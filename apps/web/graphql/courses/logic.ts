@@ -585,6 +585,7 @@ export const getStudents = async ({
                 signedUpOn: 1,
                 lastAccessedOn: 1,
                 downloaded: 1,
+                avatar: 1,
             },
         },
     ]);

@@ -1,4 +1,5 @@
 import {
+    GraphQLFloat,
     GraphQLInt,
     GraphQLList,
     GraphQLNonNull,
@@ -19,6 +20,7 @@ const activity = new GraphQLObjectType({
     fields: {
         count: { type: new GraphQLNonNull(GraphQLInt) },
         points: { type: new GraphQLList(dataPoint) },
+        growth: { type: GraphQLFloat },
     },
 });
 

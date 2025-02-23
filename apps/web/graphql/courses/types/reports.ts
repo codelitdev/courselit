@@ -9,6 +9,8 @@ import {
 } from "graphql";
 import GQLContext from "../../../models/GQLContext";
 import { getStudents } from "../logic";
+import mediaTypes from "../../media/types";
+import { getMedia } from "../../media/logic";
 
 const student = new GraphQLObjectType({
     name: "Student",
@@ -16,6 +18,10 @@ const student = new GraphQLObjectType({
         userId: { type: new GraphQLNonNull(GraphQLString) },
         email: { type: new GraphQLNonNull(GraphQLString) },
         name: { type: GraphQLString },
+        avatar: {
+            type: mediaTypes.mediaType,
+            resolve: (user, _, __, ___) => getMedia(user.avatar),
+        },
         progress: { type: new GraphQLList(GraphQLString) },
         signedUpOn: { type: GraphQLFloat },
         lastAccessedOn: { type: GraphQLFloat },

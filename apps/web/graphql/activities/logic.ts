@@ -5,105 +5,111 @@ import constants from "../../config/constants";
 import { checkPermission } from "@courselit/utils";
 const { permissions, activityTypes, analyticsDurations } = constants;
 import ActivityModel, { Activity } from "../../models/Activity";
-import { Domain } from "@models/Domain";
+import { calculatePastDate } from "./helpers";
+import { ActivityType } from "@courselit/common-models";
 
 interface Activities {
     count: number;
-    points: { date: Date; count: number }[];
+    points?: { date: Date; count: number }[];
+    growth?: number;
 }
 
 export const getActivities = async ({
     ctx,
     type,
     duration,
+    points = false,
+    growth = false,
+    entityId,
 }: {
     ctx: GQLContext;
-    type: (typeof activityTypes)[number];
+    type: ActivityType;
     duration: (typeof analyticsDurations)[number];
+    points?: boolean;
+    growth?: boolean;
+    entityId?: string;
 }): Promise<Activities> => {
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
         throw new Error(responses.action_not_allowed);
     }
 
-    const startFromDate = calculatePastDate(duration, ctx.subdomain);
+    let startFromDate = calculatePastDate(duration, ctx.subdomain);
+    let extendedStartDate = growth
+        ? calculatePastDate(
+              duration,
+              ctx.subdomain,
+              new Date(startFromDate.getTime() - 1),
+          )
+        : startFromDate;
 
-    let filter = {
-        createdAt: { $gte: startFromDate },
+    // Single query for both current and previous period
+    const query = {
+        createdAt: { $gte: extendedStartDate },
         type,
         domain: ctx.subdomain._id,
+        ...(entityId ? { entityId } : {}),
     };
-    const activities: Activity[] = await ActivityModel.find(filter);
+    const activities: Activity[] = await ActivityModel.find(query);
 
-    const points = activities.length
-        ? activities.reduce((acc, activity) => {
-              const date = new Date(activity.createdAt)
-                  .toISOString()
-                  .split("T")[0];
-              const numberToBeIncrementedBy =
-                  type === "purchased" ? activity.metadata.cost : 1;
-              if (acc[date]) {
-                  acc[date] += numberToBeIncrementedBy;
-              } else {
-                  acc[date] = numberToBeIncrementedBy;
-              }
-              return acc;
-          }, {})
-        : {};
+    // Split activities into current and previous periods
+    const currentPeriodActivities = activities.filter(
+        (activity) => new Date(activity.createdAt!) >= startFromDate,
+    );
 
-    const today = new Date();
-    let date = new Date(startFromDate);
-    const pointsSortedByDate = {};
-    while (date <= today) {
-        const dateStr = date.toISOString().split("T")[0];
-        pointsSortedByDate[dateStr] = points[dateStr] || 0;
-        date.setUTCDate(date.getUTCDate() + 1);
+    const count = currentPeriodActivities.reduce(
+        (acc, activity) =>
+            acc + (type === "purchased" ? activity.metadata?.cost || 0 : 1),
+        0,
+    );
+
+    let result: Activities = { count };
+
+    if (growth) {
+        const previousPeriodActivities = activities.filter(
+            (activity) => new Date(activity.createdAt!) < startFromDate,
+        );
+        const previousCount = previousPeriodActivities.reduce(
+            (acc, activity) =>
+                acc + (type === "purchased" ? activity.metadata?.cost || 0 : 1),
+            0,
+        );
+        result.growth = previousCount
+            ? Number(
+                  (((count - previousCount) / previousCount) * 100).toFixed(2),
+              )
+            : 0;
     }
 
-    const result = {
-        count:
-            type === "purchased"
-                ? addValues(pointsSortedByDate)
-                : activities.length,
-        points: Object.keys(pointsSortedByDate).map((date) => ({
+    if (points) {
+        const pointsMap = new Map<string, number>();
+        const today = new Date();
+        let date = new Date(startFromDate);
+
+        // Pre-fill all dates with 0
+        while (date <= today) {
+            pointsMap.set(date.toISOString().split("T")[0], 0);
+            date.setUTCDate(date.getUTCDate() + 1);
+        }
+
+        // Fill in actual values
+        currentPeriodActivities.forEach((activity) => {
+            const dateStr = new Date(activity.createdAt!)
+                .toISOString()
+                .split("T")[0];
+            const currentValue = pointsMap.get(dateStr) || 0;
+            pointsMap.set(
+                dateStr,
+                currentValue +
+                    (type === "purchased" ? activity.metadata?.cost || 0 : 1),
+            );
+        });
+
+        result.points = Array.from(pointsMap).map(([date, count]) => ({
             date: new Date(date),
-            count: pointsSortedByDate[date],
-        })),
-    };
-
-    return result;
-};
-
-const calculatePastDate = (
-    duration: (typeof analyticsDurations)[number],
-    domain: Domain,
-): Date => {
-    const today = new Date();
-    let result: Date = new Date(today.getTime());
-
-    switch (duration) {
-        case "7d":
-            result.setUTCDate(result.getUTCDate() - 7);
-            break;
-        case "30d":
-            result.setUTCDate(result.getUTCDate() - 30);
-            break;
-        case "90d":
-            result.setUTCDate(result.getUTCDate() - 90);
-            break;
-        case "1y":
-            result.setUTCFullYear(result.getUTCFullYear() - 1);
-            break;
-        case "lifetime":
-            result = new Date(domain.createdAt);
-            break;
-        default:
-            throw new Error("Invalid duration");
+            count,
+        }));
     }
 
     return result;
-};
-
-const addValues = (obj) => {
-    return Object.keys(obj).reduce((acc, date) => acc + obj[date], 0);
 };

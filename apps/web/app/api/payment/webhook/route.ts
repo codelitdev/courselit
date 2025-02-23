@@ -263,6 +263,10 @@ export async function finalizePurchase({
             userId: user.userId,
             type: constants.activityTypes[1],
             entityId: membership.entityId,
+            metadata: {
+                cost: getPlanPrice(paymentPlan).amount,
+                purchaseId: membership.sessionId,
+            },
         });
     }
     if (membership.entityType === Constants.MembershipEntityType.COMMUNITY) {

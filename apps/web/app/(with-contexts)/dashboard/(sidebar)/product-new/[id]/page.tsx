@@ -5,9 +5,8 @@ import { redirect, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LineChart } from "@/components/ui/chart";
+// import { LineChart } from "@/components/ui/chart";
 import {
-    Edit,
     Users,
     GraduationCap,
     DollarSign,
@@ -18,7 +17,7 @@ import {
     Globe,
     Trash2,
     Settings,
-    PersonStanding,
+    UserPlus,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -49,23 +48,41 @@ import {
     EDIT_CONTENT_MENU_ITEM,
     EDIT_PAGE_MENU_ITEM,
     MANAGE_COURSES_PAGE_HEADING,
+    PRODUCT_EMPTY_WARNING,
     PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER,
+    PRODUCT_UNPUBLISHED_WARNING,
     VIEW_PAGE_MENU_ITEM,
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
-import { AddressContext } from "@components/contexts";
+import { AddressContext, SiteInfoContext } from "@components/contexts";
 import useProduct from "./product-hook";
 import { formatDistanceToNow } from "date-fns";
 import { capitalize } from "@courselit/utils";
 import { truncate } from "@ui-lib/utils";
+import MetricCard from "./metric-card";
+import { getSymbolFromCurrency } from "@courselit/components-library";
+import {
+    CartesianGrid,
+    Line,
+    LineChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from "recharts";
+import { useActivities } from "@/hooks/use-activities";
+import { Constants } from "@courselit/common-models";
+import Resources from "@components/resources";
+
+const { ActivityType } = Constants;
 
 const timeRanges = [
     { value: "1d", label: "1 day" },
-    { value: "1w", label: "1 week" },
+    { value: "7d", label: "1 week" },
     { value: "30d", label: "30 days" },
     { value: "90d", label: "90 days" },
     { value: "1y", label: "1 year" },
-    { value: "all", label: "Lifetime" },
+    { value: "lifetime", label: "Lifetime" },
 ];
 
 // This would typically come from an API or database
@@ -125,7 +142,7 @@ const fetchProductData = (productId: string, timeRange: string) => {
 export default function DashboardPage() {
     const params = useParams();
     const productId = params.id as string;
-    const [timeRange, setTimeRange] = useState("30d");
+    const [timeRange, setTimeRange] = useState("7d");
     const [productData, setProductData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -138,6 +155,13 @@ export default function DashboardPage() {
             href: "#",
         },
     ];
+    const siteinfo = useContext(SiteInfoContext);
+    const { data: salesData } = useActivities(
+        ActivityType.PURCHASED,
+        timeRange,
+        productId,
+        true,
+    );
 
     useEffect(() => {
         setLoading(true);
@@ -151,33 +175,13 @@ export default function DashboardPage() {
         redirect("/dashboard/products");
     }
 
-    const MetricCard = ({ title, value, growth, icon }) => (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{title}</CardTitle>
-                {icon}
-            </CardHeader>
-            <CardContent>
-                {loading ? (
-                    <>
-                        <Skeleton className="h-7 w-3/4 mb-1" />
-                        <Skeleton className="h-4 w-1/2" />
-                    </>
-                ) : (
-                    <>
-                        <div className="text-2xl font-bold">{value}</div>
-                        <p className="text-xs text-muted-foreground">
-                            {Number.parseFloat(growth) > 0 ? "+" : ""}
-                            {growth}% from previous period
-                        </p>
-                    </>
-                )}
-            </CardContent>
-        </Card>
-    );
-
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
+            {!product?.published && (
+                <div className="bg-red-400 p-2 mb-4 text-sm text-white rounded-md">
+                    {PRODUCT_UNPUBLISHED_WARNING}
+                </div>
+            )}
             <div className="mb-8 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="space-y-1">
@@ -234,6 +238,13 @@ export default function DashboardPage() {
                                 ))}
                             </SelectContent>
                         </Select>
+                        <Button variant="outline" size="sm">
+                            <Link
+                                href={`/dashboard/product-new/${productId}/content`}
+                            >
+                                {EDIT_CONTENT_MENU_ITEM}
+                            </Link>
+                        </Button>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline">
@@ -243,7 +254,7 @@ export default function DashboardPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem asChild>
-                                    <Link href={`/p/${productId}`}>
+                                    <Link href={`/p/${product?.pageId}`}>
                                         <Eye className="mr-2 h-4 w-4" />
                                         {VIEW_PAGE_MENU_ITEM}
                                     </Link>
@@ -253,22 +264,21 @@ export default function DashboardPage() {
                                     <Link
                                         href={`/dashboard/product-new/${productId}/customer/new`}
                                     >
-                                        <PersonStanding className="mr-2 h-4 w-4" />
-
+                                        <UserPlus className="mr-2 h-4 w-4" />
                                         {
                                             PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER
                                         }
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem asChild>
+                                {/* <DropdownMenuItem asChild>
                                     <Link
                                         href={`/dashboard/product-new/${productId}/content`}
                                     >
                                         <Edit className="mr-2 h-4 w-4" />
                                         {EDIT_CONTENT_MENU_ITEM}
                                     </Link>
-                                </DropdownMenuItem>
+                                </DropdownMenuItem> */}
                                 <DropdownMenuItem asChild>
                                     <Link
                                         href={`/dashboard/page/${product?.pageId}?redirectTo=/dashboard/product-new/${product?.courseId}`}
@@ -338,44 +348,59 @@ export default function DashboardPage() {
                 </div>
             </div>
 
+            {productLoaded && !product?.lessons?.length && (
+                <div className="px-2 py-16 text-center mb-4 text-sm text-muted-foreground rounded-md border-dashed border-2">
+                    <p className="mb-4">{PRODUCT_EMPTY_WARNING}</p>
+                    <Link href={`/dashboard/product-new/${productId}/content`}>
+                        <Button size="sm">{EDIT_CONTENT_MENU_ITEM}</Button>
+                    </Link>
+                </div>
+            )}
+
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
                 {" "}
                 {/* Updated grid columns */}
                 <MetricCard
-                    title="Total Sales"
-                    value={`$${productData?.totalSales.toLocaleString()}`}
-                    growth={productData?.growthRates.totalSales}
+                    title="Sales"
                     icon={
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     }
+                    type={ActivityType.PURCHASED}
+                    duration={timeRange}
+                    entityId={productId}
                 />
-                {capitalize(product?.type!) === "Course" ? (
+                <Link href={`/dashboard/product-new/${productId}/customers`}>
+                    <MetricCard
+                        title="Customers"
+                        icon={
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                        }
+                        type={ActivityType.ENROLLED}
+                        duration={timeRange}
+                        entityId={productId}
+                    />
+                </Link>
+                {product?.type?.toLowerCase() === "course" ? (
                     <>
                         <MetricCard
-                            title="Total Students"
-                            value={productData?.totalCustomers.toLocaleString()}
-                            growth={productData?.growthRates.totalCustomers}
-                            icon={
-                                <Users className="h-4 w-4 text-muted-foreground" />
-                            }
-                        />
-                        <MetricCard
-                            title="Completion Rate"
-                            value={`${productData?.completionRate}%`}
-                            growth={productData?.growthRates.completionRate}
+                            title="People who completed the course"
                             icon={
                                 <GraduationCap className="h-4 w-4 text-muted-foreground" />
                             }
+                            type={ActivityType.COURSE_COMPLETED}
+                            duration={timeRange}
+                            entityId={productId}
                         />
                     </>
                 ) : (
                     <MetricCard
-                        title="Total Downloads"
-                        value={productData?.totalDownloads.toLocaleString()}
-                        growth={productData?.growthRates.totalDownloads}
+                        title="Downloads"
                         icon={
                             <Download className="h-4 w-4 text-muted-foreground" />
                         }
+                        type={ActivityType.DOWNLOADED}
+                        duration={timeRange}
+                        entityId={productId}
                     />
                 )}
             </div>
@@ -389,22 +414,121 @@ export default function DashboardPage() {
                         {loading ? (
                             <Skeleton className="h-[240px] w-full" />
                         ) : (
-                            <div className="h-[240px]">
-                                <LineChart
+                            <div className="">
+                                {/* <LineChart
                                     data={productData.salesData}
                                     categories={["Sales"]}
                                     index="name"
                                     colors={["#16a34a"]}
                                     valueFormatter={(value: number) =>
-                                        `$${value}`
+                                        `${getSymbolFromCurrency(
+                                            siteinfo.currencyISOCode || "USD",
+                                        )}${value}`
                                     }
                                     className="h-full w-full"
-                                />
+                                /> */}
+
+                                {/* <ResponsiveContainer width="100%" height={200}>
+                                        <LineChart
+                                            width={300}
+                                            height={200}
+                                            data={salesData?.points}
+                                        >
+                                            <Line
+                                                type="monotone"
+                                                dataKey="count"
+                                                strokeWidth={2}
+                                                stroke="#000"
+                                            />
+                                            <XAxis className="text-xs" dataKey="date" />
+                                            <YAxis className="text-xs" tickFormatter={(value) => `${getSymbolFromCurrency(siteinfo.currencyISOCode || "USD")}${value}`} />
+                                            <Tooltip formatter={(value) => `${getSymbolFromCurrency(siteinfo.currencyISOCode || "USD")}${value}`} />
+                                        </LineChart>
+                                    </ResponsiveContainer> */}
+                                <ResponsiveContainer width="100%" height={200}>
+                                    <LineChart
+                                        width={300}
+                                        height={200}
+                                        data={salesData?.points}
+                                    >
+                                        <CartesianGrid
+                                            strokeDasharray="3 3"
+                                            stroke="#e5e7eb"
+                                        />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="count"
+                                            strokeWidth={2}
+                                            stroke="#000000"
+                                            dot={false}
+                                        />
+                                        <XAxis
+                                            dataKey="date"
+                                            className="text-xs"
+                                            axisLine={false}
+                                            tickLine={false}
+                                        />
+                                        <YAxis
+                                            tickFormatter={(value) =>
+                                                `${getSymbolFromCurrency(siteinfo.currencyISOCode || "USD")}${value}`
+                                            }
+                                            className="text-xs"
+                                            axisLine={false}
+                                            tickLine={false}
+                                        />
+                                        <Tooltip
+                                            contentStyle={{
+                                                backgroundColor: "#333",
+                                                border: "none",
+                                                borderRadius: "4px",
+                                                padding: "4px 8px",
+                                                fontSize: "12px",
+                                                color: "white",
+                                            }}
+                                            itemStyle={{ color: "white" }}
+                                            formatter={(value) => [
+                                                `Sales: ${value}`,
+                                            ]}
+                                        />
+                                    </LineChart>
+                                </ResponsiveContainer>
                             </div>
                         )}
                     </CardContent>
                 </Card>
             </div>
+
+            <Resources
+                links={[
+                    {
+                        href: `https://docs.courselit.app/en/courses/add-content/`,
+                        text: "Add content to a product",
+                    },
+                    {
+                        href: `https://docs.courselit.app/en/courses/add-content/`,
+                        text: "Understanding product dashboard",
+                    },
+                ]}
+            />
         </DashboardContent>
     );
+}
+
+function aggregateDataPoints(data: any[], maxPoints: number = 30) {
+    if (!data || data.length <= maxPoints) return data;
+
+    const groupSize = Math.ceil(data.length / maxPoints);
+    const aggregatedData = [];
+
+    for (let i = 0; i < data.length; i += groupSize) {
+        const group = data.slice(i, i + groupSize);
+        const avgCount =
+            group.reduce((sum, point) => sum + point.count, 0) / group.length;
+        aggregatedData.push({
+            date: group[0].date, // Use first date of the group
+            count: Math.round(avgCount),
+        });
+    }
+
+    return aggregatedData;
 }

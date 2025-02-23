@@ -251,6 +251,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
                                     label={""}
                                     ref={fileInput}
                                     type="file"
+                                    accept={props.mimeTypesToShow?.join(",")}
                                     onChange={(e: any) =>
                                         setSelectedFile(e.target.files[0])
                                     }

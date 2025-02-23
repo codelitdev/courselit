@@ -38,6 +38,7 @@ export const MEDIA_SEARCH_INPUT_PLACEHOLDER = "Search your media";
 export const LOAD_MORE_TEXT = "Load more";
 export const MANAGE_MEDIA_BUTTON_TEXT = "Insert media";
 export const MANAGE_COURSES_PAGE_HEADING = "Products";
+export const COURSE_CUSTOMERS_PAGE_HEADING = "Customers";
 export const MANAGE_COMMUNITIES_PAGE_HEADING = "Communities";
 export const MANAGE_PAGES_PAGE_HEADING = "Pages";
 export const BREADCRUMBS_EDIT_LESSON_COURSE_NAME = "Product";
@@ -474,7 +475,8 @@ export const LESSON_QUIZ_ADD_QUESTION = "Add question";
 export const LESSON_QUIZ_ADD_OPTION_BTN = "Add option";
 export const LESSON_QUIZ_CONTENT_HEADER = "Question";
 export const LESSON_QUIZ_OPTIONS_HEADER = "Options";
-export const LESSON_QUIZ_QUESION_PLACEHOLDER = "Question";
+export const LESSON_QUIZ_QUESTION_PLACEHOLDER = "Enter question here";
+export const LESSON_QUIZ_OPTION_PLACEHOLDER = "Enter option here";
 export const QUESTION_BUILDER_CORRECT_ANS_TOOLTIP = "Correct answer";
 export const QUESTION_BUILDER_EXPAND_TOOLTIP = "Expand";
 export const QUESTION_BUILDER_COLLAPSE_TOOLTIP = "Collapse";
@@ -605,3 +607,7 @@ export const DELETED_COMMENT_PLACEHOLDER = "Deleted";
 export const SETTINGS_RESOURCE_PAYMENT = "Set up payment";
 export const SETTINGS_RESOURCE_API = "API documentation";
 export const EDIT_CONTENT_MENU_ITEM = "Edit content";
+export const PRODUCT_UNPUBLISHED_WARNING =
+    "This product is not published. It is not visible to your audience.";
+export const PRODUCT_EMPTY_WARNING =
+    "Your product is empty. Add some content to make it look interesting.";

@@ -1,8 +1,3 @@
-export type LessonType =
-    | "video"
-    | "text"
-    | "audio"
-    | "pdf"
-    | "file"
-    | "quiz"
-    | "embed";
+import { LessonType } from "./constants";
+
+export type LessonType = (typeof LessonType)[keyof typeof LessonType];

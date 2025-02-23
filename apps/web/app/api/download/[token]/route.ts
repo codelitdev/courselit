@@ -1,4 +1,15 @@
-import { Media, Progress } from "@courselit/common-models";
+import DomainModel, { Domain } from "@models/Domain";
+import { NextRequest } from "next/server";
+import DownloadLinkModel, { DownloadLink } from "@models/DownloadLink";
+import { responses } from "@config/strings";
+import { error } from "@/services/logger";
+import { Readable } from "node:stream";
+import archiver from "archiver";
+import UserModel, { User } from "@models/User";
+import { Progress, Constants, Media } from "@courselit/common-models";
+import CourseModel, { Course } from "@models/Course";
+import LessonModel, { Lesson } from "@models/Lesson";
+import { getMedia } from "@/graphql/media/logic";
 import {
     createReadStream,
     createWriteStream,
@@ -6,48 +17,42 @@ import {
     mkdirSync,
     unlinkSync,
 } from "fs";
-import { NextApiRequest, NextApiResponse } from "next";
-import path from "path";
-import { responses } from "../../../config/strings";
-import { getMedia } from "../../../graphql/media/logic";
-import CourseModel, { Course } from "../../../models/Course";
-import DownloadLinkModel, { DownloadLink } from "../../../models/DownloadLink";
-import LessonModel, { Lesson } from "../../../models/Lesson";
-import { error } from "../../../services/logger";
-import { Readable } from "node:stream";
-import archiver from "archiver";
-import UserModel, { User } from "@models/User";
-import DomainModel, { Domain } from "@models/Domain";
+import { recordActivity } from "@/lib/record-activity";
+import path from "node:path";
 
-export default async function handler(
-    req: NextApiRequest,
-    res: NextApiResponse,
+export async function GET(
+    req: NextRequest,
+    { params }: { params: Promise<{ token: string }> },
 ) {
-    if (req.method !== "GET") {
-        return res.status(405).json({ message: "Not allowed" });
-    }
-
     const domain = await DomainModel.findOne<Domain>({
-        name: req.headers.domain,
+        name: req.headers.get("domain"),
     });
     if (!domain) {
-        return res.status(404).json({ message: "Domain not found" });
+        return { error: { message: "Domain not found", status: 404 } };
     }
 
-    const { token } = req.query;
+    const token = (await params).token;
     if (!token) {
-        return res.status(400).json({ message: "Missing token" });
+        return Response.json({ message: "Missing token" }, { status: 400 });
     }
 
     const downloadLink: DownloadLink | null = await DownloadLinkModel.findOne({
         token,
+        domain: domain._id,
+        expiresAt: { $gt: new Date() },
     });
     if (!downloadLink) {
-        return res.status(404).send(responses.item_not_found);
+        return Response.json(
+            { message: responses.item_not_found },
+            { status: 404 },
+        );
     }
     if (downloadLink.expiresAt.getTime() - Date.now() < 0) {
         await (downloadLink as any).remove();
-        return res.status(404).send(responses.download_link_expired);
+        return Response.json(
+            { message: responses.download_link_expired },
+            { status: 404 },
+        );
     }
 
     const course: Course | null = await CourseModel.findOne({
@@ -56,7 +61,10 @@ export default async function handler(
         published: true,
     });
     if (!course) {
-        return res.status(404).send(responses.item_not_found);
+        return Response.json(
+            { message: responses.item_not_found },
+            { status: 404 },
+        );
     }
 
     const allLessons: Lesson[] = await LessonModel.find(
@@ -70,7 +78,10 @@ export default async function handler(
     );
 
     if (allLessons.length === 0) {
-        return res.status(200).send(responses.digital_download_no_files);
+        return Response.json(
+            { message: responses.digital_download_no_files },
+            { status: 200 },
+        );
     }
 
     const targetDirectory = `/tmp/${domain.name}/${(token as string).substr(
@@ -99,29 +110,37 @@ export default async function handler(
             archiveName: course.title,
         });
 
-        res.setHeader("Content-Type", "application/zip");
-        res.setHeader(
-            "Content-Disposition",
-            `attachment; filename=${course.title}.zip`,
-        );
         const zipStream = createReadStream(zipFileAddress);
-        zipStream.on("close", async () => {
-            downloadLink.consumed = true;
-            await (downloadLink as any).save();
+        const headers = new Headers({
+            "Content-Type": "application/zip",
+            "Content-Disposition": `attachment; filename=${course.title}.zip`,
+        });
+
+        const webStream = new ReadableStream({
+            start(controller) {
+                zipStream.on("data", (chunk) => controller.enqueue(chunk));
+                zipStream.on("end", () => controller.close());
+                zipStream.on("error", (err) => controller.error(err));
+            },
+        });
+
+        zipStream.on("end", async () => {
             await recordProgress({
                 courseId: downloadLink.courseId,
                 userId: downloadLink.userId,
             });
+            downloadLink.consumed = true;
+            await (downloadLink as any).save();
             unlinkSync(targetDirectory);
         });
 
-        return zipStream.pipe(res);
+        return new Response(webStream, { headers });
     } catch (err: any) {
         error(err.message, {
             fileName: __filename,
             stack: err.stack,
         });
-        res.status(500).send(err.message);
+        return Response.json({ message: err.message }, { status: 500 });
     }
 }
 
@@ -136,10 +155,18 @@ async function downloadFile(media: Media, folderPath: string) {
 
     try {
         const response: any = await fetch(media.file!);
+        if (!response.ok) {
+            throw new Error(`Failed to download file: ${response.statusText}`);
+        }
+        if (!response.body) {
+            throw new Error("No response body received");
+        }
+
+        const blob = await response.blob();
+        const readable = Readable.from(Buffer.from(await blob.arrayBuffer()));
 
         const fileStream = createWriteStream(filePath);
         await new Promise((resolve, reject) => {
-            const readable = Readable.fromWeb(response.body);
             readable.pipe(fileStream);
             readable.on("error", (err: any) => {
                 fileStream.close();
@@ -200,4 +227,11 @@ async function recordProgress({
 
     user.purchases[enrolledItemIndex].downloaded = true;
     await (user as any).save();
+
+    await recordActivity({
+        domain: user.domain,
+        userId: user.userId,
+        type: Constants.ActivityType.DOWNLOADED,
+        entityId: courseId,
+    });
 }

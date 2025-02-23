@@ -67,3 +67,4 @@ export * from "./invoice";
 export * from "./community-report";
 export * from "./notification";
 export * from "./course";
+export * from "./activity-type";

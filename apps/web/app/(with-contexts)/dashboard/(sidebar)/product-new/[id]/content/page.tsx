@@ -287,7 +287,7 @@ export default function ContentPage() {
                                             className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer w-full"
                                             onClick={() =>
                                                 router.push(
-                                                    `/dashboard/product-new/${productId}/content/lesson?id=${lesson.id}`,
+                                                    `/dashboard/product-new/${productId}/content/section/${section.id}/lesson?id=${lesson.lessonId}`,
                                                 )
                                             }
                                         >
@@ -319,7 +319,7 @@ export default function ContentPage() {
                                     asChild
                                 >
                                     <Link
-                                        href={`/dashboard/product-new/${productId}/content/lesson?sectionId=${section.id}`}
+                                        href={`/dashboard/product-new/${productId}/content/section/${section.id}/lesson`}
                                     >
                                         <Plus className="mr-2 h-4 w-4" />
                                         {BUTTON_NEW_LESSON_TEXT}

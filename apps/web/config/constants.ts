@@ -103,7 +103,7 @@ export default {
     ],
 
     // durations
-    analyticsDurations: ["7d", "30d", "90d", "1y", "lifetime"],
+    analyticsDurations: ["1d", "7d", "30d", "90d", "1y", "lifetime"],
 
     // mails
     minMailingAddressLength: 10,

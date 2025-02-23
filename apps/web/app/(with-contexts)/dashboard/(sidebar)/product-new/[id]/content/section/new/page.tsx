@@ -59,30 +59,9 @@ export default function SectionPage() {
             newErrors.sectionName = "Section name is required";
         }
 
-        // if (enableDrip) {
-        //   if (dripType === "date" && !document.getElementById("releaseDate")?.getAttribute("value")) {
-        //     newErrors.releaseDate = "Release date is required when scheduled release is enabled"
-        //   }
-        //   if (dripType === "days" && !(document.getElementById("releaseDays") as HTMLInputElement)?.value) {
-        //     newErrors.releaseDays = "Number of days is required when scheduled release is enabled"
-        //   }
-        // }
-
         setErrors(newErrors);
 
         if (Object.keys(newErrors).length === 0) {
-            //   console.log("Saving section:", { sectionName, enableDrip, dripType, notifyUsers })
-            //   toast({
-            //     title: "Success",
-            //     description: "Section settings saved successfully.",
-            //   })
-            //   router.push(`/dashboard/product-new/${productId}/content`)
-            // } else {
-            //   toast({
-            //     title: "Error",
-            //     description: "Please correct the errors in the form.",
-            //     variant: "destructive",
-            //   })
             createSection();
         }
     };

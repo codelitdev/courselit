@@ -5,21 +5,17 @@ import {
     LESSON_QUIZ_ADD_QUESTION,
     LESSON_QUIZ_GRADED_TEXT,
     LESSON_QUIZ_PASSING_GRADE_LABEL,
-    LESSON_QUIZ_QUESION_PLACEHOLDER,
+    LESSON_QUIZ_QUESTION_PLACEHOLDER,
 } from "../../../../../../ui-config/strings";
 import { QuestionBuilder } from "./question-builder";
 import { Question, Quiz } from "@courselit/common-models";
 import { DEFAULT_PASSING_GRADE } from "../../../../../../ui-config/constants";
-import {
-    Checkbox,
-    Button,
-    Form,
-    FormField,
-} from "@courselit/components-library";
+import { Checkbox, Form, FormField } from "@courselit/components-library";
 import { FormEvent } from "react";
+import { Button } from "@components/ui/button";
 
 interface QuizBuilderProps {
-    content: Quiz;
+    content: Partial<Quiz>;
     onChange: (...args: any[]) => void;
 }
 
@@ -27,7 +23,7 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
     const [questions, setQuestions] = useState<Question[]>(
         (content && content.questions) || [
             {
-                text: `${LESSON_QUIZ_QUESION_PLACEHOLDER} #1`,
+                text: `${LESSON_QUIZ_QUESTION_PLACEHOLDER} #1`,
                 options: [{ text: "", correctAnswer: false }],
             },
         ],
@@ -94,7 +90,7 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
         setQuestions([
             ...questions,
             {
-                text: `${LESSON_QUIZ_QUESION_PLACEHOLDER} #${
+                text: `${LESSON_QUIZ_QUESTION_PLACEHOLDER} #${
                     questions.length + 1
                 }`,
                 options: [{ text: "", correctAnswer: false }],
@@ -109,7 +105,7 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
                         <QuestionBuilder
                             details={question}
                             index={index}
-                            removeOption={() => removeOption(index)}
+                            removeOption={removeOption(index)}
                             setQuestionText={setQuestionText(index)}
                             setOptionText={setOptionText(index)}
                             setCorrectOption={setCorrectAnswer(index)}
@@ -121,6 +117,7 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
             </Form>
             <div>
                 <Button
+                    variant="outline"
                     onClick={(e: FormEvent<HTMLInputElement>) => {
                         e.preventDefault();
                         addNewQuestion();
