@@ -1,23 +1,18 @@
 import React from "react";
-
-// Regex taken from: https://stackoverflow.com/a/8260383
-const YouTubeRegex =
-    /.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#\&\?]*).*/;
+import { UIConstants } from "@courselit/common-models";
 
 const YouTubeEmbed = ({ content }: { content: string }) => {
-    const match = content.match(YouTubeRegex);
+    const match = content.match(UIConstants.YOUTUBE_REGEX);
 
     return (
-        <div className="flex justify-center">
-            <div className="w-full relative h-0 overflow-hidden rounded-md pb-[56.25%]">
-                <iframe
-                    src={`https://www.youtube.com/embed/${match![1]}`}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="absolute top-0 left-0 w-full h-full"
-                />
-            </div>
+        <div className="aspect-video">
+            <iframe
+                className="w-full h-full rounded-lg"
+                src={`https://www.youtube.com/embed/${match![1]}`}
+                title="YouTube video player"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+            />
         </div>
     );
 };
@@ -29,12 +24,17 @@ interface LessonEmbedViewerProps {
 const LessonEmbedViewer = ({ content }: LessonEmbedViewerProps) => {
     return (
         <div className="flex flex-col min-h-screen">
-            {content.value.match(YouTubeRegex) && (
+            {content.value.match(UIConstants.YOUTUBE_REGEX) && (
                 <div className="mb-4">
                     <YouTubeEmbed content={content.value} />
                 </div>
             )}
-            <a href={content.value}>{content.value}</a>
+            <a
+                href={content.value}
+                className="text-sm text-muted-foreground text-center hover:underline"
+            >
+                {content.value}
+            </a>
         </div>
     );
 };

@@ -15,7 +15,6 @@ import {
     ChevronDown,
     Eye,
     Globe,
-    Trash2,
     Settings,
     UserPlus,
 } from "lucide-react";
@@ -35,15 +34,8 @@ import {
     DropdownMenuTrigger,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
+
+
 import {
     EDIT_CONTENT_MENU_ITEM,
     EDIT_PAGE_MENU_ITEM,
@@ -179,13 +171,19 @@ export default function DashboardPage() {
         <DashboardContent breadcrumbs={breadcrumbs}>
             {!product?.published && (
                 <div className="bg-red-400 p-2 mb-4 text-sm text-white rounded-md">
-                    {PRODUCT_UNPUBLISHED_WARNING}
+                    {PRODUCT_UNPUBLISHED_WARNING}{" "}
+                    <Link
+                        href={`/dashboard/product-new/${productId}/manage#publish`}
+                        className="underline"
+                    >
+                        Manage
+                    </Link>
                 </div>
             )}
             <div className="mb-8 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="space-y-1">
-                        <h1 className="text-3xl font-bold">
+                        <h1 className="text-4xl font-semibold">
                             {product?.title || (
                                 <Skeleton className="h-9 w-64" />
                             )}
@@ -289,14 +287,14 @@ export default function DashboardPage() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
                                     <Link
-                                        href={`/dashboard/product-new/${productId}/settings`}
+                                        href={`/dashboard/product-new/${productId}/manage`}
                                     >
                                         <Settings className="mr-2 h-4 w-4" />
-                                        Settings
+                                        Manage
                                     </Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <Dialog
+                                {/* <DropdownMenuSeparator /> */}
+                                {/* <Dialog
                                     open={deleteDialogOpen}
                                     onOpenChange={setDeleteDialogOpen}
                                 >
@@ -341,7 +339,7 @@ export default function DashboardPage() {
                                             </Button>
                                         </DialogFooter>
                                     </DialogContent>
-                                </Dialog>
+                                </Dialog> */}
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>

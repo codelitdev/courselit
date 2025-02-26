@@ -156,6 +156,8 @@ export default function SectionPage() {
         }
 
         await updateGroup();
+
+        router.push(`/dashboard/product-new/${productId}/content`);
     };
 
     const updateGroup = async () => {
@@ -240,7 +242,7 @@ export default function SectionPage() {
         <DashboardContent breadcrumbs={breadcrumbs}>
             <div className="space-y-6">
                 <div>
-                    <h1 className="text-3xl font-bold">
+                    <h1 className="text-4xl font-semibold">
                         {EDIT_SECTION_HEADER}
                     </h1>
                     <p className="text-muted-foreground mt-2">

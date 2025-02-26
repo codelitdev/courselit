@@ -1,11 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useContext } from "react";
-import {
-    useRouter,
-    useParams,
-    useSearchParams,
-} from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
     Trash2,
@@ -13,22 +9,18 @@ import {
     Video,
     Headphones,
     FileImage,
-    Youtube,
     HelpCircle,
     File,
     Info,
+    Tv,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
+
+
 import {
     Dialog,
     DialogContent,
@@ -39,8 +31,8 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 
-
 import {
+    APP_MESSAGE_LESSON_DELETED,
     BUTTON_NEW_LESSON_TEXT,
     COURSE_CONTENT_HEADER,
     EDIT_LESSON_TEXT,
@@ -56,7 +48,6 @@ import {
     Lesson,
     LessonType,
     Media,
-    Question,
     Quiz,
     TextEditorContent,
     UIConstants,
@@ -76,6 +67,7 @@ import { FetchBuilder } from "@courselit/utils";
 import { QuizBuilder } from "@components/admin/products/editor/content/quiz-builder";
 import { isTextEditorNonEmpty, truncate } from "@ui-lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@components/ui/separator";
 
 // interface Question {
 //     id: string;
@@ -89,23 +81,23 @@ const lessonTypes = [
     { value: Constants.LessonType.AUDIO, label: "Audio", icon: Headphones },
     { value: Constants.LessonType.PDF, label: "PDF", icon: FileImage },
     { value: Constants.LessonType.FILE, label: "File", icon: File },
-    { value: Constants.LessonType.EMBED, label: "Embed", icon: Youtube },
+    { value: Constants.LessonType.EMBED, label: "Embed", icon: Tv },
     { value: Constants.LessonType.QUIZ, label: "Quiz", icon: HelpCircle },
 ] as const;
 
-interface LessonState {
-    type: Lesson;
-    title: string;
-    content: { value: string } | TextEditorContent | Quiz;
-    // embedUrl: string;
-    // isPreviewEnabled: boolean;
-    questions: Question[];
-    requiresPassingGrade: boolean;
-    passingGrade: string;
-    // mediaUrl: string | null;
-    // mediaCaption: string;
-    media?: Media;
-}
+// interface LessonState {
+//     type: Lesson;
+//     title: string;
+//     content: { value: string } | TextEditorContent | Quiz;
+//     // embedUrl: string;
+//     // isPreviewEnabled: boolean;
+//     questions: Question[];
+//     requiresPassingGrade: boolean;
+//     passingGrade: string;
+//     // mediaUrl: string | null;
+//     // mediaCaption: string;
+//     media?: Media;
+// }
 
 export default function LessonPage() {
     const router = useRouter();
@@ -116,7 +108,7 @@ export default function LessonPage() {
     const sectionId = params.section as string;
     const isEditing = !!lessonId;
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [expandedQuestion, setExpandedQuestion] = useState("q1");
+    // const [expandedQuestion, setExpandedQuestion] = useState("q1");
     const { toast } = useToast();
     const [errors, setErrors] = useState<Partial<Record<keyof Lesson, string>>>(
         {},
@@ -262,7 +254,7 @@ export default function LessonPage() {
                     <div className="space-y-4">
                         <div className="flex items-center space-x-2">
                             <Input
-                                placeholder="e.g. dQw4w9WgXcQ"
+                                placeholder="e.g. YouTube video URL"
                                 value={content.value}
                                 onChange={(e) =>
                                     // updateLesson({ content: { value: e.target.value } })
@@ -272,12 +264,10 @@ export default function LessonPage() {
                                     errors.content ? "border-red-500" : ""
                                 }
                             />
-                            <TooltipProvider>
+                            {/* <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button variant="outline" size="icon">
                                             <HelpCircle className="h-4 w-4" />
-                                        </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>
                                         <p>
@@ -287,7 +277,7 @@ export default function LessonPage() {
                                         </p>
                                     </TooltipContent>
                                 </Tooltip>
-                            </TooltipProvider>
+                            </TooltipProvider> */}
                         </div>
                         {errors.content && (
                             <p className="text-sm text-red-500">
@@ -295,14 +285,26 @@ export default function LessonPage() {
                             </p>
                         )}
                         {content.value && (
-                            <div className="aspect-video">
-                                <iframe
-                                    className="w-full h-full rounded-lg"
-                                    src={`https://www.youtube.com/embed/${content.value}`}
-                                    title="YouTube video player"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                />
+                            <div className="">
+                                {content.value.match(
+                                    UIConstants.YOUTUBE_REGEX,
+                                ) && (
+                                    <div className="aspect-video">
+                                        <iframe
+                                            className="w-full h-full rounded-lg"
+                                            src={`https://www.youtube.com/embed/${content.value.match(UIConstants.YOUTUBE_REGEX)[1]}`}
+                                            title="YouTube video player"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                        />
+                                    </div>
+                                )}
+                                <a
+                                    href={content.value}
+                                    className="text-xs lg:text-sm text-muted-foreground text-center hover:underline w-full"
+                                >
+                                    {content.value}
+                                </a>
                             </div>
                         )}
                     </div>
@@ -312,7 +314,9 @@ export default function LessonPage() {
                     <div className="space-y-4">
                         <QuizBuilder
                             content={quizContent}
-                            onChange={(state: any) => setQuizContent(state)}
+                            onChange={(state: any) => {
+                                setQuizContent(state);
+                            }}
                         />
                         {errors.content && (
                             <p className="text-sm text-red-500">
@@ -600,28 +604,28 @@ export default function LessonPage() {
         }
     };
 
-    const getMimeTypesToShow = () => {
-        if (
-            lesson?.type ===
-            String.prototype.toUpperCase.call(Constants.LessonType.VIDEO)
-        ) {
-            return MIMETYPE_VIDEO;
-        }
-        if (
-            lesson?.type ===
-            String.prototype.toUpperCase.call(Constants.LessonType.AUDIO)
-        ) {
-            return MIMETYPE_AUDIO;
-        }
-        if (
-            lesson?.type ===
-            String.prototype.toUpperCase.call(Constants.LessonType.PDF)
-        ) {
-            return MIMETYPE_PDF;
-        }
+    // const getMimeTypesToShow = () => {
+    //     if (
+    //         lesson?.type ===
+    //         String.prototype.toUpperCase.call(Constants.LessonType.VIDEO)
+    //     ) {
+    //         return MIMETYPE_VIDEO;
+    //     }
+    //     if (
+    //         lesson?.type ===
+    //         String.prototype.toUpperCase.call(Constants.LessonType.AUDIO)
+    //     ) {
+    //         return MIMETYPE_AUDIO;
+    //     }
+    //     if (
+    //         lesson?.type ===
+    //         String.prototype.toUpperCase.call(Constants.LessonType.PDF)
+    //     ) {
+    //         return MIMETYPE_PDF;
+    //     }
 
-        return [...MIMETYPE_AUDIO, ...MIMETYPE_VIDEO, ...MIMETYPE_PDF];
-    };
+    //     return [...MIMETYPE_AUDIO, ...MIMETYPE_VIDEO, ...MIMETYPE_PDF];
+    // };
 
     const saveMediaContent = async (media?: Media) => {
         const query = `
@@ -708,8 +712,8 @@ export default function LessonPage() {
                 const loadedLesson = Object.assign({}, response.lesson, {
                     type: response.lesson.type.toLowerCase() as LessonType,
                 });
-                setLesson(loadedLesson);
-                setOriginalLesson(loadedLesson); // Store original lesson data
+                setLesson(JSON.parse(JSON.stringify(loadedLesson)));
+                setOriginalLesson(JSON.parse(JSON.stringify(loadedLesson)));
                 setInitialLessonType(
                     response.lesson.type.toLowerCase() as LessonType,
                 );
@@ -721,7 +725,11 @@ export default function LessonPage() {
                         setRefresh(refresh + 1);
                         break;
                     case Constants.LessonType.QUIZ:
-                        setQuizContent(response.lesson.content || {});
+                        setQuizContent(
+                            JSON.parse(
+                                JSON.stringify(response.lesson.content || {}),
+                            ),
+                        );
                         break;
                     default:
                         setContent(response.lesson.content || { value: "" });
@@ -763,6 +771,9 @@ export default function LessonPage() {
                                 JSON.stringify(originalLesson.content)
                             );
                     }
+                }
+                if (key === "media") {
+                    return false;
                 }
                 return (
                     lesson[key as keyof Lesson] !==
@@ -883,6 +894,7 @@ export default function LessonPage() {
                 title: TOAST_TITLE_SUCCESS,
                 description: "Lesson updated",
             });
+            router.push(`/dashboard/product-new/${productId}/content`);
         } catch (err: any) {
             toast({
                 title: TOAST_TITLE_ERROR,
@@ -923,9 +935,21 @@ export default function LessonPage() {
         try {
             const response = await fetch.exec();
             if (response.lesson) {
-                router.replace(
-                    `/dashboard/product-new/${productId}/content/section/${sectionId}/lesson?id=${response.lesson.lessonId}`,
-                );
+                if (
+                    [
+                        Constants.LessonType.TEXT,
+                        Constants.LessonType.EMBED,
+                        Constants.LessonType.QUIZ,
+                    ].includes(lesson.type as any)
+                ) {
+                    router.replace(
+                        `/dashboard/product-new/${productId}/content`,
+                    );
+                } else {
+                    router.replace(
+                        `/dashboard/product-new/${productId}/content/section/${sectionId}/lesson?id=${response.lesson.lessonId}`,
+                    );
+                }
             }
         } catch (err: any) {
             toast({
@@ -934,6 +958,41 @@ export default function LessonPage() {
                 variant: "destructive",
             });
         } finally {
+        }
+    };
+
+    const onLessonDelete = async () => {
+        if (lesson?.lessonId) {
+            const query = `
+                mutation r {
+                    result: deleteLesson(id: "${lesson.lessonId}")
+                }
+            `;
+            const fetch = new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setPayload(query)
+                .setIsGraphQLEndpoint(true)
+                .build();
+
+            try {
+                const response = await fetch.exec();
+
+                if (response.result) {
+                    toast({
+                        title: TOAST_TITLE_SUCCESS,
+                        description: APP_MESSAGE_LESSON_DELETED,
+                    });
+                    router.replace(
+                        `/dashboard/product-new/${productId}/content`,
+                    );
+                }
+            } catch (err: any) {
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: err.message,
+                    variant: "destructive",
+                });
+            }
         }
     };
 
@@ -983,7 +1042,7 @@ export default function LessonPage() {
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
             <header>
-                <h1 className="text-3xl font-bold">
+                <h1 className="text-4xl font-semibold">
                     {isEditing ? "Edit Lesson" : "New Lesson"}
                 </h1>
                 <p className="text-muted-foreground mt-2">
@@ -996,166 +1055,196 @@ export default function LessonPage() {
             {!productLoaded || (isEditing && isLoading) ? (
                 <LessonSkeleton />
             ) : (
-                <form className="space-y-8" onSubmit={handleSave}>
-                    {product?.type?.toLowerCase() ===
-                        UIConstants.COURSE_TYPE_COURSE && (
-                        <div className="space-y-4">
-                            <Label className="font-semibold">Lesson Type</Label>
-                            <RadioGroup
-                                value={lesson.type}
-                                onValueChange={(type) => {
-                                    if (!isEditing) {
-                                        updateLesson({
-                                            type: type as LessonType,
-                                        });
-                                        setErrors({});
-                                    }
-                                }}
-                                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4"
-                                disabled={isEditing}
-                            >
-                                {lessonTypes.map(
-                                    ({ value, label, icon: Icon }) => (
-                                        <Label
-                                            key={value}
-                                            htmlFor={value}
-                                            className={`flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary ${
-                                                lesson.type === value
-                                                    ? "border-primary"
-                                                    : ""
-                                            } ${isEditing && value !== initialLessonType ? "opacity-50 cursor-not-allowed" : ""}`}
-                                        >
-                                            <RadioGroupItem
-                                                value={value}
-                                                id={value}
-                                                className="sr-only"
-                                                disabled={
-                                                    isEditing &&
-                                                    value !== initialLessonType
-                                                }
-                                            />
-                                            <Icon className="mb-2 h-6 w-6" />
-                                            {label}
-                                        </Label>
-                                    ),
-                                )}
-                            </RadioGroup>
-                        </div>
-                    )}
-
-                    <div className="space-y-4">
-                        <Label htmlFor="title" className="font-semibold">
-                            Title
-                        </Label>
-                        <Input
-                            id="title"
-                            placeholder="Enter lesson title"
-                            value={lesson.title}
-                            onChange={(e) =>
-                                updateLesson({ title: e.target.value })
-                            }
-                            className={errors.title ? "border-red-500" : ""}
-                        />
-                        {errors.title && (
-                            <p className="text-sm text-red-500">
-                                {errors.title}
-                            </p>
-                        )}
-                    </div>
-
-                    <div className="space-y-4">
-                        <Label className="font-semibold">
-                            {lesson.type === Constants.LessonType.EMBED
-                                ? "YouTube Video ID"
-                                : `${lesson.type.charAt(0).toUpperCase() + lesson.type.slice(1)} Content`}
-                        </Label>
-                        {renderLessonContent()}
-                        <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                                <Label
-                                    htmlFor="preview"
-                                    className="font-semibold"
-                                >
-                                    Preview
+                <>
+                    <form className="space-y-8 mb-4" onSubmit={handleSave}>
+                        {product?.type?.toLowerCase() ===
+                            UIConstants.COURSE_TYPE_COURSE && (
+                            <div className="space-y-4">
+                                <Label className="font-semibold">
+                                    Lesson Type
                                 </Label>
-                                <p className="text-sm text-muted-foreground">
-                                    Allow students to preview this lesson
-                                </p>
+                                <RadioGroup
+                                    value={lesson.type}
+                                    onValueChange={(type) => {
+                                        if (!isEditing) {
+                                            updateLesson({
+                                                type: type as LessonType,
+                                            });
+                                            setErrors({});
+                                        }
+                                    }}
+                                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4"
+                                    disabled={isEditing}
+                                >
+                                    {lessonTypes.map(
+                                        ({ value, label, icon: Icon }) => (
+                                            <Label
+                                                key={value}
+                                                htmlFor={value}
+                                                className={`flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary ${
+                                                    lesson.type === value
+                                                        ? "border-primary"
+                                                        : ""
+                                                } ${isEditing && value !== initialLessonType ? "opacity-50 cursor-not-allowed" : ""}`}
+                                            >
+                                                <RadioGroupItem
+                                                    value={value}
+                                                    id={value}
+                                                    className="sr-only"
+                                                    disabled={
+                                                        isEditing &&
+                                                        value !==
+                                                            initialLessonType
+                                                    }
+                                                />
+                                                <Icon className="mb-2 h-6 w-6" />
+                                                {label}
+                                            </Label>
+                                        ),
+                                    )}
+                                </RadioGroup>
                             </div>
-                            <Switch
-                                id="preview"
-                                checked={!lesson.requiresEnrollment}
-                                onCheckedChange={(checked) =>
-                                    updateLesson({
-                                        requiresEnrollment: !checked,
-                                    })
-                                }
-                            />
-                        </div>
-                    </div>
+                        )}
 
-                    <div className="flex items-center justify-between pt-6">
-                        <Dialog
-                            open={isDeleteDialogOpen}
-                            onOpenChange={setIsDeleteDialogOpen}
-                        >
-                            <DialogTrigger asChild>
-                                <Button variant="outline">
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>
-                                        Are you sure you want to delete this
-                                        lesson?
-                                    </DialogTitle>
-                                    <DialogDescription>
-                                        This action cannot be undone. This will
-                                        permanently delete the lesson
-                                        {lesson.title &&
-                                            ` "${lesson.title}"`}{" "}
-                                        and remove it from our servers.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <DialogFooter>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() =>
-                                            setIsDeleteDialogOpen(false)
-                                        }
+                        <div className="space-y-4">
+                            <Label htmlFor="title" className="font-semibold">
+                                Title
+                            </Label>
+                            <Input
+                                id="title"
+                                placeholder="Enter lesson title"
+                                value={lesson.title}
+                                onChange={(e) =>
+                                    updateLesson({ title: e.target.value })
+                                }
+                                className={errors.title ? "border-red-500" : ""}
+                            />
+                            {errors.title && (
+                                <p className="text-sm text-red-500">
+                                    {errors.title}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="space-y-4">
+                            {[
+                                Constants.LessonType.TEXT,
+                                Constants.LessonType.EMBED,
+                                Constants.LessonType.QUIZ,
+                            ].includes(lesson.type as any) && (
+                                <>
+                                    <Label className="font-semibold">
+                                        {lesson.type ===
+                                        Constants.LessonType.EMBED
+                                            ? "Embed URL"
+                                            : `${lesson.type.charAt(0).toUpperCase() + lesson.type.slice(1)} Content`}
+                                    </Label>
+                                    {renderLessonContent()}
+                                </>
+                            )}
+                            {/* {renderLessonContent()} */}
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label
+                                        htmlFor="preview"
+                                        className="font-semibold"
                                     >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        onClick={() =>
-                                            setIsDeleteDialogOpen(false)
-                                        }
-                                    >
+                                        Preview
+                                    </Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Allow students to preview this lesson
+                                    </p>
+                                </div>
+                                <Switch
+                                    id="preview"
+                                    checked={!lesson.requiresEnrollment}
+                                    onCheckedChange={(checked) =>
+                                        updateLesson({
+                                            requiresEnrollment: !checked,
+                                        })
+                                    }
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-6">
+                            <Dialog
+                                open={isDeleteDialogOpen}
+                                onOpenChange={setIsDeleteDialogOpen}
+                            >
+                                <DialogTrigger asChild>
+                                    <Button variant="outline">
+                                        <Trash2 className="mr-2 h-4 w-4" />
                                         Delete
                                     </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                        <div className="space-x-2">
-                            <Button variant="outline" asChild>
-                                <Link
-                                    href={`/dashboard/product-new/${productId}/content`}
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>
+                                            Are you sure you want to delete this
+                                            lesson?
+                                        </DialogTitle>
+                                        <DialogDescription>
+                                            This action cannot be undone. This
+                                            will permanently delete the lesson
+                                            {lesson.title &&
+                                                ` "${lesson.title}"`}{" "}
+                                            and remove it from our servers.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <DialogFooter>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() =>
+                                                setIsDeleteDialogOpen(false)
+                                            }
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            variant="destructive"
+                                            onClick={() => {
+                                                setIsDeleteDialogOpen(false);
+                                                onLessonDelete();
+                                            }}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                            <div className="space-x-2">
+                                <Button variant="outline" asChild>
+                                    <Link
+                                        href={`/dashboard/product-new/${productId}/content`}
+                                    >
+                                        Cancel
+                                    </Link>
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    disabled={isEditing && !hasChanges}
                                 >
-                                    Done
-                                </Link>
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={isEditing && !hasChanges}
-                            >
-                                {isEditing ? "Update" : "Save"} Lesson
-                            </Button>
+                                    {isEditing ? "Update" : "Save"} Lesson
+                                </Button>
+                            </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
+                    {[
+                        Constants.LessonType.VIDEO,
+                        Constants.LessonType.AUDIO,
+                        Constants.LessonType.PDF,
+                        Constants.LessonType.FILE,
+                    ].includes(lesson.type as any) && (
+                        <>
+                            <Separator />
+                            <div className="space-y-4">
+                                <Label className="font-semibold">Media</Label>
+                                {renderLessonContent()}
+                            </div>
+                        </>
+                    )}
+                </>
             )}
         </DashboardContent>
     );

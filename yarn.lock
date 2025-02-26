@@ -1722,7 +1722,7 @@ __metadata:
     "@radix-ui/react-scroll-area": ^1.0.5
     "@radix-ui/react-select": ^2.0.0
     "@radix-ui/react-slider": ^1.1.2
-    "@radix-ui/react-slot": ^1.1.0
+    "@radix-ui/react-slot": ^1.1.2
     "@radix-ui/react-switch": ^1.0.3
     "@radix-ui/react-tabs": ^1.0.4
     "@radix-ui/react-toast": ^1.2.2
@@ -5123,7 +5123,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@radix-ui/react-slot@npm:1.1.0, @radix-ui/react-slot@npm:^1.1.0":
+"@radix-ui/react-slot@npm:1.1.0":
   version: 1.1.0
   resolution: "@radix-ui/react-slot@npm:1.1.0"
   dependencies:

@@ -122,7 +122,9 @@ export default function SectionPage() {
         <DashboardContent breadcrumbs={breadcrumbs}>
             <div className="space-y-6">
                 <div>
-                    <h1 className="text-3xl font-bold">{NEW_SECTION_HEADER}</h1>
+                    <h1 className="text-4xl font-semibold">
+                        {NEW_SECTION_HEADER}
+                    </h1>
                     <p className="text-muted-foreground mt-2">
                         Add a new section to your course
                     </p>

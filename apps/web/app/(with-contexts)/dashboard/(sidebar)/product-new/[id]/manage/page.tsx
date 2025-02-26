@@ -414,7 +414,7 @@ export default function SettingsPage() {
             <div className="space-y-8">
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-3xl font-bold">Settings</h1>
+                        <h1 className="text-4xl font-semibold">Settings</h1>
                         <p className="text-muted-foreground mt-2">
                             Manage your course settings
                         </p>
@@ -599,7 +599,7 @@ export default function SettingsPage() {
 
                 <Separator />
 
-                <div className="space-y-6">
+                <div className="space-y-6" id="publish">
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                             <Label className="text-base font-semibold">

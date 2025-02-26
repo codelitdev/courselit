@@ -43,45 +43,13 @@ import { truncate } from "@ui-lib/utils";
 import { Lesson } from "@courselit/common-models";
 import { DragAndDrop, useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
-
-// Mock data for sections and lessons
-const courseSections = [
-    {
-        id: "1",
-        title: "Getting Started",
-        lessons: [
-            { id: "1-1", title: "Introduction to the Course", type: "video" },
-            {
-                id: "1-2",
-                title: "Setting Up Your Development Environment",
-                type: "text",
-            },
-        ],
-    },
-    {
-        id: "2",
-        title: "HTML Fundamentals",
-        lessons: [
-            { id: "2-1", title: "HTML Document Structure", type: "video" },
-            { id: "2-2", title: "Working with Text and Links", type: "text" },
-            {
-                id: "2-3",
-                title: "HTML Forms and Input Elements",
-                type: "video",
-            },
-        ],
-    },
-    {
-        id: "3",
-        title: "CSS Basics",
-        lessons: [
-            { id: "3-1", title: "Introduction to CSS", type: "video" },
-            { id: "3-2", title: "CSS Selectors and Properties", type: "text" },
-            { id: "3-3", title: "CSS Box Model", type: "video" },
-            { id: "3-4", title: "CSS Layout Techniques", type: "quiz" },
-        ],
-    },
-];
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Droplets } from "lucide-react";
 
 export default function ContentPage() {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -169,8 +137,8 @@ export default function ContentPage() {
 
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
-            <h1 className="text-4xl font-extrabold tracking-tight mb-8">
-                Course Content
+            <h1 className="text-4xl font-semibold tracking-tight mb-8">
+                Content
             </h1>
 
             <ScrollArea className="h-[calc(100vh-180px)]">
@@ -197,9 +165,26 @@ export default function ContentPage() {
                                         <ChevronDown className="h-5 w-5 text-gray-500" />
                                     )}
                                 </Button>
-                                <h2 className="text-xl font-semibold tracking-tight">
-                                    {section.name}
-                                </h2>
+                                <div className="flex items-center space-x-2">
+                                    <h2 className="text-xl font-semibold tracking-tight">
+                                        {section.name}
+                                    </h2>
+                                    {section.drip && (
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger>
+                                                    <Droplets className="h-4 w-4 text-gray-400" />
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>
+                                                        This section has
+                                                        scheduled release
+                                                    </p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    )}
+                                </div>
                             </div>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
