@@ -230,10 +230,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
                             okButton={
                                 <Button2
                                     onClick={uploadFile as any}
-                                    disabled={
-                                        !selectedFile ||
-                                        (selectedFile && uploading)
-                                    }
+                                    disabled={!selectedFile || uploading}
                                 >
                                     {uploading
                                         ? strings.uploading || "Uploading"

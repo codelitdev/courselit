@@ -45,45 +45,6 @@ import {
 import { CheckCircled, Circle } from "@courselit/icons";
 import { Skeleton } from "@components/ui/skeleton";
 
-// Mock data for students
-const students = [
-    {
-        id: 1,
-        name: "Alice Johnson",
-        email: "alice@example.com",
-        progress: 75,
-        lastActive: "2023-05-15",
-    },
-    {
-        id: 2,
-        name: "Bob Smith",
-        email: "bob@example.com",
-        progress: 45,
-        lastActive: "2023-05-14",
-    },
-    {
-        id: 3,
-        name: "Charlie Brown",
-        email: "charlie@example.com",
-        progress: 90,
-        lastActive: "2023-05-16",
-    },
-    {
-        id: 4,
-        name: "Diana Ross",
-        email: "diana@example.com",
-        progress: 60,
-        lastActive: "2023-05-13",
-    },
-    {
-        id: 5,
-        name: "Edward Norton",
-        email: "edward@example.com",
-        progress: 30,
-        lastActive: "2023-05-12",
-    },
-];
-
 interface Customer {
     userId: string;
     email: string;
@@ -105,7 +66,7 @@ export default function CustomersPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
     const address = useContext(AddressContext);
-    const { product, loaded: productLoaded } = useProduct(productId, address);
+    const { product } = useProduct(productId, address);
 
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },

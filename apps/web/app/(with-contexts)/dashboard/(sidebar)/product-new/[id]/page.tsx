@@ -446,22 +446,3 @@ export default function DashboardPage() {
         </DashboardContent>
     );
 }
-
-function aggregateDataPoints(data: any[], maxPoints: number = 30) {
-    if (!data || data.length <= maxPoints) return data;
-
-    const groupSize = Math.ceil(data.length / maxPoints);
-    const aggregatedData = [];
-
-    for (let i = 0; i < data.length; i += groupSize) {
-        const group = data.slice(i, i + groupSize);
-        const avgCount =
-            group.reduce((sum, point) => sum + point.count, 0) / group.length;
-        aggregatedData.push({
-            date: group[0].date, // Use first date of the group
-            count: Math.round(avgCount),
-        });
-    }
-
-    return aggregatedData;
-}

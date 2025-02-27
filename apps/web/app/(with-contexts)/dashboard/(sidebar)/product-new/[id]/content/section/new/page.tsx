@@ -28,7 +28,7 @@ export default function SectionPage() {
     const productId = params.id as string;
     //   const sectionId = searchParams.get("id")
     //   const mode = searchParams.get("mode")
-    const afterSectionId = searchParams.get("after");
+    // const afterSectionId = searchParams.get("after");
     const [loading, setLoading] = useState(false);
 
     const [sectionName, setSectionName] = useState("");

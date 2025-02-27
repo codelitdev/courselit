@@ -47,7 +47,7 @@ export default function SectionPage() {
     const searchParams = useSearchParams();
     const productId = params.id as string;
     const sectionId = params.section as string;
-    const afterSectionId = searchParams.get("after");
+    // const afterSectionId = searchParams.get("after");
 
     const [sectionName, setSectionName] = useState("");
     const [enableDrip, setEnableDrip] = useState(false);
