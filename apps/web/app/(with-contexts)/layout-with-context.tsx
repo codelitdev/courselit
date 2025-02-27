@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState, Suspense } from "react";
 import { SiteInfo, Typeface, ServerConfig } from "@courselit/common-models";
 import { defaultState } from "@components/default-state";
 import { FetchBuilder } from "@courselit/utils";
@@ -15,7 +15,7 @@ import { Toaster, useToast } from "@courselit/components-library";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { Session } from "next-auth";
 
-export default function Layout({
+function LayoutContent({
     address,
     children,
     siteinfo,
@@ -103,5 +103,20 @@ export default function Layout({
             </SiteInfoContext.Provider>
             <Toaster />
         </AddressContext.Provider>
+    );
+}
+
+export default function Layout(props: {
+    address: string;
+    children: ReactNode;
+    siteinfo: SiteInfo;
+    typefaces: Typeface[];
+    config: ServerConfig;
+    session: Session | null;
+}) {
+    return (
+        <Suspense fallback={null}>
+            <LayoutContent {...props} />
+        </Suspense>
     );
 }

@@ -20,14 +20,16 @@ const { permissions } = UIConstants;
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export const formattedLocaleDate = (
-    epochString: Date,
+    epochString?: Date | number,
     monthFormat?: "short" | "long",
 ) =>
-    new Date(Number(epochString)).toLocaleString("en-US", {
-        year: "numeric",
-        month: monthFormat || "short",
-        day: "numeric",
-    });
+    epochString
+        ? new Date(Number(epochString)).toLocaleString("en-US", {
+              year: "numeric",
+              month: monthFormat || "short",
+              day: "numeric",
+          })
+        : "";
 
 export const formulateCourseUrl = (course: any, backend = "") =>
     `${backend}/${course.isBlog ? "post" : "course"}/${course.courseId}/${

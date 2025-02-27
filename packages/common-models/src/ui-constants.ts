@@ -59,3 +59,7 @@ export const MAIL_SUBJECT_MAX_LENGTH = 78;
 export const MAIL_MAX_RECIPIENTS = 500;
 
 export const MAIL_RECIPIENTS_SPLIT_REGEX = /,\s*/;
+
+// Regex taken from: https://stackoverflow.com/a/8260383
+export const YOUTUBE_REGEX =
+    /.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#\&\?]*).*/; // eslint-disable-line no-useless-escape

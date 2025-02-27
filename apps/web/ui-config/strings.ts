@@ -1,4 +1,4 @@
-import constants from "../config/constants";
+import { Constants } from "@courselit/common-models";
 
 /**
  * This file provides application wide strings.
@@ -38,6 +38,7 @@ export const MEDIA_SEARCH_INPUT_PLACEHOLDER = "Search your media";
 export const LOAD_MORE_TEXT = "Load more";
 export const MANAGE_MEDIA_BUTTON_TEXT = "Insert media";
 export const MANAGE_COURSES_PAGE_HEADING = "Products";
+export const COURSE_CUSTOMERS_PAGE_HEADING = "Customers";
 export const MANAGE_COMMUNITIES_PAGE_HEADING = "Communities";
 export const MANAGE_PAGES_PAGE_HEADING = "Pages";
 export const BREADCRUMBS_EDIT_LESSON_COURSE_NAME = "Product";
@@ -67,7 +68,7 @@ export const DIALOG_TITLE_FEATURED_IMAGE = "Select media";
 export const BUTTON_SET_FEATURED_IMAGE = "Select";
 export const BUTTON_SELECT_MEDIA = "Pick media";
 export const FORM_FIELD_FEATURED_IMAGE = "Featured image";
-export const BTN_DELETE_COURSE = "Delete course";
+export const BTN_DELETE_COURSE = "Delete product";
 export const BTN_EXIT_COURSE = "Exit";
 export const BTN_EXIT_COURSE_TOOLTIP = "Exit course";
 export const BTN_ADD_VIDEO = "Add";
@@ -134,7 +135,7 @@ export const CAPTION_TRY_AGAIN = "Try again";
 export const CAPTION_CLOSE = "Close";
 export const LOADING = "Loading";
 export const WORKING = "Working...";
-export const BUTTON_NEW_LESSON_TEXT = "New Lesson";
+export const BUTTON_NEW_LESSON_TEXT = "Add Lesson";
 export const EDIT_LESSON_TEXT = "Edit Lesson";
 export const BUTTON_LESSON_DOWNLOAD = "Open in a new tab";
 export const BUTTON_NEW_GROUP_TEXT = "New section";
@@ -416,22 +417,22 @@ export const FORM_NEW_PRODUCT_MENU_COURSE_SUBTITLE =
     "An online course consisting of images, videos, text and more.";
 export const FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE =
     "Allow users to download file(s).";
-export const NEW_SECTION_HEADER = "New section";
+export const NEW_SECTION_HEADER = "New Section";
 export const EDIT_SECTION_DRIP = "Drip";
-export const DRIP_SECTION_STATUS = "Enable drip";
-export const EDIT_SECTION_HEADER = "Edit section";
+export const DRIP_SECTION_STATUS = "Enable Drip";
+export const EDIT_SECTION_HEADER = "Edit Section";
 export const DELETE_SECTION_HEADER = "Delete section";
 export const PRICING_HEADER = "Pricing";
-export const PRICING_DROPDOWN = "Pick your pricing scheme";
-export const PRICING_FREE = constants.costFree;
+export const PRICING_DROPDOWN = "Pricing model";
+export const PRICING_FREE = Constants.ProductPriceType.FREE;
 export const PRICING_FREE_LABEL = "Free";
 export const PRICING_FREE_SUBTITLE =
     "People can access the content for free. The user needs to be signed in.";
-export const PRICING_EMAIL = constants.costEmail;
+export const PRICING_EMAIL = Constants.ProductPriceType.EMAIL;
 export const PRICING_EMAIL_LABEL = "Free email delivery";
 export const PRICING_EMAIL_SUBTITLE =
     "People will be sent the content over email. The user needs not be signed in.";
-export const PRICING_PAID = constants.costPaid;
+export const PRICING_PAID = Constants.ProductPriceType.PAID;
 export const PRICING_PAID_LABEL = "Paid";
 export const PRICING_PAID_SUBTITLE =
     "People can access the content after a one time payment. The user needs to be signed in.";
@@ -474,8 +475,9 @@ export const LESSON_QUIZ_ADD_QUESTION = "Add question";
 export const LESSON_QUIZ_ADD_OPTION_BTN = "Add option";
 export const LESSON_QUIZ_CONTENT_HEADER = "Question";
 export const LESSON_QUIZ_OPTIONS_HEADER = "Options";
-export const LESSON_QUIZ_QUESION_PLACEHOLDER = "Question";
-export const QUESTION_BUILDER_CORRECT_ANS_TOOLTIP = "Correct answer";
+export const LESSON_QUIZ_QUESTION_PLACEHOLDER = "Enter question here";
+export const LESSON_QUIZ_OPTION_PLACEHOLDER = "Enter option here";
+export const QUESTION_BUILDER_CORRECT_ANS_TOOLTIP = "Mark as correct answer";
 export const QUESTION_BUILDER_EXPAND_TOOLTIP = "Expand";
 export const QUESTION_BUILDER_COLLAPSE_TOOLTIP = "Collapse";
 export const LESSON_QUIZ_GRADED_TEXT = "This quiz requires a passing grade";
@@ -604,3 +606,8 @@ export const TOAST_DESCRIPTION_CHANGES_SAVED = "Changes saved";
 export const DELETED_COMMENT_PLACEHOLDER = "Deleted";
 export const SETTINGS_RESOURCE_PAYMENT = "Set up payment";
 export const SETTINGS_RESOURCE_API = "API documentation";
+export const EDIT_CONTENT_MENU_ITEM = "Edit content";
+export const PRODUCT_UNPUBLISHED_WARNING =
+    "This product is not published. It is not visible to your audience.";
+export const PRODUCT_EMPTY_WARNING =
+    "Your product is empty. Add some content to make it look interesting.";

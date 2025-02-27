@@ -1,24 +1,26 @@
 import React from "react";
 import { Question } from "@courselit/common-models";
-import { Delete, ExpandLess, ExpandMore } from "@courselit/icons";
+import { ExpandLess, ExpandMore } from "@courselit/icons";
 import { useState } from "react";
 import {
     LESSON_QUIZ_ADD_OPTION_BTN,
     LESSON_QUIZ_CONTENT_HEADER,
-    LESSON_QUIZ_OPTIONS_HEADER,
+    LESSON_QUIZ_OPTION_PLACEHOLDER,
+    LESSON_QUIZ_QUESTION_PLACEHOLDER,
     QUESTION_BUILDER_COLLAPSE_TOOLTIP,
     QUESTION_BUILDER_CORRECT_ANS_TOOLTIP,
     QUESTION_BUILDER_DELETE_TOOLTIP,
     QUESTION_BUILDER_EXPAND_TOOLTIP,
-} from "../../../../../../ui-config/strings";
+} from "@/ui-config/strings";
 import {
     Checkbox,
     IconButton,
-    Button,
     Tooltip,
     FormField,
 } from "@courselit/components-library";
 import { FormEvent } from "react";
+import { Button } from "@components/ui/button";
+import { Trash } from "lucide-react";
 
 interface QuestionProps {
     details: Question;
@@ -46,25 +48,19 @@ export function QuestionBuilder({
     if (collapsed) {
         return (
             <div className="flex items-center justify-between">
-                <h3 className="font-medium">
+                <h3 className="font-medium text-sm text-muted-foreground">
                     {`${LESSON_QUIZ_CONTENT_HEADER} #${index + 1}`}
                 </h3>
                 <div className="flex gap-2">
                     {index > 0 && (
                         <Tooltip title={QUESTION_BUILDER_DELETE_TOOLTIP}>
-                            <IconButton
-                                variant="soft"
-                                onClick={() => deleteQuestion(index)}
-                            >
-                                <Delete />
+                            <IconButton onClick={() => deleteQuestion(index)}>
+                                <Trash className="w-4 h-4 text-red-500" />
                             </IconButton>
                         </Tooltip>
                     )}
                     <Tooltip title={QUESTION_BUILDER_EXPAND_TOOLTIP}>
-                        <IconButton
-                            variant="soft"
-                            onClick={() => setCollapsed(false)}
-                        >
+                        <IconButton onClick={() => setCollapsed(false)}>
                             <ExpandMore />
                         </IconButton>
                     </Tooltip>
@@ -76,24 +72,28 @@ export function QuestionBuilder({
     return (
         <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
-                <h3 className="font-medium">
+                <h3 className="font-medium text-sm text-muted-foreground">
                     {`${LESSON_QUIZ_CONTENT_HEADER} #${index + 1}`}
                 </h3>
                 <div className="flex gap-2">
                     {index > 0 && (
                         <Tooltip title={QUESTION_BUILDER_DELETE_TOOLTIP}>
                             <IconButton
-                                variant="soft"
-                                onClick={() => deleteQuestion(index)}
+                                onClick={(e: FormEvent<HTMLInputElement>) => {
+                                    e.preventDefault();
+                                    deleteQuestion(index);
+                                }}
                             >
-                                <Delete />
+                                <Trash className="w-4 h-4 text-red-500" />
                             </IconButton>
                         </Tooltip>
                     )}
                     <Tooltip title={QUESTION_BUILDER_COLLAPSE_TOOLTIP}>
                         <IconButton
-                            variant="soft"
-                            onClick={() => setCollapsed(true)}
+                            onClick={(e: FormEvent<HTMLInputElement>) => {
+                                e.preventDefault();
+                                setCollapsed(true);
+                            }}
                         >
                             <ExpandLess />
                         </IconButton>
@@ -103,10 +103,11 @@ export function QuestionBuilder({
             <FormField
                 value={details.text}
                 onChange={(e) => setQuestionText(e.target.value)}
+                placeholder={LESSON_QUIZ_QUESTION_PLACEHOLDER}
             />
-            <h4 className="font-medium text-slate-500">
+            {/* <h4 className="font-medium text-slate-500">
                 {LESSON_QUIZ_OPTIONS_HEADER}
-            </h4>
+            </h4> */}
             {details.options.map((option: Option, index: number) => (
                 <div className="flex items-center gap-2" key={index}>
                     <Tooltip title={QUESTION_BUILDER_CORRECT_ANS_TOOLTIP}>
@@ -120,13 +121,16 @@ export function QuestionBuilder({
                     <FormField
                         value={option.text}
                         onChange={(e) => setOptionText(index, e.target.value)}
+                        placeholder={LESSON_QUIZ_OPTION_PLACEHOLDER}
                         className="w-full"
                     />
                     <IconButton
-                        onClick={() => removeOption(index)}
-                        variant="soft"
+                        onClick={(e: FormEvent<HTMLInputElement>) => {
+                            e.preventDefault();
+                            removeOption(index);
+                        }}
                     >
-                        <Delete />
+                        <Trash className="w-4 h-4 text-red-500" />
                     </IconButton>
                 </div>
             ))}
@@ -137,7 +141,8 @@ export function QuestionBuilder({
                         e.preventDefault();
                         addNewOption();
                     }}
-                    variant="soft"
+                    size="sm"
+                    variant="outline"
                     tabIndex={0}
                 >
                     {LESSON_QUIZ_ADD_OPTION_BTN}

@@ -22,9 +22,7 @@
         "**/*.ts",
         "**/*.tsx",
         ".next/types/**/*.ts",
-        "additional.d.ts",
-        "components/admin/mails/editor.tsx.notused",
-        "services/mail.ts.notused"
+        "additional.d.ts"
     ],
     "exclude": ["node_modules"]
 }

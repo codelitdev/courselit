@@ -1,7 +1,11 @@
 import Group from "./group";
 import Media from "./media";
+import { ProductPriceType } from "./constants";
 
-export default interface Course {
+export type ProductPriceType =
+    (typeof ProductPriceType)[keyof typeof ProductPriceType];
+
+export interface Course {
     id: string;
     courseId: string;
     title: string;
@@ -10,7 +14,7 @@ export default interface Course {
     slug: string;
     isFeatured: boolean;
     cost: number;
-    costType: string;
+    costType: ProductPriceType;
     creatorId: string;
     updatedAt: Date;
     featuredImage: Media;

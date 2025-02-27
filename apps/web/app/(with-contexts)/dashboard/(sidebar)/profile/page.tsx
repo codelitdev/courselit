@@ -18,6 +18,7 @@ import {
     useToast,
 } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
+import { MIMETYPE_IMAGE } from "@ui-config/constants";
 import {
     BUTTON_SAVE,
     TOAST_TITLE_ERROR,
@@ -297,6 +298,7 @@ export default function Page() {
                         }}
                         type="user"
                         hidePreview={true}
+                        mimeTypesToShow={MIMETYPE_IMAGE}
                     />
                 </Section>
                 <Form onSubmit={saveDetails} className="w-full lg:!w-4/6">
