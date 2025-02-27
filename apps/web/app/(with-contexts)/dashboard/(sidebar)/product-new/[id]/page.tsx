@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useContext } from "react";
+import { useState, useContext } from "react";
 import { redirect, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,7 +34,6 @@ import {
     DropdownMenuTrigger,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-
 
 import {
     EDIT_CONTENT_MENU_ITEM,
@@ -77,67 +76,11 @@ const timeRanges = [
     { value: "lifetime", label: "Lifetime" },
 ];
 
-// This would typically come from an API or database
-const fetchProductData = (productId: string, timeRange: string) => {
-    // Simulated API call
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            const baseData = {
-                "1": {
-                    id: "1",
-                    type: "Course",
-                    name: "Web Development Masterclass",
-                    lastUpdated: "2 days ago",
-                },
-                "2": {
-                    id: "2",
-                    type: "Download",
-                    name: "Ultimate UI/UX Design Guide",
-                    lastUpdated: "5 days ago",
-                },
-            }[productId];
-
-            const randomGrowth = () => (Math.random() * 0.4 - 0.2).toFixed(2); // -20% to +20%
-
-            const metrics = {
-                totalSales: Math.floor(Math.random() * 100000) + 10000,
-                totalCustomers: Math.floor(Math.random() * 5000) + 1000,
-                completionRate: Math.floor(Math.random() * 30) + 70,
-                totalDownloads: Math.floor(Math.random() * 3000) + 1000,
-                activeUsers: Math.floor(Math.random() * 2000) + 500,
-            };
-
-            const salesData = Array.from(
-                { length: timeRange === "1d" ? 24 : 30 },
-                (_, i) => ({
-                    name: timeRange === "1d" ? `${i}:00` : `Day ${i + 1}`,
-                    total: Math.floor(Math.random() * 1000) + 100,
-                }),
-            );
-
-            resolve({
-                ...baseData,
-                ...metrics,
-                salesData,
-                growthRates: {
-                    totalSales: randomGrowth(),
-                    totalCustomers: randomGrowth(),
-                    completionRate: randomGrowth(),
-                    totalDownloads: randomGrowth(),
-                    activeUsers: randomGrowth(),
-                },
-            });
-        }, 500); // Simulate network delay
-    });
-};
-
 export default function DashboardPage() {
     const params = useParams();
     const productId = params.id as string;
     const [timeRange, setTimeRange] = useState("7d");
-    const [productData, setProductData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    // const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const address = useContext(AddressContext);
     const { product, loaded: productLoaded } = useProduct(productId, address);
     const breadcrumbs = [
@@ -148,20 +91,12 @@ export default function DashboardPage() {
         },
     ];
     const siteinfo = useContext(SiteInfoContext);
-    const { data: salesData } = useActivities(
+    const { data: salesData, loading: salesLoading } = useActivities(
         ActivityType.PURCHASED,
         timeRange,
         productId,
         true,
     );
-
-    useEffect(() => {
-        setLoading(true);
-        fetchProductData(productId, timeRange).then((data) => {
-            setProductData(data);
-            setLoading(false);
-        });
-    }, [productId, timeRange]);
 
     if (productLoaded && !product) {
         redirect("/dashboard/products");
@@ -409,7 +344,7 @@ export default function DashboardPage() {
                         <CardTitle>Sales</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {loading ? (
+                        {salesLoading ? (
                             <Skeleton className="h-[240px] w-full" />
                         ) : (
                             <div className="">

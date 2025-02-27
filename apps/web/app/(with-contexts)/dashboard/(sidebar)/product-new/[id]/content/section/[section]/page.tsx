@@ -34,7 +34,7 @@ import { truncate } from "@ui-lib/utils";
 import useProduct from "../../../product-hook";
 import { AddressContext } from "@components/contexts";
 import DashboardContent from "@components/admin/dashboard-content";
-import { Constants, DripType } from "@courselit/common-models";
+import { Constants, DripType, UIConstants } from "@courselit/common-models";
 import { MailEditorAndPreview } from "@components/admin/mails/mail-editor-and-preview";
 import { Form, useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
@@ -272,224 +272,233 @@ export default function SectionPage() {
 
                     <Separator />
 
-                    <div className="space-y-6">
-                        <div className="flex items-center gap-2">
-                            <h2 className="text-lg font-semibold">
-                                Content Release
-                            </h2>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger>
-                                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>
-                                            Control when this section becomes
-                                            available to students
-                                        </p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                                <Label htmlFor="enable-drip">
-                                    Scheduled Release
-                                </Label>
-                                <p className="text-sm text-muted-foreground">
-                                    Release content gradually to your students
-                                </p>
-                            </div>
-                            <Switch
-                                id="enable-drip"
-                                checked={enableDrip}
-                                onCheckedChange={setEnableDrip}
-                            />
-                        </div>
-
-                        {enableDrip && (
-                            <div className="rounded-lg border p-4 space-y-6 animate-in fade-in-50">
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label>Release Type</Label>
-                                        <Select
-                                            value={dripType}
-                                            onValueChange={(value: DripType) =>
-                                                setDripType(value)
-                                            }
-                                        >
-                                            <SelectTrigger
-                                                data-error="dripType"
-                                                className={
-                                                    errors.dripType
-                                                        ? "border-red-500"
-                                                        : ""
-                                                }
-                                            >
-                                                <SelectValue placeholder="Select release type" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem
-                                                    value={
-                                                        Constants.dripType[1]
-                                                    }
-                                                >
-                                                    Release on specific date
-                                                </SelectItem>
-                                                <SelectItem
-                                                    value={
-                                                        Constants.dripType[0]
-                                                    }
-                                                >
-                                                    Release days after previous
-                                                    section
-                                                </SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        {errors.dripType && (
-                                            <p className="text-sm text-red-500">
-                                                {errors.dripType}
+                    {product?.type?.toLowerCase() ===
+                        UIConstants.COURSE_TYPE_COURSE && (
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-lg font-semibold">
+                                    Content Release
+                                </h2>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>
+                                                Control when this section
+                                                becomes available to students
                                             </p>
-                                        )}
-                                    </div>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
 
-                                    {dripType === Constants.dripType[1] && (
-                                        <div className="space-y-2">
-                                            <Label htmlFor="releaseDate">
-                                                Release Date & Time
-                                            </Label>
-                                            <Input
-                                                id="releaseDate"
-                                                data-error="releaseDate"
-                                                type="datetime-local"
-                                                className={
-                                                    errors.releaseDate
-                                                        ? "border-red-500"
-                                                        : ""
-                                                }
-                                                value={new Date(
-                                                    (date ||
-                                                        new Date().getTime()) -
-                                                        new Date().getTimezoneOffset() *
-                                                            60000,
-                                                )
-                                                    .toISOString()
-                                                    .slice(0, 16)}
-                                                min={
-                                                    !date
-                                                        ? new Date()
-                                                              .toISOString()
-                                                              .slice(0, 16)
-                                                        : undefined
-                                                }
-                                                onChange={(
-                                                    e: ChangeEvent<HTMLInputElement>,
-                                                ) => {
-                                                    const selectedDate =
-                                                        new Date(
-                                                            e.target.value,
-                                                        );
-                                                    setDate(
-                                                        selectedDate.getTime(),
-                                                    );
-                                                }}
-                                            />
-                                            {errors.releaseDate && (
-                                                <p className="text-sm text-red-500">
-                                                    {errors.releaseDate}
-                                                </p>
-                                            )}
-                                        </div>
-                                    )}
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label htmlFor="enable-drip">
+                                        Scheduled Release
+                                    </Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Release content gradually to your
+                                        students
+                                    </p>
+                                </div>
+                                <Switch
+                                    id="enable-drip"
+                                    checked={enableDrip}
+                                    onCheckedChange={setEnableDrip}
+                                />
+                            </div>
 
-                                    {dripType === Constants.dripType[0] && (
+                            {enableDrip && (
+                                <div className="rounded-lg border p-4 space-y-6 animate-in fade-in-50">
+                                    <div className="space-y-4">
                                         <div className="space-y-2">
-                                            <Label htmlFor="releaseDays">
-                                                Days after previous section
-                                            </Label>
-                                            <div className="flex items-center space-x-2 max-w-[200px]">
-                                                <Input
-                                                    id="releaseDays"
-                                                    data-error="releaseDays"
-                                                    type="number"
-                                                    min="1"
-                                                    placeholder="0"
+                                            <Label>Release Type</Label>
+                                            <Select
+                                                value={dripType}
+                                                onValueChange={(
+                                                    value: DripType,
+                                                ) => setDripType(value)}
+                                            >
+                                                <SelectTrigger
+                                                    data-error="dripType"
                                                     className={
-                                                        errors.releaseDays
+                                                        errors.dripType
                                                             ? "border-red-500"
                                                             : ""
                                                     }
-                                                    value={delay}
-                                                    onChange={(e) =>
-                                                        setDelay(
-                                                            +e.target.value,
-                                                        )
-                                                    }
-                                                />
-                                                <span className="text-sm text-muted-foreground whitespace-nowrap">
-                                                    days
-                                                </span>
-                                            </div>
-                                            {errors.releaseDays && (
+                                                >
+                                                    <SelectValue placeholder="Select release type" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem
+                                                        value={
+                                                            Constants
+                                                                .dripType[1]
+                                                        }
+                                                    >
+                                                        Release on specific date
+                                                    </SelectItem>
+                                                    <SelectItem
+                                                        value={
+                                                            Constants
+                                                                .dripType[0]
+                                                        }
+                                                    >
+                                                        Release days after
+                                                        previous section
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            {errors.dripType && (
                                                 <p className="text-sm text-red-500">
-                                                    {errors.releaseDays}
+                                                    {errors.dripType}
                                                 </p>
                                             )}
                                         </div>
-                                    )}
-                                </div>
 
-                                <Separator />
-
-                                <div className="space-y-6">
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-0.5">
-                                            <Label htmlFor="notify-users">
-                                                Email Notification
-                                            </Label>
-                                            <p className="text-sm text-muted-foreground">
-                                                Notify students when content
-                                                becomes available
-                                            </p>
-                                        </div>
-                                        <Switch
-                                            id="notify-users"
-                                            checked={notifyUsers}
-                                            onCheckedChange={setNotifyUsers}
-                                        />
-                                    </div>
-
-                                    {
-                                        notifyUsers && (
-                                            <div>
-                                                <div className="space-y-2">
-                                                    <Label>
-                                                        {
-                                                            LABEL_DRIP_EMAIL_SUBJECT
-                                                        }
-                                                    </Label>
-                                                    <Input
-                                                        value={emailSubject}
-                                                        onChange={(e) =>
-                                                            setEmailSubject(
+                                        {dripType === Constants.dripType[1] && (
+                                            <div className="space-y-2">
+                                                <Label htmlFor="releaseDate">
+                                                    Release Date & Time
+                                                </Label>
+                                                <Input
+                                                    id="releaseDate"
+                                                    data-error="releaseDate"
+                                                    type="datetime-local"
+                                                    className={
+                                                        errors.releaseDate
+                                                            ? "border-red-500"
+                                                            : ""
+                                                    }
+                                                    value={new Date(
+                                                        (date ||
+                                                            new Date().getTime()) -
+                                                            new Date().getTimezoneOffset() *
+                                                                60000,
+                                                    )
+                                                        .toISOString()
+                                                        .slice(0, 16)}
+                                                    min={
+                                                        !date
+                                                            ? new Date()
+                                                                  .toISOString()
+                                                                  .slice(0, 16)
+                                                            : undefined
+                                                    }
+                                                    onChange={(
+                                                        e: ChangeEvent<HTMLInputElement>,
+                                                    ) => {
+                                                        const selectedDate =
+                                                            new Date(
                                                                 e.target.value,
+                                                            );
+                                                        setDate(
+                                                            selectedDate.getTime(),
+                                                        );
+                                                    }}
+                                                />
+                                                {errors.releaseDate && (
+                                                    <p className="text-sm text-red-500">
+                                                        {errors.releaseDate}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {dripType === Constants.dripType[0] && (
+                                            <div className="space-y-2">
+                                                <Label htmlFor="releaseDays">
+                                                    Days after previous section
+                                                </Label>
+                                                <div className="flex items-center space-x-2 max-w-[200px]">
+                                                    <Input
+                                                        id="releaseDays"
+                                                        data-error="releaseDays"
+                                                        type="number"
+                                                        min="1"
+                                                        placeholder="0"
+                                                        className={
+                                                            errors.releaseDays
+                                                                ? "border-red-500"
+                                                                : ""
+                                                        }
+                                                        value={delay}
+                                                        onChange={(e) =>
+                                                            setDelay(
+                                                                +e.target.value,
                                                             )
                                                         }
                                                     />
+                                                    <span className="text-sm text-muted-foreground whitespace-nowrap">
+                                                        days
+                                                    </span>
                                                 </div>
-                                                <MailEditorAndPreview
-                                                    content={emailContent}
-                                                    onChange={setEmailContent}
-                                                />
+                                                {errors.releaseDays && (
+                                                    <p className="text-sm text-red-500">
+                                                        {errors.releaseDays}
+                                                    </p>
+                                                )}
                                             </div>
-                                        )
-                                        // <EmailEditor content={emailContent} setEmailContent={setEmailContent} subject={emailSubject} setEmailSubject={setEmailSubject} />
-                                    }
+                                        )}
+                                    </div>
+
+                                    <Separator />
+
+                                    <div className="space-y-6">
+                                        <div className="flex items-center justify-between">
+                                            <div className="space-y-0.5">
+                                                <Label htmlFor="notify-users">
+                                                    Email Notification
+                                                </Label>
+                                                <p className="text-sm text-muted-foreground">
+                                                    Notify students when content
+                                                    becomes available
+                                                </p>
+                                            </div>
+                                            <Switch
+                                                id="notify-users"
+                                                checked={notifyUsers}
+                                                onCheckedChange={setNotifyUsers}
+                                            />
+                                        </div>
+
+                                        {
+                                            notifyUsers && (
+                                                <div>
+                                                    <div className="space-y-2">
+                                                        <Label>
+                                                            {
+                                                                LABEL_DRIP_EMAIL_SUBJECT
+                                                            }
+                                                        </Label>
+                                                        <Input
+                                                            value={emailSubject}
+                                                            onChange={(e) =>
+                                                                setEmailSubject(
+                                                                    e.target
+                                                                        .value,
+                                                                )
+                                                            }
+                                                        />
+                                                    </div>
+                                                    <MailEditorAndPreview
+                                                        content={emailContent}
+                                                        onChange={
+                                                            setEmailContent
+                                                        }
+                                                    />
+                                                </div>
+                                            )
+                                            // <EmailEditor content={emailContent} setEmailContent={setEmailContent} subject={emailSubject} setEmailSubject={setEmailSubject} />
+                                        }
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                    </div>
+                            )}
+                        </div>
+                    )}
 
                     <div className="flex items-center justify-end gap-4">
                         <Button variant="outline" asChild>

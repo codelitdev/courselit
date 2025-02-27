@@ -74,11 +74,17 @@ export const getActivities = async ({
                 acc + (type === "purchased" ? activity.metadata?.cost || 0 : 1),
             0,
         );
-        result.growth = previousCount
-            ? Number(
-                  (((count - previousCount) / previousCount) * 100).toFixed(2),
-              )
-            : 0;
+        result.growth =
+            previousCount === 0 && count > 0
+                ? 100
+                : previousCount
+                  ? Number(
+                        (
+                            ((count - previousCount) / previousCount) *
+                            100
+                        ).toFixed(2),
+                    )
+                  : 0;
     }
 
     if (points) {
