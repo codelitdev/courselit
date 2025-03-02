@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import constants from "../config/constants";
 import { generateUniqueId } from "@courselit/utils";
-import { Constants, type Group, type Media } from "@courselit/common-models";
+import { Constants, Course, type Group } from "@courselit/common-models";
 import MediaSchema from "./Media";
 import EmailSchema from "./Email";
 const {
@@ -15,36 +15,20 @@ const {
     costEmail,
 } = constants;
 
-export interface Course {
+export interface InternalCourse extends Omit<Course, "paymentPlans"> {
     domain: mongoose.Types.ObjectId;
     id: mongoose.Types.ObjectId;
-    courseId: string;
-    title: string;
-    slug: string;
-    cost: number;
-    costType: typeof costFree | typeof costPaid | typeof costEmail;
     privacy: typeof unlisted | typeof open;
-    type: typeof course | typeof download | typeof blog;
-    creatorId: string;
-    creatorName: string;
     published: boolean;
-    isBlog: boolean;
     isFeatured: boolean;
     tags: string[];
     lessons: any[];
-    description?: string;
-    featuredImage?: Media;
-    groups: Group[];
     sales: number;
     customers: string[];
-    pageId?: string;
     paymentPlans: string[];
-    defaultPaymentPlan: string;
-    createdAt: Date;
-    updatedAt: Date;
 }
 
-const CourseSchema = new mongoose.Schema<Course>(
+const CourseSchema = new mongoose.Schema<InternalCourse>(
     {
         domain: { type: mongoose.Schema.Types.ObjectId, required: true },
         courseId: { type: String, required: true, default: generateUniqueId },
@@ -64,7 +48,7 @@ const CourseSchema = new mongoose.Schema<Course>(
         type: {
             type: String,
             required: true,
-            enum: [course, download, blog],
+            enum: Object.values(Constants.CourseType),
         },
         creatorId: { type: String, required: true },
         creatorName: { type: String },
@@ -102,6 +86,7 @@ const CourseSchema = new mongoose.Schema<Course>(
         pageId: { type: String },
         paymentPlans: [String],
         defaultPaymentPlan: { type: String },
+        leadMagnet: { type: Boolean, required: true, default: false },
     },
     {
         timestamps: true,

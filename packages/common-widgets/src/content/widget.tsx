@@ -69,7 +69,6 @@ export default function Widget({
                 course: getCourse(id: "${courseId}", asGuest: true) {
                     title,
                     description,
-                    id,
                     type,
                     lessons {
                         id,

@@ -1,7 +1,7 @@
 /**
  * Business logic for managing courses.
  */
-import CourseModel, { Course } from "../../models/Course";
+import CourseModel, { InternalCourse } from "../../models/Course";
 import UserModel from "../../models/User";
 import { responses } from "../../config/strings";
 import {
@@ -28,6 +28,7 @@ import PageModel from "../../models/Page";
 import { getPrevNextCursor } from "../lessons/helpers";
 import { checkPermission } from "@courselit/utils";
 import { error } from "../../services/logger";
+import { getPlans } from "../paymentplans/logic";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -35,7 +36,7 @@ export const getCourseOrThrow = async (
     id: mongoose.Types.ObjectId | undefined,
     ctx: GQLContext,
     courseId?: string,
-): Promise<Course> => {
+): Promise<InternalCourse> => {
     checkIfAuthenticated(ctx);
 
     const query = courseId
@@ -72,15 +73,32 @@ export const getCourseOrThrow = async (
     return course;
 };
 
+async function formatCourse(course: InternalCourse, ctx: GQLContext) {
+    const paymentPlans = await getPlans({
+        planIds: course.paymentPlans,
+        ctx,
+    });
+
+    const result = {
+        ...course,
+        groups: course.groups?.map((group: any) => ({
+            ...group,
+            id: group._id.toString(),
+        })),
+        paymentPlans,
+    };
+    return result;
+}
+
 export const getCourse = async (
     id: string,
     ctx: GQLContext,
     asGuest: boolean = false,
 ) => {
-    const course: Course = await CourseModel.findOne({
+    const course: InternalCourse | null = await CourseModel.findOne({
         courseId: id,
         domain: ctx.subdomain._id,
-    });
+    }).lean();
 
     if (!course) {
         throw new Error(responses.item_not_found);
@@ -93,7 +111,7 @@ export const getCourse = async (
             ]) || checkOwnershipWithoutModel(course, ctx);
 
         if (isOwner) {
-            return course;
+            return formatCourse(course, ctx);
         }
     }
 
@@ -112,7 +130,7 @@ export const getCourse = async (
             (course as any).firstLesson = nextLesson;
         }
         // course.groups = accessibleGroups;
-        return course;
+        return formatCourse(course, ctx);
     } else {
         throw new Error(responses.item_not_found);
     }
@@ -142,10 +160,10 @@ export const createCourse = async (
 };
 
 export const updateCourse = async (
-    courseData: Partial<Course>,
+    courseData: Partial<InternalCourse & { id: string }>,
     ctx: GQLContext,
 ) => {
-    let course = await getCourseOrThrow(courseData.id, ctx);
+    let course = await getCourseOrThrow(undefined, ctx, courseData.id);
 
     for (const key of Object.keys(courseData)) {
         if (
@@ -164,14 +182,11 @@ export const updateCourse = async (
         { entityId: course.courseId, domain: ctx.subdomain._id },
         { $set: { name: course.title } },
     );
-    return course;
+    return formatCourse(course, ctx);
 };
 
-export const deleteCourse = async (
-    id: mongoose.Types.ObjectId,
-    ctx: GQLContext,
-) => {
-    const course = await getCourseOrThrow(id, ctx);
+export const deleteCourse = async (id: string, ctx: GQLContext) => {
+    const course = await getCourseOrThrow(undefined, ctx, id);
     await deleteAllLessons(course.courseId, ctx);
     if (course.featuredImage) {
         try {
@@ -217,7 +232,7 @@ export const getCoursesAsAdmin = async ({
         throw new Error(responses.action_not_allowed);
     }
 
-    const query: Partial<Omit<Course, "type">> & {
+    const query: Partial<Omit<InternalCourse, "type">> & {
         $text?: Record<string, unknown>;
         type?: string | { $in: string[] };
     } = {
@@ -374,15 +389,15 @@ export const addGroup = async ({
     collapsed,
     ctx,
 }: {
-    id: mongoose.Types.ObjectId;
+    id: string;
     name: string;
     collapsed: boolean;
     ctx: GQLContext;
 }) => {
-    const course = await getCourseOrThrow(id, ctx);
+    const course = await getCourseOrThrow(undefined, ctx, id);
     const existingName = (group: Group) => group.name === name;
 
-    if (course.groups.some(existingName)) {
+    if (course.groups?.some(existingName)) {
         throw new Error(responses.existing_group);
     }
 
@@ -392,7 +407,7 @@ export const addGroup = async ({
         0,
     );
 
-    await course.groups.push({
+    await (course.groups as any).push({
         rank: maximumRank + 1000,
         name,
     } as Group);
@@ -408,7 +423,7 @@ export const removeGroup = async (
     ctx: GQLContext,
 ) => {
     const course = await getCourseOrThrow(undefined, ctx, courseId);
-    const group = course.groups.find((group) => group.id === id);
+    const group = course.groups?.find((group) => group.id === id);
 
     if (!group) {
         return course;
@@ -454,14 +469,14 @@ export const updateGroup = async ({
     drip,
     ctx,
 }) => {
-    const course = await getCourseOrThrow(courseId, ctx);
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
 
     const $set = {};
     if (name) {
         const existingName = (group) =>
             group.name === name && group._id.toString() !== id;
 
-        if (course.groups.some(existingName)) {
+        if (course.groups?.some(existingName)) {
             throw new Error(responses.existing_group);
         }
 
@@ -474,11 +489,11 @@ export const updateGroup = async ({
 
     if (
         lessonsOrder &&
-        lessonsOrder.every((lessonId) => course.lessons.includes(lessonId)) &&
+        lessonsOrder.every((lessonId) => course.lessons?.includes(lessonId)) &&
         lessonsOrder.every((lessonId) =>
             course.groups
-                .find((group) => group.id === id)
-                .lessonsOrder.includes(lessonId),
+                ?.find((group) => group.id === id)
+                ?.lessonsOrder.includes(lessonId),
         )
     ) {
         $set["groups.$.lessonsOrder"] = lessonsOrder;
@@ -528,7 +543,7 @@ export const getStudents = async ({
     ctx,
     text,
 }: {
-    course: Course;
+    course: InternalCourse;
     ctx: GQLContext;
     text?: string;
 }) => {

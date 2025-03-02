@@ -46,7 +46,7 @@ import {
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
 import { AddressContext, SiteInfoContext } from "@components/contexts";
-import useProduct from "./product-hook";
+import useProduct from "../../../../../../hooks/use-product";
 import { formatDistanceToNow } from "date-fns";
 import { capitalize } from "@courselit/utils";
 import { truncate } from "@ui-lib/utils";

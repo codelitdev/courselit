@@ -71,7 +71,7 @@ export default function BlogItem({
                         description={DELETE_PRODUCT_POPUP_TEXT}
                         onClick={() =>
                             deleteProduct({
-                                id: product.id,
+                                id: product.courseId,
                                 backend: address.backend,
                                 dispatch,
                                 onDeleteComplete: () => {
