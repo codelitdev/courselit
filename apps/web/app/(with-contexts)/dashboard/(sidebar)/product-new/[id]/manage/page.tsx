@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useContext, useEffect, useState, useCallback } from "react";
+import { FormEvent, useContext, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,61 +49,81 @@ import { truncate } from "@ui-lib/utils";
 import {
     getSymbolFromCurrency,
     MediaSelector,
-    Select,
     TextEditor,
     TextEditorEmptyDoc,
     useToast,
 } from "@courselit/components-library";
-import { FetchBuilder, debounce } from "@courselit/utils";
-import { Media, ProductPriceType, Profile } from "@courselit/common-models";
+import { FetchBuilder } from "@courselit/utils";
+import {
+    Media,
+    PaymentPlanType,
+    ProductPriceType,
+    Profile,
+    Constants,
+} from "@courselit/common-models";
 import { COURSE_TYPE_DOWNLOAD, MIMETYPE_IMAGE } from "@ui-config/constants";
-import useProduct from "../product-hook";
+import useProduct from "@/hooks/use-product";
+import { usePaymentPlanOperations } from "@/hooks/use-payment-plan-operations";
+import PaymentPlanList from "@components/admin/payments/payment-plan-list";
+import {
+    TooltipProvider,
+    TooltipTrigger,
+    TooltipContent,
+    Tooltip,
+} from "@components/ui/tooltip";
+const { PaymentPlanType: paymentPlanType, MembershipEntityType } = Constants;
 
 const MUTATIONS = {
     UPDATE_BASIC_DETAILS: `
-        mutation UpdateBasicDetails($id: ID!, $title: String!, $description: String!) {
-            updateCourse(courseData: { id: $id, title: $title, description: $description }) {
-                id
+        mutation UpdateBasicDetails($courseId: String!, $title: String!, $description: String!) {
+            updateCourse(courseData: { id: $courseId, title: $title, description: $description }) {
+               courseId 
             }
         }
     `,
     UPDATE_PUBLISHED: `
-        mutation UpdatePublished($id: ID!, $published: Boolean!) {
-            updateCourse(courseData: { id: $id, published: $published }) {
-                id
+        mutation UpdatePublished($courseId: String!, $published: Boolean!) {
+            updateCourse(courseData: { id: $courseId, published: $published }) {
+                courseId
             }
         }
     `,
     UPDATE_PRIVACY: `
-        mutation UpdatePrivacy($id: ID!, $privacy: CoursePrivacyType!) {
-            updateCourse(courseData: { id: $id, privacy: $privacy }) {
-                id
+        mutation UpdatePrivacy($courseId: String!, $privacy: CoursePrivacyType!) {
+            updateCourse(courseData: { id: $courseId, privacy: $privacy }) {
+                courseId
             }
         }
     `,
     UPDATE_FEATURED_IMAGE: `
-        mutation UpdateFeaturedImage($courseId: ID!, $media: MediaInput) {
+        mutation UpdateFeaturedImage($courseId: String!, $media: MediaInput) {
             updateCourse(courseData: {
                 id: $courseId
                 featuredImage: $media
             }) {
-                id
+                courseId
             }
         }
     `,
     UPDATE_COST_TYPE: `
-        mutation UpdateCostType($id: ID!, $costType: CostType!) {
-            updateCourse(courseData: { id: $id, costType: $costType }) {
-                id
+        mutation UpdateCostType($courseId: String!, $costType: CostType!) {
+            updateCourse(courseData: { id: $courseId, costType: $costType }) {
+                courseId
             }
         }
     `,
     UPDATE_COST: `
-        mutation UpdateCost($id: ID!, $cost: Float!) {
-            updateCourse(courseData: { id: $id, cost: $cost }) {
-                id
+        mutation UpdateCost($courseId: String!, $cost: Float!) {
+            updateCourse(courseData: { id: $courseId, cost: $cost }) {
+                courseId
             }
         }
+    `,
+    UPDATE_LEAD_MAGNET: `
+        mutation UpdateLeadMagnet($courseId: String!, $leadMagnet: Boolean!) {
+            updateCourse(courseData: { id: $courseId, leadMagnet: $leadMagnet }) {
+                courseId
+            }
     `,
 };
 
@@ -160,6 +180,7 @@ export default function SettingsPage() {
         featuredImage: any;
         costType: ProductPriceType;
         cost: number;
+        leadMagnet: boolean;
     }>({
         name: "",
         description: TextEditorEmptyDoc,
@@ -168,6 +189,7 @@ export default function SettingsPage() {
         featuredImage: {},
         costType: PRICING_FREE,
         cost: 0,
+        leadMagnet: false,
     });
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
@@ -179,6 +201,18 @@ export default function SettingsPage() {
     ];
     const [refresh, setRefresh] = useState(0);
     const siteinfo = useContext(SiteInfoContext);
+    const {
+        paymentPlans,
+        setPaymentPlans,
+        defaultPaymentPlan,
+        setDefaultPaymentPlan,
+        onPlanSubmitted,
+        onPlanArchived,
+        onDefaultPlanChanged,
+    } = usePaymentPlanOperations({
+        id: productId,
+        entityType: MembershipEntityType.COURSE,
+    });
 
     useEffect(() => {
         if (product) {
@@ -196,8 +230,10 @@ export default function SettingsPage() {
                     product?.costType ||
                     (PRICING_FREE.toUpperCase() as ProductPriceType),
                 cost: product?.cost || 0,
+                leadMagnet: product?.leadMagnet || false,
             });
             setRefresh(refresh + 1);
+            setPaymentPlans(product?.paymentPlans || []);
         }
     }, [product]);
 
@@ -211,7 +247,7 @@ export default function SettingsPage() {
     };
 
     const handleUpdateField = async (field: string, value: any) => {
-        if (!product?.id) return;
+        if (!product?.courseId) return;
 
         const fieldConfig = {
             isPublished: {
@@ -222,6 +258,10 @@ export default function SettingsPage() {
                 mutation: MUTATIONS.UPDATE_PRIVACY,
                 variables: { privacy: value ? "UNLISTED" : "PUBLIC" },
             },
+            leadMagnet: {
+                mutation: MUTATIONS.UPDATE_LEAD_MAGNET,
+                variables: { leadMagnet: value },
+            },
         }[field];
 
         if (!fieldConfig) return;
@@ -230,7 +270,7 @@ export default function SettingsPage() {
             () =>
                 updateCourse(
                     fieldConfig.mutation,
-                    { id: product.id, ...fieldConfig.variables },
+                    { courseId: product.courseId, ...fieldConfig.variables },
                     address.backend,
                 ),
             setLoading,
@@ -253,14 +293,14 @@ export default function SettingsPage() {
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!validateForm() || !product?.id) return;
+        if (!validateForm() || !product?.courseId) return;
 
         await withErrorHandling(
             () =>
                 updateCourse(
                     MUTATIONS.UPDATE_BASIC_DETAILS,
                     {
-                        id: product.id,
+                        id: product.courseId,
                         title: formData.name,
                         description: JSON.stringify(formData.description),
                     },
@@ -272,14 +312,14 @@ export default function SettingsPage() {
     };
 
     const saveFeaturedImage = async (media?: Media) => {
-        if (!product?.id) return;
+        if (!product?.courseId) return;
 
         await withErrorHandling(
             () =>
                 updateCourse(
                     MUTATIONS.UPDATE_FEATURED_IMAGE,
                     {
-                        courseId: product.id,
+                        courseId: product.courseId,
                         media: media || null,
                     },
                     address.backend,
@@ -289,57 +329,57 @@ export default function SettingsPage() {
         );
     };
 
-    const handleCostTypeChange = async (val: string) => {
-        setFormData((prev) => ({
-            ...prev,
-            costType: val as ProductPriceType,
-        }));
+    // const handleCostTypeChange = async (val: string) => {
+    //     setFormData((prev) => ({
+    //         ...prev,
+    //         costType: val as ProductPriceType,
+    //     }));
 
-        if (!product?.id) return;
+    //     if (!product?.courseId) return;
 
-        await withErrorHandling(
-            () =>
-                updateCourse(
-                    MUTATIONS.UPDATE_COST_TYPE,
-                    {
-                        id: product.id,
-                        costType: val,
-                    },
-                    address.backend,
-                ),
-            setLoading,
-            toast,
-        );
-    };
+    //     await withErrorHandling(
+    //         () =>
+    //             updateCourse(
+    //                 MUTATIONS.UPDATE_COST_TYPE,
+    //                 {
+    //                     id: product.courseId,
+    //                     costType: val,
+    //                 },
+    //                 address.backend,
+    //             ),
+    //         setLoading,
+    //         toast,
+    //     );
+    // };
 
-    const debouncedUpdateCost = useCallback(
-        debounce((value: number, productId: string) => {
-            withErrorHandling(
-                () =>
-                    updateCourse(
-                        MUTATIONS.UPDATE_COST,
-                        {
-                            id: productId,
-                            cost: value,
-                        },
-                        address.backend,
-                    ),
-                setLoading,
-                toast,
-            );
-        }, 1000), // 1 second delay
-        [address.backend, toast], // Dependencies
-    );
+    // const debouncedUpdateCost = useCallback(
+    //     debounce((value: number, productId: string) => {
+    //         withErrorHandling(
+    //             () =>
+    //                 updateCourse(
+    //                     MUTATIONS.UPDATE_COST,
+    //                     {
+    //                         id: productId,
+    //                         cost: value,
+    //                     },
+    //                     address.backend,
+    //                 ),
+    //             setLoading,
+    //             toast,
+    //         );
+    //     }, 1000), // 1 second delay
+    //     [address.backend, toast], // Dependencies
+    // );
 
-    const handleCostChange = (value: number) => {
-        setFormData((prev) => ({
-            ...prev,
-            cost: value,
-        }));
+    // const handleCostChange = (value: number) => {
+    //     setFormData((prev) => ({
+    //         ...prev,
+    //         cost: value,
+    //     }));
 
-        if (!product?.id) return;
-        debouncedUpdateCost(value, product.id);
-    };
+    //     if (!product?.courseId) return;
+    //     debouncedUpdateCost(value, product.courseId);
+    // };
 
     const options: {
         label: string;
@@ -374,7 +414,7 @@ export default function SettingsPage() {
 
         const query = `
             mutation {
-                result: deleteCourse(id: "${product?.id}")
+                result: deleteCourse(id: "${product?.courseId}")
             }
         `;
 
@@ -414,9 +454,9 @@ export default function SettingsPage() {
             <div className="space-y-8">
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-4xl font-semibold">Settings</h1>
+                        <h1 className="text-4xl font-semibold">Manage</h1>
                         <p className="text-muted-foreground mt-2">
-                            Manage your course settings
+                            Manage your product settings
                         </p>
                     </div>
                 </div>
@@ -526,25 +566,117 @@ export default function SettingsPage() {
 
                 <Separator />
 
-                <div className="space-y-6">
+                <div className="space-y-4 flex flex-col md:flex-row md:items-start md:justify-between w-full">
+                    <div className="space-y-2">
+                        <Label className="text-lg font-semibold">Pricing</Label>
+                        <p className="text-sm text-muted-foreground">
+                            Manage your product&apos;s pricing plans
+                        </p>
+                    </div>
+                    <PaymentPlanList
+                        paymentPlans={paymentPlans.map((plan) => ({
+                            ...plan,
+                            type: plan.type.toLowerCase() as PaymentPlanType,
+                        }))}
+                        onPlanSubmit={async (values) => {
+                            try {
+                                await onPlanSubmitted(values);
+                            } catch (err: any) {
+                                toast({
+                                    title: TOAST_TITLE_ERROR,
+                                    description: err.message,
+                                });
+                            }
+                        }}
+                        onPlanArchived={async (id) => {
+                            try {
+                                await onPlanArchived(id);
+                            } catch (err: any) {
+                                toast({
+                                    title: TOAST_TITLE_ERROR,
+                                    description: err.message,
+                                });
+                            }
+                        }}
+                        allowedPlanTypes={[
+                            paymentPlanType.SUBSCRIPTION,
+                            paymentPlanType.FREE,
+                            paymentPlanType.ONE_TIME,
+                            paymentPlanType.EMI,
+                        ]}
+                        currencySymbol={getSymbolFromCurrency(
+                            siteinfo.currencyISOCode || "USD",
+                        )}
+                        currencyISOCode={
+                            siteinfo.currencyISOCode?.toUpperCase() || "USD"
+                        }
+                        onDefaultPlanChanged={async (id) => {
+                            try {
+                                await onDefaultPlanChanged(id);
+                            } catch (err: any) {
+                                toast({
+                                    title: TOAST_TITLE_ERROR,
+                                    description: err.message,
+                                });
+                            }
+                        }}
+                        defaultPaymentPlanId={defaultPaymentPlan}
+                        paymentMethod={siteinfo.paymentMethod}
+                    />
+                </div>
+
+                {product?.type?.toLowerCase() === COURSE_TYPE_DOWNLOAD && (
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                            {/* <Label className="text-base font-semibold">
+                            Lead Magnet
+                        </Label> */}
+                            <Label
+                                className={`${paymentPlans.length !== 1 || !paymentPlans.some((plan) => plan.type === paymentPlanType.FREE) ? "text-muted-foreground" : ""} text-base font-semibold`}
+                            >
+                                Lead Magnet
+                            </Label>
+                            <p className="text-sm text-muted-foreground">
+                                Send the product to user for free in exchange of
+                                their email address
+                            </p>
+                        </div>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div>
+                                        <Switch
+                                            checked={formData.leadMagnet}
+                                            disabled={
+                                                paymentPlans.length !== 1 ||
+                                                !paymentPlans.some(
+                                                    (plan) =>
+                                                        plan.type ===
+                                                        paymentPlanType.FREE,
+                                                )
+                                            }
+                                            onCheckedChange={() =>
+                                                handleSwitchChange("leadMagnet")
+                                            }
+                                        />
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>
+                                        Product must have exactly one free
+                                        payment plan to enable lead magnet
+                                    </p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
+                )}
+
+                {/* <div className="space-y-6">
                     <div className="space-y-4">
                         <Label className="text-lg font-semibold">
                             Pricing Model
                         </Label>
-                        {/* <Select
-                name="pricingModel"
-                value={formData.pricingModel}
-                onValueChange={(value) => handleInputChange({ target: { name: "pricingModel", value } })}
-              >
-                <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="Select pricing model" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="free">Free</SelectItem>
-                  <SelectItem value="one-time">One-time Payment</SelectItem>
-                  <SelectItem value="subscription">Subscription</SelectItem>
-                </SelectContent>
-              </Select> */}
                         <Select
                             name="costType"
                             value={formData.costType}
@@ -553,49 +685,32 @@ export default function SettingsPage() {
                             options={options}
                         />
                     </div>
-                    {/* {formData.pricingModel !== "free" && (
-                        <div className="space-y-2">
-                            <Label>Price</Label>
-                            <Input
-                                type="number"
-                                name="price"
-                                placeholder="0.00"
-                                className={`w-full sm:w-[200px] ${errors.price ? "border-red-500" : ""}`}
-                                value={formData.price}
-                            />
-                            {errors.price && (
-                                <p className="text-red-500 text-sm">
-                                    {errors.price}
-                                </p>
-                            )}
-                        </div>
-                    )} */}
                     {PRICING_PAID.toUpperCase() ===
                         formData.costType.toUpperCase() && (
-                        <div className="space-y-2">
-                            <Label className="text-base font-semibold">
-                                Price
-                            </Label>
-                            <div className="relative w-full sm:w-[200px]">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                                    {getSymbolFromCurrency(
-                                        siteinfo.currencyISOCode || "USD",
-                                    )}
-                                </span>
-                                <Input
-                                    type="number"
-                                    name="cost"
-                                    placeholder="0.00"
-                                    className="pl-8"
-                                    value={formData.cost}
-                                    onChange={(e) =>
-                                        handleCostChange(+e.target.value)
-                                    }
-                                />
+                            <div className="space-y-2">
+                                <Label className="text-base font-semibold">
+                                    Price
+                                </Label>
+                                <div className="relative w-full sm:w-[200px]">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                        {getSymbolFromCurrency(
+                                            siteinfo.currencyISOCode || "USD",
+                                        )}
+                                    </span>
+                                    <Input
+                                        type="number"
+                                        name="cost"
+                                        placeholder="0.00"
+                                        className="pl-8"
+                                        value={formData.cost}
+                                        onChange={(e) =>
+                                            handleCostChange(+e.target.value)
+                                        }
+                                    />
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </div>
+                        )}
+                </div> */}
 
                 <Separator />
 

@@ -51,7 +51,6 @@ export async function getServerSideProps({ query, req }: any) {
     const graphQuery = `
     query {
       post: getCourse(id: "${query.id}") {
-          id,
           title,
           description,
           featuredImage {

@@ -42,11 +42,11 @@ export default function Publish({ id, address, dispatch }: PublishProps) {
         const query = `
             mutation {
                 course: updateCourse(courseData: {
-                id: "${course!.id}"
-                published: ${!published}
+                    id: "${course!.courseId}"
+                    published: ${!published}
                 }) {
-                id,
-                published
+                    courseId,
+                    published
                 }
             }
         `;
@@ -58,11 +58,11 @@ export default function Publish({ id, address, dispatch }: PublishProps) {
         const query = `
         mutation {
             course: updateCourse(courseData: {
-            id: "${course!.id}"
-            privacy: ${privacy === "UNLISTED" ? "PUBLIC" : "UNLISTED"}
+                id: "${course!.courseId}"
+                privacy: ${privacy === "UNLISTED" ? "PUBLIC" : "UNLISTED"}
             }) {
-            id,
-            privacy 
+                courseId,
+                privacy 
             }
         }
         `;

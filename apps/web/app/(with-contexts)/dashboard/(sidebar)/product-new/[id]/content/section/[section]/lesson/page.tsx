@@ -40,7 +40,7 @@ import {
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
-import useProduct from "../../../../product-hook";
+import useProduct from "../../../../../../../../../../hooks/use-product";
 import { AddressContext, ProfileContext } from "@components/contexts";
 import {
     Constants,

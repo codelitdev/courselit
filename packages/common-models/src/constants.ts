@@ -152,3 +152,8 @@ export const ActivityType = {
     COMMUNITY_MEMBERSHIP_REQUESTED: "community_membership_requested",
     COMMUNITY_MEMBERSHIP_GRANTED: "community_membership_granted",
 } as const;
+export const CourseType = {
+    COURSE: "course",
+    DOWNLOAD: "download",
+    BLOG: "blog",
+} as const;

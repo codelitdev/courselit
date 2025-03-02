@@ -9,7 +9,7 @@ import {
 } from "@ui-config/strings";
 import { truncate } from "@ui-lib/utils";
 import { useContext } from "react";
-import useProduct from "../../product-hook";
+import useProduct from "../../../../../../../../hooks/use-product";
 import { useParams } from "next/navigation";
 
 export default function Page() {

@@ -15,7 +15,7 @@ import {
     TOAST_TITLE_ERROR,
 } from "@ui-config/strings";
 import { AddressContext } from "@components/contexts";
-import useProduct from "../../../product-hook";
+import useProduct from "../../../../../../../../../hooks/use-product";
 import { truncate } from "@ui-lib/utils";
 import DashboardContent from "@components/admin/dashboard-content";
 import { FetchBuilder } from "@courselit/utils";
@@ -95,7 +95,7 @@ export default function SectionPage() {
             .setPayload({
                 query,
                 variables: {
-                    courseId: product?.id,
+                    courseId: product?.courseId,
                     name: sectionName,
                 },
             })

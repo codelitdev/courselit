@@ -80,7 +80,7 @@ function LessonSection({
                 query: mutation,
                 variables: {
                     id: group.id,
-                    courseId: course.id,
+                    courseId: course.courseId,
                     lessonsOrder,
                 },
             })

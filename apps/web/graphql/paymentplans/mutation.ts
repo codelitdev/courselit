@@ -1,7 +1,10 @@
 import { GraphQLInt, GraphQLNonNull, GraphQLString } from "graphql";
 import types from "./types";
 import { archivePaymentPlan, changeDefaultPlan, createPlan } from "./logic";
-import { MembershipEntityType } from "@courselit/common-models";
+import {
+    MembershipEntityType,
+    PaymentPlanType,
+} from "@courselit/common-models";
 import userTypes from "../users/types";
 
 const mutations = {
@@ -34,7 +37,7 @@ const mutations = {
                 entityType,
             }: {
                 name: string;
-                type: string;
+                type: PaymentPlanType;
                 oneTimeAmount?: number;
                 emiAmount?: number;
                 emiTotalInstallments?: number;

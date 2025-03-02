@@ -9,7 +9,7 @@ import {
 import { useToast } from "@courselit/components-library";
 
 interface DeleteProductProps {
-    id: string;
+    id?: string;
     backend: string;
     dispatch?: AppDispatch;
     onDeleteComplete?: (...args: any[]) => void;
@@ -23,6 +23,8 @@ export const deleteProduct = async ({
     onDeleteComplete,
     toast,
 }: DeleteProductProps) => {
+    if (!id) return;
+
     const query = `
     mutation {
       result: deleteCourse(id: "${id}")

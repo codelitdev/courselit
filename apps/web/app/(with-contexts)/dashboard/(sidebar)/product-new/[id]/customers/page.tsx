@@ -31,7 +31,7 @@ import {
     MANAGE_COURSES_PAGE_HEADING,
     PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER,
 } from "@ui-config/strings";
-import useProduct from "../product-hook";
+import useProduct from "../../../../../../../hooks/use-product";
 import { formattedLocaleDate, truncate } from "@ui-lib/utils";
 import Link from "next/link";
 import {

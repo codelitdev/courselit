@@ -63,11 +63,11 @@ export default function Pricing({
         const mutation = `
         mutation {
             updateCourse(courseData: {
-                id: "${course!.id}",
+                id: "${course!.courseId}",
                 costType: ${costType.toUpperCase()},
                 cost: ${cost}
             }) {
-                id
+                courseId
             }
         }
         `;

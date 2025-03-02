@@ -31,7 +31,7 @@ import {
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import { truncate } from "@ui-lib/utils";
-import useProduct from "../../../product-hook";
+import useProduct from "../../../../../../../../../hooks/use-product";
 import { AddressContext } from "@components/contexts";
 import DashboardContent from "@components/admin/dashboard-content";
 import { Constants, DripType, UIConstants } from "@courselit/common-models";
@@ -195,7 +195,7 @@ export default function SectionPage() {
                 query,
                 variables: {
                     id: sectionId,
-                    courseId: product?.id,
+                    courseId: product?.courseId,
                     name: sectionName,
                     drip: dripType
                         ? {
