@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type {
     Address,
     Alignment,
@@ -29,8 +29,9 @@ import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
     mediaAspectRatio as defaultMediaAspectRatio,
+    mediaLayout as defaultMediaLayout,
 } from "./defaults";
-import { MediaAspectRatio } from "./types";
+import { MediaAspectRatio, MediaLayout } from "./types";
 
 interface AdminWidgetProps {
     name: string;
@@ -118,6 +119,15 @@ export default function AdminWidget({
         settings.mediaAspectRatio || defaultMediaAspectRatio,
     );
     const [cssId, setCssId] = useState(settings.cssId);
+    const [backgroundMedia, setBackgroundMedia] = useState<Partial<Media>>(
+        settings.backgroundMedia || {},
+    );
+    const [overlayColor, setOverlayColor] = useState<string>(settings.overlayColor || "#FFFFFF");
+    const [overlayOpacity, setOverlayOpacity] = useState<number>(settings.overlayOpacity || 0.9);
+    const [mediaLayout, setdMediaLayout] =
+        useState<MediaLayout>(
+            settings.mediaLayout || defaultMediaLayout,
+        );
 
     const onSettingsChanged = () =>
         onChange({
@@ -145,6 +155,10 @@ export default function AdminWidget({
             descriptionFontSize,
             contentAlignment,
             cssId,
+            backgroundMedia,
+            overlayColor,
+            overlayOpacity,
+            mediaLayout,
         });
 
     useEffect(() => {
@@ -174,6 +188,10 @@ export default function AdminWidget({
         descriptionFontSize,
         contentAlignment,
         cssId,
+        backgroundMedia,
+        overlayColor,
+        overlayOpacity,
+        mediaLayout,
     ]);
 
     return (
@@ -242,6 +260,71 @@ export default function AdminWidget({
                         ]}
                         onChange={(value: MediaAspectRatio) =>
                             setMediaAspectRatio(value)
+                        }
+                    />
+                )}
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Background">
+                <PageBuilderPropertyHeader label="Upload media" />
+                <MediaSelector
+                    title=""
+                    src={backgroundMedia && backgroundMedia.thumbnail}
+                    srcTitle={
+                        backgroundMedia && backgroundMedia.originalFileName
+                    }
+                    profile={profile}
+                    address={address}
+                    onSelection={(backgroundMedia: Media) => {
+                        if (backgroundMedia) {
+                            setBackgroundMedia(backgroundMedia);
+                        }
+                    }}
+                    onRemove={() => {
+                        setBackgroundMedia({});
+                    }}
+                    strings={{}}
+                    access="public"
+                    mediaId={backgroundMedia && backgroundMedia.mediaId}
+                    type="page"
+                />
+                <ColorSelector
+                    title="Overlay color"
+                    value={overlayColor || "inherit"}
+                    onChange={(value?: string) =>
+                        setOverlayColor(value)
+                    }
+                />
+                <PageBuilderSlider
+                    className="mt-2"
+                    title="Overlay opacity"
+                    value={overlayOpacity}
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    onChange={setOverlayOpacity}
+                />
+                {backgroundMedia && backgroundMedia.mediaId && (
+                    <Select
+                        title="Layout"
+                        value={mediaLayout}
+                        options={[
+                            {
+                                label: "Cover",
+                                value: "object-cover",
+                            },
+                            {
+                                label: "Contain",
+                                value: "object-contain",
+                            },
+                            { label: "Fill", value: "object-fill" },
+                            {
+                                label: "Scale down",
+                                value: "object-scale-down",
+                            },
+                            { label: "Original", value: "object-none" },
+                        ]}
+                        onChange={(value: MediaLayout) =>
+                            setdMediaLayout(value)
                         }
                     />
                 )}
