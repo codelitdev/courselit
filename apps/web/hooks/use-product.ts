@@ -1,16 +1,17 @@
-import { Address } from "@courselit/common-models";
+import { Address, Course } from "@courselit/common-models";
 import { Lesson } from "@courselit/common-models";
 import { useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
-import { Course } from "@models/Course";
+import { InternalCourse } from "@models/Course";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { useCallback, useEffect, useState } from "react";
 
 export type ProductWithAdminProps = Partial<
-    Course & {
-        lessons: Pick<Lesson, "title" | "groupId" | "lessonId" | "type"> &
-            { id: string }[];
-    }
+    Omit<InternalCourse, "paymentPlans"> &
+        Pick<Course, "paymentPlans"> & {
+            lessons: Pick<Lesson, "title" | "groupId" | "lessonId" | "type"> &
+                { id: string }[];
+        }
 >;
 
 export default function useProduct(
@@ -30,7 +31,6 @@ export default function useProduct(
                 course: getCourse(id: "${courseId}") {
                     title,
                     description,
-                    id,
                     type,
                     slug,
                     lessons {
@@ -73,6 +73,16 @@ export default function useProduct(
                     privacy,
                     pageId,
                     updatedAt
+                    paymentPlans {
+                        planId
+                        name
+                        type
+                        oneTimeAmount
+                        emiAmount
+                        emiTotalInstallments
+                        subscriptionMonthlyAmount
+                        subscriptionYearlyAmount
+                    }
                 }
             }
         `;

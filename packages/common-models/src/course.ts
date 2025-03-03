@@ -1,26 +1,34 @@
 import Group from "./group";
 import Media from "./media";
-import { ProductPriceType } from "./constants";
+import { ProductPriceType, CourseType } from "./constants";
+import { PaymentPlan } from "./payment-plan";
+import Lesson from "./lesson";
 
 export type ProductPriceType =
     (typeof ProductPriceType)[keyof typeof ProductPriceType];
 
+export type CourseType = (typeof CourseType)[keyof typeof CourseType];
+
 export interface Course {
-    id: string;
     courseId: string;
     title: string;
-    description: string;
+    description?: string;
     creatorName: string;
     slug: string;
     isFeatured: boolean;
     cost: number;
     costType: ProductPriceType;
     creatorId: string;
-    updatedAt: Date;
     featuredImage: Media;
     isBlog: boolean;
     tags: string[];
-    type: string;
+    type: CourseType;
     pageId?: string;
     groups?: Group[];
+    paymentPlans: PaymentPlan[];
+    defaultPaymentPlan?: string;
+    createdAt: Date;
+    updatedAt: Date;
+    leadMagnet?: boolean;
+    lessons?: Lesson[];
 }

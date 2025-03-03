@@ -17,6 +17,7 @@ import { getMedia } from "../../media/logic";
 import mediaTypes from "../../media/types";
 import { reports } from "./reports";
 import { Constants } from "@courselit/common-models";
+import paymentPlansTypes from "../../paymentplans/types";
 
 const { lessonMetaType } = lessonTypes;
 const {
@@ -121,7 +122,7 @@ const courseGroupType = new GraphQLObjectType({
 const courseType = new GraphQLObjectType({
     name: "Course",
     fields: {
-        id: { type: new GraphQLNonNull(GraphQLID) },
+        courseId: { type: new GraphQLNonNull(GraphQLString) },
         title: { type: new GraphQLNonNull(GraphQLString) },
         cost: { type: new GraphQLNonNull(GraphQLFloat) },
         costType: { type: courseCostType },
@@ -140,8 +141,8 @@ const courseType = new GraphQLObjectType({
         },
         updatedAt: { type: new GraphQLNonNull(GraphQLString) },
         slug: { type: new GraphQLNonNull(GraphQLString) },
-        courseId: { type: new GraphQLNonNull(GraphQLString) },
         description: { type: GraphQLString },
+        leadMagnet: { type: GraphQLBoolean },
         featuredImage: {
             type: mediaTypes.mediaType,
             resolve: (course, _, context, __) => getMedia(course.featuredImage),
@@ -149,6 +150,9 @@ const courseType = new GraphQLObjectType({
         groups: { type: new GraphQLList(courseGroupType) },
         pageId: { type: new GraphQLNonNull(GraphQLString) },
         firstLesson: { type: GraphQLString },
+        paymentPlans: {
+            type: new GraphQLList(paymentPlansTypes.paymentPlan),
+        },
     },
 });
 
@@ -163,7 +167,7 @@ const courseInputType = new GraphQLInputObjectType({
 const courseUpdateInput = new GraphQLInputObjectType({
     name: "CourseUpdateInput",
     fields: {
-        id: { type: new GraphQLNonNull(GraphQLID) },
+        id: { type: new GraphQLNonNull(GraphQLString) },
         title: { type: GraphQLString },
         costType: { type: courseCostType },
         cost: { type: GraphQLFloat },

@@ -38,7 +38,7 @@ import {
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
 import { AddressContext } from "@components/contexts";
-import useProduct from "../product-hook";
+import useProduct from "../../../../../../../hooks/use-product";
 import { truncate } from "@ui-lib/utils";
 import { Lesson } from "@courselit/common-models";
 import { DragAndDrop, useToast } from "@courselit/components-library";
@@ -118,7 +118,7 @@ export default function ContentPage() {
                 query: mutation,
                 variables: {
                     id: group.id,
-                    courseId: product?.id,
+                    courseId: product?.courseId,
                     lessonsOrder,
                 },
             })

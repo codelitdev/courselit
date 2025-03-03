@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useCommunities } from "@/components/hooks/use-communities";
+import { useCommunities } from "@/hooks/use-communities";
 import { SkeletonCard } from "./skeleton-card";
 import { ContentCard } from "./content-card";
 import { PaginationControls } from "@components/public/pagination";
-import { ContentItem } from "./types";
+import { Community } from "@courselit/common-models";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -23,7 +23,7 @@ export function CommunitiesList() {
                     ? Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
                           <SkeletonCard key={index} />
                       ))
-                    : communities.map((community: ContentItem) => (
+                    : communities.map((community: Community) => (
                           <ContentCard
                               key={community.communityId}
                               community={community}

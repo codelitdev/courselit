@@ -68,12 +68,11 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import PaymentPlanList from "@components/admin/payments/payment-plan-list";
-import { MembershipEntityType } from "@courselit/common-models/dist/constants";
-import { useCommunity } from "@components/hooks/useCommunity";
+import { useCommunity } from "@/hooks/use-community";
 import { Button } from "@components/ui/button";
 import { redirect, useRouter } from "next/navigation";
-import { useMembership } from "@components/hooks/use-membership";
-const { PaymentPlanType: paymentPlanType } = Constants;
+import { useMembership } from "@/hooks/use-membership";
+const { PaymentPlanType: paymentPlanType, MembershipEntityType } = Constants;
 
 export default function Page({
     params,

@@ -57,7 +57,7 @@ export default function Product({
     const deleteProduct = async () => {
         const query = `
     mutation {
-      result: deleteCourse(id: "${product.id}")
+      result: deleteCourse(id: "${product.courseId}")
     }
     `;
 
