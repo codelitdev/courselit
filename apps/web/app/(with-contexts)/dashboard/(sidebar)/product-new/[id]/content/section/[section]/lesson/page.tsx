@@ -719,7 +719,12 @@ export default function LessonPage() {
                 switch (response.lesson.type.toLowerCase()) {
                     case Constants.LessonType.TEXT:
                         setTextContent(
-                            response.lesson.content || TextEditorEmptyDoc,
+                            response.lesson.content
+                                ? response.lesson.content.type &&
+                                  response.lesson.content.type === "doc"
+                                    ? response.lesson.content
+                                    : TextEditorEmptyDoc
+                                : TextEditorEmptyDoc,
                         );
                         setRefresh(refresh + 1);
                         break;
