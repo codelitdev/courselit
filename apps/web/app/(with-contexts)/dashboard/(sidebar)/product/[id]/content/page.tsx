@@ -67,7 +67,7 @@ export default function ContentPage() {
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
         {
             label: product ? truncate(product.title || "", 20) || "..." : "...",
-            href: `/dashboard/product-new/${productId}`,
+            href: `/dashboard/product/${productId}`,
         },
         { label: COURSE_CONTENT_HEADER, href: "#" },
     ];
@@ -101,7 +101,7 @@ export default function ContentPage() {
 
     const updateGroup = async (group, lessonsOrder: string[]) => {
         const mutation = `
-        mutation UpdateGroup ($id: ID!, $courseId: ID!, $lessonsOrder: [String]!) {
+        mutation UpdateGroup ($id: ID!, $courseId: String!, $lessonsOrder: [String]!) {
             updateGroup(
                 id: $id,
                 courseId: $courseId,
@@ -200,7 +200,7 @@ export default function ContentPage() {
                                     <DropdownMenuItem
                                         onClick={() =>
                                             router.push(
-                                                `/dashboard/product-new/${productId}/content/section/${section.id}`,
+                                                `/dashboard/product/${productId}/content/section/${section.id}`,
                                             )
                                         }
                                     >
@@ -209,7 +209,7 @@ export default function ContentPage() {
                                     {/* <DropdownMenuItem
                                         onClick={() =>
                                             router.push(
-                                                `/dashboard/product-new/${productId}/content/section/new?after=${section.id}`,
+                                                `/dashboard/product/${productId}/content/section/new?after=${section.id}`,
                                             )
                                         }
                                     >
@@ -237,7 +237,7 @@ export default function ContentPage() {
                   <div
                     key={lesson.id}
                     className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
-                    onClick={() => router.push(`/dashboard/product-new/${productId}/content/lesson?id=${lesson.id}`)}
+                    onClick={() => router.push(`/dashboard/product/${productId}/content/lesson?id=${lesson.id}`)}
                   >
                     <div className="flex items-center space-x-3">
                       <LessonTypeIcon type={lesson.type} />
@@ -272,7 +272,7 @@ export default function ContentPage() {
                                             className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer w-full"
                                             onClick={() =>
                                                 router.push(
-                                                    `/dashboard/product-new/${productId}/content/section/${section.id}/lesson?id=${lesson.lessonId}`,
+                                                    `/dashboard/product/${productId}/content/section/${section.id}/lesson?id=${lesson.lessonId}`,
                                                 )
                                             }
                                         >
@@ -304,7 +304,7 @@ export default function ContentPage() {
                                     asChild
                                 >
                                     <Link
-                                        href={`/dashboard/product-new/${productId}/content/section/${section.id}/lesson`}
+                                        href={`/dashboard/product/${productId}/content/section/${section.id}/lesson`}
                                     >
                                         <Plus className="mr-2 h-4 w-4" />
                                         {BUTTON_NEW_LESSON_TEXT}
@@ -328,7 +328,7 @@ export default function ContentPage() {
                                     asChild
                                 >
                                     <Link
-                                        href={`/dashboard/product-new/${productId}/content/section/new`}
+                                        href={`/dashboard/product/${productId}/content/section/new`}
                                     >
                                         <Plus className="h-5 w-5 text-gray-500" />
                                     </Link>
@@ -344,7 +344,7 @@ export default function ContentPage() {
                         asChild
                     >
                         <Link
-                            href={`/dashboard/product-new/${productId}/content/section/new`}
+                            href={`/dashboard/product/${productId}/content/section/new`}
                         >
                             <Plus className="mr-2 h-4 w-4" />
                             Add Section

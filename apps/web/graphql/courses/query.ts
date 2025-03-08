@@ -13,11 +13,15 @@ import {
     getCourses,
     getEnrolledCourses,
     getCourseOrThrow,
+    getMembers,
 } from "./logic";
 import GQLContext from "../../models/GQLContext";
 import Filter from "./models/filter";
 import constants from "../../config/constants";
-import { reports } from "./types/reports";
+import { reports, courseMember } from "./types/reports";
+import userTypes from "../users/types";
+import { MembershipStatus } from "@courselit/common-models";
+
 const { course, download, blog } = constants;
 
 const courseFilters = new GraphQLEnumType({
@@ -78,6 +82,45 @@ export default {
         },
         resolve: (_: any, { id }: { id: string }, ctx: GQLContext) =>
             getCourseOrThrow(undefined, ctx, id),
+    },
+    getProductMembers: {
+        type: new GraphQLList(courseMember),
+        args: {
+            courseId: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+            page: {
+                type: GraphQLInt,
+            },
+            limit: {
+                type: GraphQLInt,
+            },
+            status: {
+                type: userTypes.membershipStatusType,
+            },
+        },
+        resolve: (
+            _: any,
+            {
+                courseId,
+                page,
+                limit,
+                status,
+            }: {
+                courseId: string;
+                page?: number;
+                limit?: number;
+                status?: MembershipStatus;
+            },
+            ctx: GQLContext,
+        ) =>
+            getMembers({
+                courseId,
+                ctx,
+                page,
+                limit,
+                status,
+            }),
     },
     getCourses: {
         type: new GraphQLList(types.publicCoursesType),

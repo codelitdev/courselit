@@ -2,7 +2,7 @@
  * Business logic for managing courses.
  */
 import CourseModel, { InternalCourse } from "../../models/Course";
-import UserModel from "../../models/User";
+import UserModel, { User } from "../../models/User";
 import { responses } from "../../config/strings";
 import {
     checkIfAuthenticated,
@@ -21,7 +21,13 @@ import Lesson from "../../models/Lesson";
 import GQLContext from "../../models/GQLContext";
 import Filter from "./models/filter";
 import mongoose from "mongoose";
-import { Constants, Group, Progress } from "@courselit/common-models";
+import {
+    Constants,
+    Group,
+    Membership,
+    MembershipStatus,
+    Progress,
+} from "@courselit/common-models";
 import { deleteAllLessons } from "../lessons/logic";
 import { deleteMedia } from "../../services/medialit";
 import PageModel from "../../models/Page";
@@ -29,6 +35,9 @@ import { getPrevNextCursor } from "../lessons/helpers";
 import { checkPermission } from "@courselit/utils";
 import { error } from "../../services/logger";
 import { getPlans } from "../paymentplans/logic";
+import MembershipModel from "@models/Membership";
+import { getActivities } from "../activities/logic";
+import { ActivityType } from "@courselit/common-models/dist/constants";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -73,15 +82,20 @@ export const getCourseOrThrow = async (
     return course;
 };
 
-async function formatCourse(course: InternalCourse, ctx: GQLContext) {
+async function formatCourse(courseId: string, ctx: GQLContext) {
+    const course: InternalCourse | null = await CourseModel.findOne({
+        courseId,
+        domain: ctx.subdomain._id,
+    }).lean();
+
     const paymentPlans = await getPlans({
-        planIds: course.paymentPlans,
+        planIds: course!.paymentPlans,
         ctx,
     });
 
     const result = {
         ...course,
-        groups: course.groups?.map((group: any) => ({
+        groups: course!.groups?.map((group: any) => ({
             ...group,
             id: group._id.toString(),
         })),
@@ -111,7 +125,7 @@ export const getCourse = async (
             ]) || checkOwnershipWithoutModel(course, ctx);
 
         if (isOwner) {
-            return formatCourse(course, ctx);
+            return formatCourse(course.courseId, ctx);
         }
     }
 
@@ -130,7 +144,7 @@ export const getCourse = async (
             (course as any).firstLesson = nextLesson;
         }
         // course.groups = accessibleGroups;
-        return formatCourse(course, ctx);
+        return formatCourse(course.courseId, ctx);
     } else {
         throw new Error(responses.item_not_found);
     }
@@ -166,6 +180,10 @@ export const updateCourse = async (
     let course = await getCourseOrThrow(undefined, ctx, courseData.id);
 
     for (const key of Object.keys(courseData)) {
+        if (key === "id") {
+            continue;
+        }
+
         if (
             key === "published" &&
             !checkPermission(ctx.user.permissions, [permissions.publishCourse])
@@ -182,7 +200,7 @@ export const updateCourse = async (
         { entityId: course.courseId, domain: ctx.subdomain._id },
         { $set: { name: course.title } },
     );
-    return formatCourse(course, ctx);
+    return formatCourse(course.courseId, ctx);
 };
 
 export const deleteCourse = async (id: string, ctx: GQLContext) => {
@@ -202,8 +220,8 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
         domain: ctx.subdomain._id,
     });
     await CourseModel.deleteOne({
-        _id: course._id,
         domain: ctx.subdomain._id,
+        courseId: course.courseId,
     });
     return true;
 };
@@ -250,10 +268,27 @@ export const getCoursesAsAdmin = async ({
 
     if (searchText) query.$text = { $search: searchText };
 
-    return await getPaginatedCoursesForAdmin({
+    const courses = await getPaginatedCoursesForAdmin({
         query,
         page: offset,
     });
+
+    return courses.map(async (course) => ({
+        ...course,
+        customers: await (MembershipModel as any).countDocuments({
+            entityId: course.courseId,
+            entityType: Constants.MembershipEntityType.COURSE,
+            domain: context.subdomain._id,
+        }),
+        sales: (
+            await getActivities({
+                entityId: course.courseId,
+                type: ActivityType.PURCHASED,
+                duration: "lifetime",
+                ctx: context,
+            })
+        ).count,
+    }));
 };
 
 export const getCourses = async ({
@@ -401,7 +436,7 @@ export const addGroup = async ({
         throw new Error(responses.existing_group);
     }
 
-    const maximumRank = course.groups.reduce(
+    const maximumRank = course.groups?.reduce(
         (acc: number, value: { rank: number }) =>
             value.rank > acc ? value.rank : acc,
         0,
@@ -414,7 +449,7 @@ export const addGroup = async ({
 
     await (course as any).save();
 
-    return course;
+    return formatCourse(course.courseId, ctx);
 };
 
 export const removeGroup = async (
@@ -426,7 +461,7 @@ export const removeGroup = async (
     const group = course.groups?.find((group) => group.id === id);
 
     if (!group) {
-        return course;
+        return formatCourse(course.courseId, ctx);
     }
 
     const countOfAssociatedLessons = await Lesson.countDocuments({
@@ -456,7 +491,7 @@ export const removeGroup = async (
         },
     );
 
-    return course;
+    return formatCourse(course.courseId, ctx);
 };
 
 export const updateGroup = async ({
@@ -530,11 +565,81 @@ export const updateGroup = async ({
 
     return await CourseModel.findOneAndUpdate(
         {
-            _id: course._id.toString(),
+            domain: ctx.subdomain._id,
+            courseId: course.courseId,
             "groups._id": id,
         },
         { $set },
         { new: true },
+    );
+};
+
+export const getMembers = async ({
+    ctx,
+    courseId,
+    page = 1,
+    limit = 10,
+    status,
+}: {
+    ctx: GQLContext;
+    courseId: string;
+    page?: number;
+    limit?: number;
+    status?: MembershipStatus;
+}): Promise<
+    (Pick<
+        Membership,
+        "userId" | "status" | "subscriptionMethod" | "subscriptionId"
+    > &
+        Partial<
+            Pick<
+                Progress,
+                "completedLessons" | "createdAt" | "updatedAt" | "downloaded"
+            >
+        >)[]
+> => {
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
+
+    const query: Record<string, unknown> = {
+        domain: ctx.subdomain._id,
+        entityId: course.courseId,
+        entityType: Constants.MembershipEntityType.COURSE,
+    };
+
+    if (status) {
+        query.status = status;
+    }
+
+    const members: Membership[] = await (MembershipModel as any).paginatedFind(
+        query,
+        {
+            page,
+            limit,
+        },
+    );
+
+    return await Promise.all(
+        members.map(async (member) => {
+            const user = await UserModel.findOne<User>({
+                domain: ctx.subdomain._id,
+                userId: member.userId,
+            });
+
+            const purchase = user?.purchases.find(
+                (purchase) => purchase.courseId === course.courseId,
+            );
+
+            return {
+                userId: member.userId,
+                status: member.status,
+                subscriptionMethod: member.subscriptionMethod,
+                subscriptionId: member.subscriptionId,
+                completedLessons: purchase?.completedLessons,
+                createdAt: purchase?.createdAt,
+                updatedAt: purchase?.updatedAt,
+                downloaded: purchase?.downloaded,
+            };
+        }),
     );
 };
 

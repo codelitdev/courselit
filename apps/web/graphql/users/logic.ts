@@ -26,17 +26,18 @@ import {
 } from "@courselit/common-models";
 import { recordActivity } from "../../lib/record-activity";
 import { triggerSequences } from "../../lib/trigger-sequences";
-import finalizePurchase from "@/lib/finalize-purchase";
 import { getCourseOrThrow } from "../courses/logic";
 import pug from "pug";
 import courseEnrollTemplate from "@/templates/course-enroll";
 import { generateEmailFrom } from "@/lib/utils";
-import MembershipModel from "@models/Membership";
+import MembershipModel, { InternalMembership } from "@models/Membership";
 import CommunityModel from "@models/Community";
 import CourseModel from "@models/Course";
 import { addMailJob } from "@/services/queue";
 import { getPaymentMethodFromSettings } from "@/payments-new";
 import { checkForInvalidPermissions } from "@/lib/check-invalid-permissions";
+import { activateMembership } from "@/app/api/payment/helpers";
+import { getInternalPaymentPlan } from "../paymentplans/logic";
 
 const removeAdminFieldsFromUserObject = (user: User) => ({
     id: user._id,
@@ -161,34 +162,42 @@ export const inviteCustomer = async (
         );
     }
 
-    if (
-        !user.purchases.some(
-            (purchase) => purchase.courseId === course.courseId,
-        )
-    ) {
-        await finalizePurchase(user.userId, id);
+    const paymentPlan = await getInternalPaymentPlan(ctx);
 
-        try {
-            const emailBody = pug.render(courseEnrollTemplate, {
-                courseName: course.title,
-                loginLink: `${ctx.address}/login`,
-                hideCourseLitBranding:
-                    ctx.subdomain.settings?.hideCourseLitBranding,
-            });
+    const membership = await getMembership({
+        domainId: ctx.subdomain._id,
+        userId: user.userId,
+        entityType: Constants.MembershipEntityType.COURSE,
+        entityId: course.courseId,
+        planId: paymentPlan.planId,
+    });
 
-            await addMailJob({
-                to: [user.email],
-                subject: `You have been invited to ${course.title}`,
-                body: emailBody,
-                from: generateEmailFrom({
-                    name: ctx.subdomain?.settings?.title || ctx.subdomain.name,
-                    email: process.env.EMAIL_FROM || ctx.subdomain.email,
-                }),
-            });
-        } catch (error) {
-            // eslint-disable-next-line no-console
-            console.log("error", error);
-        }
+    if (membership.status === Constants.MembershipStatus.ACTIVE) {
+        return user;
+    }
+
+    await activateMembership(ctx.subdomain!, membership, paymentPlan);
+
+    try {
+        const emailBody = pug.render(courseEnrollTemplate, {
+            courseName: course.title,
+            loginLink: `${ctx.address}/login`,
+            hideCourseLitBranding:
+                ctx.subdomain.settings?.hideCourseLitBranding,
+        });
+
+        await addMailJob({
+            to: [user.email],
+            subject: `You have been invited to ${course.title}`,
+            body: emailBody,
+            from: generateEmailFrom({
+                name: ctx.subdomain?.settings?.title || ctx.subdomain.name,
+                email: process.env.EMAIL_FROM || ctx.subdomain.email,
+            }),
+        });
+    } catch (error) {
+        // eslint-disable-next-line no-console
+        console.log("error", error);
     }
 
     return user;
@@ -339,7 +348,7 @@ export async function createUser({
             $setOnInsert: {
                 domain: domain._id,
                 name,
-                email,
+                email: email.toLowerCase(),
                 active: true,
                 purchases: [],
                 permissions: superAdmin
@@ -628,6 +637,7 @@ export const getUserContent = async (
                         id: course.courseId,
                         title: course.title,
                         slug: course.slug,
+                        type: course.type,
                         totalLessons: course.lessons.length,
                         completedLessonsCount: user.purchases.find(
                             (progress: Progress) =>
@@ -660,42 +670,42 @@ export const getUserContent = async (
         }
     }
 
-    const enrolledCourses = await CourseModel.find(
-        {
-            courseId: {
-                $in: [
-                    ...user.purchases.map(
-                        (course: Progress) => course.courseId,
-                    ),
-                ],
-            },
-            domain: ctx.subdomain._id,
-        },
-        {
-            courseId: 1,
-            title: 1,
-            lessons: 1,
-            type: 1,
-            slug: 1,
-        },
-    );
+    // const enrolledCourses = await CourseModel.find(
+    //     {
+    //         courseId: {
+    //             $in: [
+    //                 ...user.purchases.map(
+    //                     (course: Progress) => course.courseId,
+    //                 ),
+    //             ],
+    //         },
+    //         domain: ctx.subdomain._id,
+    //     },
+    //     {
+    //         courseId: 1,
+    //         title: 1,
+    //         lessons: 1,
+    //         type: 1,
+    //         slug: 1,
+    //     },
+    // );
 
-    for (const course of enrolledCourses) {
-        content.push({
-            entityType: Constants.MembershipEntityType.COURSE,
-            entity: {
-                id: course.courseId,
-                title: course.title,
-                slug: course.slug,
-                totalLessons: course.lessons.length,
-                featuredImage: course.featuredImage,
-                completedLessonsCount: user.purchases.find(
-                    (progress: Progress) =>
-                        progress.courseId === course.courseId,
-                )?.completedLessons.length,
-            },
-        });
-    }
+    // for (const course of enrolledCourses) {
+    //     content.push({
+    //         entityType: Constants.MembershipEntityType.COURSE,
+    //         entity: {
+    //             id: course.courseId,
+    //             title: course.title,
+    //             slug: course.slug,
+    //             totalLessons: course.lessons.length,
+    //             featuredImage: course.featuredImage,
+    //             completedLessonsCount: user.purchases.find(
+    //                 (progress: Progress) =>
+    //                     progress.courseId === course.courseId,
+    //             )?.completedLessons.length,
+    //         },
+    //     });
+    // }
 
     return content;
 };
@@ -738,4 +748,39 @@ export const hasActiveSubscription = async (
     );
 
     return isSubscriptionActive;
+};
+
+export const getMembership = async ({
+    domainId,
+    userId,
+    entityType,
+    entityId,
+    planId,
+}: {
+    domainId: mongoose.Types.ObjectId;
+    userId: string;
+    entityType: MembershipEntityType;
+    entityId: string;
+    planId: string;
+}): Promise<InternalMembership> => {
+    const existingMembership =
+        await MembershipModel.findOne<InternalMembership>({
+            domain: domainId,
+            userId,
+            entityType,
+            entityId,
+        });
+
+    let membership: InternalMembership =
+        existingMembership ||
+        (await MembershipModel.create({
+            domain: domainId,
+            userId,
+            paymentPlanId: planId,
+            entityId,
+            entityType,
+            status: Constants.MembershipStatus.PENDING,
+        }));
+
+    return membership;
 };

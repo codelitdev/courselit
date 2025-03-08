@@ -42,11 +42,11 @@ export default function SectionPage() {
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
         {
             label: product ? truncate(product.title || "", 20) || "..." : "...",
-            href: `/dashboard/product-new/${productId}`,
+            href: `/dashboard/product/${productId}`,
         },
         {
             label: COURSE_CONTENT_HEADER,
-            href: `/dashboard/product-new/${productId}/content`,
+            href: `/dashboard/product/${productId}/content`,
         },
         { label: NEW_SECTION_HEADER, href: "#" },
     ];
@@ -105,7 +105,7 @@ export default function SectionPage() {
             setLoading(true);
             const response = await fetch.exec();
             if (response.course) {
-                router.replace(`/dashboard/product-new/${productId}/content`);
+                router.replace(`/dashboard/product/${productId}/content`);
             }
         } catch (err: any) {
             toast({
@@ -240,7 +240,7 @@ export default function SectionPage() {
                     <div className="flex items-center justify-end gap-4">
                         <Button variant="outline" asChild>
                             <Link
-                                href={`/dashboard/product-new/${productId}/content`}
+                                href={`/dashboard/product/${productId}/content`}
                             >
                                 Cancel
                             </Link>

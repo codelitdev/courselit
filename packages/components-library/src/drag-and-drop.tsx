@@ -113,7 +113,7 @@ const DragAndDrop = ({
     };
 
     useEffect(() => {
-        if (onChange) {
+        if (onChange && JSON.stringify(data) !== JSON.stringify(items)) {
             onChange(data);
         }
     }, [data]);

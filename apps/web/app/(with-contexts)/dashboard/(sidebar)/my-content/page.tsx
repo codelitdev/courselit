@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useContext } from "react";
-import { ContentCard } from "@/components/admin/my-content/content-card";
+// import { ContentCard } from "@/components/admin/my-content/content-card";
 import { SkeletonCard } from "@/components/admin/my-content/skeleton-card";
 import type { ContentItem } from "@/components/admin/my-content/content";
 import { AddressContext, ProfileContext } from "@components/contexts";
@@ -9,7 +9,7 @@ import { MY_CONTENT_HEADER } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
 import { FetchBuilder } from "@courselit/utils";
 import { Constants, MembershipEntityType } from "@courselit/common-models";
-import { Link } from "@courselit/components-library";
+import { MyContentCard } from "@components/admin/my-content/content-card";
 
 function ContentGrid({
     items,
@@ -21,16 +21,10 @@ function ContentGrid({
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {items.map((item) => (
-                <Link
+                <MyContentCard
                     key={item.entity.id}
-                    href={
-                        type === Constants.MembershipEntityType.COURSE
-                            ? `/course/${item.entity.slug}/${item.entity.id}`
-                            : `/dashboard/community/${item.entity.id}`
-                    }
-                >
-                    <ContentCard item={item} />
-                </Link>
+                    item={item}
+                />
             ))}
         </div>
     );
@@ -70,6 +64,7 @@ export default function Page() {
                             file
                             thumbnail
                         }
+                        type
                     }
                 }
             }

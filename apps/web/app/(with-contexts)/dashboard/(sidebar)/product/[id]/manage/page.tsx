@@ -105,25 +105,26 @@ const MUTATIONS = {
             }
         }
     `,
-    UPDATE_COST_TYPE: `
-        mutation UpdateCostType($courseId: String!, $costType: CostType!) {
-            updateCourse(courseData: { id: $courseId, costType: $costType }) {
-                courseId
-            }
-        }
-    `,
-    UPDATE_COST: `
-        mutation UpdateCost($courseId: String!, $cost: Float!) {
-            updateCourse(courseData: { id: $courseId, cost: $cost }) {
-                courseId
-            }
-        }
-    `,
+    // UPDATE_COST_TYPE: `
+    //     mutation UpdateCostType($courseId: String!, $costType: CostType!) {
+    //         updateCourse(courseData: { id: $courseId, costType: $costType }) {
+    //             courseId
+    //         }
+    //     }
+    // `,
+    // UPDATE_COST: `
+    //     mutation UpdateCost($courseId: String!, $cost: Float!) {
+    //         updateCourse(courseData: { id: $courseId, cost: $cost }) {
+    //             courseId
+    //         }
+    //     }
+    // `,
     UPDATE_LEAD_MAGNET: `
         mutation UpdateLeadMagnet($courseId: String!, $leadMagnet: Boolean!) {
             updateCourse(courseData: { id: $courseId, leadMagnet: $leadMagnet }) {
                 courseId
             }
+        }
     `,
 };
 
@@ -195,7 +196,7 @@ export default function SettingsPage() {
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
         {
             label: product ? truncate(product.title || "", 20) || "..." : "...",
-            href: `/dashboard/product-new/${productId}`,
+            href: `/dashboard/product/${productId}`,
         },
         { label: COURSE_SETTINGS_CARD_HEADER, href: "#" },
     ];
@@ -234,6 +235,7 @@ export default function SettingsPage() {
             });
             setRefresh(refresh + 1);
             setPaymentPlans(product?.paymentPlans || []);
+            setDefaultPaymentPlan(product?.defaultPaymentPlan || "");
         }
     }, [product]);
 
@@ -300,7 +302,7 @@ export default function SettingsPage() {
                 updateCourse(
                     MUTATIONS.UPDATE_BASIC_DETAILS,
                     {
-                        id: product.courseId,
+                        courseId: product.courseId,
                         title: formData.name,
                         description: JSON.stringify(formData.description),
                     },
@@ -595,6 +597,7 @@ export default function SettingsPage() {
                                 toast({
                                     title: TOAST_TITLE_ERROR,
                                     description: err.message,
+                                    variant: "destructive",
                                 });
                             }
                         }}

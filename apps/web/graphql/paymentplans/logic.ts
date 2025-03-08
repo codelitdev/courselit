@@ -251,3 +251,10 @@ export async function changeDefaultPlan({
 
     return paymentPlan;
 }
+
+export async function getInternalPaymentPlan(ctx: any) {
+    return await PaymentPlanModel.findOne({
+        domain: ctx.subdomain._id,
+        internal: true,
+    });
+}

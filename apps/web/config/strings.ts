@@ -112,7 +112,7 @@ export const responses = {
     joining_reason_missing: "Joining reason required",
     invalid_category: "Invalid category",
     community_exists: "A community with the same name already exists",
-    payment_plan_required: "Add a payment plan before enabling the community",
+    payment_plan_required: "Add a payment plan before performing this action",
     community_requires_payment: "Community requires payment",
     community_has_no_payment_plans: "Community has no payment plans",
     duplicate_payment_plan: "A payment plan with the same type already exists",
@@ -131,6 +131,8 @@ export const responses = {
     cannot_change_role_last_moderator:
         "Cannot change role of the last moderator",
     cannot_delete_last_category: "Cannot delete the last category",
+    lead_magnet_invalid_settings:
+        "Product must have exactly one free payment plan to enable lead magnet",
 
     // api responses
     digital_download_no_files:

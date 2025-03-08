@@ -83,6 +83,8 @@ export default function useProduct(
                         subscriptionMonthlyAmount
                         subscriptionYearlyAmount
                     }
+                    leadMagnet
+                    defaultPaymentPlan
                 }
             }
         `;

@@ -10,3 +10,4 @@ export { default as convertFiltersToDBConditions } from "./convert-filters-to-db
 export { default as slugify } from "@sindresorhus/slugify";
 export { default as renderEmailContent } from "./render-email-content";
 export { default as jwtUtils } from "./jwt-utils";
+export { getPlanPrice } from "./get-plan-price";

@@ -4,16 +4,7 @@ import { generateUniqueId } from "@courselit/utils";
 import { Constants, Course, type Group } from "@courselit/common-models";
 import MediaSchema from "./Media";
 import EmailSchema from "./Email";
-const {
-    course,
-    download,
-    blog,
-    unlisted,
-    open,
-    costFree,
-    costPaid,
-    costEmail,
-} = constants;
+const { unlisted, open, costFree, costPaid, costEmail } = constants;
 
 export interface InternalCourse extends Omit<Course, "paymentPlans"> {
     domain: mongoose.Types.ObjectId;

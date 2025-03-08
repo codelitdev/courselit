@@ -96,7 +96,7 @@ function LayoutContent({
                 <ProfileContext.Provider value={{ profile, setProfile }}>
                     <TypefacesContext.Provider value={typefaces}>
                         <ServerConfigContext.Provider value={config}>
-                            {children}
+                            <Suspense fallback={null}>{children}</Suspense>
                         </ServerConfigContext.Provider>
                     </TypefacesContext.Provider>
                 </ProfileContext.Provider>

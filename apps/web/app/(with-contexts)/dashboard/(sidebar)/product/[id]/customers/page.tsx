@@ -21,9 +21,9 @@ import {
 // } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 // import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, UserPlus } from "lucide-react";
+import { Search, UserPlus, Copy } from "lucide-react";
 import { useParams } from "next/navigation";
-import { FetchBuilder } from "@courselit/utils";
+import { capitalize, FetchBuilder } from "@courselit/utils";
 import { AddressContext } from "@components/contexts";
 import DashboardContent from "@components/admin/dashboard-content";
 import {
@@ -31,7 +31,7 @@ import {
     MANAGE_COURSES_PAGE_HEADING,
     PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER,
 } from "@ui-config/strings";
-import useProduct from "../../../../../../../hooks/use-product";
+import useProduct from "@/hooks/use-product";
 import { formattedLocaleDate, truncate } from "@ui-lib/utils";
 import Link from "next/link";
 import {
@@ -44,99 +44,118 @@ import {
 } from "@components/ui/dialog";
 import { CheckCircled, Circle } from "@courselit/icons";
 import { Skeleton } from "@components/ui/skeleton";
+import {
+    Constants,
+    Progress,
+    Membership,
+    User,
+} from "@courselit/common-models";
+import { Tooltip, useToast } from "@courselit/components-library";
 
-interface Customer {
-    userId: string;
-    email: string;
-    name: string;
-    avatar: {
-        thumbnail: string;
+type Member = Pick<
+    Membership,
+    "status" | "subscriptionMethod" | "subscriptionId"
+> &
+    Partial<
+        Pick<
+            Progress,
+            "completedLessons" | "createdAt" | "updatedAt" | "downloaded"
+        >
+    > & {
+        progressInPercentage?: number;
+        user: User;
     };
-    progress: string[];
-    signedUpOn: number;
-    lastAccessedOn: number;
-}
 
 export default function CustomersPage() {
     const params = useParams();
     const productId = params.id as string;
-    const [customers, setCustomers] = useState<
-        (Customer & { progressInPercentage?: number })[]
-    >([]);
+    const [members, setMembers] = useState<Member[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
     const address = useContext(AddressContext);
     const { product } = useProduct(productId, address);
+    const { toast } = useToast();
 
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
         {
             label: product ? truncate(product.title || "", 20) || "..." : "...",
-            href: `/dashboard/product-new/${productId}`,
+            href: `/dashboard/product/${productId}`,
         },
         { label: COURSE_CUSTOMERS_PAGE_HEADING, href: "#" },
     ];
 
-    const filteredCustomers = customers.filter(
-        (customer) =>
-            customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            customer.email.toLowerCase().includes(searchTerm.toLowerCase()),
+    const filteredMembers = members.filter(
+        (member) =>
+            member.user.name
+                ?.toLowerCase()
+                .includes(searchTerm.toLowerCase()) ||
+            member.user.email.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
     const fetchStudents = async () => {
         setLoading(true);
-        const mutation = searchTerm
-            ? `
-            query {
-                report: getReports(id: "${productId}") {
-                    students (text: "${searchTerm}") {
-                        email,
-                        userId,
-                        name,
-                        progress,
-                        signedUpOn,
-                        lastAccessedOn,
-                        downloaded,
-                        avatar {
-                            thumbnail
-                        }
-                    }
-                }
-            }
+        const mutation =
+            // searchTerm
+            // ? `
+            // query {
+            //     report: getReports(id: "${productId}") {
+            //         students (text: "${searchTerm}") {
+            //             email,
+            //             userId,
+            //             name,
+            //             progress,
+            //             signedUpOn,
+            //             lastAccessedOn,
+            //             downloaded,
+            //             avatar {
+            //                 thumbnail
+            //             }
+            //         }
+            //     }
+            // }
+            // `
+            // :
             `
-            : `
-            query {
-                report: getReports(id: "${productId}") {
-                    students {
-                        email,
-                        userId,
-                        name,
-                        progress,
-                        signedUpOn,
-                        lastAccessedOn,
-                        downloaded,
+            query GetMembers($productId: String!) {
+                members: getProductMembers(courseId: $productId, limit: 10000000) {
+                    user {
                         avatar {
                             thumbnail
                         }
+                        name
+                        email
                     }
+                    status
+                    completedLessons
+                    downloaded
+                    subscriptionMethod
+                    subscriptionId
+                    createdAt
+                    updatedAt
                 }
             }
             `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload(mutation)
+            .setPayload({ query: mutation, variables: { productId } })
             .setIsGraphQLEndpoint(true)
             .build();
         try {
             const response = await fetch.exec();
-            setCustomers(
-                response.report.students.map((student: any) => ({
-                    ...student,
-                    progressInPercentage: Math.round(
-                        (student.progress.length /
-                            (product?.lessons?.length || 0)) *
-                            100,
-                    ),
+            setMembers(
+                response.members.map((member: any) => ({
+                    ...member,
+                    progressInPercentage:
+                        product?.type?.toLowerCase() ===
+                            Constants.CourseType.COURSE &&
+                        product?.lessons?.length! > 0
+                            ? Math.round(
+                                  (member.completedLessons?.length ||
+                                      0 / (product?.lessons?.length || 0)) *
+                                      100,
+                              )
+                            : undefined,
                 })),
             );
         } finally {
@@ -150,11 +169,19 @@ export default function CustomersPage() {
         }
     }, [product]);
 
+    const handleCopyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({
+            title: "Success",
+            description: "Subscription ID is copied to clipboard",
+        });
+    };
+
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold">Customers</h1>
-                <Link href={`/dashboard/product-new/${productId}/customer/new`}>
+                <Link href={`/dashboard/product/${productId}/customer/new`}>
                     <Button variant="outline" size="sm">
                         <UserPlus className="mr-2 h-4 w-4" />
                         {PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER}
@@ -246,9 +273,16 @@ export default function CustomersPage() {
                 <TableHeader>
                     <TableRow>
                         <TableHead>Name</TableHead>
-                        <TableHead>Progress</TableHead>
+                        <TableHead>
+                            {product?.type?.toLowerCase() ===
+                            Constants.CourseType.COURSE
+                                ? "Progress"
+                                : "Downloaded"}
+                        </TableHead>
                         <TableHead>Signed Up</TableHead>
                         <TableHead>Last Active</TableHead>
+                        <TableHead>Subscription ID</TableHead>
+                        <TableHead>Subscription Method</TableHead>
                         {/* <TableHead>Actions</TableHead> */}
                     </TableRow>
                 </TableHeader>
@@ -278,25 +312,25 @@ export default function CustomersPage() {
                                       </TableCell>
                                   </TableRow>
                               ))
-                        : filteredCustomers.map((customer) => (
-                              <TableRow key={customer.email}>
+                        : filteredMembers.map((member: Member) => (
+                              <TableRow key={member.user.email}>
                                   <TableCell className="font-medium">
                                       <Link
-                                          href={`/dashboard/users/${customer.userId}`}
+                                          href={`/dashboard/users/${member.userId}`}
                                       >
                                           <div className="flex items-center space-x-2">
                                               <Avatar className="h-8 w-8">
                                                   <AvatarImage
                                                       src={
-                                                          customer.avatar
+                                                          member.user.avatar
                                                               ?.thumbnail
                                                       }
-                                                      alt={customer.name}
+                                                      alt={member.user.name}
                                                   />
                                                   <AvatarFallback>
                                                       {(
-                                                          customer.name ||
-                                                          customer.email
+                                                          member.user.name ||
+                                                          member.user.email
                                                       )
                                                           .split(" ")
                                                           .map((n) => n[0])
@@ -304,80 +338,129 @@ export default function CustomersPage() {
                                                   </AvatarFallback>
                                               </Avatar>
                                               <span>
-                                                  {customer.name ||
-                                                      customer.email}
+                                                  {member.user.name ||
+                                                      member.user.email}
                                               </span>
                                           </div>
                                       </Link>
                                   </TableCell>
                                   <TableCell>
-                                      <div className="flex items-center space-x-2">
-                                          <div className="w-20 bg-gray-200 rounded-full h-2.5">
-                                              <div
-                                                  className="bg-primary h-2.5 rounded-full"
-                                                  style={{
-                                                      width: `${customer.progressInPercentage}%`,
-                                                  }}
-                                              ></div>
-                                          </div>
-                                          <span>
-                                              {customer.progressInPercentage}%
-                                          </span>
-                                          <Dialog>
-                                              <DialogTrigger className="text-xs text-muted-foreground underline">
-                                                  View
-                                              </DialogTrigger>
-                                              <DialogContent>
-                                                  <DialogHeader>
-                                                      <DialogTitle>
-                                                          {customer.name ||
-                                                              customer.email}
-                                                          &apos;s Progress
-                                                      </DialogTitle>
-                                                  </DialogHeader>
-                                                  <DialogDescription>
-                                                      {/* {product?.lessons?.map((lesson: any) => (
+                                      {product?.type?.toLowerCase() ===
+                                      Constants.CourseType.COURSE ? (
+                                          <>
+                                              {product?.lessons?.length! >
+                                                  0 && (
+                                                  <div className="flex items-center space-x-2">
+                                                      <div className="w-20 bg-gray-200 rounded-full h-2.5">
+                                                          <div
+                                                              className="bg-primary h-2.5 rounded-full"
+                                                              style={{
+                                                                  width: `${member.progressInPercentage}%`,
+                                                              }}
+                                                          ></div>
+                                                      </div>
+                                                      <span>
+                                                          {
+                                                              member.progressInPercentage
+                                                          }
+                                                          %
+                                                      </span>
+                                                      <Dialog>
+                                                          <DialogTrigger className="text-xs text-muted-foreground underline">
+                                                              View
+                                                          </DialogTrigger>
+                                                          <DialogContent>
+                                                              <DialogHeader>
+                                                                  <DialogTitle>
+                                                                      {member.name ||
+                                                                          member.email}
+                                                                      &apos;s
+                                                                      Progress
+                                                                  </DialogTitle>
+                                                              </DialogHeader>
+                                                              <DialogDescription>
+                                                                  {/* {product?.lessons?.map((lesson: any) => (
                                                     <div key={lesson.lessonId}>
                                                         <h3>{lesson.title}</h3>
                                                     </div>
                                                 ))} */}
-                                                      {product?.lessons?.map(
-                                                          (lesson: any) => (
-                                                              <div
-                                                                  key={
-                                                                      lesson.lessonId
-                                                                  }
-                                                                  className="flex justify-between items-center mb-1"
-                                                              >
-                                                                  <p>
-                                                                      {
-                                                                          lesson.title
-                                                                      }
-                                                                  </p>
-                                                                  <span>
-                                                                      {customer.progress.includes(
-                                                                          lesson.lessonId,
-                                                                      ) ? (
-                                                                          <CheckCircled />
-                                                                      ) : (
-                                                                          <Circle />
-                                                                      )}
-                                                                  </span>
-                                                              </div>
-                                                          ),
-                                                      )}
-                                                  </DialogDescription>
-                                              </DialogContent>
-                                          </Dialog>
+                                                                  {product?.lessons?.map(
+                                                                      (
+                                                                          lesson: any,
+                                                                      ) => (
+                                                                          <div
+                                                                              key={
+                                                                                  lesson.lessonId
+                                                                              }
+                                                                              className="flex justify-between items-center mb-1"
+                                                                          >
+                                                                              <p>
+                                                                                  {
+                                                                                      lesson.title
+                                                                                  }
+                                                                              </p>
+                                                                              <span>
+                                                                                  {member.completedLessons.includes(
+                                                                                      lesson.lessonId,
+                                                                                  ) ? (
+                                                                                      <CheckCircled />
+                                                                                  ) : (
+                                                                                      <Circle />
+                                                                                  )}
+                                                                              </span>
+                                                                          </div>
+                                                                      ),
+                                                                  )}
+                                                              </DialogDescription>
+                                                          </DialogContent>
+                                                      </Dialog>
+                                                  </div>
+                                              )}
+                                          </>
+                                      ) : (
+                                          <div className="flex items-center space-x-2">
+                                              {!!member.downloaded ? (
+                                                  <CheckCircled />
+                                              ) : (
+                                                  <Circle />
+                                              )}
+                                          </div>
+                                      )}
+                                  </TableCell>
+                                  <TableCell>
+                                      {formattedLocaleDate(member.createdAt)}
+                                  </TableCell>
+                                  <TableCell>
+                                      {formattedLocaleDate(member.updatedAt)}
+                                  </TableCell>
+                                  <TableCell>
+                                      <div className="flex items-center gap-2">
+                                          {member.subscriptionId
+                                              ? truncate(
+                                                    member.subscriptionId,
+                                                    10,
+                                                )
+                                              : "-"}
+                                          {member.subscriptionId && (
+                                              <Tooltip title="Copy Subscription ID">
+                                                  <Button
+                                                      size="sm"
+                                                      variant="outline"
+                                                      onClick={() =>
+                                                          handleCopyToClipboard(
+                                                              member.subscriptionId,
+                                                          )
+                                                      }
+                                                  >
+                                                      <Copy className="h-4 w-4" />
+                                                  </Button>
+                                              </Tooltip>
+                                          )}
                                       </div>
                                   </TableCell>
-                                  <TableCell>
-                                      {formattedLocaleDate(customer.signedUpOn)}
-                                  </TableCell>
-                                  <TableCell>
-                                      {formattedLocaleDate(
-                                          customer.lastAccessedOn,
-                                      )}
+                                  <TableCell className="hidden xl:table-cell max-w-xs truncate">
+                                      {capitalize(member.subscriptionMethod) ||
+                                          "-"}
                                   </TableCell>
                                   {/* <TableCell>
                                     <DropdownMenu>

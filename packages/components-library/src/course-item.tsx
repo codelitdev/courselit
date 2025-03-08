@@ -1,5 +1,6 @@
 import Image from "./image";
 import type { Course, SiteInfo } from "@courselit/common-models";
+import { Constants } from "@courselit/common-models";
 import PriceTag from "./pricetag";
 import Link from "./link";
 
@@ -19,7 +20,7 @@ const CourseItem = (props: CourseItemProps) => {
     } = props;
 
     const href =
-        course.type === "BLOG"
+        course.type === Constants.CourseType.BLOG
             ? `/blog/${course.slug}/${course.courseId}`
             : `/p/${course.pageId}`;
 
@@ -38,13 +39,13 @@ const CourseItem = (props: CourseItemProps) => {
                         alt={course.featuredImage?.caption}
                     />
                 </div>
-                {course.type !== "BLOG" && (
+                {course.type !== Constants.CourseType.BLOG && (
                     <h3 className="font-thin text-xs">
                         {course.type.toUpperCase()}
                     </h3>
                 )}
                 <h3 className="text-lg font-semibold">{course.title}</h3>
-                {!(course.type === "BLOG") && (
+                {!(course.type === Constants.CourseType.BLOG) && (
                     <PriceTag
                         cost={course.cost}
                         freeCostCaption={freeCostCaption}

@@ -2,7 +2,7 @@ import constants from "@config/constants";
 import GQLContext from "@models/GQLContext";
 import UserModel, { User } from "@models/User";
 import { error } from "../../services/logger";
-import { createUser } from "../users/logic";
+import { createUser, getMembership } from "../users/logic";
 import MailModel, { Mail } from "@models/Mail";
 import {
     checkIfAuthenticated,
@@ -12,10 +12,8 @@ import { responses, internal } from "../../config/strings";
 import SearchData from "./models/search-data";
 import { checkPermission, generateUniqueId } from "@courselit/utils";
 import { Constants, Email, Sequence } from "@courselit/common-models";
-import CourseModel, { Course } from "@models/Course";
-import finalizePurchase from "../../lib/finalize-purchase";
+import CourseModel, { InternalCourse } from "@models/Course";
 import SequenceModel, { AdminSequence } from "@models/Sequence";
-import { isDateInFuture } from "../../lib/utils";
 import {
     addRule,
     areAllEmailIdsValid,
@@ -27,6 +25,8 @@ import {
 import MailRequestStatusModel, {
     MailRequestStatus,
 } from "@models/MailRequestStatus";
+import { getPlans } from "../paymentplans/logic";
+import { activateMembership } from "@/app/api/payment/helpers";
 
 const { permissions } = constants;
 
@@ -713,14 +713,26 @@ export async function sendCourseOverMail(
     email: string,
     ctx: GQLContext,
 ): Promise<boolean> {
-    const course: Course | null = await CourseModel.findOne({
+    const course: InternalCourse | null = await CourseModel.findOne({
         courseId,
         domain: ctx.subdomain._id,
         published: true,
-        costType: constants.costEmail,
-    });
+        leadMagnet: true,
+    }).lean();
 
     if (!course) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const paymentPlans = await getPlans({
+        planIds: course.paymentPlans,
+        ctx,
+    });
+
+    if (
+        paymentPlans.length !== 1 ||
+        paymentPlans[0].type !== Constants.PaymentPlanType.FREE
+    ) {
         throw new Error(responses.item_not_found);
     }
 
@@ -734,10 +746,19 @@ export async function sendCourseOverMail(
             domain: ctx.subdomain!,
             email: email,
             lead: constants.leadDownload,
+            subscribedToUpdates: true,
         });
     }
 
-    await finalizePurchase(dbUser.userId, course.courseId);
+    const membership = await getMembership({
+        domainId: ctx.subdomain._id,
+        userId: dbUser.userId,
+        entityType: Constants.MembershipEntityType.COURSE,
+        entityId: course.courseId,
+        planId: paymentPlans[0].planId,
+    });
+
+    await activateMembership(ctx.subdomain!, membership, paymentPlans[0]);
 
     if (course.lessons.length === 0) {
         return true;

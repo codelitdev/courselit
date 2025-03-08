@@ -65,11 +65,11 @@ export default function SectionPage() {
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
         {
             label: product ? truncate(product.title || "", 20) || "..." : "...",
-            href: `/dashboard/product-new/${productId}`,
+            href: `/dashboard/product/${productId}`,
         },
         {
             label: COURSE_CONTENT_HEADER,
-            href: `/dashboard/product-new/${productId}/content`,
+            href: `/dashboard/product/${productId}/content`,
         },
         { label: EDIT_SECTION_HEADER, href: "#" },
     ];
@@ -157,12 +157,12 @@ export default function SectionPage() {
 
         await updateGroup();
 
-        router.push(`/dashboard/product-new/${productId}/content`);
+        router.push(`/dashboard/product/${productId}/content`);
     };
 
     const updateGroup = async () => {
         const query = ` 
-        mutation updateGroup($id: ID!, $courseId: ID!, $name: String, $drip: DripInput) {
+        mutation updateGroup($id: ID!, $courseId: String!, $name: String, $drip: DripInput) {
             course: updateGroup(
                 id: $id,
                 courseId: $courseId,
@@ -220,7 +220,7 @@ export default function SectionPage() {
             const response = await fetch.exec();
             if (response.course) {
                 // router.replace(
-                //     `/dashboard/product-new/${productId}/content`,
+                //     `/dashboard/product/${productId}/content`,
                 // );
                 toast({
                     title: TOAST_TITLE_SUCCESS,
@@ -503,7 +503,7 @@ export default function SectionPage() {
                     <div className="flex items-center justify-end gap-4">
                         <Button variant="outline" asChild>
                             <Link
-                                href={`/dashboard/product-new/${productId}/content`}
+                                href={`/dashboard/product/${productId}/content`}
                             >
                                 Cancel
                             </Link>

@@ -153,6 +153,7 @@ const courseType = new GraphQLObjectType({
         paymentPlans: {
             type: new GraphQLList(paymentPlansTypes.paymentPlan),
         },
+        defaultPaymentPlan: { type: GraphQLString },
     },
 });
 
@@ -176,6 +177,7 @@ const courseUpdateInput = new GraphQLInputObjectType({
         tags: { type: new GraphQLList(GraphQLString) },
         description: { type: GraphQLString },
         featuredImage: { type: mediaTypes.mediaInputType },
+        leadMagnet: { type: GraphQLBoolean },
     },
 });
 

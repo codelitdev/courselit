@@ -1,6 +1,7 @@
 "use client";
 
 import DashboardContent from "@components/admin/dashboard-content";
+import useCourse from "@components/admin/products/editor/course-hook";
 import NewCustomer from "@components/admin/products/new-customer";
 import { AddressContext } from "@components/contexts";
 import {
@@ -9,29 +10,23 @@ import {
 } from "@ui-config/strings";
 import { truncate } from "@ui-lib/utils";
 import { useContext } from "react";
-import useProduct from "../../../../../../../../hooks/use-product";
-import { useParams } from "next/navigation";
 
-export default function Page() {
-    const params = useParams();
-    const productId = params.id as string;
+export default function Page({ params }: { params: { id: string } }) {
+    const { id } = params;
     const address = useContext(AddressContext);
-    const { product } = useProduct(productId, address);
+    const course = useCourse(id, address);
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
         {
-            label: product ? truncate(product.title || "", 20) || "..." : "...",
-            href: `/dashboard/product-new/${product?.courseId}`,
+            label: course ? truncate(course.title || "", 20) || "..." : "...",
+            href: `/dashboard/product/${id}?tab=Content`,
         },
         { label: PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER, href: "#" },
     ];
 
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
-            <NewCustomer
-                courseId={product?.courseId as string}
-                address={address}
-            />
+            <NewCustomer courseId={id as string} address={address} />
         </DashboardContent>
     );
 }

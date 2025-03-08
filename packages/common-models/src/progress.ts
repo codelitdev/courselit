@@ -5,4 +5,5 @@ export interface Progress {
     accessibleGroups: string[];
     lastDripAt?: Date;
     createdAt?: Date;
+    updatedAt?: Date;
 }

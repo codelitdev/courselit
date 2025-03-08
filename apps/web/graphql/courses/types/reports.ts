@@ -11,8 +11,28 @@ import GQLContext from "../../../models/GQLContext";
 import { getStudents } from "../logic";
 import mediaTypes from "../../media/types";
 import { getMedia } from "../../media/logic";
+import { getUser } from "@/graphql/users/logic";
+import userTypes from "@/graphql/users/types";
 
-const student = new GraphQLObjectType({
+export const courseMember = new GraphQLObjectType({
+    name: "CourseMember",
+    fields: {
+        user: {
+            type: userTypes.userType,
+            resolve: (member, _, ctx: GQLContext, __) =>
+                getUser(member.userId, ctx),
+        },
+        status: { type: userTypes.membershipStatusType },
+        completedLessons: { type: new GraphQLList(GraphQLString) },
+        downloaded: { type: GraphQLBoolean },
+        subscriptionMethod: { type: GraphQLString },
+        subscriptionId: { type: GraphQLString },
+        createdAt: { type: new GraphQLNonNull(GraphQLString) },
+        updatedAt: { type: new GraphQLNonNull(GraphQLString) },
+    },
+});
+
+export const student = new GraphQLObjectType({
     name: "Student",
     fields: {
         userId: { type: new GraphQLNonNull(GraphQLString) },

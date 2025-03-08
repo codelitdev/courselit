@@ -186,6 +186,7 @@ const entityType = new GraphQLObjectType({
             resolve: (content, args, context, info) =>
                 getMedia(content.featuredImage),
         },
+        type: { type: new GraphQLNonNull(GraphQLString) },
     },
 });
 

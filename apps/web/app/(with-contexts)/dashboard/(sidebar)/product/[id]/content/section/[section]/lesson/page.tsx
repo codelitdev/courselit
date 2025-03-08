@@ -121,11 +121,11 @@ export default function LessonPage() {
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
         {
             label: product ? truncate(product.title || "", 20) || "..." : "...",
-            href: `/dashboard/product-new/${productId}`,
+            href: `/dashboard/product/${productId}`,
         },
         {
             label: COURSE_CONTENT_HEADER,
-            href: `/dashboard/product-new/${productId}/content`,
+            href: `/dashboard/product/${productId}/content`,
         },
         {
             label: isEditing ? EDIT_LESSON_TEXT : BUTTON_NEW_LESSON_TEXT,
@@ -893,7 +893,7 @@ export default function LessonPage() {
                 title: TOAST_TITLE_SUCCESS,
                 description: "Lesson updated",
             });
-            router.push(`/dashboard/product-new/${productId}/content`);
+            router.push(`/dashboard/product/${productId}/content`);
         } catch (err: any) {
             toast({
                 title: TOAST_TITLE_ERROR,
@@ -941,12 +941,10 @@ export default function LessonPage() {
                         Constants.LessonType.QUIZ,
                     ].includes(lesson.type as any)
                 ) {
-                    router.replace(
-                        `/dashboard/product-new/${productId}/content`,
-                    );
+                    router.replace(`/dashboard/product/${productId}/content`);
                 } else {
                     router.replace(
-                        `/dashboard/product-new/${productId}/content/section/${sectionId}/lesson?id=${response.lesson.lessonId}`,
+                        `/dashboard/product/${productId}/content/section/${sectionId}/lesson?id=${response.lesson.lessonId}`,
                     );
                 }
             }
@@ -981,9 +979,7 @@ export default function LessonPage() {
                         title: TOAST_TITLE_SUCCESS,
                         description: APP_MESSAGE_LESSON_DELETED,
                     });
-                    router.replace(
-                        `/dashboard/product-new/${productId}/content`,
-                    );
+                    router.replace(`/dashboard/product/${productId}/content`);
                 }
             } catch (err: any) {
                 toast({
@@ -1215,7 +1211,7 @@ export default function LessonPage() {
                             <div className="space-x-2">
                                 <Button variant="outline" asChild>
                                     <Link
-                                        href={`/dashboard/product-new/${productId}/content`}
+                                        href={`/dashboard/product/${productId}/content`}
                                     >
                                         Cancel
                                     </Link>

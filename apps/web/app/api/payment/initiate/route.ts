@@ -11,16 +11,16 @@ import {
 } from "@courselit/common-models";
 import CommunityModel from "@models/Community";
 import CourseModel from "@models/Course";
-import MembershipModel, { InternalMembership } from "@models/Membership";
 import constants from "@config/constants";
 import PaymentPlanModel from "@models/PaymentPlan";
 import { getPaymentMethodFromSettings } from "@/payments-new";
 import { generateUniqueId } from "@courselit/utils";
 import InvoiceModel from "@models/Invoice";
 import { error } from "@/services/logger";
-import { activateMembership } from "../webhook/route";
 import { responses } from "@config/strings";
 import mongoose from "mongoose";
+import { activateMembership } from "../helpers";
+import { getMembership } from "@/graphql/users/logic";
 
 const { transactionSuccess, transactionFailed, transactionInitiated } =
     constants;
@@ -91,24 +91,13 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const existingMembership =
-            await MembershipModel.findOne<InternalMembership>({
-                domain: domain._id,
-                userId: user.userId,
-                entityType: type,
-                entityId: id,
-            });
-
-        let membership: InternalMembership =
-            existingMembership ||
-            (await MembershipModel.create({
-                domain: domain._id,
-                userId: user.userId,
-                paymentPlanId: planId,
-                entityId: id,
-                entityType: type,
-                status: Constants.MembershipStatus.PENDING,
-            }));
+        const membership = await getMembership({
+            domainId: domain._id,
+            userId: user.userId,
+            entityType: type,
+            entityId: id,
+            planId,
+        });
 
         if (membership.status === Constants.MembershipStatus.REJECTED) {
             return Response.json({ status: transactionFailed });
@@ -271,16 +260,3 @@ async function getPaymentPlan(
         archived: false,
     });
 }
-
-// async function handleFreePlan(
-//     membership: InternalMembership,
-//     domain: Domain,
-//     paymentPlan: PaymentPlan,
-// ) {
-//     if (membership.status !== Constants.MembershipStatus.ACTIVE) {
-//         membership.status = Constants.MembershipStatus.ACTIVE;
-//         await (membership as any).save();
-//         await finalizePurchase({ domain, membership, paymentPlan });
-//     }
-//     return Response.json({ status: transactionSuccess });
-// }
