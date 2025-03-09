@@ -21,10 +21,7 @@ function ContentGrid({
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {items.map((item) => (
-                <MyContentCard
-                    key={item.entity.id}
-                    item={item}
-                />
+                <MyContentCard key={item.entity.id} item={item} />
             ))}
         </div>
     );
