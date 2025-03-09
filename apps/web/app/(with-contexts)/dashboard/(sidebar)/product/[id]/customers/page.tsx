@@ -75,7 +75,7 @@ export default function CustomersPage() {
     const address = useContext(AddressContext);
     const { product } = useProduct(productId, address);
     const { toast } = useToast();
-    const {profile} = useContext(ProfileContext)
+    const { profile } = useContext(ProfileContext);
     const [isUpdating, setIsUpdating] = useState(false);
 
     const breadcrumbs = [
@@ -322,30 +322,25 @@ export default function CustomersPage() {
                                           href={`/dashboard/users/${member.user.userId}`}
                                       >
                                           <div className="flex items-center space-x-2">
-                                                    <Avatar className="h-8 w-8">
-                                                        <AvatarImage
-                                                            src={
-                                                                member.user
-                                                                    .avatar
-                                                                    ?.thumbnail ||
-                                                                "/courselit_backdrop_square.webp"
-                                                            }
-                                                            alt={
-                                                                member.user
-                                                                    .name ||
-                                                                member.user
-                                                                    .email
-                                                            }
-                                                        />
-                                                        <AvatarFallback>
-                                                            {(
-                                                                member.user
-                                                                    .name ||
-                                                                member.user
-                                                                    .email
-                                                            ).charAt(0)}
-                                                        </AvatarFallback>
-                                                    </Avatar>
+                                              <Avatar className="h-8 w-8">
+                                                  <AvatarImage
+                                                      src={
+                                                          member.user.avatar
+                                                              ?.thumbnail ||
+                                                          "/courselit_backdrop_square.webp"
+                                                      }
+                                                      alt={
+                                                          member.user.name ||
+                                                          member.user.email
+                                                      }
+                                                  />
+                                                  <AvatarFallback>
+                                                      {(
+                                                          member.user.name ||
+                                                          member.user.email
+                                                      ).charAt(0)}
+                                                  </AvatarFallback>
+                                              </Avatar>
                                               {/* <Avatar className="h-8 w-8">
                                                   <AvatarImage
                                                       src={
@@ -374,25 +369,25 @@ export default function CustomersPage() {
                                   {/* <TableCell>
                                       {member.status}
                                   </TableCell> */}
-                                        <TableCell>
-                                            <div className="flex items-center space-x-2">
-                                                <Badge
-                                                    variant={
-                                                        member.status.toLowerCase() ===
-                                                        "pending"
-                                                            ? "success"
-                                                            : member.status.toLowerCase() ===
-                                                                "active"
-                                                              ? "default"
-                                                              : "destructive"
-                                                    }
-                                                >
-                                                    {member.status
-                                                        .charAt(0)
-                                                        .toUpperCase() +
-                                                        member.status.slice(1)}
-                                                </Badge>
-                                                {/* {member.user.userId !==
+                                  <TableCell>
+                                      <div className="flex items-center space-x-2">
+                                          <Badge
+                                              variant={
+                                                  member.status.toLowerCase() ===
+                                                  "pending"
+                                                      ? "success"
+                                                      : member.status.toLowerCase() ===
+                                                          "active"
+                                                        ? "default"
+                                                        : "destructive"
+                                              }
+                                          >
+                                              {member.status
+                                                  .charAt(0)
+                                                  .toUpperCase() +
+                                                  member.status.slice(1)}
+                                          </Badge>
+                                          {/* {member.user.userId !==
                                                     profile.userId && (
                                                     <Tooltip title="Change status">
                                                         <Button
@@ -411,8 +406,8 @@ export default function CustomersPage() {
                                                         </Button>
                                                     </Tooltip>
                                                 )} */}
-                                            </div>
-                                        </TableCell>
+                                      </div>
+                                  </TableCell>
                                   <TableCell>
                                       {product?.type?.toLowerCase() ===
                                       Constants.CourseType.COURSE ? (
@@ -441,8 +436,15 @@ export default function CustomersPage() {
                                                           <DialogContent>
                                                               <DialogHeader>
                                                                   <DialogTitle>
-                                                                      {truncate( member.user.name ||
-                                                                          member.user.email, 10)}
+                                                                      {truncate(
+                                                                          member
+                                                                              .user
+                                                                              .name ||
+                                                                              member
+                                                                                  .user
+                                                                                  .email,
+                                                                          10,
+                                                                      )}
                                                                       &apos;s
                                                                       Progress
                                                                   </DialogTitle>
@@ -504,13 +506,16 @@ export default function CustomersPage() {
                                   </TableCell>
                                   <TableCell>
                                       <div className="flex items-center gap-2">
-                                            <Tooltip title={`Method: ${capitalize(member.subscriptionMethod || "")}`}> 
-                                          {member.subscriptionId
-                                              ? truncate(
-                                                    member.subscriptionId,
-                                                    10,
-                                                )
-                                              : "-"}</Tooltip>
+                                          <Tooltip
+                                              title={`Method: ${capitalize(member.subscriptionMethod || "")}`}
+                                          >
+                                              {member.subscriptionId
+                                                  ? truncate(
+                                                        member.subscriptionId,
+                                                        10,
+                                                    )
+                                                  : "-"}
+                                          </Tooltip>
                                           {member.subscriptionId && (
                                               <Tooltip title="Copy Subscription ID">
                                                   <Button
@@ -518,7 +523,8 @@ export default function CustomersPage() {
                                                       variant="outline"
                                                       onClick={() =>
                                                           handleCopyToClipboard(
-                                                              member.subscriptionId || ""
+                                                              member.subscriptionId ||
+                                                                  "",
                                                           )
                                                       }
                                                   >
