@@ -141,6 +141,9 @@ export const responses = {
     user_already_exists: "The user already exists",
     unsubscribe_success:
         "Sorry to see you go. You have been unsubscribed from our mailing list.",
+    download_course_cannot_have_groups: "Digital download cannot have sections",
+    download_course_last_group_cannot_be_removed:
+        "Last section cannot be removed from a digital download",
 };
 
 export const internal = {

@@ -11,7 +11,7 @@ import {
     getCourse,
     getCoursesAsAdmin,
     getCourses,
-    getEnrolledCourses,
+    // getEnrolledCourses,
     getCourseOrThrow,
     getMembers,
 } from "./logic";
@@ -154,17 +154,17 @@ export default {
             ctx: GQLContext,
         ) => getCourses({ offset, ids, tag, filterBy, ctx }),
     },
-    getEnrolledCourses: {
-        type: new GraphQLList(types.enrolledCourses),
-        args: {
-            userId: {
-                type: new GraphQLNonNull(GraphQLString),
-            },
-        },
-        resolve: (
-            _: any,
-            { userId }: { userId: string },
-            context: GQLContext,
-        ) => getEnrolledCourses(userId, context),
-    },
+    // getEnrolledCourses: {
+    //     type: new GraphQLList(types.enrolledCourses),
+    //     args: {
+    //         userId: {
+    //             type: new GraphQLNonNull(GraphQLString),
+    //         },
+    //     },
+    //     resolve: (
+    //         _: any,
+    //         { userId }: { userId: string },
+    //         context: GQLContext,
+    //     ) => getEnrolledCourses(userId, context),
+    // },
 };

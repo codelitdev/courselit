@@ -1038,12 +1038,24 @@ export default function LessonPage() {
         <DashboardContent breadcrumbs={breadcrumbs}>
             <header>
                 <h1 className="text-4xl font-semibold">
-                    {isEditing ? "Edit Lesson" : "New Lesson"}
+                    {product?.type?.toLowerCase() ===
+                        Constants.CourseType.COURSE &&
+                        (isEditing ? "Edit Lesson" : "New Lesson")}
+                    {product?.type?.toLowerCase() ===
+                        Constants.CourseType.DOWNLOAD &&
+                        (isEditing ? "Edit File" : "New File")}
                 </h1>
                 <p className="text-muted-foreground mt-2">
-                    {isEditing
-                        ? "Modify the details of your existing lesson"
-                        : "Create a new lesson for your course"}
+                    {product?.type?.toLowerCase() ===
+                        Constants.CourseType.COURSE &&
+                        (isEditing
+                            ? "Modify the details of your existing lesson"
+                            : "Create a new lesson for your product")}
+                    {product?.type?.toLowerCase() ===
+                        Constants.CourseType.DOWNLOAD &&
+                        (isEditing
+                            ? "Modify the details of your existing file"
+                            : "Create a new file for your product")}
                 </p>
             </header>
 

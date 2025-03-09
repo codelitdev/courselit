@@ -112,7 +112,7 @@ const queries = {
             ctx: GQLContext,
         ) => getMembersCount({ ctx, communityId, status }),
     },
-    getMembership: {
+    getCommunityMembership: {
         type: types.communityMemberStatus,
         args: {
             id: {

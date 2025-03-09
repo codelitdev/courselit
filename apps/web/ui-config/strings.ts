@@ -136,6 +136,7 @@ export const CAPTION_CLOSE = "Close";
 export const LOADING = "Loading";
 export const WORKING = "Working...";
 export const BUTTON_NEW_LESSON_TEXT = "Add Lesson";
+export const BUTTON_NEW_LESSON_TEXT_DOWNLOAD = "Add File";
 export const EDIT_LESSON_TEXT = "Edit Lesson";
 export const BUTTON_LESSON_DOWNLOAD = "Open in a new tab";
 export const BUTTON_NEW_GROUP_TEXT = "New section";

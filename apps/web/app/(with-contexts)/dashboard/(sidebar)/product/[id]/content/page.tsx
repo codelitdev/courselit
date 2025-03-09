@@ -31,16 +31,19 @@ import {
 import Link from "next/link";
 import {
     BUTTON_NEW_LESSON_TEXT,
+    BUTTON_NEW_LESSON_TEXT_DOWNLOAD,
     COURSE_CONTENT_HEADER,
     EDIT_SECTION_HEADER,
+    LESSON_GROUP_DELETED,
     MANAGE_COURSES_PAGE_HEADING,
     TOAST_TITLE_ERROR,
+    TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
 import { AddressContext } from "@components/contexts";
 import useProduct from "../../../../../../../hooks/use-product";
 import { truncate } from "@ui-lib/utils";
-import { Lesson } from "@courselit/common-models";
+import { Constants, Lesson } from "@courselit/common-models";
 import { DragAndDrop, useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import {
@@ -53,7 +56,10 @@ import { Droplets } from "lucide-react";
 
 export default function ContentPage() {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [itemToDelete, setItemToDelete] = useState(null);
+    const [itemToDelete, setItemToDelete] = useState<Record<
+        string,
+        string
+    > | null>(null);
     const [collapsedSections, setCollapsedSections] = useState<string[]>([]);
     const [hoveredSectionIndex, setHoveredSectionIndex] = useState<
         number | null
@@ -73,9 +79,10 @@ export default function ContentPage() {
     ];
     const { toast } = useToast();
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         setDeleteDialogOpen(false);
         setItemToDelete(null);
+        await removeGroup(itemToDelete?.id!, product?.courseId!);
     };
 
     const toggleSectionCollapse = (sectionId: string) => {
@@ -126,6 +133,49 @@ export default function ContentPage() {
             .build();
         try {
             await fetch.exec();
+        } catch (err: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
+        }
+    };
+
+    const removeGroup = async (groupId: string, courseId: string) => {
+        const mutation = `
+            mutation RemoveGroup ($id: String!, $courseId: String!) {
+                removeGroup(
+                    id: $id,
+                    courseId: $courseId
+                ) {
+                courseId 
+                }
+            }
+        `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload({
+                query: mutation,
+                variables: {
+                    id: groupId,
+                    courseId: courseId,
+                },
+            })
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            const response = await fetch.exec();
+            if (response.removeGroup?.courseId) {
+                toast({
+                    title: TOAST_TITLE_SUCCESS,
+                    description: LESSON_GROUP_DELETED,
+                });
+                // course.groups.splice(
+                //     course.groups.findIndex((group) => group.id === groupId),
+                //     1,
+                // );
+            }
         } catch (err: any) {
             toast({
                 title: TOAST_TITLE_ERROR,
@@ -215,19 +265,28 @@ export default function ContentPage() {
                                     >
                                         Add Section Below
                                     </DropdownMenuItem> */}
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                        onClick={() => {
-                                            setItemToDelete({
-                                                type: "section",
-                                                title: section.name,
-                                            });
-                                            setDeleteDialogOpen(true);
-                                        }}
-                                        className="text-red-600"
-                                    >
-                                        Delete Section
-                                    </DropdownMenuItem>
+                                    {!(
+                                        product?.type?.toLowerCase() ===
+                                            Constants.CourseType.DOWNLOAD &&
+                                        product?.groups?.length === 1
+                                    ) && (
+                                        <>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem
+                                                onClick={() => {
+                                                    setItemToDelete({
+                                                        type: "section",
+                                                        title: section.name,
+                                                        id: section.id,
+                                                    });
+                                                    setDeleteDialogOpen(true);
+                                                }}
+                                                className="text-red-600"
+                                            >
+                                                Delete Section
+                                            </DropdownMenuItem>
+                                        </>
+                                    )}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
@@ -307,7 +366,10 @@ export default function ContentPage() {
                                         href={`/dashboard/product/${productId}/content/section/${section.id}/lesson`}
                                     >
                                         <Plus className="mr-2 h-4 w-4" />
-                                        {BUTTON_NEW_LESSON_TEXT}
+                                        {product?.type?.toLowerCase() ===
+                                        Constants.CourseType.DOWNLOAD
+                                            ? BUTTON_NEW_LESSON_TEXT_DOWNLOAD
+                                            : BUTTON_NEW_LESSON_TEXT}
                                     </Link>
                                 </Button>
                             </div>
@@ -337,20 +399,23 @@ export default function ContentPage() {
                         )}
                     </div>
                 ))}
-                <div className="mt-8 flex justify-center">
-                    <Button
-                        variant="outline"
-                        className="text-sm font-medium"
-                        asChild
-                    >
-                        <Link
-                            href={`/dashboard/product/${productId}/content/section/new`}
+                {product?.type?.toLowerCase() !==
+                    Constants.CourseType.DOWNLOAD && (
+                    <div className="mt-8 flex justify-center">
+                        <Button
+                            variant="outline"
+                            className="text-sm font-medium"
+                            asChild
                         >
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add Section
-                        </Link>
-                    </Button>
-                </div>
+                            <Link
+                                href={`/dashboard/product/${productId}/content/section/new`}
+                            >
+                                <Plus className="mr-2 h-4 w-4" />
+                                Add Section
+                            </Link>
+                        </Button>
+                    </div>
+                )}
             </ScrollArea>
 
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

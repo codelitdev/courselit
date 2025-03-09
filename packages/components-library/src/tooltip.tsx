@@ -9,12 +9,14 @@ interface TooltipProps {
     title: string;
     children: React.ReactNode;
     side?: "left" | "right" | "bottom" | "top";
+    className?: string;
 }
 
 export default function CustomTooltip({
     title,
     children,
     side = "bottom",
+    className,
 }: TooltipProps) {
     return (
         <TooltipProvider>
@@ -23,7 +25,7 @@ export default function CustomTooltip({
                     <span>{children}</span>
                 </TooltipTrigger>
                 <TooltipContent side={side}>
-                    <p>{title}</p>
+                    <p className={className}>{title}</p>
                 </TooltipContent>
             </Tooltip>
         </TooltipProvider>

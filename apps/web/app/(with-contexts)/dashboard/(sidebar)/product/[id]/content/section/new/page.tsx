@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useToast } from "@/hooks/use-toast";
 import {
     BTN_CONTINUE,
     COURSE_CONTENT_HEADER,
@@ -15,10 +14,11 @@ import {
     TOAST_TITLE_ERROR,
 } from "@ui-config/strings";
 import { AddressContext } from "@components/contexts";
-import useProduct from "../../../../../../../../../hooks/use-product";
+import useProduct from "@/hooks/use-product";
 import { truncate } from "@ui-lib/utils";
 import DashboardContent from "@components/admin/dashboard-content";
 import { FetchBuilder } from "@courselit/utils";
+import { useToast } from "@courselit/components-library";
 
 export default function SectionPage() {
     const { toast } = useToast();
@@ -68,7 +68,7 @@ export default function SectionPage() {
 
     const createSection = async () => {
         const query = `
-            mutation addGroup($courseId: ID!, $name: String!) {
+            mutation addGroup($courseId: String!, $name: String!) {
                 course: addGroup(id: $courseId, name: $name) {
                     courseId,
                     groups {

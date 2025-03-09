@@ -53,7 +53,11 @@ import { formatDistanceToNow } from "date-fns";
 import { capitalize } from "@courselit/utils";
 import { truncate } from "@ui-lib/utils";
 import MetricCard from "./metric-card";
-import { getSymbolFromCurrency, useToast } from "@courselit/components-library";
+import {
+    getSymbolFromCurrency,
+    useToast,
+    Tooltip as TooltipCL,
+} from "@courselit/components-library";
 import {
     CartesianGrid,
     Line,
@@ -134,13 +138,18 @@ export default function DashboardPage() {
                             {product?.title || (
                                 <Skeleton className="h-9 w-64" />
                             )}
-                            <Button
-                                variant="ghost"
-                                onClick={handleShareClick}
-                                size="sm"
+                            <TooltipCL
+                                title="Share product"
+                                className="font-normal!"
                             >
-                                <Share2 className="h-5 w-5" />
-                            </Button>
+                                <Button
+                                    variant="ghost"
+                                    onClick={handleShareClick}
+                                    size="sm"
+                                >
+                                    <Share2 className="h-5 w-5" />
+                                </Button>
+                            </TooltipCL>
                         </h1>
                         <div className="flex items-center gap-2">
                             {product ? (

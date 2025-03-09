@@ -14,7 +14,7 @@ export const useMembership = (id?: string) => {
     const loadMembership = useCallback(async () => {
         const query = `
             query ($id: String) {
-                communityMembership: getMembership(id: $id) {
+                communityMembership: getCommunityMembership(id: $id) {
                     status
                     role
                     rejectionReason

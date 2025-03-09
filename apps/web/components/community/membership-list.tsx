@@ -343,16 +343,16 @@ export function MembershipList({ id }: { id: string }) {
                                     <TableHead className="w-[250px]">
                                         User
                                     </TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Role</TableHead>
                                     <TableHead className="hidden lg:table-cell">
-                                        Reason
+                                        Joining Reason
                                     </TableHead>
                                     <TableHead className="hidden xl:table-cell">
                                         Rejection Reason
                                     </TableHead>
-                                    <TableHead>Subscription ID</TableHead>
-                                    <TableHead>Subscription Method</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Role</TableHead>
+                                    <TableHead>Subscription</TableHead>
+                                    {/* <TableHead>Subscription Method</TableHead> */}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -405,52 +405,21 @@ export function MembershipList({ id }: { id: string }) {
                                                 </div>
                                             </Link>
                                         </TableCell>
-                                        <TableCell className="hidden lg:table-cell max-w-xs truncate">
-                                            {member.joiningReason || "-"}
-                                        </TableCell>
-                                        <TableCell className="hidden xl:table-cell max-w-xs truncate">
-                                            {member.rejectionReason || "-"}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                {member.subscriptionId
-                                                    ? truncate(
-                                                          member.subscriptionId,
-                                                          10,
-                                                      )
-                                                    : "-"}
-                                                {member.subscriptionId && (
-                                                    <Tooltip title="Copy Subscription ID">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() =>
-                                                                handleCopyToClipboard(
-                                                                    member.subscriptionId,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Copy className="h-4 w-4" />
-                                                        </Button>
-                                                    </Tooltip>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="hidden xl:table-cell max-w-xs truncate">
+                                        {/* <TableCell className="hidden xl:table-cell max-w-xs truncate">
                                             {capitalize(
                                                 member.subscriptionMethod,
                                             ) || "-"}
-                                        </TableCell>
+                                        </TableCell> */}
                                         <TableCell>
                                             <div className="flex items-center space-x-2">
                                                 <Badge
                                                     variant={
-                                                        member.status ===
+                                                        member.status.toLowerCase() ===
                                                         "pending"
-                                                            ? "default"
-                                                            : member.status ===
+                                                            ? "success"
+                                                            : member.status.toLowerCase() ===
                                                                 "active"
-                                                              ? "success"
+                                                              ? "default"
                                                               : "destructive"
                                                     }
                                                 >
@@ -501,6 +470,41 @@ export function MembershipList({ id }: { id: string }) {
                                                             }
                                                         >
                                                             <RotateCcw className="h-3 w-3" />
+                                                        </Button>
+                                                    </Tooltip>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="hidden lg:table-cell max-w-xs truncate">
+                                            {member.joiningReason || "-"}
+                                        </TableCell>
+                                        <TableCell className="hidden xl:table-cell max-w-xs truncate">
+                                            {member.rejectionReason || "-"}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                <Tooltip
+                                                    title={`Subscription ID: ${member.subscriptionId}`}
+                                                >
+                                                    {member.subscriptionId
+                                                        ? truncate(
+                                                              member.subscriptionId,
+                                                              10,
+                                                          )
+                                                        : "-"}
+                                                </Tooltip>
+                                                {member.subscriptionId && (
+                                                    <Tooltip title="Copy Subscription ID">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() =>
+                                                                handleCopyToClipboard(
+                                                                    member.subscriptionId,
+                                                                )
+                                                            }
+                                                        >
+                                                            <Copy className="h-4 w-4" />
                                                         </Button>
                                                     </Tooltip>
                                                 )}

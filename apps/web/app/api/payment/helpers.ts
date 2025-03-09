@@ -122,11 +122,9 @@ export async function finalizePurchase({
 async function addProductToUser({
     user,
     product,
-    // cost,
 }: {
     user: User;
     product: InternalCourse;
-    // cost: number;
 }) {
     if (
         !user.purchases.some(
@@ -139,10 +137,5 @@ async function addProductToUser({
             accessibleGroups: [],
         });
         await (user as any).save();
-        // if (!product.customers.some((customer) => customer === user.userId)) {
-        //     product.customers.push(user.userId);
-        //     product.sales += product.cost;
-        //     await (product as any).save();
-        // }
     }
 }

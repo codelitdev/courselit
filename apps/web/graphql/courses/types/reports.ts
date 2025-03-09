@@ -27,8 +27,8 @@ export const courseMember = new GraphQLObjectType({
         downloaded: { type: GraphQLBoolean },
         subscriptionMethod: { type: GraphQLString },
         subscriptionId: { type: GraphQLString },
-        createdAt: { type: new GraphQLNonNull(GraphQLString) },
-        updatedAt: { type: new GraphQLNonNull(GraphQLString) },
+        createdAt: { type: GraphQLString },
+        updatedAt: { type: GraphQLString },
     },
 });
 

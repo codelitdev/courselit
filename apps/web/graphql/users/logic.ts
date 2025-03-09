@@ -670,43 +670,6 @@ export const getUserContent = async (
         }
     }
 
-    // const enrolledCourses = await CourseModel.find(
-    //     {
-    //         courseId: {
-    //             $in: [
-    //                 ...user.purchases.map(
-    //                     (course: Progress) => course.courseId,
-    //                 ),
-    //             ],
-    //         },
-    //         domain: ctx.subdomain._id,
-    //     },
-    //     {
-    //         courseId: 1,
-    //         title: 1,
-    //         lessons: 1,
-    //         type: 1,
-    //         slug: 1,
-    //     },
-    // );
-
-    // for (const course of enrolledCourses) {
-    //     content.push({
-    //         entityType: Constants.MembershipEntityType.COURSE,
-    //         entity: {
-    //             id: course.courseId,
-    //             title: course.title,
-    //             slug: course.slug,
-    //             totalLessons: course.lessons.length,
-    //             featuredImage: course.featuredImage,
-    //             completedLessonsCount: user.purchases.find(
-    //                 (progress: Progress) =>
-    //                     progress.courseId === course.courseId,
-    //             )?.completedLessons.length,
-    //         },
-    //     });
-    // }
-
     return content;
 };
 

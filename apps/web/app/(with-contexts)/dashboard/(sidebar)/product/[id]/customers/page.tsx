@@ -24,7 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, UserPlus, Copy } from "lucide-react";
 import { useParams } from "next/navigation";
 import { capitalize, FetchBuilder } from "@courselit/utils";
-import { AddressContext } from "@components/contexts";
+import { AddressContext, ProfileContext } from "@components/contexts";
 import DashboardContent from "@components/admin/dashboard-content";
 import {
     COURSE_CUSTOMERS_PAGE_HEADING,
@@ -50,7 +50,7 @@ import {
     Membership,
     User,
 } from "@courselit/common-models";
-import { Tooltip, useToast } from "@courselit/components-library";
+import { Tooltip, useToast, Badge } from "@courselit/components-library";
 
 type Member = Pick<
     Membership,
@@ -75,6 +75,8 @@ export default function CustomersPage() {
     const address = useContext(AddressContext);
     const { product } = useProduct(productId, address);
     const { toast } = useToast();
+    const {profile} = useContext(ProfileContext)
+    const [isUpdating, setIsUpdating] = useState(false);
 
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
@@ -120,6 +122,7 @@ export default function CustomersPage() {
             query GetMembers($productId: String!) {
                 members: getProductMembers(courseId: $productId, limit: 10000000) {
                     user {
+                        userId
                         avatar {
                             thumbnail
                         }
@@ -273,6 +276,7 @@ export default function CustomersPage() {
                 <TableHeader>
                     <TableRow>
                         <TableHead>Name</TableHead>
+                        <TableHead>Status</TableHead>
                         <TableHead>
                             {product?.type?.toLowerCase() ===
                             Constants.CourseType.COURSE
@@ -281,8 +285,7 @@ export default function CustomersPage() {
                         </TableHead>
                         <TableHead>Signed Up</TableHead>
                         <TableHead>Last Active</TableHead>
-                        <TableHead>Subscription ID</TableHead>
-                        <TableHead>Subscription Method</TableHead>
+                        <TableHead>Subscription</TableHead>
                         {/* <TableHead>Actions</TableHead> */}
                     </TableRow>
                 </TableHeader>
@@ -316,10 +319,34 @@ export default function CustomersPage() {
                               <TableRow key={member.user.email}>
                                   <TableCell className="font-medium">
                                       <Link
-                                          href={`/dashboard/users/${member.userId}`}
+                                          href={`/dashboard/users/${member.user.userId}`}
                                       >
                                           <div className="flex items-center space-x-2">
-                                              <Avatar className="h-8 w-8">
+                                                    <Avatar className="h-8 w-8">
+                                                        <AvatarImage
+                                                            src={
+                                                                member.user
+                                                                    .avatar
+                                                                    ?.thumbnail ||
+                                                                "/courselit_backdrop_square.webp"
+                                                            }
+                                                            alt={
+                                                                member.user
+                                                                    .name ||
+                                                                member.user
+                                                                    .email
+                                                            }
+                                                        />
+                                                        <AvatarFallback>
+                                                            {(
+                                                                member.user
+                                                                    .name ||
+                                                                member.user
+                                                                    .email
+                                                            ).charAt(0)}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                              {/* <Avatar className="h-8 w-8">
                                                   <AvatarImage
                                                       src={
                                                           member.user.avatar
@@ -336,7 +363,7 @@ export default function CustomersPage() {
                                                           .map((n) => n[0])
                                                           .join("")}
                                                   </AvatarFallback>
-                                              </Avatar>
+                                              </Avatar> */}
                                               <span>
                                                   {member.user.name ||
                                                       member.user.email}
@@ -344,6 +371,48 @@ export default function CustomersPage() {
                                           </div>
                                       </Link>
                                   </TableCell>
+                                  {/* <TableCell>
+                                      {member.status}
+                                  </TableCell> */}
+                                        <TableCell>
+                                            <div className="flex items-center space-x-2">
+                                                <Badge
+                                                    variant={
+                                                        member.status.toLowerCase() ===
+                                                        "pending"
+                                                            ? "success"
+                                                            : member.status.toLowerCase() ===
+                                                                "active"
+                                                              ? "default"
+                                                              : "destructive"
+                                                    }
+                                                >
+                                                    {member.status
+                                                        .charAt(0)
+                                                        .toUpperCase() +
+                                                        member.status.slice(1)}
+                                                </Badge>
+                                                {/* {member.user.userId !==
+                                                    profile.userId && (
+                                                    <Tooltip title="Change status">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() =>
+                                                                handleStatusChange(
+                                                                    member,
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                isUpdating
+                                                            }
+                                                        >
+                                                            <RotateCcw className="h-3 w-3" />{" "}
+                                                        </Button>
+                                                    </Tooltip>
+                                                )} */}
+                                            </div>
+                                        </TableCell>
                                   <TableCell>
                                       {product?.type?.toLowerCase() ===
                                       Constants.CourseType.COURSE ? (
@@ -372,8 +441,8 @@ export default function CustomersPage() {
                                                           <DialogContent>
                                                               <DialogHeader>
                                                                   <DialogTitle>
-                                                                      {member.name ||
-                                                                          member.email}
+                                                                      {truncate( member.user.name ||
+                                                                          member.user.email, 10)}
                                                                       &apos;s
                                                                       Progress
                                                                   </DialogTitle>
@@ -400,7 +469,7 @@ export default function CustomersPage() {
                                                                                   }
                                                                               </p>
                                                                               <span>
-                                                                                  {member.completedLessons.includes(
+                                                                                  {member.completedLessons?.includes(
                                                                                       lesson.lessonId,
                                                                                   ) ? (
                                                                                       <CheckCircled />
@@ -435,12 +504,13 @@ export default function CustomersPage() {
                                   </TableCell>
                                   <TableCell>
                                       <div className="flex items-center gap-2">
+                                            <Tooltip title={`Method: ${capitalize(member.subscriptionMethod || "")}`}> 
                                           {member.subscriptionId
                                               ? truncate(
                                                     member.subscriptionId,
                                                     10,
                                                 )
-                                              : "-"}
+                                              : "-"}</Tooltip>
                                           {member.subscriptionId && (
                                               <Tooltip title="Copy Subscription ID">
                                                   <Button
@@ -448,7 +518,7 @@ export default function CustomersPage() {
                                                       variant="outline"
                                                       onClick={() =>
                                                           handleCopyToClipboard(
-                                                              member.subscriptionId,
+                                                              member.subscriptionId || ""
                                                           )
                                                       }
                                                   >
@@ -458,10 +528,10 @@ export default function CustomersPage() {
                                           )}
                                       </div>
                                   </TableCell>
-                                  <TableCell className="hidden xl:table-cell max-w-xs truncate">
+                                  {/* <TableCell className="hidden xl:table-cell max-w-xs truncate">
                                       {capitalize(member.subscriptionMethod) ||
                                           "-"}
-                                  </TableCell>
+                                  </TableCell> */}
                                   {/* <TableCell>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>

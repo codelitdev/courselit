@@ -11,7 +11,6 @@ import {
 } from "../../lib/graphql";
 import constants from "../../config/constants";
 import {
-    calculatePercentageCompletion,
     getPaginatedCoursesForAdmin,
     setupBlog,
     setupCourse,
@@ -375,48 +374,58 @@ export const getCourses = async ({
     }));
 };
 
-export const getEnrolledCourses = async (userId: string, ctx: GQLContext) => {
-    checkIfAuthenticated(ctx);
+// export const getEnrolledCourses = async (userId: string, ctx: GQLContext) => {
+//     checkIfAuthenticated(ctx);
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
-        if (userId !== ctx.user.userId) {
-            throw new Error(responses.action_not_allowed);
-        }
-    }
+//     if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
+//         if (userId !== ctx.user.userId) {
+//             throw new Error(responses.action_not_allowed);
+//         }
+//     }
 
-    const user = await UserModel.findOne({ userId, domain: ctx.subdomain._id });
-    if (!user) {
-        throw new Error(responses.user_not_found);
-    }
+//     const user = await UserModel.findOne({ userId, domain: ctx.subdomain._id });
+//     if (!user) {
+//         throw new Error(responses.user_not_found);
+//     }
 
-    const enrolledCourses = await CourseModel.find(
-        {
-            courseId: {
-                $in: [
-                    ...user.purchases.map(
-                        (course: Progress) => course.courseId,
-                    ),
-                ],
-            },
-            domain: ctx.subdomain._id,
-        },
-        {
-            courseId: 1,
-            title: 1,
-            lessons: 1,
-            type: 1,
-            slug: 1,
-        },
-    );
+//     const memberships = await MembershipModel.find({
+//         userId,
+//         domain: ctx.subdomain._id,
+//         entityType: Constants.MembershipEntityType.COURSE,
+//         status: Constants.MembershipStatus.ACTIVE,
+//     }, {
+//         entityId: 1,
+//     });
 
-    return enrolledCourses.map((course) => ({
-        courseId: course.courseId,
-        title: course.title,
-        type: course.type,
-        slug: course.slug,
-        progress: calculatePercentageCompletion(user, course),
-    }));
-};
+//     const enrolledCourses = await CourseModel.find(
+//         {
+//             courseId: {
+//                 $in: [
+//                     // ...user.purchases.map(
+//                     //     (course: Progress) => course.courseId,
+//                     // ),
+//                     ...memberships.map((membership) => membership.entityId),
+//                 ],
+//             },
+//             domain: ctx.subdomain._id,
+//         },
+//         {
+//             courseId: 1,
+//             title: 1,
+//             lessons: 1,
+//             type: 1,
+//             slug: 1,
+//         },
+//     );
+
+//     return enrolledCourses.map((course) => ({
+//         courseId: course.courseId,
+//         title: course.title,
+//         type: course.type,
+//         slug: course.slug,
+//         progress: calculatePercentageCompletion(user, course),
+//     }));
+// };
 
 export const addGroup = async ({
     id,
@@ -430,6 +439,13 @@ export const addGroup = async ({
     ctx: GQLContext;
 }) => {
     const course = await getCourseOrThrow(undefined, ctx, id);
+    if (
+        course.type === Constants.CourseType.DOWNLOAD &&
+        course.groups?.length === 1
+    ) {
+        throw new Error(responses.download_course_cannot_have_groups);
+    }
+
     const existingName = (group: Group) => group.name === name;
 
     if (course.groups?.some(existingName)) {
@@ -462,6 +478,13 @@ export const removeGroup = async (
 
     if (!group) {
         return formatCourse(course.courseId, ctx);
+    }
+
+    if (
+        course.type === Constants.CourseType.DOWNLOAD &&
+        course.groups?.length === 1
+    ) {
+        throw new Error(responses.download_course_last_group_cannot_be_removed);
     }
 
     const countOfAssociatedLessons = await Lesson.countDocuments({

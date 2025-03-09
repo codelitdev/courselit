@@ -116,7 +116,7 @@ const Details = ({ userId, address, dispatch }: DetailsProps) => {
     const getEnrolledCourses = async () => {
         const query = `
     query {
-      enrolledCourses: getEnrolledCourses(userId: "${userData!.id}") {
+      enrolledCourses: getEnrolledCourses(userId: "${userId}") {
         id,
         title
       }
