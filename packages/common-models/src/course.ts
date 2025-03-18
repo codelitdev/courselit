@@ -1,6 +1,6 @@
+import { Media } from "./media";
 import Group from "./group";
-import Media from "./media";
-import { ProductPriceType, CourseType } from "./constants";
+import { ProductPriceType, CourseType, ProductAccessType } from "./constants";
 import { PaymentPlan } from "./payment-plan";
 import Lesson from "./lesson";
 
@@ -8,6 +8,8 @@ export type ProductPriceType =
     (typeof ProductPriceType)[keyof typeof ProductPriceType];
 
 export type CourseType = (typeof CourseType)[keyof typeof CourseType];
+export type ProductAccessType =
+    (typeof ProductAccessType)[keyof typeof ProductAccessType];
 
 export interface Course {
     courseId: string;

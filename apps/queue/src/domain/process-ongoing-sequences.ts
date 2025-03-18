@@ -1,9 +1,7 @@
-import { Domain, Email, Sequence } from "@courselit/common-models";
-import { AdminSequence } from "./model/sequence";
+import { Domain, Email } from "@courselit/common-models";
 import OngoingSequenceModel, {
     OngoingSequence,
 } from "./model/ongoing-sequence";
-import { UserWithDomain } from "./model/user";
 import { logger } from "../logger";
 import { sequenceBounceLimit } from "../constants";
 import {
@@ -22,6 +20,7 @@ import { Worker } from "bullmq";
 import redis from "../redis";
 import mongoose from "mongoose";
 import sequenceQueue from "./sequence-queue";
+import { AdminSequence, InternalUser } from "@courselit/common-logic";
 const liquidEngine = new Liquid();
 
 new Worker(
@@ -116,7 +115,7 @@ async function processOngoingSequence(
 }
 
 function getNextPublishedEmail(
-    sequence: Sequence,
+    sequence: AdminSequence,
     ongoingSequence: OngoingSequence,
 ) {
     let nextPublishedEmail = null;
@@ -168,8 +167,8 @@ async function attemptMailSending({
     email,
     domain,
 }: {
-    creator: UserWithDomain;
-    user: UserWithDomain;
+    creator: InternalUser;
+    user: InternalUser;
     sequence: AdminSequence;
     ongoingSequence: OngoingSequence;
     email: Email;

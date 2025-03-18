@@ -27,7 +27,8 @@ export function MyContentCard({ item }: ContentCardProps) {
         <ContentCard
             key={item.entity.id}
             href={
-                entityType === Constants.MembershipEntityType.COURSE
+                entityType.toLowerCase() ===
+                Constants.MembershipEntityType.COURSE
                     ? `/course/${item.entity.slug}/${item.entity.id}`
                     : `/dashboard/community/${item.entity.id}`
             }
@@ -38,7 +39,7 @@ export function MyContentCard({ item }: ContentCardProps) {
             />
             <ContentCardContent>
                 <ContentCardHeader>{item.entity.title}</ContentCardHeader>
-                {entityType === Constants.CourseType.COURSE && (
+                {entityType.toLowerCase() === Constants.CourseType.COURSE && (
                     <Badge variant="secondary">
                         {entity.type === Constants.CourseType.COURSE ? (
                             <BookOpen className="h-4 w-4 mr-1" />
@@ -48,7 +49,7 @@ export function MyContentCard({ item }: ContentCardProps) {
                         {capitalize(entity.type)}
                     </Badge>
                 )}
-                {entityType === Constants.CourseType.COURSE &&
+                {entityType.toLowerCase() === Constants.CourseType.COURSE &&
                 entity.type === Constants.CourseType.COURSE &&
                 entity.totalLessons ? (
                     <div className="space-y-2 mt-4">

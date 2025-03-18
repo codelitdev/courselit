@@ -1,0 +1,47 @@
+{
+    "name": "@courselit/common-logic",
+    "version": "0.56.9",
+    "description": "Common logic for CourseLit",
+    "author": "Team CourseLit <hi@codelit.dev>",
+    "homepage": "https://github.com/codelitdev/courselit#readme",
+    "private": true,
+    "license": "MIT",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/codelitdev/courselit.git"
+    },
+    "scripts": {
+        "test": "echo \"Error: run tests from root\" && exit 1",
+        "clean": "rimraf dist/",
+        "prepublishOnly": "yarn run build",
+        "build": "tsup",
+        "tsc:build": "tsc",
+        "dev": "tsup --watch",
+        "check-types": "tsc --noEmit"
+    },
+    "bugs": {
+        "url": "https://github.com/codelitdev/courselit/issues"
+    },
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^5.18.0",
+        "@typescript-eslint/parser": "^5.18.0",
+        "eslint": "^8.12.0",
+        "rimraf": "^4.1.1",
+        "tsup": "6.6.0",
+        "typescript": "^5.1.6"
+    },
+    "dependencies": {
+        "@courselit/common-models": "workspace:^",
+        "@courselit/utils": "workspace:^"
+    }
+}

@@ -23,6 +23,6 @@
         "**/*.tsx",
         ".next/types/**/*.ts",
         "additional.d.ts"
-    ],
+, "components/admin/users/filter-container/segment-editor.tsx.notused"    ],
     "exclude": ["node_modules"]
 }

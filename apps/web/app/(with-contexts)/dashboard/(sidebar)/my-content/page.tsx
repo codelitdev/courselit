@@ -10,6 +10,9 @@ import DashboardContent from "@components/admin/dashboard-content";
 import { FetchBuilder } from "@courselit/utils";
 import { Constants, MembershipEntityType } from "@courselit/common-models";
 import { MyContentCard } from "@components/admin/my-content/content-card";
+import { BookOpen, Users } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@components/ui/button";
 
 function ContentGrid({
     items,
@@ -40,6 +43,7 @@ const breadcrumbs = [{ label: MY_CONTENT_HEADER, href: "#" }];
 
 export default function Page() {
     const [data, setData] = useState<ContentItem[]>([]);
+    const [dataLoaded, setDataLoaded] = useState(false);
     const [loading, setLoading] = useState(true);
     const { profile } = useContext(ProfileContext);
     const address = useContext(AddressContext);
@@ -80,14 +84,49 @@ export default function Page() {
             } catch (e: any) {
             } finally {
                 setLoading(false);
+                setDataLoaded(true);
             }
         };
 
         getUserContent();
     }, [address.backend, profile.userId]);
 
-    const courses = data.filter((item) => item.entityType === "course");
-    const communities = data.filter((item) => item.entityType === "community");
+    const courses = data.filter(
+        (item) => item.entityType.toLowerCase() === "course",
+    );
+    const communities = data.filter(
+        (item) => item.entityType.toLowerCase() === "community",
+    );
+
+    const EmptyStateMessage = ({ type }: { type: MembershipEntityType }) => (
+        <div className="text-center py-12">
+            <div className="flex justify-center mb-4">
+                {type === Constants.MembershipEntityType.COURSE ? (
+                    <BookOpen className="w-12 h-12 text-muted-foreground" />
+                ) : (
+                    <Users className="w-12 h-12 text-muted-foreground" />
+                )}
+            </div>
+            <p className="text-muted-foreground mb-4">
+                {type === Constants.MembershipEntityType.COURSE
+                    ? "You haven't enrolled in any products yet."
+                    : "You haven't joined any communities yet."}{" "}
+            </p>
+            {type === Constants.MembershipEntityType.COURSE ? (
+                <Link href="/courses" className="text-primary">
+                    <Button variant="outline" size="sm">
+                        Browse products
+                    </Button>
+                </Link>
+            ) : (
+                <Link href="/communities" className="text-primary">
+                    <Button variant="outline" size="sm">
+                        Browse communities
+                    </Button>
+                </Link>
+            )}
+        </div>
+    );
 
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
@@ -95,26 +134,32 @@ export default function Page() {
                 <h1 className="text-4xl font-bold">My Content</h1>
 
                 <section>
-                    <h2 className="text-2xl font-bold mb-6">My Products</h2>
+                    <h2 className="text-xl font-semibold mb-6">My Products</h2>
                     {loading ? (
                         <SkeletonGrid />
-                    ) : (
+                    ) : courses.length > 0 ? (
                         <ContentGrid
                             items={courses}
                             type={Constants.MembershipEntityType.COURSE}
                         />
+                    ) : (
+                        <EmptyStateMessage type="course" />
                     )}
                 </section>
 
                 <section>
-                    <h2 className="text-2xl font-bold mb-6">My Communities</h2>
+                    <h2 className="text-xl font-semibold mb-6">
+                        My Communities
+                    </h2>
                     {loading ? (
                         <SkeletonGrid />
-                    ) : (
+                    ) : communities.length > 0 ? (
                         <ContentGrid
                             items={communities}
                             type={Constants.MembershipEntityType.COMMUNITY}
                         />
+                    ) : (
+                        <EmptyStateMessage type="community" />
                     )}
                 </section>
             </div>

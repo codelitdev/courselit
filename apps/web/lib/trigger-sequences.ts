@@ -1,4 +1,10 @@
-import { Rule, Constants, Sequence, User } from "@courselit/common-models";
+import {
+    Rule,
+    Constants,
+    Sequence,
+    User,
+    type Event,
+} from "@courselit/common-models";
 import OngoingSequence from "@models/OngoingSequence";
 import RuleModel from "@models/Rule";
 import SequenceModel from "@models/Sequence";
@@ -11,7 +17,7 @@ export async function triggerSequences({
     data,
 }: {
     user: User;
-    event: (typeof Constants.eventTypes)[number];
+    event: Event;
     data?: string;
 }) {
     if (!user.subscribedToUpdates) {

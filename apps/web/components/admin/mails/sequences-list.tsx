@@ -22,6 +22,7 @@ import {
     TOAST_TITLE_ERROR,
     MAIL_TABLE_HEADER_STATUS,
     MAIL_TABLE_HEADER_SUBJECT,
+    MAIL_TABLE_HEADER_ENTRANTS,
 } from "@ui-config/strings";
 import { useEffect, useState } from "react";
 import { isDateInFuture } from "../../../lib/utils";
@@ -43,7 +44,10 @@ const SequencesList = ({
     // const [rowsPerPage, setRowsPerPage] = useState(10);
     const [count, setCount] = useState(0);
     const [sequences, setSequences] = useState<
-        Pick<Sequence, "sequenceId" | "title" | "emails" | "status">[]
+        Pick<
+            Sequence,
+            "sequenceId" | "title" | "emails" | "status" | "entrantsCount"
+        >[]
     >([]);
     const { toast } = useToast();
 
@@ -70,14 +74,15 @@ const SequencesList = ({
                     offset: $page,
                     type: $type
                 ) {
-                    sequenceId,
+                    sequenceId
                     emails {
-                        subject,
-                        published,
+                        subject
+                        published
                         delayInMillis
                     }
-                    title,
+                    title
                     status
+                    entrantsCount
                 },
             }`;
 
@@ -145,6 +150,9 @@ const SequencesList = ({
             <TableHead>
                 <td>{MAIL_TABLE_HEADER_SUBJECT}</td>
                 <td align="right">{MAIL_TABLE_HEADER_STATUS}</td>
+                {type === "sequence" && (
+                    <td align="right">{MAIL_TABLE_HEADER_ENTRANTS}</td>
+                )}
             </TableHead>
             <TableBody
                 count={count}
@@ -221,6 +229,9 @@ const SequencesList = ({
                                 </>
                             )}
                         </td>
+                        {type === "sequence" && (
+                            <td align="right">{broadcast.entrantsCount}</td>
+                        )}
                     </TableRow>
                 ))}
             </TableBody>

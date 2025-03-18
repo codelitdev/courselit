@@ -1,4 +1,4 @@
-import Media from "./media";
+import { Media } from "./media";
 
 export interface CommunityMedia {
     type: "youtube" | "pdf" | "image" | "video" | "gif";

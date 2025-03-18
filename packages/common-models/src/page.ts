@@ -1,4 +1,4 @@
-import Media from "./media";
+import { Media } from "./media";
 import type { Community, Product, Site } from "./page-type";
 import WidgetInstance from "./widget-instance";
 

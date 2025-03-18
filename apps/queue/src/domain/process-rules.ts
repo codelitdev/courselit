@@ -1,11 +1,17 @@
-import RuleModel, { RuleWithDomain as Rule } from "./model/rule";
+import RuleModel from "./model/rule";
 import OngoingSequence from "./model/ongoing-sequence";
-import SequenceModel, { AdminSequence } from "./model/sequence";
+import SequenceModel from "./model/sequence";
 import UserModel from "./model/user";
-import convertFiltersToDBConditions from "./convert-filters-to-db-conditions";
+import MembershipModel from "./model/membership";
 import { logger } from "../logger";
-import { Constants, User } from "@courselit/common-models";
+import { Constants, Rule, User } from "@courselit/common-models";
 import mongoose from "mongoose";
+import {
+    AdminSequence,
+    convertFiltersToDBConditions,
+} from "@courselit/common-logic";
+
+type RuleWithDomain = Rule & { domain: mongoose.Schema.Types.ObjectId };
 
 export async function processRules() {
     // eslint-disable-next-line no-constant-condition
@@ -16,8 +22,8 @@ export async function processRules() {
             `Starting process of rules at ${currentTime.toDateString()}`,
         );
 
-        const dueRules: Rule[] = (await RuleModel.find({
-            event: Constants.eventTypes[4],
+        const dueRules: RuleWithDomain[] = (await RuleModel.find({
+            event: Constants.EventType.DATE_OCCURRED,
             eventDateInMillis: { $lt: currentTime.getTime() },
         }).lean()) as any;
 
@@ -33,7 +39,7 @@ export async function processRules() {
     }
 }
 
-async function processRule(rule: Rule) {
+async function processRule(rule: RuleWithDomain) {
     const { domain, sequenceId } = rule;
     const sequence: AdminSequence | null = await SequenceModel.findOne({
         domain,
@@ -62,9 +68,13 @@ async function processRule(rule: Rule) {
 }
 
 async function addBroadcastToOngoingSequence(sequence: AdminSequence) {
-    const query: Partial<User & { domain: mongoose.Schema.Types.ObjectId }> = {
+    const query: Partial<User & { domain: mongoose.Types.ObjectId }> = {
         domain: sequence.domain,
-        ...convertFiltersToDBConditions(sequence.filter),
+        ...(await convertFiltersToDBConditions({
+            domain: sequence.domain,
+            filter: sequence.filter,
+            membershipModel: MembershipModel,
+        })),
         subscribedToUpdates: true,
     };
     const allUsers = await UserModel.find(query);

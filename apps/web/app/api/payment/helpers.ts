@@ -5,6 +5,7 @@ import {
     Membership,
     PaymentPlan,
     Progress,
+    Event,
 } from "@courselit/common-models";
 import { User } from "@courselit/common-models";
 import { triggerSequences } from "@/lib/trigger-sequences";
@@ -70,7 +71,7 @@ export async function finalizePurchase({
         return;
     }
 
-    let event: (typeof Constants.eventTypes)[number] | undefined = undefined;
+    let event: Event | undefined = undefined;
     if (paymentPlan.type !== Constants.PaymentPlanType.FREE) {
         await recordActivity({
             domain: domain._id,
@@ -91,7 +92,7 @@ export async function finalizePurchase({
             entityId: membership.entityId,
         });
 
-        event = Constants.eventTypes[5];
+        event = Constants.EventType.COMMUNITY_JOINED;
     }
     if (membership.entityType === Constants.MembershipEntityType.COURSE) {
         const product = await CourseModel.findOne<InternalCourse>({
@@ -111,7 +112,7 @@ export async function finalizePurchase({
             entityId: membership.entityId,
         });
 
-        event = Constants.eventTypes[2];
+        event = Constants.EventType.PRODUCT_PURCHASED;
     }
 
     if (event) {

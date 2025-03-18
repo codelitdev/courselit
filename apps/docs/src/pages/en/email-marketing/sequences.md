@@ -33,6 +33,8 @@ Here you will see all the sequences you have configured.
         - `Tag removed`
         - `Product purchased`
         - `Subscriber added`
+        - `Community joined`
+        - `Community left`
     -   4. **Entrance Condition Data**: The exact tag or product that triggers the sequence. This field is only relevant in the context of the `Entrance Condition` field.
     -   5. **Save**: A button to save your changes to the sequence.
     -   6. **Start/Pause**: A button to start or pause the sequence. Once paused, the sequence won't be triggered for subsequent triggers occurring in the system.

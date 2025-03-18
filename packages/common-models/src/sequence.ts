@@ -2,7 +2,7 @@ import { Email } from "./email";
 import { SequenceReport } from "./sequence-report";
 import { SequenceType } from "./sequence-type";
 import { UserFilterWithAggregator } from "./user-filter-with-aggregator";
-import { Constants } from ".";
+import { Event } from ".";
 import { SequenceStatus } from "./sequence-status";
 
 interface From {
@@ -11,7 +11,7 @@ interface From {
 }
 
 interface Trigger {
-    type: (typeof Constants.eventTypes)[number];
+    type: Event;
     data?: string;
 }
 
@@ -27,5 +27,5 @@ export interface Sequence {
     trigger: Trigger;
     status: SequenceStatus;
     emailsOrder: string[];
-    entrants: string[];
+    entrantsCount: number;
 }

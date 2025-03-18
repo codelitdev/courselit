@@ -18,14 +18,6 @@ export const userFilters = [
 ] as const;
 export const userFilterAggregationOperators = ["and", "or"] as const;
 export const mailTypes = ["broadcast", "sequence"] as const;
-export const eventTypes = [
-    "tag:added",
-    "tag:removed",
-    "product:purchased",
-    "subscriber:added",
-    "date:occurred",
-    "community:joined",
-] as const;
 export const actionTypes = [
     "tag:add",
     "tag:remove",
@@ -156,4 +148,31 @@ export const CourseType = {
     COURSE: "course",
     DOWNLOAD: "download",
     BLOG: "blog",
+} as const;
+export const MediaAccessType = {
+    PUBLIC: "public",
+    PRIVATE: "private",
+} as const;
+export const UserFilter = {
+    EMAIL: "email",
+    PRODUCT: "product",
+    COMMUNITY: "community",
+    LAST_ACTIVE: "lastActive",
+    SIGNED_UP: "signedUp",
+    SUBSCRIPTION: "subscription",
+    TAG: "tag",
+    PERMISSION: "permission",
+} as const;
+export const ProductAccessType = {
+    UNLISTED: "unlisted",
+    OPEN: "open",
+} as const;
+export const EventType = {
+    TAG_ADDED: "tag:added",
+    TAG_REMOVED: "tag:removed",
+    PRODUCT_PURCHASED: "product:purchased",
+    SUBSCRIBER_ADDED: "subscriber:added",
+    DATE_OCCURRED: "date:occurred",
+    COMMUNITY_JOINED: "community:joined",
+    COMMUNITY_LEFT: "community:left",
 } as const;

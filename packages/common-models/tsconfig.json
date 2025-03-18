@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "outDir": "./dist",
-        "lib": ["ES2015"],
+        "lib": ["ES2017"],
         "noImplicitAny": true,
         "module": "CommonJS",
         "target": "es5",

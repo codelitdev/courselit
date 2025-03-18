@@ -12,6 +12,7 @@
         "dev": "node --env-file .env.local --watch dist/index.mjs"
     },
     "dependencies": {
+        "@courselit/common-logic": "workspace:^",
         "@courselit/common-models": "workspace:^",
         "@courselit/utils": "workspace:^",
         "bullmq": "^4.14.0",

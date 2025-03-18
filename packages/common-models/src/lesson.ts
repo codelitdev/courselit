@@ -1,5 +1,5 @@
+import { Media } from "./media";
 import { LessonType } from "./lesson-type";
-import type Media from "./media";
 import type { Quiz } from "./quiz";
 import type { TextEditorContent } from "./text-editor-content";
 

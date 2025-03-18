@@ -1,5 +1,6 @@
+import { InternalUser } from "@courselit/common-logic";
 import CourseModel, { Course } from "./model/course";
-import UserModel, { UserWithDomain as User } from "./model/user";
+import UserModel from "./model/user";
 import mailQueue from "./queue";
 import { Liquid } from "liquidjs";
 const liquidEngine = new Liquid();
@@ -31,7 +32,7 @@ export async function processDrip() {
                 )
                 .map((group) => group.id);
 
-            const users: User[] = await UserModel.find({
+            const users: InternalUser[] = await UserModel.find({
                 "purchases.courseId": course.courseId,
             });
 

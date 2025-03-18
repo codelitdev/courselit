@@ -1,4 +1,4 @@
-import Media from "./media";
+import { Media } from "./media";
 import { PaymentMethod } from "./payment-method";
 
 export default interface SiteInfo {

@@ -1,52 +1,49 @@
 import type { Address } from "@courselit/common-models";
-import {
-    Button,
-    IconButton,
-    ScrollArea,
-    useToast,
-} from "@courselit/components-library";
-import { Delete } from "@courselit/icons";
-import type { AppDispatch, AppState } from "@courselit/state-management";
+import { useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import React, { useState } from "react";
-import type { ThunkDispatch } from "redux-thunk";
 import {
     TOAST_TITLE_ERROR,
     POPUP_CANCEL_ACTION,
     POPUP_OK_ACTION,
-    USER_DELETE_SEGMENT,
-    USER_DELETE_SEGMENT_DESCRIPTION,
     USER_SEGMENT_DESCRIPTION,
     USER_SEGMENT_DROPDOWN_LABEL,
 } from "@ui-config/strings";
 import Segment from "@ui-models/segment";
-import PopoverDescription from "./popover-description";
-import PopoverHeader from "./popover-header";
-import type { AnyAction } from "redux";
-import { actionCreators } from "@courselit/state-management";
 import DocumentationLink from "@components/public/documentation-link";
-const { networkAction } = actionCreators;
+import {
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+} from "@components/ui/dropdown-menu";
+import { Button } from "@components/ui/button";
+import { Trash2 } from "lucide-react";
+import {
+    Dialog,
+    DialogFooter,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogContent,
+} from "@components/ui/dialog";
 
-interface DismissPopoverProps {
+interface DeleteSegmentProps {
     selectedSegment: string;
     segments?: Segment[];
-    cancelled?: boolean;
 }
 
 interface SegmentEditorProps {
     segments: Segment[];
     selectedSegment: string;
     address: Address;
-    dispatch?: AppDispatch;
-    dismissPopover: (props: DismissPopoverProps) => void;
+    onDelete: (props: DeleteSegmentProps) => void;
 }
 
-export default function SegmentEditor({
+export default function SegmentEditor2({
     segments,
     selectedSegment,
     address,
-    dispatch,
-    dismissPopover,
+    onDelete,
 }: SegmentEditorProps) {
     const [activeSegment, setActiveSegment] = useState<Segment>();
     const { toast } = useToast();
@@ -55,7 +52,7 @@ export default function SegmentEditor({
         const mutation = `
                 mutation {
                     segments: deleteSegment(
-                        segmentId: "${activeSegment.segmentId}",
+                        segmentId: "${activeSegment?.segmentId}",
                     ) {
                         name,
                         filter {
@@ -77,22 +74,19 @@ export default function SegmentEditor({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch &&
-                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                    networkAction(true),
-                );
             const response = await fetch.exec();
             const segmentId =
-                activeSegment.segmentId === selectedSegment
+                activeSegment?.segmentId === selectedSegment
                     ? ""
                     : selectedSegment;
             if (response.segments) {
-                dismissPopover({
+                setActiveSegment(undefined);
+                onDelete({
                     selectedSegment: segmentId,
                     segments: response.segments,
                 });
             } else {
-                dismissPopover({
+                onDelete({
                     selectedSegment: segmentId,
                 });
             }
@@ -102,68 +96,60 @@ export default function SegmentEditor({
                 description: err.message,
                 variant: "destructive",
             });
-        } finally {
-            dispatch &&
-                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                    networkAction(false),
-                );
         }
     };
 
     return (
-        <div className="max-w-[180px]">
-            {!activeSegment && (
-                <ScrollArea>
-                    <div className="p-2">
-                        <PopoverHeader>
+        <>
+            <DropdownMenuContent className="w-72">
+                {!activeSegment && (
+                    <>
+                        <DropdownMenuLabel className="text-base font-bold">
                             {USER_SEGMENT_DROPDOWN_LABEL}
-                        </PopoverHeader>
-                        <PopoverDescription>
+                        </DropdownMenuLabel>
+                        <div className="text-xs text-muted-foreground px-2 pb-2">
                             {USER_SEGMENT_DESCRIPTION}{" "}
                             <DocumentationLink path="/en/users/segments" />
-                        </PopoverDescription>
-                        <ul className="mt-2">
-                            {segments.map((segment) => (
-                                <li
-                                    key={segment.segmentId}
-                                    className="flex justify-between cursor-pointer text-medium leading-none rounded-[3px] flex items-center h-8 relative select-none outline-none data-[disabled]:text-slate-200 data-[disabled]:pointer-events-none hover:bg-slate-200"
-                                    onClick={() => {
-                                        dismissPopover({
-                                            selectedSegment: segment.segmentId,
-                                        });
-                                    }}
+                        </div>
+                        {segments.map((segment) => (
+                            <DropdownMenuItem
+                                key={segment.segmentId}
+                                className="flex items-center justify-between group"
+                                onClick={() => {
+                                    onDelete({
+                                        selectedSegment: segment.segmentId,
+                                    });
+                                }}
+                            >
+                                <span
+                                    className={
+                                        segment.segmentId === selectedSegment
+                                            ? "font-medium"
+                                            : ""
+                                    }
                                 >
-                                    <span
-                                        className={
-                                            segment.segmentId ===
-                                            selectedSegment
-                                                ? "font-medium"
-                                                : ""
-                                        }
-                                    >
-                                        {segment.name}
+                                    {segment.name}
+                                </span>
+                                {segment.segmentId && (
+                                    <span className="mr-2">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            onClick={() => {
+                                                setActiveSegment(segment);
+                                            }}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
                                     </span>
-                                    {segment.segmentId && (
-                                        <span className="mr-2">
-                                            <IconButton
-                                                variant="soft"
-                                                onClick={(e: MouseEvent) => {
-                                                    e.stopPropagation();
-                                                    setActiveSegment(segment);
-                                                }}
-                                            >
-                                                <Delete />
-                                            </IconButton>
-                                        </span>
-                                    )}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                </ScrollArea>
-            )}
-            {activeSegment && (
-                <div className="p-2">
+                                )}
+                            </DropdownMenuItem>
+                        ))}
+                    </>
+                )}
+                {/* {activeSegment && (
+                <>
                     <PopoverHeader>{USER_DELETE_SEGMENT}</PopoverHeader>
                     <PopoverDescription>{`${USER_DELETE_SEGMENT_DESCRIPTION}"${activeSegment.name}"?`}</PopoverDescription>
                     <div className="flex justify-between mt-4">
@@ -181,17 +167,44 @@ export default function SegmentEditor({
                             variant="soft"
                             onClick={(e: MouseEvent) => {
                                 e.preventDefault();
-                                dismissPopover({
+                                onDelete({
                                     selectedSegment,
-                                    cancelled: true,
                                 });
                             }}
                         >
                             {POPUP_CANCEL_ACTION}
                         </Button>
                     </div>
-                </div>
-            )}
-        </div>
+                </>
+            )} */}
+            </DropdownMenuContent>
+            <Dialog
+                open={!!activeSegment}
+                onOpenChange={() => setActiveSegment(undefined)}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete Segment</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete the segment &quot;
+                            {activeSegment?.name}&quot;? This action cannot be
+                            undone.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setActiveSegment(undefined)}
+                        >
+                            {POPUP_CANCEL_ACTION}
+                        </Button>
+                        <Button variant="destructive" onClick={deleteSegment}>
+                            {POPUP_OK_ACTION}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }
