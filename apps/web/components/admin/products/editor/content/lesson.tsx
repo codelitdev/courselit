@@ -168,7 +168,12 @@ const LessonEditor = ({
                 switch (response.lesson.type.toLowerCase()) {
                     case LESSON_TYPE_TEXT:
                         setTextContent(
-                            response.lesson.content || TextEditorEmptyDoc,
+                            response.lesson.content
+                                ? response.lesson.content.type &&
+                                  response.lesson.content.type === "doc"
+                                    ? response.lesson.content
+                                    : TextEditorEmptyDoc
+                                : TextEditorEmptyDoc,
                         );
                         setRefresh(refresh + 1);
                         break;
