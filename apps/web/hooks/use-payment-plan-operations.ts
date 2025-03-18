@@ -1,13 +1,10 @@
 import { useState, useContext } from "react";
 import { FetchBuilder } from "@courselit/utils";
-import {
-    Constants,
+import type {
     MembershipEntityType,
     PaymentPlan,
 } from "@courselit/common-models";
 import { AddressContext } from "@components/contexts";
-
-const { MembershipEntityType } = Constants;
 
 interface UsePaymentPlanOperationsProps {
     id: string;
