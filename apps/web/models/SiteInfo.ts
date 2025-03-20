@@ -25,6 +25,7 @@ const SettingsSchema = new mongoose.Schema<SiteInfo>({
     lemonsqueezyOneTimeVariantId: { type: String },
     lemonsqueezySubscriptionMonthlyVariantId: { type: String },
     lemonsqueezySubscriptionYearlyVariantId: { type: String },
+    mercadopagoAccessToken: { type: String },
 });
 
 export default SettingsSchema;
