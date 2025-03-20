@@ -26,24 +26,16 @@ export default async function handler(
     }
 
     const { body } = req;
-    console.log("Webhook body:", JSON.stringify(body));
-    info(`Webhook body received for domain: ${domain.name}`);
-    
     const paymentMethod = await getPaymentMethod(domain._id.toString());
-    console.log("Payment method:", paymentMethod.getName());
-    
+
     const paymentVerified = await paymentMethod.verify(body);
-    console.log("Payment verified:", paymentVerified);
-    info(`Payment verification result: ${paymentVerified}`);
-    
+
     if (paymentVerified) {
         const purchaseId = await paymentMethod.getPaymentIdentifier(body);
-        console.log("Purchase ID:", purchaseId);
         
         const purchaseRecord: Purchase | null = await PurchaseModel.findOne({
             orderId: purchaseId,
         });
-        console.log("Purchase Record:", purchaseRecord);
         
         if (!purchaseRecord) {
             error(`Purchase record not found for ID: ${purchaseId}`);
@@ -55,7 +47,6 @@ export default async function handler(
         purchaseRecord.status = transactionSuccess;
         purchaseRecord.webhookPayload = body;
         await (purchaseRecord as any).save();
-        console.log("Purchase record updated with success status");
         info(`Purchase record updated with success status for ID: ${purchaseId}`);
 
         // Check for existing activities before finalizing purchase
@@ -63,7 +54,7 @@ export default async function handler(
             domain: domain._id,
             entityId: purchaseRecord.courseId
         });
-        console.log("Existing activities before finalize:", existingActivities);
+        info(`Existing activities before finalize: ${existingActivities.length}`);
 
         await finalizePurchase(
             purchaseRecord.purchasedBy,
@@ -78,7 +69,6 @@ export default async function handler(
             domain: domain._id,
             entityId: purchaseRecord.courseId
         });
-        console.log("Activities after finalize:", newActivities);
 
         res.status(200).json({
             message: "success",

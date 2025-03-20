@@ -25,4 +25,7 @@ export default interface SiteInfo {
     lemonsqueezySubscriptionMonthlyVariantId?: string;
     lemonsqueezySubscriptionYearlyVariantId?: string;
     lemonsqueezyWebhookSecret?: string;
+    mercadopagoKey?: string;
+    mercadopagoSecret?: string;
+    mercadopagoAccessToken?: string;
 }
