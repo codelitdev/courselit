@@ -4,6 +4,7 @@ import DomainModel, { Domain } from "../models/Domain";
 import StripePayment from "./stripe-payment";
 import RazorpayPayment from "./razorpay-payment";
 import LemonSqueezyPayment from "./lemonsqueezy-payment";
+import MercadoPagoPayment from "./mercadopago-payment";
 
 const {
     error_unrecognised_payment_method: unrecognisedPaymentMethod,
@@ -36,6 +37,8 @@ export const getPaymentMethodFromSettings = async (
             return await new RazorpayPayment(siteInfo).setup();
         case UIConstants.PAYMENT_METHOD_LEMONSQUEEZY:
             return await new LemonSqueezyPayment(siteInfo).setup();
+        case UIConstants.PAYMENT_METHOD_MERCADOPAGO:
+            return await new MercadoPagoPayment(siteInfo).setup();
         case UIConstants.PAYMENT_METHOD_PAYTM:
             throw new Error(notYetSupported);
         default:

@@ -60,6 +60,7 @@ const siteType = new GraphQLObjectType({
         codeInjectionBody: { type: GraphQLString },
         mailingAddress: { type: GraphQLString },
         hideCourseLitBranding: { type: GraphQLBoolean },
+        mercadopagoAccessToken: { type: GraphQLString },
     },
 });
 
@@ -95,6 +96,7 @@ const sitePaymentUpdateType = new GraphQLInputObjectType({
         lemonsqueezyOneTimeVariantId: { type: GraphQLString },
         lemonsqueezySubscriptionMonthlyVariantId: { type: GraphQLString },
         lemonsqueezySubscriptionYearlyVariantId: { type: GraphQLString },
+        mercadopagoAccessToken: { type: GraphQLString },
     },
 });
 

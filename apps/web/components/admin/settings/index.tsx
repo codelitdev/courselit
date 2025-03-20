@@ -85,6 +85,7 @@ import { Copy, Info } from "lucide-react";
 import { Label } from "@components/ui/label";
 import { Input } from "@components/ui/input";
 import Resources from "@components/resources";
+import { PAYMENT_METHOD_MERCADOPAGO } from "@courselit/common-models/dist/ui-constants";
 
 const {
     PAYMENT_METHOD_PAYPAL,
@@ -163,6 +164,7 @@ const Settings = (props: SettingsProps) => {
                     settings.lemonsqueezySubscriptionMonthlyVariantId,
                 lemonsqueezySubscriptionYearlyVariantId:
                     settings.lemonsqueezySubscriptionYearlyVariantId,
+                mercadopagoAccessToken: settings.mercadopagoAccessToken,
             }),
         );
     }, [settings]);
@@ -195,7 +197,8 @@ const Settings = (props: SettingsProps) => {
                         codeInjectionHead,
                         codeInjectionBody,
                         mailingAddress,
-                        hideCourseLitBranding
+                        hideCourseLitBranding,
+                        mercadopagoAccessToken
                     }
                 },
                 apikeys: getApikeys {
@@ -247,6 +250,7 @@ const Settings = (props: SettingsProps) => {
                 settingsResponse.lemonsqueezySubscriptionMonthlyVariantId || "",
             lemonsqueezySubscriptionYearlyVariantId:
                 settingsResponse.lemonsqueezySubscriptionYearlyVariantId || "",
+            mercadopagoAccessToken: settingsResponse.mercadopagoAccessToken,
         };
         setSettings(
             Object.assign({}, settings, settingsResponseWithNullsRemoved),
@@ -291,7 +295,8 @@ const Settings = (props: SettingsProps) => {
                         codeInjectionHead,
                         codeInjectionBody,
                         mailingAddress,
-                        hideCourseLitBranding
+                        hideCourseLitBranding,
+                        mercadopagoAccessToken
                     }
                 }
             }`;
@@ -358,7 +363,8 @@ const Settings = (props: SettingsProps) => {
                         codeInjectionHead,
                         codeInjectionBody,
                         mailingAddress,
-                        hideCourseLitBranding
+                        hideCourseLitBranding,
+                        mercadopagoAccessToken
                     }
                 }
             }`;
@@ -431,7 +437,8 @@ const Settings = (props: SettingsProps) => {
                     codeInjectionHead,
                     codeInjectionBody,
                     mailingAddress,
-                    hideCourseLitBranding
+                    hideCourseLitBranding,
+                    mercadopagoAccessToken
                 }
             }
         }`;
@@ -496,7 +503,8 @@ const Settings = (props: SettingsProps) => {
                     codeInjectionHead,
                     codeInjectionBody,
                     mailingAddress,
-                    hideCourseLitBranding
+                    hideCourseLitBranding,
+                    mercadopagoAccessToken
                 }
             }
         }`;
@@ -554,7 +562,8 @@ const Settings = (props: SettingsProps) => {
                 $lemonsqueezyWebhookSecret: String
                 $lemonsqueezyOneTimeVariantId: String,
                 $lemonsqueezySubscriptionMonthlyVariantId: String,
-                $lemonsqueezySubscriptionYearlyVariantId: String
+                $lemonsqueezySubscriptionYearlyVariantId: String,
+                $mercadopagoAccessToken: String
             ) {
                 settings: updatePaymentInfo(siteData: {
                     currencyISOCode: $currencyISOCode,
@@ -569,7 +578,8 @@ const Settings = (props: SettingsProps) => {
                     lemonsqueezyWebhookSecret: $lemonsqueezyWebhookSecret,
                     lemonsqueezyOneTimeVariantId: $lemonsqueezyOneTimeVariantId,
                     lemonsqueezySubscriptionMonthlyVariantId: $lemonsqueezySubscriptionMonthlyVariantId,
-                    lemonsqueezySubscriptionYearlyVariantId: $lemonsqueezySubscriptionYearlyVariantId
+                    lemonsqueezySubscriptionYearlyVariantId: $lemonsqueezySubscriptionYearlyVariantId,
+                    mercadopagoAccessToken: $mercadopagoAccessToken
                 }) {
                     settings {
                         title,
@@ -595,10 +605,17 @@ const Settings = (props: SettingsProps) => {
                         codeInjectionHead,
                         codeInjectionBody,
                         mailingAddress,
-                        hideCourseLitBranding
+                        hideCourseLitBranding,
+                        mercadopagoAccessToken
                     }
                 }
             }`;
+
+        console.log("Mutation para guardar configuración:", query);
+        console.log(
+            "Token de Mercado Pago:",
+            newSettings.mercadopagoAccessToken,
+        );
 
         try {
             const fetchRequest = fetch
@@ -623,6 +640,8 @@ const Settings = (props: SettingsProps) => {
                             newSettings.lemonsqueezySubscriptionMonthlyVariantId,
                         lemonsqueezySubscriptionYearlyVariantId:
                             newSettings.lemonsqueezySubscriptionYearlyVariantId,
+                        mercadopagoAccessToken:
+                            newSettings.mercadopagoAccessToken,
                     },
                 })
                 .build();
@@ -690,6 +709,9 @@ const Settings = (props: SettingsProps) => {
         lemonsqueezySubscriptionYearlyVariantId: getNewSettings
             ? newSettings.lemonsqueezySubscriptionYearlyVariantId
             : settings.lemonsqueezySubscriptionYearlyVariantId,
+        mercadopagoAccessToken: getNewSettings
+            ? newSettings.mercadopagoAccessToken
+            : settings.mercadopagoAccessToken,
     });
 
     const removeApikey = async (keyId: string) => {
@@ -920,6 +942,12 @@ const Settings = (props: SettingsProps) => {
                                             !x.lemonsqueezy,
                                     ),
                                 },
+                                {
+                                    label: capitalize(
+                                        PAYMENT_METHOD_MERCADOPAGO.toLowerCase(),
+                                    ),
+                                    value: PAYMENT_METHOD_MERCADOPAGO,
+                                },
                             ]}
                             onChange={(value) =>
                                 setNewSettings(
@@ -1036,6 +1064,22 @@ const Settings = (props: SettingsProps) => {
                                     name="lemonsqueezyKey"
                                     type="password"
                                     value={newSettings.lemonsqueezyKey || ""}
+                                    onChange={onChangeData}
+                                    sx={{ mb: 2 }}
+                                    autoComplete="off"
+                                />
+                            </>
+                        )}
+                        {newSettings.paymentMethod ===
+                            PAYMENT_METHOD_MERCADOPAGO && (
+                            <>
+                                <FormField
+                                    label={"Mercado Pago Access Token"}
+                                    name="mercadopagoAccessToken"
+                                    type="password"
+                                    value={
+                                        newSettings.mercadopagoAccessToken || ""
+                                    }
                                     onChange={onChangeData}
                                     sx={{ mb: 2 }}
                                     autoComplete="off"

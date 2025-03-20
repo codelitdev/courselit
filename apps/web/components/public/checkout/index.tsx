@@ -8,6 +8,7 @@ const Stripe = dynamic(() => import("./stripe"));
 const Razorpay = dynamic(() => import("./razorpay"));
 const Free = dynamic(() => import("./free"));
 const Lemonsqueezy = dynamic(() => import("./lemonsqueezy"));
+const MercadoPago = dynamic(() => import("./mercadopago"));
 
 interface CheckoutExternalProps {
     course: Course;
@@ -38,6 +39,9 @@ const CheckoutExternal = (props: CheckoutExternalProps) => {
                     )}
                     {paymentMethod === UIConstants.PAYMENT_METHOD_PAYPAL && (
                         <></>
+                    )}
+                    {paymentMethod === UIConstants.PAYMENT_METHOD_MERCADOPAGO && (
+                        <MercadoPago course={course} />
                     )}
                 </>
             )}

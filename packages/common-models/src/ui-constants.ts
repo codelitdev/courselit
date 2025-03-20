@@ -23,6 +23,7 @@ export const PAYMENT_METHOD_LEMONSQUEEZY = "lemonsqueezy";
 export const PAYMENT_METHOD_PAYPAL = "paypal";
 export const PAYMENT_METHOD_PAYTM = "paytm";
 export const PAYMENT_METHOD_RAZORPAY = "razorpay";
+export const PAYMENT_METHOD_MERCADOPAGO = "mercadopago";
 export const PAYMENT_METHOD_NONE = "";
 
 // transaction statuses from backend

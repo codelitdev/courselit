@@ -56,7 +56,8 @@ export const Metric = ({
             query {
                 activities: getActivities(
                     type: ${type.toUpperCase()}, 
-                    duration: _${internalDuration.toUpperCase()}
+                    duration: _${internalDuration.toUpperCase()},
+                    points: true
                 ) {
                     count,
                     points {
@@ -77,24 +78,46 @@ export const Metric = ({
                 setLoading(true);
                 const response = await fetch.exec();
                 if (response.activities) {
-                    const pointsWithDate = response.activities.points.map(
-                        (point: { date: string; count: number }) => {
-                            return {
-                                date: new Date(
-                                    +point.date,
-                                ).toLocaleDateString(),
-                                count: point.count,
-                            };
-                        },
-                    );
+                    const pointsWithDate =
+                        response.activities.points?.map(
+                            (point: {
+                                date: string | number | Date;
+                                count: number;
+                            }) => {
+                                console.log("Processing point:", point);
+                                // Verificar el tipo de date y convertirlo apropiadamente
+                                let dateObj: Date;
+
+                                if (typeof point.date === "object") {
+                                    // Si es un objeto Date
+                                    dateObj = new Date(point.date.toString());
+                                } else if (typeof point.date === "string") {
+                                    // Si es un string ISO
+                                    dateObj = new Date(point.date);
+                                } else {
+                                    // Si es un timestamp numérico
+                                    dateObj = new Date(point.date);
+                                }
+
+                                return {
+                                    date: dateObj.toLocaleDateString(),
+                                    count: point.count,
+                                };
+                            },
+                        ) || [];
+
+                    console.log(`Processed points:`, pointsWithDate);
+                    console.log(`Total count:`, response.activities.count);
 
                     setData({
                         count: response.activities.count,
                         points: pointsWithDate,
                     });
+                } else {
+                    console.log(`No activities data returned from API`);
                 }
             } catch (err: any) {
-                console.log("Error in fetching activities"); // eslint-disable-line
+                console.error("Error in fetching activities:", err); // eslint-disable-line
             } finally {
                 setLoading(false);
             }

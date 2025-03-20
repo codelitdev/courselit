@@ -21,20 +21,21 @@ export default function Page() {
     const verifyPayment = async () => {
         setPaymentStatus("pending"); // Hide check status again
         const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/payment/verify-new`)
+            .setUrl(`${address.backend}/api/payment/verify`)
             .setHeaders({
                 "Content-Type": "application/json",
             })
-            .setPayload(JSON.stringify({ id }))
+            .setPayload(JSON.stringify({ purchaseId: id }))
             .build();
 
         try {
             setLoading(true);
             const response = await fetch.exec();
             if (response.status) {
-                setPaymentStatus(response.status);
+                setPaymentStatus(response.status === "success" ? "paid" : response.status);
             }
         } catch (error) {
+            console.error("Error verifying payment:", error);
         } finally {
             setLoading(false);
         }

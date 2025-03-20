@@ -24,7 +24,8 @@
     "dev": "yarn workspace @courselit/web dev",
     "prepare": "husky",
     "release:patch": "./release.sh patch",
-    "release:minor": "./release.sh minor"
+    "release:minor": "./release.sh minor",
+    "start": "yarn workspace @courselit/web start"
   },
   "packageManager": "yarn@3.2.0",
   "devDependencies": {
@@ -49,5 +50,9 @@
   "resolutions": {
     "prosemirror-model": "^1.22.3",
     "prosemirror-view": "^1.34.2"
+  },
+  "dependencies": {
+    "mercadopago": "^2.3.0",
+    "react-icons": "^5.5.0"
   }
 }

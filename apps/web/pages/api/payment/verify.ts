@@ -41,22 +41,15 @@ export default async function handler(
         return res.status(400).json({ message: responses.invalid_input });
     }
 
-    try {
-        const purchaseRecord: Purchase | null = await PurchaseModel.findOne({
-            orderId: purchaseId,
-        });
+    const purchaseRecord: Purchase | null = await PurchaseModel.findOne({
+        orderId: purchaseId,
+    });
 
-        if (!purchaseRecord || user!.userId !== purchaseRecord.purchasedBy) {
+    if (!purchaseRecord || user!.userId !== purchaseRecord.purchasedBy) {
             return res.status(404).json({ message: responses.item_not_found });
-        }
-
-        res.status(200).json({
-            status: purchaseRecord.status,
-        });
-    } catch (err: any) {
-        error(err.message, { stack: err.stack });
-        res.status(500).json({
-            message: err.message,
-        });
     }
+
+    res.status(200).json({
+        status: purchaseRecord.status,
+    });
 }
