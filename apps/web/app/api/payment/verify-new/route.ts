@@ -12,6 +12,8 @@ interface RequestPayload {
 export async function POST(req: NextRequest) {
     const body: RequestPayload = await req.json();
     const domainName = req.headers.get("domain");
+    console.log("Domain:", domainName);
+    console.log("Body:", body);
 
     try {
         const domain = await getDomain(domainName);
@@ -34,8 +36,10 @@ export async function POST(req: NextRequest) {
         if (!id) {
             return Response.json({ message: "Bad request" }, { status: 400 });
         }
-
+        console.log("Invoice ID:", id);
+        console.log("Invoices", await InvoiceModel.find());
         const invoice = await InvoiceModel.findOne({ invoiceId: id });
+        console.log("Invoice:", invoice);
 
         if (!invoice) {
             return Response.json(

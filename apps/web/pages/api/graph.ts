@@ -1,4 +1,4 @@
-import type { NextApiRequest } from "next";
+import type { NextApiRequest, NextApiResponse } from "next";
 import schema from "../../graphql";
 import { graphql } from "graphql";
 import { getAddress } from "../../lib/utils";
@@ -68,12 +68,12 @@ export default async function handler(
         subdomain: domain,
         address: getAddress(hostname, protocol),
     };
-    const response = await graphql({
-        schema,
-        source: query || req.body.query,
-        rootValue: null,
-        contextValue,
-        variableValues: variables,
-    });
-    return res.status(200).json(response);
+        const response = await graphql({
+            schema,
+            source: query || req.body.query,
+            rootValue: null,
+            contextValue,
+            variableValues: variables,
+        });
+        return res.status(200).json(response);
 }

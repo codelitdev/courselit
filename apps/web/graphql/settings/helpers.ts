@@ -96,6 +96,13 @@ export const checkForInvalidPaymentMethodSettings = (
         failedPaymentMethod = UIConstants.PAYMENT_METHOD_LEMONSQUEEZY;
     }
 
+    if (
+        siteInfo.paymentMethod === UIConstants.PAYMENT_METHOD_MERCADOPAGO &&
+        !siteInfo.mercadopagoAccessToken
+    ) {
+        failedPaymentMethod = UIConstants.PAYMENT_METHOD_MERCADOPAGO;
+    }
+
     return failedPaymentMethod;
 };
 

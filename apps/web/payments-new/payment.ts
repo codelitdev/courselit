@@ -21,7 +21,7 @@ export default interface Payment {
     initiate: (obj: InitiateProps) => void;
     verify: (event: any) => Promise<boolean>;
     getPaymentIdentifier: (event: any) => unknown;
-    getMetadata: (event: any) => Record<string, unknown>;
+    getMetadata: (event: any) => Promise<Record<string, unknown>>;
     getName: () => string;
     cancel: (id: string) => void;
     getSubscriptionId: (event: any) => string;
