@@ -165,7 +165,7 @@ export const UserFilter = {
 } as const;
 export const ProductAccessType = {
     UNLISTED: "unlisted",
-    OPEN: "open",
+    PUBLIC: "public",
 } as const;
 export const EventType = {
     TAG_ADDED: "tag:added",

@@ -24,7 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, UserPlus, Copy } from "lucide-react";
 import { useParams } from "next/navigation";
 import { capitalize, FetchBuilder } from "@courselit/utils";
-import { AddressContext, ProfileContext } from "@components/contexts";
+import { AddressContext } from "@components/contexts";
 import DashboardContent from "@components/admin/dashboard-content";
 import {
     COURSE_CUSTOMERS_PAGE_HEADING,
@@ -75,8 +75,6 @@ export default function CustomersPage() {
     const address = useContext(AddressContext);
     const { product } = useProduct(productId, address);
     const { toast } = useToast();
-    const { profile } = useContext(ProfileContext);
-    const [isUpdating, setIsUpdating] = useState(false);
 
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
@@ -154,8 +152,8 @@ export default function CustomersPage() {
                             Constants.CourseType.COURSE &&
                         product?.lessons?.length! > 0
                             ? Math.round(
-                                  (member.completedLessons?.length ||
-                                      0 / (product?.lessons?.length || 0)) *
+                                  ((member.completedLessons?.length || 0) /
+                                      (product?.lessons?.length || 0)) *
                                       100,
                               )
                             : undefined,

@@ -1,5 +1,6 @@
 import {
     GraphQLEnumType,
+    GraphQLFloat,
     GraphQLInt,
     GraphQLNonNull,
     GraphQLObjectType,
@@ -24,7 +25,7 @@ const paymentPlan = new GraphQLObjectType({
         planId: { type: new GraphQLNonNull(GraphQLString) },
         name: { type: new GraphQLNonNull(GraphQLString) },
         type: { type: new GraphQLNonNull(paymentPlanType) },
-        oneTimeAmount: { type: GraphQLInt },
+        oneTimeAmount: { type: GraphQLFloat },
         emiAmount: { type: GraphQLInt },
         emiTotalInstallments: { type: GraphQLInt },
         subscriptionMonthlyAmount: { type: GraphQLInt },

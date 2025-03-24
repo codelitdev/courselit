@@ -1,12 +1,30 @@
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users } from "lucide-react";
+import { CheckCircle, CircleDashed, Users } from "lucide-react";
 import { Community } from "@courselit/common-models";
 import { Link } from "@courselit/components-library";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@components/ui/tooltip";
 
-export function ContentCard({ community }: { community: Community }) {
+export function ContentCard({
+    community,
+    publicLink = true,
+}: {
+    community: Community;
+    publicLink?: boolean;
+}) {
     return (
-        <Link href={`/p/${community.pageId}`}>
+        <Link
+            href={
+                publicLink
+                    ? `/p/${community.pageId}`
+                    : `/dashboard/community/${community.communityId}`
+            }
+        >
             <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
                 <div className="relative aspect-video">
                     <Image
@@ -24,7 +42,7 @@ export function ContentCard({ community }: { community: Community }) {
                     <h3 className="text-xl font-semibold mb-3">
                         {community.name}
                     </h3>
-                    {community.membersCount && (
+                    <div className="flex items-center justify-between">
                         <div className="flex items-center text-sm text-muted-foreground">
                             <Users className="h-4 w-4 mr-2" />
                             <span>
@@ -32,7 +50,21 @@ export function ContentCard({ community }: { community: Community }) {
                                 members
                             </span>
                         </div>
-                    )}
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    {community.enabled ? (
+                                        <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                                    ) : (
+                                        <CircleDashed className="h-4 w-4 text-muted-foreground" />
+                                    )}
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    {community.enabled ? "Enabled" : "Draft"}
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
                 </CardContent>
             </Card>
         </Link>

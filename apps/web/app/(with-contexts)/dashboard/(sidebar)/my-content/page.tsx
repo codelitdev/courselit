@@ -113,7 +113,7 @@ export default function Page() {
                     : "You haven't joined any communities yet."}{" "}
             </p>
             {type === Constants.MembershipEntityType.COURSE ? (
-                <Link href="/courses" className="text-primary">
+                <Link href="/products" className="text-primary">
                     <Button variant="outline" size="sm">
                         Browse products
                     </Button>

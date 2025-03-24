@@ -27,9 +27,9 @@ export function PaginationControls({
                             e.preventDefault();
                             if (currentPage > 1) onPageChange(currentPage - 1);
                         }}
-                        aria-disabled={currentPage === 1}
+                        aria-disabled={currentPage === 1 || totalPages === 0}
                         className={
-                            currentPage === 1
+                            currentPage === 1 || totalPages === 0
                                 ? "pointer-events-none opacity-50"
                                 : ""
                         }
@@ -53,9 +53,11 @@ export function PaginationControls({
                             if (currentPage < totalPages)
                                 onPageChange(currentPage + 1);
                         }}
-                        aria-disabled={currentPage === totalPages}
+                        aria-disabled={
+                            currentPage === totalPages || totalPages === 0
+                        }
                         className={
-                            currentPage === totalPages
+                            currentPage === totalPages || totalPages === 0
                                 ? "pointer-events-none opacity-50"
                                 : ""
                         }

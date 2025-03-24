@@ -12,30 +12,22 @@ import {
 } from "graphql";
 import constants from "../../../config/constants";
 import lessonTypes from "../../lessons/types";
+import userTypes from "../../users/types";
 import { getAllLessons } from "../../lessons/logic";
 import { getMedia } from "../../media/logic";
 import mediaTypes from "../../media/types";
 import { reports } from "./reports";
 import { Constants } from "@courselit/common-models";
 import paymentPlansTypes from "../../paymentplans/types";
-
+import { getUser } from "../../users/logic";
 const { lessonMetaType } = lessonTypes;
-const {
-    unlisted,
-    open,
-    course,
-    download,
-    blog,
-    costPaid,
-    costEmail,
-    costFree,
-} = constants;
+const { course, download, blog, costPaid, costEmail, costFree } = constants;
 
 const courseStatusType = new GraphQLEnumType({
     name: "CoursePrivacyType",
     values: {
-        UNLISTED: { value: unlisted },
-        PUBLIC: { value: open },
+        UNLISTED: { value: Constants.ProductAccessType.UNLISTED },
+        PUBLIC: { value: Constants.ProductAccessType.PUBLIC },
     },
 });
 
@@ -132,8 +124,14 @@ const courseType = new GraphQLObjectType({
         isFeatured: { type: new GraphQLNonNull(GraphQLBoolean) },
         type: { type: new GraphQLNonNull(courseTypeFilters) },
         tags: { type: new GraphQLList(GraphQLString) },
-        creatorId: { type: new GraphQLNonNull(GraphQLID) },
+        creatorId: { type: new GraphQLNonNull(GraphQLString) },
         creatorName: { type: GraphQLString },
+        user: {
+            type: userTypes.userType,
+            resolve: async (course, args, context, info) => {
+                return await getUser(course.creatorId, context);
+            },
+        },
         lessons: {
             type: new GraphQLList(lessonMetaType),
             resolve: (course, args, context, info) =>
@@ -148,12 +146,14 @@ const courseType = new GraphQLObjectType({
             resolve: (course, _, context, __) => getMedia(course.featuredImage),
         },
         groups: { type: new GraphQLList(courseGroupType) },
-        pageId: { type: new GraphQLNonNull(GraphQLString) },
+        pageId: { type: GraphQLString },
         firstLesson: { type: GraphQLString },
         paymentPlans: {
             type: new GraphQLList(paymentPlansTypes.paymentPlan),
         },
         defaultPaymentPlan: { type: GraphQLString },
+        sales: { type: GraphQLFloat },
+        customers: { type: GraphQLInt },
     },
 });
 

@@ -14,6 +14,8 @@ import {
     // getEnrolledCourses,
     getCourseOrThrow,
     getMembers,
+    getProducts,
+    getProductsCount,
 } from "./logic";
 import GQLContext from "../../models/GQLContext";
 import Filter from "./models/filter";
@@ -72,6 +74,89 @@ export default {
             }: { offset: number; searchText?: string; filterBy?: Filter },
             context: GQLContext,
         ) => getCoursesAsAdmin({ offset, context, searchText, filterBy }),
+    },
+    getProducts: {
+        type: new GraphQLList(types.courseType),
+        args: {
+            page: {
+                type: GraphQLInt,
+            },
+            limit: {
+                type: GraphQLInt,
+            },
+            filterBy: {
+                type: new GraphQLList(courseFilters),
+            },
+            tags: {
+                type: new GraphQLList(GraphQLString),
+            },
+            ids: {
+                type: new GraphQLList(GraphQLString),
+            },
+            publicView: {
+                type: GraphQLBoolean,
+            },
+            sort: {
+                type: GraphQLInt,
+            },
+        },
+        resolve: (
+            _: any,
+            {
+                page,
+                limit,
+                filterBy,
+                tags,
+                ids,
+                publicView,
+                sort,
+            }: {
+                page: number;
+                limit: number;
+                filterBy?: Filter[];
+                tags?: string[];
+                ids?: string[];
+                publicView?: boolean;
+                sort?: number;
+            },
+            context: GQLContext,
+        ) =>
+            getProducts({
+                page,
+                limit,
+                filterBy,
+                tags,
+                ids,
+                publicView,
+                sort,
+                ctx: context,
+            }),
+    },
+    getProductsCount: {
+        type: GraphQLInt,
+        args: {
+            filterBy: { type: new GraphQLList(courseFilters) },
+            tags: { type: new GraphQLList(GraphQLString) },
+            ids: { type: new GraphQLList(GraphQLString) },
+            publicView: {
+                type: GraphQLBoolean,
+            },
+        },
+        resolve: (
+            _: any,
+            {
+                filterBy,
+                tags,
+                ids,
+                publicView,
+            }: {
+                filterBy?: Filter[];
+                tags?: string[];
+                ids?: string[];
+                publicView?: boolean;
+            },
+            ctx: GQLContext,
+        ) => getProductsCount({ ctx, filterBy, tags, ids, publicView }),
     },
     getReports: {
         type: reports,

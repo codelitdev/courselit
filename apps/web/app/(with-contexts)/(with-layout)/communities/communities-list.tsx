@@ -7,13 +7,19 @@ import { ContentCard } from "./content-card";
 import { PaginationControls } from "@components/public/pagination";
 import { Community } from "@courselit/common-models";
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 9;
 
-export function CommunitiesList() {
+export function CommunitiesList({
+    itemsPerPage = ITEMS_PER_PAGE,
+    publicLink = true,
+}: {
+    itemsPerPage?: number;
+    publicLink?: boolean;
+}) {
     const [currentPage, setCurrentPage] = useState(1);
     const { communities, loading, totalPages } = useCommunities(
         currentPage,
-        ITEMS_PER_PAGE,
+        itemsPerPage,
     );
 
     return (
@@ -27,12 +33,13 @@ export function CommunitiesList() {
                           <ContentCard
                               key={community.communityId}
                               community={community}
+                              publicLink={publicLink}
                           />
                       ))}
             </div>
             <PaginationControls
                 currentPage={currentPage}
-                totalPages={totalPages}
+                totalPages={Math.ceil(totalPages / itemsPerPage)}
                 onPageChange={setCurrentPage}
             />
         </div>

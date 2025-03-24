@@ -26,6 +26,7 @@ export function useCommunities(page: number, itemsPerPage: number) {
                         file
                     }
                     pageId
+                    enabled
                 },
                 totalCommunities: getCommunitiesCount
             }`;

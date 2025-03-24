@@ -62,8 +62,9 @@ export const getUser = async (userId = null, ctx: GQLContext) => {
     }
 
     if (
-        user.userId === ctx.user.userId ||
-        checkPermission(ctx.user.permissions, [permissions.manageUsers])
+        ctx.user &&
+        (user.userId === ctx.user.userId ||
+            checkPermission(ctx.user.permissions, [permissions.manageUsers]))
     ) {
         return user;
     } else {

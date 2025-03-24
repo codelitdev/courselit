@@ -1,5 +1,5 @@
 import React from "react";
-import { formattedLocaleDate } from "../../ui-lib/utils";
+import { formattedLocaleDate, truncate } from "../../ui-lib/utils";
 import { connect } from "react-redux";
 import {
     Image,
@@ -11,9 +11,7 @@ import {
 } from "@courselit/components-library";
 import { AppState } from "@courselit/state-management";
 import { Course, Profile, SiteInfo } from "@courselit/common-models";
-import { UIConstants as constants } from "@courselit/common-models";
-
-const { permissions } = constants;
+import { BLOG_UPDATED_PREFIX } from "@ui-config/strings";
 
 interface ArticleProps {
     course: Course;
@@ -34,12 +32,10 @@ const Article = (props: ArticleProps) => {
         <div className="flex flex-col">
             <header>
                 {!options?.hideTitle && (
-                    <h1 className="text-4xl font-semibold mb-8">
-                        {course.title}
-                    </h1>
+                    <h1 className="text-4xl font-bold mb-8">{course.title}</h1>
                 )}
                 {options?.showAttribution && (
-                    <div className="flex items-center gap-2 ">
+                    <div className="flex items-center gap-2 mb-8">
                         <div>
                             <Avatar className="h-[45px] w-[45px]">
                                 <AvatarImage
@@ -57,9 +53,14 @@ const Article = (props: ArticleProps) => {
                                 </AvatarFallback>
                             </Avatar>
                         </div>
-                        <div className="flex flex-col">
-                            <p className="font-medium">{course.creatorName}</p>
-                            <p className="font-light text-sm">
+                        <div className="flex flex-col gap-1">
+                            <p className="font-medium">
+                                {truncate(course.creatorName, 50)}
+                            </p>
+                            <p className="font-light text-sm text-muted-foreground">
+                                <span className="font-medium">
+                                    {BLOG_UPDATED_PREFIX}:
+                                </span>{" "}
                                 {formattedLocaleDate(course.updatedAt, "long")}
                             </p>
                         </div>

@@ -622,3 +622,4 @@ export const SEQUENCE_UNPUBLISHED_WARNING =
     "This sequence is not scheduled to be sent. Please start it to send it to your audience.";
 export const PRODUCT_EMPTY_WARNING =
     "Your product is empty. Add some content to make it look interesting.";
+export const BLOG_UPDATED_PREFIX = "Updated";

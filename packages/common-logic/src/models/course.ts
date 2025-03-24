@@ -90,3 +90,27 @@ export const CourseSchema = new mongoose.Schema<InternalCourse>(
 CourseSchema.index({
     title: "text",
 });
+
+CourseSchema.index({ domain: 1, title: 1 }, { unique: true });
+
+CourseSchema.statics.paginatedFind = async function (
+    filter,
+    options: {
+        page?: number;
+        limit?: number;
+        sort?: number;
+    },
+) {
+    const page = options.page || 1;
+    const limit = options.limit || 10;
+    const sort = options.sort || -1;
+    const skip = (page - 1) * limit;
+
+    const docs = await this.find(filter)
+        .sort({ createdAt: sort })
+        .lean()
+        .skip(skip)
+        .limit(limit)
+        .exec();
+    return docs;
+};

@@ -33,7 +33,7 @@ export default function CommunityFilterEditor({
     const [condition, setCondition] = useState(USER_FILTER_COMMUNITY_HAS);
     const [value, setValue] = useState("");
     const { toast } = useToast();
-    const { communities, loading } = useCommunities(1, 1_000_000);
+    const { communities } = useCommunities(1, 1_000_000);
 
     const onSubmit = (e: any) => {
         e.preventDefault();

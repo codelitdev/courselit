@@ -95,8 +95,8 @@ async function initSharedWidgets(ctx: GQLContext) {
             settings: {
                 links: [
                     {
-                        label: "Courses",
-                        href: "/courses",
+                        label: "Products",
+                        href: "/products",
                         isButton: false,
                         isPrimary: false,
                     },
@@ -108,7 +108,7 @@ async function initSharedWidgets(ctx: GQLContext) {
                     },
                     {
                         label: "Start learning",
-                        href: "/courses",
+                        href: "/products",
                         isButton: true,
                         isPrimary: true,
                     },

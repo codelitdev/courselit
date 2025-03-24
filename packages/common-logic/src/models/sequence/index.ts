@@ -19,11 +19,11 @@ export interface AdminSequence
         | "excludeFilter"
         | "status"
         | "emailsOrder"
-        | "entrants"
     > {
     domain: mongoose.Types.ObjectId;
     creatorId: string;
     emails: Partial<Email>[];
+    entrants: string[];
 }
 
 const EmailFromSchema = new mongoose.Schema({
