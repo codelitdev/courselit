@@ -42,17 +42,40 @@ export async function convertFiltersToDBConditions({
             }
             dbFilters.push(emailCondition);
         }
-        if (name === "product" || name === "community") {
+        if (name === "product") {
             const productCondition: { userId: unknown } = {
                 userId: undefined,
             };
             const memberships = await membershipModel.find(
                 {
                     domain,
-                    entityType:
-                        name === "product"
-                            ? Constants.MembershipEntityType.COURSE
-                            : Constants.MembershipEntityType.COMMUNITY,
+                    entityType: Constants.MembershipEntityType.COURSE,
+                    entityId: value,
+                },
+                {
+                    userId: 1,
+                },
+            );
+            if (condition === "Has") {
+                productCondition.userId = {
+                    $in: memberships.map((m) => m.userId),
+                };
+            }
+            if (condition === "Does not have") {
+                productCondition.userId = {
+                    $not: { $in: memberships.map((m) => m.userId) },
+                };
+            }
+            dbFilters.push(productCondition);
+        }
+        if (name === "community") {
+            const productCondition: { userId: unknown } = {
+                userId: undefined,
+            };
+            const memberships = await membershipModel.find(
+                {
+                    domain,
+                    entityType: Constants.MembershipEntityType.COMMUNITY,
                     entityId: value,
                 },
                 {

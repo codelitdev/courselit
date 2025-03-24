@@ -92,6 +92,18 @@ async function formatCourse(courseId: string, ctx: GQLContext) {
         ctx,
     });
 
+    if (
+        [Constants.CourseType.COURSE, Constants.CourseType.DOWNLOAD].includes(
+            course.type,
+        )
+    ) {
+        const { nextLesson } = await getPrevNextCursor(
+            course.courseId,
+            ctx.subdomain._id,
+        );
+        (course as any).firstLesson = nextLesson;
+    }
+
     const result = {
         ...course,
         groups: course!.groups?.map((group: any) => ({
@@ -129,19 +141,19 @@ export const getCourse = async (
     }
 
     if (course.published) {
-        if (
-            [constants.course, constants.download].includes(
-                course.type as
-                    | typeof constants.course
-                    | typeof constants.download,
-            )
-        ) {
-            const { nextLesson } = await getPrevNextCursor(
-                course.courseId,
-                ctx.subdomain._id,
-            );
-            (course as any).firstLesson = nextLesson;
-        }
+        // if (
+        //     [constants.course, constants.download].includes(
+        //         course.type as
+        //             | typeof constants.course
+        //             | typeof constants.download,
+        //     )
+        // ) {
+        //     const { nextLesson } = await getPrevNextCursor(
+        //         course.courseId,
+        //         ctx.subdomain._id,
+        //     );
+        //     (course as any).firstLesson = nextLesson;
+        // }
         // course.groups = accessibleGroups;
         return await formatCourse(course.courseId, ctx);
     } else {
@@ -471,6 +483,7 @@ export const getProducts = async ({
                       entityId: course.courseId,
                       entityType: Constants.MembershipEntityType.COURSE,
                       domain: ctx.subdomain._id,
+                      status: Constants.MembershipStatus.ACTIVE,
                   })
                 : undefined;
         const sales =

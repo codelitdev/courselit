@@ -17,13 +17,13 @@ import {
 } from "./helpers";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
-import { Course } from "../../models/Course";
 import { deleteMedia } from "../../services/medialit";
 import { recordProgress } from "../users/logic";
-import { Progress, Quiz } from "@courselit/common-models";
+import { Constants, Progress, Quiz } from "@courselit/common-models";
 import LessonEvaluation from "../../models/LessonEvaluation";
 import { checkPermission } from "@courselit/utils";
 import { recordActivity } from "../../lib/record-activity";
+import { InternalCourse } from "@courselit/common-logic";
 
 const { permissions, quiz } = constants;
 
@@ -130,7 +130,7 @@ export const createLesson = async (
     lessonValidator(lessonData);
 
     try {
-        const course: Course | null = await CourseModel.findOne({
+        const course: InternalCourse | null = await CourseModel.findOne({
             courseId: lessonData.courseId,
             domain: ctx.subdomain._id,
         });
@@ -199,7 +199,7 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
 
     try {
         // remove from the parent Course's lessons array
-        let course: Course | null = await CourseModel.findOne({
+        let course: InternalCourse | null = await CourseModel.findOne({
             domain: ctx.subdomain._id,
         }).elemMatch("lessons", { $eq: lesson.lessonId });
         if (!course) {
@@ -223,7 +223,10 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
     }
 };
 
-export const getAllLessons = async (course: Course, ctx: GQLContext) => {
+export const getAllLessons = async (
+    course: InternalCourse,
+    ctx: GQLContext,
+) => {
     const lessons = await LessonModel.find(
         {
             lessonId: {
@@ -316,14 +319,44 @@ export const markLessonCompleted = async (
     await recordActivity({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
-        type: "lesson_completed",
+        type: Constants.ActivityType.LESSON_COMPLETED,
         entityId: lesson.lessonId,
         metadata: {
             courseId: lesson.courseId,
         },
     });
 
+    await recordCourseCompleted(lesson.courseId, ctx);
+
     return true;
+};
+
+const recordCourseCompleted = async (courseId: string, ctx: GQLContext) => {
+    const course = await CourseModel.findOne({ courseId });
+    if (!course) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const isCourseCompleted = course.lessons.every((lessonId) => {
+        const progress = ctx.user.purchases.find(
+            (progress: Progress) => progress.courseId === courseId,
+        );
+        if (!progress) {
+            return false;
+        }
+        return progress.completedLessons.includes(lessonId);
+    });
+
+    if (!isCourseCompleted) {
+        return;
+    }
+
+    await recordActivity({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        type: Constants.ActivityType.COURSE_COMPLETED,
+        entityId: courseId,
+    });
 };
 
 export const evaluateLesson = async (

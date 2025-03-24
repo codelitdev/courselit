@@ -121,7 +121,7 @@ export const responses = {
     default_payment_plan_required:
         "Mark a payment plan as default before enabling the community",
     community_content_already_reported: "Content already reported",
-    profile_incomplete: "Complete your profile to join this community",
+    profile_incomplete: "Complete your profile to perform this action",
     cannot_reject_member_with_active_subscription:
         "Cannot reject a member with an active subscription",
     cannot_leave_community_last_moderator:
