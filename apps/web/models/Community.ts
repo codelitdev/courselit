@@ -43,9 +43,14 @@ CommunitySchema.index({ domain: 1, name: 1 }, { unique: true });
 CommunitySchema.statics.paginatedFind = async function (filter, options) {
     const page = options.page || 1;
     const limit = options.limit || 10;
+    const sort = options.sort || -1;
     const skip = (page - 1) * limit;
 
-    const docs = await this.find(filter).skip(skip).limit(limit).exec();
+    const docs = await this.find(filter)
+        .sort({ createdAt: sort })
+        .skip(skip)
+        .limit(limit)
+        .exec();
     return docs;
 };
 

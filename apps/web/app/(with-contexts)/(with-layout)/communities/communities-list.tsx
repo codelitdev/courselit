@@ -1,26 +1,59 @@
 "use client";
 
-import { useState } from "react";
 import { useCommunities } from "@/hooks/use-communities";
-import { SkeletonCard } from "./skeleton-card";
 import { ContentCard } from "./content-card";
 import { PaginationControls } from "@components/public/pagination";
 import { Community } from "@courselit/common-models";
+import { Users } from "lucide-react";
+import { Button } from "@components/ui/button";
+import { SkeletonCard } from "@components/skeleton-card";
 
 const ITEMS_PER_PAGE = 9;
 
 export function CommunitiesList({
     itemsPerPage = ITEMS_PER_PAGE,
-    publicLink = true,
+    publicView = true,
+    page,
+    onPageChange,
 }: {
     itemsPerPage?: number;
-    publicLink?: boolean;
+    publicView?: boolean;
+    page: number;
+    onPageChange: (page: number) => void;
 }) {
-    const [currentPage, setCurrentPage] = useState(1);
     const { communities, loading, totalPages } = useCommunities(
-        currentPage,
+        page,
         itemsPerPage,
     );
+
+    if (!loading && totalPages === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Users className="w-12 h-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">
+                    No Communities Found
+                </h3>
+                <p className="text-muted-foreground">
+                    {publicView ? "The team " : "You have "} not added any
+                    communities yet.
+                </p>
+            </div>
+        );
+    }
+
+    if (!loading && totalPages && communities.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Users className="w-12 h-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground mb-4">
+                    This page is empty.
+                </p>
+                <Button variant="outline" onClick={() => onPageChange(1)}>
+                    Go to first page
+                </Button>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8">
@@ -33,14 +66,14 @@ export function CommunitiesList({
                           <ContentCard
                               key={community.communityId}
                               community={community}
-                              publicLink={publicLink}
+                              publicView={publicView}
                           />
                       ))}
             </div>
             <PaginationControls
-                currentPage={currentPage}
+                currentPage={page}
                 totalPages={Math.ceil(totalPages / itemsPerPage)}
-                onPageChange={setCurrentPage}
+                onPageChange={onPageChange}
             />
         </div>
     );

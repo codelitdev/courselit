@@ -9,11 +9,25 @@ import {
 } from "@ui-config/strings";
 import Link from "next/link";
 import { Button } from "@components/ui/button";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback } from "react";
+import Resources from "@components/resources";
 const { permissions } = UIConstants;
 
 const breadcrumbs = [{ label: MANAGE_COMMUNITIES_PAGE_HEADING, href: "#" }];
 
 export default function Page() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const page = parseInt(searchParams?.get("page") || "1");
+
+    const handlePageChange = useCallback(
+        (value: number) => {
+            router.push(`/dashboard/communities?page=${value}`);
+        },
+        [router],
+    );
+
     return (
         <DashboardContent
             breadcrumbs={breadcrumbs}
@@ -29,7 +43,20 @@ export default function Page() {
                     </Link>
                 </div>
             </div>
-            <CommunitiesList itemsPerPage={9} publicLink={false} />
+            <CommunitiesList
+                page={page}
+                itemsPerPage={9}
+                publicView={false}
+                onPageChange={handlePageChange}
+            />
+            <Resources
+                links={[
+                    {
+                        href: "https://docs.courselit.app/en/communities/introduction/",
+                        text: "Create a community",
+                    },
+                ]}
+            />
         </DashboardContent>
     );
 }

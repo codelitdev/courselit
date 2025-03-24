@@ -23,7 +23,6 @@ import {
     ContentCardHeader,
     Badge,
     getSymbolFromCurrency,
-    Skeleton,
 } from "@courselit/components-library";
 import {
     Download,
@@ -51,38 +50,15 @@ import {
 } from "@components/ui/tooltip";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
+import { EmptyState } from "@/app/(with-contexts)/(with-layout)/products/empty-state";
+import Resources from "@components/resources";
+import { SkeletonCard } from "@components/skeleton-card";
 
 const ITEMS_PER_PAGE = 9;
 
 const { permissions } = UIConstants;
 
 const breadcrumbs = [{ label: MANAGE_COURSES_PAGE_HEADING, href: "#" }];
-
-function SkeletonCard() {
-    return (
-        <div className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-            <Skeleton className="h-40 sm:h-48 w-full" />
-            <div className="p-3 sm:p-4">
-                <Skeleton className="h-5 sm:h-6 w-3/4 mb-3 sm:mb-4" />
-                <div className="flex items-center justify-between gap-2 mb-4">
-                    <Skeleton className="h-4 sm:h-5 w-20 sm:w-24 rounded-full" />
-                    <div className="flex items-center gap-2">
-                        <Skeleton className="h-4 w-4" />
-                        <Skeleton className="h-4 w-4" />
-                    </div>
-                </div>
-                <div className="flex items-center justify-between gap-2 text-sm">
-                    <div className="flex items-center text-muted-foreground">
-                        <Skeleton className="h-4 w-24" />
-                    </div>
-                    <div className="flex items-center text-muted-foreground">
-                        <Skeleton className="h-4 w-28" />
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
 
 function ProductCard({ product }: { product: Course }) {
     const siteinfo = useContext(SiteInfoContext);
@@ -173,11 +149,7 @@ function SkeletonGrid() {
     );
 }
 
-export default function Page({
-    params,
-}: {
-    params: { filter: string; page: string };
-}) {
+export default function Page() {
     const searchParams = useSearchParams();
     const page = parseInt(searchParams?.get("page") || "1");
     const filter: "all" | CourseType =
@@ -240,39 +212,63 @@ export default function Page({
                     </Link>
                 </div>
             </div>
-            <div className="flex flex-col sm:flex-row justify-between gap-4">
-                <Select value={filter} onValueChange={handleFilterChange}>
-                    <SelectTrigger className="w-full sm:w-[180px]">
-                        <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All</SelectItem>
-                        {[
-                            Constants.CourseType.COURSE,
-                            Constants.CourseType.DOWNLOAD,
-                        ].map((status) => (
-                            <SelectItem value={status} key={status}>
-                                {capitalize(status)}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
+            {totalPages > 0 && (
+                <div className="flex flex-col sm:flex-row justify-between gap-4">
+                    <Select value={filter} onValueChange={handleFilterChange}>
+                        <SelectTrigger className="w-full sm:w-[180px]">
+                            <SelectValue placeholder="Filter by status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All</SelectItem>
+                            {[
+                                Constants.CourseType.COURSE,
+                                Constants.CourseType.DOWNLOAD,
+                            ].map((status) => (
+                                <SelectItem value={status} key={status}>
+                                    {capitalize(status)}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
             {loading ? (
                 <SkeletonGrid />
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {products.map((product: Course) => (
-                        <ProductCard key={product.courseId} product={product} />
-                    ))}
-                </div>
+                <>
+                    {totalPages > 0 && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {products.map((product: Course) => (
+                                <ProductCard
+                                    key={product.courseId}
+                                    product={product}
+                                />
+                            ))}
+                        </div>
+                    )}
+                    {totalPages === 0 && <EmptyState publicView={false} />}
+                </>
             )}
-            <PaginationControls
-                currentPage={page}
-                totalPages={Math.ceil(totalPages / ITEMS_PER_PAGE)}
-                onPageChange={handlePageChange}
+            {totalPages > 0 && (
+                <PaginationControls
+                    currentPage={page}
+                    totalPages={Math.ceil(totalPages / ITEMS_PER_PAGE)}
+                    onPageChange={handlePageChange}
+                />
+            )}
+
+            <Resources
+                links={[
+                    {
+                        href: "https://docs.courselit.app/en/courses/introduction/",
+                        text: "Create a course",
+                    },
+                    {
+                        href: "https://docs.courselit.app/en/downloads/introduction/",
+                        text: "Create a digital download",
+                    },
+                ]}
             />
-            {/* <Products address={address} loading={false} siteinfo={siteinfo} /> */}
         </DashboardContent>
     );
 }

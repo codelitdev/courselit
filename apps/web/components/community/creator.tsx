@@ -47,6 +47,7 @@ export default function CommunityCreator({ address }: { address: Address }) {
             toast({
                 title: "Error",
                 description: err.message,
+                variant: "destructive",
             });
         } finally {
             setLoading(false);

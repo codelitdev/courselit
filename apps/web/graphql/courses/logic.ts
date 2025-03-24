@@ -190,6 +190,10 @@ export const updateCourse = async (
             throw new Error(responses.action_not_allowed);
         }
 
+        if (key === "published" && !ctx.user.name) {
+            throw new Error(responses.profile_incomplete);
+        }
+
         course[key] = courseData[key];
     }
 

@@ -12,15 +12,15 @@ import {
 
 export function ContentCard({
     community,
-    publicLink = true,
+    publicView = true,
 }: {
     community: Community;
-    publicLink?: boolean;
+    publicView?: boolean;
 }) {
     return (
         <Link
             href={
-                publicLink
+                publicView
                     ? `/p/${community.pageId}`
                     : `/dashboard/community/${community.communityId}`
             }
