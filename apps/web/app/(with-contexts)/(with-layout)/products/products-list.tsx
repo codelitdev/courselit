@@ -1,15 +1,14 @@
 "use client";
 
-import { useMemo } from "react";
-import { SkeletonCard } from "@components/skeleton-card";
-import { ContentCard } from "./content-card";
+import { useMemo, useContext } from "react";
 import { PaginationControls } from "@components/public/pagination";
 import { Constants, Course } from "@courselit/common-models";
 import { useProducts } from "@/hooks/use-products";
 import { BookOpen } from "lucide-react";
 import { EmptyState } from "./empty-state";
 import { Button } from "@components/ui/button";
-
+import { SkeletonCard, ProductCard } from "@courselit/components-library";
+import { SiteInfoContext } from "@components/contexts";
 const ITEMS_PER_PAGE = 9;
 
 export function ProductsList({
@@ -21,6 +20,7 @@ export function ProductsList({
     itemsPerPage?: number;
     onPageChange: (page: number) => void;
 }) {
+    const siteinfo = useContext(SiteInfoContext);
     const filters = useMemo(
         () => [Constants.CourseType.COURSE.toUpperCase()],
         [],
@@ -59,9 +59,10 @@ export function ProductsList({
                           <SkeletonCard key={index} />
                       ))
                     : products.map((product: Course) => (
-                          <ContentCard
+                          <ProductCard
                               key={product.courseId}
                               product={product}
+                              siteinfo={siteinfo}
                           />
                       ))}
             </div>

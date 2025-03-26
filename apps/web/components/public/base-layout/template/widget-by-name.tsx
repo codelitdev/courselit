@@ -2,6 +2,7 @@ import React from "react";
 import widgets from "../../../../ui-config/widgets";
 import type { AppState, AppDispatch } from "@courselit/state-management";
 import { COMPONENT_MISSING_SUFFIX } from "../../../../ui-config/strings";
+import WidgetErrorBoundary from "./widget-error-boundary";
 
 interface WidgetByNameProps {
     id: string;
@@ -24,15 +25,19 @@ const WidgetByName = ({
 }: WidgetByNameProps) => {
     if (!widgets[name]) return <>{`${name} ${COMPONENT_MISSING_SUFFIX}`}</>;
 
-    return React.createElement(widgets[name].widget, {
-        name,
-        settings,
-        state,
-        dispatch,
-        id,
-        pageData,
-        editing,
-    });
+    return (
+        <WidgetErrorBoundary widgetName={name}>
+            {React.createElement(widgets[name].widget, {
+                name,
+                settings,
+                state,
+                dispatch,
+                id,
+                pageData,
+                editing,
+            })}
+        </WidgetErrorBoundary>
+    );
 };
 
 export default WidgetByName;
