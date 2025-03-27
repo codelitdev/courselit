@@ -26,7 +26,7 @@ export default {
             },
         },
         resolve: async (
-            _: any,
+            _: unknown,
             { courseData }: { courseData: Record<string, unknown> },
             context: GQLContext,
         ) => createCourse(courseData, context),
@@ -45,7 +45,7 @@ export default {
         type: new GraphQLNonNull(GraphQLBoolean),
         args: {
             id: {
-                type: new GraphQLNonNull(GraphQLID),
+                type: new GraphQLNonNull(GraphQLString),
             },
         },
         resolve: async (_: unknown, { id }, context) =>
@@ -55,7 +55,7 @@ export default {
         type: types.courseType,
         args: {
             id: {
-                type: new GraphQLNonNull(GraphQLID),
+                type: new GraphQLNonNull(GraphQLString),
             },
             name: {
                 type: new GraphQLNonNull(GraphQLString),
@@ -71,7 +71,7 @@ export default {
         type: types.courseType,
         args: {
             id: {
-                type: new GraphQLNonNull(GraphQLID),
+                type: new GraphQLNonNull(GraphQLString),
             },
             courseId: {
                 type: new GraphQLNonNull(GraphQLString),
@@ -87,7 +87,7 @@ export default {
                 type: new GraphQLNonNull(GraphQLID),
             },
             courseId: {
-                type: new GraphQLNonNull(GraphQLID),
+                type: new GraphQLNonNull(GraphQLString),
             },
             name: {
                 type: GraphQLString,

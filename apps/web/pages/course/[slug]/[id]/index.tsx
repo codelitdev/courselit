@@ -10,10 +10,9 @@ import { ArrowRight, CheckCircled, Circle, Lock } from "@courselit/icons";
 import {
     COURSE_PROGRESS_START,
     ENROLL_BUTTON_TEXT,
-    FREE_COST,
     SIDEBAR_TEXT_COURSE_ABOUT,
 } from "../../../../ui-config/strings";
-import { FetchBuilder, checkPermission } from "@courselit/utils";
+import { FetchBuilder, checkPermission, getPlanPrice } from "@courselit/utils";
 import {
     AppState,
     AppDispatch,
@@ -34,7 +33,11 @@ import RouteBasedComponentScaffold, {
     Divider,
 } from "@components/public/scaffold";
 import Article from "@components/public/article";
-import { Link, Button2, PriceTag } from "@courselit/components-library";
+import {
+    Link,
+    Button2,
+    getSymbolFromCurrency,
+} from "@courselit/components-library";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 const { permissions } = UIConstants;
@@ -52,6 +55,8 @@ type CourseWithoutGroups = Pick<
     | "cost"
     | "courseId"
     | "tags"
+    | "paymentPlans"
+    | "defaultPaymentPlan"
 >;
 
 export type CourseFrontend = CourseWithoutGroups & {
@@ -104,6 +109,18 @@ export const graphQuery = `
         },
         tags,
         firstLesson
+        paymentPlans {
+            planId
+            name
+            type
+            oneTimeAmount
+            emiAmount
+            emiTotalInstallments
+            subscriptionMonthlyAmount
+            subscriptionYearlyAmount
+        }
+        leadMagnet
+        defaultPaymentPlan
       }
     }
   `;
@@ -264,6 +281,12 @@ const CourseViewer = (props: CourseProps) => {
         } catch (err: any) {}
     };
 
+    const { amount, period } = getPlanPrice(
+        course?.paymentPlans.find(
+            (x) => x.planId === course?.defaultPaymentPlan,
+        )!,
+    );
+
     return (
         <>
             <Head>
@@ -303,14 +326,18 @@ const CourseViewer = (props: CourseProps) => {
                         <div>
                             <p>{profile.fetched}</p>
                             <div className="flex justify-between items-center">
-                                <PriceTag
-                                    cost={course.cost}
-                                    freeCostCaption={FREE_COST}
-                                    currencyISOCode={
-                                        props.siteInfo.currencyISOCode as string
-                                    }
-                                />
-                                <Link href={`/checkout/${course.courseId}`}>
+                                <div className="font-medium flex items-center">
+                                    {getSymbolFromCurrency(
+                                        props.siteInfo.currencyISOCode,
+                                    )}
+                                    {amount}
+                                    <span className="text-sm text-muted-foreground ml-1">
+                                        {period}
+                                    </span>
+                                </div>
+                                <Link
+                                    href={`/checkout?type=course&id=${course.courseId}`}
+                                >
                                     <Button2>{ENROLL_BUTTON_TEXT}</Button2>
                                 </Link>
                             </div>
@@ -398,6 +425,8 @@ export function formatCourse(
         groups: post.groups as GroupWithLessons[],
         tags: post.tags,
         firstLesson: post.firstLesson,
+        paymentPlans: post.paymentPlans,
+        defaultPaymentPlan: post.defaultPaymentPlan,
     };
 }
 

@@ -50,8 +50,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import CommentSection from "./comment-section";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { useCommunity } from "@components/hooks/useCommunity";
-import { useMembership } from "@components/hooks/use-membership";
+import { useCommunity } from "@/hooks/use-community";
+import { useMembership } from "@/hooks/use-membership";
 import NotFound from "@components/admin/not-found";
 import { CommunityInfo } from "./info";
 import Banner from "./banner";

@@ -60,11 +60,11 @@ export function Details({ id, address, dispatch, profile }: DetailsProps) {
         const mutation = `
             mutation {
                 updateCourse(courseData: {
-                    id: "${course!.id}"
+                    id: "${course!.courseId}"
                     title: "${title}",
                     description: ${JSON.stringify(JSON.stringify(description))}
                 }) {
-                    id
+                    courseId 
                 }
             }
         `;
@@ -95,12 +95,12 @@ export function Details({ id, address, dispatch, profile }: DetailsProps) {
 
     const saveFeaturedImage = async (media?: Media) => {
         const mutation = `
-            mutation ($courseId: ID!, $media: MediaInput) {
+            mutation ($courseId: String!, $media: MediaInput) {
                 updateCourse(courseData: {
                     id: $courseId
                     featuredImage: $media
                 }) {
-                    id
+                    courseId
                 }
             }
         `;
@@ -109,7 +109,7 @@ export function Details({ id, address, dispatch, profile }: DetailsProps) {
             .setPayload({
                 query: mutation,
                 variables: {
-                    courseId: course?.id,
+                    courseId: course?.courseId,
                     media: media || null,
                 },
             })

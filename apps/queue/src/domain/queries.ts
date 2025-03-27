@@ -2,13 +2,19 @@ import { sequenceBounceLimit } from "../constants";
 import OngoingSequenceModel, {
     OngoingSequence,
 } from "./model/ongoing-sequence";
-import SequenceModel, { AdminSequence } from "./model/sequence";
-import UserModel, { UserWithDomain } from "./model/user";
+import SequenceModel from "./model/sequence";
+import MembershipModel from "./model/membership";
+import UserModel from "./model/user";
 import RuleModel from "./model/rule";
 import mongoose from "mongoose";
 import DomainModel from "./model/domain";
 import { Constants, EmailTemplate } from "@courselit/common-models";
 import emailTemplate from "./model/email-template";
+import {
+    AdminSequence,
+    InternalMembership,
+    InternalUser,
+} from "@courselit/common-logic";
 
 export async function getDueOngoingSequences(): Promise<OngoingSequence[]> {
     const currentTime = new Date().getTime();
@@ -27,12 +33,12 @@ export async function getSequence(
     });
 }
 
-export async function getUser(userId: string): Promise<UserWithDomain | null> {
+export async function getUser(userId: string): Promise<InternalUser | null> {
     return await UserModel.findOne({
         userId,
         active: true,
         subscribedToUpdates: true,
-    }).lean<UserWithDomain | null>();
+    }).lean<InternalUser | null>();
 }
 
 export async function deleteOngoingSequence(sequenceId: string): Promise<any> {
@@ -41,7 +47,7 @@ export async function deleteOngoingSequence(sequenceId: string): Promise<any> {
 
 export async function removeRuleForBroadcast(sequenceId: string) {
     await RuleModel.deleteOne({
-        event: Constants.eventTypes[4],
+        event: Constants.EventType.DATE_OCCURRED,
         "data.sequenceId": sequenceId,
     });
 }
@@ -59,4 +65,12 @@ export async function getDomain(id: mongoose.Schema.Types.ObjectId) {
 
 export async function getTemplate(id: string): Promise<EmailTemplate | null> {
     return (await emailTemplate.find({ templateId: id }).lean()) as any;
+}
+
+export async function getMemberships(entityId: string, entityType: string) {
+    return await MembershipModel.find<InternalMembership>({
+        entityId,
+        entityType,
+        status: Constants.MembershipStatus.ACTIVE,
+    });
 }

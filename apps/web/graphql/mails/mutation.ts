@@ -25,7 +25,7 @@ import {
     deleteMailFromSequence,
 } from "./logic";
 import types from "./types";
-import { Constants } from "@courselit/common-models";
+import { Constants, Event } from "@courselit/common-models";
 
 const mutations = {
     createSubscription: {
@@ -40,17 +40,6 @@ const mutations = {
             context: GQLContext,
         ) => createSubscription(name, email, context),
     },
-    // createMail: {
-    //     type: types.mail,
-    //     args: {
-    //         searchData: { type: userTypes.userSearchInput },
-    //     },
-    //     resolve: async (
-    //         _: any,
-    //         { searchData }: { searchData: any },
-    //         context: GQLContext,
-    //     ) => createMail(searchData, context),
-    // },
     createSequence: {
         type: types.sequence,
         args: {
@@ -158,7 +147,7 @@ const mutations = {
                 title?: string;
                 fromName?: string;
                 fromEmail?: string;
-                triggerType?: (typeof Constants.eventTypes)[number];
+                triggerType?: Event;
                 triggerData?: string;
                 filter?: string;
                 emailsOrder?: string[];

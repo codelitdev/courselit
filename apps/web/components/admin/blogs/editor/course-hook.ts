@@ -31,7 +31,6 @@ export default function useCourse(
                 course: getCourse(id: "${courseId}") {
                     title,
                     description,
-                    id,
                     courseId,
                     slug,
                     featuredImage {

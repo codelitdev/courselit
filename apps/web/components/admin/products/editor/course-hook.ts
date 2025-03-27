@@ -4,12 +4,12 @@ import { useToast } from "@courselit/components-library";
 import { AppDispatch } from "@courselit/state-management";
 import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
-import { Course } from "@models/Course";
+import { InternalCourse } from "@models/Course";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { useCallback, useEffect, useState } from "react";
 
 export type CourseWithAdminProps = Partial<
-    Course & {
+    InternalCourse & {
         lessons: Pick<Lesson, "title" | "groupId" | "lessonId" | "type"> &
             { id: string }[];
     }
@@ -32,7 +32,6 @@ export default function useCourse(
                 course: getCourse(id: "${courseId}") {
                     title,
                     description,
-                    id,
                     type,
                     slug,
                     lessons {

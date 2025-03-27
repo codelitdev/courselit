@@ -85,7 +85,7 @@ export default function Page({ params }: { params: { id: string } }) {
                                     description={DELETE_PRODUCT_POPUP_TEXT}
                                     onClick={() =>
                                         deleteProduct({
-                                            id: course!.id as string,
+                                            id: course!.courseId,
                                             backend: address.backend,
                                             onDeleteComplete: () => {
                                                 router.replace(

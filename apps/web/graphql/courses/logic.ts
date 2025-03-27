@@ -1,8 +1,8 @@
 /**
  * Business logic for managing courses.
  */
-import CourseModel, { Course } from "../../models/Course";
-import UserModel from "../../models/User";
+import CourseModel, { InternalCourse } from "../../models/Course";
+import UserModel, { User } from "../../models/User";
 import { responses } from "../../config/strings";
 import {
     checkIfAuthenticated,
@@ -11,7 +11,6 @@ import {
 } from "../../lib/graphql";
 import constants from "../../config/constants";
 import {
-    calculatePercentageCompletion,
     getPaginatedCoursesForAdmin,
     setupBlog,
     setupCourse,
@@ -21,13 +20,23 @@ import Lesson from "../../models/Lesson";
 import GQLContext from "../../models/GQLContext";
 import Filter from "./models/filter";
 import mongoose from "mongoose";
-import { Constants, Group, Progress } from "@courselit/common-models";
+import {
+    Constants,
+    Group,
+    Membership,
+    MembershipStatus,
+    Progress,
+} from "@courselit/common-models";
 import { deleteAllLessons } from "../lessons/logic";
 import { deleteMedia } from "../../services/medialit";
 import PageModel from "../../models/Page";
 import { getPrevNextCursor } from "../lessons/helpers";
 import { checkPermission } from "@courselit/utils";
 import { error } from "../../services/logger";
+import { getPlans } from "../paymentplans/logic";
+import MembershipModel from "@models/Membership";
+import { getActivities } from "../activities/logic";
+import { ActivityType } from "@courselit/common-models/dist/constants";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -35,7 +44,7 @@ export const getCourseOrThrow = async (
     id: mongoose.Types.ObjectId | undefined,
     ctx: GQLContext,
     courseId?: string,
-): Promise<Course> => {
+): Promise<InternalCourse> => {
     checkIfAuthenticated(ctx);
 
     const query = courseId
@@ -72,15 +81,49 @@ export const getCourseOrThrow = async (
     return course;
 };
 
+async function formatCourse(courseId: string, ctx: GQLContext) {
+    const course: InternalCourse | null = await CourseModel.findOne({
+        courseId,
+        domain: ctx.subdomain._id,
+    }).lean();
+
+    const paymentPlans = await getPlans({
+        planIds: course!.paymentPlans,
+        ctx,
+    });
+
+    if (
+        [Constants.CourseType.COURSE, Constants.CourseType.DOWNLOAD].includes(
+            course.type,
+        )
+    ) {
+        const { nextLesson } = await getPrevNextCursor(
+            course.courseId,
+            ctx.subdomain._id,
+        );
+        (course as any).firstLesson = nextLesson;
+    }
+
+    const result = {
+        ...course,
+        groups: course!.groups?.map((group: any) => ({
+            ...group,
+            id: group._id.toString(),
+        })),
+        paymentPlans,
+    };
+    return result;
+}
+
 export const getCourse = async (
     id: string,
     ctx: GQLContext,
     asGuest: boolean = false,
 ) => {
-    const course: Course = await CourseModel.findOne({
+    const course: InternalCourse | null = await CourseModel.findOne({
         courseId: id,
         domain: ctx.subdomain._id,
-    });
+    }).lean();
 
     if (!course) {
         throw new Error(responses.item_not_found);
@@ -93,26 +136,26 @@ export const getCourse = async (
             ]) || checkOwnershipWithoutModel(course, ctx);
 
         if (isOwner) {
-            return course;
+            return await formatCourse(course.courseId, ctx);
         }
     }
 
     if (course.published) {
-        if (
-            [constants.course, constants.download].includes(
-                course.type as
-                    | typeof constants.course
-                    | typeof constants.download,
-            )
-        ) {
-            const { nextLesson } = await getPrevNextCursor(
-                course.courseId,
-                ctx.subdomain._id,
-            );
-            (course as any).firstLesson = nextLesson;
-        }
+        // if (
+        //     [constants.course, constants.download].includes(
+        //         course.type as
+        //             | typeof constants.course
+        //             | typeof constants.download,
+        //     )
+        // ) {
+        //     const { nextLesson } = await getPrevNextCursor(
+        //         course.courseId,
+        //         ctx.subdomain._id,
+        //     );
+        //     (course as any).firstLesson = nextLesson;
+        // }
         // course.groups = accessibleGroups;
-        return course;
+        return await formatCourse(course.courseId, ctx);
     } else {
         throw new Error(responses.item_not_found);
     }
@@ -142,17 +185,25 @@ export const createCourse = async (
 };
 
 export const updateCourse = async (
-    courseData: Partial<Course>,
+    courseData: Partial<InternalCourse & { id: string }>,
     ctx: GQLContext,
 ) => {
-    let course = await getCourseOrThrow(courseData.id, ctx);
+    let course = await getCourseOrThrow(undefined, ctx, courseData.id);
 
     for (const key of Object.keys(courseData)) {
+        if (key === "id") {
+            continue;
+        }
+
         if (
             key === "published" &&
             !checkPermission(ctx.user.permissions, [permissions.publishCourse])
         ) {
             throw new Error(responses.action_not_allowed);
+        }
+
+        if (key === "published" && !ctx.user.name) {
+            throw new Error(responses.profile_incomplete);
         }
 
         course[key] = courseData[key];
@@ -164,14 +215,11 @@ export const updateCourse = async (
         { entityId: course.courseId, domain: ctx.subdomain._id },
         { $set: { name: course.title } },
     );
-    return course;
+    return await formatCourse(course.courseId, ctx);
 };
 
-export const deleteCourse = async (
-    id: mongoose.Types.ObjectId,
-    ctx: GQLContext,
-) => {
-    const course = await getCourseOrThrow(id, ctx);
+export const deleteCourse = async (id: string, ctx: GQLContext) => {
+    const course = await getCourseOrThrow(undefined, ctx, id);
     await deleteAllLessons(course.courseId, ctx);
     if (course.featuredImage) {
         try {
@@ -187,8 +235,8 @@ export const deleteCourse = async (
         domain: ctx.subdomain._id,
     });
     await CourseModel.deleteOne({
-        _id: course._id,
         domain: ctx.subdomain._id,
+        courseId: course.courseId,
     });
     return true;
 };
@@ -217,7 +265,7 @@ export const getCoursesAsAdmin = async ({
         throw new Error(responses.action_not_allowed);
     }
 
-    const query: Partial<Omit<Course, "type">> & {
+    const query: Partial<Omit<InternalCourse, "type">> & {
         $text?: Record<string, unknown>;
         type?: string | { $in: string[] };
     } = {
@@ -235,10 +283,27 @@ export const getCoursesAsAdmin = async ({
 
     if (searchText) query.$text = { $search: searchText };
 
-    return await getPaginatedCoursesForAdmin({
+    const courses = await getPaginatedCoursesForAdmin({
         query,
         page: offset,
     });
+
+    return courses.map(async (course) => ({
+        ...course,
+        customers: await (MembershipModel as any).countDocuments({
+            entityId: course.courseId,
+            entityType: Constants.MembershipEntityType.COURSE,
+            domain: context.subdomain._id,
+        }),
+        sales: (
+            await getActivities({
+                entityId: course.courseId,
+                type: ActivityType.PURCHASED,
+                duration: "lifetime",
+                ctx: context,
+            })
+        ).count,
+    }));
 };
 
 export const getCourses = async ({
@@ -256,7 +321,7 @@ export const getCourses = async ({
 }) => {
     const query: Record<string, unknown> = {
         published: true,
-        privacy: open.toLowerCase(),
+        privacy: Constants.ProductAccessType.PUBLIC,
         domain: ctx.subdomain._id,
     };
 
@@ -325,47 +390,187 @@ export const getCourses = async ({
     }));
 };
 
-export const getEnrolledCourses = async (userId: string, ctx: GQLContext) => {
-    checkIfAuthenticated(ctx);
+const getProductsQuery = (
+    ctx: GQLContext,
+    filter?: Filter[],
+    tags?: string[],
+    ids?: string[],
+    publicView: boolean = false,
+) => {
+    const query: Partial<InternalCourse> = {
+        domain: ctx.subdomain._id,
+    };
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
-        if (userId !== ctx.user.userId) {
-            throw new Error(responses.action_not_allowed);
+    if (
+        !publicView &&
+        ctx.user &&
+        checkPermission(ctx.user.permissions, [
+            permissions.manageAnyCourse,
+            permissions.manageCourse,
+        ])
+    ) {
+        if (
+            checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])
+        ) {
+            // do nothing
+        } else {
+            query.creatorId = ctx.user.userId;
         }
+    } else {
+        query.published = true;
+        query.privacy = Constants.ProductAccessType.PUBLIC;
     }
 
-    const user = await UserModel.findOne({ userId, domain: ctx.subdomain._id });
-    if (!user) {
-        throw new Error(responses.user_not_found);
+    if (filter) {
+        query.type = { $in: filter };
+    } else {
+        query.type = { $in: [constants.download, constants.course] };
     }
 
-    const enrolledCourses = await CourseModel.find(
-        {
-            courseId: {
-                $in: [
-                    ...user.purchases.map(
-                        (course: Progress) => course.courseId,
-                    ),
-                ],
-            },
-            domain: ctx.subdomain._id,
-        },
-        {
-            courseId: 1,
-            title: 1,
-            lessons: 1,
-            type: 1,
-            slug: 1,
-        },
-    );
+    if (tags) {
+        query.tags = { $in: tags };
+    }
 
-    return enrolledCourses.map((course) => ({
-        courseId: course.courseId,
-        title: course.title,
-        type: course.type,
-        slug: course.slug,
-        progress: calculatePercentageCompletion(user, course),
-    }));
+    if (ids) {
+        query.courseId = {
+            $in: ids,
+        };
+    }
+
+    return query;
+};
+
+export const getProducts = async ({
+    ctx,
+    page = 1,
+    limit = 10,
+    filterBy,
+    tags,
+    ids,
+    publicView,
+    sort = -1,
+}: {
+    ctx: GQLContext;
+    page?: number;
+    limit?: number;
+    filterBy?: Filter[];
+    tags?: string[];
+    ids?: string[];
+    publicView?: boolean;
+    sort?: number;
+}): Promise<InternalCourse[]> => {
+    const query = getProductsQuery(ctx, filterBy, tags, ids, publicView);
+
+    const courses = await (CourseModel as any).paginatedFind(query, {
+        page,
+        limit,
+        sort,
+    });
+
+    const hasManagePerm =
+        ctx.user &&
+        checkPermission(ctx.user.permissions, [
+            permissions.manageAnyCourse,
+            permissions.manageCourse,
+        ]);
+
+    const products: InternalCourse[] = [];
+
+    for (const course of courses) {
+        const customers =
+            hasManagePerm && course.type !== constants.blog
+                ? await (MembershipModel as any).countDocuments({
+                      entityId: course.courseId,
+                      entityType: Constants.MembershipEntityType.COURSE,
+                      domain: ctx.subdomain._id,
+                      status: Constants.MembershipStatus.ACTIVE,
+                  })
+                : undefined;
+        const sales =
+            hasManagePerm && course.type !== constants.blog
+                ? (
+                      await getActivities({
+                          entityId: course.courseId,
+                          type: ActivityType.PURCHASED,
+                          duration: "lifetime",
+                          ctx,
+                      })
+                  ).count
+                : undefined;
+        const paymentPlans =
+            course.type !== constants.blog
+                ? await getPlans({
+                      planIds: course.paymentPlans,
+                      ctx,
+                  })
+                : undefined;
+        products.push({
+            title: course.title,
+            slug: course.slug,
+            description: course.description,
+            type: course.type,
+            creatorId: course.creatorId,
+            creatorName: course.creatorName,
+            updatedAt: course.updatedAt,
+            featuredImage: course.featuredImage,
+            courseId: course.courseId,
+            tags: course.tags,
+            privacy: course.privacy,
+            published: course.published,
+            isFeatured: course.isFeatured,
+            groups: course.type !== constants.blog ? course.groups : null,
+            pageId: course.type !== constants.blog ? course.pageId : undefined,
+            customers,
+            sales,
+            paymentPlans,
+            defaultPaymentPlan: course.defaultPaymentPlan,
+        });
+    }
+
+    // const products = courses.map(async (course) => ({
+    //     ...course,
+    //     groups: course.type !== constants.blog ? course.groups : null,
+    //     pageId: course.type !== constants.blog ? course.pageId : undefined,
+    //     customers:
+    //         hasManagePerm && course.type !== constants.blog
+    //             ? await (MembershipModel as any).countDocuments({
+    //                   entityId: course.courseId,
+    //                   entityType: Constants.MembershipEntityType.COURSE,
+    //                   domain: ctx.subdomain._id,
+    //               })
+    //             : undefined,
+    //     sales:
+    //         hasManagePerm && course.type !== constants.blog
+    //             ? (
+    //                   await getActivities({
+    //                       entityId: course.courseId,
+    //                       type: ActivityType.PURCHASED,
+    //                       duration: "lifetime",
+    //                       ctx,
+    //                   })
+    //               ).count
+    //             : undefined,
+    // }));
+
+    return products;
+};
+
+export const getProductsCount = async ({
+    ctx,
+    filterBy,
+    tags,
+    ids,
+    publicView,
+}: {
+    ctx: GQLContext;
+    filterBy?: Filter[];
+    tags?: string[];
+    ids?: string[];
+    publicView?: boolean;
+}) => {
+    const query = getProductsQuery(ctx, filterBy, tags, ids, publicView);
+
+    return await (CourseModel as any).countDocuments(query);
 };
 
 export const addGroup = async ({
@@ -374,32 +579,39 @@ export const addGroup = async ({
     collapsed,
     ctx,
 }: {
-    id: mongoose.Types.ObjectId;
+    id: string;
     name: string;
     collapsed: boolean;
     ctx: GQLContext;
 }) => {
-    const course = await getCourseOrThrow(id, ctx);
+    const course = await getCourseOrThrow(undefined, ctx, id);
+    if (
+        course.type === Constants.CourseType.DOWNLOAD &&
+        course.groups?.length === 1
+    ) {
+        throw new Error(responses.download_course_cannot_have_groups);
+    }
+
     const existingName = (group: Group) => group.name === name;
 
-    if (course.groups.some(existingName)) {
+    if (course.groups?.some(existingName)) {
         throw new Error(responses.existing_group);
     }
 
-    const maximumRank = course.groups.reduce(
+    const maximumRank = course.groups?.reduce(
         (acc: number, value: { rank: number }) =>
             value.rank > acc ? value.rank : acc,
         0,
     );
 
-    await course.groups.push({
+    await (course.groups as any).push({
         rank: maximumRank + 1000,
         name,
     } as Group);
 
     await (course as any).save();
 
-    return course;
+    return await formatCourse(course.courseId, ctx);
 };
 
 export const removeGroup = async (
@@ -408,10 +620,17 @@ export const removeGroup = async (
     ctx: GQLContext,
 ) => {
     const course = await getCourseOrThrow(undefined, ctx, courseId);
-    const group = course.groups.find((group) => group.id === id);
+    const group = course.groups?.find((group) => group.id === id);
 
     if (!group) {
-        return course;
+        return await formatCourse(course.courseId, ctx);
+    }
+
+    if (
+        course.type === Constants.CourseType.DOWNLOAD &&
+        course.groups?.length === 1
+    ) {
+        throw new Error(responses.download_course_last_group_cannot_be_removed);
     }
 
     const countOfAssociatedLessons = await Lesson.countDocuments({
@@ -441,7 +660,7 @@ export const removeGroup = async (
         },
     );
 
-    return course;
+    return await formatCourse(course.courseId, ctx);
 };
 
 export const updateGroup = async ({
@@ -454,14 +673,14 @@ export const updateGroup = async ({
     drip,
     ctx,
 }) => {
-    const course = await getCourseOrThrow(courseId, ctx);
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
 
     const $set = {};
     if (name) {
         const existingName = (group) =>
             group.name === name && group._id.toString() !== id;
 
-        if (course.groups.some(existingName)) {
+        if (course.groups?.some(existingName)) {
             throw new Error(responses.existing_group);
         }
 
@@ -474,11 +693,11 @@ export const updateGroup = async ({
 
     if (
         lessonsOrder &&
-        lessonsOrder.every((lessonId) => course.lessons.includes(lessonId)) &&
+        lessonsOrder.every((lessonId) => course.lessons?.includes(lessonId)) &&
         lessonsOrder.every((lessonId) =>
             course.groups
-                .find((group) => group.id === id)
-                .lessonsOrder.includes(lessonId),
+                ?.find((group) => group.id === id)
+                ?.lessonsOrder.includes(lessonId),
         )
     ) {
         $set["groups.$.lessonsOrder"] = lessonsOrder;
@@ -515,11 +734,81 @@ export const updateGroup = async ({
 
     return await CourseModel.findOneAndUpdate(
         {
-            _id: course._id.toString(),
+            domain: ctx.subdomain._id,
+            courseId: course.courseId,
             "groups._id": id,
         },
         { $set },
         { new: true },
+    );
+};
+
+export const getMembers = async ({
+    ctx,
+    courseId,
+    page = 1,
+    limit = 10,
+    status,
+}: {
+    ctx: GQLContext;
+    courseId: string;
+    page?: number;
+    limit?: number;
+    status?: MembershipStatus;
+}): Promise<
+    (Pick<
+        Membership,
+        "userId" | "status" | "subscriptionMethod" | "subscriptionId"
+    > &
+        Partial<
+            Pick<
+                Progress,
+                "completedLessons" | "createdAt" | "updatedAt" | "downloaded"
+            >
+        >)[]
+> => {
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
+
+    const query: Record<string, unknown> = {
+        domain: ctx.subdomain._id,
+        entityId: course.courseId,
+        entityType: Constants.MembershipEntityType.COURSE,
+    };
+
+    if (status) {
+        query.status = status;
+    }
+
+    const members: Membership[] = await (MembershipModel as any).paginatedFind(
+        query,
+        {
+            page,
+            limit,
+        },
+    );
+
+    return await Promise.all(
+        members.map(async (member) => {
+            const user = await UserModel.findOne<User>({
+                domain: ctx.subdomain._id,
+                userId: member.userId,
+            });
+
+            const purchase = user?.purchases.find(
+                (purchase) => purchase.courseId === course.courseId,
+            );
+
+            return {
+                userId: member.userId,
+                status: member.status,
+                subscriptionMethod: member.subscriptionMethod,
+                subscriptionId: member.subscriptionId,
+                completedLessons: purchase?.completedLessons,
+                createdAt: purchase?.createdAt,
+                updatedAt: purchase?.updatedAt,
+                downloaded: purchase?.downloaded,
+            };
+        }),
     );
 };
 
@@ -528,7 +817,7 @@ export const getStudents = async ({
     ctx,
     text,
 }: {
-    course: Course;
+    course: InternalCourse;
     ctx: GQLContext;
     text?: string;
 }) => {

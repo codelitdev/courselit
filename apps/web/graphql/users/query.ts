@@ -33,12 +33,35 @@ const queries = {
     getUsers: {
         type: new GraphQLList(types.userType),
         args: {
-            searchData: { type: types.userSearchInput },
+            page: {
+                type: GraphQLInt,
+            },
+            limit: {
+                type: GraphQLInt,
+            },
+            filters: { type: GraphQLString },
         },
-        resolve: (_: any, { searchData }: any, context: GQLContext) =>
-            getUsers({ searchData, ctx: context }),
+        resolve: (
+            _: any,
+            {
+                page,
+                limit,
+                filters,
+            }: { page?: number; limit?: number; filters?: string },
+            context: GQLContext,
+        ) => getUsers({ page, limit, filters, ctx: context }),
     },
-
+    getUsersCount: {
+        type: new GraphQLNonNull(GraphQLInt),
+        args: {
+            filters: { type: GraphQLString },
+        },
+        resolve: (
+            _: any,
+            { filters }: { filters?: string },
+            context: GQLContext,
+        ) => getUsersCount(context, filters),
+    },
     inviteCustomer: {
         type: types.userType,
         args: {
@@ -48,14 +71,6 @@ const queries = {
         },
         resolve: (_: any, { email, tags, id }: any, context: GQLContext) =>
             inviteCustomer(email, tags, id, context),
-    },
-    getUsersCount: {
-        type: new GraphQLNonNull(GraphQLInt),
-        args: {
-            searchData: { type: types.userSearchInput },
-        },
-        resolve: (_: any, { searchData }: any, context: GQLContext) =>
-            getUsersCount(searchData, context),
     },
     segments: {
         type: new GraphQLList(types.userSegment),

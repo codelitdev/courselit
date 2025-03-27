@@ -7,8 +7,9 @@ import dynamic from "next/dynamic";
 import BaseLayout from "../../../components/public/base-layout";
 import { Link } from "@courselit/components-library";
 import { BACK_TO_BLOG } from "../../../ui-config/strings";
+import { Button } from "@components/ui/button";
 
-const Article = dynamic(() => import("../../../components/public/article"));
+const Article = dynamic(() => import("@/components/public/article"));
 
 interface PostProps {
     siteInfo: SiteInfo;
@@ -31,12 +32,12 @@ const Post = ({ siteInfo, address, post, page }: PostProps) => {
         >
             {post && (
                 <div className="flex flex-col min-h-[80vh] gap-4 mb-8 lg:max-w-[720px] w-full mx-auto">
-                    <div className="flex flex-col gap-4 p-4 mt-8">
+                    <div className="flex flex-col gap-8 p-4 mt-8">
                         <Article course={post} options={articleOptions} />
-                        <div className="">
-                            <Link href="/blog" className="hover:underline">
-                                {BACK_TO_BLOG}
-                            </Link>
+                        <div>
+                            <Button variant="outline" asChild>
+                                <Link href="/blog">{BACK_TO_BLOG}</Link>
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -51,7 +52,6 @@ export async function getServerSideProps({ query, req }: any) {
     const graphQuery = `
     query {
       post: getCourse(id: "${query.id}") {
-          id,
           title,
           description,
           featuredImage {

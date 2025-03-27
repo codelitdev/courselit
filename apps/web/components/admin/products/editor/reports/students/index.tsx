@@ -149,7 +149,7 @@ export default function Students({
                     </tr>
                 </thead>
                 <tbody>
-                    {students.map((student: any) => (
+                    {students?.map((student: any) => (
                         <tr
                             key={student.email as string}
                             className="hover:!bg-slate-100"
@@ -224,7 +224,7 @@ export default function Students({
                     ))}
                 </tbody>
             </table>
-            {!students.length && (
+            {!students?.length && (
                 <div className="flex justify-center">
                     <p className="mt-4">{COURSE_STUDENT_NO_RECORDS}</p>
                 </div>

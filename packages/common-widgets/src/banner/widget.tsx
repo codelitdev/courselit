@@ -1,19 +1,19 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { Media, WidgetProps } from "@courselit/common-models";
+import { Constants, Media, WidgetProps } from "@courselit/common-models";
 import {
     Image,
-    PriceTag,
     TextRenderer,
     Form,
     FormField,
     Button2,
     Link,
     useToast,
+    getSymbolFromCurrency,
 } from "@courselit/components-library";
 import { actionCreators } from "@courselit/state-management";
-import { FetchBuilder } from "@courselit/utils";
+import { FetchBuilder, getPlanPrice } from "@courselit/utils";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "./constants";
 import Settings from "./settings";
 import { Users } from "lucide-react";
@@ -76,9 +76,9 @@ export default function Widget({
     let finalDescription: any = undefined;
     if (description && !isEmptyDoc(description)) {
         finalDescription = description;
-    } else if (product.description && type === "product") {
+    } else if (product.description && type === Constants.PageType.PRODUCT) {
         finalDescription = JSON.parse(product.description as string);
-    } else if (product.description && type === "community") {
+    } else if (product.description && type === Constants.PageType.COMMUNITY) {
         finalDescription = product.description;
     }
 
@@ -115,7 +115,7 @@ export default function Widget({
             ? "0"
             : editingViewShowSuccess;
     const featuredImage: Partial<Media> =
-        type === "site"
+        type === Constants.PageType.SITE
             ? state.siteinfo.logo
             : (product.featuredImage as Partial<Media>);
 
@@ -155,6 +155,11 @@ export default function Widget({
         }
     };
 
+    const isLeadMagnet =
+        product.leadMagnet &&
+        product.paymentPlans.length === 1 &&
+        product.paymentPlans[0].type === Constants.PaymentPlanType.FREE;
+
     return (
         <section
             style={{
@@ -193,23 +198,36 @@ export default function Widget({
                                 : "items-start"
                         }`}
                     >
-                        {type === "product" && (
-                            <div className="pb-1">
-                                <PriceTag
+                        {type === Constants.PageType.PRODUCT &&
+                            !isLeadMagnet && (
+                                <div className="pb-1 font-medium">
+                                    {getSymbolFromCurrency(
+                                        state.siteinfo.currencyISOCode,
+                                    )}
+                                    {
+                                        getPlanPrice(
+                                            product.paymentPlans.find(
+                                                (x) =>
+                                                    x.planId ===
+                                                    product.defaultPaymentPlan,
+                                            ),
+                                        ).amount
+                                    }
+                                    {/* <PriceTag
                                     cost={product.cost as number}
                                     freeCostCaption="FREE"
                                     currencyISOCode={
                                         state.siteinfo.currencyISOCode
                                     }
-                                />
-                            </div>
-                        )}
+                                /> */}
+                                </div>
+                            )}
                         <div className="pb-1">
                             <h1 className="text-4xl mb-4">
                                 {title ||
-                                    (type === "site"
+                                    (type === Constants.PageType.SITE
                                         ? state.siteinfo.title
-                                        : type === "product"
+                                        : type === Constants.PageType.PRODUCT
                                           ? product.title
                                           : product.name)}
                             </h1>
@@ -225,62 +243,65 @@ export default function Widget({
                                 <TextRenderer json={finalDescription} />
                             </div>
                         )}
-                        {type === "product" && product.costType === "email" && (
-                            <div>
-                                {((editing && showEditingView === "1") ||
-                                    success) && (
-                                    <TextRenderer
-                                        json={
-                                            successMessage ||
-                                            defaultSuccessMessage
-                                        }
-                                    />
-                                )}
-                                {(!editing ||
-                                    (editing && showEditingView === "0")) &&
-                                    !success && (
-                                        <Form
-                                            className="flex flex-col items-start"
-                                            onSubmit={onSubmit}
-                                        >
-                                            <div className="mb-4">
-                                                <FormField
-                                                    label="Email"
-                                                    value={email}
-                                                    onChange={(e) =>
-                                                        setEmail(e.target.value)
-                                                    }
-                                                    placeholder="Enter your email"
-                                                    type="email"
-                                                    required
-                                                />
-                                            </div>
-                                            <div>
-                                                <Button2
-                                                    style={{
-                                                        backgroundColor:
-                                                            buttonBackground,
-                                                        color: buttonForeground,
-                                                    }}
-                                                    type="submit"
-                                                    disabled={
-                                                        state.networkAction ||
-                                                        !email
-                                                    }
-                                                >
-                                                    {buttonCaption ||
-                                                        "Get for free"}
-                                                </Button2>
-                                            </div>
-                                        </Form>
+                        {type === Constants.PageType.PRODUCT &&
+                            isLeadMagnet && (
+                                <div>
+                                    {((editing && showEditingView === "1") ||
+                                        success) && (
+                                        <TextRenderer
+                                            json={
+                                                successMessage ||
+                                                defaultSuccessMessage
+                                            }
+                                        />
                                     )}
-                            </div>
-                        )}
-                        {type === "product" &&
-                            ["paid", "free"].includes(
-                                product.costType as string,
-                            ) && (
-                                <Link href={`/checkout/${product.courseId}`}>
+                                    {(!editing ||
+                                        (editing && showEditingView === "0")) &&
+                                        !success && (
+                                            <Form
+                                                className="flex flex-col items-start"
+                                                onSubmit={onSubmit}
+                                            >
+                                                <div className="mb-4">
+                                                    <FormField
+                                                        label="Email"
+                                                        value={email}
+                                                        onChange={(e) =>
+                                                            setEmail(
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        placeholder="Enter your email"
+                                                        type="email"
+                                                        required
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Button2
+                                                        style={{
+                                                            backgroundColor:
+                                                                buttonBackground,
+                                                            color: buttonForeground,
+                                                        }}
+                                                        type="submit"
+                                                        disabled={
+                                                            state.networkAction ||
+                                                            !email
+                                                        }
+                                                    >
+                                                        {buttonCaption ||
+                                                            "Get for free"}
+                                                    </Button2>
+                                                </div>
+                                            </Form>
+                                        )}
+                                </div>
+                            )}
+                        {type === Constants.PageType.PRODUCT &&
+                            !isLeadMagnet && (
+                                <Link
+                                    href={`/checkout?type=course&id=${product.courseId}`}
+                                >
                                     <Button2
                                         style={{
                                             backgroundColor: buttonBackground,
@@ -291,7 +312,7 @@ export default function Widget({
                                     </Button2>
                                 </Link>
                             )}
-                        {type === "site" && buttonAction && (
+                        {type === Constants.PageType.SITE && buttonAction && (
                             <Link href={buttonAction}>
                                 <Button2
                                     style={{
@@ -303,7 +324,7 @@ export default function Widget({
                                 </Button2>
                             </Link>
                         )}
-                        {type === "community" && (
+                        {type === Constants.PageType.COMMUNITY && (
                             <div className="flex flex-col gap-4">
                                 <span className="text-sm flex items-center gap-1 font-semibold">
                                     <Users className="w-4 h-4" />{" "}

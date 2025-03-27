@@ -7,10 +7,11 @@ import {
     UIConstants,
 } from "@courselit/common-models";
 import { getUnitAmount } from "./helpers";
-import MembershipModel, { InternalMembership } from "@models/Membership";
+import MembershipModel from "@models/Membership";
 import PaymentPlanModel from "@models/PaymentPlan";
 import Invoice from "@models/Invoice";
 import { error } from "@/services/logger";
+import { InternalMembership } from "@courselit/common-logic";
 
 const LEMON_SQUEEZY_API_VERSION = "2023-06-30";
 const LEMON_SQUEEZY_BASE_URL = "https://api.lemonsqueezy.com/v1";

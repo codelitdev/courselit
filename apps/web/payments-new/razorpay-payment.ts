@@ -125,7 +125,11 @@ export default class RazorpayPayment implements Payment {
                     },
                     (err, plan) => {
                         if (err) {
-                            reject(new Error(err.error.description));
+                            reject(
+                                new Error(
+                                    `Error creating plan on Razorpay: ${err.error.description}`,
+                                ),
+                            );
                         }
                         this.razorpay.subscriptions.create(
                             {
@@ -169,7 +173,11 @@ export default class RazorpayPayment implements Payment {
                     },
                     (err, order) => {
                         if (err) {
-                            reject(new Error(err.error.description));
+                            reject(
+                                new Error(
+                                    `Error creating plan on Razorpay: ${err.error.description}`,
+                                ),
+                            );
                         }
                         resolve(order);
                     },

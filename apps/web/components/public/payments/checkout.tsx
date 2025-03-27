@@ -169,7 +169,7 @@ export default function Checkout({
         };
 
         const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/payment/initiate-new`)
+            .setUrl(`${address.backend}/api/payment/initiate`)
             .setHeaders({
                 "Content-Type": "application/json",
             })

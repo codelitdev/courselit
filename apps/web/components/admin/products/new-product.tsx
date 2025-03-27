@@ -56,7 +56,6 @@ export function NewProduct({
                     title: "${title}",
                     type: ${type.toUpperCase()},
                 }) {
-                    id,
                     courseId
                 }
             }

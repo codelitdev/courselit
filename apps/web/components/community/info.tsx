@@ -101,7 +101,11 @@ export function CommunityInfo({
                 <CardTitle className="w-full">
                     <div class="flex justify-between items-center w-full">
                         <p>{name}</p>
-                        <Button variant="ghost" onClick={handleShareClick}>
+                        <Button
+                            variant="ghost"
+                            onClick={handleShareClick}
+                            size="sm"
+                        >
                             <Share2 className="h-5 w-5" />
                         </Button>
                     </div>

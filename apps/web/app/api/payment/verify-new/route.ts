@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getDomain, getUser } from "../initiate-new/route";
+import { getDomain, getUser } from "../initiate/route";
 import { auth } from "@/auth";
 import { error } from "@/services/logger";
 import InvoiceModel from "@models/Invoice";

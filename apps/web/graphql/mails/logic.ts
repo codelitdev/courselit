@@ -2,7 +2,7 @@ import constants from "@config/constants";
 import GQLContext from "@models/GQLContext";
 import UserModel, { User } from "@models/User";
 import { error } from "../../services/logger";
-import { createUser } from "../users/logic";
+import { createUser, getMembership } from "../users/logic";
 import MailModel, { Mail } from "@models/Mail";
 import {
     checkIfAuthenticated,
@@ -12,10 +12,8 @@ import { responses, internal } from "../../config/strings";
 import SearchData from "./models/search-data";
 import { checkPermission, generateUniqueId } from "@courselit/utils";
 import { Constants, Email, Sequence } from "@courselit/common-models";
-import CourseModel, { Course } from "@models/Course";
-import finalizePurchase from "../../lib/finalize-purchase";
-import SequenceModel, { AdminSequence } from "@models/Sequence";
-import { isDateInFuture } from "../../lib/utils";
+import CourseModel from "@models/Course";
+import SequenceModel from "@models/Sequence";
 import {
     addRule,
     areAllEmailIdsValid,
@@ -27,6 +25,9 @@ import {
 import MailRequestStatusModel, {
     MailRequestStatus,
 } from "@models/MailRequestStatus";
+import { getPlans } from "../paymentplans/logic";
+import { activateMembership } from "@/app/api/payment/helpers";
+import { AdminSequence } from "@courselit/common-logic";
 
 const { permissions } = constants;
 
@@ -59,43 +60,6 @@ export async function createSubscription(
 
     return true;
 }
-
-// export async function createMail(
-//     searchData: SearchData = {},
-//     ctx: GQLContext,
-// ): Promise<Mail | null> {
-//     checkIfAuthenticated(ctx);
-
-//     if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
-//         throw new Error(responses.action_not_allowed);
-//     }
-
-//     try {
-//         let emails = [];
-//         let emptySearchData = Object.keys(searchData).length === 0;
-//         if (!emptySearchData) {
-//             const matchingUsers = await getUsers({
-//                 searchData,
-//                 ctx,
-//                 noPagination: true,
-//                 hasMailPermissions: true,
-//             });
-//             emails = matchingUsers.map((x) => x.email);
-//         }
-//         const mail = await MailModel.create({
-//             domain: ctx.subdomain._id,
-//             creatorId: ctx.user.userId,
-//             to: emails,
-//         });
-
-//         return mail;
-//     } catch (e: any) {
-//         error(e.message, {
-//             stack: e.stack,
-//         });
-//         throw e;
-//     }
-// }
 
 export async function createSequence(
     ctx: GQLContext,
@@ -130,8 +94,8 @@ export async function createSequence(
             trigger: {
                 type:
                     type === "broadcast"
-                        ? Constants.eventTypes[4]
-                        : Constants.eventTypes[2],
+                        ? Constants.EventType.DATE_OCCURRED
+                        : Constants.EventType.PRODUCT_PURCHASED,
             },
             emailsOrder: [emailId],
         };
@@ -198,22 +162,27 @@ export async function getMail(
     return mail;
 }
 
+type SequenceWithEntrantsCount = Omit<AdminSequence, "entrants"> & {
+    entrantsCount: number;
+};
 export async function getSequence(
     ctx: GQLContext,
     sequenceId: string,
-): Promise<AdminSequence | null> {
+): Promise<SequenceWithEntrantsCount | null> {
     checkIfAuthenticated(ctx);
 
-    const sequence: AdminSequence = await SequenceModel.findOne({
+    const sequence = (await SequenceModel.findOne({
         sequenceId,
         domain: ctx.subdomain._id,
-    });
+    }).lean()) as SequenceWithEntrantsCount | null;
 
     if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
         throw new Error(responses.action_not_allowed);
     }
 
-    return sequence;
+    return Object.assign({}, sequence, {
+        entrantsCount: sequence?.entrantsCount || 0,
+    });
 }
 
 export async function updateMail({
@@ -287,7 +256,7 @@ export async function updateSequence({
     title?: string;
     fromEmail?: string;
     fromName?: string;
-    triggerType?: (typeof Constants.eventTypes)[number];
+    triggerType?: Event;
     triggerData?: string;
     emailsOrder?: string[];
 }): Promise<AdminSequence | null> {
@@ -321,9 +290,6 @@ export async function updateSequence({
     }
     if (title) {
         sequence.title = title;
-        // if (sequence.type === "broadcast") {
-        //     sequence.emails[0].subject = title;
-        // }
     }
     if (fromEmail) {
         if (!sequence.from) {
@@ -352,7 +318,7 @@ export async function updateSequence({
     if (triggerData) {
         if (!sequence.trigger) {
             sequence.trigger = {
-                type: Constants.eventTypes[2],
+                type: Constants.EventType.PRODUCT_PURCHASED,
             };
         }
         sequence.trigger.data = triggerData;
@@ -577,15 +543,10 @@ export async function startSequence({
         }
         if (
             [
-                Constants.eventTypes[0],
-                Constants.eventTypes[1],
-                Constants.eventTypes[2],
-            ].includes(
-                sequence.trigger.type as
-                    | (typeof Constants.eventTypes)[0]
-                    | (typeof Constants.eventTypes)[1]
-                    | (typeof Constants.eventTypes)[2],
-            ) &&
+                Constants.EventType.TAG_ADDED,
+                Constants.EventType.TAG_REMOVED,
+                Constants.EventType.PRODUCT_PURCHASED,
+            ].includes(sequence.trigger.type as any) &&
             !sequence.trigger?.data
         ) {
             throw new Error(`${responses.sequence_details_missing}: trigger`);
@@ -641,31 +602,6 @@ export async function pauseSequence({
     return sequence;
 }
 
-// async function addBroadcastToOngoingSequence({
-//     sequence,
-//     ctx,
-// }: {
-//     sequence: Sequence;
-//     ctx: GQLContext;
-// }) {
-//     const allUsers = await getUsers({
-//         searchData: {
-//             filters: JSON.stringify(sequence.filter),
-//         },
-//         ctx,
-//         noPagination: true,
-//         hasMailPermissions: true,
-//     });
-//     const ongoingSequences = allUsers.map((user) => ({
-//         domain: ctx.subdomain._id,
-//         sequenceId: sequence.sequenceId,
-//         userId: user.userId,
-//         nextEmailId: sequence.emails[0].emailId,
-//         nextEmailScheduledTime: new Date().getTime(),
-//     }));
-//     await OngoingSequence.insertMany(ongoingSequences);
-// }
-
 export async function getMails(
     searchData: SearchData = {},
     ctx: GQLContext,
@@ -713,14 +649,26 @@ export async function sendCourseOverMail(
     email: string,
     ctx: GQLContext,
 ): Promise<boolean> {
-    const course: Course | null = await CourseModel.findOne({
+    const course = await CourseModel.findOne({
         courseId,
         domain: ctx.subdomain._id,
         published: true,
-        costType: constants.costEmail,
-    });
+        leadMagnet: true,
+    }).lean();
 
     if (!course) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const paymentPlans = await getPlans({
+        planIds: course.paymentPlans,
+        ctx,
+    });
+
+    if (
+        paymentPlans.length !== 1 ||
+        paymentPlans[0].type !== Constants.PaymentPlanType.FREE
+    ) {
         throw new Error(responses.item_not_found);
     }
 
@@ -734,10 +682,19 @@ export async function sendCourseOverMail(
             domain: ctx.subdomain!,
             email: email,
             lead: constants.leadDownload,
+            subscribedToUpdates: true,
         });
     }
 
-    await finalizePurchase(dbUser.userId, course.courseId);
+    const membership = await getMembership({
+        domainId: ctx.subdomain._id,
+        userId: dbUser.userId,
+        entityType: Constants.MembershipEntityType.COURSE,
+        entityId: course.courseId,
+        planId: paymentPlans[0].planId,
+    });
+
+    await activateMembership(ctx.subdomain!, membership, paymentPlans[0]);
 
     if (course.lessons.length === 0) {
         return true;
@@ -922,7 +879,7 @@ export async function getSequences({
     type: (typeof Constants.mailTypes)[number];
     offset: number;
     itemsPerPage?: number;
-}): Promise<AdminSequence | null> {
+}): Promise<SequenceWithEntrantsCount[]> {
     checkIfAuthenticated(ctx);
 
     if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
@@ -951,5 +908,8 @@ export async function getSequences({
         },
     );
 
-    return sequences;
+    return sequences.map((sequence) => ({
+        ...sequence,
+        entrantsCount: sequence.entrants.length,
+    }));
 }

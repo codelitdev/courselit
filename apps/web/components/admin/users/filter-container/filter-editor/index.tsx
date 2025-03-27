@@ -8,6 +8,7 @@ const SignedUpFilterEditor = dynamic(() => import("./signed-up"));
 const LastActiveFilterEditor = dynamic(() => import("./last-active"));
 const PermissionFilterEditor = dynamic(() => import("./permission"));
 const ProductFilterEditor = dynamic(() => import("./product"));
+const CommunitiesFilterEditor = dynamic(() => import("./community"));
 const EmailFilterEditor = dynamic(() => import("./email"));
 const SubscriptionFilterEditor = dynamic(() => import("./subscription"));
 const TaggedFilterEditor = dynamic(() => import("./tagged"));
@@ -59,6 +60,13 @@ export default function FilterEditor({
             )}
             {activeCategory && activeCategory === "product" && (
                 <ProductFilterEditor
+                    onApply={changeFilter}
+                    address={address}
+                    dispatch={dispatch}
+                />
+            )}
+            {activeCategory && activeCategory === "community" && (
+                <CommunitiesFilterEditor
                     onApply={changeFilter}
                     address={address}
                     dispatch={dispatch}

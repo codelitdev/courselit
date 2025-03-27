@@ -64,6 +64,32 @@ const progress = new GraphQLObjectType({
     },
 });
 
+const entityType = new GraphQLObjectType({
+    name: "EntityType",
+    fields: {
+        id: { type: new GraphQLNonNull(GraphQLString) },
+        title: { type: new GraphQLNonNull(GraphQLString) },
+        slug: { type: GraphQLString },
+        membersCount: { type: GraphQLInt },
+        totalLessons: { type: GraphQLInt },
+        completedLessonsCount: { type: GraphQLInt },
+        featuredImage: {
+            type: mediaTypes.mediaType,
+            resolve: (content, args, context, info) =>
+                getMedia(content.featuredImage),
+        },
+        type: { type: GraphQLString },
+    },
+});
+
+const userContent = new GraphQLObjectType({
+    name: "UserContent",
+    fields: {
+        entityType: { type: new GraphQLNonNull(membershipEntityType) },
+        entity: { type: entityType },
+    },
+});
+
 const userType = new GraphQLObjectType({
     name: "User",
     fields: {
@@ -84,6 +110,7 @@ const userType = new GraphQLObjectType({
             resolve: (user, _, __, ___) => getMedia(user.avatar),
         },
         invited: { type: GraphQLBoolean },
+        content: { type: new GraphQLList(userContent) },
     },
 });
 
@@ -104,24 +131,6 @@ const userUpdateInput = new GraphQLInputObjectType({
     },
 });
 
-const userSearchInput = new GraphQLInputObjectType({
-    name: "UserSearchInput",
-    fields: {
-        offset: { type: GraphQLInt },
-        rowsPerPage: { type: GraphQLInt },
-        filters: { type: GraphQLString },
-    },
-});
-
-const usersSummaryType = new GraphQLObjectType({
-    name: "UsersSummary",
-    fields: {
-        count: { type: new GraphQLNonNull(GraphQLInt) },
-        admins: { type: new GraphQLNonNull(GraphQLInt) },
-        creators: { type: new GraphQLNonNull(GraphQLInt) },
-    },
-});
-
 const userPurchaseInput = new GraphQLObjectType({
     name: "UserPurchaseInput",
     fields: {
@@ -131,6 +140,16 @@ const userPurchaseInput = new GraphQLObjectType({
 
 const userFilter = new GraphQLObjectType({
     name: "UserFilter",
+    fields: {
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        condition: { type: new GraphQLNonNull(GraphQLString) },
+        value: { type: new GraphQLNonNull(GraphQLString) },
+        valueLabel: { type: GraphQLString },
+    },
+});
+
+const userFilterInput = new GraphQLInputObjectType({
+    name: "UserFilterInput",
     fields: {
         name: { type: new GraphQLNonNull(GraphQLString) },
         condition: { type: new GraphQLNonNull(GraphQLString) },
@@ -155,6 +174,14 @@ const filter = new GraphQLObjectType({
     },
 });
 
+const filterInput = new GraphQLInputObjectType({
+    name: "FilterInput",
+    fields: {
+        aggregator: { type: new GraphQLNonNull(GraphQLString) },
+        filters: { type: new GraphQLList(userFilterInput) },
+    },
+});
+
 const userSegment = new GraphQLObjectType({
     name: "UserSegment",
     fields: {
@@ -172,40 +199,15 @@ const tagWithDetails = new GraphQLObjectType({
     },
 });
 
-const entityType = new GraphQLObjectType({
-    name: "EntityType",
-    fields: {
-        id: { type: new GraphQLNonNull(GraphQLString) },
-        title: { type: new GraphQLNonNull(GraphQLString) },
-        slug: { type: GraphQLString },
-        membersCount: { type: GraphQLInt },
-        totalLessons: { type: GraphQLInt },
-        completedLessonsCount: { type: GraphQLInt },
-        featuredImage: {
-            type: mediaTypes.mediaType,
-            resolve: (content, args, context, info) =>
-                getMedia(content.featuredImage),
-        },
-    },
-});
-
-const userContent = new GraphQLObjectType({
-    name: "UserContent",
-    fields: {
-        entityType: { type: new GraphQLNonNull(GraphQLString) },
-        entity: { type: entityType },
-    },
-});
-
 const userTypes = {
     filter,
+    filterInput,
     userType,
     userUpdateInput,
-    userSearchInput,
-    usersSummaryType,
     userPurchaseInput,
     userSegment,
     userFilter,
+    userFilterInput,
     createSegmentInput,
     tagWithDetails,
     userContent,

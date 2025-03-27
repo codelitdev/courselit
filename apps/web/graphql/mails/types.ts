@@ -101,11 +101,13 @@ const sequenceBroadcastReport = new GraphQLObjectType({
 const sequenceTriggerType = new GraphQLEnumType({
     name: "SequenceTriggerType",
     values: {
-        TAG_ADDED: { value: Constants.eventTypes[0] },
-        TAG_REMOVED: { value: Constants.eventTypes[1] },
-        PRODUCT_PURCHASED: { value: Constants.eventTypes[2] },
-        SUBSCRIBER_ADDED: { value: Constants.eventTypes[3] },
-        DATE_OCCURRED: { value: Constants.eventTypes[4] },
+        TAG_ADDED: { value: Constants.EventType.TAG_ADDED },
+        TAG_REMOVED: { value: Constants.EventType.TAG_REMOVED },
+        PRODUCT_PURCHASED: { value: Constants.EventType.PRODUCT_PURCHASED },
+        SUBSCRIBER_ADDED: { value: Constants.EventType.SUBSCRIBER_ADDED },
+        DATE_OCCURRED: { value: Constants.EventType.DATE_OCCURRED },
+        COMMUNITY_JOINED: { value: Constants.EventType.COMMUNITY_JOINED },
+        COMMUNITY_LEFT: { value: Constants.EventType.COMMUNITY_LEFT },
     },
 });
 
@@ -157,6 +159,7 @@ const sequence = new GraphQLObjectType({
         trigger: { type: sequenceTrigger },
         data: { type: GraphQLJSONObject },
         emailsOrder: { type: new GraphQLList(GraphQLString) },
+        entrantsCount: { type: GraphQLInt },
     },
 });
 

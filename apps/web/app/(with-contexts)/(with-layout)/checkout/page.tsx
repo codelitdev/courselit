@@ -23,7 +23,7 @@ export default function CheckoutPage() {
 
     const getProduct = useCallback(async () => {
         const query = `
-            query ($id: String) {
+            query ($id: String!) {
                 course: getCourse(id: $id) {
                     courseId
                     title
@@ -42,6 +42,7 @@ export default function CheckoutPage() {
                         subscriptionMonthlyAmount
                         subscriptionYearlyAmount
                     }
+                    defaultPaymentPlan
                 }
             }
         `;

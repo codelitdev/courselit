@@ -1,8 +1,9 @@
+import { Constants } from "@courselit/common-models";
 import constants from "../../config/constants";
-import CourseModel, { Course } from "../../models/Course";
 import GQLContext from "../../models/GQLContext";
 import { Page } from "../../models/Page";
 import { getCommunity } from "../communities/logic";
+import { getCourse } from "../courses/logic";
 
 export async function getPageResponse(
     page: Page,
@@ -16,17 +17,14 @@ export async function getPageResponse(
             : widget,
     );
     let pageData: any = {
-        pageType: "site",
+        pageType: Constants.PageType.SITE,
     };
-    switch (page.type.toLowerCase()) {
+    switch (page.type) {
         case constants.product:
-            const course = await getCourse(
-                page.entityId!,
-                ctx.subdomain._id as unknown as string,
-            );
+            const course = await getCourse(page.entityId!, ctx);
             if (course) {
                 pageData = {
-                    pageType: "product",
+                    pageType: Constants.PageType.PRODUCT,
                     title: course.title,
                     cost: course.cost,
                     costType: course.costType,
@@ -34,6 +32,18 @@ export async function getPageResponse(
                     tags: course.tags,
                     featuredImage: course.featuredImage,
                     courseId: course.courseId,
+                    leadMagnet: course.leadMagnet,
+                    defaultPaymentPlan: course.defaultPaymentPlan,
+                    paymentPlans: course.paymentPlans.map((p) => ({
+                        emiAmount: p.emiAmount,
+                        emiTotalInstallments: p.emiTotalInstallments,
+                        subscriptionMonthlyAmount: p.subscriptionMonthlyAmount,
+                        subscriptionYearlyAmount: p.subscriptionYearlyAmount,
+                        type: p.type,
+                        oneTimeAmount: p.oneTimeAmount,
+                        name: p.name,
+                        planId: p.planId,
+                    })),
                 };
             }
             break;
@@ -44,7 +54,7 @@ export async function getPageResponse(
             });
             if (community) {
                 pageData = {
-                    pageType: "community",
+                    pageType: Constants.PageType.COMMUNITY,
                     name: community.name,
                     description: community.description,
                     communityId: community.communityId,
@@ -106,35 +116,41 @@ export async function getPageResponse(
     };
 }
 
-async function getCourse(
-    courseId: string,
-    domain: string,
-): Promise<Pick<
-    Course,
-    | "courseId"
-    | "title"
-    | "description"
-    | "cost"
-    | "costType"
-    | "type"
-    | "tags"
-    | "featuredImage"
-> | null> {
-    return await CourseModel.findOne(
-        {
-            courseId,
-            domain,
-        },
-        {
-            _id: 0,
-            courseId: 1,
-            title: 1,
-            description: 1,
-            cost: 1,
-            costType: 1,
-            type: 1,
-            tags: 1,
-            featuredImage: 1,
-        },
-    );
-}
+// async function getCourse(
+//     courseId: string,
+//     domain: string,
+// ): Promise<Pick<
+//     Course,
+//     | "courseId"
+//     | "title"
+//     | "description"
+//     | "cost"
+//     | "costType"
+//     | "type"
+//     | "tags"
+//     | "featuredImage"
+//     | "leadMagnet"
+//     | "defaultPaymentPlan"
+//     | "paymentPlans"
+// > | null> {
+//     return await CourseModel.findOne(
+//         {
+//             courseId,
+//             domain,
+//         },
+//         {
+//             _id: 0,
+//             courseId: 1,
+//             title: 1,
+//             description: 1,
+//             cost: 1,
+//             costType: 1,
+//             type: 1,
+//             tags: 1,
+//             featuredImage: 1,
+//             leadMagnet: 1,
+//             defaultPaymentPlan: 1,
+//             paymentPlans: 1,
+//         },
+//     );
+// }

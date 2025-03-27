@@ -5,6 +5,7 @@ import {
     PaymentPlan,
     Constants,
     Community,
+    PaymentPlanType,
 } from "@courselit/common-models";
 import CourseModel, { Course } from "@models/Course";
 import CommunityModel, { InternalCommunity } from "@models/Community";
@@ -64,7 +65,7 @@ export async function getPlans({
         domain: ctx.subdomain._id,
         planId: { $in: planIds },
         archived: false,
-    });
+    }).lean();
 }
 
 export async function createPlan({
@@ -80,7 +81,7 @@ export async function createPlan({
     ctx,
 }: {
     name: string;
-    type: string;
+    type: PaymentPlanType;
     oneTimeAmount?: number;
     emiAmount?: number;
     emiTotalInstallments?: number;
@@ -92,18 +93,21 @@ export async function createPlan({
 }): Promise<PaymentPlan> {
     checkIfAuthenticated(ctx);
 
-    if (type === "onetime" && !oneTimeAmount) {
+    if (type === Constants.PaymentPlanType.ONE_TIME && !oneTimeAmount) {
         throw new Error(
             "One-time amount is required for one-time payment plan",
         );
     }
-    if (type === "emi" && (!emiAmount || !emiTotalInstallments)) {
+    if (
+        type === Constants.PaymentPlanType.EMI &&
+        (!emiAmount || !emiTotalInstallments)
+    ) {
         throw new Error(
             "EMI amounts and total installments are required for EMI payment plan",
         );
     }
     if (
-        type === "subscription" &&
+        type === Constants.PaymentPlanType.SUBSCRIPTION &&
         ((!subscriptionMonthlyAmount && !subscriptionYearlyAmount) ||
             (subscriptionMonthlyAmount && subscriptionYearlyAmount))
     ) {
@@ -246,4 +250,11 @@ export async function changeDefaultPlan({
     await (entity as any).save();
 
     return paymentPlan;
+}
+
+export async function getInternalPaymentPlan(ctx: any) {
+    return await PaymentPlanModel.findOne({
+        domain: ctx.subdomain._id,
+        internal: true,
+    });
 }

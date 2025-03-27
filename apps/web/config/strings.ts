@@ -112,7 +112,7 @@ export const responses = {
     joining_reason_missing: "Joining reason required",
     invalid_category: "Invalid category",
     community_exists: "A community with the same name already exists",
-    payment_plan_required: "Add a payment plan before enabling the community",
+    payment_plan_required: "Add a payment plan before performing this action",
     community_requires_payment: "Community requires payment",
     community_has_no_payment_plans: "Community has no payment plans",
     duplicate_payment_plan: "A payment plan with the same type already exists",
@@ -121,7 +121,7 @@ export const responses = {
     default_payment_plan_required:
         "Mark a payment plan as default before enabling the community",
     community_content_already_reported: "Content already reported",
-    profile_incomplete: "Complete your profile to join this community",
+    profile_incomplete: "Complete your profile to perform this action",
     cannot_reject_member_with_active_subscription:
         "Cannot reject a member with an active subscription",
     cannot_leave_community_last_moderator:
@@ -131,6 +131,8 @@ export const responses = {
     cannot_change_role_last_moderator:
         "Cannot change role of the last moderator",
     cannot_delete_last_category: "Cannot delete the last category",
+    lead_magnet_invalid_settings:
+        "Product must have exactly one free payment plan to enable lead magnet",
 
     // api responses
     digital_download_no_files:
@@ -139,6 +141,9 @@ export const responses = {
     user_already_exists: "The user already exists",
     unsubscribe_success:
         "Sorry to see you go. You have been unsubscribed from our mailing list.",
+    download_course_cannot_have_groups: "Digital download cannot have sections",
+    download_course_last_group_cannot_be_removed:
+        "Last section cannot be removed from a digital download",
 };
 
 export const internal = {

@@ -1,7 +1,10 @@
 import CourseModel, { Course } from "./model/course";
-import UserModel, { UserWithDomain as User } from "./model/user";
+import UserModel from "./model/user";
 import mailQueue from "./queue";
 import { Liquid } from "liquidjs";
+import { getMemberships } from "./queries";
+import { Constants } from "@courselit/common-models";
+import { InternalUser } from "@courselit/common-logic";
 const liquidEngine = new Liquid();
 
 export async function processDrip() {
@@ -31,9 +34,17 @@ export async function processDrip() {
                 )
                 .map((group) => group.id);
 
-            const users: User[] = await UserModel.find({
-                "purchases.courseId": course.courseId,
+            const memberships = await getMemberships(
+                course.courseId,
+                Constants.MembershipEntityType.COURSE,
+            );
+            const users: InternalUser[] = await UserModel.find({
+                domain: course.domain,
+                userId: { $in: memberships.map((m) => m.userId) },
             });
+            // const users: InternalUser[] = await UserModel.find({
+            //     "purchases.courseId": course.courseId,
+            // });
 
             for (const user of users) {
                 const userProgressInCourse = user.purchases.find(

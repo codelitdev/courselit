@@ -44,10 +44,10 @@ export function Publish({ id, address, dispatch, loading }: PublishProps) {
         const query = `
       mutation {
         course: updateCourse(courseData: {
-          id: "${course!.id}"
+          id: "${course!.courseId}"
           published: ${!published}
         }) {
-          id,
+          courseId,
           published
         }
       }
@@ -60,11 +60,11 @@ export function Publish({ id, address, dispatch, loading }: PublishProps) {
         const query = `
         mutation {
             course: updateCourse(courseData: {
-            id: "${course!.id}"
-            privacy: ${privacy === "UNLISTED" ? "PUBLIC" : "UNLISTED"}
+                id: "${course!.courseId}"
+                privacy: ${privacy === "UNLISTED" ? "PUBLIC" : "UNLISTED"}
             }) {
-            id,
-            privacy 
+                courseId,
+                privacy 
             }
         }
         `;

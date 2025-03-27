@@ -1,10 +1,12 @@
-import { IconButton, Tooltip } from "@courselit/components-library";
-import { Cross } from "@courselit/icons";
+import { Tooltip } from "@courselit/components-library";
 import { capitalize } from "@courselit/utils";
 import { USER_FILTER_CHIP_TOOLTIP } from "@ui-config/strings";
 import { useMemo } from "react";
 import permissionToCaptionMap from "../permissions-to-caption-map";
 import { UserFilter as Filter } from "@courselit/common-models";
+import { Badge } from "@components/ui/badge";
+import { Button } from "@components/ui/button";
+import { X } from "lucide-react";
 
 interface FilterChipProps {
     filter: Filter;
@@ -33,7 +35,10 @@ export default function FilterChip({
     }, [name, value, valueLabel]);
 
     return (
-        <div className="text-xs flex flex-wrap py-[2px] px-[4px] items-center rounded bg-slate-200">
+        <Badge
+            variant="secondary"
+            className="flex items-center gap-1 py-1.5 px-3"
+        >
             <div>
                 <span className="font-medium">{capitalize(name)}</span>:{" "}
                 <span className="italic">{condition}</span>{" "}
@@ -42,15 +47,17 @@ export default function FilterChip({
                 )}
             </div>
             {!disabled && (
-                <IconButton
-                    variant="transparent"
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-4 w-4 p-0 ml-1 hover:bg-transparent"
                     onClick={() => onRemove(index)}
                 >
                     <Tooltip title={USER_FILTER_CHIP_TOOLTIP}>
-                        <Cross />
+                        <X className="w-4 h-4" />
                     </Tooltip>
-                </IconButton>
+                </Button>
             )}
-        </div>
+        </Badge>
     );
 }

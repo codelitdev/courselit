@@ -63,7 +63,7 @@ function LessonSection({
 }: LessonSectionProps) {
     const updateGroup = async (lessonsOrder: string[]) => {
         const mutation = `
-        mutation UpdateGroup ($id: ID!, $courseId: ID!, $lessonsOrder: [String]!) {
+        mutation UpdateGroup ($id: ID!, $courseId: String!, $lessonsOrder: [String]!) {
             updateGroup(
                 id: $id,
                 courseId: $courseId,
@@ -80,7 +80,7 @@ function LessonSection({
                 query: mutation,
                 variables: {
                     id: group.id,
-                    courseId: course.id,
+                    courseId: course.courseId,
                     lessonsOrder,
                 },
             })

@@ -1,21 +1,25 @@
-import { Address, Constants, Course } from "@courselit/common-models";
+import {
+    Address,
+    Community,
+    Constants,
+    Course,
+} from "@courselit/common-models";
 import {
     Form,
     FormField,
     Link,
     Select,
-    Button,
     Menu2,
     MenuItem,
     FormSubmit,
     Skeleton,
     useToast,
+    Badge,
 } from "@courselit/components-library";
 import { Pause } from "@courselit/icons";
 import { Play } from "@courselit/icons";
 import { Add, MoreVert } from "@courselit/icons";
 import { AppDispatch } from "@courselit/state-management";
-import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
 import {
     COMPOSE_SEQUENCE_ENTRANCE_CONDITION,
@@ -26,6 +30,7 @@ import {
     DELETE_EMAIL_MENU,
     TOAST_TITLE_ERROR,
     PAGE_HEADER_EDIT_SEQUENCE,
+    SEQUENCE_UNPUBLISHED_WARNING,
 } from "@ui-config/strings";
 import {
     ChangeEvent,
@@ -35,6 +40,7 @@ import {
     useMemo,
     useState,
 } from "react";
+import { Button } from "@components/ui/button";
 
 interface SequenceEditorProps {
     id: string;
@@ -50,7 +56,6 @@ interface TagWithDetails {
 const SequenceEditor = ({
     id,
     address,
-    dispatch,
     loading = false,
 }: SequenceEditorProps) => {
     const [title, setTitle] = useState("");
@@ -63,6 +68,9 @@ const SequenceEditor = ({
     const [tags, setTags] = useState<TagWithDetails[]>([]);
     const [products, setProducts] = useState<
         Pick<Course, "title" | "courseId">[]
+    >([]);
+    const [communities, setCommunities] = useState<
+        Pick<Community, "communityId" | "name">[]
     >([]);
     const [emailsOrder, setEmailsOrder] = useState<string[]>([]);
     const [status, setStatus] = useState(null);
@@ -112,7 +120,6 @@ const SequenceEditor = ({
             .build();
 
         try {
-            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.sequence) {
                 const { sequence } = response;
@@ -132,11 +139,8 @@ const SequenceEditor = ({
                 description: e.message,
                 variant: "destructive",
             });
-        } finally {
-            dispatch && dispatch(networkAction(false));
-            // setLoaded(true);
         }
-    }, [dispatch, fetch, id]);
+    }, [fetch, id]);
 
     useEffect(() => {
         loadSequence();
@@ -152,6 +156,12 @@ const SequenceEditor = ({
         if (triggerType === "PRODUCT_PURCHASED" && products.length === 0) {
             getProducts();
         }
+        if (
+            triggerType === "COMMUNITY_JOINED" ||
+            (triggerType === "COMMUNITY_LEFT" && communities.length === 0)
+        ) {
+            getCommunities();
+        }
     }, [triggerType]);
 
     const getTags = useCallback(async () => {
@@ -165,17 +175,12 @@ const SequenceEditor = ({
         `;
         const fetcher = fetch.setPayload(query).build();
         try {
-            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.tags) {
                 setTags(response.tags);
             }
-        } catch (err) {
-        } finally {
-            dispatch && dispatch(networkAction(false));
-            // setLoaded(false);
-        }
-    }, [dispatch, fetch]);
+        } catch (err) {}
+    }, [fetch]);
 
     const getProducts = useCallback(async () => {
         const query = `
@@ -200,7 +205,31 @@ const SequenceEditor = ({
                 variant: "destructive",
             });
         }
-    }, [dispatch, fetch]);
+    }, [fetch]);
+
+    const getCommunities = useCallback(async () => {
+        const query = `
+            query {
+                communities: getCommunities(page: 1, limit: 1000000) {
+                    communityId,
+                    name    
+                }
+            }
+        `;
+        const fetcher = fetch.setPayload(query).build();
+        try {
+            const response = await fetcher.exec();
+            if (response.communities) {
+                setCommunities([...response.communities]);
+            }
+        } catch (err: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
+        }
+    }, [, fetch]);
 
     const addMailToSequence = useCallback(async () => {
         const query = `
@@ -232,7 +261,6 @@ const SequenceEditor = ({
             .build();
 
         try {
-            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.sequence) {
                 const { sequence } = response;
@@ -252,11 +280,8 @@ const SequenceEditor = ({
                 description: e.message,
                 variant: "destructive",
             });
-        } finally {
-            dispatch && dispatch(networkAction(false));
-            // setLoaded(true);
         }
-    }, [dispatch, fetch, id]);
+    }, [fetch, id]);
 
     const updateSequence = useCallback(async () => {
         const query = `
@@ -313,7 +338,6 @@ const SequenceEditor = ({
             .build();
 
         try {
-            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.sequence) {
                 const { sequence } = response;
@@ -333,12 +357,8 @@ const SequenceEditor = ({
                 description: e.message,
                 variant: "destructive",
             });
-        } finally {
-            dispatch && dispatch(networkAction(false));
-            // setLoaded(true);
         }
     }, [
-        dispatch,
         fetch,
         id,
         title,
@@ -418,7 +438,6 @@ const SequenceEditor = ({
                 .build();
 
             try {
-                dispatch && dispatch(networkAction(true));
                 const response = await fetcher.exec();
                 if (response.sequence) {
                     const { sequence } = response;
@@ -438,12 +457,9 @@ const SequenceEditor = ({
                     description: e.message,
                     variant: "destructive",
                 });
-            } finally {
-                dispatch && dispatch(networkAction(false));
-                // setLoaded(true);
             }
         },
-        [dispatch, fetch, id],
+        [fetch, id],
     );
 
     const deleteMail = useCallback(
@@ -489,7 +505,6 @@ const SequenceEditor = ({
                 .build();
 
             try {
-                dispatch && dispatch(networkAction(true));
                 const response = await fetcher.exec();
                 if (response.sequence) {
                     const { sequence } = response;
@@ -509,16 +524,21 @@ const SequenceEditor = ({
                     description: e.message,
                     variant: "destructive",
                 });
-            } finally {
-                dispatch && dispatch(networkAction(false));
-                // setLoaded(true);
             }
         },
-        [dispatch, fetch, id],
+        [fetch, id],
     );
 
     return (
         <div className="flex flex-col gap-4">
+            {[
+                Constants.sequenceStatus[0],
+                Constants.sequenceStatus[2],
+            ].includes(status) && (
+                <div className="bg-red-400 p-2 mb-4 text-sm text-white rounded-md">
+                    {SEQUENCE_UNPUBLISHED_WARNING}{" "}
+                </div>
+            )}
             <div className="flex justify-between items-center mb-2">
                 <h1 className="text-4xl font-semibold mb-4">
                     {PAGE_HEADER_EDIT_SEQUENCE}
@@ -537,7 +557,7 @@ const SequenceEditor = ({
                     )}
                     {status === Constants.sequenceStatus[1] && (
                         <Button
-                            variant="soft"
+                            variant="secondary"
                             disabled={loading}
                             onClick={() => startSequence("pause")}
                         >
@@ -627,6 +647,14 @@ const SequenceEditor = ({
                                 label: "Subscriber added",
                                 value: "SUBSCRIBER_ADDED",
                             },
+                            {
+                                label: "Community joined",
+                                value: "COMMUNITY_JOINED",
+                            },
+                            {
+                                label: "Community left",
+                                value: "COMMUNITY_LEFT",
+                            },
                         ]}
                     />
                     {triggerType !== "SUBSCRIBER_ADDED" && (
@@ -634,20 +662,29 @@ const SequenceEditor = ({
                             value={triggerData}
                             onChange={(value: string) => setTriggerData(value)}
                             title={COMPOSE_SEQUENCE_ENTRANCE_CONDITION_DATA}
-                            options={
-                                triggerType === "TAG_ADDED" ||
-                                triggerType === "TAG_REMOVED"
-                                    ? tags.map((tag) => ({
-                                          label: tag.tag,
-                                          value: tag.tag,
-                                      }))
-                                    : triggerType === "PRODUCT_PURCHASED"
-                                      ? products.map((product) => ({
+                            options={(() => {
+                                switch (triggerType) {
+                                    case "TAG_ADDED":
+                                    case "TAG_REMOVED":
+                                        return tags.map((tag) => ({
+                                            label: tag.tag,
+                                            value: tag.tag,
+                                        }));
+                                    case "PRODUCT_PURCHASED":
+                                        return products.map((product) => ({
                                             label: product.title,
                                             value: product.courseId,
-                                        }))
-                                      : []
-                            }
+                                        }));
+                                    case "COMMUNITY_JOINED":
+                                    case "COMMUNITY_LEFT":
+                                        return communities.map((community) => ({
+                                            label: community.name,
+                                            value: community.communityId,
+                                        }));
+                                    default:
+                                        return [];
+                                }
+                            })()}
                         />
                     )}
                     <div className="flex justify-between">
@@ -695,13 +732,13 @@ const SequenceEditor = ({
                                 key={email.emailId}
                                 className="flex gap-2 items-center"
                             >
-                                <div className="bg-slate-100 rounded px-3 py-1 text-slate-600 font-semibold text-sm">
+                                <Badge variant="secondary">
                                     {Math.round(
                                         email.delayInMillis /
                                             (1000 * 60 * 60 * 24),
                                     )}{" "}
                                     day
-                                </div>
+                                </Badge>
                                 <Link
                                     href={`/dashboard/mails/sequence/${id}/${
                                         email.emailId
@@ -739,9 +776,10 @@ const SequenceEditor = ({
                 {sequence && (
                     <div>
                         <Button
-                            variant="soft"
+                            variant="outline"
                             onClick={addMailToSequence}
                             disabled={loading}
+                            size="sm"
                         >
                             <Add />
                             New mail

@@ -1,4 +1,4 @@
-import Media from "./media";
+import { Media } from "./media";
 import { PaymentPlan } from "./payment-plan";
 import { TextEditorContent } from "./text-editor-content";
 

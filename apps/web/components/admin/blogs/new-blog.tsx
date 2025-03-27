@@ -45,7 +45,6 @@ export function NewBlog({
                     title: "${title}",
                     type: ${COURSE_TYPE_BLOG.toUpperCase()},
                 }) {
-                    id,
                     courseId
                 }
             }

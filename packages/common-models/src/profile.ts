@@ -1,4 +1,4 @@
-import Media from "./media";
+import { Media } from "./media";
 import { Progress } from "./progress";
 
 export default interface Profile {

@@ -67,9 +67,9 @@ export default function Page({ params }: { params: { id: string } }) {
     }, [address.backend]);
 
     useEffect(() => {
-        if (userData) {
-            getEnrolledCourses();
-        }
+        // if (userData) {
+        //     getEnrolledCourses();
+        // }
         getTags();
     }, [getTags]);
 
@@ -110,31 +110,31 @@ export default function Page({ params }: { params: { id: string } }) {
     };
 
     // TODO: test this method. A hard-coded userId was there in the query.
-    const getEnrolledCourses = async () => {
-        const query = `
-    query {
-      enrolledCourses: getEnrolledCourses(userId: "${userData!.id}") {
-        id,
-        title
-      }
-    }
-    `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            const response = await fetch.exec();
-            setEnrolledCourses(response.enrolledCourses);
-        } catch (err) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: err.message,
-                variant: "destructive",
-            });
-        }
-    };
+    // const getEnrolledCourses = async () => {
+    //     const query = `
+    //         query {
+    //             enrolledCourses: getEnrolledCourses(userId: "${id}") {
+    //                 id,
+    //                 title
+    //             }
+    //         }
+    //     `;
+    //     const fetch = new FetchBuilder()
+    //         .setUrl(`${address.backend}/api/graph`)
+    //         .setPayload(query)
+    //         .setIsGraphQLEndpoint(true)
+    //         .build();
+    //     try {
+    //         const response = await fetch.exec();
+    //         setEnrolledCourses(response.enrolledCourses);
+    //     } catch (err) {
+    //         toast({
+    //             title: TOAST_TITLE_ERROR,
+    //             description: err.message,
+    //             variant: "destructive",
+    //         });
+    //     }
+    // };
 
     const toggleActiveState = async (value: boolean) => {
         const mutation = `

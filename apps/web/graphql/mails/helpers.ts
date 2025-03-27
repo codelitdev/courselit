@@ -1,5 +1,5 @@
 import RuleModel from "@models/Rule";
-import { Course, Email, Rule, Sequence, User } from "@courselit/common-models";
+import { Email, Rule, Sequence, User } from "@courselit/common-models";
 import GQLContext from "@models/GQLContext";
 import mongoose from "mongoose";
 import SearchData from "./models/search-data";
@@ -9,6 +9,7 @@ import digitalDownloadTemplate from "../../templates/download-link";
 import { responses } from "@config/strings";
 import { generateEmailFrom } from "@/lib/utils";
 import { addMailJob } from "@/services/queue";
+import { InternalCourse } from "@models/Course";
 
 export function areAllEmailIdsValid(
     emailsOrder: string[],
@@ -74,7 +75,7 @@ export async function createTemplateAndSendMail({
     ctx,
     user,
 }: {
-    course: Course;
+    course: InternalCourse;
     ctx: GQLContext;
     user: User;
 }) {

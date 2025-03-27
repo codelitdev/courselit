@@ -96,7 +96,7 @@ export default function SectionEditor({
         e.preventDefault();
         const query = section
             ? `
-        mutation updateGroup($id: ID!, $courseId: ID!, $name: String, $drip: DripInput) {
+        mutation updateGroup($id: ID!, $courseId: String!, $name: String, $drip: DripInput) {
             course: updateGroup(
                 id: $id,
                 courseId: $courseId,
@@ -153,7 +153,7 @@ export default function SectionEditor({
                 variables: section
                     ? {
                           id: section,
-                          courseId: course.id,
+                          courseId: course.courseId,
                           name,
                           drip: type
                               ? {

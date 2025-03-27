@@ -11,7 +11,12 @@ import {
     Form,
     FormField,
 } from "@courselit/components-library";
-import { Address, Alignment } from "@courselit/common-models";
+import {
+    Address,
+    Alignment,
+    Constants,
+    PaymentPlan,
+} from "@courselit/common-models";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "../constants";
 
 interface CustomSettingsProps {
@@ -70,6 +75,12 @@ export default function CustomSettings({
         "1" | "0"
     >(settings.editingViewShowSuccess || "0");
     const type = Object.keys(pageData).length === 0 ? "site" : "product";
+    const isLeadMagnet =
+        type === Constants.PageType.PRODUCT &&
+        pageData.leadMagnet &&
+        (pageData.paymentPlans as PaymentPlan[]).length === 1 &&
+        (pageData.paymentPlans as PaymentPlan[])[0].type ===
+            Constants.PaymentPlanType.FREE;
 
     useEffect(() => {
         onChange({
@@ -162,7 +173,7 @@ export default function CustomSettings({
                                 setButtonForeground(value)
                             }
                         />
-                        {pageData.costType === "email" && (
+                        {isLeadMagnet && (
                             <>
                                 <div>
                                     <p className="mb-1 font-medium">

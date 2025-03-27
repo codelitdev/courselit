@@ -9,10 +9,7 @@ import GQLContext from "../../models/GQLContext";
 const { permissions } = constants;
 import { initMandatoryPages } from "../pages/logic";
 import { Domain } from "../../models/Domain";
-import {
-    checkPermission,
-    convertFiltersToDBConditions,
-} from "@courselit/utils";
+import { checkPermission } from "@courselit/utils";
 import UserSegmentModel, { UserSegment } from "../../models/UserSegment";
 import mongoose from "mongoose";
 import {
@@ -26,7 +23,6 @@ import {
 } from "@courselit/common-models";
 import { recordActivity } from "../../lib/record-activity";
 import { triggerSequences } from "../../lib/trigger-sequences";
-import finalizePurchase from "@/lib/finalize-purchase";
 import { getCourseOrThrow } from "../courses/logic";
 import pug from "pug";
 import courseEnrollTemplate from "@/templates/course-enroll";
@@ -37,6 +33,12 @@ import CourseModel from "@models/Course";
 import { addMailJob } from "@/services/queue";
 import { getPaymentMethodFromSettings } from "@/payments-new";
 import { checkForInvalidPermissions } from "@/lib/check-invalid-permissions";
+import { activateMembership } from "@/app/api/payment/helpers";
+import { getInternalPaymentPlan } from "../paymentplans/logic";
+import {
+    convertFiltersToDBConditions,
+    InternalMembership,
+} from "@courselit/common-logic";
 
 const removeAdminFieldsFromUserObject = (user: User) => ({
     id: user._id,
@@ -60,8 +62,9 @@ export const getUser = async (userId = null, ctx: GQLContext) => {
     }
 
     if (
-        user.userId === ctx.user.userId ||
-        checkPermission(ctx.user.permissions, [permissions.manageUsers])
+        ctx.user &&
+        (user.userId === ctx.user.userId ||
+            checkPermission(ctx.user.permissions, [permissions.manageUsers]))
     ) {
         return user;
     } else {
@@ -161,34 +164,42 @@ export const inviteCustomer = async (
         );
     }
 
-    if (
-        !user.purchases.some(
-            (purchase) => purchase.courseId === course.courseId,
-        )
-    ) {
-        await finalizePurchase(user.userId, id);
+    const paymentPlan = await getInternalPaymentPlan(ctx);
 
-        try {
-            const emailBody = pug.render(courseEnrollTemplate, {
-                courseName: course.title,
-                loginLink: `${ctx.address}/login`,
-                hideCourseLitBranding:
-                    ctx.subdomain.settings?.hideCourseLitBranding,
-            });
+    const membership = await getMembership({
+        domainId: ctx.subdomain._id,
+        userId: user.userId,
+        entityType: Constants.MembershipEntityType.COURSE,
+        entityId: course.courseId,
+        planId: paymentPlan.planId,
+    });
 
-            await addMailJob({
-                to: [user.email],
-                subject: `You have been invited to ${course.title}`,
-                body: emailBody,
-                from: generateEmailFrom({
-                    name: ctx.subdomain?.settings?.title || ctx.subdomain.name,
-                    email: process.env.EMAIL_FROM || ctx.subdomain.email,
-                }),
-            });
-        } catch (error) {
-            // eslint-disable-next-line no-console
-            console.log("error", error);
-        }
+    if (membership.status === Constants.MembershipStatus.ACTIVE) {
+        return user;
+    }
+
+    await activateMembership(ctx.subdomain!, membership, paymentPlan);
+
+    try {
+        const emailBody = pug.render(courseEnrollTemplate, {
+            courseName: course.title,
+            loginLink: `${ctx.address}/login`,
+            hideCourseLitBranding:
+                ctx.subdomain.settings?.hideCourseLitBranding,
+        });
+
+        await addMailJob({
+            to: [user.email],
+            subject: `You have been invited to ${course.title}`,
+            body: emailBody,
+            from: generateEmailFrom({
+                name: ctx.subdomain?.settings?.title || ctx.subdomain.name,
+                email: process.env.EMAIL_FROM || ctx.subdomain.email,
+            }),
+        });
+    } catch (error) {
+        // eslint-disable-next-line no-console
+        console.log("error", error);
     }
 
     return user;
@@ -205,77 +216,68 @@ const updateCoursesForCreatorName = async (creatorId, creatorName) => {
     );
 };
 
-type UserGroupType = "team" | "customer" | "subscriber";
-
-interface SearchData {
-    offset?: number;
-    filters?: string;
-}
-
 interface GetUsersParams {
-    searchData: SearchData;
+    page?: number;
+    limit?: number;
+    filters?: string;
     ctx: GQLContext;
-    noPagination: boolean;
-    hasMailPermissions: boolean;
 }
 
 export const getUsers = async ({
-    searchData = {},
+    page = 1,
+    limit = constants.itemsPerPage,
+    filters,
     ctx,
-    noPagination = false,
-    hasMailPermissions = false,
 }: GetUsersParams) => {
-    checkIfAuthenticated(ctx);
-    if (
-        !hasMailPermissions &&
-        !checkPermission(ctx.user.permissions, [permissions.manageUsers])
-    ) {
-        throw new Error(responses.action_not_allowed);
-    }
-
-    const searchUsers = makeModelTextSearchable(UserModel);
-    const query = buildQueryFromSearchData(ctx.subdomain._id, searchData);
-    const users = await searchUsers(
-        {
-            offset: noPagination ? 1 : searchData.offset,
-            query,
-            graphQLContext: ctx,
-        },
-        {
-            itemsPerPage: noPagination
-                ? Infinity
-                : searchData.rowsPerPage || constants.itemsPerPage,
-            sortByColumn: "createdAt",
-            sortOrder: -1,
-        },
-    );
-
-    return users;
-};
-
-export const getUsersCount = async (
-    searchData: SearchData = {},
-    ctx: GQLContext,
-) => {
     checkIfAuthenticated(ctx);
     if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
         throw new Error(responses.action_not_allowed);
     }
 
-    const query = buildQueryFromSearchData(ctx.subdomain._id, searchData);
+    const searchUsers = makeModelTextSearchable(UserModel);
+    const query = await buildQueryFromSearchData(ctx.subdomain._id, filters);
+    const users = await searchUsers(
+        {
+            offset: page,
+            query,
+            graphQLContext: ctx,
+        },
+        {
+            itemsPerPage: limit,
+            sortByColumn: "createdAt",
+            sortOrder: -1,
+        },
+    );
+
+    return users.map(async (user) => ({
+        ...user,
+        content: await getUserContentInternal(ctx, user),
+    }));
+};
+
+export const getUsersCount = async (ctx: GQLContext, filters?: string) => {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const query = await buildQueryFromSearchData(ctx.subdomain._id, filters);
     return await UserModel.countDocuments(query);
 };
 
-const buildQueryFromSearchData = (
+const buildQueryFromSearchData = async (
     domain: mongoose.Types.ObjectId,
-    searchData: SearchData = {},
-): Record<string, unknown> => {
+    inputFilters?: string,
+): Promise<Record<string, unknown>> => {
     let filters = {};
-    if (searchData.filters) {
-        const filtersWithAggregator: UserFilterWithAggregator = JSON.parse(
-            searchData.filters,
-        );
-        filters = convertFiltersToDBConditions(filtersWithAggregator);
+    if (inputFilters) {
+        const filtersWithAggregator: UserFilterWithAggregator =
+            JSON.parse(inputFilters);
+        filters = await convertFiltersToDBConditions({
+            domain,
+            filter: filtersWithAggregator,
+            membershipModel: MembershipModel,
+        });
     }
     return { domain, ...filters };
 };
@@ -339,7 +341,7 @@ export async function createUser({
             $setOnInsert: {
                 domain: domain._id,
                 name,
-                email,
+                email: email.toLowerCase(),
                 active: true,
                 purchases: [],
                 permissions: superAdmin
@@ -383,7 +385,7 @@ export async function createUser({
         if (createdUser.subscribedToUpdates) {
             await triggerSequences({
                 user: createdUser,
-                event: Constants.eventTypes[3],
+                event: Constants.EventType.SUBSCRIBER_ADDED,
             });
 
             await recordActivity({
@@ -606,6 +608,10 @@ export const getUserContent = async (
         throw new Error(responses.item_not_found);
     }
 
+    return await getUserContentInternal(ctx, user);
+};
+
+async function getUserContentInternal(ctx: GQLContext, user: User) {
     const memberships = await MembershipModel.find<Membership>({
         domain: ctx.subdomain._id,
         userId: user.userId,
@@ -628,6 +634,7 @@ export const getUserContent = async (
                         id: course.courseId,
                         title: course.title,
                         slug: course.slug,
+                        type: course.type,
                         totalLessons: course.lessons.length,
                         completedLessonsCount: user.purchases.find(
                             (progress: Progress) =>
@@ -660,45 +667,8 @@ export const getUserContent = async (
         }
     }
 
-    const enrolledCourses = await CourseModel.find(
-        {
-            courseId: {
-                $in: [
-                    ...user.purchases.map(
-                        (course: Progress) => course.courseId,
-                    ),
-                ],
-            },
-            domain: ctx.subdomain._id,
-        },
-        {
-            courseId: 1,
-            title: 1,
-            lessons: 1,
-            type: 1,
-            slug: 1,
-        },
-    );
-
-    for (const course of enrolledCourses) {
-        content.push({
-            entityType: Constants.MembershipEntityType.COURSE,
-            entity: {
-                id: course.courseId,
-                title: course.title,
-                slug: course.slug,
-                totalLessons: course.lessons.length,
-                featuredImage: course.featuredImage,
-                completedLessonsCount: user.purchases.find(
-                    (progress: Progress) =>
-                        progress.courseId === course.courseId,
-                )?.completedLessons.length,
-            },
-        });
-    }
-
     return content;
-};
+}
 
 export const getMembershipStatus = async ({
     entityId,
@@ -738,4 +708,39 @@ export const hasActiveSubscription = async (
     );
 
     return isSubscriptionActive;
+};
+
+export const getMembership = async ({
+    domainId,
+    userId,
+    entityType,
+    entityId,
+    planId,
+}: {
+    domainId: mongoose.Types.ObjectId;
+    userId: string;
+    entityType: MembershipEntityType;
+    entityId: string;
+    planId: string;
+}): Promise<InternalMembership> => {
+    const existingMembership =
+        await MembershipModel.findOne<InternalMembership>({
+            domain: domainId,
+            userId,
+            entityType,
+            entityId,
+        });
+
+    let membership: InternalMembership =
+        existingMembership ||
+        (await MembershipModel.create({
+            domain: domainId,
+            userId,
+            paymentPlanId: planId,
+            entityId,
+            entityType,
+            status: Constants.MembershipStatus.PENDING,
+        }));
+
+    return membership;
 };
