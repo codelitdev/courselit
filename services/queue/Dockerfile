@@ -10,6 +10,7 @@ COPY .yarnrc.yml /app/.yarnrc.yml
 # copy project related files
 COPY packages/tsconfig /app/packages/tsconfig
 COPY packages/common-models /app/packages/common-models
+COPY packages/common-logic /app/packages/common-logic
 COPY packages/utils /app/packages/utils
 COPY apps/queue /app/apps/queue
 
@@ -34,6 +35,8 @@ COPY --from=builder /app/.yarnrc.yml ./.yarnrc.yml
 # copy project related files
 COPY --from=builder /app/packages/common-models/package.json ./packages/common-models/package.json
 COPY --from=builder /app/packages/common-models/dist ./packages/common-models/dist
+COPY --from=builder /app/packages/common-logic/package.json ./packages/common-logic/package.json
+COPY --from=builder /app/packages/common-logic/dist ./packages/common-logic/dist
 COPY --from=builder /app/packages/utils/package.json ./packages/utils/package.json
 COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
 COPY --from=builder /app/apps/queue ./apps/queue
