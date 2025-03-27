@@ -207,49 +207,4 @@ export default {
                 status,
             }),
     },
-    getCourses: {
-        type: new GraphQLList(types.publicCoursesType),
-        args: {
-            offset: {
-                type: GraphQLInt,
-            },
-            ids: {
-                type: new GraphQLList(GraphQLString),
-            },
-            tag: {
-                type: GraphQLString,
-            },
-            filterBy: {
-                type: new GraphQLList(courseFilters),
-            },
-        },
-        resolve: (
-            _: any,
-            {
-                offset,
-                ids,
-                tag,
-                filterBy,
-            }: {
-                offset?: number;
-                ids?: string[];
-                tag?: string;
-                filterBy?: Filter[];
-            },
-            ctx: GQLContext,
-        ) => getCourses({ offset, ids, tag, filterBy, ctx }),
-    },
-    // getEnrolledCourses: {
-    //     type: new GraphQLList(types.enrolledCourses),
-    //     args: {
-    //         userId: {
-    //             type: new GraphQLNonNull(GraphQLString),
-    //         },
-    //     },
-    //     resolve: (
-    //         _: any,
-    //         { userId }: { userId: string },
-    //         context: GQLContext,
-    //     ) => getEnrolledCourses(userId, context),
-    // },
 };

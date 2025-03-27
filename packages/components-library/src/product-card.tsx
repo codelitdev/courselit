@@ -36,7 +36,7 @@ export function ProductCard({
                             src={product.user?.avatar?.thumbnail}
                             alt={product.user?.name || "User Avatar"}
                             loading="lazy"
-                            className="!aspect-square !object-cover"
+                            className="!aspect-square"
                             width="w-6"
                             height="h-6"
                         />

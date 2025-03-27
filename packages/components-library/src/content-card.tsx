@@ -1,8 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "./link";
-import Image from "next/image";
-
 import { cn } from "@/lib/utils";
+import Image from "./image";
 
 interface ContentCardImageProps extends React.HTMLAttributes<HTMLDivElement> {
     src: string;
@@ -16,13 +15,11 @@ export function ContentCardImage({
     ...props
 }: ContentCardImageProps) {
     return (
-        <div className={cn("relative aspect-video", className)} {...props}>
+        <div className={cn("", className)} {...props}>
             <Image
-                src={src || "/courselit_backdrop_square.webp"}
-                alt={alt || ""}
-                fill
-                className="object-cover"
-                priority
+                src={src}
+                alt={alt}
+                loading="lazy"
             />
         </div>
     );

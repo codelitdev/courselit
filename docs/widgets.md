@@ -116,7 +116,7 @@ You will get a unique `widgetId` from the framework. You have to use this as a k
 ```js
 // Fetches courses with a certain tag
 Widget.getData = (id: string, settings: Record<string, unknown>) => `
-    ${id}: getCourses(offset: 1, tag: "${settings && settings.tag}") {
+    ${id}: getProducts(offset: 1, tag: "${settings && settings.tag}") {
         id,
         title,
         cost,

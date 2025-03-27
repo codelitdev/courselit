@@ -178,7 +178,11 @@ const createMembership = async (domain, userId, courseId, paymentPlan) => {
 
     const existingMembership = await Membership.findOne(payload);
     if (!existingMembership) {
-        await Membership.create(payload);
+        try {
+            await Membership.create(payload);
+        } catch (error) {
+            console.log("Error creating membership for ", domain, error);
+        }
     }
 };
 

@@ -44,10 +44,10 @@ export default function Widget({
     }, [products]);
 
     const loadCourses = async () => {
-        const productsArgs = getGraphQLQueryStringFromObject(products);
+        // const productsArgs = getGraphQLQueryStringFromObject(products);
         const query = `
-            query {
-                product: getProducts(ids: ${productsArgs}, limit: 1000, publicView: true) {
+            query ($ids: [String]) {
+                products: getProducts(ids: $ids, limit: 1000, publicView: true) {
                     title
                     courseId
                     featuredImage {
@@ -78,15 +78,20 @@ export default function Widget({
         `;
         const fetch = new FetchBuilder()
             .setUrl(`${state.address.backend}/api/graph`)
-            .setPayload(query)
+            .setPayload({
+                query,
+                variables: {
+                    ids: products,
+                },
+            })
             .setIsGraphQLEndpoint(true)
             .build();
 
         try {
             dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
-            if (response.product) {
-                setProductItems(response.product);
+            if (response.products) {
+                setProductItems(response.products);
             }
         } catch (err) {
             console.log("Error", err.message); // eslint-disable-line no-console

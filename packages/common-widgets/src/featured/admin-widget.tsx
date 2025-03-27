@@ -104,8 +104,8 @@ export default function AdminWidget({
 
     const loadPublishedProducts = async () => {
         const query = `
-            query {
-                products: getCourses(offset: 1, filterBy: [COURSE, DOWNLOAD]) {
+            query($limit: Int, $publicView: Boolean, $filter: [CourseFilters]) {
+                products: getProducts(limit: $limit, filterBy: $filter, publicView: $publicView) {
                     title,
                     courseId,
                     type
@@ -114,7 +114,7 @@ export default function AdminWidget({
         `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
+            .setPayload({ query, variables: { limit: 1000, publicView: true, filter: ["COURSE", "DOWNLOAD"] } })
             .setIsGraphQLEndpoint(true)
             .build();
         try {

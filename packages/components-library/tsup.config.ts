@@ -13,7 +13,6 @@ export default defineConfig((options: Options) => ({
         "next/link",
         "next/legacy/image",
         "next/navigation",
-        "next/image",
     ],
     ...options,
 }));
