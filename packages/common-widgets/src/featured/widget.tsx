@@ -8,10 +8,7 @@ import {
     ProductCard,
 } from "@courselit/components-library";
 import { actionCreators } from "@courselit/state-management";
-import {
-    FetchBuilder,
-    getGraphQLQueryStringFromObject,
-} from "@courselit/utils";
+import { FetchBuilder } from "@courselit/utils";
 import Settings from "./settings";
 import {
     verticalPadding as defaultVerticalPadding,
