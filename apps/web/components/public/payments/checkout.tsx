@@ -225,7 +225,9 @@ export default function Checkout({
                     );
                 }
                 if (product.type === Constants.MembershipEntityType.COURSE) {
-                    router.replace(`/course/${product.id}?success=true`);
+                    router.replace(
+                        `/course/${product.slug}/${product.id}?success=true`,
+                    );
                 }
             }
         } catch (err) {
@@ -492,7 +494,7 @@ export default function Checkout({
                                                     .COURSE
                                             ) {
                                                 router.replace(
-                                                    `/course/${product.id}`,
+                                                    `/course/${product.slug}/${product.id}`,
                                                 );
                                             }
                                         }}
