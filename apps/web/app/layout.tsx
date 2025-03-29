@@ -70,6 +70,8 @@ export async function generateMetadata(): Promise<Metadata> {
                 "/courselit_backdrop_square.webp",
             ],
         },
+        generator: "CourseLit",
+        applicationName: "CourseLit",
     };
 }
 

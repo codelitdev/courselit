@@ -7,7 +7,7 @@ interface MetricCardProps {
     icon: React.ReactNode;
     type: string;
     duration: string;
-    entityId: string;
+    entityId?: string;
 }
 
 const MetricCard = ({

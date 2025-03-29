@@ -38,3 +38,12 @@ export const COURSE_TYPE_DOWNLOAD = "download";
 export const DEFAULT_PASSING_GRADE = 70;
 
 export const ITEMS_PER_PAGE = 10; // this should be in sync with backend's itemsPerPage
+
+export const TIME_RANGES = [
+    { value: "1d", label: "1 day" },
+    { value: "7d", label: "1 week" },
+    { value: "30d", label: "30 days" },
+    { value: "90d", label: "90 days" },
+    { value: "1y", label: "1 year" },
+    { value: "lifetime", label: "Lifetime" },
+];

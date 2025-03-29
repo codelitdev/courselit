@@ -114,7 +114,14 @@ export default function AdminWidget({
         `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload({ query, variables: { limit: 1000, publicView: true, filter: ["COURSE", "DOWNLOAD"] } })
+            .setPayload({
+                query,
+                variables: {
+                    limit: 1000,
+                    publicView: true,
+                    filter: ["COURSE", "DOWNLOAD"],
+                },
+            })
             .setIsGraphQLEndpoint(true)
             .build();
         try {
