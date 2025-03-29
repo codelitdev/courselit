@@ -1,7 +1,6 @@
 "use client";
 
 import { SiteInfoContext } from "@components/contexts";
-import { SiteInfo } from "@courselit/common-models";
 import { Link } from "@courselit/components-library";
 import { AppState } from "@courselit/state-management";
 import {
