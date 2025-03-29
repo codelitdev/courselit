@@ -589,6 +589,7 @@ export const APP_MESSAGE_MAIL_DELETED = "Mail deleted";
 export const NEW_PAGE_FORM_WARNING =
     "These settings cannot be changed later on, so proceed with caution.";
 export const DASHBOARD_PAGE_HEADER = "Welcome";
+export const UNNAMED_USER = "Unnamed"; 
 export const MAIL_REQUEST_FORM_REASON_FIELD = "Reason";
 export const MAIL_REQUEST_FORM_REASON_PLACEHOLDER =
     "Please be as detailed as possible. This will help us review your application better.";

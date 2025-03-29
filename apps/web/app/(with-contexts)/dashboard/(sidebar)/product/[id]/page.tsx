@@ -70,17 +70,10 @@ import {
 import { useActivities } from "@/hooks/use-activities";
 import { Constants } from "@courselit/common-models";
 import Resources from "@components/resources";
+import { TIME_RANGES } from "@ui-config/constants";
+import SalesCard from "../../overview/sales-card";
 
 const { ActivityType } = Constants;
-
-const timeRanges = [
-    { value: "1d", label: "1 day" },
-    { value: "7d", label: "1 week" },
-    { value: "30d", label: "30 days" },
-    { value: "90d", label: "90 days" },
-    { value: "1y", label: "1 year" },
-    { value: "lifetime", label: "Lifetime" },
-];
 
 export default function DashboardPage() {
     const params = useParams();
@@ -189,7 +182,7 @@ export default function DashboardPage() {
                                 <SelectValue placeholder="Select time range" />
                             </SelectTrigger>
                             <SelectContent>
-                                {timeRanges.map((range) => (
+                                {TIME_RANGES.map((range) => (
                                     <SelectItem
                                         key={range.value}
                                         value={range.value}
@@ -366,7 +359,9 @@ export default function DashboardPage() {
                 )}
             </div>
 
-            <div className="mt-4">
+            <SalesCard data={salesData} loading={salesLoading} />
+
+            {/* <div className="mt-4">
                 <Card>
                     <CardHeader>
                         <CardTitle>Sales</CardTitle>
@@ -376,36 +371,6 @@ export default function DashboardPage() {
                             <Skeleton className="h-[240px] w-full" />
                         ) : (
                             <div className="">
-                                {/* <LineChart
-                                    data={productData.salesData}
-                                    categories={["Sales"]}
-                                    index="name"
-                                    colors={["#16a34a"]}
-                                    valueFormatter={(value: number) =>
-                                        `${getSymbolFromCurrency(
-                                            siteinfo.currencyISOCode || "USD",
-                                        )}${value}`
-                                    }
-                                    className="h-full w-full"
-                                /> */}
-
-                                {/* <ResponsiveContainer width="100%" height={200}>
-                                        <LineChart
-                                            width={300}
-                                            height={200}
-                                            data={salesData?.points}
-                                        >
-                                            <Line
-                                                type="monotone"
-                                                dataKey="count"
-                                                strokeWidth={2}
-                                                stroke="#000"
-                                            />
-                                            <XAxis className="text-xs" dataKey="date" />
-                                            <YAxis className="text-xs" tickFormatter={(value) => `${getSymbolFromCurrency(siteinfo.currencyISOCode || "USD")}${value}`} />
-                                            <Tooltip formatter={(value) => `${getSymbolFromCurrency(siteinfo.currencyISOCode || "USD")}${value}`} />
-                                        </LineChart>
-                                    </ResponsiveContainer> */}
                                 <ResponsiveContainer width="100%" height={200}>
                                     <LineChart
                                         width={300}
@@ -457,7 +422,7 @@ export default function DashboardPage() {
                         )}
                     </CardContent>
                 </Card>
-            </div>
+            </div> */}
 
             <Resources
                 links={[
