@@ -1,6 +1,6 @@
 "use client";
 
-import { SiteInfo } from "@courselit/common-models";
+import { SiteInfoContext } from "@components/contexts";
 import { Link } from "@courselit/components-library";
 import { AppState } from "@courselit/state-management";
 import {
@@ -8,20 +8,19 @@ import {
     SITE_SETTINGS_SECTION_PAYMENT,
 } from "@ui-config/strings";
 import { connect } from "react-redux";
+import { useContext } from "react";
 
-interface TodoProps {
-    siteinfo: SiteInfo;
-}
+export const Todo = () => {
+    const siteinfo = useContext(SiteInfoContext);
 
-export const Todo = ({ siteinfo }) => {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {(!siteinfo.title || (siteinfo.logo && !siteinfo.logo.file)) && (
-                <div className="flex flex-col border border-red-200 p-2 rounded-lg">
-                    <h2 className="font-semibold mb-1">
+                <div className="flex flex-col border border-red-200 p-4 rounded-lg">
+                    <h2 className="font-medium mb-1">
                         Basic details missing 💁‍♀️
                     </h2>
-                    <p className="text-sm text-slate-500 mb-4">
+                    <p className="text-sm mb-4 text-muted-foreground">
                         Give your school a proper name, description and a logo.
                     </p>
                     <div>
@@ -36,9 +35,9 @@ export const Todo = ({ siteinfo }) => {
                 </div>
             )}
             {(!siteinfo.currencyISOCode || !siteinfo.paymentMethod) && (
-                <div className="flex flex-col border border-red-200 p-2 rounded-lg">
+                <div className="flex flex-col border border-red-200 p-4 rounded-lg">
                     <h2 className="font-semibold mb-1">Start earning 💸</h2>
-                    <p className="text-sm text-slate-500 mb-4">
+                    <p className="text-sm text-muted-foreground mb-4">
                         Update your payment details to sell paid products.
                     </p>
                     <div>

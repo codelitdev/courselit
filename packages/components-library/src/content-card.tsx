@@ -16,11 +16,7 @@ export function ContentCardImage({
 }: ContentCardImageProps) {
     return (
         <div className={cn("", className)} {...props}>
-            <Image
-                src={src}
-                alt={alt}
-                loading="lazy"
-            />
+            <Image src={src} alt={alt} loading="lazy" />
         </div>
     );
 }
