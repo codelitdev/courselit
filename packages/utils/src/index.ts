@@ -11,3 +11,4 @@ export { default as renderEmailContent } from "./render-email-content";
 export { default as jwtUtils } from "./jwt-utils";
 export { getPlanPrice } from "./get-plan-price";
 export { truncate } from "./truncate";
+export { isVideo } from "./is-video";

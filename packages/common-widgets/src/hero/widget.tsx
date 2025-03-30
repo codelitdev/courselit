@@ -6,12 +6,14 @@ import {
     TextRenderer,
     Button2,
     Link,
+    VideoWithPreview,
 } from "@courselit/components-library";
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
     mediaAspectRatio as defaultMediaAspectRatio,
 } from "./defaults";
+import { isVideo } from "@courselit/utils";
 import clsx from "clsx";
 
 const twRoundedMap = {
@@ -52,6 +54,9 @@ export default function Widget({
         descriptionFontSize,
         contentAlignment,
         cssId,
+        playVideoInModal,
+        aspectRatio,
+        objectFit,
     },
 }: WidgetProps<Settings>) {
     const hasHeroGraphic = youtubeLink || (media && media.mediaId);
@@ -115,7 +120,34 @@ export default function Widget({
                                         : "md:pl-0"
                                 }`}
                             >
-                                {youtubeLink && (
+                                <div
+                                    className={`w-full text-center overflow-hidden ${twRoundedMap[mediaRadius]}`}
+                                    style={{
+                                        width: "100%",
+                                    }}
+                                >
+                                    {isVideo(youtubeLink, media) ? (
+                                        <VideoWithPreview
+                                            videoUrl={
+                                                youtubeLink || media?.file || ""
+                                            }
+                                            aspectRatio={aspectRatio}
+                                            title={media?.caption || ""}
+                                            thumbnailUrl={
+                                                media?.thumbnail || ""
+                                            }
+                                            modal={playVideoInModal}
+                                        />
+                                    ) : (
+                                        <Image
+                                            src={media?.file || ""}
+                                            alt={media?.caption || ""}
+                                            borderRadius={mediaRadius}
+                                            objectFit={objectFit}
+                                        />
+                                    )}
+                                </div>
+                                {/* {youtubeLink && (
                                     <div className="flex justify-center grow">
                                         <div
                                             className={`w-full relative h-0 overflow-hidden pb-[56.25%] ${twRoundedMap[mediaRadius]}`}
@@ -161,7 +193,7 @@ export default function Widget({
                                             </video>
                                         )}
                                     </div>
-                                )}
+                                )} */}
                             </div>
                         )}
                         <div
