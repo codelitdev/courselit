@@ -3,7 +3,6 @@ import {
     Media,
     WidgetDefaultSettings,
 } from "@courselit/common-models";
-import { MediaAspectRatio } from "./types";
 import { ImageObjectFit } from "@courselit/components-library";
 import { AspectRatio } from "@courselit/components-library";
 
@@ -15,7 +14,6 @@ export default interface Settings extends WidgetDefaultSettings {
     buttonBackground?: string;
     buttonForeground?: string;
     media?: Media;
-    mediaAspectRatio?: MediaAspectRatio;
     youtubeLink?: string;
     alignment?: Alignment | "right";
     backgroundColor?: string;

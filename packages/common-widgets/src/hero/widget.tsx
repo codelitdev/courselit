@@ -11,7 +11,6 @@ import {
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
-    mediaAspectRatio as defaultMediaAspectRatio,
 } from "./defaults";
 import { isVideo } from "@courselit/utils";
 import clsx from "clsx";
@@ -35,7 +34,6 @@ export default function Widget({
         buttonCaption,
         buttonAction,
         media,
-        mediaAspectRatio = defaultMediaAspectRatio,
         youtubeLink,
         alignment = "left",
         backgroundColor,

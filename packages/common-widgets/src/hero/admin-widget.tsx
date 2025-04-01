@@ -31,9 +31,7 @@ import {
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
-    mediaAspectRatio as defaultMediaAspectRatio,
 } from "./defaults";
-import { MediaAspectRatio } from "./types";
 import { isVideo } from "@courselit/utils";
 
 interface AdminWidgetProps {
@@ -117,9 +115,6 @@ export default function AdminWidget({
     const [contentAlignment, setContentAlignment] = useState<Alignment>(
         settings.contentAlignment || "center",
     );
-    const [mediaAspectRatio, setMediaAspectRatio] = useState<MediaAspectRatio>(
-        settings.mediaAspectRatio || defaultMediaAspectRatio,
-    );
     const [cssId, setCssId] = useState(settings.cssId);
     const [playVideoInModal, setPlayVideoInModal] = useState(
         settings.playVideoInModal || false,
@@ -139,7 +134,6 @@ export default function AdminWidget({
             buttonCaption,
             youtubeLink,
             media,
-            mediaAspectRatio,
             alignment,
             backgroundColor,
             foregroundColor,
@@ -177,7 +171,6 @@ export default function AdminWidget({
         buttonBackground,
         buttonForeground,
         media,
-        mediaAspectRatio,
         mediaBorderRadius,
         horizontalPadding,
         verticalPadding,
