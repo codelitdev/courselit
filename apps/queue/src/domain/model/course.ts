@@ -4,7 +4,6 @@ import EmailSchema from "./email";
 
 export interface Course {
     domain: mongoose.Types.ObjectId;
-    id: mongoose.Types.ObjectId;
     courseId: string;
     title: string;
     slug: string;

@@ -9,7 +9,7 @@ import {
 } from "@courselit/components-library";
 import { Person } from "@courselit/icons";
 import { State } from "@courselit/common-models";
-import { MobileNav } from "./mobile-nav";
+import MobileNav from "./mobile-nav";
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,

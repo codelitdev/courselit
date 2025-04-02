@@ -24,7 +24,7 @@ export default function LinkEditor({
     sectionIndex,
     onChange,
     onDelete,
-}: LinkEditorProps) {
+}: LinkEditorProps): JSX.Element {
     const [label, setLabel] = useState(link.label);
     const [href, setHref] = useState(link.href);
     const [editing, setEditing] = useState(false);

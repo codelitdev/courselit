@@ -50,7 +50,7 @@ export default function Widget({
     state,
     dispatch,
     pageData: product,
-}: WidgetProps<Settings>) {
+}: WidgetProps<Settings>): JSX.Element {
     const [course, setCourse] = useState<CourseWithGroups>();
     const [formattedCourse, setFormattedCourse] = useState<
         Record<string, Lesson[]>

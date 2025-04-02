@@ -665,9 +665,10 @@ export default function PageEditor({
                         )}
                         <style jsx global>{`
                             :root {
-                                --primary-font: ${primaryFontFamily}, sans-serif;
-                                --secondary-font: ${primaryFontFamily},
-                                    sans-serif;
+                                --primary-font:
+                                    ${primaryFontFamily}, sans-serif;
+                                --secondary-font:
+                                    ${primaryFontFamily}, sans-serif;
                             }
                         `}</style>
                     </div>

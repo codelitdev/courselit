@@ -28,7 +28,7 @@ export default function AdminWidget({
     settings,
     onChange,
     address,
-}: AdminWidgetProps) {
+}: AdminWidgetProps): JSX.Element {
     const [title, setTitle] = useState(settings.title || "Curriculum");
     const [description, setDescription] = useState(settings.description);
     const [headerAlignment, setHeaderAlignment] = useState<Alignment>(

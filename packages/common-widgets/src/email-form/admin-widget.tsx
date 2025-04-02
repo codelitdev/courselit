@@ -31,7 +31,10 @@ interface AdminWidgetProps {
     dispatch: AppDispatch;
 }
 
-export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
+export default function AdminWidget({
+    settings,
+    onChange,
+}: AdminWidgetProps): JSX.Element {
     const [title, setTitle] = useState(settings.title);
     const [subtitle, setSubtitle] = useState(settings.subtitle);
     const [btnText, setBtnText] = useState(settings.btnText);

@@ -22,6 +22,7 @@ export async function processRules() {
             `Starting process of rules at ${currentTime.toDateString()}`,
         );
 
+        // @ts-ignore - Mongoose type compatibility issue
         const dueRules: RuleWithDomain[] = (await RuleModel.find({
             event: Constants.EventType.DATE_OCCURRED,
             eventDateInMillis: { $lt: currentTime.getTime() },
@@ -41,6 +42,7 @@ export async function processRules() {
 
 async function processRule(rule: RuleWithDomain) {
     const { domain, sequenceId } = rule;
+    // @ts-ignore - Mongoose type compatibility issue
     const sequence: AdminSequence | null = await SequenceModel.findOne({
         domain,
         sequenceId,
@@ -77,6 +79,7 @@ async function addBroadcastToOngoingSequence(sequence: AdminSequence) {
         })),
         subscribedToUpdates: true,
     };
+    // @ts-ignore - Mongoose type compatibility issue
     const allUsers = await UserModel.find(query);
     // eslint-disable-next-line no-console
     console.log(

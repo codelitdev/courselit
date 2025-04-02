@@ -12,6 +12,7 @@ module.exports = {
     ignorePatterns: ["dist/**"],
     rules: {
         "react-hooks/rules-of-hooks": "error",
+        "@typescript-eslint/ban-ts-comment": "off",
     },
     settings: {
         react: {

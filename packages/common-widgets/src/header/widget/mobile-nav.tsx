@@ -1,32 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, FC } from "react";
 import {
     Drawer,
     Button2,
     Image,
     Link as AppLink,
 } from "@courselit/components-library";
-import { Media } from "@courselit/common-models";
+import { WidgetProps } from "@courselit/common-models";
 import { Link } from "../settings";
+import { Media } from "@courselit/common-models";
+import WidgetDefaultSettings from "@courselit/common-models/src/widget-default-settings";
+import {
+    PageTypeProduct,
+    PageTypeSite,
+    PageTypeBlog,
+    PageTypeCommunity,
+} from "@courselit/common-models";
 
-export function MobileNav({
-    color,
-    title,
-    logo,
-    links,
-    linkColor,
-    btnBgColor,
-    btnColor,
-    linkFontWeight,
-    spacingBetweenLinks,
-    appBarBackground,
-    logoColor,
-}: {
+interface MobileNavSettings extends WidgetDefaultSettings {
+    type: PageTypeProduct | PageTypeSite | PageTypeBlog | PageTypeCommunity;
     title: string;
     logo: Partial<Media>;
     color: string;
-    links: any[];
+    links: Link[];
     linkColor: string;
     btnBgColor: string;
     btnColor: string;
@@ -34,19 +31,26 @@ export function MobileNav({
     spacingBetweenLinks: number;
     appBarBackground: string;
     logoColor: string;
-}) {
+}
+
+const MobileNav: FC<WidgetProps<MobileNavSettings>> = (props) => {
     const [open, setOpen] = useState(false);
 
     return (
         <Drawer
             open={open}
             setOpen={setOpen}
-            trigger={<MenuButton color={color} backgroundColor={btnBgColor} />}
+            trigger={
+                <MenuButton
+                    color={props.color}
+                    backgroundColor={props.btnBgColor}
+                />
+            }
             side="right"
             style={{
-                backgroundColor: appBarBackground,
+                backgroundColor: props.appBarBackground,
             }}
-            className={appBarBackground ? "border-l-0" : ""}
+            className={props.appBarBackground ? "border-l-0" : ""}
         >
             <AppLink
                 href="/"
@@ -55,10 +59,10 @@ export function MobileNav({
                 }}
             >
                 <div className="flex items-center mb-4">
-                    {logo && (
+                    {props.logo && (
                         <div className="mr-2">
                             <Image
-                                src={logo.file}
+                                src={props.logo.file}
                                 borderRadius={2}
                                 width="w-[32px]"
                                 height="h-[32px]"
@@ -68,31 +72,31 @@ export function MobileNav({
                     <span
                         className="font-bold text-xl"
                         style={{
-                            color: logoColor || "inherit",
+                            color: props.logoColor || "inherit",
                         }}
                     >
-                        {title}
+                        {props.title}
                     </span>
                 </div>
             </AppLink>
             <ul
                 className="flex flex-col"
                 style={{
-                    gap: `${spacingBetweenLinks}px`,
+                    gap: `${props.spacingBetweenLinks}px`,
                 }}
             >
-                {links &&
-                    (links as Link[]).map((link: Link, index) => (
+                {props.links &&
+                    (props.links as Link[]).map((link: Link, index) => (
                         <span
                             className="mr-2"
                             style={{
-                                color: linkColor || "inherit",
+                                color: props.linkColor || "inherit",
                             }}
                             key={index}
                         >
                             <AppLink
                                 href={link.href}
-                                className={`${linkFontWeight}`}
+                                className={`${props.linkFontWeight}`}
                                 onClick={() => {
                                     setOpen(false);
                                 }}
@@ -101,8 +105,8 @@ export function MobileNav({
                                     <Button2
                                         size="sm"
                                         style={{
-                                            background: btnBgColor,
-                                            color: btnColor,
+                                            background: props.btnBgColor,
+                                            color: props.btnColor,
                                             font: "unset",
                                             fontSize: "unset",
                                         }}
@@ -117,7 +121,7 @@ export function MobileNav({
             </ul>
         </Drawer>
     );
-}
+};
 
 function MenuButton({
     color,
@@ -170,3 +174,5 @@ function MenuButton({
         </Button2>
     );
 }
+
+export default MobileNav;

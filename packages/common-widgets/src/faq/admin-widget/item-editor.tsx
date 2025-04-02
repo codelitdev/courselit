@@ -29,7 +29,7 @@ export default function ItemEditor({
     onChange,
     onDelete,
     address,
-}: ItemProps) {
+}: ItemProps): JSX.Element {
     const [title, setTitle] = useState(item.title);
     const [description, setDescription] = useState(item.description);
 

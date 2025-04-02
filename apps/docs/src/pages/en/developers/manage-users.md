@@ -25,8 +25,8 @@ POST /api/user
 
 ### Request Headers
 
--   `Content-Type: application/json`
--   `domain`: Your domain name
+- `Content-Type: application/json`
+- `domain`: Your domain name
 
 ### Request Body
 
@@ -44,25 +44,25 @@ POST /api/user
 
 Here are the possible values for the `permissions` array:
 
--   `course:manage`
--   `course:manage_any`
--   `course:publish`
--   `course:enroll`
--   `media:manage`
--   `site:manage`
--   `setting:manage`
--   `user:manage`
--   `community:post`
--   `community:comment`
--   `community:manage`
+- `course:manage`
+- `course:manage_any`
+- `course:publish`
+- `course:enroll`
+- `media:manage`
+- `site:manage`
+- `setting:manage`
+- `user:manage`
+- `community:post`
+- `community:comment`
+- `community:manage`
 
 ### Response
 
--   **200 OK**: User created successfully.
--   **400 Bad Request**: Missing or invalid parameters.
--   **401 Unauthorized**: Invalid API key.
--   **404 Not Found**: Domain not found.
--   **500 Internal Server Error**: An error occurred on the server.
+- **200 OK**: User created successfully.
+- **400 Bad Request**: Missing or invalid parameters.
+- **401 Unauthorized**: Invalid API key.
+- **404 Not Found**: Domain not found.
+- **500 Internal Server Error**: An error occurred on the server.
 
 ### Example
 

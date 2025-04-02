@@ -25,7 +25,7 @@ Managing member permissions is essential for controlling what actions members ca
 
 ### Important Notes
 
--   **Review Regularly**: Regularly review and update user permissions to maintain a secure and well-managed community environment.
+- **Review Regularly**: Regularly review and update user permissions to maintain a secure and well-managed community environment.
 
 ## Stuck somewhere?
 

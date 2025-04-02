@@ -16,55 +16,55 @@ Following is how it looks (indicated in the red box).
 
 Let take a moment to understand what all permissions are available and what aspect of CourseLit they control.
 
--   **Manage products**
+- **Manage products**
 
     Create/update/delete your products.
 
     _Technical name: `course:manage`_
 
--   **Manage all products**
+- **Manage all products**
 
     Create/update/delete any product in the school. This includes products created by other creators in the school.
 
     _Technical name: `course:manage_any`_
 
--   **Manage blog**
+- **Manage blog**
 
     Create/update/delete new any blog posts.
 
     _Technical name: `course:publish`_
 
--   **Buy products**
+- **Buy products**
 
     Purchase products from the school.
 
     _Technical name: `course:enroll`_
 
--   **Manage pages**
+- **Manage pages**
 
     Update any page in the school.
 
     _Technical name: `site:manage`_
 
--   **Manage settings**
+- **Manage settings**
 
     Update school wide settings like payments integration etc.
 
     _Technical name: `setting:manage`_
 
--   **Manage users**
+- **Manage users**
 
     Access/update school's users.
 
     _Technical name: `user:manage`_
 
--   **Manage files**
+- **Manage files**
 
     Update/delete your media assets.
 
     _Technical name: `media:manage`_
 
--   **Manage community**
+- **Manage community**
 
     Manage community posts, comments and settings.
 

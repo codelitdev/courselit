@@ -3,9 +3,7 @@
 import { useState, useContext } from "react";
 import { redirect, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-// import { LineChart } from "@/components/ui/chart";
 import {
     Users,
     GraduationCap,
@@ -53,20 +51,7 @@ import { formatDistanceToNow } from "date-fns";
 import { capitalize } from "@courselit/utils";
 import { truncate } from "@ui-lib/utils";
 import MetricCard from "./metric-card";
-import {
-    getSymbolFromCurrency,
-    useToast,
-    Tooltip as TooltipCL,
-} from "@courselit/components-library";
-import {
-    CartesianGrid,
-    Line,
-    LineChart,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
-} from "recharts";
+import { useToast, Tooltip as TooltipCL } from "@courselit/components-library";
 import { useActivities } from "@/hooks/use-activities";
 import { Constants } from "@courselit/common-models";
 import Resources from "@components/resources";
@@ -77,7 +62,7 @@ const { ActivityType } = Constants;
 
 export default function DashboardPage() {
     const params = useParams();
-    const productId = params.id as string;
+    const productId = params?.id as string;
     const [timeRange, setTimeRange] = useState("7d");
     // const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const address = useContext(AddressContext);

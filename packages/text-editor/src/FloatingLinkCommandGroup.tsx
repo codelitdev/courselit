@@ -7,6 +7,7 @@ import React, {
     useRef,
     useState,
 } from "react";
+import type { AnyExtensionConstructor } from "@remirror/core";
 import {
     createMarkPositioner,
     LinkExtension,
@@ -30,7 +31,7 @@ function useLinkShortcut() {
     const [isEditing, setIsEditing] = useState(false);
 
     useExtensionEvent(
-        LinkExtension,
+        LinkExtension as unknown as AnyExtensionConstructor,
         "onShortcut",
         useCallback(
             (props) => {
@@ -48,6 +49,7 @@ function useLinkShortcut() {
 }
 
 function useFloatingLinkState() {
+    // @ts-ignore
     const chain = useChainedCommands();
     const { isEditing, linkShortcut, setIsEditing } = useLinkShortcut();
     const { to, empty } = useCurrentSelection();

@@ -5,6 +5,7 @@ import { Liquid } from "liquidjs";
 import { getMemberships } from "./queries";
 import { Constants } from "@courselit/common-models";
 import { InternalUser } from "@courselit/common-logic";
+import { FilterQuery, UpdateQuery } from "mongoose";
 const liquidEngine = new Liquid();
 
 export async function processDrip() {
@@ -15,15 +16,25 @@ export async function processDrip() {
             `Starting process of drips at ${new Date().toDateString()}`,
         );
 
-        const courses: Course[] = await CourseModel.find({
+        const courseQuery: FilterQuery<Course> = {
             "groups.drip": { $exists: true },
-        });
+        };
+        // @ts-ignore - Mongoose type compatibility issue
+        const courses = (await CourseModel.find(
+            courseQuery,
+        ).lean()) as unknown as Course[];
+
         const nowUTC = new Date().getTime();
 
         for (const course of courses) {
-            const creator = await UserModel.findOne({
+            const creatorQuery: FilterQuery<InternalUser> = {
                 userId: course.creatorId,
-            });
+            };
+            // @ts-ignore - Mongoose type compatibility issue
+            const creator = (await UserModel.findOne(
+                creatorQuery,
+            ).lean()) as unknown as InternalUser | null;
+
             const exactDateAccessibleGroupIds = course.groups
                 .filter(
                     (group) =>
@@ -38,13 +49,14 @@ export async function processDrip() {
                 course.courseId,
                 Constants.MembershipEntityType.COURSE,
             );
-            const users: InternalUser[] = await UserModel.find({
+            const userQuery: FilterQuery<InternalUser> = {
                 domain: course.domain,
                 userId: { $in: memberships.map((m) => m.userId) },
-            });
-            // const users: InternalUser[] = await UserModel.find({
-            //     "purchases.courseId": course.courseId,
-            // });
+            };
+            // @ts-ignore - Mongoose type compatibility issue
+            const users = (await UserModel.find(
+                userQuery,
+            ).lean()) as unknown as InternalUser[];
 
             for (const user of users) {
                 const userProgressInCourse = user.purchases.find(
@@ -78,22 +90,22 @@ export async function processDrip() {
                 );
 
                 if (newGroupIds.length > 0) {
-                    await UserModel.updateOne(
-                        {
-                            userId: user.userId,
-                            "purchases.courseId": course.courseId,
-                        },
-                        {
-                            $addToSet: {
-                                "purchases.$.accessibleGroups": {
-                                    $each: newGroupIds,
-                                },
-                            },
-                            $set: {
-                                "purchases.$.lastDripAt": new Date(nowUTC),
+                    const updateQuery: FilterQuery<InternalUser> = {
+                        userId: user.userId,
+                        "purchases.courseId": course.courseId,
+                    };
+                    const updateData: UpdateQuery<InternalUser> = {
+                        $addToSet: {
+                            "purchases.$.accessibleGroups": {
+                                $each: newGroupIds,
                             },
                         },
-                    );
+                        $set: {
+                            "purchases.$.lastDripAt": new Date(nowUTC),
+                        },
+                    };
+                    // @ts-ignore - Mongoose type compatibility issue
+                    await UserModel.updateOne(updateQuery, updateData);
 
                     const firstGroupWithDripEmailSet = course.groups.find(
                         (group) => group.id === newGroupIds[0],
@@ -116,8 +128,8 @@ export async function processDrip() {
                             subject:
                                 firstGroupWithDripEmailSet.drip.email.subject,
                             body: content,
-                            from: `${creator.name || creator.email} <${
-                                creator.email
+                            from: `${creator?.name || creator?.email} <${
+                                creator?.email
                             }>`,
                         });
                     }

@@ -12,8 +12,8 @@ CourseLit is an open-source software and we make sure that hosting it is as easy
 
 You should self host CourseLit, if you:
 
--   want complete control of your data
--   want to host it behind a firewall for internal use
+- want complete control of your data
+- want to host it behind a firewall for internal use
 
 ### Self host CourseLit
 

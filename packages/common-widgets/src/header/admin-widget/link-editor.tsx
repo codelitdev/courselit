@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Edit, Help } from "@courselit/icons";
 import { Link } from "../settings";
 import {
@@ -23,7 +23,7 @@ export default function LinkEditor({
     index,
     onChange,
     onDelete,
-}: LinkEditorProps) {
+}: LinkEditorProps): JSX.Element {
     const [label, setLabel] = useState(link.label);
     const [href, setHref] = useState(link.href);
     const [isPrimary, setIsPrimary] = useState<boolean>(

@@ -20,7 +20,7 @@ export default function AdminWidget({
     onChange,
     pageData,
     address,
-}: AdminWidgetProps) {
+}: AdminWidgetProps): JSX.Element {
     const customSettingsChanged = (customSettings: Settings) => {
         onChange(Object.assign({}, settings, customSettings));
     };

@@ -50,9 +50,9 @@ Managing members in your community is essential for maintaining an active and en
 
 ## Membership Details
 
--   **Subscription ID**: Unique identifier for the member's subscription (if available).
--   **Subscription Method**: The payment method used by the member (if available, e.g., Stripe).
--   **Status**: Current status of the member (Active, Pending, Rejected).
+- **Subscription ID**: Unique identifier for the member's subscription (if available).
+- **Subscription Method**: The payment method used by the member (if available, e.g., Stripe).
+- **Status**: Current status of the member (Active, Pending, Rejected).
 
 ## Stuck somewhere?
 

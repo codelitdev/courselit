@@ -23,7 +23,7 @@ export function ContentCardImage({
 
 interface ContentCardHeaderProps
     extends React.HTMLAttributes<HTMLHeadingElement> {
-    children: React.ReactNode;
+    children: string | JSX.Element;
 }
 
 export function ContentCardHeader({
@@ -39,7 +39,7 @@ export function ContentCardHeader({
 }
 
 interface ContentCardContentProps extends React.HTMLAttributes<HTMLDivElement> {
-    children: React.ReactNode;
+    children: string | JSX.Element | (string | JSX.Element)[];
     className?: string;
 }
 
@@ -56,7 +56,7 @@ export function ContentCardContent({
 }
 
 interface ContentCardProps extends React.HTMLAttributes<HTMLDivElement> {
-    children: React.ReactNode;
+    children: string | JSX.Element | (string | JSX.Element)[];
     href: string;
 }
 

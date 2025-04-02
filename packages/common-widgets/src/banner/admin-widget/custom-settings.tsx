@@ -32,7 +32,7 @@ export default function CustomSettings({
     onChange,
     pageData,
     address,
-}: CustomSettingsProps) {
+}: CustomSettingsProps): JSX.Element {
     const defaultSuccessMessage: Record<string, unknown> = {
         type: "doc",
         content: [

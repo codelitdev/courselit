@@ -32,7 +32,10 @@ interface AdminWidgetProps {
     onChange: (...args: any[]) => void;
 }
 
-export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
+export default function AdminWidget({
+    settings,
+    onChange,
+}: AdminWidgetProps): JSX.Element {
     const [links, setLinks] = useState(settings.links || []);
     const [appBarBackground, setAppBarBackground] = useState<
         string | undefined
