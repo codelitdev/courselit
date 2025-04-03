@@ -44,6 +44,6 @@
     "dependencies": {
         "@courselit/common-models": "workspace:^",
         "@courselit/utils": "workspace:^",
-        "mongoose": "^7.6.3"
+        "mongoose": "^8.13.1"
     }
 }
