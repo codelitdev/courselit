@@ -17,7 +17,7 @@ COPY packages/utils ./packages/utils
 COPY apps/queue ./apps/queue
 
 # Install dependencies and build
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 RUN pnpm build
 
 # Production image
