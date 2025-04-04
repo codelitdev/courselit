@@ -76,9 +76,14 @@ const updateHeroVideo = async (page) => {
     for (const heroWidget of heroWidgets) {
         heroWidget.settings.style = "normal";
         heroWidget.settings.mediaRadius = 2;
-        if (heroWidget && heroWidget.settings.youtubeLink === "VLVcZB2-udk") {
-            heroWidget.settings.youtubeLink =
-                "https://www.youtube.com/watch?v=VLVcZB2-udk";
+        if (
+            heroWidget &&
+            heroWidget.settings.youtubeLink &&
+            !heroWidget.settings.youtubeLink.startsWith(
+                "https://www.youtube.com/watch?v=",
+            )
+        ) {
+            heroWidget.settings.youtubeLink = `https://www.youtube.com/watch?v=${heroWidget.settings.youtubeLink}`;
         }
     }
     const heroWidgetsDraft = page.draftLayout.filter(
@@ -87,9 +92,14 @@ const updateHeroVideo = async (page) => {
     for (const heroWidget of heroWidgetsDraft) {
         heroWidget.settings.style = "normal";
         heroWidget.settings.mediaRadius = 2;
-        if (heroWidget && heroWidget.settings.youtubeLink === "VLVcZB2-udk") {
-            heroWidget.settings.youtubeLink =
-                "https://www.youtube.com/watch?v=VLVcZB2-udk";
+        if (
+            heroWidget &&
+            heroWidget.settings.youtubeLink &&
+            !heroWidget.settings.youtubeLink.startsWith(
+                "https://www.youtube.com/watch?v=",
+            )
+        ) {
+            heroWidget.settings.youtubeLink = `https://www.youtube.com/watch?v=${heroWidget.settings.youtubeLink}`;
         }
     }
     page.markModified("layout");
