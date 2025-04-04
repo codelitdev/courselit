@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { SkeletonCard } from "./skeleton-card";
-import { ContentCard } from "./content-card";
+import { BlogContentCard } from "./content-card";
 import { PaginationControls } from "@components/public/pagination";
 import { Constants, Course } from "@courselit/common-models";
 import { useProducts } from "@/hooks/use-products";
@@ -34,7 +34,7 @@ export function BlogsList({
                           <SkeletonCard key={index} />
                       ))
                     : products.map((product: Course) => (
-                          <ContentCard
+                          <BlogContentCard
                               key={product.courseId}
                               product={product}
                           />

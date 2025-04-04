@@ -1,7 +1,7 @@
 "use client";
 
 import { useCommunities } from "@/hooks/use-communities";
-import { ContentCard } from "./content-card";
+import { CommunityContentCard } from "./content-card";
 import { PaginationControls } from "@components/public/pagination";
 import { Community } from "@courselit/common-models";
 import { Users } from "lucide-react";
@@ -63,7 +63,7 @@ export function CommunitiesList({
                           <SkeletonCard key={index} />
                       ))
                     : communities.map((community: Community) => (
-                          <ContentCard
+                          <CommunityContentCard
                               key={community.communityId}
                               community={community}
                               publicView={publicView}

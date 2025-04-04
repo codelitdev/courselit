@@ -315,10 +315,10 @@ export default function ContentPage() {
                                             (a: any, b: any) =>
                                                 (
                                                     section.lessonsOrder as any[]
-                                                ).indexOf(a.lessonId) -
+                                                )?.indexOf(a.lessonId) -
                                                 (
                                                     section.lessonsOrder as any[]
-                                                ).indexOf(b.lessonId),
+                                                )?.indexOf(b.lessonId),
                                         )
                                         .map((lesson: Lesson) => ({
                                             id: lesson.lessonId,

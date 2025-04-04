@@ -5,7 +5,7 @@ import { getPlanPrice } from "@courselit/utils";
 import { truncate } from "@ui-lib/utils";
 import Image from "next/image";
 
-export function ContentCard({ product }: { product: Course }) {
+export function BlogContentCard({ product }: { product: Course }) {
     const defaultPlan = product.paymentPlans?.filter(
         (plan) => plan.planId === product.defaultPaymentPlan,
     )[0];
