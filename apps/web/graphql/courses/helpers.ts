@@ -177,7 +177,7 @@ export const setupCourse = async ({
         ctx,
     });
     page.entityId = course.courseId;
-    page.layout = getInitialLayout();
+    page.layout = getInitialLayout(type);
     await page.save();
 
     return course;
@@ -205,8 +205,8 @@ export const setupBlog = async ({
     return course;
 };
 
-const getInitialLayout = () => {
-    return [
+const getInitialLayout = (type: "course" | "download") => {
+    const layout: Record<string, any>[] = [
         {
             name: "header",
             deleteable: false,
@@ -215,10 +215,20 @@ const getInitialLayout = () => {
         {
             name: "banner",
         },
-        {
-            name: "footer",
-            deleteable: false,
-            shared: true,
-        },
     ];
+    if (type === Constants.CourseType.COURSE) {
+        layout.push({
+            name: "content",
+            settings: {
+                title: "Curriculum",
+                headerAlignment: "center",
+            },
+        });
+    }
+    layout.push({
+        name: "footer",
+        deleteable: false,
+        shared: true,
+    });
+    return layout;
 };

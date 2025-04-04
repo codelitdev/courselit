@@ -157,7 +157,7 @@ export const getCourse = async (
         // course.groups = accessibleGroups;
         return await formatCourse(course.courseId, ctx);
     } else {
-        throw new Error(responses.item_not_found);
+        return null;
     }
 };
 

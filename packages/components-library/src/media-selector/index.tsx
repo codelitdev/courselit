@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, useEffect, useState } from "react";
-import Image from "../image";
+import { Image } from "../image";
 import { Address, Media, Profile } from "@courselit/common-models";
 import Access from "./access";
 import Dialog2 from "../dialog2";

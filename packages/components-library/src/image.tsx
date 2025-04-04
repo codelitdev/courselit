@@ -1,5 +1,12 @@
 import NextImage from "next/legacy/image";
 
+export type ImageObjectFit =
+    | "cover"
+    | "contain"
+    | "fill"
+    | "none"
+    | "scale-down";
+
 interface ImgProps {
     src: string;
     isThumbnail?: boolean;
@@ -13,6 +20,7 @@ interface ImgProps {
     borderRadius?: number;
     noDefaultImage?: boolean;
     className?: string;
+    objectFit?: ImageObjectFit;
 }
 
 // Copied from: https://github.com/vercel/next.js/blob/canary/examples/image-component/pages/shimmer.js
@@ -35,7 +43,7 @@ const toBase64 = (str: string) =>
         ? Buffer.from(str).toString("base64")
         : window.btoa(str);
 
-const Image = (props: ImgProps) => {
+export const Image = (props: ImgProps) => {
     const {
         src,
         alt,
@@ -46,6 +54,7 @@ const Image = (props: ImgProps) => {
         className = "",
         width = "w-full",
         height = "h-auto",
+        objectFit = "cover",
     } = props;
     const source = src || defaultImage || "/courselit_backdrop.webp";
 
@@ -67,9 +76,8 @@ const Image = (props: ImgProps) => {
                 priority={loading === "eager"}
                 sizes={sizes}
                 layout="fill"
+                objectFit={objectFit}
             />
         </div>
     );
 };
-
-export default Image;

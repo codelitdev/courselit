@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "./link";
 import { cn } from "@/lib/utils";
-import Image from "./image";
+import { Image } from "./image";
 
 interface ContentCardImageProps extends React.HTMLAttributes<HTMLDivElement> {
     src: string;

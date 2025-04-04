@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Course, SiteInfo } from "@courselit/common-models";
 import { getPlanPrice, truncate } from "@courselit/utils";
 import getSymbolFromCurrency from "currency-symbol-map";
-import Image from "./image";
+import { Image } from "./image";
 import {
     ContentCard,
     ContentCardHeader,

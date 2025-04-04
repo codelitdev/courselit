@@ -10,7 +10,7 @@ import {
     TooltipTrigger,
 } from "@components/ui/tooltip";
 
-export function ContentCard({
+export function CommunityContentCard({
     community,
     publicView = true,
 }: {
@@ -50,20 +50,24 @@ export function ContentCard({
                                 members
                             </span>
                         </div>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    {community.enabled ? (
-                                        <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                                    ) : (
-                                        <CircleDashed className="h-4 w-4 text-muted-foreground" />
-                                    )}
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    {community.enabled ? "Enabled" : "Draft"}
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                        {!publicView && (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        {community.enabled ? (
+                                            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                                        ) : (
+                                            <CircleDashed className="h-4 w-4 text-muted-foreground" />
+                                        )}
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {community.enabled
+                                            ? "Enabled"
+                                            : "Draft"}
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
                     </div>
                 </CardContent>
             </Card>

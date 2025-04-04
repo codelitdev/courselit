@@ -1,4 +1,4 @@
-import Image from "./image";
+import { Image } from "./image";
 import type { Course, SiteInfo } from "@courselit/common-models";
 import { Constants } from "@courselit/common-models";
 import PriceTag from "./pricetag";
