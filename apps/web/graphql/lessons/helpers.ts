@@ -103,8 +103,8 @@ export const getGroupedLessons = async (
                 )
                 .sort(
                     (a: GroupLessonItem, b: GroupLessonItem) =>
-                        group.lessonsOrder.indexOf(a.lessonId) -
-                        group.lessonsOrder.indexOf(b.lessonId),
+                        group.lessonsOrder?.indexOf(a.lessonId) -
+                        group.lessonsOrder?.indexOf(b.lessonId),
                 ),
         );
     }

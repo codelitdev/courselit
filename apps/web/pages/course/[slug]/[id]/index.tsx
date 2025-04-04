@@ -407,8 +407,8 @@ export function formatCourse(
             .filter((lesson: Lesson) => lesson.groupId === group.id)
             .sort(
                 (a: any, b: any) =>
-                    group.lessonsOrder.indexOf(a.lessonId) -
-                    group.lessonsOrder.indexOf(b.lessonId),
+                    group.lessonsOrder?.indexOf(a.lessonId) -
+                    group.lessonsOrder?.indexOf(b.lessonId),
             );
     }
 
