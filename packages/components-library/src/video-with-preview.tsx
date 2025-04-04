@@ -51,26 +51,52 @@ export function VideoWithPreview({
     // Extract video ID based on platform
     const getVideoId = () => {
         if (videoType === "youtube") {
-            // Handle youtube.com/watch?v= format
-            if (videoUrl.includes("youtube.com/watch")) {
-                return new URL(videoUrl).searchParams.get("v");
-            }
+            try {
+                const url = new URL(videoUrl);
 
-            // Handle youtu.be/ format
-            if (videoUrl.includes("youtu.be")) {
-                return videoUrl.split("/").pop();
-            }
+                // Handle youtube.com/watch?v= format
+                if (
+                    url.hostname === "youtube.com" ||
+                    url.hostname === "www.youtube.com"
+                ) {
+                    return url.searchParams.get("v");
+                }
 
-            // Handle youtube.com/embed/ format
-            if (videoUrl.includes("youtube.com/embed/")) {
-                return videoUrl.split("/").pop()?.split("?")[0];
+                // Handle youtu.be/ format
+                if (url.hostname === "youtu.be") {
+                    return url.pathname.slice(1); // Remove leading slash
+                }
+
+                // Handle youtube.com/embed/ format
+                if (
+                    url.hostname === "youtube.com" ||
+                    url.hostname === "www.youtube.com"
+                ) {
+                    const pathParts = url.pathname.split("/");
+                    if (pathParts[1] === "embed") {
+                        return pathParts[2];
+                    }
+                }
+            } catch (error) {
+                console.error("Invalid YouTube URL:", error);
+                return null;
             }
         }
 
         if (videoType === "vimeo") {
-            // Handle vimeo.com/videoID format
-            const matches = videoUrl.match(/vimeo\.com\/([0-9]+)/);
-            return matches ? matches[1] : null;
+            try {
+                const url = new URL(videoUrl);
+                if (url.hostname === "vimeo.com") {
+                    const videoId = url.pathname.slice(1); // Remove leading slash
+                    // Validate that the ID is numeric
+                    if (/^\d+$/.test(videoId)) {
+                        return videoId;
+                    }
+                }
+            } catch (error) {
+                console.error("Invalid Vimeo URL:", error);
+                return null;
+            }
         }
 
         return null;
