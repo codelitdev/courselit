@@ -63,7 +63,14 @@ export async function POST(req: NextRequest) {
         if (!entity) {
             return Response.json(
                 { message: responses.item_not_found },
-                { status: 400 },
+                { status: 404 },
+            );
+        }
+
+        if (!(entity.paymentPlans as unknown as string[]).includes(planId)) {
+            return Response.json(
+                { message: "Invalid payment plan" },
+                { status: 404 },
             );
         }
 
@@ -258,5 +265,6 @@ async function getPaymentPlan(
         domain: domainId,
         planId,
         archived: false,
+        internal: false,
     });
 }

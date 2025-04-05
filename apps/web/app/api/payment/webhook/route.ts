@@ -112,6 +112,7 @@ async function getPaymentPlan(
     return PaymentPlanModel.findOne<PaymentPlan>({
         domain: domainId,
         planId: paymentPlanId,
+        internal: false,
     });
 }
 

@@ -7,10 +7,7 @@
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
-        "prettier": "prettier --write **/*.ts",
-        "test": "SUPPRESS_JEST_WARNINGS=1 jest",
-        "test:watch": "SUPPRESS_JEST_WARNINGS=1 jest --watch",
-        "test:coverage": "SUPPRESS_JEST_WARNINGS=1 jest --coverage"
+        "prettier": "prettier --write **/*.ts"
     },
     "dependencies": {
         "@courselit/common-logic": "workspace:^",
@@ -77,13 +74,8 @@
         "zod": "^3.24.1"
     },
     "devDependencies": {
-        "@testing-library/dom": "^10.4.0",
-        "@testing-library/jest-dom": "^6.6.3",
-        "@testing-library/react": "^16.3.0",
-        "@testing-library/user-event": "^14.6.1",
         "@types/bcryptjs": "^2.4.2",
         "@types/cookie": "^0.4.1",
-        "@types/jest": "^29.5.14",
         "@types/mongodb": "^4.0.7",
         "@types/node": "17.0.21",
         "@types/nodemailer": "^6.4.4",
@@ -94,14 +86,10 @@
         "eslint": "8.48.0",
         "eslint-config-next": "^14.0.4",
         "eslint-config-prettier": "^9.0.0",
-        "jest": "^29.7.0",
-        "jest-environment-jsdom": "^29.7.0",
-        "mongodb-memory-server": "^10.1.4",
         "postcss": "^8.4.27",
         "prettier": "^3.0.2",
         "tailwind-config": "workspace:^",
         "tailwindcss": "^3.4.1",
-        "ts-node": "^10.9.2",
         "tsconfig": "workspace:^",
         "typescript": "^5.6.2"
     },
