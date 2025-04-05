@@ -9,7 +9,7 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: '23.x'
-    - run: npm install -g yarn@3
+    - run: npm install -g yarn@2
     - run: yarn install
     - name: Running tests
       run: |
