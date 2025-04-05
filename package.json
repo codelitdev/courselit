@@ -22,6 +22,7 @@
     "clean": "yarn workspaces foreach run clean",
     "publish": "yarn workspaces foreach --no-private npm publish",
     "dev": "yarn workspace @courselit/web dev",
+    "test": "yarn workspace @courselit/web test",
     "prepare": "husky",
     "release:patch": "./release.sh patch",
     "release:minor": "./release.sh minor"
