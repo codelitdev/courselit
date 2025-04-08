@@ -11,7 +11,7 @@ import {
 } from "@courselit/components-library";
 import { AppState } from "@courselit/state-management";
 import { Course, Profile, SiteInfo } from "@courselit/common-models";
-import { BLOG_UPDATED_PREFIX } from "@ui-config/strings";
+import { BLOG_UPDATED_PREFIX, UNNAMED_USER } from "@ui-config/strings";
 
 interface ArticleProps {
     course: Course;
@@ -55,7 +55,10 @@ const Article = (props: ArticleProps) => {
                         </div>
                         <div className="flex flex-col gap-1">
                             <p className="font-medium">
-                                {truncate(course.creatorName, 50)}
+                                {truncate(
+                                    course.creatorName || UNNAMED_USER,
+                                    50,
+                                )}
                             </p>
                             <p className="font-light text-sm text-muted-foreground">
                                 <span className="font-medium">
