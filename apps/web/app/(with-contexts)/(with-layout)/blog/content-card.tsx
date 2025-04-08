@@ -1,18 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Course } from "@courselit/common-models";
 import { Link } from "@courselit/components-library";
-import { getPlanPrice } from "@courselit/utils";
 import { truncate } from "@ui-lib/utils";
 import Image from "next/image";
 
 export function BlogContentCard({ product }: { product: Course }) {
-    const defaultPlan = product.paymentPlans?.filter(
-        (plan) => plan.planId === product.defaultPaymentPlan,
-    )[0];
-    const { amount, period } = getPlanPrice(defaultPlan);
-
     return (
-        <Link href={`/p/${product.pageId}`}>
+        <Link href={`/blog/${product.slug}/${product.courseId}`}>
             <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
                 <div className="relative aspect-video">
                     <Image

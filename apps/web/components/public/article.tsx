@@ -79,7 +79,7 @@ const Article = (props: ArticleProps) => {
                     </div>
                 </div>
             )}
-            <div className="overflow-hidden">
+            <div className="overflow-hidden min-h-[360px]">
                 <TextRenderer
                     json={
                         course.description
