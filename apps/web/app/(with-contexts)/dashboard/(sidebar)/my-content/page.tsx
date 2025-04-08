@@ -42,7 +42,6 @@ const breadcrumbs = [{ label: MY_CONTENT_HEADER, href: "#" }];
 
 export default function Page() {
     const [data, setData] = useState<ContentItem[]>([]);
-    const [dataLoaded, setDataLoaded] = useState(false);
     const [loading, setLoading] = useState(true);
     const { profile } = useContext(ProfileContext);
     const address = useContext(AddressContext);
@@ -83,7 +82,6 @@ export default function Page() {
             } catch (e: any) {
             } finally {
                 setLoading(false);
-                setDataLoaded(true);
             }
         };
 

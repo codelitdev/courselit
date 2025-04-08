@@ -25,7 +25,7 @@ export function ProductCard({
     return (
         <ContentCard href={`/p/${product.pageId}`}>
             <ContentCardImage
-                src={product.featuredImage?.thumbnail}
+                src={product.featuredImage?.file}
                 alt={product.title}
             />
             <ContentCardContent>
@@ -36,7 +36,7 @@ export function ProductCard({
                             src={product.user?.avatar?.thumbnail}
                             alt={product.user?.name || "User Avatar"}
                             loading="lazy"
-                            className="!aspect-square"
+                            className="!aspect-square rounded-full"
                             width="w-6"
                             height="h-6"
                         />

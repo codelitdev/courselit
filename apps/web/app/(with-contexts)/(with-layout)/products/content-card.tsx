@@ -21,7 +21,7 @@ export function ProductContentCard({ product }: { product: Course }) {
                 <div className="relative aspect-video">
                     <Image
                         src={
-                            product.featuredImage?.thumbnail ||
+                            product.featuredImage?.file ||
                             "/courselit_backdrop_square.webp"
                         }
                         alt={product.title}

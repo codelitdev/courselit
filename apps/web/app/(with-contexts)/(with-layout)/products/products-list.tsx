@@ -9,6 +9,7 @@ import { EmptyState } from "./empty-state";
 import { Button } from "@components/ui/button";
 import { SkeletonCard, ProductCard } from "@courselit/components-library";
 import { SiteInfoContext } from "@components/contexts";
+import { truncate } from "@ui-lib/utils";
 const ITEMS_PER_PAGE = 9;
 
 export function ProductsList({
@@ -61,7 +62,9 @@ export function ProductsList({
                     : products.map((product: Course) => (
                           <ProductCard
                               key={product.courseId}
-                              product={product}
+                              product={Object.assign({}, product, {
+                                  title: truncate(product.title, 32),
+                              })}
                               siteinfo={siteinfo}
                           />
                       ))}

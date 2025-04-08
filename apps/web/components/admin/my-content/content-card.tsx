@@ -34,7 +34,7 @@ export function MyContentCard({ item }: ContentCardProps) {
             }
         >
             <ContentCardImage
-                src={item.entity.featuredImage?.thumbnail}
+                src={item.entity.featuredImage?.file}
                 alt={item.entity.title}
             />
             <ContentCardContent>

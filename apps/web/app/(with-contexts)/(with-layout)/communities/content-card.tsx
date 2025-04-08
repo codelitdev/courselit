@@ -29,7 +29,7 @@ export function CommunityContentCard({
                 <div className="relative aspect-video">
                     <Image
                         src={
-                            community.featuredImage?.thumbnail ||
+                            community.featuredImage?.file ||
                             "/courselit_backdrop_square.webp"
                         }
                         alt={community.name}
