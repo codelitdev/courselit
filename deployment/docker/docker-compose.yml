@@ -21,7 +21,7 @@ services:
 
             # In production, replace the following with the connection string of a cloud
             # hosted instance of MongoDB.
-            - DB_CONNECTION_STRING=mongodb://root:example@mongo
+            - DB_CONNECTION_STRING=mongodb://root:example@mongo/courselit?authSource=admin
 
             # CourseLit uses Magic links to provide login functionality. Hence, it requires
             # access to the mail sending facility.
@@ -46,8 +46,17 @@ services:
             # CourseLit uses MediaLit (our another open-source software) to manage files on
             # a AWS S3 compatible storage. MediaLit is available as a hosted service
             # at https://medialit.cloud. You can self host it as well.
+            # 
+            # Uncomment the following lines to use MediaLit as a hosted service. 
+            # The MEDIALIT_APIKEY can be obtained by signing up at https://medialit.cloud.
             # - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
             # - MEDIALIT_SERVER=https://api.medialit.cloud
+            # 
+            # Uncomment the following lines to use MediaLit as a self hosted service.
+            # The MEDIALIT_APIKEY can be obtained by running the medialit service locally and
+            # checking the logs for the API key.
+            # - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
+            # - MEDIALIT_SERVER=http://host.docker.internal:8000
 
         expose:
             - "${PORT:-80}"
@@ -110,3 +119,42 @@ services:
     #   expose:
     #     - "6379"
     #   restart: on-failure
+
+    # MediaLit is a hosted service for file storage. Uncomment the following block to
+    # self host it. You will need a S3 compatible storage to use it.
+    # Uncomment the following block to use MediaLit as a self-hosted service.
+    #
+    # medialit:
+    #     image: codelit/medialit
+    #     environment:
+    #         - EMAIL=${SUPER_ADMIN_EMAIL?'SUPER_ADMIN_EMAIL is required to set up a user on MediaLit'}
+
+    #         # In production, replace the following with the connection string of a cloud
+    #         # hosted instance of MongoDB.
+    #         - DB_CONNECTION_STRING=mongodb://root:example@mongo/medialit?authSource=admin
+
+    #         # AWS S3 compatible storage configuration
+    #         - CLOUD_ENDPOINT=${CLOUD_ENDPOINT?'CLOUD_ENDPOINT is required'}
+    #         - CLOUD_REGION=${CLOUD_REGION?'CLOUD_REGION is required'}
+    #         - CLOUD_KEY=${CLOUD_KEY?'CLOUD_KEY is required'}
+    #         - CLOUD_SECRET=${CLOUD_SECRET?'CLOUD_SECRET is required'}
+    #         - CLOUD_BUCKET_NAME=${CLOUD_BUCKET_NAME?'CLOUD_BUCKET_NAME is required'}
+    #         - CLOUD_PREFIX=${CLOUD_PREFIX?'CLOUD_PREFIX is required'}
+    #         - S3_ENDPOINT=${S3_ENDPOINT?'S3_ENDPOINT is required'}
+
+    #         # Temporary file directory for uploads transformations
+    #         - TEMP_FILE_DIR_FOR_UPLOADS=/tmp
+
+    #         - ENABLE_TRUST_PROXY=${ENABLE_TRUST_PROXY}
+
+    #         # CloudFront configuration
+    #         - USE_CLOUDFRONT=${USE_CLOUDFRONT} 
+    #         - CLOUDFRONT_ENDPOINT=${CLOUDFRONT_ENDPOINT} 
+    #         - CLOUDFRONT_KEY_PAIR_ID=${CLOUDFRONT_KEY_PAIR_ID} 
+    #         - CLOUDFRONT_PRIVATE_KEY=${CLOUDFRONT_PRIVATE_KEY}
+    #         - CDN_MAX_AGE=${CDN_MAX_AGE}
+    #     ports:
+    #         - "8000:80"
+    #     depends_on:
+    #         - mongo
+    #     restart: on-failure

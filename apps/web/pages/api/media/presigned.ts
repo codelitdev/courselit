@@ -50,7 +50,7 @@ export default async function handler(
         );
         return res.status(200).json({ url: response });
     } catch (err: any) {
-        error(err.mssage, {
+        error(err.message, {
             stack: err.stack,
         });
         return res.status(500).json({ error: err.message });
