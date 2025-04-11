@@ -35,6 +35,7 @@ import {
     CommunityMedia,
     CommunityPost,
     Constants,
+    Media,
 } from "@courselit/common-models";
 import LoadingSkeleton from "./loading-skeleton";
 import { formattedLocaleDate, hasCommunityPermission } from "@ui-lib/utils";
@@ -458,94 +459,93 @@ export function CommunityForum({
         return response.url;
     };
 
-    const removeFile = async (mediaId: string) => {
-        try {
-            const fetch = new FetchBuilder()
-                .setUrl(`${address.backend}/api/media/${mediaId}`)
-                .setHttpMethod("DELETE")
-                .setIsGraphQLEndpoint(false)
-                .build();
-            const response = await fetch.exec();
-            if (response.message !== "success") {
-                throw new Error(response.message);
-            }
-        } catch (err: any) {
-            console.error("Error in removing file", err.message);
-        }
-    };
+    // const removeFile = async (mediaId: string) => {
+    //     try {
+    //         const fetch = new FetchBuilder()
+    //             .setUrl(`${address.backend}/api/media/${mediaId}`)
+    //             .setHttpMethod("DELETE")
+    //             .setIsGraphQLEndpoint(false)
+    //             .build();
+    //         const response = await fetch.exec();
+    //         if (response.message !== "success") {
+    //             throw new Error(response.message);
+    //         }
+    //     } catch (err: any) {
+    //         console.error("Error in removing file", err.message);
+    //     }
+    // };
 
     const createPost = async (
         newPost: Pick<CommunityPost, "title" | "content" | "category"> & {
             media: MediaItem[];
         },
     ) => {
-        if (newPost.media.length > 0) {
-            newPost.media = await uploadAttachments(newPost.media);
-        }
-        const mutation = `
-            mutation ($id: String!, $title: String!, $content: String!, $category: String!, $media: [CommunityPostInputMedia]) {
-                post: createCommunityPost(
-                    id: $id,
-                    title: $title,
-                    content: $content,
-                    category: $category,
-                    media: $media
-                ) {
-                    communityId
-                    postId
-                    title
-                    content
-                    category
-                    media {
-                        type
-                        title
-                        url
-                        media {
-                            mediaId
-                            file
-                            thumbnail
-                            originalFileName
-                        }
-                    }
-                    likesCount
-                    commentsCount
-                    updatedAt
-                    hasLiked
-                    user {
-                        userId
-                        name
-                        avatar {
-                            mediaId
-                            file
-                            thumbnail
-                        }
-                    }
-                    pinned
-                }
-            }
-        `;
-
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload({
-                query: mutation,
-                variables: {
-                    id: community?.communityId,
-                    content: newPost.content,
-                    category: newPost.category,
-                    title: newPost.title,
-                    media: newPost.media.map((m) => ({
-                        type: m.type,
-                        title: m.title,
-                        url: m.url,
-                        media: m.media,
-                    })),
-                },
-            })
-            .setIsGraphQLEndpoint(true)
-            .build();
-
         try {
+            if (newPost.media.length > 0) {
+                newPost.media = await uploadAttachments(newPost.media);
+            }
+            const mutation = `
+                mutation ($id: String!, $title: String!, $content: String!, $category: String!, $media: [CommunityPostInputMedia]) {
+                    post: createCommunityPost(
+                        id: $id,
+                        title: $title,
+                        content: $content,
+                        category: $category,
+                        media: $media
+                    ) {
+                        communityId
+                        postId
+                        title
+                        content
+                        category
+                        media {
+                            type
+                            title
+                            url
+                            media {
+                                mediaId
+                                file
+                                thumbnail
+                                originalFileName
+                            }
+                        }
+                        likesCount
+                        commentsCount
+                        updatedAt
+                        hasLiked
+                        user {
+                            userId
+                            name
+                            avatar {
+                                mediaId
+                                file
+                                thumbnail
+                            }
+                        }
+                        pinned
+                    }
+                }
+            `;
+
+            const fetch = new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setPayload({
+                    query: mutation,
+                    variables: {
+                        id: community?.communityId,
+                        content: newPost.content,
+                        category: newPost.category,
+                        title: newPost.title,
+                        media: newPost.media.map((m) => ({
+                            type: m.type,
+                            title: m.title,
+                            url: m.url,
+                            media: m.media,
+                        })),
+                    },
+                })
+                .setIsGraphQLEndpoint(true)
+                .build();
             const response = await fetch.exec();
             if (response.post) {
                 setPosts((prevPosts) => [response.post, ...prevPosts]);
@@ -557,8 +557,9 @@ export function CommunityForum({
             }
         } catch (err: any) {
             toast({
-                title: "Error",
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         }
     };
@@ -580,8 +581,8 @@ export function CommunityForum({
             const presignedUrl = await getPresignedUrl();
             const media = await uploadToServer(presignedUrl, file);
             return media;
-        } catch (err: any) {
-            console.error(err.message);
+        } catch (err) {
+            throw new Error(`Media upload: ${err.message}`);
         }
     };
 
@@ -905,7 +906,7 @@ export function CommunityForum({
                 setReportReason("");
             } catch (err: any) {
                 toast({
-                    title: "Error",
+                    title: TOAST_TITLE_ERROR,
                     description: err.message,
                     variant: "destructive",
                 });
