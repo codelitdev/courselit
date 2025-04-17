@@ -94,7 +94,7 @@ export const SITE_SETTINGS_COURSELIT_BRANDING_CAPTION =
     "Remove CourseLit branding";
 export const SITE_SETTINGS_COURSELIT_BRANDING_SUB_CAPTION = `Hide "Powered by CourseLit" on your CourseLit courses and site.`;
 export const SITE_SETTINGS_PAGE_HEADING = "Settings";
-export const HEADER_HELP = "Support";
+export const HEADER_COURSELIT = "About CourseLit";
 export const MEDIA_SELECTOR_UPLOAD_BTN_CAPTION = "Upload a picture";
 export const MEDIA_SELECTOR_REMOVE_BTN_CAPTION = "Remove picture";
 export const SITE_ADMIN_SETTINGS_STRIPE_SECRET = "Stripe Secret Key";

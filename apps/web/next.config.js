@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 
+const { version } = require("./package.json");
+
 const remotePatterns = [
     {
         protocol: "https",
@@ -9,6 +11,9 @@ const remotePatterns = [
 
 const nextConfig = {
     output: "standalone",
+    env: {
+        version,
+    },
     reactStrictMode: true,
     typescript: {
         ignoreBuildErrors: true,
