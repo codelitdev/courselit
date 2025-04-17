@@ -29,7 +29,7 @@
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' SUPPRESS_JEST_WARNINGS=1 jest --watch",
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' SUPPRESS_JEST_WARNINGS=1 jest --coverage"
   },
-  "packageManager": "pnpm@8.15.4",
+  "packageManager": "pnpm@10.8.1",
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -46,11 +46,11 @@
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "lint-staged": "^15.2.2",
-    "tailwindcss": "^3.0.0",
-    "typescript": "^5.8.2",
     "mongodb-memory-server": "^10.1.4",
     "prettier": "^3.0.2",
-    "ts-node": "^10.9.2"
+    "tailwindcss": "^3.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
   },
   "engines": {
     "node": ">=18.0.0",
