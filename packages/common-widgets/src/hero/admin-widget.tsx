@@ -48,7 +48,7 @@ export default function AdminWidget({
     onChange,
     profile,
     address,
-}: AdminWidgetProps) {
+}: AdminWidgetProps): JSX.Element {
     const dummyDescription: Record<string, unknown> = {
         type: "doc",
         content: [

@@ -35,7 +35,7 @@ export default function Widget({
         cssId,
         columns = defaultColumns,
     },
-}: WidgetProps<Settings>) {
+}: WidgetProps<Settings>): JSX.Element {
     return (
         <section
             className={`py-[${verticalPadding}px]`}

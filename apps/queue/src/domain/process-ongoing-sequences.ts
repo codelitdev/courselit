@@ -193,6 +193,9 @@ async function attemptMailSending({
         address: domain.settings.mailingAddress,
         unsubscribe_link: unsubscribeLink,
     };
+    if (!email.content) {
+        return;
+    }
     // const content = email.content;
     let content = await liquidEngine.parseAndRender(
         email.content,

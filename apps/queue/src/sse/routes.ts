@@ -1,7 +1,7 @@
 import express from "express";
 import { notificationEmitter } from "../domain/emitters/notification";
 
-const router = express.Router();
+const router: any = express.Router();
 
 router.get("/:userId", (req, res) => {
     const { userId } = req.params;

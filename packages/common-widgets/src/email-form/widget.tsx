@@ -43,7 +43,7 @@ const Widget = ({
     dispatch,
     editing,
     id,
-}: WidgetProps<Settings>) => {
+}: WidgetProps<Settings>): JSX.Element => {
     const [email, setEmail] = useState("");
     const [name, setName] = useState("");
     const [turnstileToken, setTurnstileToken] = useState<string>("");

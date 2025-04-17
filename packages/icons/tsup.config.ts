@@ -8,6 +8,10 @@ export default defineConfig((options: Options) => ({
     dts: true,
     minify: true,
     clean: true,
-    external: [],
+    external: ["react", "react/jsx-runtime"],
+    esbuildOptions(options) {
+        options.jsx = "automatic";
+        return options;
+    },
     ...options,
 }));

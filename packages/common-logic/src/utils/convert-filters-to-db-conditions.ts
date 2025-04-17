@@ -5,6 +5,53 @@ import {
 } from "@courselit/common-models";
 import mongoose from "mongoose";
 
+type EmailCondition = {
+    email:
+        | string
+        | { $regex: string; $options: string }
+        | { $not: { $regex: string; $options: string } };
+};
+
+type ProductCondition = {
+    userId:
+        | { $in: mongoose.Types.ObjectId[] }
+        | { $not: { $in: mongoose.Types.ObjectId[] } };
+};
+
+type SubscriptionCondition = {
+    subscribedToUpdates: boolean;
+};
+
+type PermissionCondition = {
+    permissions: { $in: string[] } | { $nin: string[] };
+};
+
+type DateCondition = {
+    $lt?: Date;
+    $gte?: Date;
+};
+
+type LastActiveCondition = {
+    updatedAt: DateCondition;
+};
+
+type SignedUpCondition = {
+    createdAt: DateCondition;
+};
+
+type TagCondition = {
+    tags: string | { $not: { $regex: string } };
+};
+
+type DBCondition =
+    | EmailCondition
+    | ProductCondition
+    | SubscriptionCondition
+    | PermissionCondition
+    | LastActiveCondition
+    | SignedUpCondition
+    | TagCondition;
+
 export async function convertFiltersToDBConditions({
     domain,
     filter,
@@ -15,36 +62,39 @@ export async function convertFiltersToDBConditions({
     membershipModel: typeof mongoose.Model<Membership>;
 }): Promise<
     | {
-          $and: Record<string, unknown>[];
+          $and: DBCondition[];
       }
     | {
-          $or: Record<string, unknown>[];
+          $or: DBCondition[];
       }
     | Record<string, unknown>
 > {
     const { aggregator = "or", filters } = filter;
-    const dbFilters = [];
+    const dbFilters: DBCondition[] = [];
 
     for (const filter of filters) {
         const { name, condition, value } = filter;
         if (name === "email") {
-            const emailCondition: { email: unknown } = { email: undefined };
+            const emailCondition: EmailCondition = { email: "" };
             if (condition === "Is exactly") {
-                emailCondition.email = value;
+                emailCondition.email = value as string;
             }
             if (condition === "Contains") {
-                emailCondition.email = { $regex: value, $options: "i" };
+                emailCondition.email = {
+                    $regex: value as string,
+                    $options: "i",
+                };
             }
             if (condition === "Does not contain") {
                 emailCondition.email = {
-                    $not: { $regex: value, $options: "i" },
+                    $not: { $regex: value as string, $options: "i" },
                 };
             }
             dbFilters.push(emailCondition);
         }
         if (name === "product") {
-            const productCondition: { userId: unknown } = {
-                userId: undefined,
+            const productCondition: ProductCondition = {
+                userId: { $in: [] },
             };
             const memberships = await membershipModel.find(
                 {
@@ -69,8 +119,8 @@ export async function convertFiltersToDBConditions({
             dbFilters.push(productCondition);
         }
         if (name === "community") {
-            const productCondition: { userId: unknown } = {
-                userId: undefined,
+            const productCondition: ProductCondition = {
+                userId: { $in: [] },
             };
             const memberships = await membershipModel.find(
                 {
@@ -95,8 +145,8 @@ export async function convertFiltersToDBConditions({
             dbFilters.push(productCondition);
         }
         if (name === "subscription") {
-            const subscriptionCondition: { subscribedToUpdates: unknown } = {
-                subscribedToUpdates: undefined,
+            const subscriptionCondition: SubscriptionCondition = {
+                subscribedToUpdates: false,
             };
             if (condition === "Subscribed") {
                 subscriptionCondition.subscribedToUpdates = true;
@@ -107,22 +157,22 @@ export async function convertFiltersToDBConditions({
             dbFilters.push(subscriptionCondition);
         }
         if (name === "permission") {
-            const permissionCondition: { permissions: unknown } = {
-                permissions: undefined,
+            const permissionCondition: PermissionCondition = {
+                permissions: { $in: [] },
             };
             if (condition === "Has") {
-                permissionCondition.permissions = { $in: [value] };
+                permissionCondition.permissions = { $in: [value as string] };
             }
             if (condition === "Does not have") {
-                permissionCondition.permissions = { $nin: [value] };
+                permissionCondition.permissions = { $nin: [value as string] };
             }
             dbFilters.push(permissionCondition);
         }
         if (name === "lastActive") {
-            const lastActiveCondition: { updatedAt: unknown } = {
-                updatedAt: undefined,
+            const lastActiveCondition: LastActiveCondition = {
+                updatedAt: {},
             };
-            const dateWithoutTime = new Date(value);
+            const dateWithoutTime = new Date(value as string);
             dateWithoutTime.setUTCHours(0, 0, 0, 0);
             if (condition === "On") {
                 const nextDateWithoutTime = new Date(
@@ -142,10 +192,10 @@ export async function convertFiltersToDBConditions({
             dbFilters.push(lastActiveCondition);
         }
         if (name === "signedUp") {
-            const signedUpCondition: { createdAt: unknown } = {
-                createdAt: undefined,
+            const signedUpCondition: SignedUpCondition = {
+                createdAt: {},
             };
-            const dateWithoutTime = new Date(value);
+            const dateWithoutTime = new Date(value as string);
             dateWithoutTime.setUTCHours(0, 0, 0, 0);
             if (condition === "On") {
                 const nextDateWithoutTime = new Date(
@@ -165,13 +215,13 @@ export async function convertFiltersToDBConditions({
             dbFilters.push(signedUpCondition);
         }
         if (name === "tag") {
-            const tagCondition: { tags: unknown } = { tags: undefined };
+            const tagCondition: TagCondition = { tags: "" };
             if (condition === "Has") {
-                tagCondition.tags = value;
+                tagCondition.tags = value as string;
             }
             if (condition === "Does not have") {
                 tagCondition.tags = {
-                    $not: { $regex: value },
+                    $not: { $regex: value as string },
                 };
             }
             dbFilters.push(tagCondition);

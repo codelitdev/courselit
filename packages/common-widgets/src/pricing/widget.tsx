@@ -46,7 +46,7 @@ export default function Widget({
         monthlyPriceCaption,
         yearlyPriceCaption,
     },
-}: WidgetProps<Settings>) {
+}: WidgetProps<Settings>): JSX.Element {
     const [pricing, setPricing] = useState<"monthly" | "yearly">("yearly");
 
     return (

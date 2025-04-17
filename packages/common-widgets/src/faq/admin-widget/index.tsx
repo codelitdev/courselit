@@ -44,7 +44,7 @@ export default function AdminWidget({
     address,
     hideActionButtons,
     preservedStateAcrossRerender,
-}: AdminWidgetProps) {
+}: AdminWidgetProps): JSX.Element {
     const dummyDescription: Record<string, unknown> = {
         type: "doc",
         content: [

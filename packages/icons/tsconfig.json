@@ -3,8 +3,13 @@
     "exclude": ["dist", "build", "node_modules"],
     "compilerOptions": {
         "outDir": "./dist",
-        "lib": ["dom"],
-        "strict": false
+        "lib": ["dom", "es2015"],
+        "strict": true,
+        "jsx": "react-jsx",
+        "module": "esnext",
+        "moduleResolution": "node",
+        "target": "es2015",
+        "skipLibCheck": true
     },
     "include": ["src/**/*"]
 }

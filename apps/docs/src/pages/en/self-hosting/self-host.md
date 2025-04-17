@@ -111,13 +111,14 @@ To self host, follow the following steps.
 
 4.  Restart the services once to generate a user and an API key in MediaLit database. The API key
     will be printed to the docker compose logs. The relevant logs will look something like the following.
-    `sh
+
+    ```sh
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @     API key: testcktI8Sa71QUgYtest      @
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    `
+    ```
 
-        Copy the API key.
+    Copy the API key.
 
 5.  Update the `MEDIALIT_APIKEY` value in `.env` file and restart the service once again.
 

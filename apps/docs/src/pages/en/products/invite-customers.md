@@ -6,8 +6,8 @@ layout: ../../../layouts/MainLayout.astro
 
 You can invite customers to your published products. This comes in handy in certain situations, such as:
 
--   You collect the payments manually (or outside of CourseLit) and want to add customers manually afterward.
--   You want to gift a product to a customer.
+- You collect the payments manually (or outside of CourseLit) and want to add customers manually afterward.
+- You want to gift a product to a customer.
 
 ## Invite a customer
 

@@ -36,9 +36,9 @@ Once you are signed in using an admin account, go to the dashboard by clicking o
 
 If you are creating a paid community, you can set up various pricing plans:
 
--   **Yearly**: Set a yearly subscription fee.
--   **Monthly**: Set a monthly subscription fee.
--   **One Time**: Offer a one-time payment option.
+- **Yearly**: Set a yearly subscription fee.
+- **Monthly**: Set a monthly subscription fee.
+- **One Time**: Offer a one-time payment option.
 
 ### Step 6: Save and Create
 
@@ -49,9 +49,9 @@ If you are creating a paid community, you can set up various pricing plans:
 
 Once your community is created, you can:
 
--   **Add Members**: Invite or accept new members.
--   **Share Content**: Post updates, announcements, and multimedia content.
--   **Monitor Activity**: Keep track of member interactions and reported content.
+- **Add Members**: Invite or accept new members.
+- **Share Content**: Post updates, announcements, and multimedia content.
+- **Monitor Activity**: Keep track of member interactions and reported content.
 
 ## Stuck somewhere?
 

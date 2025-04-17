@@ -8,9 +8,9 @@ Receiving payments is effortless in CourseLit, and you get to keep 100% of what 
 
 CourseLit offers integrations with the following payment platforms:
 
--   [Stripe](https://stripe.com)
--   [Razorpay](https://razorpay.com)
--   [Lemonsqueezy](https://lemonsqueezy.com) (Experimental)
+- [Stripe](https://stripe.com)
+- [Razorpay](https://razorpay.com)
+- [Lemonsqueezy](https://lemonsqueezy.com) (Experimental)
 
 > A school can only have a single payment platform activated at a time.
 

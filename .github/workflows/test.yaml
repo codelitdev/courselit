@@ -9,18 +9,20 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: '23.x'
-    - run: npm install -g yarn@2
-    - run: yarn install
+    - uses: pnpm/action-setup@v2
+      with:
+        version: 8
+    - run: pnpm install
     - name: Build packages
       run: |
-          yarn workspace @courselit/icons build
-          yarn workspace @courselit/common-models build
-          yarn workspace @courselit/utils build
-          yarn workspace @courselit/text-editor build
-          yarn workspace @courselit/state-management build
-          yarn workspace @courselit/components-library build
-          yarn workspace @courselit/common-widgets build
+          pnpm --filter @courselit/icons build
+          pnpm --filter @courselit/common-models build
+          pnpm --filter @courselit/utils build
+          pnpm --filter @courselit/text-editor build
+          pnpm --filter @courselit/state-management build
+          pnpm --filter @courselit/components-library build
+          pnpm --filter @courselit/common-widgets build
     - name: Running tests
       run: |
-        yarn test
+        pnpm test
       working-directory: ./

@@ -38,7 +38,7 @@ export default function AdminWidget({
     onChange,
     profile,
     address,
-}: AdminWidgetProps) {
+}: AdminWidgetProps): JSX.Element {
     const [mediaBorderRadius, setMediaBorderRadius] = useState(
         settings.mediaRadius || 2,
     );

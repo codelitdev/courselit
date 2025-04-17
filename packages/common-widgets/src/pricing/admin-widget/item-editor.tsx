@@ -28,7 +28,7 @@ export default function ItemEditor({
     onDelete,
     address,
     pricingSwitcherEnabled = false,
-}: ItemProps) {
+}: ItemProps): JSX.Element {
     const [title, setTitle] = useState(item.title);
     const [description, setDescription] = useState(item.description);
     const [price, setPrice] = useState(item.price);

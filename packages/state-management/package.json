@@ -24,7 +24,7 @@
         "test": "echo \"Error: run tests from root\" && exit 1",
         "build": "tsc",
         "clean": "rimraf dist/",
-        "prepublishOnly": "yarn run build"
+        "prepublishOnly": "pnpm run build"
     },
     "bugs": {
         "url": "https://github.com/codelitdev/courselit/issues"
@@ -41,6 +41,7 @@
     "devDependencies": {
         "@typescript-eslint/eslint-plugin": "^5.18.0",
         "@typescript-eslint/parser": "^5.18.0",
+        "tsconfig": "workspace:^",
         "eslint": "^8.12.0",
         "rimraf": "^4.1.1",
         "typescript": "^4.6.3"

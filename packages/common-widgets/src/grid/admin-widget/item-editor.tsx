@@ -34,7 +34,7 @@ export default function ItemEditor({
     onDelete,
     address,
     profile,
-}: ItemProps) {
+}: ItemProps): JSX.Element {
     const [title, setTitle] = useState(item.title);
     const [description, setDescription] = useState(item.description);
     const [buttonCaption, setButtonCaption] = useState(item.buttonCaption);

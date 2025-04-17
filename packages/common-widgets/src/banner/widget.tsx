@@ -53,7 +53,7 @@ export default function Widget({
     pageData: product,
     dispatch,
     editing,
-}: WidgetProps<Settings>) {
+}: WidgetProps<Settings>): JSX.Element {
     const [email, setEmail] = useState("");
     const [success, setSuccess] = useState(false);
     const { toast } = useToast();
@@ -160,6 +160,13 @@ export default function Widget({
         product.paymentPlans.length === 1 &&
         product.paymentPlans[0].type === Constants.PaymentPlanType.FREE;
 
+    const titleText: string = (title ||
+        (type === Constants.PageType.SITE
+            ? state.siteinfo.title
+            : type === Constants.PageType.PRODUCT
+              ? product.title
+              : product.name)) as string;
+
     return (
         <section
             style={{
@@ -223,14 +230,7 @@ export default function Widget({
                                 </div>
                             )}
                         <div className="pb-1">
-                            <h1 className="text-4xl mb-4">
-                                {title ||
-                                    (type === Constants.PageType.SITE
-                                        ? state.siteinfo.title
-                                        : type === Constants.PageType.PRODUCT
-                                          ? product.title
-                                          : product.name)}
-                            </h1>
+                            <h1 className="text-4xl mb-4">{titleText}</h1>
                         </div>
                         {finalDescription && (
                             <div
@@ -327,8 +327,10 @@ export default function Widget({
                         {type === Constants.PageType.COMMUNITY && (
                             <div className="flex flex-col gap-4">
                                 <span className="text-sm flex items-center gap-1 font-semibold">
-                                    <Users className="w-4 h-4" />{" "}
-                                    {product.membersCount} members
+                                    <>
+                                        <Users className="w-4 h-4" />{" "}
+                                        {product.membersCount} members
+                                    </>
                                 </span>
                                 <Link
                                     href={`/checkout?type=community&id=${product.communityId}`}

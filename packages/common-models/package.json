@@ -24,7 +24,7 @@
         "test": "echo \"Error: run tests from root\" && exit 1",
         "build": "tsc",
         "clean": "rimraf dist/",
-        "prepublishOnly": "yarn run build"
+        "prepublishOnly": "pnpm run build"
     },
     "bugs": {
         "url": "https://github.com/codelitdev/courselit/issues"

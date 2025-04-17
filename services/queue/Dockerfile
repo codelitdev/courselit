@@ -1,46 +1,39 @@
-FROM node:22-alpine AS builder
+FROM node:22-alpine AS base
+
+# Install pnpm in base image
+RUN corepack enable pnpm
+
+FROM base AS builder
 WORKDIR /app
 
-# copy yarn specific files
-COPY package.json /app/package.json
-COPY .yarn /app/.yarn
-COPY yarn.lock /app/yarn.lock
-COPY .yarnrc.yml /app/.yarnrc.yml
+# copy pnpm specific files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # copy project related files
-COPY packages/tsconfig /app/packages/tsconfig
-COPY packages/common-models /app/packages/common-models
-COPY packages/common-logic /app/packages/common-logic
-COPY packages/utils /app/packages/utils
-COPY apps/queue /app/apps/queue
+COPY packages/tsconfig ./packages/tsconfig
+COPY packages/common-models ./packages/common-models
+COPY packages/common-logic ./packages/common-logic
+COPY packages/utils ./packages/utils
+COPY apps/queue ./apps/queue
 
-RUN cd /app && echo 'Yarn version in builder' && yarn --version
-
-# Build all workspaces
-RUN yarn rebuild
-RUN yarn build
+# Install dependencies and build
+RUN pnpm install
+RUN pnpm build
 
 # Production image
-FROM node:22-alpine AS runner
+FROM base AS runner
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 WORKDIR /app
 
-# copy yarn specific files
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/.yarn ./.yarn
-COPY --from=builder /app/yarn.lock ./yarn.lock
-COPY --from=builder /app/.yarnrc.yml ./.yarnrc.yml
-
-# copy project related files
-COPY --from=builder /app/packages/common-models/package.json ./packages/common-models/package.json
-COPY --from=builder /app/packages/common-models/dist ./packages/common-models/dist
-COPY --from=builder /app/packages/common-logic/package.json ./packages/common-logic/package.json
-COPY --from=builder /app/packages/common-logic/dist ./packages/common-logic/dist
-COPY --from=builder /app/packages/utils/package.json ./packages/utils/package.json
-COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
+# Copy all necessary files
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/pnpm-lock.yaml ./
+COPY --from=builder /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/apps/queue ./apps/queue
 
-RUN yarn workspaces focus --all --production 
+# Install production dependencies
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
-CMD [ "yarn", "workspace", "@courselit/queue", "start" ]
+CMD ["pnpm", "--filter", "@courselit/queue", "start"]

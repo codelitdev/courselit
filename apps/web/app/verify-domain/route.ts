@@ -33,6 +33,8 @@ const getDomain = async (hostName: string): Promise<Domain | null> => {
     return getDomainBasedOnSubdomain(subdomain);
 };
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
     const headerList = headers();
     let domain: Domain | null;

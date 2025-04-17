@@ -3,7 +3,16 @@
     "exclude": ["dist", "build", "node_modules"],
     "compilerOptions": {
         "outDir": "./dist",
-        "lib": ["dom"],
+        "lib": [
+            "dom",
+            "es2015",
+            "es2016",
+            "es2017",
+            "es2018",
+            "es2019",
+            "es2020",
+            "esnext"
+        ],
         "strict": false,
         "experimentalDecorators": false,
         "paths": {

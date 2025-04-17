@@ -8,8 +8,8 @@ import {
     MenuItem2,
 } from "@courselit/components-library";
 import { Person } from "@courselit/icons";
-import { State } from "@courselit/common-models";
-import { MobileNav } from "./mobile-nav";
+import { WidgetProps } from "@courselit/common-models";
+import MobileNav from "./mobile-nav";
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
@@ -18,12 +18,7 @@ import {
     linkFontWeight as defaultLinkFontWeight,
 } from "../defaults";
 
-interface WidgetProps {
-    settings: Settings;
-    state: State;
-}
-
-export default function Widget({ state, settings }: WidgetProps) {
+export default function Widget({ state, settings }: WidgetProps<Settings>) {
     const { verticalPadding, horizontalPadding } = settings;
     const linkClasses = "flex w-full";
     const linkAlignment = settings.linkAlignment || defaultLinkAlignment;

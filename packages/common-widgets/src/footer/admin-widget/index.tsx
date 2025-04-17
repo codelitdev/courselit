@@ -36,7 +36,10 @@ export interface AdminWidgetProps {
     settings: Settings;
 }
 
-export default function AdminWidget({ settings, onChange }: AdminWidgetProps) {
+export default function AdminWidget({
+    settings,
+    onChange,
+}: AdminWidgetProps): JSX.Element {
     const [sections, setSections] = useState<Section[]>(
         settings.sections || [
             {

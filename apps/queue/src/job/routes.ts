@@ -6,7 +6,7 @@ import NotificationModel from "../domain/model/notification";
 import { ObjectId } from "mongodb";
 import { User } from "@courselit/common-models";
 
-const router = express.Router();
+const router: any = express.Router();
 
 router.post("/mail", async (req: express.Request, res: express.Response) => {
     try {
@@ -35,6 +35,7 @@ router.post(
                 req.body;
 
             for (const forUserId of forUserIds) {
+                // @ts-ignore - Mongoose type compatibility issue
                 const notification = await NotificationModel.create({
                     domain: new ObjectId(user.domain),
                     userId: user.userId,

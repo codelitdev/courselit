@@ -15,7 +15,7 @@ export default function TextRenderer({
     let headings;
 
     try {
-        headings = json && extractHeadings(json);
+        headings = json && extractHeadings(json as any);
     } catch (err) {
         console.error("Error extracting headings", err); // eslint-disable-line no-console
     }

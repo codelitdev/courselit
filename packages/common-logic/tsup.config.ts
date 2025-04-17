@@ -9,5 +9,10 @@ export default defineConfig((options: Options) => ({
     minify: true,
     clean: true,
     external: ["mongoose"],
+    esbuildOptions(options) {
+        options.target = "es2017";
+        options.platform = "node";
+        return options;
+    },
     ...options,
 }));

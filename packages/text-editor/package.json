@@ -30,7 +30,7 @@
         "test": "echo \"Error: run tests from root\" && exit 1",
         "build": "tsc",
         "clean": "rimraf dist/",
-        "prepublishOnly": "yarn run build"
+        "prepublishOnly": "pnpm run build"
     },
     "bugs": {
         "url": "https://github.com/codelitdev/courselit/issues"
@@ -44,6 +44,8 @@
         "@codemirror/theme-one-dark": "^6.1.2",
         "@courselit/common-models": "workspace:^",
         "@courselit/utils": "workspace:^",
+        "@remirror/core": "^3.0.1",
+        "@remirror/core-types": "^3.0.0",
         "@remirror/extension-codemirror6": "^2.0.1",
         "@remirror/extension-react-tables": "^3.0.1",
         "@remirror/pm": "^3.0.0",
@@ -51,6 +53,7 @@
         "@remirror/react-editors": "^2.0.1",
         "@remirror/react-ui": "^1.0.1",
         "codemirror": "^6.0.1",
+        "prosemirror-model": "^1.22.3",
         "remirror": "^3.0.1"
     },
     "devDependencies": {

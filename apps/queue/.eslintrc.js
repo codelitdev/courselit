@@ -8,4 +8,7 @@ module.exports = {
         "prettier",
     ],
     ignorePatterns: ["dist/**/*.js"],
+    rules: {
+        "@typescript-eslint/ban-ts-comment": "off",
+    },
 };
