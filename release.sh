@@ -32,6 +32,9 @@ fi
 # VERSION=$(grep -m1 '"version":' apps/web/package.json | cut -d'"' -f4)
 VERSION=$1
 
+# Update version in apps/web/package.json
+jq --arg version "$VERSION" '.version = $version' apps/web/package.json > tmp.json && mv tmp.json apps/web/package.json
+
 # commit, tag and push
 git add . 
 git commit -m v$VERSION
