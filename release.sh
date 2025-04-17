@@ -17,14 +17,14 @@ git checkout main
 # Update versions in apps
 for dir in apps/*/; do
     cd "$dir" || exit
-    pnpm version "$1" --no-git-tag-version
+    pnpm version "$1" --no-git-tag-version --yes
     cd - > /dev/null || exit
 done
 
 # Update versions in packages
 for dir in packages/*/; do
     cd "$dir" || exit
-    pnpm version "$1" --no-git-tag-version
+    pnpm version "$1" --no-git-tag-version --yes
     cd - > /dev/null || exit
 done
 
