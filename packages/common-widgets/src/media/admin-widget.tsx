@@ -13,11 +13,16 @@ import {
     PageBuilderPropertyHeader,
     PageBuilderSlider,
     CssIdField,
+    Checkbox,
+    AspectRatio,
+    ImageObjectFit,
+    Select,
 } from "@courselit/components-library";
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
 } from "./defaults";
+import { isVideo } from "@courselit/utils";
 
 interface AdminWidgetProps {
     name: string;
@@ -49,6 +54,15 @@ export default function AdminWidget({
         settings.verticalPadding || defaultVerticalPadding,
     );
     const [cssId, setCssId] = useState(settings.cssId);
+    const [playVideoInModal, setPlayVideoInModal] = useState(
+        settings.playVideoInModal || false,
+    );
+    const [aspectRatio, setAspectRatio] = useState<AspectRatio>(
+        settings.aspectRatio || "16/9",
+    );
+    const [objectFit, setObjectFit] = useState<ImageObjectFit>(
+        settings.objectFit || "cover",
+    );
 
     const onSettingsChanged = () =>
         onChange({
@@ -59,6 +73,9 @@ export default function AdminWidget({
             horizontalPadding,
             verticalPadding,
             cssId,
+            playVideoInModal,
+            aspectRatio,
+            objectFit,
         });
 
     useEffect(() => {
@@ -71,6 +88,9 @@ export default function AdminWidget({
         horizontalPadding,
         verticalPadding,
         cssId,
+        playVideoInModal,
+        aspectRatio,
+        objectFit,
     ]);
 
     return (
@@ -78,8 +98,8 @@ export default function AdminWidget({
             <AdminWidgetPanel title="Media">
                 <Form>
                     <FormField
-                        label="YouTube Video Link"
-                        placeholder="Just enter the video id after ?v= in the URL"
+                        label="YouTube/Vimeo Link"
+                        placeholder="Enter the link to the video"
                         value={youtubeLink}
                         onChange={(e) => setYoutubeLink(e.target.value)}
                     />
@@ -107,6 +127,51 @@ export default function AdminWidget({
                     mediaId={media && media.mediaId}
                     type="page"
                 />
+                {isVideo(youtubeLink, media) ? (
+                    <div className="flex flex-col gap-2">
+                        <div className="flex justify-between mt-2">
+                            <div className="flex grow items-center gap-1">
+                                <p>Play video in a pop-up</p>
+                            </div>
+                            <Checkbox
+                                checked={playVideoInModal}
+                                onChange={(value: boolean) =>
+                                    setPlayVideoInModal(value)
+                                }
+                            />
+                        </div>
+                        <Select
+                            title="Aspect ratio"
+                            value={aspectRatio}
+                            options={[
+                                { label: "16/9", value: "16/9" },
+                                { label: "4/3", value: "4/3" },
+                                { label: "1/1", value: "1/1" },
+                                { label: "9/16", value: "9/16" },
+                            ]}
+                            onChange={(value: AspectRatio) =>
+                                setAspectRatio(value)
+                            }
+                        />
+                    </div>
+                ) : (
+                    <div>
+                        <Select
+                            title="Object fit"
+                            value={objectFit}
+                            options={[
+                                { label: "Cover", value: "cover" },
+                                { label: "Contain", value: "contain" },
+                                { label: "Fill", value: "fill" },
+                                { label: "None", value: "none" },
+                                { label: "Scale-down", value: "scale-down" },
+                            ]}
+                            onChange={(value: ImageObjectFit) =>
+                                setObjectFit(value)
+                            }
+                        />
+                    </div>
+                )}
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Design">
                 <ColorSelector

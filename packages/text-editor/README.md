@@ -7,7 +7,7 @@ This is a rich text editor, based on [Remirror](https://remirror.io).
 To install this package, use the following command.
 
 ```sh
-yarn install @courselit/text-editor
+npm install @courselit/text-editor
 ```
 
 > You need to install [remirror](https://www.npmjs.com/package/remirror) package in your application and import Remirror's CSS file in your application using the following command `import 'remirror/styles/all.css'`.

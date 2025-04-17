@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Course, SiteInfo } from "@courselit/common-models";
 import { getPlanPrice, truncate } from "@courselit/utils";
 import getSymbolFromCurrency from "currency-symbol-map";
-import Image from "./image";
+import { Image } from "./image";
 import {
     ContentCard,
     ContentCardHeader,
@@ -25,7 +25,7 @@ export function ProductCard({
     return (
         <ContentCard href={`/p/${product.pageId}`}>
             <ContentCardImage
-                src={product.featuredImage?.thumbnail}
+                src={product.featuredImage?.file}
                 alt={product.title}
             />
             <ContentCardContent>
@@ -36,7 +36,7 @@ export function ProductCard({
                             src={product.user?.avatar?.thumbnail}
                             alt={product.user?.name || "User Avatar"}
                             loading="lazy"
-                            className="!aspect-square"
+                            className="!aspect-square rounded-full"
                             width="w-6"
                             height="h-6"
                         />

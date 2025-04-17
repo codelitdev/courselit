@@ -202,7 +202,10 @@ export const sortCourseGroups = (course: Course) => {
     return course.groups.sort((a: Group, b: Group) => a.rank - b.rank);
 };
 
-export function truncate(str: string, length: number) {
+export function truncate(str?: string, length?: number) {
+    if (!str || !length) {
+        return "";
+    }
     return str.length <= length ? str : `${str.substring(0, length)}...`;
 }
 

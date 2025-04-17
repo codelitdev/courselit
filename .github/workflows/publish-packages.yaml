@@ -25,30 +25,34 @@ jobs:
           LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
           git checkout $LATEST_TAG
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
       - name: Install Packages
-        run: yarn install
+        run: pnpm install
 
       - name: Authenticate with Registry
         run: |
-          yarn npm logout
-          echo "npmAuthToken: $NPM_TOKEN" >> .yarnrc.yml
-          yarn npm whoami
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
+          pnpm whoami
         env:
           NPM_TOKEN: ${{ secrets.NPM }}
 
       - name: Build packages
         run: |
-          yarn workspace @courselit/icons build
-          yarn workspace @courselit/common-models build
-          yarn workspace @courselit/utils build
-          yarn workspace @courselit/text-editor build
-          yarn workspace @courselit/state-management build
-          yarn workspace @courselit/components-library build
-          yarn workspace @courselit/common-widgets build
+          pnpm --filter @courselit/icons build
+          pnpm --filter @courselit/common-models build
+          pnpm --filter @courselit/utils build
+          pnpm --filter @courselit/text-editor build
+          pnpm --filter @courselit/state-management build
+          pnpm --filter @courselit/components-library build
+          pnpm --filter @courselit/common-widgets build
 
       - name: Publish package
         run: |
-          yarn publish
+          pnpm publish
         env:
           GH_TOKEN: ${{ secrets.PAT }}
           GITHUB_TOKEN: ${{ secrets.PAT }}
@@ -81,12 +85,6 @@ jobs:
         with:
           images: codelit/courselit-app
 
-      - name: Docker meta for the proxy
-        id: metaproxy
-        uses: docker/metadata-action@v3
-        with:
-          images: codelit/courselit-proxy
-
       - name: Docker meta for the queue 
         id: metaqueue
         uses: docker/metadata-action@v3
@@ -104,18 +102,6 @@ jobs:
 
       - name: Image digest
         run: echo ${{ steps.docker_build_app.outputs.digest }}
-
-      - name: Build and push proxy
-        id: docker_build_proxy
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./services/proxy/Dockerfile
-          push: true
-          tags: ${{ steps.metaproxy.outputs.tags }}
-
-      - name: Image digest
-        run: echo ${{ steps.docker_build_proxy.outputs.digest }}
 
       - name: Build and push queue 
         id: docker_build_queue

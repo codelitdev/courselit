@@ -451,6 +451,7 @@ export default function PageEditor({
                 onDelete={deleteWidget}
                 state={state as AppState}
                 dispatch={dispatch || (() => {})}
+                key={selectedWidget}
             />
         ),
         [selectedWidget],

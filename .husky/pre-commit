@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
 . "$(dirname "$0")/_/husky.sh"
 
-yarn dlx lint-staged
+pnpm exec lint-staged
+pnpm test

@@ -24,13 +24,15 @@ import {
     PageBuilderSlider,
     PageBuilderPropertyHeader,
     CssIdField,
+    AspectRatio,
+    ImageObjectFit,
+    Checkbox,
 } from "@courselit/components-library";
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
-    mediaAspectRatio as defaultMediaAspectRatio,
 } from "./defaults";
-import { MediaAspectRatio } from "./types";
+import { isVideo } from "@courselit/utils";
 
 interface AdminWidgetProps {
     name: string;
@@ -67,9 +69,8 @@ export default function AdminWidget({
     );
     const [buttonAction, setButtonAction] = useState(settings.buttonAction);
     const [buttonCaption, setButtonCaption] = useState(settings.buttonCaption);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [mediaBorderRadius, setMediaBorderRadius] = useState(
-        settings.mediaRadius,
+        settings.mediaRadius || 2,
     );
     const [youtubeLink, setYoutubeLink] = useState(settings.youtubeLink);
     const [alignment, setAlignment] = useState(settings.alignment || "left");
@@ -114,10 +115,16 @@ export default function AdminWidget({
     const [contentAlignment, setContentAlignment] = useState<Alignment>(
         settings.contentAlignment || "center",
     );
-    const [mediaAspectRatio, setMediaAspectRatio] = useState<MediaAspectRatio>(
-        settings.mediaAspectRatio || defaultMediaAspectRatio,
-    );
     const [cssId, setCssId] = useState(settings.cssId);
+    const [playVideoInModal, setPlayVideoInModal] = useState(
+        settings.playVideoInModal || false,
+    );
+    const [aspectRatio, setAspectRatio] = useState<AspectRatio>(
+        settings.aspectRatio || "16/9",
+    );
+    const [objectFit, setObjectFit] = useState<ImageObjectFit>(
+        settings.objectFit || "cover",
+    );
 
     const onSettingsChanged = () =>
         onChange({
@@ -127,7 +134,6 @@ export default function AdminWidget({
             buttonCaption,
             youtubeLink,
             media,
-            mediaAspectRatio,
             alignment,
             backgroundColor,
             foregroundColor,
@@ -145,6 +151,9 @@ export default function AdminWidget({
             descriptionFontSize,
             contentAlignment,
             cssId,
+            playVideoInModal,
+            aspectRatio,
+            objectFit,
         });
 
     useEffect(() => {
@@ -162,7 +171,6 @@ export default function AdminWidget({
         buttonBackground,
         buttonForeground,
         media,
-        mediaAspectRatio,
         mediaBorderRadius,
         horizontalPadding,
         verticalPadding,
@@ -174,6 +182,9 @@ export default function AdminWidget({
         descriptionFontSize,
         contentAlignment,
         cssId,
+        playVideoInModal,
+        aspectRatio,
+        objectFit,
     ]);
 
     return (
@@ -199,8 +210,8 @@ export default function AdminWidget({
             <AdminWidgetPanel title="Media">
                 <Form>
                     <FormField
-                        label="YouTube Video Link"
-                        placeholder="Just enter the video id after ?v= in the URL"
+                        label="YouTube/Vimeo Link"
+                        placeholder="Enter the link to the video"
                         value={youtubeLink}
                         onChange={(e) => setYoutubeLink(e.target.value)}
                     />
@@ -228,7 +239,52 @@ export default function AdminWidget({
                     mediaId={media && media.mediaId}
                     type="page"
                 />
-                {media && media.mediaId && (
+                {isVideo(youtubeLink, media) ? (
+                    <div className="flex flex-col gap-2">
+                        <div className="flex justify-between mt-2">
+                            <div className="flex grow items-center gap-1">
+                                <p>Play video in a pop-up</p>
+                            </div>
+                            <Checkbox
+                                checked={playVideoInModal}
+                                onChange={(value: boolean) =>
+                                    setPlayVideoInModal(value)
+                                }
+                            />
+                        </div>
+                        <Select
+                            title="Aspect ratio"
+                            value={aspectRatio}
+                            options={[
+                                { label: "16/9", value: "16/9" },
+                                { label: "4/3", value: "4/3" },
+                                { label: "1/1", value: "1/1" },
+                                { label: "9/16", value: "9/16" },
+                            ]}
+                            onChange={(value: AspectRatio) =>
+                                setAspectRatio(value)
+                            }
+                        />
+                    </div>
+                ) : (
+                    <div>
+                        <Select
+                            title="Object fit"
+                            value={objectFit}
+                            options={[
+                                { label: "Cover", value: "cover" },
+                                { label: "Contain", value: "contain" },
+                                { label: "Fill", value: "fill" },
+                                { label: "None", value: "none" },
+                                { label: "Scale-down", value: "scale-down" },
+                            ]}
+                            onChange={(value: ImageObjectFit) =>
+                                setObjectFit(value)
+                            }
+                        />
+                    </div>
+                )}
+                {/* {media && media.mediaId && (
                     <Select
                         title="Media aspect ratio"
                         value={mediaAspectRatio}
@@ -244,7 +300,7 @@ export default function AdminWidget({
                             setMediaAspectRatio(value)
                         }
                     />
-                )}
+                )} */}
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Calls to action">
                 <Accordion type="single" collapsible>
@@ -383,6 +439,13 @@ export default function AdminWidget({
                     max={6}
                     value={descriptionFontSize}
                     onChange={setDescriptionFontSize}
+                />
+                <PageBuilderSlider
+                    title="Media border radius"
+                    value={mediaBorderRadius}
+                    min={0}
+                    max={8}
+                    onChange={setMediaBorderRadius}
                 />
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Advanced">

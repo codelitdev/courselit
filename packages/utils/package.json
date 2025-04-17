@@ -1,6 +1,6 @@
 {
     "name": "@courselit/utils",
-    "version": "0.57.3",
+    "version": "0.57.10",
     "description": "Utilities for CourseLit",
     "author": "Team CourseLit <hi@codelit.dev>",
     "homepage": "https://github.com/codelitdev/courselit#readme",
@@ -22,7 +22,7 @@
     "scripts": {
         "test": "echo \"Error: run tests from root\" && exit 1",
         "clean": "rimraf dist/",
-        "prepublishOnly": "yarn run build",
+        "prepublishOnly": "pnpm run build",
         "build": "tsup",
         "tsc:build": "tsc",
         "dev": "tsup --watch",

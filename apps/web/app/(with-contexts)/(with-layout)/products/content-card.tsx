@@ -8,7 +8,7 @@ import { SiteInfoContext } from "@components/contexts";
 import { Badge } from "@components/ui/badge";
 import { truncate } from "@ui-lib/utils";
 
-export function ContentCard({ product }: { product: Course }) {
+export function ProductContentCard({ product }: { product: Course }) {
     const siteinfo = useContext(SiteInfoContext);
     const defaultPlan = product.paymentPlans?.filter(
         (plan) => plan.planId === product.defaultPaymentPlan,
@@ -21,7 +21,7 @@ export function ContentCard({ product }: { product: Course }) {
                 <div className="relative aspect-video">
                     <Image
                         src={
-                            product.featuredImage?.thumbnail ||
+                            product.featuredImage?.file ||
                             "/courselit_backdrop_square.webp"
                         }
                         alt={product.title}

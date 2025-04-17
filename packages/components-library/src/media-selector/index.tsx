@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, useEffect, useState } from "react";
-import Image from "../image";
+import { Image } from "../image";
 import { Address, Media, Profile } from "@courselit/common-models";
 import Access from "./access";
 import Dialog2 from "../dialog2";
@@ -9,7 +9,7 @@ import { FetchBuilder } from "@courselit/utils";
 import Form from "../form";
 import FormField from "../form-field";
 import React from "react";
-import { Button2, PageBuilderPropertyHeader, Tooltip } from "..";
+import { Button2, PageBuilderPropertyHeader, Tooltip, useToast } from "..";
 import { X } from "lucide-react";
 
 interface Strings {
@@ -73,6 +73,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
     const fileInput: React.RefObject<HTMLInputElement> = React.createRef();
     const [selectedFile, setSelectedFile] = useState();
     const [caption, setCaption] = useState("");
+    const { toast } = useToast();
     const {
         strings,
         address,
@@ -81,7 +82,13 @@ const MediaSelector = (props: MediaSelectorProps) => {
         srcTitle,
         tooltip,
         disabled = false,
-        onError,
+        onError = (err: Error) => {
+            toast({
+                title: "Error",
+                description: `Media upload: ${err.message}`,
+                variant: "destructive",
+            });
+        },
     } = props;
 
     const onSelection = (media: Media) => {
@@ -146,7 +153,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
             const media = await uploadToServer(presignedUrl);
             onSelection(media);
         } catch (err: any) {
-            onError && onError(err);
+            onError(err);
         } finally {
             setUploading(false);
             setSelectedFile(undefined);
@@ -173,7 +180,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
                 props.onRemove();
             }
         } catch (err: any) {
-            onError && onError(err);
+            onError(err);
         } finally {
             setUploading(false);
             setDialogOpened(false);

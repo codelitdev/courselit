@@ -119,19 +119,22 @@ export async function processDrip() {
                                 tags: user.tags,
                             },
                         };
-                        const content = await liquidEngine.parseAndRender(
-                            firstGroupWithDripEmailSet.drip.email.content,
-                            templatePayload,
-                        );
-                        await mailQueue.add("mail", {
-                            to: user.email,
-                            subject:
-                                firstGroupWithDripEmailSet.drip.email.subject,
-                            body: content,
-                            from: `${creator?.name || creator?.email} <${
-                                creator?.email
-                            }>`,
-                        });
+                        if (firstGroupWithDripEmailSet.drip?.email?.content) {
+                            const content = await liquidEngine.parseAndRender(
+                                firstGroupWithDripEmailSet.drip.email.content,
+                                templatePayload,
+                            );
+                            await mailQueue.add("mail", {
+                                to: user.email,
+                                subject:
+                                    firstGroupWithDripEmailSet.drip.email
+                                        .subject,
+                                body: content,
+                                from: `${creator?.name || creator?.email} <${
+                                    creator?.email
+                                }>`,
+                            });
+                        }
                     }
                 }
             }

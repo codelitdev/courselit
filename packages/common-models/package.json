@@ -1,6 +1,6 @@
 {
     "name": "@courselit/common-models",
-    "version": "0.57.3",
+    "version": "0.57.10",
     "description": "Models shared between the main app and other packages of CourseLit.",
     "author": "Rajat Saxena <hi@rajatsaxena.dev>",
     "homepage": "https://github.com/codelitdev/courselit#readme",
@@ -24,7 +24,7 @@
         "test": "echo \"Error: run tests from root\" && exit 1",
         "build": "tsc",
         "clean": "rimraf dist/",
-        "prepublishOnly": "yarn run build"
+        "prepublishOnly": "pnpm run build"
     },
     "bugs": {
         "url": "https://github.com/codelitdev/courselit/issues"

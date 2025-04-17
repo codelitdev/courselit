@@ -1,6 +1,6 @@
 {
     "name": "@courselit/common-widgets",
-    "version": "0.57.3",
+    "version": "0.57.10",
     "description": "A collection of common widgets for CourseLit LMS",
     "keywords": [
         "widgets",
@@ -26,7 +26,7 @@
     "scripts": {
         "test": "echo \"Error: run tests from root\" && exit 1",
         "clean": "rimraf dist/",
-        "prepublishOnly": "yarn run build",
+        "prepublishOnly": "pnpm run build",
         "build": "tsup",
         "tsc:build": "tsc",
         "dev": "tsup --watch",

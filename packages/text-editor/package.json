@@ -1,6 +1,6 @@
 {
     "name": "@courselit/text-editor",
-    "version": "0.34.3",
+    "version": "0.34.10",
     "description": "A text editor based on Remirror",
     "keywords": [
         "text editor",
@@ -30,7 +30,7 @@
         "test": "echo \"Error: run tests from root\" && exit 1",
         "build": "tsc",
         "clean": "rimraf dist/",
-        "prepublishOnly": "yarn run build"
+        "prepublishOnly": "pnpm run build"
     },
     "bugs": {
         "url": "https://github.com/codelitdev/courselit/issues"

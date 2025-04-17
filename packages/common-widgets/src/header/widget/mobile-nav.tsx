@@ -1,25 +1,16 @@
 "use client";
 
-import React, { useState, FC } from "react";
+import React, { useState } from "react";
 import {
     Drawer,
     Button2,
     Image,
     Link as AppLink,
 } from "@courselit/components-library";
-import { WidgetProps } from "@courselit/common-models";
 import { Link } from "../settings";
 import { Media } from "@courselit/common-models";
-import WidgetDefaultSettings from "@courselit/common-models/src/widget-default-settings";
-import {
-    PageTypeProduct,
-    PageTypeSite,
-    PageTypeBlog,
-    PageTypeCommunity,
-} from "@courselit/common-models";
 
-interface MobileNavSettings extends WidgetDefaultSettings {
-    type: PageTypeProduct | PageTypeSite | PageTypeBlog | PageTypeCommunity;
+interface MobileNavSettings {
     title: string;
     logo: Partial<Media>;
     color: string;
@@ -33,7 +24,7 @@ interface MobileNavSettings extends WidgetDefaultSettings {
     logoColor: string;
 }
 
-const MobileNav: FC<WidgetProps<MobileNavSettings>> = (props) => {
+const MobileNav = (props: MobileNavSettings) => {
     const [open, setOpen] = useState(false);
 
     return (

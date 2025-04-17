@@ -164,17 +164,6 @@ export default function Widget({
                                         product={course}
                                         siteinfo={state.siteinfo}
                                     />
-                                    // <div
-                                    //     key={course.courseId}
-                                    //     className="basis-full md:basis-[49.5%] lg:basis-[32.6666%] mb-6"
-                                    // >
-                                    //     <CourseItem
-                                    //         course={course}
-                                    //         siteInfo={state.siteinfo}
-                                    //         freeCostCaption={"FREE"}
-                                    //         key={index}
-                                    //     />
-                                    // </div>
                                 ))}
                             </>
                         )}

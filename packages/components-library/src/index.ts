@@ -5,7 +5,6 @@ import "./styles.css";
 import PriceTag from "./pricetag";
 import Section from "./section";
 import CourseItem from "./course-item";
-import Image from "./image";
 import Link from "./link";
 import MediaSelector from "./media-selector";
 import TextEditor, { emptyDoc as TextEditorEmptyDoc } from "./text-editor";
@@ -57,13 +56,14 @@ import getSymbolFromCurrency from "currency-symbol-map";
 export * from "./content-card";
 export * from "./skeleton-card";
 export * from "./product-card";
+export * from "./video-with-preview";
+export * from "./image";
 
 export {
     PriceTag,
     Section,
     // WidgetHelpers,
     CourseItem,
-    Image,
     Select,
     Link,
     MediaSelector,

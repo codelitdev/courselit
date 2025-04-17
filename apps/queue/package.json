@@ -1,6 +1,6 @@
 {
     "name": "@courselit/queue",
-    "version": "0.25.3",
+    "version": "0.25.10",
     "private": true,
     "packageManager": "pnpm@9.14.2",
     "scripts": {

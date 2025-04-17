@@ -14,5 +14,5 @@ docker run -p 6379:6379 -d redis
 3. Start the server
 
 ```sh
-yarn workspace @courselit/queue run dev
+pnpm --filter @courselit/queue dev
 ```

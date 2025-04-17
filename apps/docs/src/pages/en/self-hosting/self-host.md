@@ -84,100 +84,45 @@ docker compose up
 
 If you want to upload media (images, videos etc.) to your school, you need to configure [MediaLit](https://hub.docker.com/r/codelit/medialit). MediaLit powers CourseLit's media management and optimisation. MediaLit offers a Docker image which you can self host.
 
-To self host, paste the following code in your `docker-compose.yml` file, under the existing content.
+To self host, follow the following steps.
 
-```
-medialit:
-  image: codelit/medialit
-  environment:
-    - DB_CONNECTION_STRING=${DB_CONNECTION_STRING_MEDIALIT}
-    - CLOUD_ENDPOINT=${CLOUD_ENDPOINT}
-    - CLOUD_REGION=${CLOUD_REGION}
-    - CLOUD_KEY=${CLOUD_KEY}
-    - CLOUD_SECRET=${CLOUD_SECRET}
-    - CLOUD_BUCKET_NAME=${CLOUD_BUCKET_NAME}
-    - CDN_ENDPOINT=${CDN_ENDPOINT}
-    - TEMP_FILE_DIR_FOR_UPLOADS=${TEMP_FILE_DIR_FOR_UPLOADS}
-    - PORT=8000
-    - EMAIL_HOST=${EMAIL_HOST}
-    - EMAIL_USER=${EMAIL_USER}
-    - EMAIL_PASS=${EMAIL_PASS}
-    - EMAIL_FROM=${EMAIL_FROM}
-    - ENABLE_TRUST_PROXY=${ENABLE_TRUST_PROXY}
-    - CLOUD_PREFIX=${CLOUD_PREFIX}
-  ports:
-    - "8000:8000"
-  container_name: medialit
-  restart: on-failure
-```
+1.  Uncomment the block under the `app` service in `docker-compose.yml` which says the following.
 
-In your `.env` file, paste the following code (under the existing content) and change the values as per your environment.
+    ```
+    # - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
+    # - MEDIALIT_SERVER=http://host.docker.internal:8000
+    ```
 
-```
-# Medialit Server
-DB_CONNECTION_STRING_MEDIALIT=mongodb_connection_string
-CLOUD_ENDPOINT=aws_s3_endpoint
-CLOUD_REGION=aws_s3_region
-CLOUD_KEY=aws_s3_key
-CLOUD_SECRET=aws_s3_secret
-CLOUD_BUCKET_NAME=aws_s3_bucket_name
-CDN_ENDPOINT=aws_s3_cdn_endpoint
-TEMP_FILE_DIR_FOR_UPLOADS=path_to_directory
-PORT=8000
-CLOUD_PREFIX=medialit
-```
+2.  Uncomment the block titled `MediaLit` in `docker-compose.yml`.
 
-Restart the services by running the following commands.
+3.  In your `.env` file, paste the following code (under the existing content) and change the values as per your environment.
 
-```
-docker compose stop
-docker compose up
-```
+    ```
+    # Medialit Server
+    CLOUD_ENDPOINT=aws_s3_endpoint
+    CLOUD_REGION=aws_s3_region
+    CLOUD_KEY=aws_s3_key
+    CLOUD_SECRET=aws_s3_secret
+    CLOUD_BUCKET_NAME=aws_s3_bucket_name
+    S3_ENDPOINT=aws_s3_cdn_endpoint
+    CLOUD_PREFIX=medialit
+    MEDIALIT_APIKEY=key_to_be_obtained_docker_compose_logs
+    ```
 
-> **NOTE**: The MediaLit installation is done but is not yet integrated with CourseLit! There are a few more steps. Keep reading.
+4.  Restart the services once to generate a user and an API key in MediaLit database. The API key
+    will be printed to the docker compose logs. The relevant logs will look something like the following.
 
-#### Obtain the API key from MediaLit
+    ```sh
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @     API key: testcktI8Sa71QUgYtest      @
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    ```
 
-First you need to obtain the container id of your MediaLit instance. To do this, run:
+    Copy the API key.
 
-```
-docker ps
-```
+5.  Update the `MEDIALIT_APIKEY` value in `.env` file and restart the service once again.
 
-Once you have the ID of the `MediaLit` container, run the following to generate an API key
-
-```
-docker exec <container_id | container_name> node /app/apps/api/dist/src/scripts/create-local-user.js <email>
-```
-
-Keep the generated API key safe. We will use it in the following step.
-
-> For the most up-to-date instructions, refer to the official [Readme](https://github.com/codelitdev/medialit?tab=readme-ov-file#creating-a-local-user) of MediaLit.
-
-#### Using Self-hosted MediaLit With CourseLit
-
-Open the `.env` file and add the following lines.
-
-```
-MEDIALIT_SERVER=http://localhost:8000
-MEDIALIT_APIKEY=key_from_above_step
-```
-
-Now, in the `docker-compose.yml` file, add the following two lines under the `environment` block of the `app` service.
-
-```
-      - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
-      - MEDIALIT_SERVER=${MEDIALIT_SERVER}
-```
-
-Restart the server by running the following commands.
-
-```
-docker compose stop
-docker compose up
-```
-
-That's it! You now have a fully functioning LMS powered by CourseLit.
+6.  That's it! You now have a fully functioning LMS powered by CourseLit and MediaLit.
 
 ## Hosted version
 

@@ -13,7 +13,7 @@ To install a widget follow these steps.
 1. Install the package
 
 ```
-yarn workspace @courselit/web add my-widget
+pnpm --filter @courselit/web add my-widget
 ```
 
 2. Now open `ui-config/widget.tsx` file located in `apps/web` and add the widget to the `widgets` section as shown below.

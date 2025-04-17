@@ -15,7 +15,7 @@ fi
 git checkout main
 
 # update the version
-yarn workspaces foreach version "$1"
+pnpm version "$1" --recursive
 
 # get the new version
 VERSION=$(grep -m1 '"version":' apps/web/package.json | cut -d'"' -f4)

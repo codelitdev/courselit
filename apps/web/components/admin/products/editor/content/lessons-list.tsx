@@ -132,10 +132,10 @@ function LessonSection({
                             )
                             .sort(
                                 (a: any, b: any) =>
-                                    (group.lessonsOrder as any[]).indexOf(
+                                    (group.lessonsOrder as any[])?.indexOf(
                                         a.lessonId,
                                     ) -
-                                    (group.lessonsOrder as any[]).indexOf(
+                                    (group.lessonsOrder as any[])?.indexOf(
                                         b.lessonId,
                                     ),
                             )

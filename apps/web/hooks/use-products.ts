@@ -52,6 +52,7 @@ export function useProducts(
                         }
                     }
                     privacy
+                    slug
                 },
                 totalProducts: getProductsCount(filterBy: $filter, publicView: $publicView)
             }`;

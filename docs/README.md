@@ -63,7 +63,7 @@ To self host CourseLit, follow our [official guide](https://docs.courselit.app/e
 
 ## Development
 
-The project is organised as a [mono-repo](https://en.wikipedia.org/wiki/Monorepo). It uses [Yarn workspaces](https://yarnpkg.com/features/workspaces) for managing the mono-repo.
+The project is organised as a [mono-repo](https://en.wikipedia.org/wiki/Monorepo). It uses [Pnpm workspaces](https://pnpm.io/workspaces) for managing the mono-repo.
 
 To set up the development environment, first clone the project on your local machine and `cd` to its diretory.
 
@@ -73,13 +73,13 @@ Now run the following commands from the root directory of the project.
 
 ```sh
 # Install dependencies
-yarn install
+pnpm install
 
 # Build the packages
-yarn build
+pnpm build
 
 # Start the app
-yarn dev
+pnpm dev
 ```
 
 That's it! Now you can dive into the code base.

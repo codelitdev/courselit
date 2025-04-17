@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect, useContext } from "react";
-// import { ContentCard } from "@/components/admin/my-content/content-card";
-// import { SkeletonCard } from "@/components/admin/my-content/skeleton-card";
 import type { ContentItem } from "@/components/admin/my-content/content";
 import { AddressContext, ProfileContext } from "@components/contexts";
 import { MY_CONTENT_HEADER } from "@ui-config/strings";
@@ -44,7 +42,6 @@ const breadcrumbs = [{ label: MY_CONTENT_HEADER, href: "#" }];
 
 export default function Page() {
     const [data, setData] = useState<ContentItem[]>([]);
-    const [dataLoaded, setDataLoaded] = useState(false);
     const [loading, setLoading] = useState(true);
     const { profile } = useContext(ProfileContext);
     const address = useContext(AddressContext);
@@ -85,7 +82,6 @@ export default function Page() {
             } catch (e: any) {
             } finally {
                 setLoading(false);
-                setDataLoaded(true);
             }
         };
 

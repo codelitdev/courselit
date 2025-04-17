@@ -1,0 +1,28 @@
+name: Testing
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '23.x'
+    - uses: pnpm/action-setup@v2
+      with:
+        version: 8
+    - run: pnpm install
+    - name: Build packages
+      run: |
+          pnpm --filter @courselit/icons build
+          pnpm --filter @courselit/common-models build
+          pnpm --filter @courselit/utils build
+          pnpm --filter @courselit/text-editor build
+          pnpm --filter @courselit/state-management build
+          pnpm --filter @courselit/components-library build
+          pnpm --filter @courselit/common-widgets build
+    - name: Running tests
+      run: |
+        pnpm test
+      working-directory: ./

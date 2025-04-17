@@ -66,7 +66,7 @@ function ProductCard({ product }: { product: Course }) {
     return (
         <ContentCard href={`/dashboard/product/${product.courseId}`}>
             <ContentCardImage
-                src={product.featuredImage?.thumbnail}
+                src={product.featuredImage?.file}
                 alt={product.title}
             />
             <ContentCardContent>
