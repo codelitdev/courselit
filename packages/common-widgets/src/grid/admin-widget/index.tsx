@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Settings, { Item } from "../settings";
+import Settings, { Item, SvgStyle } from "../settings";
 import ItemEditor from "./item-editor";
 import { Address, Profile, Alignment } from "@courselit/common-models";
 import {
@@ -15,12 +15,18 @@ import {
     ContentPaddingSelector,
     CssIdField,
     PageBuilderSlider,
+    Tooltip,
+    Checkbox,
+    Button2,
 } from "@courselit/components-library";
 import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
     columns as defaultColumns,
 } from "../defaults";
+import { Help } from "@courselit/icons";
+import { WandSparkles } from "lucide-react";
+import SvgStyleEditor from "./svg-style-editor";
 
 export interface AdminWidgetProps {
     settings: Settings;
@@ -122,6 +128,20 @@ export default function AdminWidget({
     );
     const [cssId, setCssId] = useState(settings.cssId);
     const [columns, setColumns] = useState(settings.columns || defaultColumns);
+    const [svgStyle, setSvgStyle] = useState<SvgStyle>(
+        settings.svgStyle || {
+            width: 36,
+            height: 36,
+            svgColor: "#000000",
+            backgroundColor: "#ffffff",
+            borderRadius: 8,
+            borderWidth: 1,
+            borderStyle: "solid",
+            borderColor: "#e2e8f0",
+        },
+    );
+    const [svgInline, setSvgInline] = useState(settings.svgInline || false);
+    const [editingSvgStyle, setEditingSvgStyle] = useState(false);
 
     const onSettingsChanged = () =>
         onChange({
@@ -144,6 +164,8 @@ export default function AdminWidget({
             itemBorderRadius,
             cssId,
             columns,
+            svgStyle,
+            svgInline,
         });
 
     useEffect(() => {
@@ -168,6 +190,8 @@ export default function AdminWidget({
         itemBorderRadius,
         cssId,
         columns,
+        svgStyle,
+        svgInline,
     ]);
 
     const onItemChange = (newItemData: Item) => {
@@ -206,6 +230,20 @@ export default function AdminWidget({
                 onDelete={onDelete}
                 profile={profile}
                 address={address}
+                svgStyle={svgStyle}
+            />
+        );
+    }
+
+    if (editingSvgStyle) {
+        return (
+            <SvgStyleEditor
+                svgStyle={svgStyle}
+                onChange={(style: SvgStyle) => {
+                    setSvgStyle(style);
+                    setEditingSvgStyle(false);
+                    hideActionButtons(false, {});
+                }}
             />
         );
     }
@@ -348,6 +386,33 @@ export default function AdminWidget({
                     value={columns}
                     onChange={setColumns}
                 />
+                <div className="flex justify-between mt-2">
+                    <div className="flex grow items-center gap-1">
+                        <p>Icon inline</p>
+                        <Tooltip title="The icon (if used) will show inline with the item header">
+                            <Help />
+                        </Tooltip>
+                    </div>
+                    <Checkbox
+                        checked={svgInline}
+                        onChange={(value: boolean) => setSvgInline(value)}
+                    />
+                </div>
+                <div className="flex justify-between mt-2">
+                    <div className="flex grow items-center gap-1">
+                        <p>Icon style</p>
+                    </div>
+                    <Button2
+                        size="icon"
+                        variant="outline"
+                        onClick={() => {
+                            setEditingSvgStyle(true);
+                            hideActionButtons(true, {});
+                        }}
+                    >
+                        <WandSparkles />
+                    </Button2>
+                </div>
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Advanced">
                 <CssIdField value={cssId} onChange={setCssId} />

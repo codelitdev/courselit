@@ -33,7 +33,13 @@ export default function ColorSelector({
                     onChange={(e) => onChange(e.target.value)}
                 />
                 <Tooltip title="Reset">
-                    <IconButton onClick={() => onChange()} variant="soft">
+                    <IconButton
+                        onClick={(e) => {
+                            e.preventDefault();
+                            onChange();
+                        }}
+                        variant="soft"
+                    >
                         <Cross />
                     </IconButton>
                 </Tooltip>

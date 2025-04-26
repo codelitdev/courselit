@@ -1,5 +1,5 @@
 import React from "react";
-import { Item } from "../settings";
+import { Item, SvgStyle } from "../settings";
 import {
     TextRenderer,
     Image,
@@ -12,6 +12,7 @@ import {
     Link,
 } from "@courselit/components-library";
 import { Alignment } from "@courselit/common-models";
+import { processedSvg } from "../helpers";
 
 interface ItemmProps {
     item: Item;
@@ -22,6 +23,8 @@ interface ItemmProps {
     foregroundColor?: string;
     borderColor?: string;
     borderRadius?: number;
+    svgStyle: SvgStyle;
+    svgInline: boolean;
 }
 
 export default function Itemm({
@@ -32,6 +35,7 @@ export default function Itemm({
         buttonCaption,
         media,
         mediaAlignment,
+        svgText,
     },
     buttonBackground,
     buttonForeground,
@@ -40,6 +44,8 @@ export default function Itemm({
     foregroundColor,
     borderColor,
     borderRadius,
+    svgStyle,
+    svgInline,
 }: ItemmProps) {
     return (
         <Card
@@ -62,11 +68,38 @@ export default function Itemm({
                     }`}
                 >
                     <CardTitle
-                        className={`${
-                            alignment === "center" ? "text-center" : ""
+                        className={`flex ${
+                            alignment === "center"
+                                ? "justify-center"
+                                : "justify-start"
                         }`}
                     >
-                        {title}
+                        <div
+                            className={`flex ${svgInline ? "flex-row gap-2 items-center" : `flex-col gap-4 ${alignment === "center" ? "items-center" : "items-start"}`}`}
+                        >
+                            {svgText && (
+                                <div
+                                    className="flex justify-center items-center"
+                                    style={{
+                                        width: `${svgStyle.width}px`,
+                                        height: `${svgStyle.height}px`,
+                                        backgroundColor:
+                                            svgStyle.backgroundColor,
+                                        borderRadius: `${svgStyle.borderRadius}px`,
+                                        borderWidth: `${svgStyle.borderWidth}px`,
+                                        borderStyle: svgStyle.borderStyle,
+                                        borderColor: svgStyle.borderColor,
+                                        padding: "8px",
+                                    }}
+                                    dangerouslySetInnerHTML={{
+                                        __html:
+                                            processedSvg(svgText, svgStyle) ||
+                                            '<div class="text-red-500">Invalid SVG</div>',
+                                    }}
+                                />
+                            )}
+                            {title}
+                        </div>
                     </CardTitle>
                     {media && media.file && (
                         <div className="mb-4">

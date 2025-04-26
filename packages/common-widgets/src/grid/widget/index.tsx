@@ -34,6 +34,8 @@ export default function Widget({
         itemBorderRadius,
         cssId,
         columns = defaultColumns,
+        svgStyle,
+        svgInline,
     },
 }: WidgetProps<Settings>): JSX.Element {
     return (
@@ -106,6 +108,8 @@ export default function Widget({
                                                 }
                                                 borderColor={itemBorderColor}
                                                 borderRadius={itemBorderRadius}
+                                                svgStyle={svgStyle}
+                                                svgInline={svgInline}
                                             />
                                         </div>
                                     </div>

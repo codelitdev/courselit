@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Item } from "../settings";
+import { Item, SvgStyle } from "../settings";
 import {
     MediaSelector,
     TextEditor,
@@ -18,9 +18,10 @@ import {
     Profile,
     VerticalAlignment,
 } from "@courselit/common-models";
-
+import SvgEditor from "./svg-editor";
 interface ItemProps {
     item: Item;
+    svgStyle: SvgStyle;
     index: number;
     onChange: (newItemData: Item) => void;
     onDelete: () => void;
@@ -30,6 +31,7 @@ interface ItemProps {
 
 export default function ItemEditor({
     item,
+    svgStyle,
     onChange,
     onDelete,
     address,
@@ -43,6 +45,7 @@ export default function ItemEditor({
     const [mediaAlignment, setMediaAlignment] = useState<VerticalAlignment>(
         item.mediaAlignment || "bottom",
     );
+    const [svgText, setSvgText] = useState(item.svgText);
 
     const itemChanged = () =>
         onChange({
@@ -52,6 +55,7 @@ export default function ItemEditor({
             buttonAction,
             media,
             mediaAlignment,
+            svgText,
         });
 
     return (
@@ -82,8 +86,14 @@ export default function ItemEditor({
                         value={buttonAction}
                         onChange={(e) => setButtonAction(e.target.value)}
                     />
+                    <p className="mb-1 font-medium">Icon</p>
+                    <SvgEditor
+                        svgText={svgText}
+                        svgStyle={svgStyle}
+                        onSvgChange={(svgText: string) => setSvgText(svgText)}
+                    />
                     <MediaSelector
-                        title=""
+                        title="Media"
                         src={media && media.thumbnail}
                         srcTitle={media && media.originalFileName}
                         profile={profile}
