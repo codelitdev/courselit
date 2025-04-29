@@ -23,3 +23,5 @@ export * from "./content";
 export * from "./faq";
 export * from "./pricing";
 export * from "./media";
+export * from "./embed";
+export * from "./marquee";
