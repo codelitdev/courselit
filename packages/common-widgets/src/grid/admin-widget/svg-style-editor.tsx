@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
     AdminWidgetPanel,
     Form,
@@ -9,7 +10,6 @@ import {
     PageBuilderSlider,
 } from "@courselit/components-library";
 import { SvgStyle } from "../settings";
-import { useState } from "react";
 import { processedSvg } from "../helpers";
 
 export default function SvgStyleEditor({

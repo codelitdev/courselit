@@ -60,6 +60,7 @@ export * from "./skeleton-card";
 export * from "./product-card";
 export * from "./video-with-preview";
 export * from "./image";
+export * from "./lib/utils";
 
 export {
     PriceTag,

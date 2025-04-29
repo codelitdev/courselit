@@ -1,0 +1,13 @@
+export const horizontalPadding = 100;
+export const verticalPadding = 50;
+export const direction = "right";
+export const speed = 60;
+export const pauseOnHover = false;
+export const fadeWidth = 50;
+export const backgroundColor = "#fff";
+export const itemBackgroundColor = "";
+export const itemForegroundColor = "#000";
+export const itemBorderColor = "#ffffff00";
+export const itemBorderRadius = 12;
+export const itemBorderWidth = 1;
+export const itemBorderStyle = "solid";
