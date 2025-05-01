@@ -134,10 +134,10 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
                         razorpayKey,
                     },
                     theme {
-                        name,
-                        active,
-                        styles,
-                        url
+                        colors,
+                        typography,
+                        interactives,
+                        structure
                     },
                     typefaces {
                         section,

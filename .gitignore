@@ -14,6 +14,7 @@ coverage
 # Text editors configurations
 .vscode
 .rgignore
+.cursor
 
 # Env file
 .env*.local

@@ -9,10 +9,104 @@ import {
 import type GQLContext from "../../models/GQLContext";
 import DomainModel, { Domain } from "../../models/Domain";
 import { checkPermission } from "@courselit/utils";
-import { Typeface } from "@courselit/common-models";
+import { Theme, Typeface } from "@courselit/common-models";
 import ApikeyModel, { ApiKey } from "@models/ApiKey";
+import { defaultTheme } from "@courselit/page-primitives";
 
 const { permissions } = constants;
+
+// const defaultTheme: Theme = {
+//     name: "default",
+//     colors: {
+//         primary: "#000000",
+//         secondary: "#000000",
+//         background: "#000000",
+//         border: "#000000",
+//         text: "#000000",
+//         success: "#000000",
+//         error: "#000000",
+//         warning: "#000000",
+//         info: "#000000",
+//     },
+//     typography: {
+//         preheader: {
+//             fontFamily: "Arial",
+//             fontSize: "text-base",
+//             fontWeight: "font-normal",
+//         },
+//         header1: {
+//             fontFamily: "Arial",
+//             fontSize: "text-base",
+//             fontWeight: "font-normal",
+//         },
+//         header2: {
+//             fontFamily: "Arial",
+//             fontSize: "text-base",
+//             fontWeight: "font-normal",
+//         },
+//         header3: {
+//             fontFamily: "Arial",
+//             fontSize: "text-base",
+//             fontWeight: "font-normal",
+//         },
+//         header4: {
+//             fontFamily: "Arial",
+//             fontSize: "text-base",
+//             fontWeight: "font-normal",
+//         },
+//         subheader1: {
+//             fontFamily: "Arial",
+//             fontSize: "text-base",
+//             fontWeight: "font-normal",
+//         },
+//         subheader2: {
+//             fontFamily: "Arial",
+//             fontSize: "text-base",
+//             fontWeight: "font-normal",
+//         },
+//         text1: {
+//             fontFamily: "Arial",
+//             fontSize: "text-base",
+//             fontWeight: "font-normal",
+//         },
+//         text2: {
+//             fontFamily: "Arial",
+//             fontSize: "text-base",
+//             fontWeight: "font-normal",
+//         },
+//         link: {
+//             fontFamily: "Arial",
+//             fontSize: "text-base",
+//             fontWeight: "font-normal",
+//         },
+//         button: {
+//             fontFamily: "Arial",
+//             fontSize: "text-base",
+//             fontWeight: "font-normal",
+//         },
+//         input: {
+//             fontFamily: "Arial",
+//             fontSize: "text-base",
+//             fontWeight: "font-normal",
+//         },
+//         caption: {
+//             fontFamily: "Arial",
+//             fontSize: "text-base",
+//             fontWeight: "font-normal",
+//         },
+//     },
+//     interactives: {
+//         button: {},
+//         link: {},
+//         card: {},
+//         input: {},
+//     },
+//     structure: {
+//         page: {
+//             width: "max-w-none",
+//         },
+//     },
+// }
 
 export const getSiteInfo = async (ctx: GQLContext) => {
     const exclusionProjection: Record<string, 0> = {
@@ -30,11 +124,17 @@ export const getSiteInfo = async (ctx: GQLContext) => {
         checkPermission(ctx.user.permissions, [permissions.manageSite]);
     if (!siteEditor) {
         exclusionProjection.draftTypefaces = 0;
+        exclusionProjection.draftTheme = 0;
     }
     const domain: Domain | null = await DomainModel.findById(
         ctx.subdomain._id,
         exclusionProjection,
     );
+
+    if (domain) {
+        domain.theme = defaultTheme;
+        domain.draftTheme = defaultTheme;
+    }
 
     return domain;
 };
@@ -223,4 +323,47 @@ export const removeApikey = async (keyId: string, ctx: GQLContext) => {
     await ApikeyModel.deleteOne({ keyId, domain: ctx.subdomain._id });
 
     return true;
+};
+
+export const updateDraftTheme = async (
+    ctx: GQLContext,
+    colors?: Theme["colors"],
+    typography?: Theme["typography"],
+    interactives?: Theme["interactives"],
+    structure?: Theme["structure"],
+) => {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const domain: Domain | null = await DomainModel.findById(ctx.subdomain._id);
+    if (!domain) {
+        return null;
+    }
+
+    if (!domain.draftTheme) {
+        domain.draftTheme = domain.theme || defaultTheme;
+    }
+
+    if (colors) {
+        domain.draftTheme.colors = colors;
+    }
+
+    if (typography) {
+        domain.draftTheme.typography = typography;
+    }
+
+    if (interactives) {
+        domain.draftTheme.interactives = interactives;
+    }
+
+    if (structure) {
+        domain.draftTheme.structure = structure;
+    }
+
+    await (domain as any).save();
+
+    return domain;
 };

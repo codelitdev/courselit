@@ -11,8 +11,10 @@ import {
     updateDraftTypefaces,
     removeApikey,
     addApikey,
+    updateDraftTheme,
 } from "./logic";
-import { Typeface } from "@courselit/common-models";
+import { Theme, Typeface } from "@courselit/common-models";
+import { GraphQLJSONObject } from "graphql-type-json";
 
 const mutations = {
     updateSiteInfo: {
@@ -69,6 +71,37 @@ const mutations = {
         },
         resolve: async (_: any, { keyId }: { keyId: string }, context: any) =>
             removeApikey(keyId, context),
+    },
+    updateDraftTheme: {
+        type: types.domain,
+        args: {
+            colors: { type: GraphQLJSONObject },
+            typography: { type: GraphQLJSONObject },
+            interactives: { type: GraphQLJSONObject },
+            structure: { type: GraphQLJSONObject },
+        },
+        resolve: async (
+            _: any,
+            {
+                colors,
+                typography,
+                interactives,
+                structure,
+            }: {
+                colors?: Theme["colors"];
+                typography?: Theme["typography"];
+                interactives?: Theme["interactives"];
+                structure?: Theme["structure"];
+            },
+            context: any,
+        ) =>
+            updateDraftTheme(
+                context,
+                colors,
+                typography,
+                interactives,
+                structure,
+            ),
     },
 };
 

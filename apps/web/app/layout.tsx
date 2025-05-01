@@ -1,6 +1,7 @@
 import "remirror/styles/all.css";
 import "@courselit/common-widgets/styles.css";
 import "@courselit/components-library/styles.css";
+import "@courselit/page-primitives/styles.css";
 import "../styles/globals.css";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
@@ -39,10 +40,10 @@ export async function generateMetadata(): Promise<Metadata> {
                         lemonsqueezySubscriptionYearlyVariantId,
                     },
                     theme {
-                        name,
-                        active,
-                        styles,
-                        url
+                        colors,
+                        typography,
+                        interactives,
+                        structure
                     },
                     typefaces {
                         section,

@@ -1,14 +1,8 @@
 {
-    "name": "@courselit/common-widgets",
-    "version": "0.57.10",
-    "description": "A collection of common widgets for CourseLit LMS",
-    "keywords": [
-        "widgets",
-        "lms",
-        "courselit",
-        "course"
-    ],
-    "author": "Rajat Saxena <social@rajats.xyz>",
+    "name": "@courselit/page-primitives",
+    "version": "0.0.0",
+    "description": "Page primitives for CourseLit",
+    "author": "Rajat Saxena <hi@codelit.dev>",
     "homepage": "https://github.com/codelitdev/courselit#readme",
     "license": "MIT",
     "types": "dist/index.d.ts",
@@ -35,34 +29,29 @@
     "bugs": {
         "url": "https://github.com/codelitdev/courselit/issues"
     },
-    "peerDependencies": {
-        "lucide-react": "*",
-        "next": "*",
-        "react": "*",
-        "react-dom": "*"
-    },
     "devDependencies": {
+        "@types/react": "^18.0.0",
         "autoprefixer": "^10.4.14",
         "eslint": "^8.57.0",
-        "eslint-plugin-n": "^15.2.0",
-        "eslint-plugin-promise": "^6.0.0",
         "postcss": "^8.4.27",
         "rimraf": "^4.1.1",
         "tailwind-config": "workspace:^",
+        "tailwindcss": "3",
         "tsconfig": "workspace:^",
         "tsup": "6.6.0",
-        "typescript": "^5.1.6",
+        "typescript": "^4.9.5",
         "typescript-eslint": "^7.4.0"
     },
     "dependencies": {
         "@courselit/common-models": "workspace:^",
-        "@courselit/components-library": "workspace:^",
-        "@courselit/icons": "workspace:^",
-        "@courselit/page-primitives": "workspace:^",
-        "@courselit/state-management": "workspace:^",
-        "@courselit/utils": "workspace:^",
+        "@radix-ui/react-slot": "^1.2.0",
+        "class-variance-authority": "^0.7.0",
         "clsx": "^2.1.1",
-        "react-redux": "^8.1.2"
+        "lucide-react": "^0.503.0",
+        "tailwind-merge": "^3.2.0",
+        "tw-animate-css": "^1.2.8"
     },
-    "gitHead": "e91494470733b09bc3e772a9079162a844b40d97"
+    "peerDependencies": {
+        "react": "^18.0.0"
+    }
 }

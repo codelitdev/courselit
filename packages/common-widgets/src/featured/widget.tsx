@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useEffect, useState } from "react";
 import { Course, WidgetProps } from "@courselit/common-models";
 import {
@@ -14,6 +12,7 @@ import {
     verticalPadding as defaultVerticalPadding,
     horizontalPadding as defaultHorizontalPadding,
 } from "./defaults";
+import { Header1 } from "@courselit/page-primitives";
 
 export default function Widget({
     settings: {
@@ -119,7 +118,7 @@ export default function Widget({
                                     : "flex-start",
                         }}
                     >
-                        <h2 className="text-4xl mb-4">{title}</h2>
+                        <Header1>{title}</Header1>
                         {description && <TextRenderer json={description} />}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -129,32 +128,6 @@ export default function Widget({
                                     <SkeletonCard key={index} />
                                 ))}
                             </>
-                            // <div className="flex flex-wrap gap-[1%]">
-                            //     <div className="basis-full md:basis-[49.5%] lg:basis-[32.6666%] mb-6">
-                            //         <div className="mb-4">
-                            //             <Skeleton className="h-[200px] lg:h-[220px] w-full mb-4" />
-                            //             <Skeleton className="h-[16px] w-full mb-1" />
-                            //             <Skeleton className="h-[20px] w-full mb-1" />
-                            //             <Skeleton className="h-[18px] w-full" />
-                            //         </div>
-                            //     </div>
-                            //     <div className="basis-full md:basis-[49.5%] lg:basis-[32.6666%] mb-6">
-                            //         <div className="mb-4">
-                            //             <Skeleton className="h-[200px] lg:h-[220px] w-full mb-4" />
-                            //             <Skeleton className="h-[16px] w-full mb-1" />
-                            //             <Skeleton className="h-[20px] w-full mb-1" />
-                            //             <Skeleton className="h-[18px] w-full" />
-                            //         </div>
-                            //     </div>
-                            //     <div className="basis-full md:basis-[49.5%] lg:basis-[32.6666%] mb-6">
-                            //         <div className="mb-4">
-                            //             <Skeleton className="h-[200px] lg:h-[220px] w-full mb-4" />
-                            //             <Skeleton className="h-[16px] w-full mb-1" />
-                            //             <Skeleton className="h-[20px] w-full mb-1" />
-                            //             <Skeleton className="h-[18px] w-full" />
-                            //         </div>
-                            //     </div>
-                            // </div>
                         )}
                         {productItems.length > 0 && (
                             <>

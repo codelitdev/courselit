@@ -4,11 +4,11 @@ import { getPlanPrice, truncate } from "@courselit/utils";
 import getSymbolFromCurrency from "currency-symbol-map";
 import { Image } from "./image";
 import {
-    ContentCard,
-    ContentCardHeader,
-    ContentCardContent,
-    ContentCardImage,
-} from "./content-card";
+    PageCard,
+    PageCardHeader,
+    PageCardContent,
+    PageCardImage,
+} from "@courselit/page-primitives";
 
 export function ProductCard({
     product,
@@ -23,13 +23,14 @@ export function ProductCard({
     const { amount, period } = getPlanPrice(defaultPlan);
 
     return (
-        <ContentCard href={`/p/${product.pageId}`}>
-            <ContentCardImage
+        <PageCard href={`/p/${product.pageId}`} className="overflow-hidden">
+            <PageCardImage
                 src={product.featuredImage?.file}
                 alt={product.title}
+                className="aspect-video object-cover"
             />
-            <ContentCardContent>
-                <ContentCardHeader>{product.title}</ContentCardHeader>
+            <PageCardContent>
+                <PageCardHeader>{product.title}</PageCardHeader>
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                         <Image
@@ -52,8 +53,8 @@ export function ProductCard({
                         <span className="ml-1">{period}</span>
                     </Badge>
                 </div>
-            </ContentCardContent>
-        </ContentCard>
+            </PageCardContent>
+        </PageCard>
         // <Link href={`/p/${product.pageId}`}>
         //     <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
         //         <div className="relative aspect-video">

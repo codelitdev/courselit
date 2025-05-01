@@ -9,6 +9,7 @@ import {
     TypefacesContext,
 } from "@components/contexts";
 import { Profile } from "@courselit/common-models";
+import { defaultTheme } from "@courselit/page-primitives";
 import { useSearchParams } from "next/navigation";
 import { useContext } from "react";
 
@@ -46,11 +47,7 @@ export default function Page({ params }: { params: { id: string } }) {
                     checked: profile ? true : false,
                 },
                 networkAction: false,
-                theme: {
-                    name: "dummy",
-                    active: false,
-                    styles: {},
-                },
+                theme: defaultTheme,
                 typefaces: [
                     {
                         section: "default",

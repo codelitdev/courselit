@@ -545,6 +545,7 @@ export const MAIL_TABLE_HEADER_ENTRANTS = "Entrants";
 export const MAIL_TABLE_HEADER_SENT_ON = "Sent on";
 export const TOOLTIP_USER_PAGE_SEND_MAIL = "Send mail to the current selection";
 export const EDIT_PAGE_BUTTON_FONTS = "Fonts";
+export const EDIT_PAGE_BUTTON_THEME = "Theme";
 export const EDIT_PAGE_BUTTON_SEO = "SEO";
 export const SEO_FORM_NAME_LABEL = "Title";
 export const SEO_FORM_DESC_LABEL = "Description";

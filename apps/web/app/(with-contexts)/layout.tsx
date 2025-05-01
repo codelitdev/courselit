@@ -44,10 +44,10 @@ export default async function Layout({
                         lemonsqueezySubscriptionYearlyVariantId,
                     },
                     theme {
-                        name,
-                        active,
-                        styles,
-                        url
+                        colors,
+                        typography,
+                        interactives,
+                        structure
                     },
                     typefaces {
                         section,

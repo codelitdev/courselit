@@ -17,6 +17,7 @@ import {
     spacingBetweenLinks as defaultSpacingBetweenLinks,
     linkFontWeight as defaultLinkFontWeight,
 } from "../defaults";
+import { Button, Header4, Link as PageLink } from "@courselit/page-primitives";
 
 export default function Widget({ state, settings }: WidgetProps<Settings>) {
     const { verticalPadding, horizontalPadding } = settings;
@@ -25,6 +26,7 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
     const spacingBetweenLinks =
         settings.spacingBetweenLinks || defaultSpacingBetweenLinks;
     const linkFontWeight = settings.linkFontWeight || defaultLinkFontWeight;
+    const { theme } = state;
 
     return (
         <header
@@ -56,14 +58,15 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                                     />
                                 </div>
                             )}
-                            <p
+                            <Header4
+                                theme={theme}
                                 style={{
                                     color: settings.logoColor || "inherit",
                                 }}
                                 className="font-bold text-xl md:text-2xl"
                             >
                                 {state.siteinfo.title}
-                            </p>
+                            </Header4>
                         </div>
                     </AppLink>
                     <div
@@ -82,34 +85,44 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                             (settings.links as Link[])
                                 .filter((x) => !x.isPrimary)
                                 .map((link: Link, index) => (
-                                    <span
-                                        style={{
-                                            color:
-                                                settings.linkColor || "inherit",
-                                        }}
+                                    <AppLink
+                                        href={link.href}
+                                        className={`${linkFontWeight}`}
                                         key={index}
                                     >
-                                        <AppLink
-                                            href={link.href}
-                                            className={`${linkFontWeight}`}
+                                        <PageLink
+                                            theme={theme}
+                                            style={{
+                                                color: settings.linkColor,
+                                            }}
                                         >
                                             {link.isButton && (
-                                                <Button2
+                                                // <Button2
+                                                //     size="sm"
+                                                //     style={{
+                                                //         background:
+                                                //             settings.loginBtnBgColor,
+                                                //         color: settings.loginBtnColor,
+                                                //         font: "unset",
+                                                //         fontSize: "unset",
+                                                //     }}
+                                                // >
+                                                //     {link.label}
+                                                // </Button2>
+                                                <Button
                                                     size="sm"
                                                     style={{
                                                         background:
                                                             settings.loginBtnBgColor,
                                                         color: settings.loginBtnColor,
-                                                        font: "unset",
-                                                        fontSize: "unset",
                                                     }}
                                                 >
                                                     {link.label}
-                                                </Button2>
+                                                </Button>
                                             )}
                                             {!link.isButton && link.label}
-                                        </AppLink>
-                                    </span>
+                                        </PageLink>
+                                    </AppLink>
                                 ))}
                     </div>
                     <div className="flex gap-2 items-center">
@@ -118,7 +131,9 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                                 {settings.links
                                     .filter((x) => x.isPrimary)
                                     .map((link: Link, index) => (
-                                        <span
+                                        <PageLink
+                                            theme={theme}
+                                            href={link.href}
                                             className="mr-2"
                                             style={{
                                                 color:
@@ -129,7 +144,7 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                                         >
                                             <AppLink href={link.href}>
                                                 {link.isButton && (
-                                                    <Button2
+                                                    <Button
                                                         size="sm"
                                                         style={{
                                                             background:
@@ -140,11 +155,11 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                                                         }}
                                                     >
                                                         {link.label}
-                                                    </Button2>
+                                                    </Button>
                                                 )}
                                                 {!link.isButton && link.label}
                                             </AppLink>
-                                        </span>
+                                        </PageLink>
                                     ))}
                             </div>
                         )}

@@ -28,6 +28,7 @@ const DomainSchema = new mongoose.Schema<Domain>(
         deleted: { type: Boolean, required: true, default: false },
         settings: SettingsSchema,
         theme: ThemeSchema,
+        draftTheme: ThemeSchema,
         sharedWidgets: {
             type: mongoose.Schema.Types.Mixed,
             default: {},

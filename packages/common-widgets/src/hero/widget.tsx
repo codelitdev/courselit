@@ -14,6 +14,7 @@ import {
 } from "./defaults";
 import { isVideo } from "@courselit/utils";
 import clsx from "clsx";
+import { Button, Header1 } from "@courselit/page-primitives";
 
 const twRoundedMap = {
     "0": "rounded-none",
@@ -56,6 +57,7 @@ export default function Widget({
         aspectRatio,
         objectFit,
     },
+    state: { theme },
 }: WidgetProps<Settings>) {
     const hasHeroGraphic = youtubeLink || (media && media.mediaId);
     let direction: "md:!flex-row" | "md:!flex-row-reverse";
@@ -215,13 +217,14 @@ export default function Widget({
                                         : "items-start",
                                 )}
                             >
-                                <h2
+                                {/* <h2
                                     className={`mb-4 font-bold lg:text-${titleFontSize}xl text-${Math.ceil(
                                         titleFontSize * 0.66,
                                     )}xl`}
                                 >
                                     {title}
-                                </h2>
+                                </h2> */}
+                                <Header1>{title}</Header1>
                                 {description && (
                                     <div
                                         className={clsx(
@@ -248,7 +251,7 @@ export default function Widget({
                                 <div className="flex flex-col md:!flex-row gap-2">
                                     {buttonAction && buttonCaption && (
                                         <Link href={buttonAction}>
-                                            <Button2
+                                            <Button
                                                 style={{
                                                     backgroundColor:
                                                         buttonBackground,
@@ -258,7 +261,7 @@ export default function Widget({
                                                 size="lg"
                                             >
                                                 {buttonCaption}
-                                            </Button2>
+                                            </Button>
                                         </Link>
                                     )}
                                     {secondaryButtonAction &&
