@@ -47,6 +47,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import Link from "next/link";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
@@ -721,14 +722,17 @@ export default function PageEditor({
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <Button2
-                                                component="link"
-                                                variant="outline"
-                                                size="icon"
+                                            <a
                                                 href={`/p/${page.pageId}`}
+                                                target="_blank"
                                             >
-                                                <Eye className="h-4 w-4" />
-                                            </Button2>
+                                                <Button2
+                                                    variant="outline"
+                                                    size="icon"
+                                                >
+                                                    <Eye className="h-4 w-4" />
+                                                </Button2>
+                                            </a>
                                         </TooltipTrigger>
                                         <TooltipContent>
                                             <p>{EDIT_PAGE_BUTTON_VIEW}</p>
@@ -738,10 +742,7 @@ export default function PageEditor({
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <Button2
-                                                variant="outline"
-                                                size="icon"
-                                                component="link"
+                                            <Link
                                                 href={
                                                     redirectTo ||
                                                     (page.type === "product"
@@ -749,8 +750,13 @@ export default function PageEditor({
                                                         : `/dashboard/products`)
                                                 }
                                             >
-                                                <LogOut className="h-4 w-4" />
-                                            </Button2>
+                                                <Button2
+                                                    variant="outline"
+                                                    size="icon"
+                                                >
+                                                    <LogOut className="h-4 w-4" />
+                                                </Button2>
+                                            </Link>
                                         </TooltipTrigger>
                                         <TooltipContent>
                                             <p>{EDIT_PAGE_BUTTON_DONE}</p>

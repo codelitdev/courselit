@@ -1,5 +1,5 @@
 import "remirror/styles/all.css";
-import "@courselit/common-widgets/styles.css";
+import "@courselit/page-blocks/styles.css";
 import "@courselit/components-library/styles.css";
 import "@courselit/page-primitives/styles.css";
 import "../styles/globals.css";

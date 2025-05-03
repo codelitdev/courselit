@@ -1,6 +1,6 @@
 import React from "react";
 import "../styles/globals.css";
-import "@courselit/common-widgets/styles.css";
+import "@courselit/page-blocks/styles.css";
 import "@courselit/components-library/styles.css";
 import "@courselit/page-primitives/styles.css";
 import type { AppProps } from "next/app";

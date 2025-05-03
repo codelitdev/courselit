@@ -3,8 +3,8 @@ import type { Theme } from "@courselit/common-models";
 export const defaultTheme: Theme = {
     name: "default",
     colors: {
-        primary: "#2563eb",
-        secondary: "#f3f4f6",
+        primary: "#000000",
+        secondary: "#333333",
         background: "#ffffff",
         border: "#e5e7eb",
         text: "#111827",

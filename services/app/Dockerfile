@@ -20,7 +20,7 @@ COPY packages/tailwind-config /app/packages/tailwind-config
 COPY packages/tsconfig /app/packages/tsconfig
 COPY packages/common-models /app/packages/common-models
 COPY packages/common-logic /app/packages/common-logic
-COPY packages/common-widgets /app/packages/common-widgets
+COPY packages/page-blocks /app/packages/page-blocks
 COPY packages/components-library /app/packages/components-library
 COPY packages/state-management /app/packages/state-management
 COPY packages/text-editor /app/packages/text-editor

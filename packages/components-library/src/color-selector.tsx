@@ -75,7 +75,10 @@ export default function ColorSelector({
                     {allowReset && (
                         <Tooltip title="Reset">
                             <IconButton
-                                onClick={() => onChange()}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    onChange();
+                                }}
                                 variant="ghost"
                                 size="sm"
                                 className="h-6 w-6 hover:bg-muted/50"

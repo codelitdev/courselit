@@ -1,7 +1,7 @@
 import React, { ReactNode } from "react";
 import WidgetByName from "./widget-by-name";
 import { WidgetInstance } from "@courselit/common-models";
-import { Footer, Header } from "@courselit/common-widgets";
+import { Footer, Header } from "@courselit/page-blocks";
 import { ArrowDownward, ArrowUpward } from "@courselit/icons";
 import { Button, Toaster } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";

@@ -21,7 +21,8 @@ jobs:
           pnpm --filter @courselit/text-editor build
           pnpm --filter @courselit/state-management build
           pnpm --filter @courselit/components-library build
-          pnpm --filter @courselit/common-widgets build
+          pnpm --filter @courselit/page-primitives build
+          pnpm --filter @courselit/page-blocks build
     - name: Running tests
       run: |
         pnpm test

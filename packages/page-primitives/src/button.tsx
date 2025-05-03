@@ -56,13 +56,6 @@ export const Button: React.FC<ButtonProps> = ({
         disabled && buttonStyles?.disabled?.color,
         disabled && buttonStyles?.disabled?.background,
         disabled && buttonStyles?.disabled?.border,
-        // Theme colors
-        theme?.colors &&
-            variant === "default" &&
-            `bg-[${theme.colors.primary}] hover:bg-[${theme.colors.primary}]/90`,
-        theme?.colors &&
-            variant === "secondary" &&
-            `bg-[${theme.colors.secondary}] hover:bg-[${theme.colors.secondary}]/90`,
         className,
     );
 

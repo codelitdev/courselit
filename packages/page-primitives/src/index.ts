@@ -15,3 +15,4 @@ export * from "./input";
 export * from "./caption";
 export * from "./card";
 export * from "./theme";
+export * from "./label";

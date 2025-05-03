@@ -22,7 +22,7 @@ const nextConfig = {
         remotePatterns,
     },
     transpilePackages: [
-        "@courselit/common-widgets",
+        "@courselit/page-blocks",
         "@courselit/components-library",
     ],
     experimental: {

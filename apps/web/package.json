@@ -12,7 +12,7 @@
     "dependencies": {
         "@courselit/common-logic": "workspace:^",
         "@courselit/common-models": "workspace:^",
-        "@courselit/common-widgets": "workspace:^",
+        "@courselit/page-blocks": "workspace:^",
         "@courselit/components-library": "workspace:^",
         "@courselit/icons": "workspace:^",
         "@courselit/page-primitives": "workspace:^",
