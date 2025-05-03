@@ -2,12 +2,9 @@ import React from "react";
 import { TypographyProps } from "./typography";
 import { cn } from "./lib/utils";
 
-export const Text2: React.FC<TypographyProps> = ({
-    children,
-    className = "",
-    theme,
-    ...props
-}) => {
+export const Text2: React.FC<
+    TypographyProps & { component?: "p" | "span" }
+> = ({ children, className = "", theme, component = "p", ...props }) => {
     const typographyStyles = theme?.typography?.text2;
     const classes = cn(
         // Base styles
@@ -24,9 +21,13 @@ export const Text2: React.FC<TypographyProps> = ({
         className,
     );
 
-    return (
+    return component === "p" ? (
         <p className={classes} {...props}>
             {children}
         </p>
+    ) : (
+        <span className={classes} {...props}>
+            {children}
+        </span>
     );
 };

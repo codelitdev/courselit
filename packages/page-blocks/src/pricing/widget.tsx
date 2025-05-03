@@ -10,13 +10,13 @@ import {
 import {
     Button,
     Header1,
-    Header2,
     PageCard,
     PageCardContent,
     PageCardHeader,
     Subheader1,
     Text2,
 } from "@courselit/page-primitives";
+import { Preheader } from "@courselit/page-primitives";
 
 const twGridColsMap = {
     2: "lg:grid-cols-2",
@@ -121,47 +121,51 @@ export default function Widget({
                                         color: foregroundColor,
                                         borderColor: cardBorderColor,
                                     }}
+                                    theme={theme}
+                                    className="p-0"
                                 >
                                     <PageCardContent>
-                                        <PageCardHeader>
-                                            <p
-                                                className="font-semibold"
-                                                style={{
-                                                    color: planTitleColor,
-                                                }}
-                                            >
-                                                {item.title}
-                                            </p>
-                                            <Header2 className="text-3xl">
-                                                {pricingSwitcher
-                                                    ? pricing === "yearly"
-                                                        ? item.priceYearly
-                                                        : item.price
-                                                    : item.price}
-                                            </Header2>
-                                            <span
-                                                className="text-sm"
+                                        <Preheader
+                                            className="pt-4"
+                                            style={{
+                                                color: planTitleColor,
+                                            }}
+                                            theme={theme}
+                                        >
+                                            {item.title}
+                                        </Preheader>
+                                        <PageCardHeader theme={theme}>
+                                            {pricingSwitcher
+                                                ? pricing === "yearly"
+                                                    ? item.priceYearly
+                                                    : item.price
+                                                : item.price}
+                                        </PageCardHeader>
+                                        <div className="grow flex flex-col gap-4">
+                                            <Text2
                                                 style={{
                                                     color: foregroundColor,
                                                 }}
+                                                component="span"
+                                                theme={theme}
                                             >
                                                 <TextRenderer
                                                     json={item.description}
                                                 />
-                                            </span>
-                                        </PageCardHeader>
-                                        <div className="grow flex flex-col gap-4">
-                                            {item.features
-                                                ?.split(",")
-                                                .map((x) => x.trim())
-                                                .map((feature) => (
-                                                    <div
-                                                        className="flex items-center gap-2 text-sm"
-                                                        key={feature}
-                                                    >
-                                                        {feature}
-                                                    </div>
-                                                ))}
+                                            </Text2>
+                                            <div className="flex flex-col gap-3">
+                                                {item.features
+                                                    ?.split(",")
+                                                    .map((x) => x.trim())
+                                                    .map((feature) => (
+                                                        <div
+                                                            className="flex items-center gap-2 text-sm"
+                                                            key={feature}
+                                                        >
+                                                            {feature}
+                                                        </div>
+                                                    ))}
+                                            </div>
                                             <Link
                                                 href={
                                                     pricing === "yearly" &&
@@ -193,6 +197,7 @@ export default function Widget({
                                                             ? "default"
                                                             : "outline"
                                                     }
+                                                    theme={theme}
                                                 >
                                                     {item.action.label}
                                                 </Button>

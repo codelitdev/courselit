@@ -25,8 +25,8 @@ export const Preheader: React.FC<TypographyProps> = ({
     );
 
     return (
-        <div className={classes} {...props}>
+        <p className={classes} {...props}>
             {children}
-        </div>
+        </p>
     );
 };

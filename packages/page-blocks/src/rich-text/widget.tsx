@@ -55,7 +55,11 @@ const Widget = ({
                         textAlign: alignment,
                     }}
                 >
-                    <Text1 theme={theme} className={`${twFontSize[fontSize]}`}>
+                    <Text1
+                        theme={theme}
+                        className={`${twFontSize[fontSize]}`}
+                        component="span"
+                    >
                         <TextRenderer json={text} />
                     </Text1>
                 </div>
