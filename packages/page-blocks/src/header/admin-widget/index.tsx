@@ -12,13 +12,11 @@ import {
     FormField,
     Form,
     Tooltip,
-    ContentPaddingSelector,
     PageBuilderSlider,
+    MaxWidthSelector,
 } from "@courselit/components-library";
 import { Help } from "@courselit/icons";
 import {
-    verticalPadding as defaultVerticalPadding,
-    horizontalPadding as defaultHorizontalPadding,
     spacingBetweenLinks as defaultSpacingBetweenLinks,
     linkFontWeight as defaultLinkFontWeight,
     linkAlignment as defaultLinkAlignment,
@@ -26,15 +24,18 @@ import {
 } from "../defaults";
 import { DragAndDrop } from "@courselit/components-library";
 import { generateUniqueId } from "@courselit/utils";
+import { Theme } from "@courselit/common-models";
 
 interface AdminWidgetProps {
     settings: Settings;
     onChange: (...args: any[]) => void;
+    theme: Theme;
 }
 
 export default function AdminWidget({
     settings,
     onChange,
+    theme,
 }: AdminWidgetProps): JSX.Element {
     const [links, setLinks] = useState(settings.links || []);
     const [appBarBackground, setAppBarBackground] = useState<
@@ -64,12 +65,9 @@ export default function AdminWidget({
     const [spacingBetweenLinks, setSpacingBetweenLinks] = useState<
         number | undefined
     >(settings.spacingBetweenLinks || defaultSpacingBetweenLinks);
-    const [horizontalPadding, setHorizontalPadding] = useState<number>(
-        settings.horizontalPadding || defaultHorizontalPadding,
-    );
-    const [verticalPadding, setVerticalPadding] = useState<number>(
-        settings.verticalPadding || defaultVerticalPadding,
-    );
+    const [maxWidth, setMaxWidth] = useState<
+        Theme["structure"]["page"]["width"]
+    >(settings.maxWidth || theme.structure.page.width);
 
     useEffect(() => {
         onChange({
@@ -83,8 +81,7 @@ export default function AdminWidget({
             showLoginControl,
             linkFontWeight,
             spacingBetweenLinks,
-            verticalPadding,
-            horizontalPadding,
+            maxWidth,
         });
     }, [
         links,
@@ -97,8 +94,7 @@ export default function AdminWidget({
         showLoginControl,
         linkFontWeight,
         spacingBetweenLinks,
-        verticalPadding,
-        horizontalPadding,
+        maxWidth,
     ]);
 
     const onLinkChanged = (index: number, link: Link) => {
@@ -220,17 +216,7 @@ export default function AdminWidget({
                     min={16}
                     onChange={setSpacingBetweenLinks}
                 />
-                <ContentPaddingSelector
-                    value={horizontalPadding}
-                    min={50}
-                    onChange={setHorizontalPadding}
-                />
-                <ContentPaddingSelector
-                    variant="vertical"
-                    value={verticalPadding}
-                    max={32}
-                    onChange={setVerticalPadding}
-                />
+                <MaxWidthSelector value={maxWidth} onChange={setMaxWidth} />
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Other settings">
                 <div className="flex justify-between">

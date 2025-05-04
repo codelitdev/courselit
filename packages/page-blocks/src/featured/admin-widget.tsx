@@ -1,7 +1,5 @@
-"use client";
-
 import React, { ChangeEvent, useEffect, useState } from "react";
-import type { Address } from "@courselit/common-models";
+import type { Address, Theme } from "@courselit/common-models";
 import Settings from "./settings";
 import { capitalize, FetchBuilder } from "@courselit/utils";
 import { actionCreators, AppDispatch } from "@courselit/state-management";
@@ -15,14 +13,11 @@ import {
     FormField,
     CircularProgress,
     CssIdField,
+    MaxWidthSelector,
+    VerticalPaddingSelector,
 } from "@courselit/components-library";
 import { Delete } from "@courselit/icons";
 import { Alignment } from "@courselit/common-models";
-import {
-    verticalPadding as defaultVerticalPadding,
-    horizontalPadding as defaultHorizontalPadding,
-} from "./defaults";
-import { ContentPaddingSelector } from "@courselit/components-library";
 
 interface AdminWidgetProps {
     settings: Settings;
@@ -30,6 +25,7 @@ interface AdminWidgetProps {
     address: Address;
     networkAction: boolean;
     dispatch: AppDispatch;
+    theme: Theme;
 }
 
 export default function AdminWidget({
@@ -37,6 +33,7 @@ export default function AdminWidget({
     onChange,
     address,
     dispatch,
+    theme,
 }: AdminWidgetProps): JSX.Element {
     const dummyDescription: Record<string, unknown> = {
         type: "doc",
@@ -66,12 +63,12 @@ export default function AdminWidget({
     const [headerAlignment, setHeaderAlignment] = useState<Alignment>(
         settings.headerAlignment || "left",
     );
-    const [horizontalPadding, setHorizontalPadding] = useState<number>(
-        settings.horizontalPadding || defaultHorizontalPadding,
-    );
-    const [verticalPadding, setVerticalPadding] = useState<number>(
-        settings.verticalPadding || defaultVerticalPadding,
-    );
+    const [verticalPadding, setVerticalPadding] = useState<
+        Theme["structure"]["section"]["verticalPadding"]
+    >(settings.verticalPadding || theme.structure.section.verticalPadding);
+    const [maxWidth, setMaxWidth] = useState<
+        Theme["structure"]["page"]["width"]
+    >(settings.maxWidth || theme.structure.page.width);
     const [cssId, setCssId] = useState(settings.cssId);
 
     useEffect(() => {
@@ -82,7 +79,7 @@ export default function AdminWidget({
             color,
             products,
             headerAlignment,
-            horizontalPadding,
+            maxWidth,
             verticalPadding,
             cssId,
         });
@@ -93,7 +90,7 @@ export default function AdminWidget({
         backgroundColor,
         color,
         headerAlignment,
-        horizontalPadding,
+        maxWidth,
         verticalPadding,
         cssId,
     ]);
@@ -236,13 +233,8 @@ export default function AdminWidget({
                     value={color || "inherit"}
                     onChange={(value?: string) => setColor(value)}
                 />
-                <ContentPaddingSelector
-                    value={horizontalPadding}
-                    min={50}
-                    onChange={setHorizontalPadding}
-                />
-                <ContentPaddingSelector
-                    variant="vertical"
+                <MaxWidthSelector value={maxWidth} onChange={setMaxWidth} />
+                <VerticalPaddingSelector
                     value={verticalPadding}
                     onChange={setVerticalPadding}
                 />

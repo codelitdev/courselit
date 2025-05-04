@@ -28,9 +28,8 @@ export default interface Settings extends WidgetDefaultSettings {
     title?: string;
     subtitle?: string;
     sections?: Section[];
-    horizontalPadding: number;
-    verticalPadding: number;
     titleFontSize?: number;
+    subtitleFontSize?: number;
     sectionHeaderFontSize: "font-normal" | "font-semibold" | "font-medium";
     socials?: Socials;
     socialIconsSize?: number;

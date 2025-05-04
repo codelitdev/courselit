@@ -1,10 +1,15 @@
 import React, { useState } from "react";
 import { Theme } from "@courselit/common-models";
-import { EDIT_PAGE_BUTTON_THEME } from "../../../../ui-config/strings";
-import { Cross as Close, Back, ExpandMoreRight } from "@courselit/icons";
-import { IconButton, ColorSelector } from "@courselit/components-library";
+import { ExpandMoreRight } from "@courselit/icons";
+import { ColorSelector } from "@courselit/components-library";
 import { capitalize } from "@courselit/utils";
-import { Columns3, PaletteIcon, SquareMousePointer, Type } from "lucide-react";
+import {
+    Columns3,
+    PaletteIcon,
+    SquareMousePointer,
+    Type,
+    ChevronLeft,
+} from "lucide-react";
 import TypographySelector from "./typography-selector";
 
 interface ThemeEditorProps {
@@ -198,28 +203,30 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
     };
 
     return (
-        <div className="flex flex-col">
-            <div className="flex items-center px-2 py-3 justify-between">
-                <div className="flex items-center gap-1">
-                    {navigationStack.length > 0 && (
+        <div>
+            {navigationStack.length === 0 && (
+                <div className="space-y-4 py-2">{getCurrentView()}</div>
+            )}
+            {navigationStack.length > 0 && (
+                <>
+                    <div
+                        className="flex items-center gap-2 px-2 py-2 rounded-t-md"
+                        style={{ marginTop: "-8px" }}
+                    >
                         <button
                             onClick={navigateBack}
-                            className="flex items-center text-lg font-medium"
+                            className="flex items-center rounded-md p-1 hover:bg-muted transition-colors focus:outline-none"
+                            aria-label="Back"
                         >
-                            <Back className="h-4 w-4" />
+                            <ChevronLeft className="h-4 w-4" />
                         </button>
-                    )}
-                    <span className="text-lg font-medium">
-                        {navigationStack.length === 0
-                            ? EDIT_PAGE_BUTTON_THEME
-                            : navigationStack[navigationStack.length - 1].label}
-                    </span>
-                </div>
-                <IconButton onClick={onClose} variant="soft">
-                    <Close fontSize="small" />
-                </IconButton>
-            </div>
-            {getCurrentView()}
+                        <span className="text-sm font-medium text-muted-foreground">
+                            {navigationStack[navigationStack.length - 1].label}
+                        </span>
+                    </div>
+                    <div className="py-2">{getCurrentView()}</div>
+                </>
+            )}
         </div>
     );
 }

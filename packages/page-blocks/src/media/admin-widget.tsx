@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Address, Media, Profile } from "@courselit/common-models";
+import type { Address, Media, Profile, Theme } from "@courselit/common-models";
 import Settings from "./settings";
 import {
     AdminWidgetPanel,
@@ -9,7 +9,6 @@ import {
     MediaSelector,
     Form,
     FormField,
-    ContentPaddingSelector,
     PageBuilderPropertyHeader,
     PageBuilderSlider,
     CssIdField,
@@ -17,11 +16,9 @@ import {
     AspectRatio,
     ImageObjectFit,
     Select,
+    MaxWidthSelector,
+    VerticalPaddingSelector,
 } from "@courselit/components-library";
-import {
-    verticalPadding as defaultVerticalPadding,
-    horizontalPadding as defaultHorizontalPadding,
-} from "./defaults";
 import { isVideo } from "@courselit/utils";
 
 interface AdminWidgetProps {
@@ -31,6 +28,7 @@ interface AdminWidgetProps {
     address: Address;
     networkAction: boolean;
     profile: Profile;
+    theme: Theme;
 }
 
 export default function AdminWidget({
@@ -38,6 +36,7 @@ export default function AdminWidget({
     onChange,
     profile,
     address,
+    theme,
 }: AdminWidgetProps): JSX.Element {
     const [mediaBorderRadius, setMediaBorderRadius] = useState(
         settings.mediaRadius || 2,
@@ -47,12 +46,12 @@ export default function AdminWidget({
         settings.backgroundColor,
     );
     const [media, setMedia] = useState<Partial<Media>>(settings.media || {});
-    const [horizontalPadding, setHorizontalPadding] = useState<number>(
-        settings.horizontalPadding || defaultHorizontalPadding,
-    );
-    const [verticalPadding, setVerticalPadding] = useState<number>(
-        settings.verticalPadding || defaultVerticalPadding,
-    );
+    const [maxWidth, setMaxWidth] = useState<
+        Theme["structure"]["page"]["width"]
+    >(settings.maxWidth || theme.structure.page.width);
+    const [verticalPadding, setVerticalPadding] = useState<
+        Theme["structure"]["section"]["verticalPadding"]
+    >(settings.verticalPadding || theme.structure.section.verticalPadding);
     const [cssId, setCssId] = useState(settings.cssId);
     const [playVideoInModal, setPlayVideoInModal] = useState(
         settings.playVideoInModal || false,
@@ -70,7 +69,7 @@ export default function AdminWidget({
             media,
             backgroundColor,
             mediaRadius: mediaBorderRadius,
-            horizontalPadding,
+            maxWidth,
             verticalPadding,
             cssId,
             playVideoInModal,
@@ -85,7 +84,7 @@ export default function AdminWidget({
         backgroundColor,
         media,
         mediaBorderRadius,
-        horizontalPadding,
+        maxWidth,
         verticalPadding,
         cssId,
         playVideoInModal,
@@ -179,22 +178,17 @@ export default function AdminWidget({
                     value={backgroundColor || "inherit"}
                     onChange={(value?: string) => setBackgroundColor(value)}
                 />
-                <ContentPaddingSelector
-                    value={horizontalPadding}
-                    min={50}
-                    onChange={setHorizontalPadding}
-                />
-                <ContentPaddingSelector
-                    variant="vertical"
-                    value={verticalPadding}
-                    onChange={setVerticalPadding}
-                />
                 <PageBuilderSlider
                     title="Media border radius"
                     value={mediaBorderRadius}
                     min={0}
                     max={8}
                     onChange={setMediaBorderRadius}
+                />
+                <MaxWidthSelector value={maxWidth} onChange={setMaxWidth} />
+                <VerticalPaddingSelector
+                    value={verticalPadding}
+                    onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Advanced">

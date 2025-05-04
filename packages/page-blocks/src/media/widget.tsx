@@ -2,11 +2,8 @@ import React from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
 import { Image, VideoWithPreview } from "@courselit/components-library";
-import {
-    verticalPadding as defaultVerticalPadding,
-    horizontalPadding as defaultHorizontalPadding,
-} from "./defaults";
 import { isVideo } from "@courselit/utils";
+import { Section } from "@courselit/page-primitives";
 
 const twRoundedMap = {
     "0": "rounded-none",
@@ -26,69 +23,70 @@ export default function Widget({
         youtubeLink,
         backgroundColor,
         mediaRadius = 0,
-        horizontalPadding = defaultHorizontalPadding,
-        verticalPadding = defaultVerticalPadding,
         cssId,
         playVideoInModal,
         aspectRatio,
         objectFit,
+        maxWidth,
+        verticalPadding,
     },
+    state: { theme },
 }: WidgetProps<Settings>) {
+    const overiddenTheme = JSON.parse(JSON.stringify(theme));
+    overiddenTheme.structure.page.width =
+        maxWidth || theme.structure.page.width;
+    overiddenTheme.structure.section.verticalPadding =
+        verticalPadding || theme.structure.section.verticalPadding;
+
     const hasHeroGraphic = youtubeLink || (media && media.mediaId);
 
     return (
-        <section
-            className={`py-[${verticalPadding}px]`}
+        <Section
+            theme={overiddenTheme}
             style={{
                 backgroundColor,
             }}
             id={cssId}
         >
-            <div className="mx-auto lg:max-w-[1200px]">
-                <div
-                    className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%] gap-4`}
-                >
-                    {hasHeroGraphic && (
-                        <div>
-                            <div
-                                className={`w-full text-center overflow-hidden ${twRoundedMap[mediaRadius]}`}
-                                style={{
-                                    width: "100%",
-                                }}
-                            >
-                                {isVideo(youtubeLink, media) ? (
-                                    <VideoWithPreview
-                                        videoUrl={
-                                            youtubeLink || media?.file || ""
-                                        }
-                                        aspectRatio={aspectRatio}
-                                        title={media?.caption || ""}
-                                        thumbnailUrl={media?.thumbnail || ""}
-                                        modal={playVideoInModal}
-                                    />
-                                ) : (
-                                    <Image
-                                        src={media?.file || ""}
-                                        alt={media?.caption || ""}
-                                        borderRadius={mediaRadius}
-                                        objectFit={objectFit}
-                                    />
-                                )}
-                            </div>
-                        </div>
-                    )}
-                    {!hasHeroGraphic && (
+            <div className={`flex flex-col gap-4`}>
+                {hasHeroGraphic && (
+                    <div>
                         <div
                             className={`w-full text-center overflow-hidden ${twRoundedMap[mediaRadius]}`}
                             style={{
                                 width: "100%",
                             }}
                         >
-                            <Image src="" borderRadius={0} />
+                            {isVideo(youtubeLink, media) ? (
+                                <VideoWithPreview
+                                    videoUrl={youtubeLink || media?.file || ""}
+                                    aspectRatio={aspectRatio}
+                                    title={media?.caption || ""}
+                                    thumbnailUrl={media?.thumbnail || ""}
+                                    modal={playVideoInModal}
+                                />
+                            ) : (
+                                <Image
+                                    src={media?.file || ""}
+                                    alt={media?.caption || ""}
+                                    borderRadius={mediaRadius}
+                                    objectFit={objectFit}
+                                />
+                            )}
                         </div>
-                    )}
-                </div>
+                    </div>
+                )}
+                {!hasHeroGraphic && (
+                    <div
+                        className={`w-full text-center overflow-hidden ${twRoundedMap[mediaRadius]}`}
+                        style={{
+                            width: "100%",
+                        }}
+                    >
+                        <Image src="" borderRadius={0} />
+                    </div>
+                )}
             </div>
-        </section>
+        </Section>
     );
 }

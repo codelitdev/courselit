@@ -12,10 +12,10 @@
     "dependencies": {
         "@courselit/common-logic": "workspace:^",
         "@courselit/common-models": "workspace:^",
+        "@courselit/page-primitives": "workspace:^",
         "@courselit/page-blocks": "workspace:^",
         "@courselit/components-library": "workspace:^",
         "@courselit/icons": "workspace:^",
-        "@courselit/page-primitives": "workspace:^",
         "@courselit/state-management": "workspace:^",
         "@courselit/utils": "workspace:^",
         "@hookform/resolvers": "^3.9.1",

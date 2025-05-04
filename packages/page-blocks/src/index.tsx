@@ -10,6 +10,14 @@ const maxWClasses =
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const fontSize =
     "text-lg text-xl text-2xl text-3xl text-4xl text-5xl text-6xl text-7xl text-8xl lg:text-lg lg:text-xl lg:text-2xl lg:text-3xl lg:text-4xl lg:text-5xl lg:text-6xl lg:text-7xl lg:text-8xl";
+const maxWTWClasses =
+    "lg:max-w-lg lg:max-w-xl lg:max-w-2xl lg:max-w-3xl lg:max-w-4xl lg:max-w-5xl lg:max-w-6xl";
+const verticalPaddingTWClasses =
+    "py-4 py-5 py-6 py-7 py-8 py-9 py-10 py-11 py-12 py-13 py-14 py-15 py-16 py-17 py-18 py-19 py-20";
+const horizontalPaddingTWClasses =
+    "px-4 px-5 px-6 px-7 px-8 px-9 px-10 px-11 px-12 px-13 px-14 px-15 px-16 px-17 px-18 px-19 px-20";
+const textSize =
+    "text-sm text-base text-lg text-xl text-2xl text-3xl text-4xl text-5xl text-6xl text-7xl text-8xl";
 
 export * from "./rich-text";
 export * from "./footer";

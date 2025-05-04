@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Address, Alignment } from "@courselit/common-models";
+import { Address, Alignment, Theme } from "@courselit/common-models";
 import { useEffect, useState } from "react";
 import Settings from "./settings";
 import {
@@ -11,23 +11,22 @@ import {
     TextEditor,
     Form,
     FormField,
-    ContentPaddingSelector,
     CssIdField,
+    MaxWidthSelector,
+    VerticalPaddingSelector,
 } from "@courselit/components-library";
-import {
-    verticalPadding as defaultVerticalPadding,
-    horizontalPadding as defaultHorizontalPadding,
-} from "./defaults";
 
 interface AdminWidgetProps {
     settings: Settings;
     onChange: (...args: any[]) => void;
     address: Address;
+    theme: Theme;
 }
 export default function AdminWidget({
     settings,
     onChange,
     address,
+    theme,
 }: AdminWidgetProps): JSX.Element {
     const [title, setTitle] = useState(settings.title || "Curriculum");
     const [description, setDescription] = useState(settings.description);
@@ -46,12 +45,12 @@ export default function AdminWidget({
     const [badgeForegroundColor, setBadgeForegroundColor] = useState(
         settings.badgeForegroundColor,
     );
-    const [horizontalPadding, setHorizontalPadding] = useState<number>(
-        settings.horizontalPadding || defaultHorizontalPadding,
-    );
-    const [verticalPadding, setVerticalPadding] = useState<number>(
-        settings.verticalPadding || defaultVerticalPadding,
-    );
+    const [maxWidth, setMaxWidth] = useState<
+        Theme["structure"]["page"]["width"]
+    >(settings.maxWidth || theme.structure.page.width);
+    const [verticalPadding, setVerticalPadding] = useState<
+        Theme["structure"]["section"]["verticalPadding"]
+    >(settings.verticalPadding || theme.structure.section.verticalPadding);
     const [cssId, setCssId] = useState(settings.cssId);
 
     useEffect(() => {
@@ -63,7 +62,7 @@ export default function AdminWidget({
             foregroundColor,
             badgeBackgroundColor,
             badgeForegroundColor,
-            horizontalPadding,
+            maxWidth,
             verticalPadding,
             cssId,
         });
@@ -75,7 +74,7 @@ export default function AdminWidget({
         foregroundColor,
         badgeBackgroundColor,
         badgeForegroundColor,
-        horizontalPadding,
+        maxWidth,
         verticalPadding,
         cssId,
     ]);
@@ -134,13 +133,8 @@ export default function AdminWidget({
                         setBadgeForegroundColor(value)
                     }
                 />
-                <ContentPaddingSelector
-                    value={horizontalPadding}
-                    min={50}
-                    onChange={setHorizontalPadding}
-                />
-                <ContentPaddingSelector
-                    variant="vertical"
+                <MaxWidthSelector value={maxWidth} onChange={setMaxWidth} />
+                <VerticalPaddingSelector
                     value={verticalPadding}
                     onChange={setVerticalPadding}
                 />

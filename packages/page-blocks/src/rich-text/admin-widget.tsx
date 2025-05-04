@@ -6,25 +6,28 @@ import {
     ColorSelector,
     Select,
     TextEditor,
-    ContentPaddingSelector,
     PageBuilderSlider,
+    VerticalPaddingSelector,
+    MaxWidthSelector,
 } from "@courselit/components-library";
 import Settings from "./settings";
-import { Address, HorizontalAlignment } from "@courselit/common-models";
-import {
-    verticalPadding as defaultVerticalPadding,
-    horizontalPadding as defaultHorizontalPadding,
-    fontSize as defaultFontSize,
-} from "./defaults";
+import { Address, HorizontalAlignment, Theme } from "@courselit/common-models";
+import { fontSize as defaultFontSize } from "./defaults";
 import { CssIdField } from "@courselit/components-library";
 
 export interface AboutWidgetProps {
     onChange: (...args: any[]) => void;
     settings: Settings;
     address: Address;
+    theme: Theme;
 }
 
-const AdminWidget = ({ settings, onChange, address }: AboutWidgetProps) => {
+const AdminWidget = ({
+    settings,
+    onChange,
+    address,
+    theme,
+}: AboutWidgetProps) => {
     const dummyText: Record<string, unknown> = {
         type: "doc",
         content: [
@@ -47,12 +50,12 @@ const AdminWidget = ({ settings, onChange, address }: AboutWidgetProps) => {
         settings.backgroundColor,
     );
     const [color, setColor] = useState(settings.color);
-    const [horizontalPadding, setHorizontalPadding] = useState<number>(
-        settings.horizontalPadding || defaultHorizontalPadding,
-    );
-    const [verticalPadding, setVerticalPadding] = useState<number>(
-        settings.verticalPadding || defaultVerticalPadding,
-    );
+    const [maxWidth, setMaxWidth] = useState<
+        Theme["structure"]["page"]["width"]
+    >(settings.maxWidth || theme.structure.page.width);
+    const [verticalPadding, setVerticalPadding] = useState<
+        Theme["structure"]["section"]["verticalPadding"]
+    >(settings.verticalPadding || theme.structure.section.verticalPadding);
     const [cssId, setCssId] = useState(settings.cssId);
     const [fontSize, setFontSize] = useState(
         settings.fontSize || defaultFontSize,
@@ -64,8 +67,8 @@ const AdminWidget = ({ settings, onChange, address }: AboutWidgetProps) => {
             alignment,
             color,
             backgroundColor,
-            horizontalPadding,
             verticalPadding,
+            maxWidth,
             cssId,
             fontSize,
         });
@@ -74,7 +77,7 @@ const AdminWidget = ({ settings, onChange, address }: AboutWidgetProps) => {
         alignment,
         color,
         backgroundColor,
-        horizontalPadding,
+        maxWidth,
         verticalPadding,
         cssId,
         fontSize,
@@ -116,7 +119,7 @@ const AdminWidget = ({ settings, onChange, address }: AboutWidgetProps) => {
                         setAlignment(value)
                     }
                 />
-                <ContentPaddingSelector
+                {/* <ContentPaddingSelector
                     className="mb-2"
                     value={horizontalPadding}
                     min={50}
@@ -127,13 +130,18 @@ const AdminWidget = ({ settings, onChange, address }: AboutWidgetProps) => {
                     className="mb-2"
                     value={verticalPadding}
                     onChange={setVerticalPadding}
-                />
+                /> */}
                 <PageBuilderSlider
                     title="Font size"
                     min={1}
                     max={12}
                     value={fontSize}
                     onChange={setFontSize}
+                />
+                <MaxWidthSelector value={maxWidth} onChange={setMaxWidth} />
+                <VerticalPaddingSelector
+                    value={verticalPadding}
+                    onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Advanced">

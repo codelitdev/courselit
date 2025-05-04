@@ -1,5 +1,5 @@
 import React from "react";
-import { Address } from "@courselit/common-models";
+import { Address, Theme } from "@courselit/common-models";
 import Settings from "../settings";
 import { AppDispatch } from "@courselit/state-management";
 import CustomSettings from "./custom-settings";
@@ -12,6 +12,7 @@ interface AdminWidgetProps {
     networkAction: boolean;
     dispatch: AppDispatch;
     pageData: Record<string, unknown>;
+    theme: Theme;
 }
 
 export default function AdminWidget({
@@ -20,6 +21,7 @@ export default function AdminWidget({
     onChange,
     pageData,
     address,
+    theme,
 }: AdminWidgetProps): JSX.Element {
     const customSettingsChanged = (customSettings: Settings) => {
         onChange(Object.assign({}, settings, customSettings));
@@ -32,6 +34,7 @@ export default function AdminWidget({
             onChange={customSettingsChanged}
             pageData={pageData}
             address={address}
+            theme={theme}
         />
     );
 }

@@ -8,7 +8,5 @@ export default interface Settings extends WidgetDefaultSettings {
     foregroundColor?: string;
     badgeBackgroundColor?: string;
     badgeForegroundColor?: string;
-    horizontalPadding: number;
-    verticalPadding: number;
     cssId?: string;
 }

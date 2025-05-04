@@ -20,8 +20,6 @@ export default interface Settings extends WidgetDefaultSettings {
     foregroundColor?: string;
     style: "card" | "normal";
     mediaRadius?: number;
-    horizontalPadding: number;
-    verticalPadding: number;
     secondaryButtonCaption?: string;
     secondaryButtonAction?: string;
     secondaryButtonBackground?: string;

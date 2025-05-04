@@ -5,8 +5,6 @@ export default interface Settings extends WidgetDefaultSettings {
     youtubeLink?: string;
     backgroundColor?: string;
     mediaRadius?: number;
-    horizontalPadding: number;
-    verticalPadding: number;
     cssId?: string;
     playVideoInModal?: boolean;
     aspectRatio?: AspectRatio;

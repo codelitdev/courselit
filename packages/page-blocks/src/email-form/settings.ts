@@ -11,7 +11,5 @@ export default interface Settings extends WidgetDefaultSettings {
     alignment?: Alignment | "right";
     successMessage?: string;
     failureMessage?: string;
-    horizontalPadding: number;
-    verticalPadding: number;
     cssId?: string;
 }

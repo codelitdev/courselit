@@ -16,4 +16,6 @@ export default interface Settings extends WidgetDefaultSettings {
     successMessage?: Record<string, unknown>;
     failureMessage?: string;
     editingViewShowSuccess: "1" | "0";
+    mediaRadius?: number;
+    cssId?: string;
 }

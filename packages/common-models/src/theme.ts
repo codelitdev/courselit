@@ -216,23 +216,62 @@ export default interface Theme {
     structure: {
         page: {
             width:
-                | "max-w-none"
-                | "max-w-xs"
-                | "max-w-sm"
-                | "max-w-md"
-                | "max-w-lg"
-                | "max-w-xl"
                 | "max-w-2xl"
                 | "max-w-3xl"
                 | "max-w-4xl"
                 | "max-w-5xl"
-                | "max-w-6xl"
-                | "max-w-7xl"
-                | "max-w-full"
-                | "max-w-screen-sm"
-                | "max-w-screen-md"
-                | "max-w-screen-lg"
-                | "max-w-screen-xl";
+                | "max-w-6xl";
+        };
+        section: {
+            padding: {
+                x:
+                    | "px-4"
+                    | "px-6"
+                    | "px-8"
+                    | "px-10"
+                    | "px-12"
+                    | "px-16"
+                    | "px-20"
+                    | "px-24"
+                    | "px-32"
+                    | "px-40"
+                    | "px-48"
+                    | "px-56"
+                    | "px-64";
+                y:
+                    | "py-4"
+                    | "py-6"
+                    | "py-8"
+                    | "py-10"
+                    | "py-12"
+                    | "py-16"
+                    | "py-20"
+                    | "py-24"
+                    | "py-32"
+                    | "py-40"
+                    | "py-48"
+                    | "py-56"
+                    | "py-64";
+            };
+            verticalPadding:
+                | "py-0"
+                | "py-1"
+                | "py-2"
+                | "py-3"
+                | "py-4"
+                | "py-5"
+                | "py-6"
+                | "py-8"
+                | "py-10"
+                | "py-12"
+                | "py-16"
+                | "py-20"
+                | "py-24"
+                | "py-32"
+                | "py-40"
+                | "py-48"
+                | "py-56"
+                | "py-64";
         };
     };
 }

@@ -10,12 +10,16 @@ import {
     AdminWidgetPanel,
     Form,
     FormField,
+    VerticalPaddingSelector,
+    MaxWidthSelector,
+    PageBuilderSlider,
 } from "@courselit/components-library";
 import {
     Address,
     Alignment,
     Constants,
     PaymentPlan,
+    Theme,
 } from "@courselit/common-models";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "../constants";
 
@@ -25,6 +29,7 @@ interface CustomSettingsProps {
     pageData: Record<string, unknown>;
     onChange: (...args: any[]) => void;
     address: Address;
+    theme: Theme;
 }
 
 export default function CustomSettings({
@@ -32,6 +37,7 @@ export default function CustomSettings({
     onChange,
     pageData,
     address,
+    theme,
 }: CustomSettingsProps): JSX.Element {
     const defaultSuccessMessage: Record<string, unknown> = {
         type: "doc",
@@ -74,6 +80,15 @@ export default function CustomSettings({
     const [editingViewShowSuccess, setEditingViewShowSuccess] = useState<
         "1" | "0"
     >(settings.editingViewShowSuccess || "0");
+    const [maxWidth, setMaxWidth] = useState<
+        Theme["structure"]["page"]["width"]
+    >(settings.maxWidth || theme.structure.page.width);
+    const [verticalPadding, setVerticalPadding] = useState<
+        Theme["structure"]["section"]["verticalPadding"]
+    >(settings.verticalPadding || theme.structure.section.verticalPadding);
+    const [mediaBorderRadius, setMediaBorderRadius] = useState(
+        settings.mediaRadius || 2,
+    );
     const type = Object.keys(pageData).length === 0 ? "site" : "product";
     const isLeadMagnet =
         type === Constants.PageType.PRODUCT &&
@@ -97,6 +112,9 @@ export default function CustomSettings({
             successMessage,
             failureMessage,
             editingViewShowSuccess,
+            maxWidth,
+            verticalPadding,
+            mediaRadius: mediaBorderRadius,
         });
     }, [
         title,
@@ -112,6 +130,9 @@ export default function CustomSettings({
         successMessage,
         failureMessage,
         editingViewShowSuccess,
+        maxWidth,
+        verticalPadding,
+        mediaBorderRadius,
     ]);
 
     return (
@@ -243,6 +264,18 @@ export default function CustomSettings({
                             { label: "Center", value: "center" },
                         ]}
                         onChange={(value: Alignment) => setTextAlignment(value)}
+                    />
+                    <MaxWidthSelector value={maxWidth} onChange={setMaxWidth} />
+                    <VerticalPaddingSelector
+                        value={verticalPadding}
+                        onChange={setVerticalPadding}
+                    />
+                    <PageBuilderSlider
+                        title="Media border radius"
+                        value={mediaBorderRadius}
+                        min={0}
+                        max={8}
+                        onChange={setMediaBorderRadius}
                     />
                 </AdminWidgetPanel>
             </div>

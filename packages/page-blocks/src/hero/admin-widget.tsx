@@ -6,6 +6,7 @@ import type {
     Alignment,
     Media,
     Profile,
+    Theme,
 } from "@courselit/common-models";
 import Settings from "./settings";
 import {
@@ -16,7 +17,6 @@ import {
     TextEditor,
     Form,
     FormField,
-    ContentPaddingSelector,
     Accordion,
     AccordionItem,
     AccordionTrigger,
@@ -27,11 +27,11 @@ import {
     AspectRatio,
     ImageObjectFit,
     Checkbox,
+    VerticalPaddingSelector,
+    MaxWidthSelector,
 } from "@courselit/components-library";
-import {
-    verticalPadding as defaultVerticalPadding,
-    horizontalPadding as defaultHorizontalPadding,
-} from "./defaults";
+
+
 import { isVideo } from "@courselit/utils";
 
 interface AdminWidgetProps {
@@ -41,6 +41,7 @@ interface AdminWidgetProps {
     address: Address;
     networkAction: boolean;
     profile: Profile;
+    theme: Theme;
 }
 
 export default function AdminWidget({
@@ -48,6 +49,7 @@ export default function AdminWidget({
     onChange,
     profile,
     address,
+    theme,
 }: AdminWidgetProps): JSX.Element {
     const dummyDescription: Record<string, unknown> = {
         type: "doc",
@@ -88,12 +90,6 @@ export default function AdminWidget({
     );
     const [media, setMedia] = useState<Partial<Media>>(settings.media || {});
     const [style, setStyle] = useState(settings.style || "normal");
-    const [horizontalPadding, setHorizontalPadding] = useState<number>(
-        settings.horizontalPadding || defaultHorizontalPadding,
-    );
-    const [verticalPadding, setVerticalPadding] = useState<number>(
-        settings.verticalPadding || defaultVerticalPadding,
-    );
     const [secondaryButtonAction, setSecondaryButtonAction] = useState(
         settings.secondaryButtonAction,
     );
@@ -125,6 +121,12 @@ export default function AdminWidget({
     const [objectFit, setObjectFit] = useState<ImageObjectFit>(
         settings.objectFit || "cover",
     );
+    const [verticalPadding, setVerticalPadding] = useState<
+        Theme["structure"]["section"]["verticalPadding"]
+    >(settings.verticalPadding || theme.structure.section.verticalPadding);
+    const [maxWidth, setMaxWidth] = useState<
+        Theme["structure"]["page"]["width"]
+    >(settings.maxWidth || theme.structure.page.width);
 
     const onSettingsChanged = () =>
         onChange({
@@ -141,7 +143,6 @@ export default function AdminWidget({
             buttonBackground,
             buttonForeground,
             mediaRadius: mediaBorderRadius,
-            horizontalPadding,
             verticalPadding,
             secondaryButtonAction,
             secondaryButtonCaption,
@@ -154,6 +155,7 @@ export default function AdminWidget({
             playVideoInModal,
             aspectRatio,
             objectFit,
+            maxWidth,
         });
 
     useEffect(() => {
@@ -172,7 +174,6 @@ export default function AdminWidget({
         buttonForeground,
         media,
         mediaBorderRadius,
-        horizontalPadding,
         verticalPadding,
         secondaryButtonAction,
         secondaryButtonCaption,
@@ -185,6 +186,7 @@ export default function AdminWidget({
         playVideoInModal,
         aspectRatio,
         objectFit,
+        maxWidth,
     ]);
 
     return (
@@ -416,16 +418,6 @@ export default function AdminWidget({
                     ]}
                     onChange={(value: "normal" | "card") => setStyle(value)}
                 />
-                <ContentPaddingSelector
-                    value={horizontalPadding}
-                    min={50}
-                    onChange={setHorizontalPadding}
-                />
-                <ContentPaddingSelector
-                    variant="vertical"
-                    value={verticalPadding}
-                    onChange={setVerticalPadding}
-                />
                 <PageBuilderSlider
                     title="Title font size"
                     min={4}
@@ -446,6 +438,11 @@ export default function AdminWidget({
                     min={0}
                     max={8}
                     onChange={setMediaBorderRadius}
+                />
+                <MaxWidthSelector value={maxWidth} onChange={setMaxWidth} />
+                <VerticalPaddingSelector
+                    value={verticalPadding}
+                    onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Advanced">

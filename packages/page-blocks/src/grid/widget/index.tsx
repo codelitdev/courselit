@@ -2,12 +2,13 @@ import { WidgetProps } from "@courselit/common-models";
 import Settings from "../settings";
 import { TextRenderer, Link } from "@courselit/components-library";
 import Itemm from "./item";
+import { columns as defaultColumns } from "../defaults";
 import {
-    verticalPadding as defaultVerticalPadding,
-    horizontalPadding as defaultHorizontalPadding,
-    columns as defaultColumns,
-} from "../defaults";
-import { Header1, Button, Subheader1 } from "@courselit/page-primitives";
+    Header1,
+    Button,
+    Subheader1,
+    Section,
+} from "@courselit/page-primitives";
 
 const twGridColsMap = {
     2: "lg:grid-cols-2",
@@ -26,8 +27,6 @@ export default function Widget({
         buttonForeground,
         backgroundColor,
         foregroundColor,
-        horizontalPadding = defaultHorizontalPadding,
-        verticalPadding = defaultVerticalPadding,
         items,
         itemBackgroundColor,
         itemForegroundColor,
@@ -35,97 +34,97 @@ export default function Widget({
         itemBorderRadius,
         cssId,
         columns = defaultColumns,
+        maxWidth,
+        verticalPadding,
     },
     state: { theme },
 }: WidgetProps<Settings>): JSX.Element {
+    const overiddenTheme = JSON.parse(JSON.stringify(theme));
+    overiddenTheme.structure.page.width =
+        maxWidth || theme.structure.page.width;
+    overiddenTheme.structure.section.verticalPadding =
+        verticalPadding || theme.structure.section.verticalPadding;
+
     return (
-        <section
-            className={`py-[${verticalPadding}px]`}
+        <Section
+            theme={overiddenTheme}
             style={{
                 backgroundColor,
                 color: foregroundColor,
             }}
             id={cssId}
         >
-            <div className="mx-auto lg:max-w-[1200px]">
+            <div className={`flex flex-col gap-4`}>
                 <div
-                    className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}
+                    className={`flex flex-col ${
+                        headerAlignment === "center"
+                            ? "items-center"
+                            : "items-start"
+                    }`}
                 >
-                    <div
-                        className={`flex flex-col ${
-                            headerAlignment === "center"
-                                ? "items-center"
-                                : "items-start"
-                        }`}
-                    >
-                        <Header1 className="mb-4" theme={theme}>
-                            {title}
-                        </Header1>
-                        {description && (
-                            <div
-                                className={`mb-4 ${
-                                    headerAlignment === "center"
-                                        ? "text-center"
-                                        : "text-left"
-                                }`}
+                    <Header1 className="mb-4" theme={overiddenTheme}>
+                        {title}
+                    </Header1>
+                    {description && (
+                        <div
+                            className={`mb-4 ${
+                                headerAlignment === "center"
+                                    ? "text-center"
+                                    : "text-left"
+                            }`}
+                        >
+                            <Subheader1 theme={overiddenTheme}>
+                                <TextRenderer json={description} />
+                            </Subheader1>
+                        </div>
+                    )}
+                    {buttonAction && buttonCaption && (
+                        <Link href={buttonAction} className="mb-12">
+                            <Button
+                                style={{
+                                    backgroundColor:
+                                        buttonBackground ||
+                                        theme?.colors?.primary,
+                                    color: buttonForeground || "#fff",
+                                }}
+                                theme={overiddenTheme}
+                                className="w-full"
                             >
-                                <Subheader1 theme={theme}>
-                                    <TextRenderer json={description} />
-                                </Subheader1>
-                            </div>
-                        )}
-                        {buttonAction && buttonCaption && (
-                            <Link href={buttonAction} className="mb-12">
-                                <Button
-                                    style={{
-                                        backgroundColor:
-                                            buttonBackground ||
-                                            theme?.colors?.primary,
-                                        color: buttonForeground || "#fff",
-                                    }}
-                                    theme={theme}
-                                    className="w-full"
-                                >
-                                    {buttonCaption}
-                                </Button>
-                            </Link>
-                        )}
-                    </div>
-                    {items && items.length > 0 && (
-                        <>
-                            <div
-                                className={`grid grid-cols-1 md:grid-cols-2 ${twGridColsMap[columns]} gap-4`}
-                            >
-                                {items.map((item, index) => (
-                                    <div key={index} className="flex flex-col">
-                                        <div className="h-full">
-                                            <Itemm
-                                                item={item}
-                                                buttonBackground={
-                                                    buttonBackground
-                                                }
-                                                buttonForeground={
-                                                    buttonForeground
-                                                }
-                                                alignment={itemsAlignment}
-                                                backgroundColor={
-                                                    itemBackgroundColor
-                                                }
-                                                foregroundColor={
-                                                    itemForegroundColor
-                                                }
-                                                borderColor={itemBorderColor}
-                                                borderRadius={itemBorderRadius}
-                                                theme={theme}
-                                            />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </>
+                                {buttonCaption}
+                            </Button>
+                        </Link>
                     )}
                 </div>
+                {items && items.length > 0 && (
+                    <>
+                        <div
+                            className={`grid grid-cols-1 md:grid-cols-2 ${twGridColsMap[columns]} gap-4`}
+                        >
+                            {items.map((item, index) => (
+                                <div key={index} className="flex flex-col">
+                                    <div className="h-full">
+                                        <Itemm
+                                            item={item}
+                                            buttonBackground={buttonBackground}
+                                            buttonForeground={buttonForeground}
+                                            alignment={itemsAlignment}
+                                            backgroundColor={
+                                                itemBackgroundColor
+                                            }
+                                            foregroundColor={
+                                                itemForegroundColor
+                                            }
+                                            borderColor={itemBorderColor}
+                                            borderRadius={itemBorderRadius}
+                                            theme={overiddenTheme}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
             </div>
-        </section>
+        </Section>
     );
 }

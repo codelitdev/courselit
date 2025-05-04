@@ -8,37 +8,38 @@ import {
     ColorSelector,
     IconButton,
     PageBuilderSlider,
-    Select,
-    ContentPaddingSelector,
     Accordion,
     AccordionItem,
     AccordionTrigger,
     AccordionContent,
     Form,
     FormField,
+    MaxWidthSelector,
+    VerticalPaddingSelector,
 } from "@courselit/components-library";
 import { Link, Section, Socials } from "../settings";
 import { Check } from "@courselit/icons";
 import LinkEditor from "./link-editor";
 import {
-    horizontalPadding as defaultHorizontalPadding,
-    verticalPadding as defaultVerticalPadding,
     titleFontSize as defaultTitleFontSize,
-    sectionHeaderFontSize as defaultSectionHeaderFontSize,
+    subtitleFontSize as defaultSubtitleFontSize,
     socials as defaultSocials,
     socialIconsSize as defaultSocialIconsSize,
 } from "../defaults";
 import { DragAndDrop } from "@courselit/components-library";
 import { generateUniqueId } from "@courselit/utils";
+import { Theme } from "@courselit/common-models";
 
 export interface AdminWidgetProps {
     onChange: (...args: any[]) => void;
     settings: Settings;
+    theme: Theme;
 }
 
 export default function AdminWidget({
     settings,
     onChange,
+    theme,
 }: AdminWidgetProps): JSX.Element {
     const [sections, setSections] = useState<Section[]>(
         settings.sections || [
@@ -66,20 +67,17 @@ export default function AdminWidget({
     const [foregroundColor, setForegroundColor] = useState(
         settings.foregroundColor,
     );
-    const [horizontalPadding, setHorizontalPadding] = useState<number>(
-        settings.horizontalPadding || defaultHorizontalPadding,
-    );
-    const [verticalPadding, setVerticalPadding] = useState<number>(
-        settings.verticalPadding || defaultVerticalPadding,
-    );
+    const [maxWidth, setMaxWidth] = useState<
+        Theme["structure"]["page"]["width"]
+    >(settings.maxWidth || theme.structure.page.width);
+    const [verticalPadding, setVerticalPadding] = useState<
+        Theme["structure"]["section"]["verticalPadding"]
+    >(settings.verticalPadding || theme.structure.section.verticalPadding);
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [sectionName, setSectionName] = useState("");
     const [sectionBeingEdited, setSectionBeingEdited] = useState(-1);
     const [titleFontSize, setTitleFontSize] = useState(
         settings.titleFontSize || defaultTitleFontSize,
-    );
-    const [sectionHeaderFontSize, setSectionHeaderFontSize] = useState(
-        settings.sectionHeaderFontSize || defaultSectionHeaderFontSize,
     );
     const [socials, setSocials] = useState<Socials>(
         settings.socials || defaultSocials,
@@ -87,27 +85,30 @@ export default function AdminWidget({
     const [socialIconsSize, setSocialIconsSize] = useState(
         settings.socialIconsSize || defaultSocialIconsSize,
     );
+    const [subtitleFontSize, setSubtitleFontSize] = useState(
+        settings.subtitleFontSize || defaultSubtitleFontSize,
+    );
 
     useEffect(() => {
         onChange({
             sections,
             backgroundColor,
             foregroundColor,
-            horizontalPadding,
+            maxWidth,
             verticalPadding,
             titleFontSize,
-            sectionHeaderFontSize,
             socials,
             socialIconsSize,
+            subtitleFontSize,
         });
     }, [
         sections,
         backgroundColor,
         foregroundColor,
-        horizontalPadding,
+        maxWidth,
         verticalPadding,
         titleFontSize,
-        sectionHeaderFontSize,
+        subtitleFontSize,
         socials,
         socialIconsSize,
     ]);
@@ -354,28 +355,6 @@ export default function AdminWidget({
                     value={backgroundColor || "inherit"}
                     onChange={(value?: string) => setBackgroundColor(value)}
                 />
-                <Select
-                    title="Section headers font weight"
-                    value={sectionHeaderFontSize}
-                    options={[
-                        { label: "Normal", value: "font-normal" },
-                        { label: "Bold", value: "font-medium" },
-                        { label: "Bolder", value: "font-semibold" },
-                    ]}
-                    onChange={(
-                        value: "font-semibold" | "font-normal" | "font-medium",
-                    ) => setSectionHeaderFontSize(value)}
-                />
-                <ContentPaddingSelector
-                    value={horizontalPadding}
-                    min={50}
-                    onChange={setHorizontalPadding}
-                />
-                <ContentPaddingSelector
-                    variant="vertical"
-                    value={verticalPadding}
-                    onChange={setVerticalPadding}
-                />
                 <PageBuilderSlider
                     title="Title font size"
                     min={2}
@@ -383,12 +362,24 @@ export default function AdminWidget({
                     value={titleFontSize}
                     onChange={setTitleFontSize}
                 />
+                {/* <PageBuilderSlider
+                    title="Subtitle font size"
+                    min={1}
+                    max={4}
+                    value={subtitleFontSize}
+                    onChange={setSubtitleFontSize}
+                /> */}
                 <PageBuilderSlider
                     title="Social icons size"
                     min={16}
                     max={48}
                     value={socialIconsSize}
                     onChange={setSocialIconsSize}
+                />
+                <MaxWidthSelector value={maxWidth} onChange={setMaxWidth} />
+                <VerticalPaddingSelector
+                    value={verticalPadding}
+                    onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>
         </div>

@@ -9,12 +9,13 @@ import {
 } from "@courselit/state-management";
 import type {
     Media,
-    Theme,
+    // Theme,
     Typeface,
     WidgetInstance,
 } from "@courselit/common-models";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
+import { defaultTheme } from "@courselit/page-primitives";
 
 interface MasterLayoutProps {
     title: string;
@@ -24,7 +25,6 @@ interface MasterLayoutProps {
     children?: ReactNode;
     childrenOnTop?: boolean;
     typefaces: Typeface[];
-    theme: Theme;
     dispatch: AppDispatch;
     description?: string;
     socialImage?: Media;
@@ -47,6 +47,7 @@ export const MasterLayout = ({
     state,
 }: MasterLayoutProps) => {
     const { status } = useSession();
+    state.theme = defaultTheme;
 
     const primaryFontFamily = typefaces.filter(
         (x) => x.section === "default",
@@ -146,7 +147,6 @@ const mapStateToProps = (state: AppState) => ({
     siteInfo: state.siteinfo,
     address: state.address,
     typefaces: state.typefaces,
-    theme: state.theme,
     state: state,
 });
 

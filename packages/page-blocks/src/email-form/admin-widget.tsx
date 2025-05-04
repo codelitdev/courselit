@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import type { Address } from "@courselit/common-models";
+import type { Address, Theme } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
 import type Settings from "./settings";
 import {
@@ -10,16 +10,15 @@ import {
     Select,
     Form,
     FormField,
-    ContentPaddingSelector,
     CssIdField,
+    MaxWidthSelector,
+    VerticalPaddingSelector,
 } from "@courselit/components-library";
 import {
     DEFAULT_BTN_TEXT,
     DEFAULT_FAILURE_MESSAGE,
     DEFAULT_SUCCESS_MESSAGE,
     DEFAULT_TITLE,
-    verticalPadding as defaultVerticalPadding,
-    horizontalPadding as defaultHorizontalPadding,
 } from "./defaults";
 
 interface AdminWidgetProps {
@@ -29,11 +28,13 @@ interface AdminWidgetProps {
     address: Address;
     networkAction: boolean;
     dispatch: AppDispatch;
+    theme: Theme;
 }
 
 export default function AdminWidget({
     settings,
     onChange,
+    theme,
 }: AdminWidgetProps): JSX.Element {
     const [title, setTitle] = useState(settings.title);
     const [subtitle, setSubtitle] = useState(settings.subtitle);
@@ -57,12 +58,12 @@ export default function AdminWidget({
         settings.btnForegroundColor,
     );
     const [alignment, setAlignment] = useState(settings.alignment || "left");
-    const [horizontalPadding, setHorizontalPadding] = useState<number>(
-        settings.horizontalPadding || defaultHorizontalPadding,
-    );
-    const [verticalPadding, setVerticalPadding] = useState<number>(
-        settings.verticalPadding || defaultVerticalPadding,
-    );
+    const [maxWidth, setMaxWidth] = useState<
+        Theme["structure"]["page"]["width"]
+    >(settings.maxWidth || theme.structure.page.width);
+    const [verticalPadding, setVerticalPadding] = useState<
+        Theme["structure"]["section"]["verticalPadding"]
+    >(settings.verticalPadding || theme.structure.section.verticalPadding);
     const [cssId, setCssId] = useState(settings.cssId);
 
     useEffect(() => {
@@ -77,7 +78,7 @@ export default function AdminWidget({
             alignment,
             successMessage,
             failureMessage,
-            horizontalPadding,
+            maxWidth,
             verticalPadding,
             cssId,
         });
@@ -92,7 +93,7 @@ export default function AdminWidget({
         alignment,
         successMessage,
         failureMessage,
-        horizontalPadding,
+        maxWidth,
         verticalPadding,
         cssId,
     ]);
@@ -173,15 +174,8 @@ export default function AdminWidget({
                         { label: "Right", value: "right" },
                     ]}
                 />
-                <ContentPaddingSelector
-                    className="mb-2"
-                    value={horizontalPadding}
-                    min={50}
-                    onChange={setHorizontalPadding}
-                />
-                <ContentPaddingSelector
-                    variant="vertical"
-                    className="mb-2"
+                <MaxWidthSelector value={maxWidth} onChange={setMaxWidth} />
+                <VerticalPaddingSelector
                     value={verticalPadding}
                     onChange={setVerticalPadding}
                 />

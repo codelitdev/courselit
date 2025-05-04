@@ -22,6 +22,7 @@ import {
     TOAST_TITLE_ERROR,
     EDIT_PAGE_BUTTON_VIEW,
     EDIT_PAGE_BUTTON_THEME,
+    EDIT_PAGE_ADD_WIDGET_TITLE,
 } from "../../../ui-config/strings";
 import { useRouter } from "next/navigation";
 import {
@@ -40,7 +41,6 @@ import { ArrowUpFromLine, Eye, LogOut, Palette, Earth } from "lucide-react";
 import { cn } from "@/lib/shadcn-utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import {
     Tooltip,
     TooltipContent,
@@ -48,6 +48,14 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import Link from "next/link";
+import { PanelHeader } from "./panel-header";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
@@ -105,6 +113,8 @@ export default function PageEditor({
     const [draftTheme, setDraftTheme] = useState<Theme>();
     const [theme, setTheme] = useState<Theme>();
     const { toast } = useToast();
+    const [pages, setPages] = useState<Page[]>([]);
+    const [loadingPages, setLoadingPages] = useState(true);
 
     const router = useRouter();
     const debouncedSave = useCallback(
@@ -121,7 +131,44 @@ export default function PageEditor({
     useEffect(() => {
         loadDraftTypefaces();
         loadPage();
-    }, []);
+        
+        loadPages();
+    }, [address.backend, dispatch]);
+
+        async function loadPages() {
+            setLoadingPages(true);
+            const query = `
+                query {
+                    pages: getPages(type: SITE) {
+                        pageId,
+                        name,
+                        entityId,
+                        deleteable
+                    }
+                }
+            `;
+            const fetch = new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setPayload(query)
+                .setIsGraphQLEndpoint(true)
+                .build();
+            try {
+                dispatch && dispatch(networkAction(true));
+                const response = await fetch.exec();
+                if (response.pages) {
+                    setPages(response.pages);
+                }
+            } catch (err: any) {
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: err.message || "Failed to load pages",
+                    variant: "destructive",
+                });
+            } finally {
+                setLoadingPages(false);
+                dispatch && dispatch(networkAction(false));
+            }
+        }
 
     useEffect(() => {
         if (JSON.stringify(layout) !== JSON.stringify(page.draftLayout)) {
@@ -639,15 +686,37 @@ export default function PageEditor({
                 <div className="fixed w-full border-b z-10 bg-background">
                     <header className="flex w-full h-14 px-6 justify-between items-center">
                         <div className="flex items-center gap-3">
-                            <Badge
-                                variant="outline"
-                                className="text-sm font-medium"
-                            >
-                                {page.type}
-                            </Badge>
-                            <h1 className="text-lg font-semibold">
-                                {page.name}
-                            </h1>
+                            <div className="w-[220px]">
+                                {loadingPages ? (
+                                    <div className="flex flex-col gap-2">
+                                        <Skeleton className="h-10 w-full rounded-md" />
+                                    </div>
+                                ) : pages.length > 0 && page.pageId ? (
+                                    <Select
+                                        value={page.pageId}
+                                        onValueChange={(value) => {
+                                            if (value !== page.pageId) {
+                                                router.push(`/dashboard/page/${value}`);
+                                            }
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Select page" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {pages.map((p) => (
+                                                <SelectItem key={p.pageId} value={p.pageId}>
+                                                    {p.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                ) : (
+                                    <div className="h-10 flex items-center px-3 border rounded-md text-sm text-muted-foreground">
+                                        No pages found
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
@@ -769,12 +838,20 @@ export default function PageEditor({
                 </div>
                 <div className="flex w-full h-[calc(100vh-56px)] mt-14 gap-4 p-4 bg-muted/10">
                     {leftPaneContent !== "none" && (
-                        <div className="w-[300px] rounded-xl border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm">
-                            <ScrollArea className="h-full">
-                                <div>
-                                    <div className="space-y-4">
-                                        {activeSidePaneContent}
-                                    </div>
+                        <div className="w-[300px] rounded-xl border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm flex flex-col overflow-hidden">
+                            <PanelHeader 
+                                title={
+                                    leftPaneContent === "widgets" ? EDIT_PAGE_ADD_WIDGET_TITLE :
+                                    leftPaneContent === "editor" ? "Edit Widget" :
+                                    leftPaneContent === "fonts" ? "Fonts" :
+                                    leftPaneContent === "theme" ? "Theme" :
+                                    leftPaneContent === "seo" ? "SEO" : ""
+                                }
+                                onClose={onClose}
+                            />
+                            <ScrollArea className="h-[calc(100%-56px)]">
+                                <div className="py-2 space-y-4">
+                                    {activeSidePaneContent}
                                 </div>
                             </ScrollArea>
                         </div>

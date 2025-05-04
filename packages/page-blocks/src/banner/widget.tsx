@@ -20,7 +20,20 @@ import {
     Preheader,
     Text2,
     Subheader1,
+    Section,
 } from "@courselit/page-primitives";
+
+const twRoundedMap = {
+    "0": "rounded-none",
+    "1": "rounded-sm",
+    "2": "rounded",
+    "3": "rounded-md",
+    "4": "rounded-lg",
+    "5": "rounded-xl",
+    "6": "rounded-2xl",
+    "7": "rounded-3xl",
+    "8": "rounded-full",
+};
 
 function isEmptyDoc(description) {
     return (
@@ -52,17 +65,27 @@ export default function Widget({
         successMessage,
         failureMessage,
         editingViewShowSuccess,
+        maxWidth,
+        verticalPadding,
+        cssId,
+        mediaRadius = 2,
     },
     state,
     pageData: product,
     dispatch,
     editing,
 }: WidgetProps<Settings>): JSX.Element {
+    const { theme } = state;
+    const overiddenTheme = JSON.parse(JSON.stringify(theme));
+    overiddenTheme.structure.page.width =
+        maxWidth || theme.structure.page.width;
+    overiddenTheme.structure.section.verticalPadding =
+        verticalPadding || theme.structure.section.verticalPadding;
+
     const [email, setEmail] = useState("");
     const [success, setSuccess] = useState(false);
     const { toast } = useToast();
     const type = product.pageType;
-    const { theme } = state;
     const defaultSuccessMessage: Record<string, unknown> = {
         type: "doc",
         content: [
@@ -173,23 +196,25 @@ export default function Widget({
               : product.name)) as string;
 
     return (
-        <section
+        <Section
+            theme={overiddenTheme}
             style={{
                 backgroundColor,
             }}
+            id={cssId}
         >
             <div
                 style={{
                     flexDirection: direction,
                     alignItems: !verticalLayout ? "center" : "",
                 }}
-                className={`flex flex-col space-between ${direction} mx-auto lg:max-w-[1200px]`}
+                className={`flex flex-col gap-4 space-between ${direction}`}
             >
                 {featuredImage && (
                     <div
-                        className={`p-4 text-center ${
+                        className={`text-center overflow-hidden ${
                             verticalLayout ? "md:w-full" : "w-full md:w-1/2"
-                        }`}
+                        } ${twRoundedMap[mediaRadius]}`}
                     >
                         <Image
                             src={featuredImage.file}
@@ -198,7 +223,7 @@ export default function Widget({
                     </div>
                 )}
                 <div
-                    className={`p-4 text-center ${
+                    className={`text-center ${
                         verticalLayout ? "md:w-full" : "w-full md:w-1/2"
                     }`}
                     style={{ color }}
@@ -212,7 +237,7 @@ export default function Widget({
                     >
                         {type === Constants.PageType.PRODUCT &&
                             !isLeadMagnet && (
-                                <Preheader theme={theme}>
+                                <Preheader theme={overiddenTheme}>
                                     {getSymbolFromCurrency(
                                         state.siteinfo.currencyISOCode,
                                     )}
@@ -228,7 +253,9 @@ export default function Widget({
                                 </Preheader>
                             )}
                         <div className="pb-1 mb-4">
-                            <Header1 theme={theme}>{titleText}</Header1>
+                            <Header1 theme={overiddenTheme}>
+                                {titleText}
+                            </Header1>
                         </div>
                         {finalDescription && (
                             <div
@@ -238,7 +265,7 @@ export default function Widget({
                                         : "text-left"
                                 }`}
                             >
-                                <Subheader1 theme={theme}>
+                                <Subheader1 theme={overiddenTheme}>
                                     <TextRenderer json={finalDescription} />
                                 </Subheader1>
                             </div>
@@ -248,7 +275,7 @@ export default function Widget({
                                 <div>
                                     {((editing && showEditingView === "1") ||
                                         success) && (
-                                        <Subheader1 theme={theme}>
+                                        <Subheader1 theme={overiddenTheme}>
                                             <TextRenderer
                                                 json={
                                                     successMessage ||
@@ -265,13 +292,13 @@ export default function Widget({
                                                 onSubmit={onSubmit}
                                             >
                                                 <Label
-                                                    theme={theme}
+                                                    theme={overiddenTheme}
                                                     htmlFor="email"
                                                 >
                                                     Email
                                                 </Label>
                                                 <Input
-                                                    theme={theme}
+                                                    theme={overiddenTheme}
                                                     value={email}
                                                     onChange={(e) =>
                                                         setEmail(e.target.value)
@@ -281,7 +308,7 @@ export default function Widget({
                                                     required
                                                 />
                                                 <Button
-                                                    theme={theme}
+                                                    theme={overiddenTheme}
                                                     style={{
                                                         backgroundColor:
                                                             buttonBackground ||
@@ -310,7 +337,7 @@ export default function Widget({
                                     href={`/checkout?type=course&id=${product.courseId}`}
                                 >
                                     <Button
-                                        theme={theme}
+                                        theme={overiddenTheme}
                                         style={{
                                             backgroundColor:
                                                 buttonBackground ||
@@ -368,6 +395,6 @@ export default function Widget({
                     </div>
                 </div>
             </div>
-        </section>
+        </Section>
     );
 }

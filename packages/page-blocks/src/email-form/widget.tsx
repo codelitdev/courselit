@@ -19,11 +19,8 @@ import {
     Button,
     Input,
     Label,
+    Section,
 } from "@courselit/page-primitives";
-import {
-    verticalPadding as defaultVerticalPadding,
-    horizontalPadding as defaultHorizontalPadding,
-} from "./defaults";
 import Script from "next/script";
 
 const Widget = ({
@@ -38,22 +35,28 @@ const Widget = ({
         alignment = "left",
         successMessage,
         failureMessage,
-        horizontalPadding = defaultHorizontalPadding,
-        verticalPadding = defaultVerticalPadding,
         cssId,
+        maxWidth,
+        verticalPadding,
     },
     state,
     dispatch,
     editing,
     id,
 }: WidgetProps<Settings>): JSX.Element => {
+    const { theme } = state;
+    const overiddenTheme = JSON.parse(JSON.stringify(theme));
+    overiddenTheme.structure.page.width =
+        maxWidth || theme.structure.page.width;
+    overiddenTheme.structure.section.verticalPadding =
+        verticalPadding || theme.structure.section.verticalPadding;
+
     const [email, setEmail] = useState("");
     const [name, setName] = useState("");
     const [turnstileToken, setTurnstileToken] = useState<string>("");
     const [errorMessage, setErrorMessage] = useState<string>("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
-    const { theme } = state;
 
     const justifyContent =
         alignment === "center"
@@ -129,108 +132,105 @@ const Widget = ({
     };
 
     return (
-        <section
-            className={`py-[${verticalPadding}px]`}
+        <Section
+            theme={overiddenTheme}
             style={{
                 backgroundColor,
                 color: foregroundColor,
             }}
             id={cssId}
         >
-            <div className="mx-auto lg:max-w-[1200px]">
-                <Form
-                    onSubmit={onSubmit}
-                    className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}
+            <Form
+                onSubmit={onSubmit}
+                className={`flex flex-col gap-4`}
+                style={{
+                    alignItems: justifyContent,
+                }}
+            >
+                <Header2 theme={overiddenTheme} className="mb-4">
+                    {title || DEFAULT_TITLE}
+                </Header2>
+                {subtitle && (
+                    <Subheader1 theme={overiddenTheme} className="mb-4">
+                        {subtitle}
+                    </Subheader1>
+                )}
+                {errorMessage && (
+                    <Text1 theme={overiddenTheme} className="my-1 text-red-600">
+                        {errorMessage}
+                    </Text1>
+                )}
+                <div
+                    className="flex flex-col md:!flex-row md:!items-end gap-2 w-full"
                     style={{
-                        alignItems: justifyContent,
+                        justifyContent,
                     }}
                 >
-                    <Header2 theme={theme} className="mb-4">
-                        {title || DEFAULT_TITLE}
-                    </Header2>
-                    {subtitle && (
-                        <Subheader1 theme={theme} className="mb-4">
-                            {subtitle}
-                        </Subheader1>
-                    )}
-                    {errorMessage && (
-                        <Text1 theme={theme} className="my-1 text-red-600">
-                            {errorMessage}
-                        </Text1>
-                    )}
-                    <div
-                        className="flex flex-col md:!flex-row md:!items-end gap-2 w-full"
-                        style={{
-                            justifyContent,
-                        }}
-                    >
-                        <div className="flex flex-col gap-1">
-                            <Label theme={theme} htmlFor="name">
-                                Name
-                            </Label>
-                            <Input
-                                theme={theme}
-                                id="name"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                placeholder="Enter your name"
-                                type="text"
-                                required
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <Label theme={theme} htmlFor="email">
-                                Email
-                            </Label>
-                            <Input
-                                theme={theme}
-                                id="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="Enter your email"
-                                type="email"
-                                required
-                            />
-                        </div>
-                        {!editing && state.config.turnstileSiteKey && (
-                            <>
-                                <Script
-                                    src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-                                    async={true}
-                                    defer={true}
-                                    id="cloudflare-turnstile"
-                                ></Script>
-                                <span
-                                    className="cf-turnstile"
-                                    data-sitekey={state.config.turnstileSiteKey}
-                                    data-callback={`turnstileCallback_${id}`}
-                                />
-                            </>
-                        )}
-                        <Button
-                            theme={theme}
-                            style={{
-                                backgroundColor:
-                                    btnBackgroundColor ||
-                                    theme?.colors?.primary,
-                                color: btnForegroundColor || "#fff",
-                            }}
-                            disabled={
-                                !editing &&
-                                (isSubmitting ||
-                                    !name ||
-                                    !email ||
-                                    (state.config.turnstileSiteKey &&
-                                        !turnstileToken))
-                            }
-                            type="submit"
-                        >
-                            {btnText || DEFAULT_BTN_TEXT}
-                        </Button>
+                    <div className="flex flex-col gap-1">
+                        <Label theme={overiddenTheme} htmlFor="name">
+                            Name
+                        </Label>
+                        <Input
+                            theme={overiddenTheme}
+                            id="name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Enter your name"
+                            type="text"
+                            required
+                        />
                     </div>
-                </Form>
-            </div>
-        </section>
+                    <div className="flex flex-col gap-1">
+                        <Label theme={overiddenTheme} htmlFor="email">
+                            Email
+                        </Label>
+                        <Input
+                            theme={overiddenTheme}
+                            id="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Enter your email"
+                            type="email"
+                            required
+                        />
+                    </div>
+                    {!editing && state.config.turnstileSiteKey && (
+                        <>
+                            <Script
+                                src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+                                async={true}
+                                defer={true}
+                                id="cloudflare-turnstile"
+                            ></Script>
+                            <span
+                                className="cf-turnstile"
+                                data-sitekey={state.config.turnstileSiteKey}
+                                data-callback={`turnstileCallback_${id}`}
+                            />
+                        </>
+                    )}
+                    <Button
+                        theme={overiddenTheme}
+                        style={{
+                            backgroundColor:
+                                btnBackgroundColor || theme?.colors?.primary,
+                            color: btnForegroundColor || "#fff",
+                        }}
+                        disabled={
+                            !editing &&
+                            (isSubmitting ||
+                                !name ||
+                                !email ||
+                                (state.config.turnstileSiteKey &&
+                                    !turnstileToken))
+                        }
+                        type="submit"
+                    >
+                        {btnText || DEFAULT_BTN_TEXT}
+                    </Button>
+                </div>
+            </Form>
+        </Section>
     );
 };
 

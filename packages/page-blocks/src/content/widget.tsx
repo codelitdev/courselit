@@ -28,11 +28,8 @@ import {
     Text1,
     Caption,
     Subheader1,
+    Section,
 } from "@courselit/page-primitives";
-import {
-    verticalPadding as defaultVerticalPadding,
-    horizontalPadding as defaultHorizontalPadding,
-} from "./defaults";
 
 interface CourseWithGroups extends Course {
     groups: Group[];
@@ -48,20 +45,26 @@ export default function Widget({
         foregroundColor,
         badgeBackgroundColor,
         badgeForegroundColor,
-        horizontalPadding = defaultHorizontalPadding,
-        verticalPadding = defaultVerticalPadding,
         cssId,
+        maxWidth,
+        verticalPadding,
     },
     state,
     dispatch,
     pageData: product,
 }: WidgetProps<Settings>): JSX.Element {
+    const { theme } = state;
+    const overiddenTheme = JSON.parse(JSON.stringify(theme));
+    overiddenTheme.structure.page.width =
+        maxWidth || theme.structure.page.width;
+    overiddenTheme.structure.section.verticalPadding =
+        verticalPadding || theme.structure.section.verticalPadding;
+
     const [course, setCourse] = useState<CourseWithGroups>();
     const [formattedCourse, setFormattedCourse] = useState<
         Record<string, Lesson[]>
     >({});
     const { toast } = useToast();
-    const { theme } = state;
 
     useEffect(() => {
         if (product.courseId) {
@@ -148,133 +151,129 @@ export default function Widget({
     }, [course]);
 
     return (
-        <section
-            className={`py-[${verticalPadding}px]`}
+        <Section
+            theme={overiddenTheme}
             style={{
                 backgroundColor,
                 color: foregroundColor,
             }}
             id={cssId}
         >
-            <div className="mx-auto lg:max-w-[1200px]">
+            <div className={`flex flex-col gap-4`}>
                 <div
-                    className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%] gap-4`}
+                    className={`flex flex-col mb-4 ${
+                        headerAlignment === "center"
+                            ? "items-center"
+                            : "items-start"
+                    }`}
                 >
-                    <div
-                        className={`flex flex-col mb-4 ${
-                            headerAlignment === "center"
-                                ? "items-center"
-                                : "items-start"
-                        }`}
-                    >
-                        <Header1 theme={theme} className="mb-4">
-                            {title}
-                        </Header1>
-                        {description && (
-                            <div
-                                className={`${
-                                    headerAlignment === "center"
-                                        ? "text-center"
-                                        : "text-left"
-                                }`}
-                            >
-                                <Subheader1 theme={theme}>
-                                    <TextRenderer json={description} />
-                                </Subheader1>
-                            </div>
-                        )}
-                    </div>
-                    {!course && (
-                        <div className="flex flex-col gap-2">
-                            {[1, 2, 3, 4].map((item) => (
-                                <div key={item}>
-                                    <div className="flex gap-2 items-center mb-2">
-                                        <Skeleton className="h-8 w-full" />
-                                        <Skeleton className="h-6 w-[100px] rounded-[300px]" />
-                                        <Skeleton className="h-6 w-6" />
-                                    </div>
-                                    <hr className="w-full" />
-                                </div>
-                            ))}
+                    <Header1 theme={overiddenTheme} className="mb-4">
+                        {title}
+                    </Header1>
+                    {description && (
+                        <div
+                            className={`${
+                                headerAlignment === "center"
+                                    ? "text-center"
+                                    : "text-left"
+                            }`}
+                        >
+                            <Subheader1 theme={overiddenTheme}>
+                                <TextRenderer json={description} />
+                            </Subheader1>
                         </div>
                     )}
-                    <Accordion type="single" collapsible>
-                        {Object.keys(formattedCourse).map((group, index) => (
-                            <AccordionItem value={group} key={index}>
-                                <AccordionTrigger>
-                                    <div className="flex grow justify-between mr-2">
-                                        <Text1 theme={theme}>{group}</Text1>
-                                        <Badge
+                </div>
+                {!course && (
+                    <div className="flex flex-col gap-2">
+                        {[1, 2, 3, 4].map((item) => (
+                            <div key={item}>
+                                <div className="flex gap-2 items-center mb-2">
+                                    <Skeleton className="h-8 w-full" />
+                                    <Skeleton className="h-6 w-[100px] rounded-[300px]" />
+                                    <Skeleton className="h-6 w-6" />
+                                </div>
+                                <hr className="w-full" />
+                            </div>
+                        ))}
+                    </div>
+                )}
+                <Accordion type="single" collapsible>
+                    {Object.keys(formattedCourse).map((group, index) => (
+                        <AccordionItem value={group} key={index}>
+                            <AccordionTrigger>
+                                <div className="flex grow justify-between mr-2">
+                                    <Text1 theme={overiddenTheme}>
+                                        {group}
+                                    </Text1>
+                                    <Badge
+                                        style={{
+                                            backgroundColor:
+                                                badgeBackgroundColor,
+                                        }}
+                                    >
+                                        <Caption
+                                            theme={overiddenTheme}
+                                            className="leading-none"
                                             style={{
-                                                backgroundColor:
-                                                    badgeBackgroundColor,
+                                                color:
+                                                    badgeForegroundColor ||
+                                                    "white",
                                             }}
                                         >
-                                            <Caption
-                                                theme={theme}
-                                                className="leading-none"
+                                            {`${formattedCourse[group].length} lessons`}
+                                        </Caption>
+                                    </Badge>
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                {formattedCourse[group].map(
+                                    (lesson: Lesson) => (
+                                        <div
+                                            key={lesson.lessonId}
+                                            className="flex items-center gap-2 py-2 px-2 hover:bg-gray-100 rounded"
+                                        >
+                                            <LessonIcon
+                                                type={lesson.type as LessonType}
+                                            />
+                                            <Link
+                                                href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
                                                 style={{
-                                                    color:
-                                                        badgeForegroundColor ||
-                                                        "white",
+                                                    color: foregroundColor,
                                                 }}
                                             >
-                                                {`${formattedCourse[group].length} lessons`}
-                                            </Caption>
-                                        </Badge>
-                                    </div>
-                                </AccordionTrigger>
-                                <AccordionContent>
-                                    {formattedCourse[group].map(
-                                        (lesson: Lesson) => (
-                                            <div
-                                                key={lesson.lessonId}
-                                                className="flex items-center gap-2 py-2 px-2 hover:bg-gray-100 rounded"
-                                            >
-                                                <LessonIcon
-                                                    type={
-                                                        lesson.type as LessonType
-                                                    }
-                                                />
-                                                <Link
-                                                    href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
+                                                <Text1 theme={overiddenTheme}>
+                                                    {lesson.title}
+                                                </Text1>
+                                            </Link>
+                                            {!lesson.requiresEnrollment && (
+                                                <Badge
                                                     style={{
-                                                        color: foregroundColor,
+                                                        backgroundColor:
+                                                            badgeBackgroundColor,
                                                     }}
                                                 >
-                                                    <Text1 theme={theme}>
-                                                        {lesson.title}
-                                                    </Text1>
-                                                </Link>
-                                                {!lesson.requiresEnrollment && (
-                                                    <Badge
+                                                    <Caption
+                                                        theme={overiddenTheme}
+                                                        className="leading-none"
                                                         style={{
-                                                            backgroundColor:
-                                                                badgeBackgroundColor,
+                                                            color:
+                                                                badgeForegroundColor ||
+                                                                "white",
                                                         }}
                                                     >
-                                                        <Caption
-                                                            theme={theme}
-                                                            className="leading-none"
-                                                            style={{
-                                                                color:
-                                                                    badgeForegroundColor ||
-                                                                    "white",
-                                                            }}
-                                                        >
-                                                            Preview
-                                                        </Caption>
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                        ),
-                                    )}
-                                </AccordionContent>
-                            </AccordionItem>
-                        ))}
-                    </Accordion>
-                </div>
+                                                        Preview
+                                                    </Caption>
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    ),
+                                )}
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
             </div>
-        </section>
+        </Section>
     );
 }

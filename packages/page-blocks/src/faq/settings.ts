@@ -13,7 +13,5 @@ export default interface Settings extends WidgetDefaultSettings {
     backgroundColor?: string;
     foregroundColor?: string;
     items?: Item[];
-    horizontalPadding: number;
-    verticalPadding: number;
     cssId?: string;
 }

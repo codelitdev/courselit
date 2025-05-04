@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Settings, { Item } from "../settings";
 import ItemEditor from "./item-editor";
-import { Address, Profile, Alignment } from "@courselit/common-models";
+import { Address, Profile, Alignment, Theme } from "@courselit/common-models";
 import {
     AdminWidgetPanel,
     ColorSelector,
@@ -12,15 +12,12 @@ import {
     Button,
     Form,
     FormField,
-    ContentPaddingSelector,
     CssIdField,
     PageBuilderSlider,
+    MaxWidthSelector,
+    VerticalPaddingSelector,
 } from "@courselit/components-library";
-import {
-    verticalPadding as defaultVerticalPadding,
-    horizontalPadding as defaultHorizontalPadding,
-    columns as defaultColumns,
-} from "../defaults";
+import { columns as defaultColumns } from "../defaults";
 
 export interface AdminWidgetProps {
     settings: Settings;
@@ -32,6 +29,7 @@ export interface AdminWidgetProps {
         preservedStateAcrossRerender: Record<string, unknown>,
     ) => void;
     preservedStateAcrossRerender: Record<string, unknown>;
+    theme: Theme;
 }
 
 export default function AdminWidget({
@@ -41,6 +39,7 @@ export default function AdminWidget({
     address,
     hideActionButtons,
     preservedStateAcrossRerender,
+    theme,
 }: AdminWidgetProps): JSX.Element {
     const dummyDescription: Record<string, unknown> = {
         type: "doc",
@@ -102,12 +101,12 @@ export default function AdminWidget({
         settings.itemsAlignment || "center",
     );
     const [itemBeingEditedIndex, setItemBeingEditedIndex] = useState(-1);
-    const [horizontalPadding, setHorizontalPadding] = useState<number>(
-        settings.horizontalPadding || defaultHorizontalPadding,
-    );
-    const [verticalPadding, setVerticalPadding] = useState<number>(
-        settings.verticalPadding || defaultVerticalPadding,
-    );
+    const [maxWidth, setMaxWidth] = useState<
+        Theme["structure"]["page"]["width"]
+    >(settings.maxWidth || theme.structure.page.width);
+    const [verticalPadding, setVerticalPadding] = useState<
+        Theme["structure"]["section"]["verticalPadding"]
+    >(settings.verticalPadding || theme.structure.section.verticalPadding);
     const [itemBackgroundColor, setItemBackgroundColor] = useState(
         settings.itemBackgroundColor,
     );
@@ -136,7 +135,7 @@ export default function AdminWidget({
             buttonForeground,
             items,
             itemsAlignment,
-            horizontalPadding,
+            maxWidth,
             verticalPadding,
             itemBackgroundColor,
             itemForegroundColor,
@@ -160,7 +159,7 @@ export default function AdminWidget({
         buttonForeground,
         items,
         itemsAlignment,
-        horizontalPadding,
+        maxWidth,
         verticalPadding,
         itemBackgroundColor,
         itemForegroundColor,
@@ -321,19 +320,6 @@ export default function AdminWidget({
                     value={buttonForeground || "inherit"}
                     onChange={(value?: string) => setButtonForeground(value)}
                 />
-                <ContentPaddingSelector
-                    className="mb-2"
-                    value={horizontalPadding}
-                    min={50}
-                    onChange={setHorizontalPadding}
-                />
-                <ContentPaddingSelector
-                    variant="vertical"
-                    className="mb-2"
-                    value={verticalPadding}
-                    min={32}
-                    onChange={setVerticalPadding}
-                />
                 <PageBuilderSlider
                     title="Item border radius"
                     max={40}
@@ -347,6 +333,11 @@ export default function AdminWidget({
                     max={3}
                     value={columns}
                     onChange={setColumns}
+                />
+                <MaxWidthSelector value={maxWidth} onChange={setMaxWidth} />
+                <VerticalPaddingSelector
+                    value={verticalPadding}
+                    onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Advanced">

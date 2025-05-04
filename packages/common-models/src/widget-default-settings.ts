@@ -3,6 +3,7 @@ import {
     PageTypeCommunity,
     PageTypeProduct,
     PageTypeSite,
+    Theme,
 } from ".";
 
 type PageType =
@@ -13,4 +14,6 @@ type PageType =
 
 export default interface WidgetDefaultSettings {
     type: PageType;
+    verticalPadding: Theme["structure"]["section"]["verticalPadding"];
+    maxWidth?: Theme["structure"]["page"]["width"];
 }

@@ -174,7 +174,14 @@ export const defaultTheme: Theme = {
     },
     structure: {
         page: {
-            width: "max-w-7xl",
+            width: "max-w-6xl",
+        },
+        section: {
+            padding: {
+                x: "px-4",
+                y: "py-4",
+            },
+            verticalPadding: "py-0",
         },
     },
 };

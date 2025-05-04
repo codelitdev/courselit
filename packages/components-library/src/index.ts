@@ -58,6 +58,8 @@ export * from "./skeleton-card";
 export * from "./product-card";
 export * from "./video-with-preview";
 export * from "./image";
+export * from "./vertical-padding-selector";
+export * from "./max-width-selector";
 
 export {
     PriceTag,

@@ -2,12 +2,8 @@ import React from "react";
 import { TextRenderer } from "@courselit/components-library";
 import type { WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
-import {
-    verticalPadding as defaultVerticalPadding,
-    horizontalPadding as defaultHorizontalPadding,
-    fontSize as defaultFontSize,
-} from "./defaults";
-import { Text1 } from "@courselit/page-primitives";
+import { fontSize as defaultFontSize } from "./defaults";
+import { Text1, Section } from "@courselit/page-primitives";
 
 const twFontSize = {
     1: "text-xs",
@@ -30,41 +26,39 @@ const Widget = ({
         alignment,
         backgroundColor,
         color,
-        horizontalPadding = defaultHorizontalPadding,
-        verticalPadding = defaultVerticalPadding,
         cssId,
+        maxWidth,
+        verticalPadding,
         fontSize = defaultFontSize,
     },
     state: { theme },
 }: WidgetProps<Settings>) => {
+    const overiddenTheme = JSON.parse(JSON.stringify(theme));
+    overiddenTheme.structure.page.width =
+        maxWidth || theme.structure.page.width;
+    overiddenTheme.structure.section.verticalPadding =
+        verticalPadding || theme.structure.section.verticalPadding;
+
     if (!text) return <></>;
 
     return (
-        <section
-            className={`py-[${verticalPadding}px]`}
+        <Section
+            theme={overiddenTheme}
             style={{
                 backgroundColor,
                 color,
+                textAlign: alignment,
             }}
             id={cssId}
         >
-            <div className="mx-auto lg:max-w-[1200px]">
-                <div
-                    className={`flex flex-col px-4 w-full mx-auto lg:max-w-[${horizontalPadding}%]`}
-                    style={{
-                        textAlign: alignment,
-                    }}
-                >
-                    <Text1
-                        theme={theme}
-                        className={`${twFontSize[fontSize]}`}
-                        component="span"
-                    >
-                        <TextRenderer json={text} />
-                    </Text1>
-                </div>
-            </div>
-        </section>
+            <Text1
+                theme={overiddenTheme}
+                className={`${twFontSize[fontSize]}`}
+                component="span"
+            >
+                <TextRenderer json={text} />
+            </Text1>
+        </Section>
     );
 };
 
