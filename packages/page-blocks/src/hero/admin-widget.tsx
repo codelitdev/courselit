@@ -31,7 +31,6 @@ import {
     MaxWidthSelector,
 } from "@courselit/components-library";
 
-
 import { isVideo } from "@courselit/utils";
 
 interface AdminWidgetProps {
