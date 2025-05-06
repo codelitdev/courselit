@@ -36,11 +36,13 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
             theme={overiddenTheme}
             className={clsx(
                 "sticky top-0 z-10 bg-white/75 backdrop-blur",
-                !settings.appBarBackground && "border-b",
+                // !settings.appBarBackground && !theme?.colors?.background && "border-b",
             )}
             style={{
                 backgroundColor:
                     settings.appBarBackground || theme?.colors?.background,
+                color: settings.linkColor || theme?.colors?.text,
+                borderBottom: `1px solid ${settings.appBarBackground || theme?.colors?.border}`,
             }}
             component="header"
         >
@@ -61,9 +63,9 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                         <Header4
                             theme={overiddenTheme}
                             style={{
-                                color: settings.logoColor || "inherit",
+                                color:
+                                    settings.logoColor || theme?.colors?.text,
                             }}
-                            className="font-bold text-xl md:text-2xl"
                         >
                             {state.siteinfo.title}
                         </Header4>

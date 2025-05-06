@@ -45,8 +45,8 @@ const Widget = ({
         <Section
             theme={overiddenTheme}
             style={{
-                backgroundColor,
-                color,
+                backgroundColor: backgroundColor || theme?.colors?.background,
+                color: color || theme?.colors?.text,
                 textAlign: alignment,
             }}
             id={cssId}

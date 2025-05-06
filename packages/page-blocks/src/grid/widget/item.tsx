@@ -47,12 +47,12 @@ export default function Itemm({
             style={{
                 backgroundColor,
                 color: foregroundColor,
-                borderColor,
+                border: `1px solid ${borderColor || theme?.colors?.border}`,
                 borderRadius,
             }}
             theme={theme}
         >
-            <PageCardContent className="p-0" theme={theme}>
+            <PageCardContent className="" theme={theme}>
                 <PageCardHeader theme={theme}>
                     <div
                         className={`flex gap-4 ${

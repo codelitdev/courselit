@@ -43,28 +43,28 @@ export const PageCard: React.FC<PageCardProps> = ({
     const cardStyles = theme?.interactives?.card;
     const classes = cn(
         // Base styles
-        "rounded-lg border bg-card text-card-foreground shadow-sm",
+        "rounded-lg border shadow-sm",
         // Theme interactivity
         cardStyles?.border?.width,
         cardStyles?.border?.radius,
         cardStyles?.border?.style,
-        cardStyles?.border?.color,
         cardStyles?.shadow,
-        cardStyles?.padding?.x,
-        cardStyles?.padding?.y,
         // Theme hover states
-        cardStyles?.hover?.shadow,
-        cardStyles?.hover?.border?.width,
-        cardStyles?.hover?.border?.radius,
-        cardStyles?.hover?.border?.style,
-        cardStyles?.hover?.border?.color,
-        cardStyles?.hover?.background,
-        cardStyles?.hover?.color,
+        cardStyles?.hover,
         className,
     );
 
     const cardContent = (
-        <div className={classes} {...props}>
+        <div
+            style={{
+                border: `1px solid ${theme?.colors?.border}`,
+                backgroundColor: theme?.colors?.background
+                    ? theme?.colors?.background
+                    : undefined,
+            }}
+            className={classes}
+            {...props}
+        >
             {children}
         </div>
     );
@@ -87,15 +87,10 @@ export const PageCardImage: React.FC<PageCardImageProps> = ({
     theme,
     ...props
 }) => {
-    const cardStyles = theme?.interactives?.card;
+    // const cardStyles = theme?.interactives?.card;
     const classes = cn(
         // Base styles
         "w-full",
-        // Theme interactivity
-        cardStyles?.border?.width,
-        cardStyles?.border?.radius,
-        cardStyles?.border?.style,
-        cardStyles?.border?.color,
         className,
     );
 
@@ -111,7 +106,7 @@ export const PageCardContent: React.FC<PageCardContentProps> = ({
     const cardStyles = theme?.interactives?.card;
     const classes = cn(
         // Base styles
-        "p-6 pt-0",
+        "p-4 pt-0",
         // Theme interactivity
         cardStyles?.padding?.x,
         cardStyles?.padding?.y,
@@ -133,7 +128,7 @@ export const PageCardHeader: React.FC<PageCardHeaderProps> = ({
 }) => {
     const classes = cn(
         // Base styles
-        "flex flex-col space-y-1.5 py-4",
+        "pb-4",
         className,
     );
 

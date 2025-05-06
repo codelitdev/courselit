@@ -40,8 +40,8 @@ export default function Widget({
         <Section
             theme={overiddenTheme}
             style={{
-                backgroundColor,
-                color: foregroundColor,
+                backgroundColor: backgroundColor || theme?.colors?.background,
+                color: foregroundColor || theme?.colors?.text,
             }}
             id={cssId}
         >
@@ -77,6 +77,10 @@ export default function Widget({
                                 <AccordionItem
                                     key={item.title}
                                     value={`${item.title}-${index}`}
+                                    className="border-b-0"
+                                    style={{
+                                        borderBottom: `1px solid ${theme?.colors?.border}`,
+                                    }}
                                 >
                                     <AccordionTrigger>
                                         <Text1 theme={overiddenTheme}>

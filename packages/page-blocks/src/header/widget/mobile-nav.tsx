@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Drawer, Image, Link as AppLink } from "@courselit/components-library";
 import { Link } from "../settings";
 import { Media, Theme } from "@courselit/common-models";
-import { Header1, Button } from "@courselit/page-primitives";
+import { Header4, Button } from "@courselit/page-primitives";
 import PageLink from "./link";
 import { MenuIcon } from "lucide-react";
 
@@ -40,9 +40,10 @@ const MobileNav = (props: MobileNavSettings) => {
             }
             side="right"
             style={{
-                backgroundColor: props.appBarBackground,
+                backgroundColor:
+                    props.appBarBackground || theme?.colors?.background,
+                borderLeft: `1px solid ${props.appBarBackground || theme?.colors?.border}`,
             }}
-            className={props.appBarBackground ? "border-l-0" : ""}
         >
             <AppLink
                 href="/"
@@ -61,15 +62,14 @@ const MobileNav = (props: MobileNavSettings) => {
                             />
                         </div>
                     )}
-                    <Header1
-                        className="font-bold text-xl"
+                    <Header4
                         style={{
                             color: props.logoColor || "inherit",
                         }}
                         theme={theme}
                     >
                         {props.title}
-                    </Header1>
+                    </Header4>
                 </div>
             </AppLink>
             <ul
@@ -112,7 +112,7 @@ function MenuButton({
     return (
         <Button
             variant="ghost"
-            className="px-2 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 lg:!hidden"
+            className="px-2 hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 lg:!hidden"
             style={{
                 backgroundColor,
             }}

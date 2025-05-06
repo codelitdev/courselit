@@ -26,10 +26,10 @@ export const getSiteInfo = async (ctx: GQLContext) => {
         "settings.razorpaySecret": 0,
         "settings.razorpayWebhookSecret": 0,
     };
-    const siteEditor =
+    const isSiteEditor =
         ctx.user &&
         checkPermission(ctx.user.permissions, [permissions.manageSite]);
-    if (!siteEditor) {
+    if (!isSiteEditor) {
         exclusionProjection.draftTypefaces = 0;
         exclusionProjection.draftTheme = 0;
     }
@@ -38,9 +38,11 @@ export const getSiteInfo = async (ctx: GQLContext) => {
         exclusionProjection,
     );
 
-    if (domain) {
+    if (domain && !domain.theme) {
         domain.theme = defaultTheme;
-        domain.draftTheme = defaultTheme;
+    }
+    if (isSiteEditor && domain && !domain.draftTheme) {
+        domain.draftTheme = domain.theme;
     }
 
     return domain;
@@ -255,19 +257,21 @@ export const updateDraftTheme = async (
     }
 
     if (colors) {
-        domain.draftTheme.colors = colors;
+        domain.draftTheme.colors = JSON.parse(JSON.stringify(colors));
     }
 
     if (typography) {
-        domain.draftTheme.typography = typography;
+        domain.draftTheme.typography = JSON.parse(JSON.stringify(typography));
     }
 
     if (interactives) {
-        domain.draftTheme.interactives = interactives;
+        domain.draftTheme.interactives = JSON.parse(
+            JSON.stringify(interactives),
+        );
     }
 
     if (structure) {
-        domain.draftTheme.structure = structure;
+        domain.draftTheme.structure = JSON.parse(JSON.stringify(structure));
     }
 
     await (domain as any).save();

@@ -6,10 +6,10 @@ import {
     ServerConfigContext,
     SiteInfoContext,
     TypefacesContext,
+    ThemeContext,
 } from "@components/contexts";
 import { MasterLayout } from "@components/public/base-layout";
 import { Profile } from "@courselit/common-models";
-import { defaultTheme } from "@courselit/page-primitives";
 import { getPage } from "@ui-lib/utils";
 import { useContext, useEffect, useState } from "react";
 
@@ -24,6 +24,7 @@ export default function HomepageLayout({
     const [page, setPage] = useState<any>(null);
     const config = useContext(ServerConfigContext);
     const { profile } = useContext(ProfileContext);
+    const theme = useContext(ThemeContext);
 
     useEffect(() => {
         if (address.backend) {
@@ -41,8 +42,8 @@ export default function HomepageLayout({
             title={page.title}
             typefaces={typefaces}
             siteInfo={siteinfo}
-            // theme={{ name: "", active: true, styles: {} }}
             dispatch={() => {}}
+            theme={theme}
             state={{
                 config: config,
                 siteinfo,
@@ -53,7 +54,7 @@ export default function HomepageLayout({
                     checked: profile ? true : false,
                 },
                 networkAction: false,
-                theme: defaultTheme,
+                theme,
                 typefaces,
                 message: {
                     message: "",

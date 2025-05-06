@@ -82,17 +82,15 @@ export default function Widget({
             direction = "md:!flex-row";
     }
 
+    const defaultStyle = {
+        backgroundColor: backgroundColor || theme?.colors?.background,
+        color: foregroundColor || theme?.colors?.text,
+    };
+
     return (
         <Section
             theme={overiddenTheme}
-            style={
-                style === "card"
-                    ? {}
-                    : {
-                          backgroundColor,
-                          color: foregroundColor,
-                      }
-            }
+            style={style === "card" ? {} : defaultStyle}
             id={cssId}
         >
             <div
@@ -101,14 +99,7 @@ export default function Widget({
                     direction,
                     style === "card" ? "px-4 py-4 rounded-md" : "",
                 )}
-                style={
-                    style === "card"
-                        ? {
-                              backgroundColor,
-                              color: foregroundColor,
-                          }
-                        : {}
-                }
+                style={style === "card" ? defaultStyle : {}}
             >
                 {hasHeroGraphic && (
                     <div
@@ -168,13 +159,6 @@ export default function Widget({
                                 : "items-start",
                         )}
                     >
-                        {/* <h2
-                                    className={`mb-4 font-bold lg:text-${titleFontSize}xl text-${Math.ceil(
-                                        titleFontSize * 0.66,
-                                    )}xl`}
-                                >
-                                    {title}
-                                </h2> */}
                         <Header1 theme={overiddenTheme} className="mb-4">
                             {title}
                         </Header1>

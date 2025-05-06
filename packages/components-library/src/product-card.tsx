@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Course, SiteInfo } from "@courselit/common-models";
+import { Course, SiteInfo, Theme } from "@courselit/common-models";
 import { getPlanPrice, truncate } from "@courselit/utils";
 import getSymbolFromCurrency from "currency-symbol-map";
 import { Image } from "./image";
@@ -8,14 +8,17 @@ import {
     PageCardHeader,
     PageCardContent,
     PageCardImage,
+    Subheader2,
 } from "@courselit/page-primitives";
 
 export function ProductCard({
     product,
     siteinfo,
+    theme,
 }: {
     product: Course;
     siteinfo: SiteInfo;
+    theme?: Theme;
 }) {
     const defaultPlan = product.paymentPlans?.filter(
         (plan) => plan.planId === product.defaultPaymentPlan,
@@ -23,15 +26,20 @@ export function ProductCard({
     const { amount, period } = getPlanPrice(defaultPlan);
 
     return (
-        <PageCard href={`/p/${product.pageId}`} className="overflow-hidden">
+        <PageCard
+            href={`/p/${product.pageId}`}
+            className="overflow-hidden"
+            theme={theme}
+        >
             <PageCardImage
                 src={product.featuredImage?.file}
                 alt={product.title}
-                className="aspect-video object-cover"
+                className="aspect-video object-cover rounded-t-lg rounded-b-none"
+                theme={theme}
             />
-            <PageCardContent>
-                <PageCardHeader>{product.title}</PageCardHeader>
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <PageCardContent theme={theme}>
+                <PageCardHeader theme={theme}>{product.title}</PageCardHeader>
+                <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
                         <Image
                             src={product.user?.avatar?.thumbnail}
@@ -41,9 +49,9 @@ export function ProductCard({
                             width="w-6"
                             height="h-6"
                         />
-                        <span>
+                        <Subheader2 theme={theme}>
                             {truncate(product.user?.name || "Unnamed", 20)}
-                        </span>
+                        </Subheader2>
                     </div>
                     <Badge className="flex items-center font-medium">
                         {getSymbolFromCurrency(

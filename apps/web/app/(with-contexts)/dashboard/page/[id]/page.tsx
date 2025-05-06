@@ -6,10 +6,10 @@ import {
     ProfileContext,
     ServerConfigContext,
     SiteInfoContext,
+    ThemeContext,
     TypefacesContext,
 } from "@components/contexts";
 import { Profile } from "@courselit/common-models";
-import { defaultTheme } from "@courselit/page-primitives";
 import { useSearchParams } from "next/navigation";
 import { useContext } from "react";
 
@@ -22,6 +22,7 @@ export default function Page({ params }: { params: { id: string } }) {
     const typefaces = useContext(TypefacesContext);
     const { profile } = useContext(ProfileContext);
     const config = useContext(ServerConfigContext);
+    const theme = useContext(ThemeContext);
 
     return (
         <PageEditor
@@ -47,7 +48,7 @@ export default function Page({ params }: { params: { id: string } }) {
                     checked: profile ? true : false,
                 },
                 networkAction: false,
-                theme: defaultTheme,
+                theme,
                 typefaces: [
                     {
                         section: "default",

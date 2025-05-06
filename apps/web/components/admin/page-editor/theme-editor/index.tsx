@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Theme } from "@courselit/common-models";
 import { ExpandMoreRight } from "@courselit/icons";
 import { ColorSelector } from "@courselit/components-library";
-import { capitalize } from "@courselit/utils";
+import { capitalize, FetchBuilder } from "@courselit/utils";
 import {
     Columns3,
     PaletteIcon,
@@ -11,6 +11,9 @@ import {
     ChevronLeft,
 } from "lucide-react";
 import TypographySelector from "./typography-selector";
+import { toast } from "@/hooks/use-toast";
+import { AddressContext } from "@components/contexts";
+import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 
 interface ThemeEditorProps {
     draftTheme: Theme;
@@ -75,8 +78,8 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
     const [navigationStack, setNavigationStack] = useState<NavigationItem[]>(
         [],
     );
+    const address = useContext(AddressContext);
 
-    // Auto-save changes
     React.useEffect(() => {
         onSave(theme);
     }, [theme, onSave]);
@@ -87,6 +90,41 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
 
     const navigateBack = () => {
         setNavigationStack((prev) => prev.slice(0, -1));
+    };
+
+    const updateThemeCategory = async (
+        category: "colors" | "typography" | "interactives" | "structure",
+        categoryData: Record<string, string>,
+    ) => {
+        const query = `
+        mutation ($data: JSONObject) {
+            updateDraftTheme(${category}: $data) {
+                draftTheme {
+                    colors
+                }
+            }
+        }
+        `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload({
+                query,
+                variables: {
+                    data: categoryData,
+                },
+            })
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            await fetch.exec();
+        } catch (err: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
+        } finally {
+        }
     };
 
     const getCurrentView = () => {
@@ -131,15 +169,23 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
                         capitalize(currentItem.id)
                     }
                     value={theme.typography[currentItem.id]}
-                    onChange={(value) =>
+                    onChange={async (value) => {
+                        const updatedTypography = {
+                            ...theme.typography,
+                            [currentItem.id]: value,
+                        };
                         setTheme({
                             ...theme,
-                            typography: {
-                                ...theme.typography,
-                                [currentItem.id]: value,
-                            },
-                        })
-                    }
+                            typography: updatedTypography,
+                        });
+                        await updateThemeCategory(
+                            "typography",
+                            updatedTypography as unknown as Record<
+                                string,
+                                string
+                            >,
+                        );
+                    }}
                 />
             );
         }
@@ -153,15 +199,23 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
                                 key={color}
                                 title={capitalize(color)}
                                 value={theme.colors[color]}
-                                onChange={(value) =>
+                                onChange={async (value) => {
+                                    const updatedColors = {
+                                        ...theme.colors,
+                                        [color]: value,
+                                    };
                                     setTheme({
                                         ...theme,
-                                        colors: {
-                                            ...theme.colors,
-                                            [color]: value,
-                                        },
-                                    })
-                                }
+                                        colors: updatedColors,
+                                    });
+                                    await updateThemeCategory(
+                                        "colors",
+                                        updatedColors as unknown as Record<
+                                            string,
+                                            string
+                                        >,
+                                    );
+                                }}
                                 allowReset={false}
                             />
                         ))}

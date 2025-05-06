@@ -154,8 +154,8 @@ export default function Widget({
         <Section
             theme={overiddenTheme}
             style={{
-                backgroundColor,
-                color: foregroundColor,
+                backgroundColor: backgroundColor || theme?.colors?.background,
+                color: foregroundColor || theme?.colors?.text,
             }}
             id={cssId}
         >
@@ -200,7 +200,14 @@ export default function Widget({
                 )}
                 <Accordion type="single" collapsible>
                     {Object.keys(formattedCourse).map((group, index) => (
-                        <AccordionItem value={group} key={index}>
+                        <AccordionItem
+                            value={group}
+                            key={index}
+                            className="border-b-0"
+                            style={{
+                                borderBottom: `1px solid ${theme?.colors?.border}`,
+                            }}
+                        >
                             <AccordionTrigger>
                                 <div className="flex grow justify-between mr-2">
                                     <Text1 theme={overiddenTheme}>

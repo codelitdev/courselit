@@ -55,7 +55,9 @@ const EditableWidget = ({
         return (
             <div
                 onClick={() => onEditClick && onEditClick(item.widgetId)}
-                className={`relative ${editing ? "cursor-pointer" : "cursor-default"} group z-20`}
+                className={`relative ${
+                    editing ? "cursor-pointer" : "cursor-default"
+                } group`}
             >
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity z-20">
                     <div className="text-white/90 border border-white/50 px-3 py-1.5 rounded text-sm font-medium">
@@ -76,7 +78,7 @@ const EditableWidget = ({
                         <Tooltip title="Move up">
                             <Button
                                 size="icon"
-                                className="rounded-full"
+                                className="bg-black text-white shadow-md hover:bg-black/90 h-8 w-8 rounded-full"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onMoveWidgetUp && onMoveWidgetUp(index);
@@ -90,13 +92,12 @@ const EditableWidget = ({
                         <Tooltip title="Add widget below">
                             <Button
                                 size="icon"
-                                className="rounded-full"
+                                className="bg-black text-white shadow-md hover:bg-black/90 h-8 w-8 rounded-full"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onAddWidgetBelow && onAddWidgetBelow(index);
                                 }}
                             >
-                                {/* Add widget below{" "} */}
                                 <Plus className="w-4 h-4" />
                             </Button>
                         </Tooltip>
@@ -105,7 +106,7 @@ const EditableWidget = ({
                         <Tooltip title="Move down">
                             <Button
                                 size="icon"
-                                className="rounded-full"
+                                className="bg-black text-white shadow-md hover:bg-black/90 h-8 w-8 rounded-full"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onMoveWidgetDown && onMoveWidgetDown(index);

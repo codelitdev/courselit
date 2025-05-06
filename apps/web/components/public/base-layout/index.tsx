@@ -9,13 +9,13 @@ import {
 } from "@courselit/state-management";
 import type {
     Media,
+    Theme,
     // Theme,
     Typeface,
     WidgetInstance,
 } from "@courselit/common-models";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
-import { defaultTheme } from "@courselit/page-primitives";
 
 interface MasterLayoutProps {
     title: string;
@@ -30,6 +30,7 @@ interface MasterLayoutProps {
     socialImage?: Media;
     robotsAllowed?: boolean;
     state: AppState;
+    theme: Theme;
 }
 
 export const MasterLayout = ({
@@ -45,9 +46,10 @@ export const MasterLayout = ({
     socialImage,
     robotsAllowed = true,
     state,
+    theme,
 }: MasterLayoutProps) => {
     const { status } = useSession();
-    state.theme = defaultTheme;
+    state.theme = theme;
 
     const primaryFontFamily = typefaces.filter(
         (x) => x.section === "default",
@@ -148,6 +150,7 @@ const mapStateToProps = (state: AppState) => ({
     address: state.address,
     typefaces: state.typefaces,
     state: state,
+    theme: state.theme,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });

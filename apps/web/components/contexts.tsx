@@ -11,4 +11,6 @@ export const TypefacesContext = createContext(defaultState.typefaces);
 
 export const ServerConfigContext = createContext(defaultState.config);
 
+export const ThemeContext = createContext(defaultState.theme);
+
 // export const PageContext = createContext(defaultState.page);

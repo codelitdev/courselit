@@ -140,12 +140,7 @@ export interface Padding {
         | "py-64";
 }
 
-export interface HoverStyle {
-    color?: string;
-    background?: string;
-    border?: Border;
-    shadow?: Shadow;
-}
+export type HoverStyle = string;
 
 export interface DisabledStyle {
     color?: string;

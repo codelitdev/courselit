@@ -35,11 +35,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             inputStyles?.border?.color,
             inputStyles?.shadow,
             // Theme hover states
-            inputStyles?.hover?.border?.width,
-            inputStyles?.hover?.border?.radius,
-            inputStyles?.hover?.border?.style,
-            inputStyles?.hover?.border?.color,
-            inputStyles?.hover?.shadow,
+            inputStyles?.hover,
             // Theme disabled states
             props.disabled && inputStyles?.disabled?.opacity,
             props.disabled && inputStyles?.disabled?.cursor,

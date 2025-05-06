@@ -43,13 +43,7 @@ export const Button: React.FC<ButtonProps> = ({
         buttonStyles?.border?.color,
         buttonStyles?.shadow,
         // Theme hover states
-        buttonStyles?.hover?.background,
-        buttonStyles?.hover?.color,
-        buttonStyles?.hover?.border?.width,
-        buttonStyles?.hover?.border?.radius,
-        buttonStyles?.hover?.border?.style,
-        buttonStyles?.hover?.border?.color,
-        buttonStyles?.hover?.shadow,
+        buttonStyles?.hover,
         // Theme disabled states
         disabled && buttonStyles?.disabled?.opacity,
         disabled && buttonStyles?.disabled?.cursor,

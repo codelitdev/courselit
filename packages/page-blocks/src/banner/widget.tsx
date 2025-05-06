@@ -199,7 +199,8 @@ export default function Widget({
         <Section
             theme={overiddenTheme}
             style={{
-                backgroundColor,
+                backgroundColor: backgroundColor || theme?.colors?.background,
+                color: color || theme?.colors?.text,
             }}
             id={cssId}
         >

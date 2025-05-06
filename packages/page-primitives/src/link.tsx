@@ -40,13 +40,7 @@ export const Link: React.FC<LinkProps> = ({
         linkStyles?.border?.color,
         linkStyles?.shadow,
         // Theme hover states
-        linkStyles?.hover?.color,
-        linkStyles?.hover?.background,
-        linkStyles?.hover?.border?.width,
-        linkStyles?.hover?.border?.radius,
-        linkStyles?.hover?.border?.style,
-        linkStyles?.hover?.border?.color,
-        linkStyles?.hover?.shadow,
+        linkStyles?.hover,
         // Theme disabled states
         disabled && linkStyles?.disabled?.color,
         disabled && linkStyles?.disabled?.background,

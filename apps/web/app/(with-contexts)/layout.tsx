@@ -73,6 +73,7 @@ export default async function Layout({
             address={address}
             siteinfo={formatSiteInfo(siteInfoResponse.site.settings)}
             typefaces={siteInfoResponse.site.typefaces}
+            theme={siteInfoResponse.site.theme}
             config={config}
             session={session}
         >

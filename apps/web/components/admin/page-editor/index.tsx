@@ -56,6 +56,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { ThemeContext } from "@components/contexts";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
@@ -110,8 +111,8 @@ export default function PageEditor({
     const [primaryFontFamily, setPrimaryFontFamily] =
         useState("Roboto, sans-serif");
     const [loading, setLoading] = useState(false);
-    const [draftTheme, setDraftTheme] = useState<Theme>();
-    const [theme, setTheme] = useState<Theme>();
+    const [draftTheme, setDraftTheme] = useState<Theme>(state.theme);
+    // const [theme, setTheme] = useState<Theme>(state.theme);
     const { toast } = useToast();
     const [pages, setPages] = useState<Page[]>([]);
     const [loadingPages, setLoadingPages] = useState(true);
@@ -131,13 +132,13 @@ export default function PageEditor({
     useEffect(() => {
         loadDraftTypefaces();
         loadPage();
-        
+
         loadPages();
     }, [address.backend, dispatch]);
 
-        async function loadPages() {
-            setLoadingPages(true);
-            const query = `
+    async function loadPages() {
+        setLoadingPages(true);
+        const query = `
                 query {
                     pages: getPages(type: SITE) {
                         pageId,
@@ -147,28 +148,28 @@ export default function PageEditor({
                     }
                 }
             `;
-            const fetch = new FetchBuilder()
-                .setUrl(`${address.backend}/api/graph`)
-                .setPayload(query)
-                .setIsGraphQLEndpoint(true)
-                .build();
-            try {
-                dispatch && dispatch(networkAction(true));
-                const response = await fetch.exec();
-                if (response.pages) {
-                    setPages(response.pages);
-                }
-            } catch (err: any) {
-                toast({
-                    title: TOAST_TITLE_ERROR,
-                    description: err.message || "Failed to load pages",
-                    variant: "destructive",
-                });
-            } finally {
-                setLoadingPages(false);
-                dispatch && dispatch(networkAction(false));
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload(query)
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            dispatch && dispatch(networkAction(true));
+            const response = await fetch.exec();
+            if (response.pages) {
+                setPages(response.pages);
             }
+        } catch (err: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message || "Failed to load pages",
+                variant: "destructive",
+            });
+        } finally {
+            setLoadingPages(false);
+            dispatch && dispatch(networkAction(false));
         }
+    }
 
     useEffect(() => {
         if (JSON.stringify(layout) !== JSON.stringify(page.draftLayout)) {
@@ -294,13 +295,6 @@ export default function PageEditor({
                     interactives
                     structure
                 }
-                theme {
-                    name
-                    colors
-                    typography
-                    interactives
-                    structure
-                }
             }
         }
         `;
@@ -317,9 +311,6 @@ export default function PageEditor({
             }
             if (response.site.draftTheme) {
                 setDraftTheme(response.site.draftTheme);
-            }
-            if (response.site.theme) {
-                setTheme(response.site.theme);
             }
         } catch (err: any) {
             toast({
@@ -595,8 +586,6 @@ export default function PageEditor({
         setLayout([...moveMemberUp(layout, index)]);
     };
 
-    const saveTheme = async (theme: Theme) => {};
-
     const activeSidePaneContent = (
         <>
             {leftPaneContent === "widgets" && (
@@ -618,21 +607,7 @@ export default function PageEditor({
                 <ThemeEditor
                     draftTheme={draftTheme}
                     onClose={onClose}
-                    onSave={({
-                        name,
-                        colors,
-                        typography,
-                        interactives,
-                        structure,
-                    }) =>
-                        saveTheme({
-                            name,
-                            colors,
-                            typography,
-                            interactives,
-                            structure,
-                        })
-                    }
+                    onSave={(theme) => setDraftTheme(theme)}
                 />
             )}
             {leftPaneContent === "seo" && (
@@ -696,7 +671,9 @@ export default function PageEditor({
                                         value={page.pageId}
                                         onValueChange={(value) => {
                                             if (value !== page.pageId) {
-                                                router.push(`/dashboard/page/${value}`);
+                                                router.push(
+                                                    `/dashboard/page/${value}`,
+                                                );
                                             }
                                         }}
                                     >
@@ -705,7 +682,10 @@ export default function PageEditor({
                                         </SelectTrigger>
                                         <SelectContent>
                                             {pages.map((p) => (
-                                                <SelectItem key={p.pageId} value={p.pageId}>
+                                                <SelectItem
+                                                    key={p.pageId}
+                                                    value={p.pageId}
+                                                >
                                                     {p.name}
                                                 </SelectItem>
                                             ))}
@@ -839,13 +819,19 @@ export default function PageEditor({
                 <div className="flex w-full h-[calc(100vh-56px)] mt-14 gap-4 p-4 bg-muted/10">
                     {leftPaneContent !== "none" && (
                         <div className="w-[300px] rounded-xl border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm flex flex-col overflow-hidden">
-                            <PanelHeader 
+                            <PanelHeader
                                 title={
-                                    leftPaneContent === "widgets" ? EDIT_PAGE_ADD_WIDGET_TITLE :
-                                    leftPaneContent === "editor" ? "Edit Widget" :
-                                    leftPaneContent === "fonts" ? "Fonts" :
-                                    leftPaneContent === "theme" ? "Theme" :
-                                    leftPaneContent === "seo" ? "SEO" : ""
+                                    leftPaneContent === "widgets"
+                                        ? EDIT_PAGE_ADD_WIDGET_TITLE
+                                        : leftPaneContent === "editor"
+                                          ? "Edit Widget"
+                                          : leftPaneContent === "fonts"
+                                            ? "Fonts"
+                                            : leftPaneContent === "theme"
+                                              ? "Theme"
+                                              : leftPaneContent === "seo"
+                                                ? "SEO"
+                                                : ""
                                 }
                                 onClose={onClose}
                             />
@@ -879,7 +865,9 @@ export default function PageEditor({
                                         onAddWidgetBelow={onAddWidgetBelow}
                                         onMoveWidgetDown={onMoveWidgetDown}
                                         onMoveWidgetUp={onMoveWidgetUp}
-                                        state={state}
+                                        state={Object.assign({}, state, {
+                                            theme: draftTheme,
+                                        })}
                                         dispatch={dispatch}
                                     />
                                 )}

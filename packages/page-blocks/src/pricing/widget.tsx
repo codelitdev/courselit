@@ -11,6 +11,7 @@ import {
     PageCardHeader,
     Section,
     Subheader1,
+    Text1,
     Text2,
 } from "@courselit/page-primitives";
 import { Preheader } from "@courselit/page-primitives";
@@ -55,8 +56,8 @@ export default function Widget({
         <Section
             theme={overiddenTheme}
             style={{
-                backgroundColor,
-                color: foregroundColor,
+                backgroundColor: backgroundColor || theme?.colors?.background,
+                color: foregroundColor || theme?.colors?.text,
             }}
             id={cssId}
         >
@@ -119,7 +120,7 @@ export default function Widget({
                                 style={{
                                     backgroundColor,
                                     color: foregroundColor,
-                                    borderColor: cardBorderColor,
+                                    border: `1px solid ${cardBorderColor || theme?.colors?.border}`,
                                 }}
                                 theme={theme}
                                 className="p-0"
@@ -142,7 +143,7 @@ export default function Widget({
                                             : item.price}
                                     </PageCardHeader>
                                     <div className="grow flex flex-col gap-4">
-                                        <Text2
+                                        <Text1
                                             style={{
                                                 color: foregroundColor,
                                             }}
@@ -152,18 +153,19 @@ export default function Widget({
                                             <TextRenderer
                                                 json={item.description}
                                             />
-                                        </Text2>
-                                        <div className="flex flex-col gap-3">
+                                        </Text1>
+                                        <div className="">
                                             {item.features
                                                 ?.split(",")
                                                 .map((x) => x.trim())
                                                 .map((feature) => (
-                                                    <div
-                                                        className="flex items-center gap-2 text-sm"
+                                                    <Text2
                                                         key={feature}
+                                                        theme={theme}
+                                                        className="[&:not(:first-child)]:mt-4"
                                                     >
                                                         {feature}
-                                                    </div>
+                                                    </Text2>
                                                 ))}
                                         </div>
                                         <Link

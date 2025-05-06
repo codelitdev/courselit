@@ -103,8 +103,8 @@ export default function Widget({
         <Section
             theme={overiddenTheme}
             style={{
-                backgroundColor,
-                color,
+                backgroundColor: backgroundColor || theme?.colors?.background,
+                color: color || theme?.colors?.text,
             }}
             id={cssId}
         >
@@ -131,7 +131,10 @@ export default function Widget({
                     {productItems.length === 0 && (
                         <>
                             {Array.from({ length: 3 }).map((_, index) => (
-                                <SkeletonCard key={index} />
+                                <SkeletonCard
+                                    key={index}
+                                    theme={overiddenTheme}
+                                />
                             ))}
                         </>
                     )}
@@ -142,6 +145,7 @@ export default function Widget({
                                     key={course.courseId}
                                     product={course}
                                     siteinfo={state.siteinfo}
+                                    theme={overiddenTheme}
                                 />
                             ))}
                         </>

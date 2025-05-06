@@ -13,13 +13,13 @@ import {
 } from "./constants";
 import { Form, useToast } from "@courselit/components-library";
 import {
-    Header2,
     Subheader1,
     Text1,
     Button,
     Input,
     Label,
     Section,
+    Header1,
 } from "@courselit/page-primitives";
 import Script from "next/script";
 
@@ -135,8 +135,8 @@ const Widget = ({
         <Section
             theme={overiddenTheme}
             style={{
-                backgroundColor,
-                color: foregroundColor,
+                backgroundColor: backgroundColor || theme?.colors?.background,
+                color: foregroundColor || theme?.colors?.text,
             }}
             id={cssId}
         >
@@ -147,18 +147,16 @@ const Widget = ({
                     alignItems: justifyContent,
                 }}
             >
-                <Header2 theme={overiddenTheme} className="mb-4">
+                <Header1 theme={overiddenTheme} className="mb-4">
                     {title || DEFAULT_TITLE}
-                </Header2>
+                </Header1>
                 {subtitle && (
                     <Subheader1 theme={overiddenTheme} className="mb-4">
                         {subtitle}
                     </Subheader1>
                 )}
                 {errorMessage && (
-                    <Text1 theme={overiddenTheme} className="my-1 text-red-600">
-                        {errorMessage}
-                    </Text1>
+                    <Text1 theme={overiddenTheme}>{errorMessage}</Text1>
                 )}
                 <div
                     className="flex flex-col md:!flex-row md:!items-end gap-2 w-full"
@@ -167,7 +165,11 @@ const Widget = ({
                     }}
                 >
                     <div className="flex flex-col gap-1">
-                        <Label theme={overiddenTheme} htmlFor="name">
+                        <Label
+                            theme={overiddenTheme}
+                            htmlFor="name"
+                            className="font-medium"
+                        >
                             Name
                         </Label>
                         <Input
@@ -181,7 +183,11 @@ const Widget = ({
                         />
                     </div>
                     <div className="flex flex-col gap-1">
-                        <Label theme={overiddenTheme} htmlFor="email">
+                        <Label
+                            theme={overiddenTheme}
+                            htmlFor="email"
+                            className="font-medium"
+                        >
                             Email
                         </Label>
                         <Input

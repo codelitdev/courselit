@@ -115,23 +115,19 @@ export const defaultTheme: Theme = {
                 y: "py-2",
             },
             border: {
+                width: "border-1",
                 radius: "rounded-md",
                 style: "solid",
             },
             shadow: "shadow-sm",
-            hover: {
-                background: "blue-700",
-                shadow: "shadow-md",
-            },
             disabled: {
                 opacity: "opacity-50",
                 cursor: "cursor-not-allowed",
             },
+            hover: "",
         },
         link: {
-            hover: {
-                color: "blue-800",
-            },
+            hover: "",
             disabled: {
                 color: "gray-400",
                 cursor: "cursor-not-allowed",
@@ -139,17 +135,15 @@ export const defaultTheme: Theme = {
         },
         card: {
             padding: {
-                x: "px-6",
-                y: "py-6",
+                x: "px-4",
+                y: "py-4",
             },
             border: {
                 radius: "rounded-lg",
                 style: "solid",
             },
             shadow: "shadow-sm",
-            hover: {
-                shadow: "shadow-md",
-            },
+            hover: "transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
         },
         input: {
             borderRadius: "rounded-md",
@@ -161,11 +155,7 @@ export const defaultTheme: Theme = {
                 style: "solid",
             },
             shadow: "shadow-sm",
-            hover: {
-                border: {
-                    color: "blue-500",
-                },
-            },
+            hover: "",
             disabled: {
                 opacity: "opacity-50",
                 cursor: "cursor-not-allowed",
