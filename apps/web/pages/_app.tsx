@@ -15,8 +15,8 @@ import CodeInjector from "../components/public/code-injector";
 import { useRouter } from "next/router";
 import "remirror/styles/all.css";
 import { getBackendAddress } from "../ui-lib/utils";
-import FontsInjector from "../components/public/fonts-injector";
 import { SessionProvider } from "next-auth/react";
+import * as fonts from "@/lib/fonts";
 
 type CourseLitProps = AppProps & {};
 
@@ -43,11 +43,12 @@ function MyApp({
                             //visibility: !mounted ? "hidden" : "visible",
                         }
                     }
+                    className={`${fonts.openSans.variable} ${fonts.montserrat.variable} ${fonts.lato.variable} ${fonts.poppins.variable} ${fonts.sourceSans3.variable} ${fonts.raleway.variable} ${fonts.notoSans.variable} ${fonts.merriweather.variable} ${fonts.inter.variable} ${fonts.alegreya.variable} ${fonts.roboto.variable} ${fonts.mulish.variable} ${fonts.nunito.variable} ${fonts.rubik.variable} ${fonts.playfairDisplay.variable} ${fonts.oswald.variable} ${fonts.ptSans.variable} ${fonts.workSans.variable} ${fonts.robotoSlab.variable} ${fonts.sourceSerif4.variable} ${fonts.bebasNeue.variable} ${fonts.quicksand.variable} font-sans`}
                 >
                     <Component {...pageProps} />
                 </div>
                 <CodeInjector router={router} />
-                <FontsInjector router={router} />
+                {/* <FontsInjector router={router} /> */}
             </Provider>
         </SessionProvider>
     );

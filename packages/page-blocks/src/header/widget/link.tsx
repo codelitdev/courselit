@@ -38,7 +38,10 @@ export default function Link({
                 </Button>
             )}
             {!isButton && (
-                <PageLink theme={theme} style={{ color: linkColor }}>
+                <PageLink
+                    theme={theme}
+                    style={{ color: linkColor || theme?.colors?.text }}
+                >
                     {label}
                 </PageLink>
             )}
