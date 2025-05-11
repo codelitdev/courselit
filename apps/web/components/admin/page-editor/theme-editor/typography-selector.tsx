@@ -24,7 +24,11 @@ interface TypographySelectorProps {
     onChange: (value: any) => void;
 }
 
-function TypographySelector({ title, value, onChange }: TypographySelectorProps) {
+function TypographySelector({
+    title,
+    value,
+    onChange,
+}: TypographySelectorProps) {
     const renderDemo = () => {
         return (
             <div className="space-y-2 flex flex-col">
@@ -37,7 +41,7 @@ function TypographySelector({ title, value, onChange }: TypographySelectorProps)
                         value?.lineHeight || "",
                         value?.letterSpacing || "",
                         value?.textAlign || "",
-                        value?.textTransform || "normal-case"
+                        value?.textTransform || "normal-case",
                     )}
                 >
                     The quick brown fox jumps over the lazy dog
@@ -64,33 +68,35 @@ function TypographySelector({ title, value, onChange }: TypographySelectorProps)
                             <SelectValue placeholder="Select font family" />
                         </SelectTrigger>
                         <SelectContent>
-                            {Object.entries(fontFamilyOptions).map(([category, fonts], index) => (
-                                <React.Fragment key={category}>
-                                    {index > 0 && <div className="h-5" />}
-                                    <SelectItem
-                                        value={`category-${category.toLowerCase()}`}
-                                        disabled
-                                        className="text-xs font-semibold text-muted-foreground uppercase tracking-wider py-2"
-                                    >
-                                        {category}
-                                    </SelectItem>
-                                    {fonts.map((font) => (
+                            {Object.entries(fontFamilyOptions).map(
+                                ([category, fonts], index) => (
+                                    <React.Fragment key={category}>
+                                        {index > 0 && <div className="h-5" />}
                                         <SelectItem
-                                            key={font.value}
-                                            value={font.value}
-                                            className={cn(
-                                                "pl-8 text-sm min-h-[2rem] flex items-center",
-                                                font.value
-                                            )}
-                                            style={{
-                                                paddingLeft: '2rem',
-                                            }}
+                                            value={`category-${category.toLowerCase()}`}
+                                            disabled
+                                            className="text-xs font-semibold text-muted-foreground uppercase tracking-wider py-2"
                                         >
-                                            {font.label}
+                                            {category}
                                         </SelectItem>
-                                    ))}
-                                </React.Fragment>
-                            ))}
+                                        {fonts.map((font) => (
+                                            <SelectItem
+                                                key={font.value}
+                                                value={font.value}
+                                                className={cn(
+                                                    "pl-8 text-sm min-h-[2rem] flex items-center",
+                                                    font.value,
+                                                )}
+                                                style={{
+                                                    paddingLeft: "2rem",
+                                                }}
+                                            >
+                                                {font.label}
+                                            </SelectItem>
+                                        ))}
+                                    </React.Fragment>
+                                ),
+                            )}
                         </SelectContent>
                     </Select>
                 </div>
@@ -111,7 +117,10 @@ function TypographySelector({ title, value, onChange }: TypographySelectorProps)
                             </SelectTrigger>
                             <SelectContent>
                                 {fontSizeOptions.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
+                                    <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </SelectItem>
                                 ))}
@@ -134,7 +143,10 @@ function TypographySelector({ title, value, onChange }: TypographySelectorProps)
                             </SelectTrigger>
                             <SelectContent>
                                 {fontWeightOptions.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
+                                    <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </SelectItem>
                                 ))}
@@ -159,7 +171,10 @@ function TypographySelector({ title, value, onChange }: TypographySelectorProps)
                             </SelectTrigger>
                             <SelectContent>
                                 {lineHeightOptions.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
+                                    <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </SelectItem>
                                 ))}
@@ -182,7 +197,10 @@ function TypographySelector({ title, value, onChange }: TypographySelectorProps)
                             </SelectTrigger>
                             <SelectContent>
                                 {letterSpacingOptions.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
+                                    <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </SelectItem>
                                 ))}
@@ -207,7 +225,10 @@ function TypographySelector({ title, value, onChange }: TypographySelectorProps)
                             </SelectTrigger>
                             <SelectContent>
                                 {textAlignOptions.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
+                                    <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </SelectItem>
                                 ))}
@@ -230,7 +251,10 @@ function TypographySelector({ title, value, onChange }: TypographySelectorProps)
                             </SelectTrigger>
                             <SelectContent>
                                 {textTransformOptions.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
+                                    <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </SelectItem>
                                 ))}
@@ -247,9 +271,7 @@ function TypographySelector({ title, value, onChange }: TypographySelectorProps)
             <div className="border rounded-lg p-2 h-[100px] overflow-auto">
                 {renderDemo()}
             </div>
-            <div className="space-y-6">
-                {renderConfig()}
-            </div>
+            <div className="space-y-6">{renderConfig()}</div>
         </div>
     );
 }
