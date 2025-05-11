@@ -19,6 +19,7 @@ import {
     InteractiveSelector,
     interactiveDisplayNames,
 } from "./interactive-selector";
+import StructureSelector from "./structure-selector";
 
 interface ThemeEditorProps {
     draftTheme: Theme;
@@ -110,6 +111,11 @@ const typographyCategories: TypographyCategory[] = [
         items: ["link", "button", "input"],
     },
 ];
+
+const structureDisplayNames: Record<string, string> = {
+    page: "Page",
+    section: "Section",
+} as const;
 
 function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
     const [theme, setTheme] = useState<Theme>(draftTheme);
@@ -256,19 +262,39 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
                     type={
                         currentItem.id as "button" | "link" | "card" | "input"
                     }
-                    value={theme.interactives[currentItem.id]}
-                    onChange={async (value) => {
-                        const updatedInteractives = {
-                            ...theme.interactives,
-                            [currentItem.id]: value,
-                        };
-                        setTheme({
-                            ...theme,
-                            interactives: updatedInteractives,
-                        });
+                    theme={theme}
+                    onChange={async (updatedTheme) => {
+                        setTheme(updatedTheme);
                         await updateThemeCategory(
                             "interactives",
-                            updatedInteractives as unknown as Record<
+                            updatedTheme.interactives as unknown as Record<
+                                string,
+                                string
+                            >,
+                        );
+                    }}
+                />
+            );
+        }
+
+        // Check if current item is a structure item
+        if (
+            parentItem?.id === "structure" &&
+            currentItem.id in theme.structure
+        ) {
+            return (
+                <StructureSelector
+                    title={
+                        structureDisplayNames[currentItem.id] ||
+                        capitalize(currentItem.id)
+                    }
+                    type={currentItem.id as "page" | "section"}
+                    theme={theme}
+                    onChange={async (updatedTheme) => {
+                        setTheme(updatedTheme);
+                        await updateThemeCategory(
+                            "structure",
+                            updatedTheme.structure as unknown as Record<
                                 string,
                                 string
                             >,
@@ -407,6 +433,31 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
                                 </button>
                             ),
                         )}
+                    </div>
+                );
+            case "structure":
+                return (
+                    <div className="space-y-1 p-2">
+                        {Object.keys(structureDisplayNames).map((structure) => (
+                            <button
+                                key={structure}
+                                onClick={() =>
+                                    navigateTo({
+                                        id: structure,
+                                        label:
+                                            structureDisplayNames[structure] ||
+                                            capitalize(structure),
+                                    })
+                                }
+                                className="w-full flex items-center justify-between px-3 py-2 text-xs rounded-md hover:bg-muted transition-colors group"
+                            >
+                                <span className="group-hover:text-foreground transition-colors">
+                                    {structureDisplayNames[structure] ||
+                                        capitalize(structure)}
+                                </span>
+                                <ExpandMoreRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                            </button>
+                        ))}
                     </div>
                 );
             default:
