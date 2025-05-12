@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "@courselit/components-library";
 import Settings from "./settings";
-import { State } from "@courselit/common-models";
+import { State, Theme } from "@courselit/common-models";
 import {
     titleFontSize as defaultTitleFontSize,
     subtitleFontSize as defaultSubtitleFontSize,
@@ -53,11 +53,11 @@ const Widget = ({
     state,
 }: WidgetProps) => {
     const { theme } = state;
-    const overiddenTheme = JSON.parse(JSON.stringify(theme));
+    const overiddenTheme: Theme = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
-        maxWidth || theme.structure.page.width;
+        maxWidth || theme.theme.structure.page.width;
     overiddenTheme.structure.section.verticalPadding =
-        verticalPadding || theme.structure.section.verticalPadding;
+        verticalPadding || theme.theme.structure.section.verticalPadding;
     const linkProps = {
         color: foregroundColor,
         textDecoration: "none",
@@ -68,8 +68,9 @@ const Widget = ({
             theme={overiddenTheme}
             component="footer"
             style={{
-                backgroundColor: backgroundColor || theme?.colors?.background,
-                color: foregroundColor || theme?.colors?.text,
+                backgroundColor:
+                    backgroundColor || overiddenTheme?.colors?.background,
+                color: foregroundColor || overiddenTheme?.colors?.text,
             }}
         >
             <div

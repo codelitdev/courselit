@@ -28,12 +28,12 @@ import {
 } from "../defaults";
 import { DragAndDrop } from "@courselit/components-library";
 import { generateUniqueId } from "@courselit/utils";
-import { Theme } from "@courselit/common-models";
+import { Theme, UITheme } from "@courselit/common-models";
 
 export interface AdminWidgetProps {
     onChange: (...args: any[]) => void;
     settings: Settings;
-    theme: Theme;
+    theme: UITheme;
 }
 
 export default function AdminWidget({
@@ -69,10 +69,13 @@ export default function AdminWidget({
     );
     const [maxWidth, setMaxWidth] = useState<
         Theme["structure"]["page"]["width"]
-    >(settings.maxWidth || theme.structure.page.width);
+    >(settings.maxWidth || theme.theme.structure.page.width);
     const [verticalPadding, setVerticalPadding] = useState<
         Theme["structure"]["section"]["verticalPadding"]
-    >(settings.verticalPadding || theme.structure.section.verticalPadding);
+    >(
+        settings.verticalPadding ||
+            theme.theme.structure.section.verticalPadding,
+    );
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [sectionName, setSectionName] = useState("");
     const [sectionBeingEdited, setSectionBeingEdited] = useState(-1);

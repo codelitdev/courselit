@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState, useEffect } from "react";
-import { WidgetProps } from "@courselit/common-models";
+import { Theme, WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
 import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
@@ -45,11 +45,11 @@ const Widget = ({
     id,
 }: WidgetProps<Settings>): JSX.Element => {
     const { theme } = state;
-    const overiddenTheme = JSON.parse(JSON.stringify(theme));
+    const overiddenTheme: Theme = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
-        maxWidth || theme.structure.page.width;
+        maxWidth || theme.theme.structure.page.width;
     overiddenTheme.structure.section.verticalPadding =
-        verticalPadding || theme.structure.section.verticalPadding;
+        verticalPadding || theme.theme.structure.section.verticalPadding;
 
     const [email, setEmail] = useState("");
     const [name, setName] = useState("");
@@ -135,8 +135,9 @@ const Widget = ({
         <Section
             theme={overiddenTheme}
             style={{
-                backgroundColor: backgroundColor || theme?.colors?.background,
-                color: foregroundColor || theme?.colors?.text,
+                backgroundColor:
+                    backgroundColor || overiddenTheme?.colors?.background,
+                color: foregroundColor || overiddenTheme?.colors?.text,
             }}
             id={cssId}
         >
@@ -219,7 +220,8 @@ const Widget = ({
                         theme={overiddenTheme}
                         style={{
                             backgroundColor:
-                                btnBackgroundColor || theme?.colors?.primary,
+                                btnBackgroundColor ||
+                                overiddenTheme?.colors?.primary,
                             color: btnForegroundColor || "#fff",
                         }}
                         disabled={

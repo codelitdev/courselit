@@ -151,7 +151,6 @@ export interface DisabledStyle {
 }
 
 export default interface Theme {
-    name: string;
     colors: {
         primary: string;
         secondary: string;

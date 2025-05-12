@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Address, Alignment, Theme } from "@courselit/common-models";
+import { Address, Alignment, Theme, UITheme } from "@courselit/common-models";
 import { useEffect, useState } from "react";
 import Settings from "./settings";
 import {
@@ -20,7 +20,7 @@ interface AdminWidgetProps {
     settings: Settings;
     onChange: (...args: any[]) => void;
     address: Address;
-    theme: Theme;
+    theme: UITheme;
 }
 export default function AdminWidget({
     settings,
@@ -47,10 +47,13 @@ export default function AdminWidget({
     );
     const [maxWidth, setMaxWidth] = useState<
         Theme["structure"]["page"]["width"]
-    >(settings.maxWidth || theme.structure.page.width);
+    >(settings.maxWidth || theme.theme.structure.page.width);
     const [verticalPadding, setVerticalPadding] = useState<
         Theme["structure"]["section"]["verticalPadding"]
-    >(settings.verticalPadding || theme.structure.section.verticalPadding);
+    >(
+        settings.verticalPadding ||
+            theme.theme.structure.section.verticalPadding,
+    );
     const [cssId, setCssId] = useState(settings.cssId);
 
     useEffect(() => {

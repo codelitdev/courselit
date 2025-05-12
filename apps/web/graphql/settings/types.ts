@@ -10,7 +10,6 @@ import {
 } from "graphql";
 import mediaTypes from "../media/types";
 import { getMedia } from "../media/logic";
-import { GraphQLJSONObject } from "graphql-type-json";
 const { mediaType } = mediaTypes;
 
 const typefaceType = new GraphQLObjectType({
@@ -117,35 +116,11 @@ const quota = new GraphQLObjectType({
     },
 });
 
-const themeType = new GraphQLObjectType({
-    name: "Theme",
-    fields: {
-        name: { type: new GraphQLNonNull(GraphQLString) },
-        colors: { type: GraphQLJSONObject },
-        typography: { type: GraphQLJSONObject },
-        interactives: { type: GraphQLJSONObject },
-        structure: { type: GraphQLJSONObject },
-    },
-});
-
-const themeInputType = new GraphQLInputObjectType({
-    name: "ThemeInput",
-    fields: {
-        name: { type: new GraphQLNonNull(GraphQLString) },
-        colors: { type: GraphQLJSONObject },
-        typography: { type: GraphQLJSONObject },
-        interactives: { type: GraphQLJSONObject },
-        structure: { type: GraphQLJSONObject },
-    },
-});
-
 const domain = new GraphQLObjectType({
     name: "Domain",
     fields: {
         name: { type: new GraphQLNonNull(GraphQLString) },
         settings: { type: siteType },
-        theme: { type: themeType },
-        draftTheme: { type: themeType },
         typefaces: { type: new GraphQLList(typefaceType) },
         draftTypefaces: { type: new GraphQLList(typefaceType) },
         quota: { type: quota },
@@ -185,8 +160,6 @@ const types = {
     apikeyType,
     apikeyUpdateInput,
     newApikeyType,
-    themeInputType,
-    themeType,
 };
 
 export default types;

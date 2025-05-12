@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useEffect, useState } from "react";
-import type { Address, Theme } from "@courselit/common-models";
+import type { Address, Theme, UITheme } from "@courselit/common-models";
 import Settings from "./settings";
 import { capitalize, FetchBuilder } from "@courselit/utils";
 import { actionCreators, AppDispatch } from "@courselit/state-management";
@@ -25,7 +25,7 @@ interface AdminWidgetProps {
     address: Address;
     networkAction: boolean;
     dispatch: AppDispatch;
-    theme: Theme;
+    theme: UITheme;
 }
 
 export default function AdminWidget({
@@ -65,10 +65,13 @@ export default function AdminWidget({
     );
     const [verticalPadding, setVerticalPadding] = useState<
         Theme["structure"]["section"]["verticalPadding"]
-    >(settings.verticalPadding || theme.structure.section.verticalPadding);
+    >(
+        settings.verticalPadding ||
+            theme.theme.structure.section.verticalPadding,
+    );
     const [maxWidth, setMaxWidth] = useState<
         Theme["structure"]["page"]["width"]
-    >(settings.maxWidth || theme.structure.page.width);
+    >(settings.maxWidth || theme.theme.structure.page.width);
     const [cssId, setCssId] = useState(settings.cssId);
 
     useEffect(() => {

@@ -1,5 +1,5 @@
 import React from "react";
-import { Address, Theme } from "@courselit/common-models";
+import { Address, UITheme } from "@courselit/common-models";
 import Settings from "../settings";
 import { AppDispatch } from "@courselit/state-management";
 import CustomSettings from "./custom-settings";
@@ -12,7 +12,7 @@ interface AdminWidgetProps {
     networkAction: boolean;
     dispatch: AppDispatch;
     pageData: Record<string, unknown>;
-    theme: Theme;
+    theme: UITheme;
 }
 
 export default function AdminWidget({
@@ -34,7 +34,7 @@ export default function AdminWidget({
             onChange={customSettingsChanged}
             pageData={pageData}
             address={address}
-            theme={theme}
+            theme={theme.theme}
         />
     );
 }

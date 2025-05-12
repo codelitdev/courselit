@@ -1,5 +1,5 @@
-import React, { useState, useContext } from "react";
-import { Theme } from "@courselit/common-models";
+import React, { useState, useContext, useEffect } from "react";
+import { UITheme } from "@courselit/common-models";
 import { ExpandMoreRight } from "@courselit/icons";
 import { ColorSelector } from "@courselit/components-library";
 import { capitalize, FetchBuilder } from "@courselit/utils";
@@ -13,19 +13,13 @@ import {
 } from "lucide-react";
 import TypographySelector from "./typography-selector";
 import { toast } from "@/hooks/use-toast";
-import { AddressContext } from "@components/contexts";
+import { AddressContext, ThemeContext } from "@components/contexts";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import {
     InteractiveSelector,
     interactiveDisplayNames,
 } from "./interactive-selector";
 import StructureSelector from "./structure-selector";
-
-interface ThemeEditorProps {
-    draftTheme: Theme;
-    onClose: () => void;
-    onSave: (theme: Theme) => void;
-}
 
 type Section = {
     id: string;
@@ -117,8 +111,14 @@ const structureDisplayNames: Record<string, string> = {
     section: "Section",
 } as const;
 
-function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
-    const [theme, setTheme] = useState<Theme>(draftTheme);
+const colorOrder = ["primary", "secondary", "background", "text", "border"];
+
+function ThemeEditor() {
+    const [themes, setThemes] = useState<{
+        system: UITheme[];
+        custom: UITheme[];
+    }>({ system: [], custom: [] });
+    const [theme, setTheme] = useState<UITheme | null>(null);
     const [navigationStack, setNavigationStack] = useState<NavigationItem[]>(
         [],
     );
@@ -126,10 +126,102 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
         Record<string, boolean>
     >({});
     const address = useContext(AddressContext);
+    const currentTheme = useContext(ThemeContext);
 
-    React.useEffect(() => {
-        onSave(theme);
-    }, [theme, onSave]);
+    useEffect(() => {
+        loadThemes();
+    }, []);
+
+    const loadThemes = async () => {
+        const query = `
+        query {
+            themes: getThemes {
+                system {
+                    themeId
+                    name
+                    theme {
+                        colors  
+                        typography
+                        interactives
+                        structure
+                    }
+                    draftTheme {
+                        colors
+                        typography
+                        interactives
+                        structure
+                    }
+                }
+                custom {
+                    themeId
+                    name
+                    theme {
+                        colors
+                        typography
+                        interactives
+                        structure
+                    }
+                    draftTheme {
+                        colors
+                        typography
+                        interactives
+                        structure
+                    }
+                }
+            }
+        }
+        `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload({ query })
+            .setIsGraphQLEndpoint(true)
+            .build();
+
+        try {
+            const { themes } = await fetch.exec();
+            if (themes) {
+                setThemes(themes);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    useEffect(() => {
+        if (themes.system.length > 0 && !theme) {
+            // Set the first system theme as default
+            setTheme(themes.system[0]);
+        }
+    }, [themes.system, theme]);
+
+    const loadTheme = async () => {
+        if (!theme?.themeId) return;
+
+        const query = `
+        query {
+            theme: getTheme(themeId: $themeId) {
+                themeId
+                name
+                theme
+                draftTheme
+            }
+        }
+        `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload({ query, variables: { themeId: theme.themeId } })
+            .setIsGraphQLEndpoint(true)
+            .build();
+
+        try {
+            const { theme: updatedTheme } = await fetch.exec();
+            if (updatedTheme) {
+                setTheme(updatedTheme);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     const navigateTo = (item: NavigationItem) => {
         setNavigationStack((prev) => [...prev, item]);
@@ -150,9 +242,13 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
         category: "colors" | "typography" | "interactives" | "structure",
         categoryData: Record<string, string>,
     ) => {
+        if (!theme) {
+            return;
+        }
+
         const query = `
-        mutation ($data: JSONObject) {
-            updateDraftTheme(${category}: $data) {
+        mutation ($data: JSONObject, $themeId: String!) {
+            updateDraftTheme(themeId: $themeId, ${category}: $data) {
                 draftTheme {
                     colors
                 }
@@ -165,6 +261,7 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
                 query,
                 variables: {
                     data: categoryData,
+                    themeId: theme.themeId,
                 },
             })
             .setIsGraphQLEndpoint(true)
@@ -186,7 +283,124 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
         const parentItem = navigationStack[navigationStack.length - 2];
 
         if (!currentItem) {
-            // Root view - Main sections
+            // Root view - Themes list
+            return (
+                <div className="p-2 space-y-4">
+                    {/* System Themes */}
+                    <div className="text-sm font-medium text-muted-foreground mb-2 ">
+                        System Themes
+                    </div>
+                    <div>
+                        {themes.system.map((theme) => (
+                            <button
+                                key={theme.themeId}
+                                onClick={() => {
+                                    setTheme(theme);
+                                    navigateTo({
+                                        id: "categories",
+                                        label: theme.name,
+                                    });
+                                }}
+                                className={
+                                    "w-full flex items-center justify-between px-3 py-3 rounded-md transition-colors group" +
+                                    (theme === theme
+                                        ? " bg-muted"
+                                        : " hover:bg-muted")
+                                }
+                            >
+                                <span className="flex items-center gap-3">
+                                    <span className="flex gap-1">
+                                        {colorOrder.map(
+                                            (key) =>
+                                                theme.theme.colors?.[key] && (
+                                                    <span
+                                                        key={key}
+                                                        className="w-4 h-4 rounded-full border"
+                                                        style={{
+                                                            backgroundColor:
+                                                                theme.theme
+                                                                    .colors[
+                                                                    key
+                                                                ],
+                                                        }}
+                                                    />
+                                                ),
+                                        )}
+                                    </span>
+                                    <span className="font-medium text-foreground text-sm">
+                                        {theme.name}
+                                    </span>
+                                </span>
+                                <ExpandMoreRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                            </button>
+                        ))}
+                    </div>
+                    <hr className="my-4 border-muted" />
+                    <div className="text-sm font-medium text-muted-foreground mb-2">
+                        Custom Themes
+                    </div>
+                    <div>
+                        {themes.custom.length === 0 ? (
+                            <div className="text-muted-foreground text-sm">
+                                No custom themes yet
+                            </div>
+                        ) : (
+                            themes.custom.map((theme) => (
+                                <button
+                                    key={theme.themeId}
+                                    onClick={() => {
+                                        setTheme(theme);
+                                        navigateTo({
+                                            id: "categories",
+                                            label: theme.name,
+                                        });
+                                    }}
+                                    className={
+                                        "w-full flex items-center justify-between px-3 py-3 rounded-md transition-colors group" +
+                                        (theme === theme
+                                            ? " bg-muted"
+                                            : " hover:bg-muted")
+                                    }
+                                >
+                                    <span className="flex items-center gap-3">
+                                        <span className="flex gap-1">
+                                            {colorOrder.map(
+                                                (key) =>
+                                                    theme.theme.colors?.[
+                                                        key
+                                                    ] && (
+                                                        <span
+                                                            key={key}
+                                                            className="w-4 h-4 rounded-full border"
+                                                            style={{
+                                                                backgroundColor:
+                                                                    theme.theme
+                                                                        .colors[
+                                                                        key
+                                                                    ],
+                                                            }}
+                                                        />
+                                                    ),
+                                            )}
+                                        </span>
+                                        <span className="font-medium text-foreground text-sm">
+                                            {theme.name}
+                                        </span>
+                                    </span>
+                                    <ExpandMoreRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                                </button>
+                            ))
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // Categories view
+        if (currentItem.id === "categories") {
+            if (!theme) {
+                return <p>No theme selected</p>;
+            }
             return (
                 <div className="p-2 space-y-1">
                     {sections.map((section) => (
@@ -215,10 +429,15 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
             );
         }
 
+        // For all other views, we need a theme
+        if (!theme) {
+            return <p>No theme selected</p>;
+        }
+
         // Check if current item is a typography item
         if (
             parentItem?.id === "typography" &&
-            currentItem.id in theme.typography
+            currentItem.id in theme.draftTheme!.typography
         ) {
             return (
                 <TypographySelector
@@ -226,15 +445,18 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
                         typographyDisplayNames[currentItem.id] ||
                         capitalize(currentItem.id)
                     }
-                    value={theme.typography[currentItem.id]}
+                    value={theme.draftTheme!.typography[currentItem.id]}
                     onChange={async (value) => {
                         const updatedTypography = {
-                            ...theme.typography,
+                            ...theme.draftTheme!.typography,
                             [currentItem.id]: value,
                         };
                         setTheme({
                             ...theme,
-                            typography: updatedTypography,
+                            draftTheme: {
+                                ...theme.draftTheme!,
+                                typography: updatedTypography,
+                            },
                         });
                         await updateThemeCategory(
                             "typography",
@@ -251,7 +473,7 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
         // Check if current item is an interactive item
         if (
             parentItem?.id === "interactives" &&
-            currentItem.id in theme.interactives
+            currentItem.id in theme.draftTheme!.interactives
         ) {
             return (
                 <InteractiveSelector
@@ -262,9 +484,15 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
                     type={
                         currentItem.id as "button" | "link" | "card" | "input"
                     }
-                    theme={theme}
+                    theme={theme.draftTheme}
                     onChange={async (updatedTheme) => {
-                        setTheme(updatedTheme);
+                        setTheme({
+                            ...theme,
+                            draftTheme: {
+                                ...theme.draftTheme!,
+                                interactives: updatedTheme.interactives,
+                            },
+                        });
                         await updateThemeCategory(
                             "interactives",
                             updatedTheme.interactives as unknown as Record<
@@ -280,7 +508,7 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
         // Check if current item is a structure item
         if (
             parentItem?.id === "structure" &&
-            currentItem.id in theme.structure
+            currentItem.id in theme.draftTheme!.structure
         ) {
             return (
                 <StructureSelector
@@ -289,9 +517,15 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
                         capitalize(currentItem.id)
                     }
                     type={currentItem.id as "page" | "section"}
-                    theme={theme}
+                    theme={theme.draftTheme!}
                     onChange={async (updatedTheme) => {
-                        setTheme(updatedTheme);
+                        setTheme({
+                            ...theme,
+                            draftTheme: {
+                                ...theme.draftTheme!,
+                                structure: updatedTheme.structure,
+                            },
+                        });
                         await updateThemeCategory(
                             "structure",
                             updatedTheme.structure as unknown as Record<
@@ -308,7 +542,7 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
             case "colors":
                 return (
                     <div className="space-y-2 p-2">
-                        {Object.keys(theme.colors)
+                        {Object.keys(theme.draftTheme!.colors)
                             .filter(
                                 (color) =>
                                     ![
@@ -322,15 +556,18 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
                                 <ColorSelector
                                     key={color}
                                     title={capitalize(color)}
-                                    value={theme.colors[color]}
+                                    value={theme.draftTheme!.colors[color]}
                                     onChange={async (value) => {
                                         const updatedColors = {
-                                            ...theme.colors,
+                                            ...theme.draftTheme!.colors,
                                             [color]: value,
                                         };
                                         setTheme({
                                             ...theme,
-                                            colors: updatedColors,
+                                            draftTheme: {
+                                                ...theme.draftTheme!,
+                                                colors: updatedColors,
+                                            },
                                         });
                                         await updateThemeCategory(
                                             "colors",
@@ -360,7 +597,9 @@ function ThemeEditor({ draftTheme, onClose, onSave }: ThemeEditorProps) {
                                     <ChevronDown
                                         className={`h-4 w-4 mr-2 transition-transform ${collapsedCategories[category.name] ? "rotate-[-90deg]" : "rotate-0"}`}
                                     />
-                                    {category.name}
+                                    <span className="text-sm font-medium text-muted-foreground">
+                                        {category.name}
+                                    </span>
                                 </button>
                                 {!collapsedCategories[category.name] && (
                                     <div>

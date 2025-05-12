@@ -18,7 +18,8 @@ export async function generateMetadata(): Promise<Metadata> {
         host: headersList.get("host"),
     });
     const siteInfoQuery = `
-            { site: getSiteInfo {
+            { 
+                site: getSiteInfo {
                     name,
                     settings {
                         title,
@@ -39,17 +40,6 @@ export async function generateMetadata(): Promise<Metadata> {
                         lemonsqueezyOneTimeVariantId,
                         lemonsqueezySubscriptionMonthlyVariantId,
                         lemonsqueezySubscriptionYearlyVariantId,
-                    },
-                    theme {
-                        colors,
-                        typography,
-                        interactives,
-                        structure
-                    },
-                    typefaces {
-                        section,
-                        typeface,
-                        fontWeights
                     },
                 }
             }

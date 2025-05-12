@@ -1,5 +1,5 @@
 import React from "react";
-import { WidgetProps } from "@courselit/common-models";
+import { Theme, WidgetProps } from "@courselit/common-models";
 import Settings, { Item } from "./settings";
 import {
     TextRenderer,
@@ -30,18 +30,19 @@ export default function Widget({
     state,
 }: WidgetProps<Settings>) {
     const { theme } = state;
-    const overiddenTheme = JSON.parse(JSON.stringify(theme));
+    const overiddenTheme: Theme = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
-        maxWidth || theme.structure.page.width;
+        maxWidth || theme.theme.structure.page.width;
     overiddenTheme.structure.section.verticalPadding =
-        verticalPadding || theme.structure.section.verticalPadding;
+        verticalPadding || theme.theme.structure.section.verticalPadding;
 
     return (
         <Section
             theme={overiddenTheme}
             style={{
-                backgroundColor: backgroundColor || theme?.colors?.background,
-                color: foregroundColor || theme?.colors?.text,
+                backgroundColor:
+                    backgroundColor || overiddenTheme?.colors?.background,
+                color: foregroundColor || overiddenTheme?.colors?.text,
             }}
             id={cssId}
         >
@@ -79,7 +80,7 @@ export default function Widget({
                                     value={`${item.title}-${index}`}
                                     className="border-b-0"
                                     style={{
-                                        borderBottom: `1px solid ${theme?.colors?.border}`,
+                                        borderBottom: `1px solid ${overiddenTheme?.colors?.border}`,
                                     }}
                                 >
                                     <AccordionTrigger>

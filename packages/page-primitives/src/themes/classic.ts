@@ -1,7 +1,6 @@
-import type { Theme } from "@courselit/common-models";
+import { Theme } from "./theme";
 
-export const defaultTheme: Theme = {
-    name: "default",
+const themeStyles: Theme["styles"] = {
     colors: {
         primary: "#000000",
         secondary: "#333333",
@@ -174,4 +173,10 @@ export const defaultTheme: Theme = {
             verticalPadding: "py-0",
         },
     },
+};
+
+export const classic: Theme = {
+    id: "classic",
+    name: "Classic",
+    styles: themeStyles,
 };

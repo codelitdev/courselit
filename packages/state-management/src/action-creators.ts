@@ -115,7 +115,8 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
             dispatch(networkAction(true));
 
             const query = `
-            { site: getSiteInfo {
+            { 
+                site: getSiteInfo {
                     name,
                     settings {
                         title,
@@ -133,17 +134,21 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
                         hideCourseLitBranding,
                         razorpayKey,
                     },
-                    theme {
-                        colors,
-                        typography,
-                        interactives,
-                        structure
-                    },
                     typefaces {
                         section,
                         typeface,
                         fontWeights
                     },
+                },
+                theme: getTheme {
+                    themeId
+                    name
+                    theme {
+                        colors
+                        typography
+                        interactives
+                        structure
+                    }
                 }
             }
             `;
@@ -156,8 +161,10 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
 
             if (response && response.site) {
                 dispatch(newSiteInfoAvailable(response.site.settings));
-                dispatch(themeAvailable(response.site.theme));
                 dispatch(typefacesAvailable(response.site.typefaces));
+            }
+            if (response && response.theme) {
+                dispatch(themeAvailable(response.theme));
             }
         } catch (err) {
             console.error(err); // eslint-disable-line no-console

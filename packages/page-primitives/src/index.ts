@@ -36,4 +36,4 @@ export * from "./caption";
 export * from "./card";
 export * from "./label";
 export * from "./section";
-export * from "./theme";
+export * from "./themes";

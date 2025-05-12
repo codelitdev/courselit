@@ -6,6 +6,7 @@ import {
     Group,
     Lesson,
     LessonType,
+    Theme,
     WidgetProps,
 } from "@courselit/common-models";
 import Settings from "./settings";
@@ -54,11 +55,11 @@ export default function Widget({
     pageData: product,
 }: WidgetProps<Settings>): JSX.Element {
     const { theme } = state;
-    const overiddenTheme = JSON.parse(JSON.stringify(theme));
+    const overiddenTheme: Theme = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
-        maxWidth || theme.structure.page.width;
+        maxWidth || theme.theme.structure.page.width;
     overiddenTheme.structure.section.verticalPadding =
-        verticalPadding || theme.structure.section.verticalPadding;
+        verticalPadding || theme.theme.structure.section.verticalPadding;
 
     const [course, setCourse] = useState<CourseWithGroups>();
     const [formattedCourse, setFormattedCourse] = useState<
@@ -154,8 +155,9 @@ export default function Widget({
         <Section
             theme={overiddenTheme}
             style={{
-                backgroundColor: backgroundColor || theme?.colors?.background,
-                color: foregroundColor || theme?.colors?.text,
+                backgroundColor:
+                    backgroundColor || overiddenTheme?.colors?.background,
+                color: foregroundColor || overiddenTheme?.colors?.text,
             }}
             id={cssId}
         >
@@ -205,7 +207,7 @@ export default function Widget({
                             key={index}
                             className="border-b-0"
                             style={{
-                                borderBottom: `1px solid ${theme?.colors?.border}`,
+                                borderBottom: `1px solid ${overiddenTheme?.colors?.border}`,
                             }}
                         >
                             <AccordionTrigger>

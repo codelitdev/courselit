@@ -7,6 +7,7 @@ import type {
     Media,
     Profile,
     Theme,
+    UITheme,
 } from "@courselit/common-models";
 import Settings from "./settings";
 import {
@@ -40,7 +41,7 @@ interface AdminWidgetProps {
     address: Address;
     networkAction: boolean;
     profile: Profile;
-    theme: Theme;
+    theme: UITheme;
 }
 
 export default function AdminWidget({
@@ -122,10 +123,13 @@ export default function AdminWidget({
     );
     const [verticalPadding, setVerticalPadding] = useState<
         Theme["structure"]["section"]["verticalPadding"]
-    >(settings.verticalPadding || theme.structure.section.verticalPadding);
+    >(
+        settings.verticalPadding ||
+            theme.theme.structure.section.verticalPadding,
+    );
     const [maxWidth, setMaxWidth] = useState<
         Theme["structure"]["page"]["width"]
-    >(settings.maxWidth || theme.structure.page.width);
+    >(settings.maxWidth || theme.theme.structure.page.width);
 
     const onSettingsChanged = () =>
         onChange({

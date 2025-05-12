@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import type { Address, Theme } from "@courselit/common-models";
+import type { Address, Theme, UITheme } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
 import type Settings from "./settings";
 import {
@@ -28,7 +28,7 @@ interface AdminWidgetProps {
     address: Address;
     networkAction: boolean;
     dispatch: AppDispatch;
-    theme: Theme;
+    theme: UITheme;
 }
 
 export default function AdminWidget({
@@ -60,10 +60,13 @@ export default function AdminWidget({
     const [alignment, setAlignment] = useState(settings.alignment || "left");
     const [maxWidth, setMaxWidth] = useState<
         Theme["structure"]["page"]["width"]
-    >(settings.maxWidth || theme.structure.page.width);
+    >(settings.maxWidth || theme.theme.structure.page.width);
     const [verticalPadding, setVerticalPadding] = useState<
         Theme["structure"]["section"]["verticalPadding"]
-    >(settings.verticalPadding || theme.structure.section.verticalPadding);
+    >(
+        settings.verticalPadding ||
+            theme.theme.structure.section.verticalPadding,
+    );
     const [cssId, setCssId] = useState(settings.cssId);
 
     useEffect(() => {

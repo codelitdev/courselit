@@ -24,12 +24,12 @@ import {
 } from "../defaults";
 import { DragAndDrop } from "@courselit/components-library";
 import { generateUniqueId } from "@courselit/utils";
-import { Theme } from "@courselit/common-models";
+import { Theme, UITheme } from "@courselit/common-models";
 
 interface AdminWidgetProps {
     settings: Settings;
     onChange: (...args: any[]) => void;
-    theme: Theme;
+    theme: UITheme;
 }
 
 export default function AdminWidget({
@@ -67,7 +67,7 @@ export default function AdminWidget({
     >(settings.spacingBetweenLinks || defaultSpacingBetweenLinks);
     const [maxWidth, setMaxWidth] = useState<
         Theme["structure"]["page"]["width"]
-    >(settings.maxWidth || theme.structure.page.width);
+    >(settings.maxWidth || theme.theme.structure.page.width);
 
     useEffect(() => {
         onChange({

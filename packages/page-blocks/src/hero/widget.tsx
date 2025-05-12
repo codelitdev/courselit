@@ -1,5 +1,5 @@
 import React from "react";
-import { WidgetProps } from "@courselit/common-models";
+import { Theme, WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
 import {
     Image,
@@ -63,11 +63,11 @@ export default function Widget({
     },
     state: { theme },
 }: WidgetProps<Settings>) {
-    const overiddenTheme = JSON.parse(JSON.stringify(theme));
+    const overiddenTheme: Theme = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
-        maxWidth || theme.structure.page.width;
+        maxWidth || theme.theme.structure.page.width;
     overiddenTheme.structure.section.verticalPadding =
-        verticalPadding || theme.structure.section.verticalPadding;
+        verticalPadding || theme.theme.structure.section.verticalPadding;
 
     const hasHeroGraphic = youtubeLink || (media && media.mediaId);
     let direction: "md:!flex-row" | "md:!flex-row-reverse";
@@ -83,8 +83,8 @@ export default function Widget({
     }
 
     const defaultStyle = {
-        backgroundColor: backgroundColor || theme?.colors?.background,
-        color: foregroundColor || theme?.colors?.text,
+        backgroundColor: backgroundColor || overiddenTheme?.colors?.background,
+        color: foregroundColor || overiddenTheme?.colors?.text,
     };
 
     return (

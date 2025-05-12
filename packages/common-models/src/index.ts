@@ -68,3 +68,5 @@ export * from "./community-report";
 export * from "./notification";
 export * from "./course";
 export * from "./activity-type";
+export * from "./ui-theme";
+export * from "./user-theme";

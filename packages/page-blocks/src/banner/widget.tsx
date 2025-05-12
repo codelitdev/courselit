@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react";
-import { Constants, Media, WidgetProps } from "@courselit/common-models";
+import { Constants, Media, Theme, WidgetProps } from "@courselit/common-models";
 import {
     Image,
     TextRenderer,
@@ -76,11 +76,11 @@ export default function Widget({
     editing,
 }: WidgetProps<Settings>): JSX.Element {
     const { theme } = state;
-    const overiddenTheme = JSON.parse(JSON.stringify(theme));
+    const overiddenTheme: Theme = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
-        maxWidth || theme.structure.page.width;
+        maxWidth || theme.theme.structure.page.width;
     overiddenTheme.structure.section.verticalPadding =
-        verticalPadding || theme.structure.section.verticalPadding;
+        verticalPadding || theme.theme.structure.section.verticalPadding;
 
     const [email, setEmail] = useState("");
     const [success, setSuccess] = useState(false);
@@ -199,8 +199,9 @@ export default function Widget({
         <Section
             theme={overiddenTheme}
             style={{
-                backgroundColor: backgroundColor || theme?.colors?.background,
-                color: color || theme?.colors?.text,
+                backgroundColor:
+                    backgroundColor || overiddenTheme?.colors?.background,
+                color: color || overiddenTheme?.colors?.text,
             }}
             id={cssId}
         >
@@ -313,7 +314,8 @@ export default function Widget({
                                                     style={{
                                                         backgroundColor:
                                                             buttonBackground ||
-                                                            theme?.colors
+                                                            overiddenTheme
+                                                                ?.colors
                                                                 ?.primary,
                                                         color:
                                                             buttonForeground ||
@@ -342,7 +344,7 @@ export default function Widget({
                                         style={{
                                             backgroundColor:
                                                 buttonBackground ||
-                                                theme?.colors?.primary,
+                                                overiddenTheme?.colors?.primary,
                                             color: buttonForeground || "#fff",
                                         }}
                                     >
@@ -353,11 +355,11 @@ export default function Widget({
                         {type === Constants.PageType.SITE && buttonAction && (
                             <Link href={buttonAction}>
                                 <Button
-                                    theme={theme}
+                                    theme={overiddenTheme}
                                     style={{
                                         backgroundColor:
                                             buttonBackground ||
-                                            theme?.colors?.primary,
+                                            overiddenTheme?.colors?.primary,
                                         color: buttonForeground || "#fff",
                                     }}
                                 >
@@ -368,7 +370,7 @@ export default function Widget({
                         {type === Constants.PageType.COMMUNITY && (
                             <div className="flex flex-col gap-4">
                                 <Text2
-                                    theme={theme}
+                                    theme={overiddenTheme}
                                     className="flex items-center gap-1"
                                 >
                                     <>
@@ -380,11 +382,11 @@ export default function Widget({
                                     href={`/checkout?type=community&id=${product.communityId}`}
                                 >
                                     <Button
-                                        theme={theme}
+                                        theme={overiddenTheme}
                                         style={{
                                             backgroundColor:
                                                 buttonBackground ||
-                                                theme?.colors?.primary,
+                                                overiddenTheme?.colors?.primary,
                                             color: buttonForeground || "#fff",
                                         }}
                                     >

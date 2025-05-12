@@ -9,9 +9,8 @@ import {
 import type GQLContext from "../../models/GQLContext";
 import DomainModel, { Domain } from "../../models/Domain";
 import { checkPermission } from "@courselit/utils";
-import { Theme, Typeface } from "@courselit/common-models";
+import { Typeface } from "@courselit/common-models";
 import ApikeyModel, { ApiKey } from "@models/ApiKey";
-import { defaultTheme } from "@courselit/page-primitives";
 
 const { permissions } = constants;
 
@@ -31,19 +30,11 @@ export const getSiteInfo = async (ctx: GQLContext) => {
         checkPermission(ctx.user.permissions, [permissions.manageSite]);
     if (!isSiteEditor) {
         exclusionProjection.draftTypefaces = 0;
-        exclusionProjection.draftTheme = 0;
     }
     const domain: Domain | null = await DomainModel.findById(
         ctx.subdomain._id,
         exclusionProjection,
     );
-
-    if (domain && !domain.theme) {
-        domain.theme = defaultTheme;
-    }
-    if (isSiteEditor && domain && !domain.draftTheme) {
-        domain.draftTheme = domain.theme;
-    }
 
     return domain;
 };
@@ -232,49 +223,4 @@ export const removeApikey = async (keyId: string, ctx: GQLContext) => {
     await ApikeyModel.deleteOne({ keyId, domain: ctx.subdomain._id });
 
     return true;
-};
-
-export const updateDraftTheme = async (
-    ctx: GQLContext,
-    colors?: Theme["colors"],
-    typography?: Theme["typography"],
-    interactives?: Theme["interactives"],
-    structure?: Theme["structure"],
-) => {
-    checkIfAuthenticated(ctx);
-
-    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
-        throw new Error(responses.action_not_allowed);
-    }
-
-    const domain: Domain | null = await DomainModel.findById(ctx.subdomain._id);
-    if (!domain) {
-        return null;
-    }
-
-    if (!domain.draftTheme) {
-        domain.draftTheme = domain.theme || defaultTheme;
-    }
-
-    if (colors) {
-        domain.draftTheme.colors = JSON.parse(JSON.stringify(colors));
-    }
-
-    if (typography) {
-        domain.draftTheme.typography = JSON.parse(JSON.stringify(typography));
-    }
-
-    if (interactives) {
-        domain.draftTheme.interactives = JSON.parse(
-            JSON.stringify(interactives),
-        );
-    }
-
-    if (structure) {
-        domain.draftTheme.structure = JSON.parse(JSON.stringify(structure));
-    }
-
-    await (domain as any).save();
-
-    return domain;
 };

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { WidgetProps } from "@courselit/common-models";
+import { Theme, WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
 import { Link, Switch, TextRenderer } from "@courselit/components-library";
 import { columns as defaultColumns } from "./defaults";
@@ -44,11 +44,11 @@ export default function Widget({
     },
     state: { theme },
 }: WidgetProps<Settings>): JSX.Element {
-    const overiddenTheme = JSON.parse(JSON.stringify(theme));
+    const overiddenTheme: Theme = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
-        maxWidth || theme.structure.page.width;
+        maxWidth || theme.theme.structure.page.width;
     overiddenTheme.structure.section.verticalPadding =
-        verticalPadding || theme.structure.section.verticalPadding;
+        verticalPadding || theme.theme.structure.section.verticalPadding;
 
     const [pricing, setPricing] = useState<"monthly" | "yearly">("yearly");
 
@@ -56,8 +56,9 @@ export default function Widget({
         <Section
             theme={overiddenTheme}
             style={{
-                backgroundColor: backgroundColor || theme?.colors?.background,
-                color: foregroundColor || theme?.colors?.text,
+                backgroundColor:
+                    backgroundColor || overiddenTheme?.colors?.background,
+                color: foregroundColor || overiddenTheme?.colors?.text,
             }}
             id={cssId}
         >
@@ -69,7 +70,7 @@ export default function Widget({
                             : "items-start"
                     }`}
                 >
-                    <Header1 className="mb-4" theme={theme}>
+                    <Header1 className="mb-4" theme={overiddenTheme}>
                         {title}
                     </Header1>
                     {description && (
@@ -80,7 +81,7 @@ export default function Widget({
                                     : "text-left"
                             }`}
                         >
-                            <Subheader1 theme={theme}>
+                            <Subheader1 theme={overiddenTheme}>
                                 <TextRenderer json={description} />
                             </Subheader1>
                         </div>
@@ -88,7 +89,7 @@ export default function Widget({
                     {pricingSwitcher && (
                         <div className="flex items-center gap-2 mb-8 mt-4 text-lg w-full justify-center">
                             <div className="flex-1 text-right">
-                                <Text2 theme={theme}>
+                                <Text2 theme={overiddenTheme}>
                                     {monthlyPriceCaption}
                                 </Text2>
                             </div>
@@ -103,7 +104,7 @@ export default function Widget({
                                 />
                             </div>
                             <div className="flex-1">
-                                <Text2 theme={theme}>
+                                <Text2 theme={overiddenTheme}>
                                     {yearlyPriceCaption}
                                 </Text2>
                             </div>
@@ -120,9 +121,9 @@ export default function Widget({
                                 style={{
                                     backgroundColor,
                                     color: foregroundColor,
-                                    border: `1px solid ${cardBorderColor || theme?.colors?.border}`,
+                                    border: `1px solid ${cardBorderColor || overiddenTheme?.colors?.border}`,
                                 }}
-                                theme={theme}
+                                theme={overiddenTheme}
                                 className="p-0"
                             >
                                 <PageCardContent>
@@ -131,11 +132,11 @@ export default function Widget({
                                         style={{
                                             color: planTitleColor,
                                         }}
-                                        theme={theme}
+                                        theme={overiddenTheme}
                                     >
                                         {item.title}
                                     </Preheader>
-                                    <PageCardHeader theme={theme}>
+                                    <PageCardHeader theme={overiddenTheme}>
                                         {pricingSwitcher
                                             ? pricing === "yearly"
                                                 ? item.priceYearly
@@ -148,7 +149,7 @@ export default function Widget({
                                                 color: foregroundColor,
                                             }}
                                             component="span"
-                                            theme={theme}
+                                            theme={overiddenTheme}
                                         >
                                             <TextRenderer
                                                 json={item.description}
@@ -161,7 +162,7 @@ export default function Widget({
                                                 .map((feature) => (
                                                     <Text2
                                                         key={feature}
-                                                        theme={theme}
+                                                        theme={overiddenTheme}
                                                         className="[&:not(:first-child)]:mt-4"
                                                     >
                                                         {feature}
@@ -184,7 +185,8 @@ export default function Widget({
                                                         (item.primary
                                                             ? primaryButtonBackground
                                                             : buttonBackground) ||
-                                                        theme?.colors?.primary,
+                                                        overiddenTheme?.colors
+                                                            ?.primary,
                                                     color:
                                                         buttonForeground ||
                                                         "#fff",
@@ -197,7 +199,7 @@ export default function Widget({
                                                         ? "default"
                                                         : "outline"
                                                 }
-                                                theme={theme}
+                                                theme={overiddenTheme}
                                             >
                                                 {item.action.label}
                                             </Button>

@@ -8,7 +8,7 @@ import {
     Button2,
 } from "@courselit/components-library";
 import { Person } from "@courselit/icons";
-import { WidgetProps } from "@courselit/common-models";
+import { Theme, WidgetProps } from "@courselit/common-models";
 import MobileNav from "./mobile-nav";
 import {
     linkAlignment as defaultLinkAlignment,
@@ -21,9 +21,9 @@ import clsx from "clsx";
 
 export default function Widget({ state, settings }: WidgetProps<Settings>) {
     const { theme } = state;
-    const overiddenTheme = JSON.parse(JSON.stringify(theme));
+    const overiddenTheme: Theme = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
-        settings.maxWidth || theme.structure.page.width;
+        settings.maxWidth || theme.theme.structure.page.width;
 
     const linkClasses = "flex w-full";
     const linkAlignment = settings.linkAlignment || defaultLinkAlignment;
@@ -40,9 +40,9 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
             )}
             style={{
                 backgroundColor:
-                    settings.appBarBackground || theme?.colors?.background,
-                color: settings.linkColor || theme?.colors?.text,
-                borderBottom: `1px solid ${settings.appBarBackground || theme?.colors?.border}`,
+                    settings.appBarBackground || theme.theme.colors.background,
+                color: settings.linkColor || theme.theme.colors.text,
+                borderBottom: `1px solid ${settings.appBarBackground || theme.theme.colors.border}`,
             }}
             component="header"
         >
@@ -64,7 +64,8 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                             theme={overiddenTheme}
                             style={{
                                 color:
-                                    settings.logoColor || theme?.colors?.text,
+                                    settings.logoColor ||
+                                    overiddenTheme?.colors?.text,
                             }}
                         >
                             {state.siteinfo.title}

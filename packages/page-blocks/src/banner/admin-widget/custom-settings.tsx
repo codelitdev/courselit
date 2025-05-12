@@ -20,6 +20,7 @@ import {
     Constants,
     PaymentPlan,
     Theme,
+    UITheme,
 } from "@courselit/common-models";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "../constants";
 
@@ -29,7 +30,7 @@ interface CustomSettingsProps {
     pageData: Record<string, unknown>;
     onChange: (...args: any[]) => void;
     address: Address;
-    theme: Theme;
+    theme: UITheme;
 }
 
 export default function CustomSettings({
@@ -82,10 +83,13 @@ export default function CustomSettings({
     >(settings.editingViewShowSuccess || "0");
     const [maxWidth, setMaxWidth] = useState<
         Theme["structure"]["page"]["width"]
-    >(settings.maxWidth || theme.structure.page.width);
+    >(settings.maxWidth || theme.theme.structure.page.width);
     const [verticalPadding, setVerticalPadding] = useState<
         Theme["structure"]["section"]["verticalPadding"]
-    >(settings.verticalPadding || theme.structure.section.verticalPadding);
+    >(
+        settings.verticalPadding ||
+            theme.theme.structure.section.verticalPadding,
+    );
     const [mediaBorderRadius, setMediaBorderRadius] = useState(
         settings.mediaRadius || 2,
     );

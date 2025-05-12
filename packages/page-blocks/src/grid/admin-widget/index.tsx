@@ -3,7 +3,13 @@
 import React, { useEffect, useState } from "react";
 import Settings, { Item } from "../settings";
 import ItemEditor from "./item-editor";
-import { Address, Profile, Alignment, Theme } from "@courselit/common-models";
+import {
+    Address,
+    Profile,
+    Alignment,
+    Theme,
+    UITheme,
+} from "@courselit/common-models";
 import {
     AdminWidgetPanel,
     ColorSelector,
@@ -29,7 +35,7 @@ export interface AdminWidgetProps {
         preservedStateAcrossRerender: Record<string, unknown>,
     ) => void;
     preservedStateAcrossRerender: Record<string, unknown>;
-    theme: Theme;
+    theme: UITheme;
 }
 
 export default function AdminWidget({
@@ -103,10 +109,13 @@ export default function AdminWidget({
     const [itemBeingEditedIndex, setItemBeingEditedIndex] = useState(-1);
     const [maxWidth, setMaxWidth] = useState<
         Theme["structure"]["page"]["width"]
-    >(settings.maxWidth || theme.structure.page.width);
+    >(settings.maxWidth || theme.theme.structure.page.width);
     const [verticalPadding, setVerticalPadding] = useState<
         Theme["structure"]["section"]["verticalPadding"]
-    >(settings.verticalPadding || theme.structure.section.verticalPadding);
+    >(
+        settings.verticalPadding ||
+            theme.theme.structure.section.verticalPadding,
+    );
     const [itemBackgroundColor, setItemBackgroundColor] = useState(
         settings.itemBackgroundColor,
     );

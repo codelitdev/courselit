@@ -1,6 +1,6 @@
 import React from "react";
 import { TextRenderer } from "@courselit/components-library";
-import type { WidgetProps } from "@courselit/common-models";
+import type { Theme, WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
 import { fontSize as defaultFontSize } from "./defaults";
 import { Text1, Section } from "@courselit/page-primitives";
@@ -33,11 +33,11 @@ const Widget = ({
     },
     state: { theme },
 }: WidgetProps<Settings>) => {
-    const overiddenTheme = JSON.parse(JSON.stringify(theme));
+    const overiddenTheme: Theme = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
-        maxWidth || theme.structure.page.width;
+        maxWidth || theme.theme.structure.page.width;
     overiddenTheme.structure.section.verticalPadding =
-        verticalPadding || theme.structure.section.verticalPadding;
+        verticalPadding || theme.theme.structure.section.verticalPadding;
 
     if (!text) return <></>;
 
@@ -45,8 +45,9 @@ const Widget = ({
         <Section
             theme={overiddenTheme}
             style={{
-                backgroundColor: backgroundColor || theme?.colors?.background,
-                color: color || theme?.colors?.text,
+                backgroundColor:
+                    backgroundColor || overiddenTheme?.colors?.background,
+                color: color || overiddenTheme?.colors?.text,
                 textAlign: alignment,
             }}
             id={cssId}

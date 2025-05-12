@@ -5,15 +5,15 @@ import {
     Typeface,
     WidgetInstance,
 } from "@courselit/common-models";
-import type { Address, Media, Profile, Theme } from "@courselit/common-models";
+import type {
+    Address,
+    Media,
+    Profile,
+    UITheme,
+} from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { networkAction } from "@courselit/state-management/dist/action-creators";
-import {
-    debounce,
-    FetchBuilder,
-    generateUniqueId,
-    getGraphQLQueryStringFromObject,
-} from "@courselit/utils";
+import { debounce, FetchBuilder, generateUniqueId } from "@courselit/utils";
 import {
     EDIT_PAGE_BUTTON_DONE,
     EDIT_PAGE_BUTTON_UPDATE,
@@ -59,7 +59,7 @@ import {
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
-const FontsList = dynamic(() => import("./fonts-list"));
+// const FontsList = dynamic(() => import("./fonts-list"));
 const ThemeEditor = dynamic(() => import("./theme-editor/index"));
 
 const DEBOUNCE_TIME = 500;
@@ -110,7 +110,7 @@ export default function PageEditor({
     const [primaryFontFamily, setPrimaryFontFamily] =
         useState("Roboto, sans-serif");
     const [loading, setLoading] = useState(false);
-    const [draftTheme, setDraftTheme] = useState<Theme>(state.theme);
+    const [draftTheme, setDraftTheme] = useState<UITheme>(state.theme);
     // const [theme, setTheme] = useState<Theme>(state.theme);
     const { toast } = useToast();
     const [pages, setPages] = useState<Page[]>([]);
@@ -287,13 +287,6 @@ export default function PageEditor({
                     letterSpacing,
                     case
                 },
-                draftTheme {
-                    name
-                    colors
-                    typography
-                    interactives
-                    structure
-                }
             }
         }
         `;
@@ -307,9 +300,6 @@ export default function PageEditor({
             const response = await fetch.exec();
             if (response.site.draftTypefaces) {
                 setDraftTypefaces(response.site.draftTypefaces);
-            }
-            if (response.site.draftTheme) {
-                setDraftTheme(response.site.draftTheme);
             }
         } catch (err: any) {
             toast({
@@ -528,51 +518,51 @@ export default function PageEditor({
         [selectedWidget],
     );
 
-    const saveDraftTypefaces = async (fontName: string) => {
-        const newTypefaces: Typeface[] = structuredClone(draftTypefaces);
-        const defaultSection = newTypefaces.filter(
-            (x) => x.section === "default",
-        )[0];
-        defaultSection.typeface = fontName;
+    // const saveDraftTypefaces = async (fontName: string) => {
+    //     const newTypefaces: Typeface[] = structuredClone(draftTypefaces);
+    //     const defaultSection = newTypefaces.filter(
+    //         (x) => x.section === "default",
+    //     )[0];
+    //     defaultSection.typeface = fontName;
 
-        const query = `
-            mutation {
-                site: updateDraftTypefaces(
-                    typefaces: ${getGraphQLQueryStringFromObject(newTypefaces)} 
-                ) {
-                    draftTypefaces {
-                        section,
-                        typeface,
-                        fontWeights,
-                        fontSize,
-                        lineHeight,
-                        letterSpacing,
-                        case
-                    },
-                }
-            }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            dispatch && dispatch(networkAction(true));
-            const response = await fetch.exec();
-            if (response.site) {
-                setDraftTypefaces(response.site.draftTypefaces);
-            }
-        } catch (err: any) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: err.message,
-                variant: "destructive",
-            });
-        } finally {
-            dispatch && dispatch(networkAction(false));
-        }
-    };
+    //     const query = `
+    //         mutation {
+    //             site: updateDraftTypefaces(
+    //                 typefaces: ${getGraphQLQueryStringFromObject(newTypefaces)}
+    //             ) {
+    //                 draftTypefaces {
+    //                     section,
+    //                     typeface,
+    //                     fontWeights,
+    //                     fontSize,
+    //                     lineHeight,
+    //                     letterSpacing,
+    //                     case
+    //                 },
+    //             }
+    //         }
+    //     `;
+    //     const fetch = new FetchBuilder()
+    //         .setUrl(`${address.backend}/api/graph`)
+    //         .setPayload(query)
+    //         .setIsGraphQLEndpoint(true)
+    //         .build();
+    //     try {
+    //         dispatch && dispatch(networkAction(true));
+    //         const response = await fetch.exec();
+    //         if (response.site) {
+    //             setDraftTypefaces(response.site.draftTypefaces);
+    //         }
+    //     } catch (err: any) {
+    //         toast({
+    //             title: TOAST_TITLE_ERROR,
+    //             description: err.message,
+    //             variant: "destructive",
+    //         });
+    //     } finally {
+    //         dispatch && dispatch(networkAction(false));
+    //     }
+    // };
 
     const onAddWidgetBelow = (index: number) => {
         setSelectedWidgetIndex(index);
@@ -595,18 +585,18 @@ export default function PageEditor({
                 />
             )}
             {leftPaneContent === "editor" && editWidget}
-            {leftPaneContent === "fonts" && (
+            {/* {leftPaneContent === "fonts" && (
                 <FontsList
                     draftTypefaces={draftTypefaces}
                     onClose={onClose}
                     saveDraftTypefaces={saveDraftTypefaces}
                 />
-            )}
+            )} */}
             {leftPaneContent === "theme" && (
                 <ThemeEditor
-                    draftTheme={draftTheme}
-                    onClose={onClose}
-                    onSave={(theme) => setDraftTheme(theme)}
+                // draftTheme={draftTheme}
+                // onClose={onClose}
+                // onSave={(theme) => setDraftTheme(theme)}
                 />
             )}
             {leftPaneContent === "seo" && (

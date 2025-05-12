@@ -1,5 +1,5 @@
 import React from "react";
-import { WidgetProps } from "@courselit/common-models";
+import { Theme, WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
 import { Image, VideoWithPreview } from "@courselit/components-library";
 import { isVideo } from "@courselit/utils";
@@ -32,11 +32,11 @@ export default function Widget({
     },
     state: { theme },
 }: WidgetProps<Settings>) {
-    const overiddenTheme = JSON.parse(JSON.stringify(theme));
+    const overiddenTheme: Theme = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
-        maxWidth || theme.structure.page.width;
+        maxWidth || theme.theme.structure.page.width;
     overiddenTheme.structure.section.verticalPadding =
-        verticalPadding || theme.structure.section.verticalPadding;
+        verticalPadding || theme.theme.structure.section.verticalPadding;
 
     const hasHeroGraphic = youtubeLink || (media && media.mediaId);
 
@@ -44,8 +44,9 @@ export default function Widget({
         <Section
             theme={overiddenTheme}
             style={{
-                backgroundColor: backgroundColor || theme?.colors?.background,
-                color: theme?.colors?.text,
+                backgroundColor:
+                    backgroundColor || theme?.theme?.colors?.background,
+                color: theme?.theme?.colors?.text,
             }}
             id={cssId}
         >

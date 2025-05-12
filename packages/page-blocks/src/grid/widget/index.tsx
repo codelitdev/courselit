@@ -1,4 +1,4 @@
-import { WidgetProps } from "@courselit/common-models";
+import { Theme, WidgetProps } from "@courselit/common-models";
 import Settings from "../settings";
 import { TextRenderer, Link } from "@courselit/components-library";
 import Itemm from "./item";
@@ -39,18 +39,19 @@ export default function Widget({
     },
     state: { theme },
 }: WidgetProps<Settings>): JSX.Element {
-    const overiddenTheme = JSON.parse(JSON.stringify(theme));
+    const overiddenTheme: Theme = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
-        maxWidth || theme.structure.page.width;
+        maxWidth || theme.theme.structure.page.width;
     overiddenTheme.structure.section.verticalPadding =
-        verticalPadding || theme.structure.section.verticalPadding;
+        verticalPadding || theme.theme.structure.section.verticalPadding;
 
     return (
         <Section
             theme={overiddenTheme}
             style={{
-                backgroundColor: backgroundColor || theme?.colors?.background,
-                color: foregroundColor || theme?.colors?.text,
+                backgroundColor:
+                    backgroundColor || overiddenTheme?.colors?.background,
+                color: foregroundColor || overiddenTheme?.colors?.text,
             }}
             id={cssId}
         >
@@ -84,7 +85,7 @@ export default function Widget({
                                 style={{
                                     backgroundColor:
                                         buttonBackground ||
-                                        theme?.colors?.primary,
+                                        overiddenTheme?.colors?.primary,
                                     color: buttonForeground || "#fff",
                                 }}
                                 theme={overiddenTheme}

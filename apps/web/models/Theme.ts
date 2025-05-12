@@ -16,7 +16,6 @@ const TypographySchema = new mongoose.Schema(
 );
 
 export const ThemeSchema = new mongoose.Schema<Theme>({
-    name: { type: String, required: true },
     colors: {
         type: {
             primary: { type: String, required: true },

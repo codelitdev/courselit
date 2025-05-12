@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Course, WidgetProps } from "@courselit/common-models";
+import { Course, Theme, WidgetProps } from "@courselit/common-models";
 import {
     TextRenderer,
     SkeletonCard,
@@ -26,11 +26,11 @@ export default function Widget({
     dispatch,
 }: WidgetProps<Settings>) {
     const { theme } = state;
-    const overiddenTheme = JSON.parse(JSON.stringify(theme));
+    const overiddenTheme: Theme = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
-        maxWidth || theme.structure.page.width;
+        maxWidth || theme.theme.structure.page.width;
     overiddenTheme.structure.section.verticalPadding =
-        verticalPadding || theme.structure.section.verticalPadding;
+        verticalPadding || theme.theme.structure.section.verticalPadding;
 
     const [productItems, setProductItems] = useState<Partial<Course>[]>([]);
 
@@ -103,8 +103,9 @@ export default function Widget({
         <Section
             theme={overiddenTheme}
             style={{
-                backgroundColor: backgroundColor || theme?.colors?.background,
-                color: color || theme?.colors?.text,
+                backgroundColor:
+                    backgroundColor || overiddenTheme?.colors?.background,
+                color: color || overiddenTheme?.colors?.text,
             }}
             id={cssId}
         >
