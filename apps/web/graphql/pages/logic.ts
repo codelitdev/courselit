@@ -294,6 +294,7 @@ export const publish = async (
     page.socialImage = page.draftSocialImage;
 
     ctx.subdomain.typefaces = ctx.subdomain.draftTypefaces;
+    ctx.subdomain.theme = ctx.subdomain.draftTheme;
     ctx.subdomain.sharedWidgets = ctx.subdomain.draftSharedWidgets;
     ctx.subdomain.draftSharedWidgets = {};
 

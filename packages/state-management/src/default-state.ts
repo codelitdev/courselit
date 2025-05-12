@@ -41,7 +41,11 @@ export default {
         message: "",
         action: null,
     },
-    theme: {},
+    theme: {
+        themeId: "",
+        name: "",
+        theme: {},
+    },
     address: {
         backend: "",
         frontend: "",

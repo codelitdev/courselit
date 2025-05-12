@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import SettingsSchema from "./SiteInfo";
-import { ThemeSchema } from "./Theme";
 import TypefaceSchema from "./Typeface";
 import constants from "../config/constants";
 import { Domain as PublicDomain, Typeface } from "@courselit/common-models";
@@ -27,7 +26,7 @@ const DomainSchema = new mongoose.Schema<Domain>(
         email: { type: String, required: true },
         deleted: { type: Boolean, required: true, default: false },
         settings: SettingsSchema,
-        theme: ThemeSchema,
+        themeId: { type: String },
         sharedWidgets: {
             type: mongoose.Schema.Types.Mixed,
             default: {},

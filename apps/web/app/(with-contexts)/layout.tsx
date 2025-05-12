@@ -43,17 +43,21 @@ export default async function Layout({
                         lemonsqueezySubscriptionMonthlyVariantId,
                         lemonsqueezySubscriptionYearlyVariantId,
                     },
-                    theme {
-                        name,
-                        active,
-                        styles,
-                        url
-                    },
                     typefaces {
                         section,
                         typeface,
                         fontWeights
                     },
+                }
+                theme: getTheme {
+                    themeId
+                    name
+                    theme {
+                        colors
+                        typography
+                        interactives
+                        structure
+                    }
                 }
             }
             `;
@@ -73,6 +77,7 @@ export default async function Layout({
             address={address}
             siteinfo={formatSiteInfo(siteInfoResponse.site.settings)}
             typefaces={siteInfoResponse.site.typefaces}
+            theme={siteInfoResponse.theme}
             config={config}
             session={session}
         >

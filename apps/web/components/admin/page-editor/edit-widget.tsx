@@ -1,9 +1,8 @@
 import { useState } from "react";
 import widgets from "../../../ui-config/widgets";
 import { AppDispatch, AppState } from "@courselit/state-management";
-import { Cross as Close } from "@courselit/icons";
+import { Button } from "@courselit/components-library";
 import AdminWidget from "./admin-widget";
-import { IconButton, Button } from "@courselit/components-library";
 
 interface EditWidgetProps {
     onChange: (widgetId: string, settings: Record<string, unknown>) => void;
@@ -31,30 +30,22 @@ export default function EditWidget({
 }: EditWidgetProps) {
     const [deleteConfirmation, setDeleteConfirmation] = useState(false);
     const [hideActionButtons, setHideActionButtons] = useState(false);
-    const actualWidget = widgets[widget.name];
     const [preservedStateAcrossRerender, setPreservedStateAcrossRerender] =
         useState<Record<string, unknown>>({});
+
+    const actualWidget = widgets[widget.name];
 
     const onDeleteWidget = () => {
         if (deleteConfirmation) {
             onDelete(widget.widgetId);
-            onClose();
         } else {
             setDeleteConfirmation(true);
+            setTimeout(() => setDeleteConfirmation(false), 2000);
         }
     };
 
     return (
-        <div className="flex flex-col">
-            <li className="flex items-center px-2 py-3 justify-between">
-                <h2 className="text-lg font-medium">
-                    {actualWidget && actualWidget.metadata.displayName}
-                    {!actualWidget && widget.name}
-                </h2>
-                <IconButton onClick={onClose} variant="soft">
-                    <Close fontSize="small" />
-                </IconButton>
-            </li>
+        <div>
             {actualWidget && (
                 <div className="px-2">
                     <AdminWidget

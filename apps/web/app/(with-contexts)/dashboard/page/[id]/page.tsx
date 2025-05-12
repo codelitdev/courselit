@@ -6,6 +6,7 @@ import {
     ProfileContext,
     ServerConfigContext,
     SiteInfoContext,
+    ThemeContext,
     TypefacesContext,
 } from "@components/contexts";
 import { Profile } from "@courselit/common-models";
@@ -21,6 +22,7 @@ export default function Page({ params }: { params: { id: string } }) {
     const typefaces = useContext(TypefacesContext);
     const { profile } = useContext(ProfileContext);
     const config = useContext(ServerConfigContext);
+    const theme = useContext(ThemeContext);
 
     return (
         <PageEditor
@@ -46,11 +48,7 @@ export default function Page({ params }: { params: { id: string } }) {
                     checked: profile ? true : false,
                 },
                 networkAction: false,
-                theme: {
-                    name: "dummy",
-                    active: false,
-                    styles: {},
-                },
+                theme,
                 typefaces: [
                     {
                         section: "default",

@@ -5,23 +5,24 @@ import {
     Typeface,
     WidgetInstance,
 } from "@courselit/common-models";
-import type { Address, Media, Profile } from "@courselit/common-models";
+import type {
+    Address,
+    Media,
+    Profile,
+    UITheme,
+} from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { networkAction } from "@courselit/state-management/dist/action-creators";
-import {
-    debounce,
-    FetchBuilder,
-    generateUniqueId,
-    getGraphQLQueryStringFromObject,
-} from "@courselit/utils";
+import { debounce, FetchBuilder, generateUniqueId } from "@courselit/utils";
 import {
     EDIT_PAGE_BUTTON_DONE,
     EDIT_PAGE_BUTTON_UPDATE,
     PAGE_TITLE_EDIT_PAGE,
-    EDIT_PAGE_BUTTON_FONTS,
     EDIT_PAGE_BUTTON_SEO,
     TOAST_TITLE_ERROR,
     EDIT_PAGE_BUTTON_VIEW,
+    EDIT_PAGE_BUTTON_THEME,
+    EDIT_PAGE_ADD_WIDGET_TITLE,
 } from "../../../ui-config/strings";
 import { useRouter } from "next/navigation";
 import {
@@ -34,13 +35,32 @@ import dynamic from "next/dynamic";
 import Head from "next/head";
 import widgets from "../../../ui-config/widgets";
 import { Sync, CheckCircled } from "@courselit/icons";
-import { Button, Skeleton, useToast } from "@courselit/components-library";
+import { Button2, Skeleton, useToast } from "@courselit/components-library";
 import SeoEditor from "./seo-editor";
-import { ArrowUpFromLine, Eye, LogOut } from "lucide-react";
+import { ArrowUpFromLine, Eye, LogOut, Palette, Earth } from "lucide-react";
+import { cn } from "@/lib/shadcn-utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import Link from "next/link";
+import { PanelHeader } from "./panel-header";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
-const FontsList = dynamic(() => import("./fonts-list"));
+// const FontsList = dynamic(() => import("./fonts-list"));
+const ThemeEditor = dynamic(() => import("./theme-editor/index"));
 
 const DEBOUNCE_TIME = 500;
 
@@ -57,7 +77,7 @@ interface PageEditorProps {
 
 type LeftPaneContent =
     | "fonts"
-    | "themes"
+    | "theme"
     | "editor"
     | "widgets"
     | "seo"
@@ -90,7 +110,11 @@ export default function PageEditor({
     const [primaryFontFamily, setPrimaryFontFamily] =
         useState("Roboto, sans-serif");
     const [loading, setLoading] = useState(false);
+    const [draftTheme, setDraftTheme] = useState<UITheme>(state.theme);
+    // const [theme, setTheme] = useState<Theme>(state.theme);
     const { toast } = useToast();
+    const [pages, setPages] = useState<Page[]>([]);
+    const [loadingPages, setLoadingPages] = useState(true);
 
     const router = useRouter();
     const debouncedSave = useCallback(
@@ -107,7 +131,44 @@ export default function PageEditor({
     useEffect(() => {
         loadDraftTypefaces();
         loadPage();
-    }, []);
+
+        loadPages();
+    }, [address.backend, dispatch]);
+
+    async function loadPages() {
+        setLoadingPages(true);
+        const query = `
+                query {
+                    pages: getPages(type: SITE) {
+                        pageId,
+                        name,
+                        entityId,
+                        deleteable
+                    }
+                }
+            `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload(query)
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            dispatch && dispatch(networkAction(true));
+            const response = await fetch.exec();
+            if (response.pages) {
+                setPages(response.pages);
+            }
+        } catch (err: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message || "Failed to load pages",
+                variant: "destructive",
+            });
+        } finally {
+            setLoadingPages(false);
+            dispatch && dispatch(networkAction(false));
+        }
+    }
 
     useEffect(() => {
         if (JSON.stringify(layout) !== JSON.stringify(page.draftLayout)) {
@@ -457,51 +518,51 @@ export default function PageEditor({
         [selectedWidget],
     );
 
-    const saveDraftTypefaces = async (fontName: string) => {
-        const newTypefaces: Typeface[] = structuredClone(draftTypefaces);
-        const defaultSection = newTypefaces.filter(
-            (x) => x.section === "default",
-        )[0];
-        defaultSection.typeface = fontName;
+    // const saveDraftTypefaces = async (fontName: string) => {
+    //     const newTypefaces: Typeface[] = structuredClone(draftTypefaces);
+    //     const defaultSection = newTypefaces.filter(
+    //         (x) => x.section === "default",
+    //     )[0];
+    //     defaultSection.typeface = fontName;
 
-        const query = `
-            mutation {
-                site: updateDraftTypefaces(
-                    typefaces: ${getGraphQLQueryStringFromObject(newTypefaces)} 
-                ) {
-                    draftTypefaces {
-                        section,
-                        typeface,
-                        fontWeights,
-                        fontSize,
-                        lineHeight,
-                        letterSpacing,
-                        case
-                    },
-                }
-            }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            dispatch && dispatch(networkAction(true));
-            const response = await fetch.exec();
-            if (response.site) {
-                setDraftTypefaces(response.site.draftTypefaces);
-            }
-        } catch (err: any) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: err.message,
-                variant: "destructive",
-            });
-        } finally {
-            dispatch && dispatch(networkAction(false));
-        }
-    };
+    //     const query = `
+    //         mutation {
+    //             site: updateDraftTypefaces(
+    //                 typefaces: ${getGraphQLQueryStringFromObject(newTypefaces)}
+    //             ) {
+    //                 draftTypefaces {
+    //                     section,
+    //                     typeface,
+    //                     fontWeights,
+    //                     fontSize,
+    //                     lineHeight,
+    //                     letterSpacing,
+    //                     case
+    //                 },
+    //             }
+    //         }
+    //     `;
+    //     const fetch = new FetchBuilder()
+    //         .setUrl(`${address.backend}/api/graph`)
+    //         .setPayload(query)
+    //         .setIsGraphQLEndpoint(true)
+    //         .build();
+    //     try {
+    //         dispatch && dispatch(networkAction(true));
+    //         const response = await fetch.exec();
+    //         if (response.site) {
+    //             setDraftTypefaces(response.site.draftTypefaces);
+    //         }
+    //     } catch (err: any) {
+    //         toast({
+    //             title: TOAST_TITLE_ERROR,
+    //             description: err.message,
+    //             variant: "destructive",
+    //         });
+    //     } finally {
+    //         dispatch && dispatch(networkAction(false));
+    //     }
+    // };
 
     const onAddWidgetBelow = (index: number) => {
         setSelectedWidgetIndex(index);
@@ -524,11 +585,18 @@ export default function PageEditor({
                 />
             )}
             {leftPaneContent === "editor" && editWidget}
-            {leftPaneContent === "fonts" && (
+            {/* {leftPaneContent === "fonts" && (
                 <FontsList
                     draftTypefaces={draftTypefaces}
                     onClose={onClose}
                     saveDraftTypefaces={saveDraftTypefaces}
+                />
+            )} */}
+            {leftPaneContent === "theme" && (
+                <ThemeEditor
+                // draftTheme={draftTheme}
+                // onClose={onClose}
+                // onSave={(theme) => setDraftTheme(theme)}
                 />
             )}
             {leftPaneContent === "seo" && (
@@ -574,114 +642,242 @@ export default function PageEditor({
 
     if (Object.keys(page).length > 0) {
         return (
-            <div className="flex flex-col">
+            <div className="flex flex-col h-screen bg-muted/10">
                 <Head>
-                    <title>{`${PAGE_TITLE_EDIT_PAGE} ${
-                        page.name || ""
-                    }`}</title>
+                    <title>{`${PAGE_TITLE_EDIT_PAGE} ${page.name || ""}`}</title>
                     {fontString && <link rel="stylesheet" href={fontString} />}
                 </Head>
-                <div className="fixed w-full border-0 border-b border-slate-200 z-10">
-                    <header className="flex w-full p-4 justify-between bg-white/80 backdrop-blur-md">
-                        <div className="flex gap-2">
-                            <Button
-                                onClick={() => {
-                                    setLeftPaneContent("fonts");
-                                }}
-                                variant="soft"
-                            >
-                                {EDIT_PAGE_BUTTON_FONTS}
-                            </Button>
-                            <Button
-                                onClick={() => {
-                                    setLeftPaneContent("seo");
-                                }}
-                                variant="soft"
-                            >
-                                {EDIT_PAGE_BUTTON_SEO}
-                            </Button>
+                <div className="fixed w-full border-b z-10 bg-background">
+                    <header className="flex w-full h-14 px-6 justify-between items-center">
+                        <div className="flex items-center gap-3">
+                            <div className="w-[220px]">
+                                {loadingPages ? (
+                                    <div className="flex flex-col gap-2">
+                                        <Skeleton className="h-10 w-full rounded-md" />
+                                    </div>
+                                ) : pages.length > 0 && page.pageId ? (
+                                    <Select
+                                        value={page.pageId}
+                                        onValueChange={(value) => {
+                                            if (value !== page.pageId) {
+                                                router.push(
+                                                    `/dashboard/page/${value}`,
+                                                );
+                                            }
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Select page" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {pages.map((p) => (
+                                                <SelectItem
+                                                    key={p.pageId}
+                                                    value={p.pageId}
+                                                >
+                                                    {p.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                ) : (
+                                    <div className="h-10 flex items-center px-3 border rounded-md text-sm text-muted-foreground">
+                                        No pages found
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <div className="flex justify-end items-center gap-2">
-                            {loading && <Sync />}
-                            {!loading && <CheckCircled />}
-                            <Button onClick={onPublish}>
-                                <span className="flex items-center gap-2">
-                                    <ArrowUpFromLine width={16} />
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                {/* <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button2
+                                                onClick={() => setLeftPaneContent("fonts")}
+                                                variant="outline"
+                                                size="icon"
+                                            >
+                                                <Type className="h-4 w-4" />
+                                            </Button2>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>{EDIT_PAGE_BUTTON_FONTS}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider> */}
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button2
+                                                onClick={() =>
+                                                    setLeftPaneContent("theme")
+                                                }
+                                                variant="outline"
+                                                size="icon"
+                                            >
+                                                <Palette className="h-4 w-4" />
+                                            </Button2>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>{EDIT_PAGE_BUTTON_THEME}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button2
+                                                onClick={() =>
+                                                    setLeftPaneContent("seo")
+                                                }
+                                                variant="outline"
+                                                size="icon"
+                                            >
+                                                <Earth className="h-4 w-4" />
+                                            </Button2>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>{EDIT_PAGE_BUTTON_SEO}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
+                            <Separator orientation="vertical" className="h-6" />
+                            <div className="flex items-center gap-3">
+                                {loading ? (
+                                    <Sync className="h-4 w-4 animate-spin text-muted-foreground" />
+                                ) : (
+                                    <CheckCircled className="h-4 w-4 text-green-500" />
+                                )}
+                                <Button2
+                                    onClick={onPublish}
+                                    size="sm"
+                                    className="gap-2 whitespace-nowrap"
+                                >
+                                    <ArrowUpFromLine className="h-4 w-4" />
                                     {EDIT_PAGE_BUTTON_UPDATE}
-                                </span>
-                            </Button>
-                            <Button
-                                component="link"
-                                variant="soft"
-                                href={`/p/${page.pageId}`}
-                            >
-                                <span className="flex items-center gap-2">
-                                    <Eye width={16} />
-                                    {EDIT_PAGE_BUTTON_VIEW}
-                                </span>
-                            </Button>
-                            <Button
-                                variant="soft"
-                                component="link"
-                                href={
-                                    redirectTo ||
-                                    (page.type === "product"
-                                        ? `/dashboard/product/${page.entityId}`
-                                        : `/dashboard/products`)
-                                }
-                            >
-                                <span className="flex items-center gap-2">
-                                    <LogOut width={16} />
-                                    {EDIT_PAGE_BUTTON_DONE}
-                                </span>
-                            </Button>
+                                </Button2>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <a
+                                                href={`/p/${page.pageId}`}
+                                                target="_blank"
+                                            >
+                                                <Button2
+                                                    variant="outline"
+                                                    size="icon"
+                                                >
+                                                    <Eye className="h-4 w-4" />
+                                                </Button2>
+                                            </a>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>{EDIT_PAGE_BUTTON_VIEW}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Link
+                                                href={
+                                                    redirectTo ||
+                                                    (page.type === "product"
+                                                        ? `/dashboard/product/${page.entityId}`
+                                                        : `/dashboard/products`)
+                                                }
+                                            >
+                                                <Button2
+                                                    variant="outline"
+                                                    size="icon"
+                                                >
+                                                    <LogOut className="h-4 w-4" />
+                                                </Button2>
+                                            </Link>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>{EDIT_PAGE_BUTTON_DONE}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
                         </div>
                     </header>
                 </div>
-                <div className="flex h-screen pt-[64px] w-full">
+                <div className="flex w-full h-[calc(100vh-56px)] mt-14 gap-4 p-4 bg-muted/10">
                     {leftPaneContent !== "none" && (
-                        <div className="overflow-y-auto w-[440px] max-h-screen border-0 border-r border-slate-200">
-                            {activeSidePaneContent}
+                        <div className="w-[300px] rounded-xl border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm flex flex-col overflow-hidden">
+                            <PanelHeader
+                                title={
+                                    leftPaneContent === "widgets"
+                                        ? EDIT_PAGE_ADD_WIDGET_TITLE
+                                        : leftPaneContent === "editor"
+                                          ? "Edit Widget"
+                                          : leftPaneContent === "fonts"
+                                            ? "Fonts"
+                                            : leftPaneContent === "theme"
+                                              ? "Theme"
+                                              : leftPaneContent === "seo"
+                                                ? "SEO"
+                                                : ""
+                                }
+                                onClose={onClose}
+                            />
+                            <ScrollArea className="h-[calc(100%-56px)]">
+                                <div className="py-2 space-y-4">
+                                    {activeSidePaneContent}
+                                </div>
+                            </ScrollArea>
                         </div>
                     )}
-                    <div className="w-full max-h-screen overflow-y-auto scroll-smooth">
-                        {draftTypefaces.length === 0 && (
-                            <div>
-                                <Skeleton className="w-full h-10" />
+                    <div
+                        className={cn(
+                            "rounded-xl border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm",
+                            leftPaneContent === "none" ? "w-full" : "flex-1",
+                        )}
+                    >
+                        <ScrollArea className="h-full">
+                            <div className="px-2">
+                                {draftTypefaces.length === 0 && (
+                                    <div>
+                                        <Skeleton className="w-full h-10" />
+                                    </div>
+                                )}
+                                {draftTypefaces.length > 0 && (
+                                    <Template
+                                        layout={layout}
+                                        pageData={page.pageData || {}}
+                                        editing={true}
+                                        onEditClick={onWidgetClicked}
+                                        selectedWidget={selectedWidget}
+                                        onAddWidgetBelow={onAddWidgetBelow}
+                                        onMoveWidgetDown={onMoveWidgetDown}
+                                        onMoveWidgetUp={onMoveWidgetUp}
+                                        state={Object.assign({}, state, {
+                                            theme: draftTheme,
+                                        })}
+                                        dispatch={dispatch}
+                                    />
+                                )}
                             </div>
-                        )}
-                        {draftTypefaces.length > 0 && (
-                            <Template
-                                layout={layout}
-                                pageData={page.pageData || {}}
-                                editing={true}
-                                onEditClick={onWidgetClicked}
-                                selectedWidget={selectedWidget}
-                                onAddWidgetBelow={onAddWidgetBelow}
-                                onMoveWidgetDown={onMoveWidgetDown}
-                                onMoveWidgetUp={onMoveWidgetUp}
-                                state={state}
-                                dispatch={dispatch}
-                            />
-                        )}
-                        <style jsx global>{`
-                            :root {
-                                --primary-font:
-                                    ${primaryFontFamily}, sans-serif;
-                                --secondary-font:
-                                    ${primaryFontFamily}, sans-serif;
-                            }
-                        `}</style>
+                        </ScrollArea>
                     </div>
                 </div>
+                <style jsx global>{`
+                    :root {
+                        --primary-font: ${primaryFontFamily}, sans-serif;
+                        --secondary-font: ${primaryFontFamily}, sans-serif;
+                    }
+                `}</style>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 p-4">
             <Skeleton className="w-full h-16" />
-            <div className="flex gap-4 px-4">
+            <div className="flex gap-4">
                 <Skeleton className="w-1/4 h-90" />
                 <Skeleton className="w-3/4 h-screen" />
             </div>

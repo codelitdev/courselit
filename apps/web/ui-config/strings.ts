@@ -545,6 +545,7 @@ export const MAIL_TABLE_HEADER_ENTRANTS = "Entrants";
 export const MAIL_TABLE_HEADER_SENT_ON = "Sent on";
 export const TOOLTIP_USER_PAGE_SEND_MAIL = "Send mail to the current selection";
 export const EDIT_PAGE_BUTTON_FONTS = "Fonts";
+export const EDIT_PAGE_BUTTON_THEME = "Theme";
 export const EDIT_PAGE_BUTTON_SEO = "SEO";
 export const SEO_FORM_NAME_LABEL = "Title";
 export const SEO_FORM_DESC_LABEL = "Description";
@@ -624,3 +625,4 @@ export const SEQUENCE_UNPUBLISHED_WARNING =
 export const PRODUCT_EMPTY_WARNING =
     "Your product is empty. Add some content to make it look interesting.";
 export const BLOG_UPDATED_PREFIX = "Updated";
+export const HEADER_HELP = "Help";
