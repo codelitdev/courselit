@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Course, Theme, WidgetProps } from "@courselit/common-models";
-import {
-    TextRenderer,
-    SkeletonCard,
-    ProductCard,
-} from "@courselit/components-library";
+import { TextRenderer, SkeletonCard } from "@courselit/components-library";
 import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import Settings from "./settings";
 import { Header1, Subheader1, Section } from "@courselit/page-primitives";
+import { ProductCard } from "../components";
 
 export default function Widget({
     settings: {
