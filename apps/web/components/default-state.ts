@@ -5,8 +5,8 @@ import {
     Typeface,
     ServerConfig,
 } from "@courselit/common-models";
+import { Theme } from "@courselit/page-models";
 import { themes } from "@courselit/page-primitives";
-import type { UITheme } from "@models/ui-theme";
 
 export const defaultState: {
     siteinfo: SiteInfo;
@@ -15,7 +15,7 @@ export const defaultState: {
     address: Address;
     typefaces: Typeface[];
     config: ServerConfig;
-    theme: UITheme;
+    theme: Theme;
     [x: string]: any;
 } = {
     siteinfo: {
@@ -70,8 +70,8 @@ export const defaultState: {
         queueServer: "",
     },
     theme: {
-        themeId: "",
+        id: "",
         name: "",
-        theme: themes.find((theme) => theme.id === "classic")?.styles!,
+        theme: themes.find((theme) => theme.id === "classic")?.theme!,
     },
 };

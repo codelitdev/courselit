@@ -1,7 +1,18 @@
 import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
 import { ThemeSchema } from "./Theme";
-import { UserTheme } from "@courselit/common-models";
+import { Theme, ThemeStyle } from "@courselit/page-models";
+
+export interface UserTheme {
+    themeId: Theme["id"];
+    name: Theme["name"];
+    parentThemeId: string;
+    userId: string;
+    theme: ThemeStyle;
+    draftTheme: ThemeStyle;
+    createdAt: Date;
+    updatedAt: Date;
+}
 
 export interface InternalUserTheme extends UserTheme {
     domain: mongoose.Types.ObjectId;
@@ -24,7 +35,7 @@ const UserThemeSchema = new mongoose.Schema<InternalUserTheme>({
     updatedAt: { type: Date, default: Date.now },
 });
 
-UserThemeSchema.index({ domain: 1, themeName: 1 }, { unique: true });
+UserThemeSchema.index({ domain: 1, name: 1 }, { unique: true });
 
 export default mongoose.models.UserTheme ||
     mongoose.model("UserTheme", UserThemeSchema);

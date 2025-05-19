@@ -626,3 +626,4 @@ export const PRODUCT_EMPTY_WARNING =
     "Your product is empty. Add some content to make it look interesting.";
 export const BLOG_UPDATED_PREFIX = "Updated";
 export const HEADER_HELP = "Help";
+export const CHECKOUT_PAGE_ORDER_SUMMARY = "Order summary";

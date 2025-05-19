@@ -22,7 +22,7 @@ export default function Page({ params }: { params: { id: string } }) {
     const typefaces = useContext(TypefacesContext);
     const { profile } = useContext(ProfileContext);
     const config = useContext(ServerConfigContext);
-    const theme = useContext(ThemeContext);
+    const { theme } = useContext(ThemeContext);
 
     return (
         <PageEditor

@@ -1,12 +1,12 @@
 import React from "react";
-import type { Theme } from "@courselit/common-models";
 import { cn } from "./lib/utils";
+import type { ThemeStyle } from "@courselit/page-models";
 
 export interface LinkProps
     extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
     children: React.ReactNode;
     className?: string;
-    theme?: Theme;
+    theme?: ThemeStyle;
     disabled?: boolean;
 }
 
@@ -21,7 +21,7 @@ export const Link: React.FC<LinkProps> = ({
     const linkStyles = theme?.interactives?.link;
     const classes = cn(
         // Base styles
-        "font-medium text-primary",
+        "font-medium",
         // Theme typography
         typographyStyles?.fontFamily,
         typographyStyles?.fontSize,
@@ -37,7 +37,6 @@ export const Link: React.FC<LinkProps> = ({
         linkStyles?.border?.width,
         linkStyles?.border?.radius,
         linkStyles?.border?.style,
-        linkStyles?.border?.color,
         linkStyles?.shadow,
         // Theme hover states
         linkStyles?.hover,

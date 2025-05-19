@@ -1,4 +1,4 @@
-import { Theme } from "@courselit/common-models";
+import { ThemeStyle } from "@courselit/page-models";
 import PageBuilderSlider from "./page-builder-slider";
 
 // Map of numeric values to Tailwind padding classes
@@ -25,15 +25,15 @@ const PADDING_MAP = {
 
 export function getVerticalPaddingTWClass(
     value: number,
-): Theme["structure"]["section"]["verticalPadding"] {
+): ThemeStyle["structure"]["section"]["verticalPadding"] {
     const roundedValue = Math.max(0, Math.min(17, Math.round(value)));
     return PADDING_MAP[roundedValue] || PADDING_MAP[5]; // Default to py-5
 }
 
 interface VerticalPaddingSelectorProps {
-    value: Theme["structure"]["section"]["verticalPadding"];
+    value: ThemeStyle["structure"]["section"]["verticalPadding"];
     onChange: (
-        padding: Theme["structure"]["section"]["verticalPadding"],
+        padding: ThemeStyle["structure"]["section"]["verticalPadding"],
     ) => void;
     className?: string;
 }

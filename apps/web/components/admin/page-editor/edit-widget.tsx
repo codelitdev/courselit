@@ -36,6 +36,10 @@ export default function EditWidget({
     const actualWidget = widgets[widget.name];
 
     const onDeleteWidget = () => {
+        if (!widget.deleteable) {
+            return;
+        }
+
         if (deleteConfirmation) {
             onDelete(widget.widgetId);
         } else {

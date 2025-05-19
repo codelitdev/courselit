@@ -1,8 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Theme } from "@courselit/common-models";
+import { ThemeStyle } from "@courselit/page-models";
 
-export function SkeletonCard({ theme }: { theme?: Theme }) {
+export function SkeletonCard({ theme }: { theme?: ThemeStyle }) {
     return (
         <Card
             style={{

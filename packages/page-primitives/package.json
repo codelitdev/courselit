@@ -43,7 +43,7 @@
         "typescript-eslint": "^7.4.0"
     },
     "dependencies": {
-        "@courselit/common-models": "workspace:^",
+        "@courselit/page-models": "workspace:^",
         "@radix-ui/react-label": "^2.1.2",
         "@radix-ui/react-slot": "^1.2.0",
         "class-variance-authority": "^0.7.0",

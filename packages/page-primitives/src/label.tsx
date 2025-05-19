@@ -1,11 +1,11 @@
 import React from "react";
-import type { Theme } from "@courselit/common-models";
 import { Label as ShadcnLabel } from "./components/ui/label";
 import { cn } from "./lib/utils";
+import type { ThemeStyle } from "@courselit/page-models";
 
 export interface LabelProps
     extends React.LabelHTMLAttributes<HTMLLabelElement> {
-    theme?: Theme;
+    theme?: ThemeStyle;
     error?: boolean;
 }
 

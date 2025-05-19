@@ -1,14 +1,13 @@
 import React from "react";
-import { Link } from "./link";
-import type { Theme } from "@courselit/common-models";
 import { cn } from "./lib/utils";
 import { Header4 } from "./header4";
+import type { ThemeStyle } from "@courselit/page-models";
 
 export interface PageCardProps extends React.HTMLAttributes<HTMLDivElement> {
-    href?: string;
+    isLink?: boolean;
     children: React.ReactNode;
     className?: string;
-    theme?: Theme;
+    theme?: ThemeStyle;
 }
 
 export interface PageCardImageProps
@@ -16,25 +15,25 @@ export interface PageCardImageProps
     src: string;
     alt: string;
     className?: string;
-    theme?: Theme;
+    theme?: ThemeStyle;
 }
 
 export interface PageCardContentProps
     extends React.HTMLAttributes<HTMLDivElement> {
     children: React.ReactNode;
     className?: string;
-    theme?: Theme;
+    theme?: ThemeStyle;
 }
 
 export interface PageCardHeaderProps
     extends React.HTMLAttributes<HTMLDivElement> {
     children: React.ReactNode;
     className?: string;
-    theme?: Theme;
+    theme?: ThemeStyle;
 }
 
 export const PageCard: React.FC<PageCardProps> = ({
-    href,
+    isLink,
     children,
     className = "",
     theme,
@@ -43,18 +42,18 @@ export const PageCard: React.FC<PageCardProps> = ({
     const cardStyles = theme?.interactives?.card;
     const classes = cn(
         // Base styles
-        "rounded-lg border shadow-sm",
+        "",
         // Theme interactivity
         cardStyles?.border?.width,
         cardStyles?.border?.radius,
         cardStyles?.border?.style,
         cardStyles?.shadow,
         // Theme hover states
-        cardStyles?.hover,
+        isLink ? `cursor-pointer ${cardStyles?.hover}` : "",
         className,
     );
 
-    const cardContent = (
+    return (
         <div
             style={{
                 border: `1px solid ${theme?.colors?.border}`,
@@ -68,16 +67,6 @@ export const PageCard: React.FC<PageCardProps> = ({
             {children}
         </div>
     );
-
-    if (href) {
-        return (
-            <Link href={href} theme={theme} className="block">
-                {cardContent}
-            </Link>
-        );
-    }
-
-    return cardContent;
 };
 
 export const PageCardImage: React.FC<PageCardImageProps> = ({

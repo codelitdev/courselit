@@ -15,6 +15,7 @@ import { checkPermission, FetchBuilder } from "@courselit/utils";
 import { Constants, UIConstants } from "@courselit/common-models";
 import { createHash, randomInt } from "crypto";
 import { getProtocol } from "../lib/utils";
+import { headers as headersType } from "next/headers";
 const { permissions } = UIConstants;
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -286,4 +287,13 @@ export function hasCommunityPermission(
     const requiredRoleIndex = roleHierarchy.indexOf(requiredRole);
 
     return memberRoleIndex >= requiredRoleIndex;
+}
+
+export function getAddressFromHeaders(headers: typeof headersType) {
+    const headersList = headers();
+    const address = getBackendAddress({
+        "x-forwarded-proto": headersList.get("x-forwarded-proto"),
+        host: headersList.get("host"),
+    });
+    return address;
 }

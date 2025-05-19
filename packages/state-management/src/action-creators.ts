@@ -20,12 +20,12 @@ import type {
     State,
     SiteInfo,
     //WidgetsData,
-    Theme,
     Typeface,
 } from "@courselit/common-models";
 import { ThunkAction } from "redux-thunk";
 import { AnyAction } from "redux";
 import { ServerConfig } from "@courselit/common-models";
+import { Theme } from "@courselit/page-models";
 
 export function signedIn() {
     return async (dispatch: any) => {
@@ -164,7 +164,14 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
                 dispatch(typefacesAvailable(response.site.typefaces));
             }
             if (response && response.theme) {
-                dispatch(themeAvailable(response.theme));
+                // dispatch(themeAvailable(response.theme));
+                dispatch(
+                    themeAvailable({
+                        id: response.theme.themeId,
+                        name: response.theme.name,
+                        theme: response.theme.theme,
+                    }),
+                );
             }
         } catch (err) {
             console.error(err); // eslint-disable-line no-console

@@ -4,6 +4,7 @@ import IconButton from "./icon-button";
 import Tooltip from "./tooltip";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import debounce from "lodash.debounce";
 
 const colorSelectorVariants = cva("flex justify-between items-center gap-2", {
     variants: {
@@ -43,6 +44,34 @@ export default function ColorSelector({
     className,
     allowReset = true,
 }: ColorSelectorProps) {
+    const [localValue, setLocalValue] = React.useState(value);
+
+    const debouncedOnChange = React.useMemo(
+        () =>
+            debounce((newValue: string) => {
+                onChange(newValue);
+            }, 150),
+        [onChange],
+    );
+
+    React.useEffect(() => {
+        setLocalValue(value);
+    }, [value]);
+
+    React.useEffect(() => {
+        return () => {
+            debouncedOnChange.cancel();
+        };
+    }, [debouncedOnChange]);
+
+    const handleColorChange = React.useCallback(
+        (newValue: string) => {
+            setLocalValue(newValue);
+            debouncedOnChange(newValue);
+        },
+        [debouncedOnChange],
+    );
+
     return (
         <div
             className={cn(colorSelectorVariants({ variant, size, className }))}
@@ -60,16 +89,16 @@ export default function ColorSelector({
                     <div className="relative">
                         <input
                             type="color"
-                            value={value}
+                            value={localValue}
                             onChange={(e) => {
                                 e.preventDefault();
-                                onChange(e.target.value);
+                                handleColorChange(e.target.value);
                             }}
                             className="w-8 h-8 rounded-md cursor-pointer opacity-0 absolute inset-0"
                         />
                         <div
                             className="w-8 h-8 rounded-md border border-input bg-background flex items-center justify-center overflow-hidden ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                            style={{ backgroundColor: value }}
+                            style={{ backgroundColor: localValue }}
                         />
                     </div>
                     {allowReset && (

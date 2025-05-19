@@ -1,56 +1,95 @@
-import { Course, SiteInfo, Theme } from "@courselit/common-models";
-import { getSymbolFromCurrency, Image } from "@courselit/components-library";
-import { Badge } from "@courselit/components-library";
-import { PageCardHeader, Subheader2 } from "@courselit/page-primitives";
+import { Image, Link, Skeleton } from "@courselit/components-library";
+import { Badge, PageCardHeader, Subheader1 } from "@courselit/page-primitives";
 import { PageCardContent } from "@courselit/page-primitives";
 import { PageCard, PageCardImage } from "@courselit/page-primitives";
-import { getPlanPrice, truncate } from "@courselit/utils";
+import { ThemeStyle } from "@courselit/page-models";
 
 export function ProductCard({
-    product,
-    siteinfo,
+    title,
+    user,
     theme,
+    href,
+    image,
+    badgeChildren,
 }: {
-    product: Course;
-    siteinfo: SiteInfo;
-    theme?: Theme;
+    title: string;
+    user: {
+        name: string;
+        thumbnail: string;
+    };
+    theme?: ThemeStyle;
+    href: string;
+    image: string;
+    badgeChildren?: any;
 }) {
-    const defaultPlan = product.paymentPlans?.filter(
-        (plan) => plan.planId === product.defaultPaymentPlan,
-    )[0];
-    const { amount, period } = getPlanPrice(defaultPlan);
-
     return (
         <PageCard
-            href={`/p/${product.pageId}`}
+            isLink={true}
             className="overflow-hidden"
+            style={{
+                backgroundColor: theme?.colors?.background,
+                color: theme?.colors?.text,
+                borderColor: theme?.colors?.border,
+            }}
             theme={theme}
         >
-            <PageCardImage
-                src={product.featuredImage?.file}
-                alt={product.title}
-                className="aspect-video object-cover rounded-t-lg rounded-b-none"
-                theme={theme}
-            />
+            <Link
+                href={href}
+                style={{
+                    height: "100%",
+                    display: "block",
+                }}
+            >
+                <PageCardImage
+                    src={image}
+                    alt={title}
+                    className="aspect-video object-cover"
+                    theme={theme}
+                />
+                <PageCardContent theme={theme} className="h-full">
+                    <PageCardHeader theme={theme}>{title}</PageCardHeader>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Image
+                                src={user?.thumbnail}
+                                alt={user?.name || "User Avatar"}
+                                width="w-8"
+                                height="h-8"
+                                className="rounded-full"
+                                objectFit="cover"
+                            />
+                            <Subheader1 theme={theme}>{user?.name}</Subheader1>
+                        </div>
+                        {badgeChildren && (
+                            <Badge theme={theme}>{badgeChildren}</Badge>
+                        )}
+                    </div>
+                </PageCardContent>
+            </Link>
+        </PageCard>
+    );
+}
+
+export function ProductCardSkeleton({ theme }: { theme?: ThemeStyle }) {
+    return (
+        <PageCard
+            className="overflow-hidden"
+            style={{
+                backgroundColor: theme?.colors?.background,
+                color: theme?.colors?.text,
+                borderColor: theme?.colors?.border,
+            }}
+            theme={theme}
+        >
+            <Skeleton className="aspect-video w-full" />
             <PageCardContent theme={theme}>
-                <PageCardHeader theme={theme}>{product.title}</PageCardHeader>
+                <Skeleton className="h-6 w-3/4 mb-4" />
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
-                        <Image
-                            src={product.user?.avatar?.thumbnail}
-                            alt={product.user?.name || "User Avatar"}
-                        />
-                        <Subheader2 theme={theme}>
-                            {truncate(product.user?.name || "Unnamed", 20)}
-                        </Subheader2>
+                        <Skeleton className="w-12 h-12 rounded-full" />
+                        <Skeleton className="h-5 w-32" />
                     </div>
-                    <Badge className="flex items-center font-medium">
-                        {getSymbolFromCurrency(
-                            siteinfo.currencyISOCode || "USD",
-                        )}
-                        <span>{amount.toFixed(2)}</span>
-                        <span className="ml-1">{period}</span>
-                    </Badge>
+                    <Skeleton className="h-6 w-24" />
                 </div>
             </PageCardContent>
         </PageCard>

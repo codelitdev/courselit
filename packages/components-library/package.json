@@ -51,9 +51,9 @@
     },
     "gitHead": "fca7d2f8455c835f1c185a1ebc8513c6269ebe5b",
     "dependencies": {
+        "@courselit/page-models": "workspace:^",
         "@courselit/common-models": "workspace:^",
         "@courselit/icons": "workspace:^",
-        "@courselit/state-management": "workspace:^",
         "@courselit/text-editor": "workspace:^",
         "@courselit/utils": "workspace:^",
         "@dnd-kit/core": "^6.1.0",
@@ -81,6 +81,7 @@
         "lucide-react": "^0.309.0",
         "react-dom": "^18.2.0",
         "tailwind-merge": "^2.2.0",
-        "tailwindcss-animate": "^1.0.7"
+        "tailwindcss-animate": "^1.0.7",
+        "lodash.debounce": "^4.0.8"
     }
 }

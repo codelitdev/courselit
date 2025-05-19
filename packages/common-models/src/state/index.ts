@@ -5,7 +5,7 @@ import Profile from "../profile";
 import SiteInfo from "../site-info";
 import { Typeface } from "../typeface";
 import { ServerConfig } from "../server-config";
-import { UITheme } from "../ui-theme";
+import { Theme } from "@courselit/page-models";
 
 export default interface State {
     auth: Auth;
@@ -13,7 +13,7 @@ export default interface State {
     networkAction: boolean;
     profile: Profile;
     address: Address;
-    theme: Omit<UITheme, "draftTheme">;
+    theme: Theme;
     typefaces: Typeface[];
     message: Message;
     config: ServerConfig;

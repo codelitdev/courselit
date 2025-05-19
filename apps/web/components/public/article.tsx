@@ -25,7 +25,7 @@ interface ArticleOptionsProps {
     hideTitle?: boolean;
 }
 
-const Article = (props: ArticleProps) => {
+export const Article = (props: ArticleProps) => {
     const { course, options = { hideTitle: false }, profile } = props;
 
     return (

@@ -1,12 +1,13 @@
-import { Theme } from "./theme";
+import { Theme, ThemeStyle } from "@courselit/page-models";
 
-const themeStyles: Theme["styles"] = {
+const themeStyles: ThemeStyle = {
     colors: {
         primary: "#000000",
         secondary: "#333333",
         background: "#ffffff",
         border: "#e5e7eb",
         text: "#111827",
+        buttonText: "#FFFFFF",
         success: "#16a34a",
         error: "#dc2626",
         warning: "#d97706",
@@ -114,9 +115,9 @@ const themeStyles: Theme["styles"] = {
                 y: "py-2",
             },
             border: {
-                width: "border-1",
+                width: "border",
                 radius: "rounded-md",
-                style: "solid",
+                style: "border-solid",
             },
             shadow: "shadow-sm",
             disabled: {
@@ -139,7 +140,7 @@ const themeStyles: Theme["styles"] = {
             },
             border: {
                 radius: "rounded-lg",
-                style: "solid",
+                style: "border-solid",
             },
             shadow: "shadow-sm",
             hover: "transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
@@ -151,7 +152,7 @@ const themeStyles: Theme["styles"] = {
                 y: "py-2",
             },
             border: {
-                style: "solid",
+                style: "border-solid",
             },
             shadow: "shadow-sm",
             hover: "",
@@ -170,7 +171,7 @@ const themeStyles: Theme["styles"] = {
                 x: "px-4",
                 y: "py-4",
             },
-            verticalPadding: "py-0",
+            verticalPadding: "py-10",
         },
     },
 };
@@ -178,5 +179,5 @@ const themeStyles: Theme["styles"] = {
 export const classic: Theme = {
     id: "classic",
     name: "Classic",
-    styles: themeStyles,
+    theme: themeStyles,
 };

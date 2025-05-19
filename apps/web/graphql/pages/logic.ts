@@ -9,6 +9,7 @@ import { checkPermission, generateUniqueId } from "@courselit/utils";
 import { Media, User, Constants } from "@courselit/common-models";
 import { Domain } from "../../models/Domain";
 import { homePageTemplate } from "./page-templates";
+import { publishTheme } from "../themes/logic";
 const { product, site, blogPage, communityPage, permissions, defaultPages } =
     constants;
 const { pageNames } = Constants;
@@ -211,8 +212,17 @@ export const updatePage = async ({
             let layout;
             try {
                 layout = JSON.parse(inputLayout);
+                const headerWidget = layout.find(
+                    (widget: any) => widget.name === "header",
+                );
+                const footerWidget = layout.find(
+                    (widget: any) => widget.name === "footer",
+                );
+                if (!headerWidget || !footerWidget) {
+                    throw new Error(responses.missing_mandatory_blocks);
+                }
             } catch (err) {
-                throw new Error(responses.invalid_layout);
+                throw new Error(`${responses.invalid_layout}: ${err.message}`);
             }
             for (let widget of layout) {
                 if (widget.shared && widget.widgetId) {
@@ -294,9 +304,10 @@ export const publish = async (
     page.socialImage = page.draftSocialImage;
 
     ctx.subdomain.typefaces = ctx.subdomain.draftTypefaces;
-    ctx.subdomain.theme = ctx.subdomain.draftTheme;
     ctx.subdomain.sharedWidgets = ctx.subdomain.draftSharedWidgets;
-    ctx.subdomain.draftSharedWidgets = {};
+    // ctx.subdomain.draftSharedWidgets = {};
+
+    await publishTheme(ctx.subdomain.themeId, ctx);
 
     await (ctx.subdomain as any).save();
     await (page as any).save();

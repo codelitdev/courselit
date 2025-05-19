@@ -3,14 +3,26 @@ import { responses } from "../../config/strings";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
 import { checkPermission } from "@courselit/utils";
-import UserThemeModel from "../../models/UserTheme";
+import UserThemeModel from "@/models/UserTheme";
 import { themes as SystemThemes } from "@courselit/page-primitives";
-import { Theme as CommonTheme, UITheme } from "@courselit/common-models";
+import { ThemeStyle } from "@courselit/page-models";
+import { UITheme } from "@models/UITheme";
 
 const { permissions } = constants;
 
 function getSystemTheme(themeId: string) {
-    return SystemThemes.find((theme) => theme.id === themeId);
+    const theme = SystemThemes.find((theme) => theme.id === themeId);
+
+    if (theme) {
+        return {
+            themeId: theme.id,
+            name: theme.name,
+            theme: theme.theme,
+            draftTheme: theme.theme,
+        };
+    }
+
+    return null;
 }
 
 export const getTheme = async (
@@ -18,37 +30,30 @@ export const getTheme = async (
     themeId?: string,
 ): Promise<UITheme> => {
     if (!themeId) {
+        const defaultThemeId = ctx.subdomain.themeId || "classic";
         let theme: any = await UserThemeModel.findOne(
             {
-                themeId: ctx.subdomain.themeId,
+                themeId: defaultThemeId,
                 domain: ctx.subdomain._id,
             },
             {
                 themeId: 1,
                 name: 1,
                 theme: 1,
+                draftTheme: 1,
             },
         ).lean();
 
         if (!theme) {
-            const systemTheme = getSystemTheme("classic");
-            theme = {
-                themeId: systemTheme!.id,
-                name: systemTheme!.name,
-                theme: systemTheme!.styles,
-            };
+            theme = getSystemTheme(defaultThemeId);
         }
 
-        return theme;
+        return formatTheme(theme);
     }
 
     const systemTheme = getSystemTheme(themeId);
     if (systemTheme) {
-        return {
-            themeId: systemTheme.id,
-            name: systemTheme.name,
-            theme: systemTheme.styles,
-        };
+        return formatTheme(systemTheme);
     }
 
     checkIfAuthenticated(ctx);
@@ -73,21 +78,16 @@ export const getTheme = async (
         throw new Error(responses.item_not_found);
     }
 
-    return {
-        themeId: theme.themeId,
-        name: theme.name,
-        theme: theme.theme,
-        draftTheme: theme.draftTheme,
-    };
+    return formatTheme(theme);
 };
 
 export const updateDraftTheme = async (
     themeId: string,
     ctx: GQLContext,
-    colors?: CommonTheme["colors"],
-    typography?: CommonTheme["typography"],
-    interactives?: CommonTheme["interactives"],
-    structure?: CommonTheme["structure"],
+    colors?: ThemeStyle["colors"],
+    typography?: ThemeStyle["typography"],
+    interactives?: ThemeStyle["interactives"],
+    structure?: ThemeStyle["structure"],
 ): Promise<UITheme> => {
     checkIfAuthenticated(ctx);
 
@@ -99,14 +99,18 @@ export const updateDraftTheme = async (
 
     let theme;
     if (systemTheme) {
+        const existingChildren = await UserThemeModel.find({
+            parentThemeId: systemTheme.themeId,
+        });
         theme = await UserThemeModel.create({
             domain: ctx.subdomain._id,
-            name: `${systemTheme.name} copy`,
-            parentThemeId: systemTheme.id,
+            name: `${systemTheme.name} - Copy ${existingChildren.length + 1}`,
+            parentThemeId: systemTheme.themeId,
             userId: ctx.user.userId,
-            theme: systemTheme,
-            draftTheme: systemTheme,
+            theme: systemTheme.theme,
+            draftTheme: systemTheme.theme,
         });
+        ctx.subdomain.themeId = theme.themeId;
     } else {
         theme = await UserThemeModel.findOne({
             domain: ctx.subdomain._id,
@@ -133,76 +137,11 @@ export const updateDraftTheme = async (
     }
 
     await theme.save();
+    ctx.subdomain.lastEditedThemeId = theme.themeId;
+    await (ctx.subdomain as any).save();
 
-    return {
-        themeId: theme.themeId,
-        name: theme.name,
-        theme: theme.theme,
-        draftTheme: theme.draftTheme,
-    };
+    return formatTheme(theme);
 };
-
-// export const switchTheme = async (themeId: string, ctx: GQLContext) => {
-//     checkIfAuthenticated(ctx);
-//     if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
-//         throw new Error(responses.action_not_allowed);
-//     }
-
-//     const theme = await ThemeModel.findOne({ themeId: themeId, domain: ctx.subdomain._id });
-//     if (!theme) {
-//         throw new Error(responses.theme_not_installed);
-//     }
-
-//     ctx.subdomain.themeId = themeId;
-//     await (ctx.subdomain as any).save();
-
-//     return theme;
-// };
-
-// export const removeTheme = async (name: string, ctx: GQLContext) => {
-//     checkIfAuthenticated(ctx);
-//     if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
-//         throw new Error(responses.action_not_allowed);
-//     }
-
-//     await ThemeModel.deleteOne({ name, domain: ctx.subdomain._id });
-//     if (name === ctx.subdomain.theme.name) {
-//         ctx.subdomain.theme.remove();
-//         await ctx.subdomain.save();
-//     }
-
-//     return true;
-// };
-
-// export const addTheme = async (themeData: any, ctx: GQLContext) => {
-//     checkIfAuthenticated(ctx);
-//     if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
-//         throw new Error(responses.action_not_allowed);
-//     }
-
-//     if (!themeData.styles) {
-//         throw new Error(responses.invalid_theme);
-//     }
-
-//     let styles;
-//     try {
-//         if (themeData.styles) {
-//             styles = JSON.parse(themeData.styles);
-//         }
-//     } catch (err) {
-//         throw new Error(responses.invalid_theme);
-//     }
-
-//     const theme = await ThemeModel.create({
-//         domain: ctx.subdomain._id,
-//         name: themeData.name,
-//         styles,
-//         screenshot: themeData.screenshot,
-//         url: themeData.url,
-//     });
-
-//     return theme;
-// };
 
 export const getThemes = async (
     ctx: GQLContext,
@@ -222,21 +161,18 @@ export const getThemes = async (
         {
             themeId: 1,
             name: 1,
+            theme: 1,
+            draftTheme: 1,
         },
     );
 
-    userThemes = userThemes.map((theme) => ({
-        themeId: theme.themeId,
-        name: theme.name,
-        theme: theme.theme,
-        draftTheme: theme.draftTheme,
-    }));
+    userThemes = userThemes.map(formatTheme);
 
     const systemThemes = SystemThemes.map((theme) => ({
         themeId: theme.id,
         name: theme.name,
-        theme: theme.styles,
-        draftTheme: theme.styles,
+        theme: theme.theme,
+        draftTheme: theme.theme,
     }));
 
     return {
@@ -244,3 +180,50 @@ export const getThemes = async (
         custom: userThemes,
     };
 };
+
+export const publishTheme = async (themeId: string, ctx: GQLContext) => {
+    let theme: any = getSystemTheme(themeId);
+    if (theme) {
+        return formatTheme(theme);
+    }
+
+    theme = await UserThemeModel.findOne({
+        domain: ctx.subdomain._id,
+        themeId,
+    });
+
+    if (!theme) {
+        throw new Error(responses.theme_not_installed);
+    }
+
+    theme.theme = theme.draftTheme;
+    await theme.save();
+
+    return formatTheme(theme);
+};
+
+export const switchTheme = async (themeId: string, ctx: GQLContext) => {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    let theme: any = getSystemTheme(themeId);
+    if (!theme) {
+        theme = await publishTheme(themeId, ctx);
+    }
+
+    ctx.subdomain.themeId = themeId;
+    await (ctx.subdomain as any).save();
+
+    return formatTheme(theme);
+};
+
+function formatTheme(theme: any) {
+    return {
+        themeId: theme.themeId,
+        name: theme.name,
+        theme: theme.theme,
+        draftTheme: theme.draftTheme,
+    };
+}

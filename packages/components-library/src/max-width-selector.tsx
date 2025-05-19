@@ -1,4 +1,4 @@
-import { Theme } from "@courselit/common-models";
+import { ThemeStyle } from "@courselit/page-models";
 import PageBuilderSlider from "./page-builder-slider";
 
 // Map of numeric values to Tailwind padding classes
@@ -12,14 +12,14 @@ const MAX_WIDTH_MAP = {
 
 export function getMaxWidthTWClass(
     value: number,
-): Theme["structure"]["page"]["width"] {
+): ThemeStyle["structure"]["page"]["width"] {
     const roundedValue = Math.max(1, Math.min(5, Math.round(value)));
     return MAX_WIDTH_MAP[roundedValue] || MAX_WIDTH_MAP[5]; // Default to max-w-6xl
 }
 
 interface MaxWidthSelectorProps {
-    value: Theme["structure"]["page"]["width"];
-    onChange: (width: Theme["structure"]["page"]["width"]) => void;
+    value: ThemeStyle["structure"]["page"]["width"];
+    onChange: (width: ThemeStyle["structure"]["page"]["width"]) => void;
     className?: string;
 }
 
@@ -45,6 +45,7 @@ export function MaxWidthSelector({
             value={parseInt(numericValue)}
             tooltip="Maximum width of the content"
             className={className}
+            allowsReset={true}
         />
     );
 }

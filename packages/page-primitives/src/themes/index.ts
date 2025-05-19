@@ -1,6 +1,14 @@
 import { classic } from "./classic";
-import { Theme } from "./theme";
+import { learning } from "./learning";
+import { neobrutalism } from "./neobrutalism";
+import { editorial } from "./editorial";
+import { midnight } from "./midnight";
+import { Theme } from "@courselit/page-models";
 
-export * from "./theme";
-
-export const themes: Theme[] = [classic];
+export const themes: Theme[] = [
+    classic,
+    learning,
+    neobrutalism,
+    editorial,
+    midnight,
+];

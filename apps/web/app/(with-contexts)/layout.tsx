@@ -3,21 +3,18 @@ import React from "react";
 import { auth } from "@/auth";
 import { FetchBuilder } from "@courselit/utils";
 import { headers } from "next/headers";
-import { getBackendAddress } from "@ui-lib/utils";
+import { getAddressFromHeaders } from "@ui-lib/utils";
 import { defaultState } from "@components/default-state";
 import { decode } from "base-64";
 import { ServerConfig, SiteInfo } from "@courselit/common-models";
+import type { Theme } from "@courselit/page-models";
 
 export default async function Layout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const headersList = headers();
-    const address = getBackendAddress({
-        "x-forwarded-proto": headersList.get("x-forwarded-proto"),
-        host: headersList.get("host"),
-    });
+    const address = getAddressFromHeaders(headers);
     const session = await auth();
 
     const siteInfoQuery = `
@@ -72,12 +69,18 @@ export default async function Layout({
         queueServer: process.env.QUEUE_SERVER || "",
     };
 
+    const transformedTheme: Theme = {
+        id: siteInfoResponse.theme.themeId,
+        name: siteInfoResponse.theme.name,
+        theme: siteInfoResponse.theme.theme,
+    };
+
     return (
         <LayoutWithContext
             address={address}
             siteinfo={formatSiteInfo(siteInfoResponse.site.settings)}
             typefaces={siteInfoResponse.site.typefaces}
-            theme={siteInfoResponse.theme}
+            theme={transformedTheme}
             config={config}
             session={session}
         >

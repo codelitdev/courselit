@@ -7,6 +7,7 @@ const { typeface } = constants;
 
 export interface Domain extends PublicDomain {
     _id: mongoose.Types.ObjectId;
+    lastEditedThemeId?: string;
 }
 
 export const defaultTypeface: Typeface = {
@@ -27,6 +28,7 @@ const DomainSchema = new mongoose.Schema<Domain>(
         deleted: { type: Boolean, required: true, default: false },
         settings: SettingsSchema,
         themeId: { type: String },
+        lastEditedThemeId: { type: String },
         sharedWidgets: {
             type: mongoose.Schema.Types.Mixed,
             default: {},

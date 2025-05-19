@@ -5,12 +5,7 @@ import {
     Typeface,
     WidgetInstance,
 } from "@courselit/common-models";
-import type {
-    Address,
-    Media,
-    Profile,
-    UITheme,
-} from "@courselit/common-models";
+import type { Address, Media, Profile } from "@courselit/common-models";
 import type { AppDispatch, AppState } from "@courselit/state-management";
 import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { debounce, FetchBuilder, generateUniqueId } from "@courselit/utils";
@@ -56,6 +51,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { ThemeWithDraftState } from "./theme-editor/theme-with-draft-state";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
@@ -110,8 +106,9 @@ export default function PageEditor({
     const [primaryFontFamily, setPrimaryFontFamily] =
         useState("Roboto, sans-serif");
     const [loading, setLoading] = useState(false);
-    const [draftTheme, setDraftTheme] = useState<UITheme>(state.theme);
-    // const [theme, setTheme] = useState<Theme>(state.theme);
+    const [draftTheme, setDraftTheme] = useState<ThemeWithDraftState>(
+        state.theme,
+    );
     const { toast } = useToast();
     const [pages, setPages] = useState<Page[]>([]);
     const [loadingPages, setLoadingPages] = useState(true);
@@ -471,6 +468,7 @@ export default function PageEditor({
         );
         layout.splice(widgetIndex, 1);
         setLayout(layout);
+        onClose();
         await savePage({ pageId: page.pageId!, layout });
     };
 
@@ -495,26 +493,25 @@ export default function PageEditor({
     };
 
     const onClose = () => {
-        setSelectedWidget();
+        setSelectedWidget(undefined);
         setLeftPaneContent("none");
     };
 
     const editWidget = useMemo(
-        () => (
-            <EditWidget
-                widget={
-                    page &&
-                    layout?.filter((x) => x.widgetId === selectedWidget)[0]
-                }
-                pageData={page.pageData || {}}
-                onChange={onWidgetSettingsChanged}
-                onClose={onClose}
-                onDelete={deleteWidget}
-                state={state as AppState}
-                dispatch={dispatch || (() => {})}
-                key={selectedWidget}
-            />
-        ),
+        () =>
+            page &&
+            layout?.find((x) => x.widgetId === selectedWidget) && (
+                <EditWidget
+                    widget={layout.find((x) => x.widgetId === selectedWidget)}
+                    pageData={page.pageData || {}}
+                    onChange={onWidgetSettingsChanged}
+                    onClose={onClose}
+                    onDelete={deleteWidget}
+                    state={state as AppState}
+                    dispatch={dispatch || (() => {})}
+                    key={selectedWidget}
+                />
+            ),
         [selectedWidget],
     );
 
@@ -594,9 +591,9 @@ export default function PageEditor({
             )} */}
             {leftPaneContent === "theme" && (
                 <ThemeEditor
-                // draftTheme={draftTheme}
-                // onClose={onClose}
-                // onSave={(theme) => setDraftTheme(theme)}
+                    onThemeChange={(theme) => {
+                        setDraftTheme(theme);
+                    }}
                 />
             )}
             {leftPaneContent === "seo" && (
@@ -855,7 +852,13 @@ export default function PageEditor({
                                         onMoveWidgetDown={onMoveWidgetDown}
                                         onMoveWidgetUp={onMoveWidgetUp}
                                         state={Object.assign({}, state, {
-                                            theme: draftTheme,
+                                            theme: {
+                                                themeId: draftTheme.id,
+                                                name: draftTheme.name,
+                                                theme:
+                                                    draftTheme.draftTheme ||
+                                                    draftTheme.theme,
+                                            },
                                         })}
                                         dispatch={dispatch}
                                     />

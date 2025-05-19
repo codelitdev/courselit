@@ -30,6 +30,7 @@
         "url": "https://github.com/codelitdev/courselit/issues"
     },
     "dependencies": {
+        "@courselit/page-models": "workspace:^",
         "@courselit/common-models": "workspace:^",
         "@courselit/utils": "workspace:^",
         "base-64": "^1.0.0",

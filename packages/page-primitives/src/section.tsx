@@ -1,11 +1,11 @@
 import React from "react";
-import { Theme } from "@courselit/common-models";
 import { cn } from "./lib/utils";
+import type { ThemeStyle } from "@courselit/page-models";
 
 interface SectionProps extends React.HTMLAttributes<HTMLElement> {
     children: React.ReactNode;
     className?: string;
-    theme?: Theme;
+    theme?: ThemeStyle;
     component?: "header" | "footer" | "section";
 }
 
@@ -19,9 +19,9 @@ export const Section: React.FC<SectionProps> = ({
 }) => {
     const classes = cn(theme?.structure?.section?.verticalPadding, className);
     const styleWithBackground = {
-        backgroundColor: theme?.colors?.background,
-        color: theme?.colors?.text,
         ...style,
+        backgroundColor: style?.backgroundColor || theme?.colors?.background,
+        color: style?.color || theme?.colors?.text,
     };
 
     return (

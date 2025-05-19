@@ -2,12 +2,11 @@ import { Address, Course } from "@courselit/common-models";
 import { Lesson } from "@courselit/common-models";
 import { useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
-import { InternalCourse } from "@models/Course";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { useCallback, useEffect, useState } from "react";
 
 export type ProductWithAdminProps = Partial<
-    Omit<InternalCourse, "paymentPlans"> &
+    Omit<Course, "paymentPlans"> &
         Pick<Course, "paymentPlans"> & {
             lessons: Pick<Lesson, "title" | "groupId" | "lessonId" | "type"> &
                 { id: string }[];
@@ -23,9 +22,12 @@ export default function useProduct(
     >();
     const { toast } = useToast();
     const [loaded, setLoaded] = useState(false);
+    const [hasError, setHasError] = useState(false);
 
     const loadProduct = useCallback(
         async (courseId: string) => {
+            if (hasError) return;
+
             const query = `
             query {
                 course: getCourse(id: "${courseId}") {
@@ -59,6 +61,7 @@ export default function useProduct(
                     courseId,
                     cost,
                     costType,
+                    creatorName,
                     featuredImage {
                         mediaId,
                         originalFileName,
@@ -101,6 +104,7 @@ export default function useProduct(
                     setProduct(null);
                 }
             } catch (err: any) {
+                setHasError(true);
                 setProduct(null);
                 toast({
                     title: TOAST_TITLE_ERROR,
@@ -111,14 +115,14 @@ export default function useProduct(
                 setLoaded(true);
             }
         },
-        [address?.backend],
+        [address?.backend, hasError],
     );
 
     useEffect(() => {
-        if (id && address) {
+        if (id && address && !hasError) {
             loadProduct(id);
         }
-    }, [id, address, loadProduct]);
+    }, [id, address, loadProduct, hasError]);
 
     return { product, loaded };
 }

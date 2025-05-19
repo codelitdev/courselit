@@ -60,6 +60,7 @@ export const responses = {
     invalid_theme: "Invalid theme",
     theme_not_installed: "The theme is not installed",
     invalid_layout: "Invalid layout",
+    missing_mandatory_blocks: "Missing mandatory blocks",
     destination_dont_exist: "Destination does not exist",
     page_exists: "A page with the URL already exists",
     invalid_format: "Invalid format",

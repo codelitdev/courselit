@@ -1,16 +1,24 @@
 import { createContext } from "react";
 import { defaultState } from "./default-state";
+import { Theme } from "@courselit/page-models";
+import { Profile } from "@courselit/common-models";
 
 export const AddressContext = createContext(defaultState.address);
 
 export const SiteInfoContext = createContext(defaultState.siteinfo);
 
-export const ProfileContext = createContext(defaultState.profile);
+export const ProfileContext = createContext<{
+    profile: Partial<Profile>;
+    setProfile: any;
+}>({ profile: defaultState.profile, setProfile: undefined });
 
 export const TypefacesContext = createContext(defaultState.typefaces);
 
 export const ServerConfigContext = createContext(defaultState.config);
 
-export const ThemeContext = createContext(defaultState.theme);
+export const ThemeContext = createContext<{
+    theme: Theme;
+    setTheme: any;
+}>({ theme: defaultState.theme, setTheme: undefined });
 
 // export const PageContext = createContext(defaultState.page);

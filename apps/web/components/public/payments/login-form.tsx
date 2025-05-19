@@ -4,8 +4,8 @@ import { useContext, useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+// import { Button } from "@/components/ui/button";
+import { Button, Input, Text1, Text2 } from "@courselit/page-primitives";
 import {
     FormControl,
     FormField,
@@ -13,7 +13,11 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import Link from "next/link";
-import { AddressContext, ProfileContext } from "@components/contexts";
+import {
+    AddressContext,
+    ProfileContext,
+    ThemeContext,
+} from "@components/contexts";
 import { useToast } from "@courselit/components-library";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { signIn } from "next-auth/react";
@@ -37,6 +41,7 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
     const [loginStep, setLoginStep] = useState<LoginStep>("email");
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
+    const { theme } = useContext(ThemeContext);
 
     useEffect(() => {
         if (profile && profile.email) {
@@ -188,6 +193,7 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                                 <FormItem>
                                     <FormControl>
                                         <Input
+                                            theme={theme.theme}
                                             type="email"
                                             placeholder="Email address"
                                             {...field}
@@ -197,7 +203,7 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                                 </FormItem>
                             )}
                         />
-                        <p className="text-xs text-muted-foreground">
+                        <Text2 className="text-xs" theme={theme.theme}>
                             By signing in, you accept our{" "}
                             <Link
                                 href="/terms"
@@ -212,12 +218,13 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                             >
                                 Privacy Policy
                             </Link>
-                        </p>
+                        </Text2>
                         <Button
                             type="button"
                             onClick={handleRequestOTP}
                             className="w-full"
                             disabled={loading}
+                            theme={theme.theme}
                         >
                             Continue
                         </Button>
@@ -226,9 +233,9 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
 
                 {loginStep === "otp" && (
                     <>
-                        <p className="text-sm text-muted-foreground mb-2">
+                        <Text1 className="mb-2" theme={theme.theme}>
                             We have emailed you a one time password.
-                        </p>
+                        </Text1>
                         <FormField
                             control={form.control}
                             name="otp"
@@ -236,6 +243,7 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                                 <FormItem>
                                     <FormControl>
                                         <Input
+                                            theme={theme.theme}
                                             type="text"
                                             placeholder="Enter OTP"
                                             {...field}
@@ -250,6 +258,7 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                             onClick={handleVerifyOTP}
                             className="w-full"
                             disabled={loading}
+                            theme={theme.theme}
                         >
                             Verify OTP
                         </Button>
@@ -265,6 +274,7 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                                 <FormItem>
                                     <FormControl>
                                         <Input
+                                            theme={theme.theme}
                                             placeholder="Full name"
                                             {...field}
                                         />
@@ -277,6 +287,7 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                             type="button"
                             onClick={handleNameSubmit}
                             className="w-full"
+                            theme={theme.theme}
                         >
                             Continue
                         </Button>

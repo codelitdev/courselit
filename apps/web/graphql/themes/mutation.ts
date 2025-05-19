@@ -2,6 +2,8 @@ import { GraphQLNonNull, GraphQLString } from "graphql";
 import types from "./types";
 import { GraphQLJSONObject } from "graphql-type-json";
 import { Theme } from "@courselit/common-models";
+import { switchTheme, updateDraftTheme } from "./logic";
+import GQLContext from "@models/GQLContext";
 
 export default {
     updateDraftTheme: {
@@ -28,7 +30,7 @@ export default {
                 interactives?: Theme["interactives"];
                 structure?: Theme["structure"];
             },
-            context: any,
+            context: GQLContext,
         ) =>
             updateDraftTheme(
                 themeId,
@@ -39,37 +41,12 @@ export default {
                 structure,
             ),
     },
-    // switchTheme: {
-    //     type: types.themeType,
-    //     args: {
-    //         themeId: {
-    //             type: new GraphQLNonNull(GraphQLString),
-    //         },
-    //     },
-    //     resolve: async (_: any, { themeId }: any, context: GQLContext) =>
-    //         switchTheme(themeId, context),
-    // },
-    // updateTheme: {
-    //     type: types.themeType,
-    //     args: {
-    //         themeId: {
-    //             type: new GraphQLNonNull(GraphQLString),
-    //         },
-    //         name: {
-    //             type: GraphQLString,
-    //         },
-    //     },
-    //     resolve: async (_: any, { themeId, name }: any, context: GQLContext) =>
-    //         updateTheme(themeId, name, context),
-    // },
-    // deleteTheme: {
-    //     type: new GraphQLNonNull(GraphQLBoolean),
-    //     args: {
-    //         themeId: {
-    //             type: new GraphQLNonNull(GraphQLString),
-    //         },
-    //     },
-    //     resolve: async (_: any, { themeId }: any, context: GQLContext) =>
-    //         deleteTheme(themeId, context),
-    // },
+    switchTheme: {
+        type: types.themeType,
+        args: {
+            themeId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (_: any, { themeId }: any, context: GQLContext) =>
+            switchTheme(themeId, context),
+    },
 };

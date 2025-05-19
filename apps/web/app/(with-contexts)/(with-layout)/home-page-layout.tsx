@@ -18,13 +18,13 @@ export default function HomepageLayout({
 }: {
     children: React.ReactNode;
 }) {
+    const [page, setPage] = useState<any>(null);
     const address = useContext(AddressContext);
     const siteinfo = useContext(SiteInfoContext);
     const typefaces = useContext(TypefacesContext);
-    const [page, setPage] = useState<any>(null);
     const config = useContext(ServerConfigContext);
     const { profile } = useContext(ProfileContext);
-    const theme = useContext(ThemeContext);
+    const { theme } = useContext(ThemeContext);
 
     useEffect(() => {
         if (address.backend) {
@@ -63,7 +63,7 @@ export default function HomepageLayout({
                 },
             }}
         >
-            <div className="mx-auto lg:max-w-[1200px] w-full">{children}</div>
+            {children}
         </MasterLayout>
     );
 }

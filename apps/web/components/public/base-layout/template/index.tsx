@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { Fragment, ReactNode } from "react";
 import WidgetByName from "./widget-by-name";
 import { WidgetInstance } from "@courselit/common-models";
 import { Footer, Header } from "@courselit/page-blocks";
@@ -199,16 +199,16 @@ const Template = (props: TemplateProps) => {
                 />
             )}
             {childrenOnTop && (
-                <div className="flex flex-col min-h-[80vh]">
+                <Fragment>
                     {children}
                     {pageWidgets}
-                </div>
+                </Fragment>
             )}
             {!childrenOnTop && (
-                <div className="flex flex-col min-h-[80vh]">
+                <Fragment>
                     {pageWidgets}
                     {children}
-                </div>
+                </Fragment>
             )}
             {footer && (
                 <EditableWidget
