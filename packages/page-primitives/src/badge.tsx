@@ -8,7 +8,7 @@ import type { ThemeStyle } from "@courselit/page-models";
 
 export interface BadgeProps extends Omit<ShadcnBadgeProps, "variant"> {
     theme?: ThemeStyle;
-    style?: React.CSSProperties;
+    style?: Record<string, string>;
     variant?: "default" | "secondary" | "destructive" | "outline";
 }
 
@@ -46,11 +46,8 @@ export const Badge: React.FC<BadgeProps> = ({
             style={{
                 ...style,
                 backgroundColor:
-                    (style as React.CSSProperties).backgroundColor ||
-                    theme?.colors?.secondary,
-                color:
-                    (style as React.CSSProperties).color ||
-                    theme?.colors?.buttonText,
+                    style.backgroundColor || theme?.colors?.secondary,
+                color: style.color || theme?.colors?.buttonText,
                 borderColor: theme?.colors?.border,
             }}
             {...props}
