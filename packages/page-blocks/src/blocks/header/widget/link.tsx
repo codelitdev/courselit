@@ -1,3 +1,4 @@
+import React from "react";
 import { Button, Link as PageLink } from "@courselit/page-primitives";
 import { Link as AppLink } from "@courselit/components-library";
 import { ThemeStyle } from "@courselit/page-models";

@@ -1,3 +1,4 @@
+import React from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings from "../settings";
 import { TextRenderer, Link } from "@courselit/components-library";

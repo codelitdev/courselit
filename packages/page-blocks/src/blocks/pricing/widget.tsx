@@ -1,3 +1,4 @@
+import React from "react";
 import { useState } from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
