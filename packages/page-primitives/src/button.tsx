@@ -8,7 +8,7 @@ import type { ThemeStyle } from "@courselit/page-models";
 
 export interface ButtonProps extends ShadcnButtonProps {
     theme?: ThemeStyle;
-    style?: React.CSSProperties;
+    style?: Record<string, string>;
 }
 
 export const Button: React.FC<ButtonProps> = ({

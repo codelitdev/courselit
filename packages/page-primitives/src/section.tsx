@@ -7,6 +7,7 @@ interface SectionProps extends React.HTMLAttributes<HTMLElement> {
     className?: string;
     theme?: ThemeStyle;
     component?: "header" | "footer" | "section";
+    style?: Record<string, string>;
 }
 
 export const Section: React.FC<SectionProps> = ({
