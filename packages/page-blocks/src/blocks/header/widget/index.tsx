@@ -36,14 +36,11 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
     return (
         <Section
             theme={overiddenTheme}
-            className={clsx(
-                "sticky top-0 z-10 bg-white/75 backdrop-blur",
-                // !settings.appBarBackground && !theme?.colors?.background && "border-b",
-            )}
+            className={clsx("sticky top-0 z-10 backdrop-blur")}
             style={{
-                backgroundColor: settings.appBarBackground,
+                backgroundColor: `${settings.appBarBackground || overiddenTheme.colors.background}`,
                 color: settings.linkColor,
-                borderBottom: `1px solid ${settings.appBarBackground || theme.theme.colors.border}`,
+                borderBottom: `1px solid ${settings.appBarBackground || overiddenTheme.colors.border}`,
             }}
             component="header"
         >
@@ -123,58 +120,64 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                         </div>
                     )}
                     {settings.showLoginControl && (
-                        <Menu
-                            trigger={
-                                <Button2
-                                    variant="ghost"
-                                    className="relative h-8 w-8 rounded-full"
-                                    style={{
-                                        color: settings.loginBtnColor,
-                                        backgroundColor:
-                                            settings.loginBtnBgColor,
-                                    }}
-                                >
-                                    <div>
-                                        <Person />
-                                    </div>
-                                </Button2>
-                            }
-                        >
-                            {!state.auth.guest && (
+                        <div className="lg:!block hidden">
+                            <Menu
+                                trigger={
+                                    <Button2
+                                        variant="ghost"
+                                        className="relative h-8 w-8 rounded-full"
+                                        style={{
+                                            color: settings.loginBtnColor,
+                                            backgroundColor:
+                                                settings.loginBtnBgColor,
+                                        }}
+                                    >
+                                        <div>
+                                            <Person />
+                                        </div>
+                                    </Button2>
+                                }
+                            >
+                                {!state.auth.guest && (
+                                    <MenuItem2>
+                                        <AppLink
+                                            href={"/dashboard"}
+                                            className={linkClasses}
+                                        >
+                                            Dashboard
+                                        </AppLink>
+                                    </MenuItem2>
+                                )}
                                 <MenuItem2>
                                     <AppLink
-                                        href={"/dashboard"}
+                                        href={
+                                            state.auth.guest
+                                                ? "/login"
+                                                : "/logout"
+                                        }
                                         className={linkClasses}
                                     >
-                                        Dashboard
+                                        {state.auth.guest ? "Login" : "Logout"}
                                     </AppLink>
                                 </MenuItem2>
-                            )}
-                            <MenuItem2>
-                                <AppLink
-                                    href={
-                                        state.auth.guest ? "/login" : "/logout"
-                                    }
-                                    className={linkClasses}
-                                >
-                                    {state.auth.guest ? "Login" : "Logout"}
-                                </AppLink>
-                            </MenuItem2>
-                        </Menu>
+                            </Menu>
+                        </div>
                     )}
                     <MobileNav
                         title={state.siteinfo.title}
                         logo={state.siteinfo.logo}
                         color={settings.loginBtnColor}
+                        btnBgColor={settings.loginBtnBgColor}
                         links={settings.links}
                         linkColor={settings.linkColor}
-                        btnBgColor={settings.loginBtnBgColor}
                         btnColor={settings.loginBtnColor}
                         linkFontWeight={linkFontWeight}
                         spacingBetweenLinks={spacingBetweenLinks}
                         appBarBackground={settings.appBarBackground}
                         logoColor={settings.logoColor}
                         theme={overiddenTheme}
+                        showLoginControl={settings.showLoginControl}
+                        isGuest={state.auth.guest}
                     />
                 </div>
             </div>

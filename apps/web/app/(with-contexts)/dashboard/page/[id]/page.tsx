@@ -43,10 +43,15 @@ export default function Page({ params }: { params: { id: string } }) {
                 siteinfo: siteInfo,
                 address: address,
                 profile: profile as Profile,
-                auth: {
-                    guest: profile ? false : true,
-                    checked: profile ? true : false,
-                },
+                auth: profile.email
+                    ? {
+                          guest: false,
+                          checked: true,
+                      }
+                    : {
+                          guest: true,
+                          checked: true,
+                      },
                 networkAction: false,
                 theme,
                 typefaces: [

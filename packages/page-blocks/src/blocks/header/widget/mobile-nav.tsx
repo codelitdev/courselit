@@ -20,22 +20,32 @@ interface MobileNavSettings {
     appBarBackground: string;
     logoColor: string;
     theme: ThemeStyle;
+    showLoginControl: boolean;
+    isGuest: boolean;
 }
 
 const MobileNav = (props: MobileNavSettings) => {
     const [open, setOpen] = useState(false);
-    const { theme } = props;
+    const { theme, isGuest, showLoginControl } = props;
 
     return (
         <Drawer
             open={open}
             setOpen={setOpen}
             trigger={
-                <MenuButton
-                    color={props.color}
-                    backgroundColor={props.btnBgColor}
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    style={{
+                        backgroundColor: props.btnBgColor,
+                        color: props.color,
+                    }}
                     theme={theme}
-                />
+                    className="lg:!hidden"
+                >
+                    <MenuIcon className="h-4 w-4" />
+                    <span className="sr-only">Toggle Menu</span>
+                </Button>
             }
             side="right"
             style={{
@@ -63,7 +73,7 @@ const MobileNav = (props: MobileNavSettings) => {
                     )}
                     <Header4
                         style={{
-                            color: props.logoColor || "inherit",
+                            color: props.logoColor || theme?.colors?.text,
                         }}
                         theme={theme}
                     >
@@ -94,33 +104,46 @@ const MobileNav = (props: MobileNavSettings) => {
                             btnColor={props.btnColor}
                         />
                     ))}
+                {showLoginControl && (
+                    <>
+                        <hr
+                            style={{
+                                borderColor: theme?.colors?.border,
+                            }}
+                        />
+                        {!isGuest && (
+                            <PageLink
+                                theme={theme}
+                                href="/dashboard"
+                                linkFontWeight={props.linkFontWeight}
+                                onClick={() => {
+                                    setOpen(false);
+                                }}
+                                isButton={false}
+                                label="Dashboard"
+                                linkColor={props.linkColor}
+                                btnBgColor={props.btnBgColor}
+                                btnColor={props.btnColor}
+                            />
+                        )}
+                        <PageLink
+                            theme={theme}
+                            href={isGuest ? "/login" : "/logout"}
+                            label={isGuest ? "Login" : "Logout"}
+                            linkFontWeight={props.linkFontWeight}
+                            onClick={() => {
+                                setOpen(false);
+                            }}
+                            isButton={false}
+                            linkColor={props.linkColor}
+                            btnBgColor={props.btnBgColor}
+                            btnColor={props.btnColor}
+                        />
+                    </>
+                )}
             </ul>
         </Drawer>
     );
 };
-
-function MenuButton({
-    color,
-    backgroundColor = "inherit",
-    theme,
-}: {
-    color: string;
-    backgroundColor: string;
-    theme: ThemeStyle;
-}) {
-    return (
-        <Button
-            variant="ghost"
-            className="px-2 hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 lg:!hidden"
-            style={{
-                backgroundColor,
-            }}
-            theme={theme}
-        >
-            <MenuIcon className="h-4 w-4" style={{ color }} />
-            <span className="sr-only">Toggle Menu</span>
-        </Button>
-    );
-}
 
 export default MobileNav;

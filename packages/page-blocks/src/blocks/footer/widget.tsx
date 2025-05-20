@@ -46,7 +46,6 @@ const Widget = ({
         sections,
         titleFontSize = defaultTitleFontSize,
         subtitleFontSize = defaultSubtitleFontSize,
-        // sectionHeaderFontSize = defaultSectionHeaderFontSize,
         socials = defaultSocials,
         socialIconsSize = defaultSocialIconsSize,
         maxWidth,

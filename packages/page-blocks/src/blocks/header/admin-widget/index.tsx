@@ -145,12 +145,12 @@ export default function AdminWidget({
             <AdminWidgetPanel title="Design">
                 <ColorSelector
                     title="Logo color"
-                    value={logoColor || "inherit"}
+                    value={logoColor || ""}
                     onChange={(value?: string) => setLogoColor(value)}
                 />
                 <ColorSelector
                     title="Background color"
-                    value={appBarBackground || "#eee"}
+                    value={appBarBackground || ""}
                     onChange={(value?: string) => setAppBarBackground(value)}
                 />
                 <ColorSelector
@@ -161,7 +161,7 @@ export default function AdminWidget({
                 />
                 <ColorSelector
                     title="Button text"
-                    value={loginBtnColor || "#fff"}
+                    value={loginBtnColor || ""}
                     onChange={(value?: string) => setLoginBtnColor(value)}
                 />
                 <ColorSelector

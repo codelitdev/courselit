@@ -10,7 +10,7 @@ import {
 import type { Media, Typeface, WidgetInstance } from "@courselit/common-models";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
-import { UITheme } from "@models/UITheme";
+import { Theme } from "@courselit/page-models";
 
 interface MasterLayoutProps {
     title: string;
@@ -25,7 +25,7 @@ interface MasterLayoutProps {
     socialImage?: Media;
     robotsAllowed?: boolean;
     state: AppState;
-    theme: Omit<UITheme, "draftTheme">;
+    theme: Theme;
 }
 
 export const MasterLayout = ({
