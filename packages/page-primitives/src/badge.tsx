@@ -46,8 +46,11 @@ export const Badge: React.FC<BadgeProps> = ({
             style={{
                 ...style,
                 backgroundColor:
-                    style.backgroundColor || theme?.colors?.secondary,
-                color: style.color || theme?.colors?.buttonText,
+                    (style as React.CSSProperties).backgroundColor ||
+                    theme?.colors?.secondary,
+                color:
+                    (style as React.CSSProperties).color ||
+                    theme?.colors?.buttonText,
                 borderColor: theme?.colors?.border,
             }}
             {...props}
