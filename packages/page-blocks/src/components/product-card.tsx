@@ -1,3 +1,4 @@
+import React from "react";
 import { Image, Link, Skeleton } from "@courselit/components-library";
 import { Badge, PageCardHeader, Subheader1 } from "@courselit/page-primitives";
 import { PageCardContent } from "@courselit/page-primitives";
