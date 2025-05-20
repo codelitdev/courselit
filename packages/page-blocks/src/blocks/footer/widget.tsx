@@ -4,7 +4,7 @@ import Settings from "./settings";
 import { State } from "@courselit/common-models";
 import {
     titleFontSize as defaultTitleFontSize,
-    subtitleFontSize as defaultSubtitleFontSize,
+    // subtitleFontSize as defaultSubtitleFontSize,
     socials as defaultSocials,
     socialIconsSize as defaultSocialIconsSize,
 } from "./defaults";
@@ -19,7 +19,7 @@ import {
 } from "@courselit/icons";
 import {
     Header1,
-    Subheader1,
+    Header4,
     Link as PageLink,
     Section,
 } from "@courselit/page-primitives";
@@ -31,12 +31,12 @@ export interface WidgetProps {
     state: State;
 }
 
-const twSubtitleFontSizeMap = {
-    "1": "text-base",
-    "2": "text-lg",
-    "3": "text-xl",
-    "4": "text-2xl",
-};
+// const twSubtitleFontSizeMap = {
+//     "1": "text-base",
+//     "2": "text-lg",
+//     "3": "text-xl",
+//     "4": "text-2xl",
+// };
 
 const Widget = ({
     settings: {
@@ -45,7 +45,7 @@ const Widget = ({
         verticalPadding,
         sections,
         titleFontSize = defaultTitleFontSize,
-        subtitleFontSize = defaultSubtitleFontSize,
+        // subtitleFontSize = defaultSubtitleFontSize,
         socials = defaultSocials,
         socialIconsSize = defaultSocialIconsSize,
         maxWidth,
@@ -159,15 +159,12 @@ const Widget = ({
                                 key={section.name}
                                 className="flex flex-col lg:max-w-[160px]"
                             >
-                                <Subheader1
-                                    className={clsx(
-                                        "mb-4",
-                                        `!${twSubtitleFontSizeMap[String(subtitleFontSize)]}`,
-                                    )}
+                                <Header4
+                                    className={clsx("mb-4", "text-sm")}
                                     theme={overiddenTheme}
                                 >
-                                    {section.name} {subtitleFontSize}
-                                </Subheader1>
+                                    {section.name}
+                                </Header4>
                                 <div className="flex flex-col gap-2">
                                     {section.links.map((link, index) => (
                                         <Link
@@ -180,7 +177,7 @@ const Widget = ({
                                                 style={{
                                                     color: foregroundColor,
                                                 }}
-                                                className="text-sm"
+                                                className="text-xs"
                                             >
                                                 {link.label}
                                             </PageLink>

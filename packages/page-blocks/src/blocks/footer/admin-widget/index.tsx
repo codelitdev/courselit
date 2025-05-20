@@ -20,7 +20,7 @@ import { Check } from "@courselit/icons";
 import LinkEditor from "./link-editor";
 import {
     titleFontSize as defaultTitleFontSize,
-    subtitleFontSize as defaultSubtitleFontSize,
+    // subtitleFontSize as defaultSubtitleFontSize,
     socials as defaultSocials,
     socialIconsSize as defaultSocialIconsSize,
 } from "../defaults";
@@ -83,9 +83,9 @@ export default function AdminWidget({
     const [socialIconsSize, setSocialIconsSize] = useState(
         settings.socialIconsSize || defaultSocialIconsSize,
     );
-    const [subtitleFontSize, setSubtitleFontSize] = useState(
-        settings.subtitleFontSize || defaultSubtitleFontSize,
-    );
+    // const [subtitleFontSize, setSubtitleFontSize] = useState(
+    //     settings.subtitleFontSize || defaultSubtitleFontSize,
+    // );
 
     useEffect(() => {
         onChange({
@@ -97,7 +97,7 @@ export default function AdminWidget({
             titleFontSize,
             socials,
             socialIconsSize,
-            subtitleFontSize,
+            // subtitleFontSize,
         });
     }, [
         sections,
@@ -106,7 +106,7 @@ export default function AdminWidget({
         maxWidth,
         verticalPadding,
         titleFontSize,
-        subtitleFontSize,
+        // subtitleFontSize,
         socials,
         socialIconsSize,
     ]);

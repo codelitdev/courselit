@@ -74,8 +74,8 @@ export default function Itemm({
                         {media && media.file && (
                             <div className="mb-4">
                                 <PageCardImage
-                                    alt={media && media.caption}
-                                    src={media && media.file}
+                                    alt={media.caption}
+                                    src={media.file}
                                     className="!aspect-square rounded"
                                 />
                             </div>
