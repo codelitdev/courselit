@@ -11,7 +11,7 @@ jobs:
         node-version: '23.x'
     - uses: pnpm/action-setup@v2
       with:
-        version: 8
+        version: 10 
     - run: pnpm install
     - name: Build packages
       run: |
