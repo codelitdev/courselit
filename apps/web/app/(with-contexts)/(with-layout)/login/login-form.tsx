@@ -28,14 +28,13 @@ import {
     LOGIN_FORM_LABEL,
     LOGIN_FORM_DISCLAIMER,
     LOADING,
-    LOGIN_SUCCESS,
     TOAST_TITLE_ERROR,
-    TOAST_TITLE_SUCCESS,
 } from "@/ui-config/strings";
 import Link from "next/link";
 import { TriangleAlert } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-export default function LoginForm() {
+export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
     const { theme } = useContext(ThemeContext);
     const [showCode, setShowCode] = useState(false);
     const [email, setEmail] = useState("");
@@ -43,6 +42,7 @@ export default function LoginForm() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
+    const router = useRouter();
 
     const requestCode = async function (e: FormEvent) {
         e.preventDefault();
@@ -79,10 +79,12 @@ export default function LoginForm() {
             if (response?.error) {
                 setError(`Can't sign you in at this time`);
             } else {
-                toast({
-                    title: TOAST_TITLE_SUCCESS,
-                    description: LOGIN_SUCCESS,
-                });
+                // toast({
+                //     title: TOAST_TITLE_SUCCESS,
+                //     description: LOGIN_SUCCESS,
+                // });
+                // router.replace(redirectTo || "/dashboard/my-content");
+                window.location.href = redirectTo || "/dashboard/my-content";
             }
         } finally {
             setLoading(false);

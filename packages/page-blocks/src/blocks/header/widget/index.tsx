@@ -15,7 +15,11 @@ import {
     spacingBetweenLinks as defaultSpacingBetweenLinks,
     linkFontWeight as defaultLinkFontWeight,
 } from "../defaults";
-import { Header4, Section } from "@courselit/page-primitives";
+import {
+    Header4,
+    Section,
+    Link as PrimitiveLink,
+} from "@courselit/page-primitives";
 import PageLink from "./link";
 import clsx from "clsx";
 import { ThemeStyle } from "@courselit/page-models";
@@ -144,7 +148,18 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                                             href={"/dashboard"}
                                             className={linkClasses}
                                         >
-                                            Dashboard
+                                            <PrimitiveLink
+                                                theme={overiddenTheme}
+                                                style={{
+                                                    color:
+                                                        settings.linkColor ||
+                                                        overiddenTheme?.colors
+                                                            ?.text,
+                                                }}
+                                                className="!no-underline"
+                                            >
+                                                Dashboard
+                                            </PrimitiveLink>
                                         </AppLink>
                                     </MenuItem2>
                                 )}
@@ -157,7 +172,20 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                                         }
                                         className={linkClasses}
                                     >
-                                        {state.auth.guest ? "Login" : "Logout"}
+                                        <PrimitiveLink
+                                            theme={overiddenTheme}
+                                            style={{
+                                                color:
+                                                    settings.linkColor ||
+                                                    overiddenTheme?.colors
+                                                        ?.text,
+                                            }}
+                                            className="!no-underline"
+                                        >
+                                            {state.auth.guest
+                                                ? "Login"
+                                                : "Logout"}
+                                        </PrimitiveLink>
                                     </AppLink>
                                 </MenuItem2>
                             </Menu>
