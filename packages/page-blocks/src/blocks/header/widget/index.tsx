@@ -29,7 +29,7 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
     const overiddenTheme: ThemeStyle = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
         settings.maxWidth || theme.theme.structure.page.width;
-    overiddenTheme.structure.section.verticalPadding = "py-0";
+    overiddenTheme.structure.section.padding.y = "py-4";
 
     const linkClasses = "flex w-full";
     const linkAlignment = settings.linkAlignment || defaultLinkAlignment;

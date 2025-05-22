@@ -18,7 +18,8 @@ export const Section: React.FC<SectionProps> = ({
     component = "section",
     ...props
 }) => {
-    const classes = cn(theme?.structure?.section?.verticalPadding, className);
+    // const classes = cn(theme?.structure?.section?.verticalPadding, className);
+    const classes = className;
     const styleWithBackground = {
         ...style,
         backgroundColor: style?.backgroundColor || theme?.colors?.background,

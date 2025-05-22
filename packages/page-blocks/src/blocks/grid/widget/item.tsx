@@ -39,7 +39,7 @@ export default function Itemm({
     backgroundColor,
     foregroundColor,
     borderColor,
-    borderRadius,
+    // borderRadius,
     theme,
 }: ItemmProps) {
     return (
@@ -49,7 +49,7 @@ export default function Itemm({
                 backgroundColor: backgroundColor || theme?.colors?.background,
                 color: foregroundColor || theme?.colors?.text,
                 borderColor: borderColor || theme?.colors?.border,
-                borderRadius,
+                // borderRadius,
             }}
             theme={theme}
         >

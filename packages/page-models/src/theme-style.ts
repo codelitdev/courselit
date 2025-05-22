@@ -208,6 +208,7 @@ export interface ThemeStyle {
         section: {
             padding: {
                 x:
+                    | "px-0"
                     | "px-4"
                     | "px-6"
                     | "px-8"
@@ -222,6 +223,7 @@ export interface ThemeStyle {
                     | "px-56"
                     | "px-64";
                 y:
+                    | "py-0"
                     | "py-4"
                     | "py-6"
                     | "py-8"
@@ -236,25 +238,6 @@ export interface ThemeStyle {
                     | "py-56"
                     | "py-64";
             };
-            verticalPadding:
-                | "py-0"
-                | "py-1"
-                | "py-2"
-                | "py-3"
-                | "py-4"
-                | "py-5"
-                | "py-6"
-                | "py-8"
-                | "py-10"
-                | "py-12"
-                | "py-16"
-                | "py-20"
-                | "py-24"
-                | "py-32"
-                | "py-40"
-                | "py-48"
-                | "py-56"
-                | "py-64";
         };
     };
 }

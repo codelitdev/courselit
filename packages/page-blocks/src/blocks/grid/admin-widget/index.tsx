@@ -104,7 +104,7 @@ export default function AdminWidget({
         ThemeStyle["structure"]["page"]["width"]
     >(settings.maxWidth);
     const [verticalPadding, setVerticalPadding] = useState<
-        ThemeStyle["structure"]["section"]["verticalPadding"]
+        ThemeStyle["structure"]["section"]["padding"]["y"]
     >(settings.verticalPadding);
     const [itemBackgroundColor, setItemBackgroundColor] = useState(
         settings.itemBackgroundColor,
@@ -115,9 +115,9 @@ export default function AdminWidget({
     const [itemBorderColor, setItemBorderColor] = useState(
         settings.itemBorderColor,
     );
-    const [itemBorderRadius, setItemBorderRadius] = useState(
-        settings.itemBorderRadius,
-    );
+    // const [itemBorderRadius, setItemBorderRadius] = useState(
+    //     settings.itemBorderRadius,
+    // );
     const [cssId, setCssId] = useState(settings.cssId);
     const [columns, setColumns] = useState(settings.columns || defaultColumns);
 
@@ -139,7 +139,7 @@ export default function AdminWidget({
             itemBackgroundColor,
             itemForegroundColor,
             itemBorderColor,
-            itemBorderRadius,
+            // itemBorderRadius,
             cssId,
             columns,
         });
@@ -163,7 +163,7 @@ export default function AdminWidget({
         itemBackgroundColor,
         itemForegroundColor,
         itemBorderColor,
-        itemBorderRadius,
+        // itemBorderRadius,
         cssId,
         columns,
     ]);
@@ -319,13 +319,13 @@ export default function AdminWidget({
                     value={buttonForeground || "inherit"}
                     onChange={(value?: string) => setButtonForeground(value)}
                 />
-                <PageBuilderSlider
+                {/* <PageBuilderSlider
                     title="Item border radius"
                     max={40}
                     min={0}
                     value={itemBorderRadius}
                     onChange={setItemBorderRadius}
-                />
+                /> */}
                 <PageBuilderSlider
                     title="Columns"
                     min={2}
@@ -340,7 +340,7 @@ export default function AdminWidget({
                 <VerticalPaddingSelector
                     value={
                         verticalPadding ||
-                        theme.theme.structure.section.verticalPadding
+                        theme.theme.structure.section.padding.y
                     }
                     onChange={setVerticalPadding}
                 />

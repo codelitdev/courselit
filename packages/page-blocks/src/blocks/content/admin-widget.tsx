@@ -48,7 +48,7 @@ export default function AdminWidget({
         ThemeStyle["structure"]["page"]["width"]
     >(settings.maxWidth);
     const [verticalPadding, setVerticalPadding] = useState<
-        ThemeStyle["structure"]["section"]["verticalPadding"]
+        ThemeStyle["structure"]["section"]["padding"]["y"]
     >(settings.verticalPadding);
     const [cssId, setCssId] = useState(settings.cssId);
 
@@ -139,7 +139,7 @@ export default function AdminWidget({
                 <VerticalPaddingSelector
                     value={
                         verticalPadding ||
-                        theme.theme.structure.section.verticalPadding
+                        theme.theme.structure.section.padding.y
                     }
                     onChange={setVerticalPadding}
                 />

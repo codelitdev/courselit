@@ -72,7 +72,6 @@ export const ThemeSchema = new mongoose.Schema<Theme>({
                         type: mongoose.Schema.Types.Mixed,
                         required: true,
                     },
-                    verticalPadding: { type: String, required: true },
                 },
                 required: true,
                 _id: false,

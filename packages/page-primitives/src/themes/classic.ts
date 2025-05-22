@@ -139,6 +139,7 @@ const themeStyles: ThemeStyle = {
                 y: "py-4",
             },
             border: {
+                width: "border",
                 radius: "rounded-lg",
                 style: "border-solid",
             },
@@ -169,9 +170,8 @@ const themeStyles: ThemeStyle = {
         section: {
             padding: {
                 x: "px-4",
-                y: "py-4",
+                y: "py-16",
             },
-            verticalPadding: "py-10",
         },
     },
 };

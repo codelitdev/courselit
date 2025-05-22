@@ -63,8 +63,8 @@ export default function Widget({
     const overiddenTheme: ThemeStyle = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
         maxWidth || theme.theme.structure.page.width;
-    overiddenTheme.structure.section.verticalPadding =
-        verticalPadding || theme.theme.structure.section.verticalPadding;
+    overiddenTheme.structure.section.padding.y =
+        verticalPadding || theme.theme.structure.section.padding.y;
 
     const hasHeroGraphic = youtubeLink || (media && media.mediaId);
     let direction: "md:!flex-row" | "md:!flex-row-reverse";

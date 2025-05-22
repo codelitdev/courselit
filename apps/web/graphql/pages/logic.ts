@@ -221,7 +221,9 @@ export const publish = async (
     ctx.subdomain.sharedWidgets = ctx.subdomain.draftSharedWidgets;
     // ctx.subdomain.draftSharedWidgets = {};
 
-    await publishTheme(ctx.subdomain.themeId, ctx);
+    if (ctx.subdomain.themeId) {
+        await publishTheme(ctx.subdomain.themeId, ctx);
+    }
 
     await (ctx.subdomain as any).save();
     await (page as any).save();

@@ -139,8 +139,7 @@ const themeStyles: ThemeStyle = {
     structure: {
         page: { width: "max-w-6xl" },
         section: {
-            padding: { x: "px-8", y: "py-8" },
-            verticalPadding: "py-10",
+            padding: { x: "px-8", y: "py-10" },
         },
     },
 };

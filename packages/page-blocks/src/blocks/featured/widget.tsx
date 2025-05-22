@@ -31,8 +31,8 @@ export default function Widget({
     const overiddenTheme: ThemeStyle = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
         maxWidth || theme.theme.structure.page.width;
-    overiddenTheme.structure.section.verticalPadding =
-        verticalPadding || theme.theme.structure.section.verticalPadding;
+    overiddenTheme.structure.section.padding.y =
+        verticalPadding || theme.theme.structure.section.padding.y;
 
     const [productItems, setProductItems] = useState<Partial<Course>[]>([]);
 

@@ -179,7 +179,7 @@ export const homePageTemplate = [
             ],
             itemsAlignment: "center",
             columns: 3,
-            backgroundColor: "#f4f4f5",
+            // backgroundColor: "#f4f4f5",
         },
     },
     {
@@ -203,7 +203,7 @@ export const homePageTemplate = [
                 caption: "",
             },
             mediaRadius: 2,
-            backgroundColor: "#171127",
+            // backgroundColor: "#171127",
         },
     },
     {
@@ -305,7 +305,7 @@ export const homePageTemplate = [
         deleteable: true,
         shared: false,
         settings: {
-            backgroundColor: "#f4f4f5",
+            // backgroundColor: "#f4f4f5",
         },
     },
     {
@@ -363,7 +363,7 @@ export const homePageTemplate = [
                 ],
             },
             alignment: "center",
-            color: "#525252",
+            // color: "#525252",
             fontSize: 5,
             verticalPadding: "py-2",
         },

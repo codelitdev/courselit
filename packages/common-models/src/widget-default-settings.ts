@@ -14,6 +14,6 @@ type PageType =
 
 export default interface WidgetDefaultSettings {
     type: PageType;
-    verticalPadding: ThemeStyle["structure"]["section"]["verticalPadding"];
+    verticalPadding: ThemeStyle["structure"]["section"]["padding"]["y"];
     maxWidth?: ThemeStyle["structure"]["page"]["width"];
 }

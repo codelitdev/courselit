@@ -33,7 +33,7 @@ export default function Widget({
         itemBackgroundColor,
         itemForegroundColor,
         itemBorderColor,
-        itemBorderRadius,
+        // itemBorderRadius,
         cssId,
         columns = defaultColumns,
         maxWidth,
@@ -44,8 +44,8 @@ export default function Widget({
     const overiddenTheme: ThemeStyle = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
         maxWidth || theme.theme.structure.page.width;
-    overiddenTheme.structure.section.verticalPadding =
-        verticalPadding || theme.theme.structure.section.verticalPadding;
+    overiddenTheme.structure.section.padding.y =
+        verticalPadding || theme.theme.structure.section.padding.y;
 
     return (
         <Section
@@ -115,7 +115,7 @@ export default function Widget({
                                                 itemForegroundColor
                                             }
                                             borderColor={itemBorderColor}
-                                            borderRadius={itemBorderRadius}
+                                            // borderRadius={itemBorderRadius}
                                             theme={overiddenTheme}
                                         />
                                     </div>

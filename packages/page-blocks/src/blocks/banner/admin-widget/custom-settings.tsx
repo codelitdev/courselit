@@ -82,7 +82,7 @@ export default function CustomSettings({
         ThemeStyle["structure"]["page"]["width"]
     >(settings.maxWidth);
     const [verticalPadding, setVerticalPadding] = useState<
-        ThemeStyle["structure"]["section"]["verticalPadding"]
+        ThemeStyle["structure"]["section"]["padding"]["y"]
     >(settings.verticalPadding);
     const [mediaBorderRadius, setMediaBorderRadius] = useState(
         settings.mediaRadius || 2,
@@ -269,8 +269,7 @@ export default function CustomSettings({
                     />
                     <VerticalPaddingSelector
                         value={
-                            verticalPadding ||
-                            theme.structure.section.verticalPadding
+                            verticalPadding || theme.structure.section.padding.y
                         }
                         onChange={setVerticalPadding}
                     />

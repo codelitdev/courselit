@@ -4,36 +4,32 @@ import PageBuilderSlider from "./page-builder-slider";
 // Map of numeric values to Tailwind padding classes
 const PADDING_MAP = {
     0: "py-0",
-    1: "py-1",
-    2: "py-2",
-    3: "py-3",
-    4: "py-4",
-    5: "py-5",
-    6: "py-6",
-    7: "py-8",
-    8: "py-10",
-    9: "py-12",
-    10: "py-16",
-    11: "py-20",
-    12: "py-24",
-    13: "py-32",
-    14: "py-40",
-    15: "py-48",
-    16: "py-56",
-    17: "py-64",
+    1: "py-4",
+    2: "py-6",
+    3: "py-8",
+    4: "py-10",
+    5: "py-12",
+    6: "py-16",
+    7: "py-20",
+    8: "py-24",
+    9: "py-32",
+    10: "py-40",
+    11: "py-48",
+    12: "py-56",
+    13: "py-64",
 };
 
 export function getVerticalPaddingTWClass(
     value: number,
-): ThemeStyle["structure"]["section"]["verticalPadding"] {
+): ThemeStyle["structure"]["section"]["padding"]["y"] {
     const roundedValue = Math.max(0, Math.min(17, Math.round(value)));
     return PADDING_MAP[roundedValue] || PADDING_MAP[5]; // Default to py-5
 }
 
 interface VerticalPaddingSelectorProps {
-    value: ThemeStyle["structure"]["section"]["verticalPadding"];
+    value: ThemeStyle["structure"]["section"]["padding"]["y"];
     onChange: (
-        padding: ThemeStyle["structure"]["section"]["verticalPadding"],
+        padding: ThemeStyle["structure"]["section"]["padding"]["y"],
     ) => void;
     className?: string;
 }
@@ -54,7 +50,7 @@ export function VerticalPaddingSelector({
     return (
         <PageBuilderSlider
             title="Vertical padding"
-            max={17}
+            max={13}
             min={0}
             onChange={handleChange}
             value={parseInt(numericValue)}
