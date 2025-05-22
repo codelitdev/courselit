@@ -56,10 +56,8 @@ export const PageCard: React.FC<PageCardProps> = ({
     return (
         <div
             style={{
-                border: `1px solid ${theme?.colors?.border}`,
-                backgroundColor: theme?.colors?.background
-                    ? theme?.colors?.background
-                    : undefined,
+                borderColor: theme?.colors?.border,
+                backgroundColor: theme?.colors?.background || undefined,
             }}
             className={classes}
             {...props}

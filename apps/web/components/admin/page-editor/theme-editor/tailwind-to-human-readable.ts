@@ -48,29 +48,19 @@ export const paddingOptions = {
 
 export const borderWidthOptions: TailwindOption[] = [
     { label: "None", value: "border-0" },
-    { label: "Thin", value: "border-1" },
-    { label: "Light", value: "border-2" },
-    { label: "Medium", value: "border-3" },
-    { label: "Regular", value: "border-4" },
-    { label: "Heavy", value: "border-5" },
-    { label: "Extra Heavy", value: "border-6" },
-    { label: "2X Heavy", value: "border-7" },
-    { label: "3X Heavy", value: "border-8" },
-    { label: "4X Heavy", value: "border-9" },
-    { label: "5X Heavy", value: "border-10" },
+    { label: "Light", value: "border" },
+    { label: "Medium", value: "border-2" },
+    { label: "Heavy", value: "border-4" },
+    { label: "Extra Heavy", value: "border-8" },
 ];
 
 export const borderStyleOptions: TailwindOption[] = [
-    { label: "Solid", value: "solid" },
-    { label: "Dashed", value: "dashed" },
-    { label: "Dotted", value: "dotted" },
-    { label: "Double", value: "double" },
-    { label: "Groove", value: "groove" },
-    { label: "Ridge", value: "ridge" },
-    { label: "Inset", value: "inset" },
-    { label: "Outset", value: "outset" },
-    { label: "Hidden", value: "hidden" },
-    { label: "None", value: "none" },
+    { label: "None", value: "border-none" },
+    { label: "Solid", value: "border-solid" },
+    { label: "Dashed", value: "border-dashed" },
+    { label: "Dotted", value: "border-dotted" },
+    { label: "Double", value: "border-double" },
+    { label: "Hidden", value: "border-hidden" },
 ];
 
 export const borderRadiusOptions: TailwindOption[] = [

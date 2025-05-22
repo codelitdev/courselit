@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/shadcn-utils";
 import { Info } from "lucide-react";
-import { ThemeStyle } from "@courselit/page-models";
+import { Border, ThemeStyle } from "@courselit/page-models";
 import {
     paddingOptions,
     borderWidthOptions,
@@ -36,7 +36,6 @@ import {
 } from "@/components/ui/dialog";
 
 interface InteractiveSelectorProps {
-    title: string;
     type: "button" | "link" | "card" | "input";
     theme: ThemeStyle;
     onChange: (theme: ThemeStyle) => void;
@@ -50,7 +49,6 @@ const interactiveDisplayNames: Record<string, string> = {
 } as const;
 
 function InteractiveSelector({
-    title,
     type,
     theme,
     onChange,
@@ -233,112 +231,8 @@ function InteractiveSelector({
                         </SelectContent>
                     </Select>
                 </div>
-                {/* <div className="space-y-2">
-                    <Label>Border Style</Label>
-                    <Select
-                        value={value?.border?.style || ""}
-                        onValueChange={(newValue) => {
-                            onChange({
-                                ...theme,
-                                interactives: {
-                                    ...theme.interactives,
-                                    [type]: {
-                                        ...value,
-                                        border: {
-                                            ...value?.border,
-                                            style: newValue,
-                                        },
-                                    },
-                                },
-                            });
-                        }}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select style" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {borderStyleOptions.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div> */}
             </div>
         );
-
-        // const renderDisabledConfig = () => (
-        //     <div className="space-y-4">
-        //         <Label className="text-sm font-medium">Disabled State</Label>
-        //         <div className="grid grid-cols-2 gap-4">
-        //             <div className="space-y-2">
-        //                 <Label>Opacity</Label>
-        //                 <Select
-        //                     value={value?.disabled?.opacity || ""}
-        //                     onValueChange={(newValue) => {
-        //                         onChange({
-        //                             ...theme,
-        //                             interactives: {
-        //                                 ...theme.interactives,
-        //                                 [type]: {
-        //                                     ...value,
-        //                                     disabled: {
-        //                                         ...value?.disabled,
-        //                                         opacity: newValue,
-        //                                     },
-        //                                 },
-        //                             },
-        //                         });
-        //                     }}
-        //                 >
-        //                     <SelectTrigger>
-        //                         <SelectValue placeholder="Select opacity" />
-        //                     </SelectTrigger>
-        //                     <SelectContent>
-        //                         {opacityOptions.map((option) => (
-        //                             <SelectItem key={option.value} value={option.value}>
-        //                                 {option.label}
-        //                             </SelectItem>
-        //                         ))}
-        //                     </SelectContent>
-        //                 </Select>
-        //             </div>
-        //             <div className="space-y-2">
-        //                 <Label>Cursor</Label>
-        //                 <Select
-        //                     value={value?.disabled?.cursor || ""}
-        //                     onValueChange={(newValue) => {
-        //                         onChange({
-        //                             ...theme,
-        //                             interactives: {
-        //                                 ...theme.interactives,
-        //                                 [type]: {
-        //                                     ...value,
-        //                                     disabled: {
-        //                                         ...value?.disabled,
-        //                                         cursor: newValue,
-        //                                     },
-        //                                 },
-        //                             },
-        //                         });
-        //                     }}
-        //                 >
-        //                     <SelectTrigger>
-        //                         <SelectValue placeholder="Select cursor" />
-        //                     </SelectTrigger>
-        //                     <SelectContent>
-        //                         {cursorOptions.map((option) => (
-        //                             <SelectItem key={option.value} value={option.value}>
-        //                                 {option.label}
-        //                             </SelectItem>
-        //                         ))}
-        //                     </SelectContent>
-        //                 </Select>
-        //             </div>
-        //         </div>
-        //     </div>
-        // );
 
         const renderHoverInput = () => (
             <div className="space-y-2">
@@ -675,7 +569,7 @@ function InteractiveSelector({
                                                     ...value,
                                                     border: {
                                                         ...value?.border,
-                                                        radius: newValue,
+                                                        radius: newValue as Border["radius"],
                                                     },
                                                 },
                                             },
@@ -788,7 +682,7 @@ function InteractiveSelector({
                                                     ...value,
                                                     border: {
                                                         ...value?.border,
-                                                        style: newValue,
+                                                        style: newValue as Border["style"],
                                                     },
                                                 },
                                             },
@@ -812,6 +706,41 @@ function InteractiveSelector({
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Border Width</Label>
+                                <Select
+                                    value={value?.border?.width || ""}
+                                    onValueChange={(newValue) => {
+                                        onChange({
+                                            ...theme,
+                                            interactives: {
+                                                ...theme.interactives,
+                                                [type]: {
+                                                    ...value,
+                                                    border: {
+                                                        ...value?.border,
+                                                        width: newValue as Border["width"],
+                                                    },
+                                                },
+                                            },
+                                        });
+                                    }}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select width" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {borderWidthOptions.map((option) => (
+                                            <SelectItem
+                                                key={option.value}
+                                                value={option.value}
+                                            >
+                                                {option.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             <div className="space-y-2">
                                 <Label>Shadow</Label>
                                 <Select
