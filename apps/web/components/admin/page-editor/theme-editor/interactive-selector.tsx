@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/shadcn-utils";
 import { Info } from "lucide-react";
-import { Theme } from "@courselit/common-models";
+import { ThemeStyle } from "@courselit/page-models";
 import {
     paddingOptions,
     borderWidthOptions,
@@ -38,8 +38,8 @@ import {
 interface InteractiveSelectorProps {
     title: string;
     type: "button" | "link" | "card" | "input";
-    theme: Theme;
-    onChange: (theme: Theme) => void;
+    theme: ThemeStyle;
+    onChange: (theme: ThemeStyle) => void;
 }
 
 const interactiveDisplayNames: Record<string, string> = {

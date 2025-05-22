@@ -1,6 +1,12 @@
-import React, { useState, useContext, useEffect, useCallback } from "react";
+import React, {
+    useState,
+    useContext,
+    useEffect,
+    useCallback,
+    useRef,
+} from "react";
 import { ExpandMoreRight } from "@courselit/icons";
-import { ColorSelector, Skeleton } from "@courselit/components-library";
+import { ColorSelector } from "@courselit/components-library";
 import { capitalize, FetchBuilder, truncate } from "@courselit/utils";
 import {
     Columns3,
@@ -22,6 +28,8 @@ import StructureSelector from "./structure-selector";
 import { ThemeCard } from "./theme-card";
 import { Theme } from "@courselit/page-models";
 import { ThemeWithDraftState } from "./theme-with-draft-state";
+import useThemes from "../use-themes";
+import { ThemeCardSkeleton } from "./theme-card-skeleton";
 
 type Section = {
     id: string;
@@ -120,12 +128,7 @@ function ThemeEditor({
 }: {
     onThemeChange: (theme: Theme) => void;
 }) {
-    const [themes, setThemes] = useState<{
-        system: Theme[];
-        custom: Theme[];
-    }>({ system: [], custom: [] });
-    const [firstLoad, setFirstLoad] = useState(true);
-    const [theme, setTheme] = useState<Theme | null>(null);
+    const { themes, theme, setTheme, loadThemes, loaded } = useThemes();
     const [navigationStack, setNavigationStack] = useState<NavigationItem[]>(
         [],
     );
@@ -136,97 +139,28 @@ function ThemeEditor({
     const address = useContext(AddressContext);
     const { theme: currentTheme, setTheme: setCurrentTheme } =
         useContext(ThemeContext);
+    const selectedThemeRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (theme) {
             onThemeChange(theme);
-            replaceThemeInThemesArray(theme);
         }
     }, [theme]);
 
-    const replaceThemeInThemesArray = useCallback((theme: Theme) => {
-        setThemes((prev) => ({
-            ...prev,
-            system: prev.system.map((t) => (t.id === theme.id ? theme : t)),
-            custom: prev.custom.map((t) => (t.id === theme.id ? theme : t)),
-        }));
-    }, []);
-
-    const loadThemes = useCallback(async () => {
-        setIsLoading(true);
-        const query = `
-        query {
-            themes: getThemes {
-                system {
-                    themeId
-                    name
-                    theme {
-                        colors
-                        typography
-                        interactives
-                        structure
-                    }
-                    draftTheme {
-                        colors
-                        typography
-                        interactives
-                        structure
-                    }
-                }
-                custom {
-                    themeId
-                    name
-                    theme {
-                        colors
-                        typography
-                        interactives
-                        structure
-                    }
-                    draftTheme {
-                        colors
-                        typography
-                        interactives
-                        structure
-                    }
-                }
-            }
-        }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload({ query })
-            .setIsGraphQLEndpoint(true)
-            .build();
-
-        try {
-            const { themes } = await fetch.exec();
-            if (themes) {
-                setThemes({
-                    system: themes.system.map(transformServerTheme),
-                    custom: themes.custom.map(transformServerTheme),
-                });
-            }
-        } catch (error) {
-            console.error(error);
-        } finally {
+    useEffect(() => {
+        if (loaded) {
             setIsLoading(false);
+            // Scroll to selected theme after a short delay to ensure DOM is ready
+            setTimeout(() => {
+                if (selectedThemeRef.current) {
+                    selectedThemeRef.current.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                    });
+                }
+            }, 100);
         }
-    }, [address.backend]);
-
-    useEffect(() => {
-        loadThemes();
-    }, [loadThemes]);
-
-    useEffect(() => {
-        if (currentTheme?.id) {
-            let theme = themes.system.find((t) => t.id === currentTheme.id);
-            theme = themes.custom.find((t) => t.id === currentTheme.id);
-            if (theme && firstLoad) {
-                setTheme(theme);
-                setFirstLoad(false);
-            }
-        }
-    }, [themes, currentTheme]);
+    }, [loaded, theme?.id]);
 
     const navigateTo = useCallback((item: NavigationItem) => {
         setNavigationStack((prev) => [...prev, item]);
@@ -290,7 +224,6 @@ function ThemeEditor({
                         const updatedThemeNew =
                             transformServerTheme(updatedTheme);
                         setTheme(updatedThemeNew);
-                        setCurrentTheme(updatedThemeNew);
                         loadThemes();
                     }
                 }
@@ -373,34 +306,15 @@ function ThemeEditor({
                     </div>
                     <div className="space-y-2">
                         {isLoading
-                            ? // Skeleton for system themes
-                              Array(3)
+                            ? Array(3)
                                   .fill(0)
                                   .map((_, index) => (
-                                      <div
-                                          key={index}
-                                          className="w-full flex items-center justify-between px-3 py-3 rounded-md"
-                                      >
-                                          <div className="flex items-center gap-3">
-                                              <div className="flex gap-1">
-                                                  {Array(5)
-                                                      .fill(0)
-                                                      .map((_, i) => (
-                                                          <Skeleton
-                                                              key={i}
-                                                              className="w-4 h-4 rounded-full"
-                                                          />
-                                                      ))}
-                                              </div>
-                                              <Skeleton className="h-4 w-32" />
-                                          </div>
-                                          <Skeleton className="h-4 w-4" />
-                                      </div>
+                                      <ThemeCardSkeleton key={index} />
                                   ))
                             : themes.system.map((themeItem) => (
                                   <ThemeCard
                                       key={themeItem.id}
-                                      name={truncate(themeItem.name, 20)}
+                                      name={truncate(themeItem.name, 30)}
                                       palette={colorOrder
                                           .map(
                                               (key) =>
@@ -416,6 +330,11 @@ function ThemeEditor({
                                       }}
                                       showUseButton={true}
                                       className="cursor-pointer"
+                                      ref={
+                                          themeItem.id === theme?.id
+                                              ? selectedThemeRef
+                                              : null
+                                      }
                                       onClick={() => {
                                           setTheme(themeItem);
                                           setNavigationStack([
@@ -434,29 +353,10 @@ function ThemeEditor({
                     </div>
                     <div className="space-y-2">
                         {isLoading ? (
-                            // Skeleton for custom themes
                             Array(2)
                                 .fill(0)
                                 .map((_, index) => (
-                                    <div
-                                        key={index}
-                                        className="w-full flex items-center justify-between px-3 py-3 rounded-md"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex gap-1">
-                                                {Array(5)
-                                                    .fill(0)
-                                                    .map((_, i) => (
-                                                        <Skeleton
-                                                            key={i}
-                                                            className="w-4 h-4 rounded-full"
-                                                        />
-                                                    ))}
-                                            </div>
-                                            <Skeleton className="h-4 w-32" />
-                                        </div>
-                                        <Skeleton className="h-4 w-4" />
-                                    </div>
+                                    <ThemeCardSkeleton key={index} />
                                 ))
                         ) : themes.custom.length === 0 ? (
                             <div className="text-muted-foreground text-sm">
@@ -466,7 +366,7 @@ function ThemeEditor({
                             themes.custom.map((themeItem) => (
                                 <ThemeCard
                                     key={themeItem.id}
-                                    name={truncate(themeItem.name, 20)}
+                                    name={truncate(themeItem.name, 30)}
                                     palette={colorOrder
                                         .map(
                                             (key) =>
@@ -483,6 +383,11 @@ function ThemeEditor({
                                     }}
                                     showUseButton={true}
                                     className="cursor-pointer"
+                                    ref={
+                                        themeItem.id === theme?.id
+                                            ? selectedThemeRef
+                                            : null
+                                    }
                                     onClick={() => {
                                         setTheme(themeItem);
                                         setNavigationStack([

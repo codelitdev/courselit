@@ -124,6 +124,7 @@ const domain = new GraphQLObjectType({
         typefaces: { type: new GraphQLList(typefaceType) },
         draftTypefaces: { type: new GraphQLList(typefaceType) },
         quota: { type: quota },
+        lastEditedThemeId: { type: GraphQLString },
     },
 });
 

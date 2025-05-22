@@ -7,15 +7,15 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Theme } from "@courselit/common-models";
 import { paddingOptions } from "./tailwind-to-human-readable";
 import { Separator } from "@components/ui/separator";
+import { ThemeStyle } from "@courselit/page-models";
 
 interface StructureSelectorProps {
     title: string;
     type: "page" | "section";
-    theme: Theme;
-    onChange: (theme: Theme) => void;
+    theme: ThemeStyle;
+    onChange: (theme: ThemeStyle) => void;
 }
 
 const pageWidthOptions = [

@@ -30,6 +30,7 @@ export const getSiteInfo = async (ctx: GQLContext) => {
         checkPermission(ctx.user.permissions, [permissions.manageSite]);
     if (!isSiteEditor) {
         exclusionProjection.draftTypefaces = 0;
+        exclusionProjection.lastEditedThemeId = 0;
     }
     const domain: Domain | null = await DomainModel.findById(
         ctx.subdomain._id,

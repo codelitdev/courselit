@@ -110,7 +110,7 @@ export const updateDraftTheme = async (
             theme: systemTheme.theme,
             draftTheme: systemTheme.theme,
         });
-        ctx.subdomain.themeId = theme.themeId;
+        // ctx.subdomain.themeId = theme.themeId;
     } else {
         theme = await UserThemeModel.findOne({
             domain: ctx.subdomain._id,
@@ -214,6 +214,7 @@ export const switchTheme = async (themeId: string, ctx: GQLContext) => {
     }
 
     ctx.subdomain.themeId = themeId;
+    ctx.subdomain.lastEditedThemeId = themeId;
     await (ctx.subdomain as any).save();
 
     return formatTheme(theme);

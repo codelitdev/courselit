@@ -52,6 +52,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { ThemeWithDraftState } from "./theme-editor/theme-with-draft-state";
+import useThemes from "./use-themes";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
@@ -112,6 +113,7 @@ export default function PageEditor({
     const { toast } = useToast();
     const [pages, setPages] = useState<Page[]>([]);
     const [loadingPages, setLoadingPages] = useState(true);
+    const { theme: lastEditedTheme } = useThemes();
 
     const router = useRouter();
     const debouncedSave = useCallback(
@@ -181,6 +183,12 @@ export default function PageEditor({
             setPrimaryFontFamily(pFontFamily);
         }
     }, [draftTypefaces]);
+
+    useEffect(() => {
+        if (lastEditedTheme) {
+            setDraftTheme(lastEditedTheme);
+        }
+    }, [lastEditedTheme]);
 
     const onItemClick = (widgetId: string) => {
         setLayout([...layout]);
@@ -841,7 +849,7 @@ export default function PageEditor({
                                         <Skeleton className="w-full h-10" />
                                     </div>
                                 )}
-                                {draftTypefaces.length > 0 && (
+                                {draftTypefaces.length > 0 && draftTheme && (
                                     <Template
                                         layout={layout}
                                         pageData={page.pageData || {}}
