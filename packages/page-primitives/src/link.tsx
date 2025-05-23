@@ -8,6 +8,7 @@ export interface LinkProps
     className?: string;
     theme?: ThemeStyle;
     disabled?: boolean;
+    style?: React.CSSProperties;
 }
 
 export const Link: React.FC<LinkProps> = ({
@@ -15,6 +16,7 @@ export const Link: React.FC<LinkProps> = ({
     className = "",
     theme,
     disabled = false,
+    style,
     ...props
 }) => {
     const typographyStyles = theme?.typography?.link;
@@ -37,7 +39,6 @@ export const Link: React.FC<LinkProps> = ({
         linkStyles?.border?.width,
         linkStyles?.border?.radius,
         linkStyles?.border?.style,
-        linkStyles?.shadow,
         // Theme hover states
         linkStyles?.hover,
         // Theme disabled states
@@ -50,7 +51,14 @@ export const Link: React.FC<LinkProps> = ({
     );
 
     return (
-        <span className={classes} {...props}>
+        <span
+            className={classes}
+            style={{
+                ...style,
+                textShadow: linkStyles?.textShadow || undefined,
+            }}
+            {...props}
+        >
             {children}
         </span>
     );

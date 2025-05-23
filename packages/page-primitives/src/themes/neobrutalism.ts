@@ -2,55 +2,55 @@ import { Theme, ThemeStyle } from "@courselit/page-models";
 
 const themeStyles: ThemeStyle = {
     colors: {
-        primary: "#95d818", // solid black
-        secondary: "#FFFFFF", // crisp white
-        background: "#FFFFFF", // white with bold black lines
+        primary: "#FFF700", // vibrant yellow from the button
+        secondary: "#7DF9FF", // vibrant cyan
+        background: "#6FFFD7", // mint green from the card background
         border: "#000000", // black outlines everywhere
         text: "#000000", // black text
         buttonText: "#000000", // high-contrast button text
-        success: "#00FF00", // neon green
-        error: "#FF0000", // bright red
+        success: "#2FF2F2", // neon green-cyan
+        error: "#FF4911", // bright orange-red
         warning: "#FFFF00", // bright yellow
-        info: "#00FFFF", // cyan neon
+        info: "#3300FF", // vibrant blue
     },
     typography: {
         preheader: {
-            fontFamily: "font-rubik",
+            fontFamily: "font-inter",
             fontSize: "text-sm",
-            fontWeight: "font-bold",
-            letterSpacing: "tracking-wide",
+            fontWeight: "font-normal",
         },
         header1: {
-            fontFamily: "font-bebas-neue",
-            fontSize: "text-6xl",
+            fontFamily: "font-inter",
+            fontSize: "text-3xl",
             fontWeight: "font-bold",
-            textTransform: "uppercase",
+            textTransform: "normal-case",
         },
         header2: {
-            fontFamily: "font-bebas-neue",
-            fontSize: "text-5xl",
+            fontFamily: "font-inter",
+            fontSize: "text-2xl",
             fontWeight: "font-bold",
-            textTransform: "uppercase",
+            textTransform: "normal-case",
         },
         header3: {
-            fontFamily: "font-oswald",
-            fontSize: "text-4xl",
-            fontWeight: "font-semibold",
-            textTransform: "uppercase",
+            fontFamily: "font-inter",
+            fontSize: "text-xl",
+            fontWeight: "font-bold",
+            textTransform: "normal-case",
         },
         header4: {
-            fontFamily: "font-oswald",
-            fontSize: "text-3xl",
-            fontWeight: "font-medium",
+            fontFamily: "font-inter",
+            fontSize: "text-lg",
+            fontWeight: "font-bold",
+            textTransform: "normal-case",
         },
         subheader1: {
             fontFamily: "font-inter",
-            fontSize: "text-xl",
-            fontWeight: "font-medium",
+            fontSize: "text-base",
+            fontWeight: "font-normal",
         },
         subheader2: {
             fontFamily: "font-inter",
-            fontSize: "text-base",
+            fontSize: "text-sm",
             fontWeight: "font-normal",
         },
         text1: {
@@ -61,18 +61,18 @@ const themeStyles: ThemeStyle = {
         text2: {
             fontFamily: "font-inter",
             fontSize: "text-sm",
-            fontWeight: "font-light",
+            fontWeight: "font-normal",
         },
         link: {
             fontFamily: "font-inter",
             fontSize: "text-base",
             fontWeight: "font-semibold",
-            textDecoration: "underline",
         },
         button: {
-            fontFamily: "font-rubik",
+            fontFamily: "font-inter",
             fontSize: "text-base",
             fontWeight: "font-bold",
+            textTransform: "normal-case",
         },
         input: {
             fontFamily: "font-inter",
@@ -93,7 +93,8 @@ const themeStyles: ThemeStyle = {
                 radius: "rounded-none",
                 style: "border-solid",
             },
-            shadow: "shadow-neo",
+            customShadow: "4px 4px 0 0 #000000",
+            shadow: "shadow-custom",
             hover: "transition-all duration-200 ease-in-out hover:shadow-none hover:translate-x-1 hover:translate-y-1",
             disabled: {
                 background: "#F3F4F6",
@@ -103,7 +104,7 @@ const themeStyles: ThemeStyle = {
         },
         link: {
             padding: { x: "px-1", y: "py-0" },
-            hover: "underline",
+            hover: "hover:underline",
         },
         card: {
             padding: { x: "px-6", y: "py-6" },
@@ -112,14 +113,16 @@ const themeStyles: ThemeStyle = {
                 radius: "rounded-none",
                 style: "border-solid",
             },
-            shadow: "shadow-neo",
-            hover: "transition-all duration-200 ease-in-out hover:shadow-neo-lg hover:translate-y-1",
+            customShadow: "4px 4px 0 0 #000000",
+            shadow: "shadow-custom",
+            hover: "transition-all duration-200 ease-in-out hover:translate-y-1",
         },
         input: {
             borderRadius: "rounded-none",
             padding: { x: "px-4", y: "py-2" },
             border: { width: "border-2", style: "border-solid" },
-            shadow: "shadow-neo",
+            customShadow: "4px 4px 0 0 #000000",
+            shadow: "shadow-custom",
             hover: "transition-all duration-150 ease-in-out hover:shadow-none hover:translate-x-1 hover:translate-y-1",
             disabled: {
                 background: "#F3F4F6",

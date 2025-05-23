@@ -76,6 +76,20 @@ export const shadowOptions: TailwindOption[] = [
     { label: "Extra Large", value: "shadow-xl" },
     { label: "2X Large", value: "shadow-2xl" },
     { label: "Inner", value: "shadow-inner" },
+    { label: "Neo", value: "shadow-neo" },
+    { label: "Neo Small", value: "shadow-neo-sm" },
+    { label: "Neo Large", value: "shadow-neo-lg" },
+    { label: "Custom", value: "shadow-custom" },
+];
+
+export const textShadowOptions: TailwindOption[] = [
+    { label: "None", value: "text-shadow-none" },
+    { label: "Extra Small", value: "text-shadow-2xs" },
+    { label: "Small", value: "text-shadow-xs" },
+    { label: "Default", value: "text-shadow-sm" },
+    { label: "Medium", value: "text-shadow-md" },
+    { label: "Large", value: "text-shadow-lg" },
+    { label: "Custom", value: "text-shadow-custom" },
 ];
 
 export const opacityOptions: TailwindOption[] = [

@@ -93,11 +93,6 @@ const config: Config = {
                 bebasNeue: ["var(--font-bebas-neue)"],
                 quicksand: ["var(--font-quicksand)"],
             },
-            boxShadow: {
-                neo: "4px 4px 0 0 #000000",
-                "neo-sm": "3px 3px 0 0 #000000",
-                "neo-lg": "6px 6px 0 0 #000000",
-            },
         },
     },
     plugins: [require("tailwindcss-animate")],
@@ -113,10 +108,10 @@ const config: Config = {
             pattern: /px-(4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20)/,
         },
         "transparent",
-        {
-            pattern: /shadow-(neo|neo-sm|neo-lg)/,
-            variants: ["hover"],
-        },
+        // {
+        //     pattern: /shadow-(neo|neo-sm|neo-lg)/,
+        //     variants: ["hover"],
+        // },
         {
             pattern:
                 /bg-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(50|100|200|300|400|500|600|700|800|900|950)/,

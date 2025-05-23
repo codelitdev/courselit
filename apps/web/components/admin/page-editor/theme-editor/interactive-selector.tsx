@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/shadcn-utils";
 import { Info } from "lucide-react";
 import { Border, ThemeStyle } from "@courselit/page-models";
 import {
@@ -25,6 +24,8 @@ import {
     PageCard,
     PageCardContent,
     PageCardHeader,
+    Input as PageInput,
+    Link as PageLink,
 } from "@courselit/page-primitives";
 import {
     Dialog,
@@ -72,9 +73,7 @@ function InteractiveSelector({
                         <Label className="text-xs text-muted-foreground">
                             Preview
                         </Label>
-                        <a href="#" className={cn(value?.hover || "")}>
-                            Demo Link
-                        </a>
+                        <PageLink theme={theme}>Demo Link</PageLink>
                     </div>
                 );
             case "card":
@@ -99,17 +98,10 @@ function InteractiveSelector({
                         <Label className="text-xs text-muted-foreground">
                             Preview
                         </Label>
-                        <Input
+                        <PageInput
+                            theme={theme}
                             type="text"
                             placeholder="Demo Input"
-                            className={cn(
-                                value?.padding?.x || "",
-                                value?.padding?.y || "",
-                                value?.borderRadius || "",
-                                value?.border?.style || "",
-                                value?.shadow || "",
-                                value?.hover || "",
-                            )}
                         />
                     </div>
                 );
@@ -549,12 +541,71 @@ function InteractiveSelector({
             </div>
         );
 
+        const renderBoxShadowConfig = () => (
+            <div className="space-y-2">
+                <div className="space-y-2">
+                    <Label>Shadow</Label>
+                    <Select
+                        value={value?.shadow || ""}
+                        onValueChange={(newValue) => {
+                            onChange({
+                                ...theme,
+                                interactives: {
+                                    ...theme.interactives,
+                                    [type]: {
+                                        ...value,
+                                        shadow: newValue,
+                                    },
+                                },
+                            });
+                        }}
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select shadow" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {shadowOptions.map((option) => (
+                                <SelectItem
+                                    key={option.value}
+                                    value={option.value}
+                                >
+                                    {option.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                {value?.shadow === "shadow-custom" && (
+                    <div className="space-y-2">
+                        <Label>Custom Shadow</Label>
+                        <Input
+                            value={value?.customShadow || ""}
+                            placeholder="0px 0px 0px 0px rgba(0, 0, 0, 0.1)"
+                            onChange={(e) =>
+                                onChange({
+                                    ...theme,
+                                    interactives: {
+                                        ...theme.interactives,
+                                        [type]: {
+                                            ...value,
+                                            customShadow: e.target.value,
+                                        },
+                                    },
+                                })
+                            }
+                        />
+                    </div>
+                )}
+            </div>
+        );
+
         switch (type) {
             case "button":
                 return (
                     <div className="space-y-6">
                         {renderPaddingConfig()}
                         {renderBorderConfig()}
+                        {renderBoxShadowConfig()}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label>Border Radius</Label>
@@ -602,7 +653,7 @@ function InteractiveSelector({
                                                 ...theme.interactives,
                                                 [type]: {
                                                     ...value,
-                                                    shadow: newValue,
+                                                    shadow: newValue as ThemeStyle["interactives"]["button"]["shadow"],
                                                 },
                                             },
                                         });
@@ -628,11 +679,36 @@ function InteractiveSelector({
                     </div>
                 );
             case "link":
-                return <div className="space-y-6">{renderHoverInput()}</div>;
+                return (
+                    <div className="space-y-6">
+                        {renderHoverInput()}
+                        <div className="space-y-2">
+                            <Label>Text Shadow</Label>
+                            <Input
+                                value={value?.textShadow || ""}
+                                placeholder="0px 0px 0px 0px rgba(0, 0, 0, 0.1)"
+                                onChange={(e) =>
+                                    onChange({
+                                        ...theme,
+                                        interactives: {
+                                            ...theme.interactives,
+                                            [type]: {
+                                                ...value,
+                                                textShadow: e.target
+                                                    .value as ThemeStyle["interactives"]["link"]["textShadow"],
+                                            },
+                                        },
+                                    })
+                                }
+                            />
+                        </div>
+                    </div>
+                );
             case "card":
                 return (
                     <div className="space-y-6">
                         {renderPaddingConfig()}
+                        {renderBoxShadowConfig()}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label>Border Radius</Label>
@@ -781,6 +857,7 @@ function InteractiveSelector({
                 return (
                     <div className="space-y-6">
                         {renderPaddingConfig()}
+                        {renderBoxShadowConfig()}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label>Border Radius</Label>

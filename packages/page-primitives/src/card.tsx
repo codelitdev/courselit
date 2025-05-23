@@ -30,6 +30,7 @@ export interface PageCardHeaderProps
     children: React.ReactNode;
     className?: string;
     theme?: ThemeStyle;
+    style?: React.CSSProperties;
 }
 
 export const PageCard: React.FC<PageCardProps> = ({
@@ -37,6 +38,7 @@ export const PageCard: React.FC<PageCardProps> = ({
     children,
     className = "",
     theme,
+    style,
     ...props
 }) => {
     const cardStyles = theme?.interactives?.card;
@@ -47,7 +49,7 @@ export const PageCard: React.FC<PageCardProps> = ({
         cardStyles?.border?.width,
         cardStyles?.border?.radius,
         cardStyles?.border?.style,
-        cardStyles?.shadow,
+        cardStyles?.shadow === "shadow-custom" ? "" : cardStyles?.shadow,
         // Theme hover states
         isLink ? `cursor-pointer ${cardStyles?.hover}` : "",
         className,
@@ -56,8 +58,16 @@ export const PageCard: React.FC<PageCardProps> = ({
     return (
         <div
             style={{
-                borderColor: theme?.colors?.border,
-                backgroundColor: theme?.colors?.background || undefined,
+                ...style,
+                borderColor: style?.borderColor || theme?.colors?.border,
+                backgroundColor:
+                    style?.backgroundColor ||
+                    theme?.colors?.background ||
+                    undefined,
+                boxShadow:
+                    cardStyles?.shadow === "shadow-custom"
+                        ? cardStyles?.customShadow
+                        : undefined,
             }}
             className={classes}
             {...props}

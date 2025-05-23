@@ -60,7 +60,8 @@ type Shadow =
     | "shadow-none"
     | "shadow-neo"
     | "shadow-neo-sm"
-    | "shadow-neo-lg";
+    | "shadow-neo-lg"
+    | "shadow-custom";
 type Cursor = "cursor-not-allowed" | "cursor-default" | "cursor-pointer";
 
 export interface Typography {
@@ -173,11 +174,12 @@ export interface ThemeStyle {
             shadow?: Shadow;
             hover?: HoverStyle;
             disabled?: DisabledStyle;
+            customShadow?: string;
         };
         link: {
             padding?: Padding;
             border?: Border;
-            shadow?: Shadow;
+            textShadow?: string;
             hover?: HoverStyle;
             disabled?: DisabledStyle;
         };
@@ -186,6 +188,7 @@ export interface ThemeStyle {
             border?: Border;
             shadow?: Shadow;
             hover?: HoverStyle;
+            customShadow?: string;
         };
         input: {
             borderRadius?: BorderRadius;
@@ -194,6 +197,7 @@ export interface ThemeStyle {
             shadow?: Shadow;
             hover?: HoverStyle;
             disabled?: DisabledStyle;
+            customShadow?: string;
         };
     };
     structure: {

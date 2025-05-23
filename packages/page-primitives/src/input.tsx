@@ -34,7 +34,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             inputStyles?.border?.width,
             inputStyles?.border?.style,
             // inputStyles?.border?.color,
-            inputStyles?.shadow,
+            inputStyles?.shadow === "shadow-custom" ? "" : inputStyles?.shadow,
             // Theme hover states
             inputStyles?.hover,
             // Theme disabled states
@@ -55,6 +55,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 style={{
                     ...style,
                     borderColor: theme?.colors?.border,
+                    boxShadow:
+                        inputStyles?.shadow === "shadow-custom"
+                            ? inputStyles?.customShadow
+                            : undefined,
                 }}
                 {...props}
             />

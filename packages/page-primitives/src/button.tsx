@@ -43,7 +43,7 @@ export const Button: React.FC<ButtonProps> = ({
         buttonStyles?.border?.radius,
         buttonStyles?.border?.style,
         // buttonStyles?.border?.color,
-        buttonStyles?.shadow,
+        buttonStyles?.shadow === "shadow-custom" ? "" : buttonStyles?.shadow,
         // Theme hover states
         buttonStyles?.hover,
         // Theme disabled states
@@ -67,6 +67,10 @@ export const Button: React.FC<ButtonProps> = ({
                     style.backgroundColor || theme?.colors?.primary,
                 color: style.color || theme?.colors?.buttonText,
                 borderColor: theme?.colors?.border,
+                boxShadow:
+                    buttonStyles?.shadow === "shadow-custom"
+                        ? buttonStyles?.customShadow
+                        : undefined,
             }}
             {...props}
         >
