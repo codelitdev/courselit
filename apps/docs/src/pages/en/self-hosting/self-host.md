@@ -90,7 +90,7 @@ To self host, follow the following steps.
 
     ```
     # - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
-    # - MEDIALIT_SERVER=http://host.docker.internal:8000
+    # - MEDIALIT_SERVER=http://medialit
     ```
 
 2.  Uncomment the block titled `MediaLit` in `docker-compose.yml`.
@@ -109,8 +109,15 @@ To self host, follow the following steps.
     MEDIALIT_APIKEY=key_to_be_obtained_docker_compose_logs
     ```
 
-4.  Restart the services once to generate a user and an API key in MediaLit database. The API key
-    will be printed to the docker compose logs. The relevant logs will look something like the following.
+    To learn how to configure an AWS S3 bucket for MediaLit, click [here](https://github.com/codelitdev/medialit?tab=readme-ov-file#setting-up-correct-access-on-aws-s3-bucket).
+
+4.  Start the MediaLit service once to generate an API key to use with CourseLit.
+
+    ```sh
+    docker compose up medialit
+    ```
+
+    The above command will start the MediaLit service and display a fresh API key on the console. The relevant logs will look something like the following.
 
     ```sh
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

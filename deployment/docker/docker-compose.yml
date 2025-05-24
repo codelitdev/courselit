@@ -56,7 +56,7 @@ services:
             # The MEDIALIT_APIKEY can be obtained by running the medialit service locally and
             # checking the logs for the API key.
             # - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
-            # - MEDIALIT_SERVER=http://host.docker.internal:8000
+            # - MEDIALIT_SERVER=http://medialit
 
         expose:
             - "${PORT:-80}"
@@ -153,6 +153,10 @@ services:
     #         - CLOUDFRONT_KEY_PAIR_ID=${CLOUDFRONT_KEY_PAIR_ID} 
     #         - CLOUDFRONT_PRIVATE_KEY=${CLOUDFRONT_PRIVATE_KEY}
     #         - CDN_MAX_AGE=${CDN_MAX_AGE}
+
+    #         # To make MediaLit work on local. This allows the medialit service 
+    #         # to be accessed from the host machine.
+    #         - HOSTNAME_OVERRIDE=localhost:8000
     #     ports:
     #         - "8000:80"
     #     depends_on:
