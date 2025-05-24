@@ -25,11 +25,12 @@ export const getSiteInfo = async (ctx: GQLContext) => {
         "settings.razorpaySecret": 0,
         "settings.razorpayWebhookSecret": 0,
     };
-    const siteEditor =
+    const isSiteEditor =
         ctx.user &&
         checkPermission(ctx.user.permissions, [permissions.manageSite]);
-    if (!siteEditor) {
+    if (!isSiteEditor) {
         exclusionProjection.draftTypefaces = 0;
+        exclusionProjection.lastEditedThemeId = 0;
     }
     const domain: Domain | null = await DomainModel.findById(
         ctx.subdomain._id,

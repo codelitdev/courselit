@@ -7,7 +7,7 @@ import { headers } from "next/headers";
 import connectToDatabase from "../../services/db";
 import { warn } from "@/services/logger";
 
-const { domainNameForSingleTenancy } = constants;
+const { domainNameForSingleTenancy, schoolNameForSingleTenancy } = constants;
 
 const getDomainBasedOnSubdomain = async (
     subdomain: string,
@@ -141,6 +141,9 @@ export async function GET(req: Request) {
                             lastDailyCountUpdate: new Date(),
                             lastMonthlyCountUpdate: new Date(),
                         },
+                    },
+                    settings: {
+                        title: schoolNameForSingleTenancy,
                     },
                 },
                 {

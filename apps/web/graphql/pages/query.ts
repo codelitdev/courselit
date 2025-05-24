@@ -1,4 +1,9 @@
-import { GraphQLEnumType, GraphQLList, GraphQLString } from "graphql";
+import {
+    GraphQLBoolean,
+    GraphQLEnumType,
+    GraphQLList,
+    GraphQLString,
+} from "graphql";
 import GQLContext from "../../models/GQLContext";
 import { getPage, getPages } from "./logic";
 import types from "./types";
@@ -22,9 +27,15 @@ const queries = {
             id: {
                 type: GraphQLString,
             },
+            justWidgets: {
+                type: GraphQLBoolean,
+            },
         },
-        resolve: (_: any, { id }: { id: string }, ctx: GQLContext) =>
-            getPage({ id, ctx }),
+        resolve: (
+            _: any,
+            { id, justWidgets }: { id: string; justWidgets: boolean },
+            ctx: GQLContext,
+        ) => getPage({ id, ctx, justWidgets }),
     },
     getPages: {
         type: new GraphQLList(types.page),

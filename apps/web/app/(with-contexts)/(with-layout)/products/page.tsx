@@ -1,13 +1,16 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useContext } from "react";
 import { ProductsList } from "./products-list";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Header1, Section } from "@courselit/page-primitives";
+import { ThemeContext } from "@components/contexts";
 
 export default function CoursesPage() {
     const searchParams = useSearchParams();
     const page = parseInt(searchParams?.get("page") || "1");
     const router = useRouter();
+    const { theme } = useContext(ThemeContext);
 
     const handlePageChange = useCallback(
         (value: number) => {
@@ -17,9 +20,15 @@ export default function CoursesPage() {
     );
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-8">Products</h1>
-            <ProductsList page={page} onPageChange={handlePageChange} />
-        </div>
+        <Section theme={theme.theme}>
+            <div className="flex flex-col gap-4 min-h-[80vh]">
+                <Header1 theme={theme.theme}>Products</Header1>
+                <ProductsList
+                    theme={theme.theme}
+                    page={page}
+                    onPageChange={handlePageChange}
+                />
+            </div>
+        </Section>
     );
 }

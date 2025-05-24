@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "outDir": "./dist",
+        "lib": ["ES2017"],
+        "noImplicitAny": true,
+        "module": "CommonJS",
+        "target": "es5",
+        "jsx": "react",
+        "moduleResolution": "node",
+        "declaration": true,
+        "typeRoots": ["./node_modules/@types"]
+    },
+    "exclude": ["node_modules", "dist"]
+}

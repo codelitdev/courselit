@@ -1,5 +1,4 @@
 import SiteInfo from "./site-info";
-import Theme from "./theme";
 import { Typeface } from "./typeface";
 import WidgetInstance from "./widget-instance";
 
@@ -15,7 +14,6 @@ export interface Domain {
     createdAt: Date;
     updatedAt: Date;
     settings: SiteInfo;
-    theme: Theme;
     sharedWidgets: SharedWidgets;
     draftSharedWidgets: SharedWidgets;
     typefaces: Typeface[];
@@ -33,4 +31,5 @@ export interface Domain {
             lastMonthlyCountUpdate: Date;
         };
     };
+    themeId: string;
 }

@@ -12,7 +12,7 @@ import {
     FAQ,
     Pricing,
     Media,
-} from "@courselit/common-widgets";
+} from "@courselit/page-blocks";
 
 function loadWidgets(): Record<string, any> {
     const widgets: Record<string, Widget> = {};

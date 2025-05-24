@@ -1,10 +1,12 @@
-import React, { ReactNode } from "react";
+import React, { Fragment, ReactNode } from "react";
 import WidgetByName from "./widget-by-name";
 import { WidgetInstance } from "@courselit/common-models";
-import { Footer, Header } from "@courselit/common-widgets";
-import { ArrowDownward, ArrowUpward } from "@courselit/icons";
-import { Button, Toaster } from "@courselit/components-library";
+import { Footer, Header } from "@courselit/page-blocks";
+import { ArrowDown, Plus, ArrowUp } from "lucide-react";
+import { Toaster } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
+import { Tooltip } from "@courselit/components-library";
+import { Button } from "@/components/ui/button";
 
 interface TemplateProps {
     layout: WidgetInstance[];
@@ -55,8 +57,13 @@ const EditableWidget = ({
                 onClick={() => onEditClick && onEditClick(item.widgetId)}
                 className={`relative ${
                     editing ? "cursor-pointer" : "cursor-default"
-                } after:content-[''] after:absolute after:w-full after:h-full after:top-0 after:left-0 after:bg-black/30 after:opacity-0 hover:after:opacity-100 group`}
+                } group`}
             >
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                    <div className="text-white/90 border border-white/50 px-3 py-1.5 rounded text-sm font-medium">
+                        Click to update
+                    </div>
+                </div>
                 <WidgetByName
                     name={item.name}
                     settings={item.settings || {}}
@@ -66,39 +73,48 @@ const EditableWidget = ({
                     dispatch={dispatch}
                     state={state}
                 />
-                <div className="w-full justify-evenly hidden group-hover:flex absolute bottom-[-16px] z-10">
+                <div className="w-full justify-evenly hidden group-hover:flex absolute bottom-[-16px] z-30">
                     {allowsUpwardMovement && (
-                        <Button
-                            component="button"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onMoveWidgetUp && onMoveWidgetUp(index);
-                            }}
-                        >
-                            <ArrowUpward /> Move up
-                        </Button>
+                        <Tooltip title="Move up">
+                            <Button
+                                size="icon"
+                                className="bg-black text-white shadow-md hover:bg-black/90 h-8 w-8 rounded-full"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onMoveWidgetUp && onMoveWidgetUp(index);
+                                }}
+                            >
+                                <ArrowUp className="w-4 h-4" />
+                            </Button>
+                        </Tooltip>
                     )}
                     {allowsWidgetAddition && (
-                        <Button
-                            component="button"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onAddWidgetBelow && onAddWidgetBelow(index);
-                            }}
-                        >
-                            Add widget below{" "}
-                        </Button>
+                        <Tooltip title="Add widget below">
+                            <Button
+                                size="icon"
+                                className="bg-black text-white shadow-md hover:bg-black/90 h-8 w-8 rounded-full"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onAddWidgetBelow && onAddWidgetBelow(index);
+                                }}
+                            >
+                                <Plus className="w-4 h-4" />
+                            </Button>
+                        </Tooltip>
                     )}
                     {allowsDownwardMovement && (
-                        <Button
-                            component="button"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onMoveWidgetDown && onMoveWidgetDown(index);
-                            }}
-                        >
-                            Move down <ArrowDownward />
-                        </Button>
+                        <Tooltip title="Move down">
+                            <Button
+                                size="icon"
+                                className="bg-black text-white shadow-md hover:bg-black/90 h-8 w-8 rounded-full"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onMoveWidgetDown && onMoveWidgetDown(index);
+                                }}
+                            >
+                                <ArrowDown className="w-4 h-4" />
+                            </Button>
+                        </Tooltip>
                     )}
                 </div>
             </div>
@@ -183,16 +199,16 @@ const Template = (props: TemplateProps) => {
                 />
             )}
             {childrenOnTop && (
-                <div className="flex flex-col min-h-[80vh]">
+                <Fragment>
                     {children}
                     {pageWidgets}
-                </div>
+                </Fragment>
             )}
             {!childrenOnTop && (
-                <div className="flex flex-col min-h-[80vh]">
+                <Fragment>
                     {pageWidgets}
                     {children}
-                </div>
+                </Fragment>
             )}
             {footer && (
                 <EditableWidget

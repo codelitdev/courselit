@@ -10,16 +10,19 @@ import {
     SiteInfoContext,
     TypefacesContext,
     ServerConfigContext,
+    ThemeContext,
 } from "@components/contexts";
 import { Toaster, useToast } from "@courselit/components-library";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { Session } from "next-auth";
+import { Theme } from "@courselit/page-models";
 
 function LayoutContent({
     address,
     children,
     siteinfo,
     typefaces,
+    theme: initialTheme,
     config,
     session,
 }: {
@@ -27,10 +30,12 @@ function LayoutContent({
     children: ReactNode;
     siteinfo: SiteInfo;
     typefaces: Typeface[];
+    theme: Theme;
     config: ServerConfig;
     session: Session | null;
 }) {
     const [profile, setProfile] = useState(defaultState.profile);
+    const [theme, setTheme] = useState(initialTheme);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -93,13 +98,15 @@ function LayoutContent({
             }}
         >
             <SiteInfoContext.Provider value={siteinfo}>
-                <ProfileContext.Provider value={{ profile, setProfile }}>
-                    <TypefacesContext.Provider value={typefaces}>
-                        <ServerConfigContext.Provider value={config}>
-                            <Suspense fallback={null}>{children}</Suspense>
-                        </ServerConfigContext.Provider>
-                    </TypefacesContext.Provider>
-                </ProfileContext.Provider>
+                <ThemeContext.Provider value={{ theme, setTheme }}>
+                    <ProfileContext.Provider value={{ profile, setProfile }}>
+                        <TypefacesContext.Provider value={typefaces}>
+                            <ServerConfigContext.Provider value={config}>
+                                <Suspense fallback={null}>{children}</Suspense>
+                            </ServerConfigContext.Provider>
+                        </TypefacesContext.Provider>
+                    </ProfileContext.Provider>
+                </ThemeContext.Provider>
             </SiteInfoContext.Provider>
             <Toaster />
         </AddressContext.Provider>
@@ -111,6 +118,7 @@ export default function Layout(props: {
     children: ReactNode;
     siteinfo: SiteInfo;
     typefaces: Typeface[];
+    theme: Theme;
     config: ServerConfig;
     session: Session | null;
 }) {

@@ -4,6 +4,7 @@ import GQLContext from "../../models/GQLContext";
 import { Page } from "../../models/Page";
 import { getCommunity } from "../communities/logic";
 import { getCourse } from "../courses/logic";
+import { generateUniqueId } from "@courselit/utils";
 
 export async function getPageResponse(
     page: Page,
@@ -154,3 +155,108 @@ export async function getPageResponse(
 //         },
 //     );
 // }
+
+export async function initSharedWidgets(ctx: GQLContext) {
+    let subdomainChanged = false;
+    if (!ctx.subdomain.sharedWidgets.header) {
+        ctx.subdomain.sharedWidgets.header = {
+            name: "header",
+            shared: true,
+            deleteable: false,
+            widgetId: generateUniqueId(),
+            settings: {
+                links: [
+                    {
+                        label: "Products",
+                        href: "/products",
+                        isButton: false,
+                        isPrimary: false,
+                    },
+                    {
+                        label: "Blog",
+                        href: "/blog",
+                        isButton: false,
+                        isPrimary: false,
+                    },
+                    {
+                        label: "Start learning",
+                        href: "/products",
+                        isButton: true,
+                        isPrimary: true,
+                    },
+                ],
+                linkAlignment: "center",
+                showLoginControl: true,
+                linkFontWeight: "font-normal",
+                spacingBetweenLinks: 16,
+            },
+        };
+        subdomainChanged = true;
+    }
+    if (!ctx.subdomain.sharedWidgets.footer) {
+        ctx.subdomain.sharedWidgets.footer = {
+            name: "footer",
+            shared: true,
+            deleteable: false,
+            widgetId: generateUniqueId(),
+            settings: {
+                sections: [
+                    {
+                        name: "Legal",
+                        links: [
+                            { label: "Terms of use", href: "/p/terms" },
+                            { label: "Privacy policy", href: "/p/privacy" },
+                        ],
+                    },
+                ],
+                titleFontSize: 2,
+                socials: {
+                    facebook: "",
+                    twitter: "https://twitter.com/courselit",
+                    instagram: "",
+                    youtube: "",
+                    linkedin: "",
+                    discord: "",
+                    github: "https://github.com/codelitdev/courselit",
+                },
+                socialIconsSize: 24,
+            },
+        };
+        subdomainChanged = true;
+    }
+    // if (!ctx.subdomain.sharedWidgets["newsletter-signup"]) {
+    //     ctx.subdomain.sharedWidgets["newsletter-signup"] = {
+    //         name: "newsletter-signup",
+    //         shared: true,
+    //         deleteable: true,
+    //         widgetId: generateUniqueId(),
+    //         settings: {
+    //             alignment: "center",
+    //         },
+    //     };
+    //     subdomainChanged = true;
+    // }
+    if (subdomainChanged) {
+        (ctx.subdomain as any).markModified("sharedWidgets");
+        await (ctx.subdomain as any).save();
+    }
+}
+
+export async function copySharedWidgetsToDomain(
+    layout,
+    domain: GQLContext["subdomain"],
+) {
+    for (let widget of layout) {
+        if (widget.shared && widget.widgetId) {
+            domain.draftSharedWidgets[widget.name] = Object.assign(
+                {},
+                domain.draftSharedWidgets[widget.name],
+                widget,
+            );
+            widget.settings = undefined;
+        }
+    }
+    (domain as any).markModified("draftSharedWidgets");
+    await (domain as any).save();
+    return layout;
+}
