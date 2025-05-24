@@ -49,6 +49,8 @@ export * from "./components/ui/slider";
 export * from "./components/ui/card";
 export * from "./components/ui/badge";
 export * from "./components/ui/skeleton";
+export * from "./components/ui/textarea";
+export * from "./components/ui/alert";
 
 export * from "./toast2";
 export * from "./paginated-table";
@@ -58,11 +60,11 @@ export * from "./skeleton-card";
 export * from "./product-card";
 export * from "./video-with-preview";
 export * from "./image";
+export * from "./lib/utils";
 
 export {
     PriceTag,
     Section,
-    // WidgetHelpers,
     CourseItem,
     Select,
     Link,

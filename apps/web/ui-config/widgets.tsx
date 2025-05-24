@@ -12,6 +12,8 @@ import {
     FAQ,
     Pricing,
     Media,
+    Embed,
+    Marquee,
 } from "@courselit/common-widgets";
 
 function loadWidgets(): Record<string, any> {
@@ -27,6 +29,8 @@ function loadWidgets(): Record<string, any> {
     widgets[FAQ.metadata.name] = FAQ;
     widgets[Pricing.metadata.name] = Pricing;
     widgets[Media.metadata.name] = Media;
+    widgets[Embed.metadata.name] = Embed;
+    widgets[Marquee.metadata.name] = Marquee;
     widgets[Footer.metadata.name] = Object.assign({}, Footer, { shared: true });
     widgets[Header.metadata.name] = Object.assign({}, Header, { shared: true });
     widgets[EmailForm.metadata.name] = Object.assign({}, EmailForm, {
