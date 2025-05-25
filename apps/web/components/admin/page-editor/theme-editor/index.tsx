@@ -552,44 +552,59 @@ function ThemeEditor({
             case "colors":
                 return (
                     <div className="space-y-2 p-2">
-                        {Object.keys(theme.draftTheme!.colors)
-                            .filter(
-                                (color) =>
-                                    ![
-                                        "success",
-                                        "warning",
-                                        "error",
-                                        "info",
-                                    ].includes(color),
-                            )
-                            .map((color) => (
-                                <ColorSelector
-                                    key={color}
-                                    title={capitalize(color)}
-                                    value={theme.draftTheme!.colors[color]}
-                                    onChange={async (value) => {
-                                        const updatedColors = {
-                                            ...theme.draftTheme!.colors,
-                                            [color]: value,
-                                        };
-                                        setTheme({
-                                            ...theme,
-                                            draftTheme: {
-                                                ...theme.draftTheme!,
-                                                colors: updatedColors,
-                                            },
-                                        });
-                                        await updateThemeCategory(
-                                            "colors",
-                                            updatedColors as unknown as Record<
-                                                string,
-                                                string
-                                            >,
-                                        );
-                                    }}
-                                    allowReset={false}
-                                />
-                            ))}
+                        {[
+                            {
+                                name: "primary",
+                                displayName: "Primary",
+                            },
+                            {
+                                name: "secondary",
+                                displayName: "Secondary",
+                            },
+                            {
+                                name: "background",
+                                displayName: "Background",
+                            },
+                            {
+                                name: "text",
+                                displayName: "Text",
+                            },
+                            {
+                                name: "border",
+                                displayName: "Border",
+                            },
+                            {
+                                name: "buttonText",
+                                displayName: "Button Text",
+                            },
+                        ].map((color) => (
+                            <ColorSelector
+                                key={color.name}
+                                title={color.displayName}
+                                value={theme.draftTheme!.colors[color.name]}
+                                onChange={async (value) => {
+                                    const updatedColors = {
+                                        ...theme.draftTheme!.colors,
+                                        [color.name]: value,
+                                    };
+                                    setTheme({
+                                        ...theme,
+                                        draftTheme: {
+                                            ...theme.draftTheme!,
+                                            colors: updatedColors,
+                                        },
+                                    });
+                                    await updateThemeCategory(
+                                        "colors",
+                                        updatedColors as unknown as Record<
+                                            string,
+                                            string
+                                        >,
+                                    );
+                                }}
+                                allowReset={false}
+                            />
+                        ))}
                     </div>
                 );
             case "typography":

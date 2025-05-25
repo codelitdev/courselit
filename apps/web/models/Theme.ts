@@ -23,6 +23,7 @@ export const ThemeSchema = new mongoose.Schema<Theme>({
             background: { type: String, required: true },
             border: { type: String, required: true },
             text: { type: String, required: true },
+            buttonText: { type: String, required: true },
             success: { type: String, required: true },
             error: { type: String, required: true },
             warning: { type: String, required: true },

@@ -95,40 +95,40 @@ const themeStyles: ThemeStyle = {
     },
     interactives: {
         button: {
-            padding: { x: "px-6", y: "py-3" },
+            padding: { x: "px-6", y: "py-4" },
             border: {
                 width: "border-2",
-                radius: "rounded-lg",
+                radius: "rounded",
                 style: "border-solid",
             },
             shadow: "shadow-lg",
-            hover: "transition-colors duration-200 ease-in-out hover:bg-blue-700 hover:shadow-xl",
+            hover: "transition-all duration-200 ease-in-out hover:bg-blue-700 hover:shadow-xl hover:scale-105",
             disabled: {
-                background: "#BFDBFE",
+                background: "#F3F4F6",
                 opacity: "opacity-50",
                 cursor: "cursor-not-allowed",
             },
         },
         link: {
             padding: { x: "px-1", y: "py-0" },
-            hover: "transition-colors duration-150 ease-in-out hover:text-indigo-700 hover:underline",
+            hover: "transition-all duration-150 ease-in-out hover:text-blue-700 hover:underline hover:scale-105",
         },
         card: {
             padding: { x: "px-8", y: "py-8" },
             border: {
                 width: "border",
-                radius: "rounded-2xl",
+                radius: "rounded",
                 style: "border-solid",
             },
             shadow: "shadow-xl",
-            hover: "transition-shadow duration-200 ease-in hover:shadow-2xl",
+            hover: "transition-all duration-200 ease-in-out hover:shadow-2xl hover:scale-105",
         },
         input: {
             borderRadius: "rounded-lg",
             padding: { x: "px-5", y: "py-3" },
             border: { width: "border-2", style: "border-solid" },
             shadow: "shadow",
-            hover: "transition-colors duration-150 ease-in-out hover:border-blue-400",
+            hover: "transition-all duration-150 ease-in-out hover:border-blue-400 hover:shadow-md",
             disabled: {
                 background: "#F3F4F6",
                 cursor: "cursor-not-allowed",
