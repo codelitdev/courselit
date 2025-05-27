@@ -25,15 +25,7 @@ export default function Widget({
         itemsAlignment,
         buttonCaption,
         buttonAction,
-        buttonBackground,
-        buttonForeground,
-        backgroundColor,
-        foregroundColor,
         items,
-        itemBackgroundColor,
-        itemForegroundColor,
-        itemBorderColor,
-        // itemBorderRadius,
         cssId,
         columns = defaultColumns,
         maxWidth,
@@ -48,14 +40,7 @@ export default function Widget({
         verticalPadding || theme.theme.structure.section.padding.y;
 
     return (
-        <Section
-            theme={overiddenTheme}
-            style={{
-                backgroundColor: backgroundColor,
-                color: foregroundColor,
-            }}
-            id={cssId}
-        >
+        <Section theme={overiddenTheme} id={cssId}>
             <div className={`flex flex-col gap-4`}>
                 <div
                     className={`flex flex-col ${
@@ -82,14 +67,7 @@ export default function Widget({
                     )}
                     {buttonAction && buttonCaption && (
                         <Link href={buttonAction} className="mb-12">
-                            <Button
-                                style={{
-                                    backgroundColor: buttonBackground,
-                                    color: buttonForeground,
-                                }}
-                                theme={overiddenTheme}
-                                className="w-full"
-                            >
+                            <Button theme={overiddenTheme} className="w-full">
                                 {buttonCaption}
                             </Button>
                         </Link>
@@ -105,17 +83,7 @@ export default function Widget({
                                     <div className="h-full">
                                         <Itemm
                                             item={item}
-                                            buttonBackground={buttonBackground}
-                                            buttonForeground={buttonForeground}
                                             alignment={itemsAlignment}
-                                            backgroundColor={
-                                                itemBackgroundColor
-                                            }
-                                            foregroundColor={
-                                                itemForegroundColor
-                                            }
-                                            borderColor={itemBorderColor}
-                                            // borderRadius={itemBorderRadius}
                                             theme={overiddenTheme}
                                         />
                                     </div>

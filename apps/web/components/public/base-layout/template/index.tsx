@@ -7,6 +7,7 @@ import { Toaster } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
 import { Tooltip } from "@courselit/components-library";
 import { Button } from "@/components/ui/button";
+import convert, { HSL } from "color-convert";
 
 interface TemplateProps {
     layout: WidgetInstance[];
@@ -20,6 +21,211 @@ interface TemplateProps {
     onMoveWidgetDown?: (index: number) => void;
     dispatch?: AppDispatch;
     state: Partial<AppState>;
+    id?: string;
+    colorMode?: "light" | "dark";
+}
+
+const Template = (props: TemplateProps) => {
+    const {
+        layout,
+        pageData,
+        editing = false,
+        onEditClick,
+        children,
+        childrenOnTop = false,
+        onAddWidgetBelow,
+        onMoveWidgetUp,
+        onMoveWidgetDown,
+        dispatch,
+        state,
+        id,
+        colorMode,
+    } = props;
+    const theme =
+        colorMode === "dark"
+            ? state.theme?.theme?.colors?.dark
+            : state.theme?.theme?.colors?.light;
+
+    if (!layout) return <></>;
+    const footer = layout.filter(
+        (widget) => widget.name === Footer.metadata.name,
+    )[0];
+    const header = layout.filter(
+        (widget) => widget.name === Header.metadata.name,
+    )[0];
+    const widgetsWithoutHeaderAndFooter = layout.filter(
+        (widget) =>
+            ![Header.metadata.name, Footer.metadata.name].includes(widget.name),
+    );
+    const pageWidgets = widgetsWithoutHeaderAndFooter.map(
+        (item: any, index: number) => (
+            <EditableWidget
+                item={item}
+                key={item.widgetId}
+                editing={editing}
+                onEditClick={onEditClick}
+                pageData={pageData}
+                allowsWidgetAddition={true}
+                allowsUpwardMovement={index !== 0}
+                allowsDownwardMovement={
+                    widgetsWithoutHeaderAndFooter.length - 1 !== index
+                }
+                onAddWidgetBelow={onAddWidgetBelow}
+                onMoveWidgetDown={onMoveWidgetDown}
+                onMoveWidgetUp={onMoveWidgetUp}
+                index={index + 1}
+                dispatch={dispatch}
+                state={state}
+            />
+        ),
+    );
+
+    return (
+        <div className="flex flex-col font-primary" id={id}>
+            {header && (
+                <EditableWidget
+                    item={header}
+                    editing={editing}
+                    pageData={pageData}
+                    onEditClick={onEditClick}
+                    allowsWidgetAddition={true}
+                    onAddWidgetBelow={onAddWidgetBelow}
+                    onMoveWidgetDown={onMoveWidgetDown}
+                    onMoveWidgetUp={onMoveWidgetUp}
+                    index={0}
+                    dispatch={dispatch}
+                    state={state}
+                />
+            )}
+            {childrenOnTop && (
+                <Fragment>
+                    {children}
+                    {pageWidgets}
+                </Fragment>
+            )}
+            {!childrenOnTop && (
+                <Fragment>
+                    {pageWidgets}
+                    {children}
+                </Fragment>
+            )}
+            {footer && (
+                <EditableWidget
+                    item={footer}
+                    pageData={pageData}
+                    editing={editing}
+                    onEditClick={onEditClick}
+                    index={layout.length - 1}
+                    dispatch={dispatch}
+                    state={state}
+                />
+            )}
+            <Toaster />
+            <style jsx>{`
+                #${id} {
+                    --background: ${theme?.background
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  theme.background?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --foreground: ${theme?.foreground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  theme.foreground?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --card: ${theme?.card
+                        ? formatHSL(
+                              convert.hex.hsl(theme.card?.replace("#", "")),
+                          )
+                        : ""};
+                    --card-foreground: ${theme?.cardForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  theme.cardForeground?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --primary: ${theme?.primary
+                        ? formatHSL(
+                              convert.hex.hsl(theme.primary?.replace("#", "")),
+                          )
+                        : ""};
+                    --primary-foreground: ${theme?.primaryForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  theme.primaryForeground?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --secondary: ${theme?.secondary
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  theme.secondary?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --secondary-foreground: ${theme?.secondaryForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  theme.secondaryForeground?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --muted: ${theme?.muted
+                        ? formatHSL(
+                              convert.hex.hsl(theme.muted?.replace("#", "")),
+                          )
+                        : ""};
+                    --muted-foreground: ${theme?.mutedForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  theme.mutedForeground?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --accent: ${theme?.accent
+                        ? formatHSL(
+                              convert.hex.hsl(theme.accent?.replace("#", "")),
+                          )
+                        : ""};
+                    --accent-foreground: ${theme?.accentForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  theme.accentForeground?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --border: ${theme?.border
+                        ? formatHSL(
+                              convert.hex.hsl(theme.border?.replace("#", "")),
+                          )
+                        : ""};
+                    --destructive: ${theme?.destructive
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  theme.destructive?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --input: ${theme?.input
+                        ? formatHSL(
+                              convert.hex.hsl(theme.input?.replace("#", "")),
+                          )
+                        : ""};
+                }
+            `}</style>
+        </div>
+    );
+};
+
+export default Template;
+
+function formatHSL(hsl: HSL): string {
+    return `${hsl[0]} ${hsl[1]}% ${hsl[2]}%`;
 }
 
 const EditableWidget = ({
@@ -133,97 +339,3 @@ const EditableWidget = ({
         />
     );
 };
-
-const Template = (props: TemplateProps) => {
-    const {
-        layout,
-        pageData,
-        editing = false,
-        onEditClick,
-        children,
-        childrenOnTop = false,
-        onAddWidgetBelow,
-        onMoveWidgetUp,
-        onMoveWidgetDown,
-        dispatch,
-        state,
-    } = props;
-    if (!layout) return <></>;
-    const footer = layout.filter(
-        (widget) => widget.name === Footer.metadata.name,
-    )[0];
-    const header = layout.filter(
-        (widget) => widget.name === Header.metadata.name,
-    )[0];
-    const widgetsWithoutHeaderAndFooter = layout.filter(
-        (widget) =>
-            ![Header.metadata.name, Footer.metadata.name].includes(widget.name),
-    );
-    const pageWidgets = widgetsWithoutHeaderAndFooter.map(
-        (item: any, index: number) => (
-            <EditableWidget
-                item={item}
-                key={item.widgetId}
-                editing={editing}
-                onEditClick={onEditClick}
-                pageData={pageData}
-                allowsWidgetAddition={true}
-                allowsUpwardMovement={index !== 0}
-                allowsDownwardMovement={
-                    widgetsWithoutHeaderAndFooter.length - 1 !== index
-                }
-                onAddWidgetBelow={onAddWidgetBelow}
-                onMoveWidgetDown={onMoveWidgetDown}
-                onMoveWidgetUp={onMoveWidgetUp}
-                index={index + 1}
-                dispatch={dispatch}
-                state={state}
-            />
-        ),
-    );
-    return (
-        <div className="flex flex-col font-primary">
-            {header && (
-                <EditableWidget
-                    item={header}
-                    editing={editing}
-                    pageData={pageData}
-                    onEditClick={onEditClick}
-                    allowsWidgetAddition={true}
-                    onAddWidgetBelow={onAddWidgetBelow}
-                    onMoveWidgetDown={onMoveWidgetDown}
-                    onMoveWidgetUp={onMoveWidgetUp}
-                    index={0}
-                    dispatch={dispatch}
-                    state={state}
-                />
-            )}
-            {childrenOnTop && (
-                <Fragment>
-                    {children}
-                    {pageWidgets}
-                </Fragment>
-            )}
-            {!childrenOnTop && (
-                <Fragment>
-                    {pageWidgets}
-                    {children}
-                </Fragment>
-            )}
-            {footer && (
-                <EditableWidget
-                    item={footer}
-                    pageData={pageData}
-                    editing={editing}
-                    onEditClick={onEditClick}
-                    index={layout.length - 1}
-                    dispatch={dispatch}
-                    state={state}
-                />
-            )}
-            <Toaster />
-        </div>
-    );
-};
-
-export default Template;

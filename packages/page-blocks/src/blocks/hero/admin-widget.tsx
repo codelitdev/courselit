@@ -9,7 +9,6 @@ import { Theme, ThemeStyle } from "@courselit/page-models";
 import Settings from "./settings";
 import {
     AdminWidgetPanel,
-    ColorSelector,
     MediaSelector,
     Select,
     TextEditor,
@@ -73,18 +72,7 @@ export default function AdminWidget({
     );
     const [youtubeLink, setYoutubeLink] = useState(settings.youtubeLink);
     const [alignment, setAlignment] = useState(settings.alignment || "left");
-    const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor,
-    );
-    const [foregroundColor, setForegroundColor] = useState(
-        settings.foregroundColor,
-    );
-    const [buttonBackground, setButtonBackground] = useState(
-        settings.buttonBackground,
-    );
-    const [buttonForeground, setButtonForeground] = useState(
-        settings.buttonForeground,
-    );
+
     const [media, setMedia] = useState<Partial<Media>>(settings.media || {});
     const [style, setStyle] = useState(settings.style || "normal");
     const [secondaryButtonAction, setSecondaryButtonAction] = useState(
@@ -92,12 +80,6 @@ export default function AdminWidget({
     );
     const [secondaryButtonCaption, setSecondaryButtonCaption] = useState(
         settings.secondaryButtonCaption,
-    );
-    const [secondaryButtonBackground, setSecondaryButtonBackground] = useState(
-        settings.secondaryButtonBackground,
-    );
-    const [secondaryButtonForeground, setSecondaryButtonForeground] = useState(
-        settings.secondaryButtonForeground,
     );
     const [titleFontSize, setTitleFontSize] = useState(
         settings.titleFontSize || 4,
@@ -134,17 +116,11 @@ export default function AdminWidget({
             youtubeLink,
             media,
             alignment,
-            backgroundColor,
-            foregroundColor,
             style,
-            buttonBackground,
-            buttonForeground,
             mediaRadius: mediaBorderRadius,
             verticalPadding,
             secondaryButtonAction,
             secondaryButtonCaption,
-            secondaryButtonBackground,
-            secondaryButtonForeground,
             titleFontSize,
             descriptionFontSize,
             contentAlignment,
@@ -164,18 +140,12 @@ export default function AdminWidget({
         buttonCaption,
         youtubeLink,
         alignment,
-        backgroundColor,
-        foregroundColor,
         style,
-        buttonBackground,
-        buttonForeground,
         media,
         mediaBorderRadius,
         verticalPadding,
         secondaryButtonAction,
         secondaryButtonCaption,
-        secondaryButtonBackground,
-        secondaryButtonForeground,
         titleFontSize,
         descriptionFontSize,
         contentAlignment,
@@ -251,22 +221,16 @@ export default function AdminWidget({
                                 }
                             />
                         </div>
-                        <Select
-                            title="Aspect ratio"
-                            value={aspectRatio}
-                            options={[
-                                { label: "16/9", value: "16/9" },
-                                { label: "4/3", value: "4/3" },
-                                { label: "1/1", value: "1/1" },
-                                { label: "9/16", value: "9/16" },
-                            ]}
-                            onChange={(value: AspectRatio) =>
-                                setAspectRatio(value)
-                            }
-                        />
                     </div>
                 ) : (
-                    <div>
+                    <div className="flex flex-col gap-2">
+                        <PageBuilderSlider
+                            title="Media border radius"
+                            value={mediaBorderRadius}
+                            onChange={setMediaBorderRadius}
+                            min={0}
+                            max={8}
+                        />
                         <Select
                             title="Object fit"
                             value={objectFit}
@@ -283,23 +247,17 @@ export default function AdminWidget({
                         />
                     </div>
                 )}
-                {/* {media && media.mediaId && (
-                    <Select
-                        title="Media aspect ratio"
-                        value={mediaAspectRatio}
-                        options={[
-                            {
-                                label: "16:9 (rectangle)",
-                                value: "aspect-video",
-                            },
-                            { label: "1:1 (square)", value: "aspect-square" },
-                            { label: "Auto", value: "aspect-auto" },
-                        ]}
-                        onChange={(value: MediaAspectRatio) =>
-                            setMediaAspectRatio(value)
-                        }
-                    />
-                )} */}
+                <Select
+                    title="Aspect ratio"
+                    value={aspectRatio}
+                    options={[
+                        { label: "16:9", value: "16/9" },
+                        { label: "4:3", value: "4/3" },
+                        { label: "1:1", value: "1/1" },
+                        { label: "9:16", value: "9/16" },
+                    ]}
+                    onChange={(value: AspectRatio) => setAspectRatio(value)}
+                />
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Calls to action">
                 <Accordion type="single" collapsible>
@@ -322,20 +280,6 @@ export default function AdminWidget({
                                     }
                                 />
                             </Form>
-                            <ColorSelector
-                                title="Button color"
-                                value={buttonBackground || "inherit"}
-                                onChange={(value?: string) =>
-                                    setButtonBackground(value)
-                                }
-                            />
-                            <ColorSelector
-                                title="Button text color"
-                                value={buttonForeground || "inherit"}
-                                onChange={(value?: string) =>
-                                    setButtonForeground(value)
-                                }
-                            />
                         </AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="secondary">
@@ -359,25 +303,31 @@ export default function AdminWidget({
                                     }
                                 />
                             </Form>
-                            <ColorSelector
-                                title="Button color"
-                                value={secondaryButtonBackground || "inherit"}
-                                onChange={(value?: string) =>
-                                    setSecondaryButtonBackground(value)
-                                }
-                            />
-                            <ColorSelector
-                                title="Button text color"
-                                value={secondaryButtonForeground || "inherit"}
-                                onChange={(value?: string) =>
-                                    setSecondaryButtonForeground(value)
-                                }
-                            />
                         </AccordionContent>
                     </AccordionItem>
                 </Accordion>
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Design">
+                <Select
+                    title="Style"
+                    value={style}
+                    options={[
+                        { label: "Normal", value: "normal" },
+                        { label: "Card", value: "card" },
+                    ]}
+                    onChange={(value: "card" | "normal") => setStyle(value)}
+                />
+                <Select
+                    title="Alignment"
+                    value={alignment}
+                    options={[
+                        { label: "Left", value: "left" },
+                        { label: "Right", value: "right" },
+                    ]}
+                    onChange={(value: Alignment | "right") =>
+                        setAlignment(value)
+                    }
+                />
                 <Select
                     title="Content alignment"
                     value={contentAlignment}
@@ -387,47 +337,20 @@ export default function AdminWidget({
                     ]}
                     onChange={(value: Alignment) => setContentAlignment(value)}
                 />
-                <Select
-                    title="Media alignment"
-                    value={alignment}
-                    options={[
-                        { label: "Left", value: "left" },
-                        { label: "Right", value: "right" },
-                    ]}
-                    onChange={(value) => setAlignment(value)}
-                />
-                <ColorSelector
-                    title="Background color"
-                    value={backgroundColor || "inherit"}
-                    onChange={(value?: string) => setBackgroundColor(value)}
-                />
-                <ColorSelector
-                    title="Text color"
-                    value={foregroundColor || "inherit"}
-                    onChange={(value?: string) => setForegroundColor(value)}
-                />
-                <Select
-                    title="Style"
-                    value={style}
-                    options={[
-                        { label: "Normal", value: "normal" },
-                        { label: "Card", value: "card" },
-                    ]}
-                    onChange={(value: "normal" | "card") => setStyle(value)}
-                />
+
                 <PageBuilderSlider
                     title="Title font size"
-                    min={4}
-                    max={8}
                     value={titleFontSize}
                     onChange={setTitleFontSize}
+                    min={3}
+                    max={8}
                 />
                 <PageBuilderSlider
                     title="Description font size"
-                    min={0}
-                    max={6}
                     value={descriptionFontSize}
                     onChange={setDescriptionFontSize}
+                    min={0}
+                    max={6}
                 />
                 <PageBuilderSlider
                     title="Media border radius"

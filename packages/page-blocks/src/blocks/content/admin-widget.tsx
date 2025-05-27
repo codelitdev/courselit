@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Settings from "./settings";
 import {
     AdminWidgetPanel,
-    ColorSelector,
     Select,
     TextEditor,
     Form,
@@ -32,18 +31,6 @@ export default function AdminWidget({
     const [headerAlignment, setHeaderAlignment] = useState<Alignment>(
         settings.headerAlignment || "center",
     );
-    const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor,
-    );
-    const [foregroundColor, setForegroundColor] = useState(
-        settings.foregroundColor,
-    );
-    const [badgeBackgroundColor, setBadgeBackgroundColor] = useState(
-        settings.badgeBackgroundColor,
-    );
-    const [badgeForegroundColor, setBadgeForegroundColor] = useState(
-        settings.badgeForegroundColor,
-    );
     const [maxWidth, setMaxWidth] = useState<
         ThemeStyle["structure"]["page"]["width"]
     >(settings.maxWidth);
@@ -57,26 +44,11 @@ export default function AdminWidget({
             title,
             description,
             headerAlignment,
-            backgroundColor,
-            foregroundColor,
-            badgeBackgroundColor,
-            badgeForegroundColor,
             maxWidth,
             verticalPadding,
             cssId,
         });
-    }, [
-        title,
-        description,
-        headerAlignment,
-        backgroundColor,
-        foregroundColor,
-        badgeBackgroundColor,
-        badgeForegroundColor,
-        maxWidth,
-        verticalPadding,
-        cssId,
-    ]);
+    }, [title, description, headerAlignment, maxWidth, verticalPadding, cssId]);
 
     return (
         <div className="flex flex-col gap-4 mb-4">
@@ -108,39 +80,9 @@ export default function AdminWidget({
                 />
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Design">
-                <ColorSelector
-                    title="Background color"
-                    value={backgroundColor || "inherit"}
-                    onChange={(value?: string) => setBackgroundColor(value)}
-                />
-                <ColorSelector
-                    title="Text color"
-                    value={foregroundColor || "inherit"}
-                    onChange={(value?: string) => setForegroundColor(value)}
-                />
-                <ColorSelector
-                    title="Badge color"
-                    value={badgeBackgroundColor || "inherit"}
-                    onChange={(value?: string) =>
-                        setBadgeBackgroundColor(value)
-                    }
-                />
-                <ColorSelector
-                    title="Badge text color"
-                    value={badgeForegroundColor || "inherit"}
-                    onChange={(value?: string) =>
-                        setBadgeForegroundColor(value)
-                    }
-                />
-                <MaxWidthSelector
-                    value={maxWidth || theme.theme.structure.page.width}
-                    onChange={setMaxWidth}
-                />
+                <MaxWidthSelector value={maxWidth} onChange={setMaxWidth} />
                 <VerticalPaddingSelector
-                    value={
-                        verticalPadding ||
-                        theme.theme.structure.section.padding.y
-                    }
+                    value={verticalPadding}
                     onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>

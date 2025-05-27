@@ -58,10 +58,6 @@ export default function Widget({
         buttonCaption,
         buttonAction,
         alignment,
-        backgroundColor,
-        color,
-        buttonBackground,
-        buttonForeground,
         textAlignment,
         successMessage,
         failureMessage,
@@ -110,16 +106,6 @@ export default function Widget({
     } else if (product.description && type === Constants.PageType.COMMUNITY) {
         finalDescription = product.description;
     }
-
-    // const actualDescription = description
-    //     ? isEmptyDoc(description)
-    //         ? product.description
-    //             ? JSON.parse(product.description as string)
-    //             : undefined
-    //         : description
-    //     : product.description
-    //       ? JSON.parse(product.description as string)
-    //       : undefined;
 
     let direction: any;
     switch (alignment) {
@@ -197,14 +183,7 @@ export default function Widget({
               : product.name)) as string;
 
     return (
-        <Section
-            theme={overiddenTheme}
-            style={{
-                backgroundColor,
-                color,
-            }}
-            id={cssId}
-        >
+        <Section theme={overiddenTheme} id={cssId}>
             <div
                 style={{
                     flexDirection: direction,
@@ -228,7 +207,6 @@ export default function Widget({
                     className={`text-center ${
                         verticalLayout ? "md:w-full" : "w-full md:w-1/2"
                     }`}
-                    style={{ color }}
                 >
                     <div
                         className={`flex flex-col ${
@@ -311,11 +289,6 @@ export default function Widget({
                                                 />
                                                 <Button
                                                     theme={overiddenTheme}
-                                                    style={{
-                                                        backgroundColor:
-                                                            buttonBackground,
-                                                        color: buttonForeground,
-                                                    }}
                                                     type="submit"
                                                     disabled={
                                                         state.networkAction ||
@@ -334,26 +307,14 @@ export default function Widget({
                                 <Link
                                     href={`/checkout?type=course&id=${product.courseId}`}
                                 >
-                                    <Button
-                                        theme={overiddenTheme}
-                                        style={{
-                                            backgroundColor: buttonBackground,
-                                            color: buttonForeground,
-                                        }}
-                                    >
+                                    <Button theme={overiddenTheme}>
                                         {buttonCaption || "Buy now"}
                                     </Button>
                                 </Link>
                             )}
                         {type === Constants.PageType.SITE && buttonAction && (
                             <Link href={buttonAction}>
-                                <Button
-                                    theme={overiddenTheme}
-                                    style={{
-                                        backgroundColor: buttonBackground,
-                                        color: buttonForeground,
-                                    }}
-                                >
+                                <Button theme={overiddenTheme}>
                                     {buttonCaption || "Set a URL"}
                                 </Button>
                             </Link>
@@ -372,13 +333,7 @@ export default function Widget({
                                 <Link
                                     href={`/checkout?type=community&id=${product.communityId}`}
                                 >
-                                    <Button
-                                        theme={overiddenTheme}
-                                        style={{
-                                            backgroundColor: buttonBackground,
-                                            color: buttonForeground,
-                                        }}
-                                    >
+                                    <Button theme={overiddenTheme}>
                                         {buttonCaption || "Join community"}
                                     </Button>
                                 </Link>

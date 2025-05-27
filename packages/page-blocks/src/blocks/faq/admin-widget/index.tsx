@@ -6,7 +6,6 @@ import { Theme, ThemeStyle } from "@courselit/page-models";
 import { AppDispatch } from "@courselit/state-management";
 import {
     AdminWidgetPanel,
-    ColorSelector,
     Select,
     TextEditor,
     Button,
@@ -79,12 +78,6 @@ export default function AdminWidget({
     const [description, setDescription] = useState(
         settings.description || dummyDescription,
     );
-    const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor,
-    );
-    const [foregroundColor, setForegroundColor] = useState(
-        settings.foregroundColor,
-    );
     const [items, setItems] = useState<Item[]>(
         settings.items || [dummyItem, dummyItem, dummyItem],
     );
@@ -105,8 +98,6 @@ export default function AdminWidget({
             title,
             description,
             headerAlignment,
-            backgroundColor,
-            foregroundColor,
             items,
             maxWidth,
             verticalPadding,
@@ -119,8 +110,6 @@ export default function AdminWidget({
         title,
         description,
         headerAlignment,
-        backgroundColor,
-        foregroundColor,
         items,
         maxWidth,
         verticalPadding,
@@ -212,16 +201,6 @@ export default function AdminWidget({
                 </div>
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Design">
-                <ColorSelector
-                    title="Background color"
-                    value={backgroundColor || "inherit"}
-                    onChange={(value?: string) => setBackgroundColor(value)}
-                />
-                <ColorSelector
-                    title="Text color"
-                    value={foregroundColor || "inherit"}
-                    onChange={(value?: string) => setForegroundColor(value)}
-                />
                 <Select
                     title="Header alignment"
                     value={headerAlignment}

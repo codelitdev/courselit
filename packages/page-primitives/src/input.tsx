@@ -28,11 +28,11 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             typographyStyles?.textDecoration,
             typographyStyles?.textOverflow,
             // Theme interactivity
-            inputStyles?.borderRadius,
             inputStyles?.padding?.x,
             inputStyles?.padding?.y,
             inputStyles?.border?.width,
             inputStyles?.border?.style,
+            inputStyles?.border?.radius,
             // inputStyles?.border?.color,
             inputStyles?.shadow === "shadow-custom" ? "" : inputStyles?.shadow,
             // Theme hover states
@@ -54,7 +54,6 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 className={classes}
                 style={{
                     ...style,
-                    borderColor: theme?.colors?.border,
                     boxShadow:
                         inputStyles?.shadow === "shadow-custom"
                             ? inputStyles?.customShadow

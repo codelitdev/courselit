@@ -2,16 +2,40 @@ import { Theme, ThemeStyle } from "@courselit/page-models";
 
 const themeStyles: ThemeStyle = {
     colors: {
-        primary: "#61AFEF", // bright blue
-        secondary: "#6366F1", // indigo-500 (modern secondary)
-        background: "#282C34", // editor background
-        border: "#3E4451", // panel border
-        text: "#ABB2BF", // light gray text
-        buttonText: "#FFFFFF", // high-contrast button text
-        success: "#98C379", // green
-        error: "#E06C75", // red
-        warning: "#E5C07B", // yellow
-        info: "#56B6C2", // cyan
+        light: {
+            background: "#FFFFFF",
+            foreground: "#282C34",
+            card: "#FFFFFF",
+            cardForeground: "#282C34",
+            primary: "#61AFEF", // bright blue
+            primaryForeground: "#FFFFFF",
+            secondary: "#6366F1", // indigo-500
+            secondaryForeground: "#FFFFFF",
+            muted: "#9ca3af",
+            mutedForeground: "#9ca3af",
+            accent: "#56B6C2", // cyan
+            accentForeground: "#FFFFFF",
+            border: "#3E4451", // panel border
+            destructive: "#E06C75", // red
+            input: "#3E4451",
+        },
+        dark: {
+            background: "#282C34", // editor background
+            foreground: "#ABB2BF", // light gray text
+            card: "#282C34",
+            cardForeground: "#ABB2BF",
+            primary: "#61AFEF", // bright blue
+            primaryForeground: "#FFFFFF",
+            secondary: "#6366F1", // indigo-500
+            secondaryForeground: "#FFFFFF",
+            muted: "#9ca3af",
+            mutedForeground: "#9ca3af",
+            accent: "#56B6C2", // cyan
+            accentForeground: "#FFFFFF",
+            border: "#3E4451", // panel border
+            destructive: "#E06C75", // red
+            input: "#3E4451",
+        },
     },
     typography: {
         preheader: {
@@ -119,7 +143,7 @@ const themeStyles: ThemeStyle = {
                 radius: "rounded-none",
                 style: "border-solid",
             },
-            shadow: "shadow-inner",
+            shadow: "shadow-sm",
             hover: "transition-shadow duration-200 ease-in hover:shadow-md",
         },
         input: {
@@ -129,7 +153,7 @@ const themeStyles: ThemeStyle = {
                 radius: "rounded-none",
                 style: "border-solid",
             },
-            shadow: "shadow-inner",
+            shadow: "shadow-sm",
             hover: "transition-colors duration-150 ease-in-out hover:border-blue-400",
             disabled: {
                 background: "bg-slate-700",

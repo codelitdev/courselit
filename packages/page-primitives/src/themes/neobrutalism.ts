@@ -2,16 +2,40 @@ import { Theme, ThemeStyle } from "@courselit/page-models";
 
 const themeStyles: ThemeStyle = {
     colors: {
-        primary: "#FFF700", // vibrant yellow from the button
-        secondary: "#7DF9FF", // vibrant cyan
-        background: "#6FFFD7", // mint green from the card background
-        border: "#000000", // black outlines everywhere
-        text: "#000000", // black text
-        buttonText: "#000000", // high-contrast button text
-        success: "#2FF2F2", // neon green-cyan
-        error: "#FF4911", // bright orange-red
-        warning: "#FFFF00", // bright yellow
-        info: "#3300FF", // vibrant blue
+        light: {
+            background: "#6FFFD7", // mint green
+            foreground: "#000000", // black text
+            card: "#6FFFD7",
+            cardForeground: "#000000",
+            primary: "#FFF700", // vibrant yellow
+            primaryForeground: "#000000",
+            secondary: "#7DF9FF", // vibrant cyan
+            secondaryForeground: "#000000",
+            muted: "#9ca3af",
+            mutedForeground: "#9ca3af",
+            accent: "#2FF2F2", // neon green-cyan
+            accentForeground: "#000000",
+            border: "#000000", // black outlines
+            destructive: "#FF4911", // bright orange-red
+            input: "#000000", // mint green
+        },
+        dark: {
+            background: "#000000",
+            foreground: "#6FFFD7", // mint green
+            card: "#000000",
+            cardForeground: "#6FFFD7",
+            primary: "#FFF700", // vibrant yellow
+            primaryForeground: "#000000",
+            secondary: "#7DF9FF", // vibrant cyan
+            secondaryForeground: "#000000",
+            muted: "#9ca3af",
+            mutedForeground: "#9ca3af",
+            accent: "#2FF2F2", // neon green-cyan
+            accentForeground: "#000000",
+            border: "#6FFFD7", // mint green
+            destructive: "#FF4911", // bright orange-red
+            input: "#6FFFD7",
+        },
     },
     typography: {
         preheader: {
@@ -118,9 +142,12 @@ const themeStyles: ThemeStyle = {
             hover: "transition-all duration-200 ease-in-out hover:translate-y-1",
         },
         input: {
-            borderRadius: "rounded-none",
             padding: { x: "px-4", y: "py-2" },
-            border: { width: "border-2", style: "border-solid" },
+            border: {
+                width: "border-2",
+                style: "border-solid",
+                radius: "rounded-none",
+            },
             customShadow: "4px 4px 0 0 #000000",
             shadow: "shadow-custom",
             hover: "transition-all duration-150 ease-in-out hover:shadow-none hover:translate-x-1 hover:translate-y-1",

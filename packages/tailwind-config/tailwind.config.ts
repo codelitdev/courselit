@@ -108,10 +108,6 @@ const config: Config = {
             pattern: /px-(4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20)/,
         },
         "transparent",
-        // {
-        //     pattern: /shadow-(neo|neo-sm|neo-lg)/,
-        //     variants: ["hover"],
-        // },
         {
             pattern:
                 /bg-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(50|100|200|300|400|500|600|700|800|900|950)/,

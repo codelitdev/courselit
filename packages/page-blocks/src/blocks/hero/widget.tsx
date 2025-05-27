@@ -29,6 +29,15 @@ const twRoundedMap = {
     "8": "rounded-full",
 };
 
+const twFontSize = {
+    3: "text-4xl",
+    4: "text-5xl",
+    5: "text-6xl",
+    6: "text-7xl",
+    7: "text-8xl",
+    8: "text-9xl",
+};
+
 export default function Widget({
     settings: {
         title,
@@ -38,17 +47,11 @@ export default function Widget({
         media,
         youtubeLink,
         alignment = "left",
-        backgroundColor,
-        foregroundColor,
-        buttonBackground,
-        buttonForeground,
         style = "normal",
         mediaRadius = 2,
         verticalPadding,
         secondaryButtonAction,
         secondaryButtonCaption,
-        secondaryButtonBackground,
-        secondaryButtonForeground,
         titleFontSize,
         descriptionFontSize,
         contentAlignment,
@@ -79,24 +82,14 @@ export default function Widget({
             direction = "md:!flex-row";
     }
 
-    const defaultStyle = {
-        backgroundColor: backgroundColor,
-        color: foregroundColor,
-    };
-
     return (
-        <Section
-            theme={overiddenTheme}
-            style={style === "card" ? {} : defaultStyle}
-            id={cssId}
-        >
+        <Section theme={overiddenTheme} id={cssId}>
             <div
                 className={clsx(
                     "flex flex-col gap-4",
                     direction,
                     style === "card" ? "px-4 py-4 rounded-md" : "",
                 )}
-                style={style === "card" ? defaultStyle : {}}
             >
                 {hasHeroGraphic && (
                     <div
@@ -156,7 +149,10 @@ export default function Widget({
                                 : "items-start",
                         )}
                     >
-                        <Header1 theme={overiddenTheme} className="mb-4">
+                        <Header1
+                            theme={overiddenTheme}
+                            className={`mb-4 ${twFontSize[titleFontSize || 0]}`}
+                        >
                             {title}
                         </Header1>
                         {description && (
@@ -190,13 +186,8 @@ export default function Widget({
                                     theme={overiddenTheme}
                                 >
                                     <Button
-                                        style={{
-                                            backgroundColor: buttonBackground,
-                                            color: buttonForeground,
-                                        }}
                                         theme={overiddenTheme}
                                         className="w-full md:min-w-[150px]"
-                                        // size="lg"
                                     >
                                         {buttonCaption}
                                     </Button>
@@ -209,15 +200,9 @@ export default function Widget({
                                         theme={overiddenTheme}
                                     >
                                         <Button
-                                            style={{
-                                                backgroundColor:
-                                                    secondaryButtonBackground,
-                                                color: secondaryButtonForeground,
-                                            }}
                                             theme={overiddenTheme}
                                             className="w-full md:min-w-[150px]"
                                             variant="secondary"
-                                            // size="lg"
                                         >
                                             {secondaryButtonCaption}
                                         </Button>

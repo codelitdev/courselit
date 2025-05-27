@@ -114,6 +114,7 @@ export default function PageEditor({
     const [pages, setPages] = useState<Page[]>([]);
     const [loadingPages, setLoadingPages] = useState(true);
     const { theme: lastEditedTheme } = useThemes();
+    const [colorMode, setColorMode] = useState<"light" | "dark">("light");
 
     const router = useRouter();
     const debouncedSave = useCallback(
@@ -602,6 +603,8 @@ export default function PageEditor({
                     onThemeChange={(theme) => {
                         setDraftTheme(theme);
                     }}
+                    colorMode={colorMode}
+                    onColorModeChange={(mode) => setColorMode(mode)}
                 />
             )}
             {leftPaneContent === "seo" && (
@@ -869,6 +872,8 @@ export default function PageEditor({
                                             },
                                         })}
                                         dispatch={dispatch}
+                                        colorMode={colorMode}
+                                        id={page.pageId}
                                     />
                                 )}
                             </div>

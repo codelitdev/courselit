@@ -21,14 +21,7 @@ export default interface Settings extends WidgetDefaultSettings {
     description?: Record<string, unknown>;
     headerAlignment: Alignment;
     itemsAlignment: Alignment;
-    backgroundColor?: string;
-    foregroundColor?: string;
     items?: Item[];
-    buttonBackground?: string;
-    buttonForeground?: string;
-    primaryButtonBackground?: string;
-    planTitleColor?: string;
-    cardBorderColor?: string;
     cssId?: string;
     columns?: number;
     pricingSwitcher?: boolean;

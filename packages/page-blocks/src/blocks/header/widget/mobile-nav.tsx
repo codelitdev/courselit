@@ -10,15 +10,9 @@ import { MenuIcon } from "lucide-react";
 interface MobileNavSettings {
     title: string;
     logo: Partial<Media>;
-    color: string;
     links: Link[];
-    linkColor: string;
-    btnBgColor: string;
-    btnColor: string;
     linkFontWeight: "font-normal" | "font-bold" | "font-light";
     spacingBetweenLinks: number;
-    appBarBackground: string;
-    logoColor: string;
     theme: ThemeStyle;
     showLoginControl: boolean;
     isGuest: boolean;
@@ -36,10 +30,6 @@ const MobileNav = (props: MobileNavSettings) => {
                 <Button
                     variant="ghost"
                     size="icon"
-                    style={{
-                        backgroundColor: props.btnBgColor,
-                        color: props.color,
-                    }}
                     theme={theme}
                     className="lg:!hidden"
                 >
@@ -48,11 +38,6 @@ const MobileNav = (props: MobileNavSettings) => {
                 </Button>
             }
             side="right"
-            style={{
-                backgroundColor:
-                    props.appBarBackground || theme?.colors?.background,
-                borderLeft: `1px solid ${props.appBarBackground || theme?.colors?.border}`,
-            }}
         >
             <AppLink
                 href="/"
@@ -71,14 +56,7 @@ const MobileNav = (props: MobileNavSettings) => {
                             />
                         </div>
                     )}
-                    <Header4
-                        style={{
-                            color: props.logoColor || theme?.colors?.text,
-                        }}
-                        theme={theme}
-                    >
-                        {props.title}
-                    </Header4>
+                    <Header4 theme={theme}>{props.title}</Header4>
                 </div>
             </AppLink>
             <ul
@@ -99,18 +77,11 @@ const MobileNav = (props: MobileNavSettings) => {
                             }}
                             isButton={link.isButton}
                             label={link.label}
-                            linkColor={props.linkColor}
-                            btnBgColor={props.btnBgColor}
-                            btnColor={props.btnColor}
                         />
                     ))}
                 {showLoginControl && (
                     <>
-                        <hr
-                            style={{
-                                borderColor: theme?.colors?.border,
-                            }}
-                        />
+                        <hr />
                         {!isGuest && (
                             <PageLink
                                 theme={theme}
@@ -121,9 +92,6 @@ const MobileNav = (props: MobileNavSettings) => {
                                 }}
                                 isButton={false}
                                 label="Dashboard"
-                                linkColor={props.linkColor}
-                                btnBgColor={props.btnBgColor}
-                                btnColor={props.btnColor}
                             />
                         )}
                         <PageLink
@@ -135,9 +103,6 @@ const MobileNav = (props: MobileNavSettings) => {
                                 setOpen(false);
                             }}
                             isButton={false}
-                            linkColor={props.linkColor}
-                            btnBgColor={props.btnBgColor}
-                            btnColor={props.btnColor}
                         />
                     </>
                 )}

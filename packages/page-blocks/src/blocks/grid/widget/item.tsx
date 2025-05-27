@@ -14,12 +14,7 @@ import {
 
 interface ItemmProps {
     item: Item;
-    buttonBackground?: string;
-    buttonForeground?: string;
     alignment: Alignment;
-    backgroundColor?: string;
-    foregroundColor?: string;
-    borderColor?: string;
     borderRadius?: number;
     theme: ThemeStyle;
 }
@@ -33,26 +28,12 @@ export default function Itemm({
         media,
         mediaAlignment,
     },
-    buttonBackground,
-    buttonForeground,
     alignment,
-    backgroundColor,
-    foregroundColor,
-    borderColor,
     // borderRadius,
     theme,
 }: ItemmProps) {
     return (
-        <PageCard
-            className="h-full flex flex-col"
-            style={{
-                backgroundColor: backgroundColor || theme?.colors?.background,
-                color: foregroundColor || theme?.colors?.text,
-                borderColor: borderColor || theme?.colors?.border,
-                // borderRadius,
-            }}
-            theme={theme}
-        >
+        <PageCard className="h-full flex flex-col" theme={theme}>
             <PageCardContent className="" theme={theme}>
                 <PageCardHeader theme={theme}>
                     <div
@@ -103,14 +84,7 @@ export default function Itemm({
                 </article>
                 {buttonAction && buttonCaption && (
                     <Link href={buttonAction} className="w-full">
-                        <Button
-                            className="w-full"
-                            style={{
-                                backgroundColor: buttonBackground,
-                                color: buttonForeground,
-                            }}
-                            theme={theme}
-                        >
+                        <Button className="w-full" theme={theme}>
                             {buttonCaption}
                         </Button>
                     </Link>

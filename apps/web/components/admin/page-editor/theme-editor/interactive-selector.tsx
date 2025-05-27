@@ -859,7 +859,7 @@ function InteractiveSelector({
                         {renderPaddingConfig()}
                         {renderBoxShadowConfig()}
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                                 <Label>Border Radius</Label>
                                 <Select
                                     value={value?.borderRadius || ""}
@@ -890,7 +890,7 @@ function InteractiveSelector({
                                         ))}
                                     </SelectContent>
                                 </Select>
-                            </div>
+                            </div> */}
                             <div className="space-y-2">
                                 <Label>Border Style</Label>
                                 <Select

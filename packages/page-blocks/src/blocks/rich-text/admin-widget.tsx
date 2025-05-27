@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
     AdminWidgetPanel,
-    ColorSelector,
     Select,
     TextEditor,
     PageBuilderSlider,
@@ -45,10 +44,6 @@ const AdminWidget = ({
     const [alignment, setAlignment] = useState<HorizontalAlignment>(
         settings.alignment || "left",
     );
-    const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor,
-    );
-    const [color, setColor] = useState(settings.color);
     const [maxWidth, setMaxWidth] = useState<
         ThemeStyle["structure"]["page"]["width"]
     >(settings.maxWidth);
@@ -64,23 +59,12 @@ const AdminWidget = ({
         onChange({
             text: content,
             alignment,
-            color,
-            backgroundColor,
             verticalPadding,
             maxWidth,
             cssId,
             fontSize,
         });
-    }, [
-        content,
-        alignment,
-        color,
-        backgroundColor,
-        maxWidth,
-        verticalPadding,
-        cssId,
-        fontSize,
-    ]);
+    }, [content, alignment, maxWidth, verticalPadding, cssId, fontSize]);
 
     return (
         <div className="flex flex-col gap-4 mb-4">
@@ -96,16 +80,6 @@ const AdminWidget = ({
                 </div>
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Design">
-                <ColorSelector
-                    title="Text color"
-                    value={color || "inherit"}
-                    onChange={(value?: string) => setColor(value)}
-                />
-                <ColorSelector
-                    title="Background color"
-                    value={backgroundColor || ""}
-                    onChange={(value?: string) => setBackgroundColor(value)}
-                />
                 <Select
                     title="Alignment"
                     value={alignment}
@@ -118,18 +92,6 @@ const AdminWidget = ({
                         setAlignment(value)
                     }
                 />
-                {/* <ContentPaddingSelector
-                    className="mb-2"
-                    value={horizontalPadding}
-                    min={50}
-                    onChange={setHorizontalPadding}
-                />
-                <ContentPaddingSelector
-                    variant="vertical"
-                    className="mb-2"
-                    value={verticalPadding}
-                    onChange={setVerticalPadding}
-                /> */}
                 <PageBuilderSlider
                     title="Font size"
                     min={1}

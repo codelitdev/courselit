@@ -10,8 +10,6 @@ export default interface Settings extends WidgetDefaultSettings {
     description?: Record<string, unknown>;
     headerAlignment: Alignment;
     itemsAlignment: Alignment;
-    backgroundColor?: string;
-    foregroundColor?: string;
     items?: Item[];
     cssId?: string;
 }

@@ -4,7 +4,6 @@ import Settings from "../settings";
 import {
     TextEditor,
     Select,
-    ColorSelector,
     AdminWidgetPanel,
     Form,
     FormField,
@@ -56,16 +55,6 @@ export default function CustomSettings({
     const [buttonCaption, setButtonCaption] = useState(settings.buttonCaption);
     const [buttonAction, setButtonAction] = useState(settings.buttonAction);
     const [alignment, setAlignment] = useState(settings.alignment || "left");
-    const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor,
-    );
-    const [color, setColor] = useState(settings.color);
-    const [buttonBackground, setButtonBackground] = useState(
-        settings.buttonBackground,
-    );
-    const [buttonForeground, setButtonForeground] = useState(
-        settings.buttonForeground,
-    );
     const [textAlignment, setTextAlignment] = useState<Alignment>(
         settings.textAlignment || "left",
     );
@@ -102,10 +91,6 @@ export default function CustomSettings({
             buttonCaption,
             alignment,
             buttonAction,
-            backgroundColor,
-            color,
-            buttonBackground,
-            buttonForeground,
             textAlignment,
             successMessage,
             failureMessage,
@@ -120,10 +105,6 @@ export default function CustomSettings({
         buttonCaption,
         alignment,
         buttonAction,
-        backgroundColor,
-        color,
-        buttonBackground,
-        buttonForeground,
         textAlignment,
         successMessage,
         failureMessage,
@@ -178,20 +159,6 @@ export default function CustomSettings({
                                 }
                             />
                         )}
-                        <ColorSelector
-                            title="Button color"
-                            value={buttonBackground || "inherit"}
-                            onChange={(value?: string) =>
-                                setButtonBackground(value)
-                            }
-                        />
-                        <ColorSelector
-                            title="Button text color"
-                            value={buttonForeground || "inherit"}
-                            onChange={(value?: string) =>
-                                setButtonForeground(value)
-                            }
-                        />
                         {isLeadMagnet && (
                             <>
                                 <div>
@@ -233,16 +200,6 @@ export default function CustomSettings({
             </div>
             <div className="mb-4">
                 <AdminWidgetPanel title="Design">
-                    <ColorSelector
-                        title="Background color"
-                        value={backgroundColor || "inherit"}
-                        onChange={(value?: string) => setBackgroundColor(value)}
-                    />
-                    <ColorSelector
-                        title="Text color"
-                        value={color || "inherit"}
-                        onChange={(value?: string) => setColor(value)}
-                    />
                     <Select
                         title="Text content position"
                         value={alignment}
@@ -252,7 +209,9 @@ export default function CustomSettings({
                             { label: "Left", value: "left" },
                             { label: "Right", value: "right" },
                         ]}
-                        onChange={(value) => setAlignment(value)}
+                        onChange={(
+                            value: "top" | "bottom" | "left" | "right",
+                        ) => setAlignment(value)}
                     />
                     <Select
                         title="Text alignment"
@@ -260,17 +219,13 @@ export default function CustomSettings({
                         options={[
                             { label: "Left", value: "left" },
                             { label: "Center", value: "center" },
+                            { label: "Right", value: "right" },
                         ]}
                         onChange={(value: Alignment) => setTextAlignment(value)}
                     />
-                    <MaxWidthSelector
-                        value={maxWidth || theme.structure.page.width}
-                        onChange={setMaxWidth}
-                    />
+                    <MaxWidthSelector value={maxWidth} onChange={setMaxWidth} />
                     <VerticalPaddingSelector
-                        value={
-                            verticalPadding || theme.structure.section.padding.y
-                        }
+                        value={verticalPadding}
                         onChange={setVerticalPadding}
                     />
                     <PageBuilderSlider

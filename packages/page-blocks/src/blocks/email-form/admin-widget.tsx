@@ -4,7 +4,6 @@ import { AppDispatch } from "@courselit/state-management";
 import type Settings from "./settings";
 import {
     AdminWidgetPanel,
-    ColorSelector,
     Select,
     Form,
     FormField,
@@ -44,18 +43,6 @@ export default function AdminWidget({
     const [failureMessage, setFailureMessage] = useState(
         settings.failureMessage,
     );
-    const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor,
-    );
-    const [foregroundColor, setForegroundColor] = useState(
-        settings.foregroundColor,
-    );
-    const [btnBackgroundColor, setBtnBackgroundColor] = useState(
-        settings.btnBackgroundColor,
-    );
-    const [btnForegroundColor, setBtnForegroundColor] = useState(
-        settings.btnForegroundColor,
-    );
     const [alignment, setAlignment] = useState(settings.alignment || "left");
     const [maxWidth, setMaxWidth] = useState<
         ThemeStyle["structure"]["page"]["width"]
@@ -70,10 +57,6 @@ export default function AdminWidget({
             title,
             subtitle,
             btnText,
-            backgroundColor,
-            foregroundColor,
-            btnBackgroundColor,
-            btnForegroundColor,
             alignment,
             successMessage,
             failureMessage,
@@ -85,10 +68,6 @@ export default function AdminWidget({
         title,
         subtitle,
         btnText,
-        backgroundColor,
-        foregroundColor,
-        btnBackgroundColor,
-        btnForegroundColor,
         alignment,
         successMessage,
         failureMessage,
@@ -139,28 +118,8 @@ export default function AdminWidget({
                         onChange={(e) => setBtnText(e.target.value)}
                     />
                 </Form>
-                <ColorSelector
-                    title="Button color"
-                    value={btnBackgroundColor || "inherit"}
-                    onChange={(value?: string) => setBtnBackgroundColor(value)}
-                />
-                <ColorSelector
-                    title="Button text"
-                    value={btnForegroundColor || "inherit"}
-                    onChange={(value?: string) => setBtnForegroundColor(value)}
-                />
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Design">
-                <ColorSelector
-                    title="Text color"
-                    value={foregroundColor || "inherit"}
-                    onChange={(value?: string) => setForegroundColor(value)}
-                />
-                <ColorSelector
-                    title="Background color"
-                    value={backgroundColor || "inherit"}
-                    onChange={(value?: string) => setBackgroundColor(value)}
-                />
                 <Select
                     value={alignment}
                     title="Alignment"
@@ -173,15 +132,9 @@ export default function AdminWidget({
                         { label: "Right", value: "right" },
                     ]}
                 />
-                <MaxWidthSelector
-                    value={maxWidth || theme.theme.structure.page.width}
-                    onChange={setMaxWidth}
-                />
+                <MaxWidthSelector value={maxWidth} onChange={setMaxWidth} />
                 <VerticalPaddingSelector
-                    value={
-                        verticalPadding ||
-                        theme.theme.structure.section.padding.y
-                    }
+                    value={verticalPadding}
                     onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>

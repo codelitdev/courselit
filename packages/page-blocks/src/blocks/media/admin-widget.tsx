@@ -3,7 +3,6 @@ import type { Address, Media, Profile } from "@courselit/common-models";
 import Settings from "./settings";
 import {
     AdminWidgetPanel,
-    ColorSelector,
     MediaSelector,
     Form,
     FormField,
@@ -41,9 +40,6 @@ export default function AdminWidget({
         settings.mediaRadius || 2,
     );
     const [youtubeLink, setYoutubeLink] = useState(settings.youtubeLink);
-    const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor,
-    );
     const [media, setMedia] = useState<Partial<Media>>(settings.media || {});
     const [maxWidth, setMaxWidth] = useState<
         ThemeStyle["structure"]["page"]["width"]
@@ -66,7 +62,6 @@ export default function AdminWidget({
         onChange({
             youtubeLink,
             media,
-            backgroundColor,
             mediaRadius: mediaBorderRadius,
             maxWidth,
             verticalPadding,
@@ -80,7 +75,6 @@ export default function AdminWidget({
         onSettingsChanged();
     }, [
         youtubeLink,
-        backgroundColor,
         media,
         mediaBorderRadius,
         maxWidth,
@@ -172,11 +166,6 @@ export default function AdminWidget({
                 )}
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Design">
-                <ColorSelector
-                    title="Background color"
-                    value={backgroundColor || "inherit"}
-                    onChange={(value?: string) => setBackgroundColor(value)}
-                />
                 <PageBuilderSlider
                     title="Media border radius"
                     value={mediaBorderRadius}

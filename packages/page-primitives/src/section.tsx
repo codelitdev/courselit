@@ -19,11 +19,11 @@ export const Section: React.FC<SectionProps> = ({
     ...props
 }) => {
     // const classes = cn(theme?.structure?.section?.verticalPadding, className);
-    const classes = className;
+    const classes = cn("bg-background text-foreground", className);
     const styleWithBackground = {
         ...style,
-        backgroundColor: style?.backgroundColor || theme?.colors?.background,
-        color: style?.color || theme?.colors?.text,
+        backgroundColor: style?.backgroundColor,
+        color: style?.color,
     };
 
     return (

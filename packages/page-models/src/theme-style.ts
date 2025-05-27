@@ -139,18 +139,28 @@ export interface DisabledStyle {
     cursor?: Cursor;
 }
 
+export interface Colors {
+    background: string;
+    foreground: string;
+    card: string;
+    cardForeground: string;
+    primary: string;
+    primaryForeground: string;
+    secondary: string;
+    secondaryForeground: string;
+    muted: string;
+    mutedForeground: string;
+    accent: string;
+    accentForeground: string;
+    border: string;
+    destructive: string;
+    input: string;
+}
+
 export interface ThemeStyle {
     colors: {
-        primary: string;
-        secondary: string;
-        background: string;
-        border: string;
-        text: string;
-        buttonText: string;
-        success: string;
-        error: string;
-        warning: string;
-        info: string;
+        light: Colors;
+        dark: Colors;
     };
     typography: {
         preheader: Typography;

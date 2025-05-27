@@ -4,10 +4,8 @@ import ItemEditor from "./item-editor";
 import { Address, Alignment } from "@courselit/common-models";
 import {
     AdminWidgetPanel,
-    ColorSelector,
     Select,
     TextEditor,
-    Button,
     Form,
     FormField,
     CssIdField,
@@ -82,12 +80,6 @@ export default function AdminWidget({
     const [description, setDescription] = useState(
         settings.description || dummyDescription,
     );
-    const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor,
-    );
-    const [foregroundColor, setForegroundColor] = useState(
-        settings.foregroundColor,
-    );
     const [items, setItems] = useState<Item[]>(
         settings.items || [
             dummyItem,
@@ -105,21 +97,6 @@ export default function AdminWidget({
     const [verticalPadding, setVerticalPadding] = useState<
         ThemeStyle["structure"]["section"]["padding"]["y"]
     >(settings.verticalPadding);
-    const [buttonBackground, setButtonBackground] = useState(
-        settings.buttonBackground,
-    );
-    const [buttonForeground, setButtonForeground] = useState(
-        settings.buttonForeground,
-    );
-    const [primaryButtonBackground, setPrimaryButtonBackground] = useState(
-        settings.primaryButtonBackground,
-    );
-    const [planTitleColor, setPlanTitleColor] = useState(
-        settings.planTitleColor,
-    );
-    const [cardBorderColor, setCardBorderColor] = useState(
-        settings.cardBorderColor,
-    );
     const [pricingSwitcher, setPricingSwitcher] = useState(
         typeof settings.pricingSwitcher !== "undefined"
             ? settings.pricingSwitcher
@@ -139,18 +116,11 @@ export default function AdminWidget({
             title,
             description,
             headerAlignment,
-            backgroundColor,
-            foregroundColor,
             items,
             maxWidth,
             verticalPadding,
-            buttonBackground,
-            buttonForeground,
-            primaryButtonBackground,
-            cardBorderColor,
             cssId,
             columns,
-            planTitleColor,
             pricingSwitcher,
             monthlyPriceCaption,
             yearlyPriceCaption,
@@ -162,18 +132,11 @@ export default function AdminWidget({
         title,
         description,
         headerAlignment,
-        backgroundColor,
-        foregroundColor,
         items,
         maxWidth,
         verticalPadding,
-        buttonBackground,
-        buttonForeground,
-        primaryButtonBackground,
-        cardBorderColor,
         cssId,
         columns,
-        planTitleColor,
         pricingSwitcher,
         monthlyPriceCaption,
         yearlyPriceCaption,
@@ -268,66 +231,7 @@ export default function AdminWidget({
                     )}
                 </Form>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Plans">
-                <ul className="flex flex-col gap-2">
-                    {items.map((item: Item, index: number) => (
-                        <li
-                            key={index}
-                            onClick={() => {
-                                hideActionButtons(true, {
-                                    selectedItem: index,
-                                });
-                            }}
-                            className="p-1 border border-transparent hover:border-slate-300 rounded"
-                        >
-                            {item.title}
-                        </li>
-                    ))}
-                </ul>
-                <div>
-                    <Button component="button" onClick={addNewItem}>
-                        Add new plan
-                    </Button>
-                </div>
-            </AdminWidgetPanel>
             <AdminWidgetPanel title="Design">
-                <ColorSelector
-                    title="Background color"
-                    value={backgroundColor || "inherit"}
-                    onChange={(value?: string) => setBackgroundColor(value)}
-                />
-                <ColorSelector
-                    title="Text color"
-                    value={foregroundColor || "inherit"}
-                    onChange={(value?: string) => setForegroundColor(value)}
-                />
-                <ColorSelector
-                    title="Button background color"
-                    value={buttonBackground || "inherit"}
-                    onChange={(value?: string) => setButtonBackground(value)}
-                />
-                <ColorSelector
-                    title="Button text color"
-                    value={buttonForeground || "inherit"}
-                    onChange={(value?: string) => setButtonForeground(value)}
-                />
-                <ColorSelector
-                    title="Primary button background color"
-                    value={primaryButtonBackground || "inherit"}
-                    onChange={(value?: string) =>
-                        setPrimaryButtonBackground(value)
-                    }
-                />
-                <ColorSelector
-                    title="Card border color"
-                    value={cardBorderColor || "inherit"}
-                    onChange={(value?: string) => setCardBorderColor(value)}
-                />
-                <ColorSelector
-                    title="Plan title color"
-                    value={planTitleColor || "inherit"}
-                    onChange={(value?: string) => setPlanTitleColor(value)}
-                />
                 <Select
                     title="Header alignment"
                     value={headerAlignment}
@@ -338,10 +242,10 @@ export default function AdminWidget({
                     onChange={(value: Alignment) => setHeaderAlignment(value)}
                 />
                 <PageBuilderSlider
-                    title="Columns"
+                    title="Number of columns"
+                    value={columns}
                     min={2}
                     max={3}
-                    value={columns}
                     onChange={setColumns}
                 />
                 <MaxWidthSelector

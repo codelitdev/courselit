@@ -25,7 +25,7 @@ export const Badge: React.FC<BadgeProps> = ({
 
     const classes = cn(
         // Base styles
-        "",
+        // "bg-secondary",
         // Theme typography from caption
         typographyStyles?.fontFamily,
         typographyStyles?.fontSize,
@@ -45,10 +45,8 @@ export const Badge: React.FC<BadgeProps> = ({
             className={classes}
             style={{
                 ...style,
-                backgroundColor:
-                    style.backgroundColor || theme?.colors?.secondary,
-                color: style.color || theme?.colors?.buttonText,
-                borderColor: theme?.colors?.border,
+                backgroundColor: style.backgroundColor,
+                color: style.color,
             }}
             {...props}
         >

@@ -5,7 +5,6 @@ import { capitalize, FetchBuilder } from "@courselit/utils";
 import { actionCreators, AppDispatch } from "@courselit/state-management";
 import {
     AdminWidgetPanel,
-    ColorSelector,
     Select,
     TextEditor,
     IconButton,
@@ -56,10 +55,6 @@ export default function AdminWidget({
     const [description, setDescription] = useState(
         settings.description || dummyDescription,
     );
-    const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor,
-    );
-    const [color, setColor] = useState(settings.color);
     const [headerAlignment, setHeaderAlignment] = useState<Alignment>(
         settings.headerAlignment || "left",
     );
@@ -75,8 +70,6 @@ export default function AdminWidget({
         onChange({
             title,
             description,
-            backgroundColor,
-            color,
             products,
             headerAlignment,
             maxWidth,
@@ -87,8 +80,6 @@ export default function AdminWidget({
         products,
         title,
         description,
-        backgroundColor,
-        color,
         headerAlignment,
         maxWidth,
         verticalPadding,
@@ -223,16 +214,6 @@ export default function AdminWidget({
                 </AdminWidgetPanel>
             )}
             <AdminWidgetPanel title="Design">
-                <ColorSelector
-                    title="Background color"
-                    value={backgroundColor || "inherit"}
-                    onChange={(value?: string) => setBackgroundColor(value)}
-                />
-                <ColorSelector
-                    title="Color"
-                    value={color || "inherit"}
-                    onChange={(value?: string) => setColor(value)}
-                />
                 <MaxWidthSelector
                     value={maxWidth || theme.theme.structure.page.width}
                     onChange={setMaxWidth}

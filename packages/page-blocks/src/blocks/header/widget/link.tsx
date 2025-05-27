@@ -10,9 +10,6 @@ export default function Link({
     onClick,
     isButton,
     label,
-    linkColor,
-    btnBgColor,
-    btnColor,
 }: {
     href: string;
     theme: ThemeStyle;
@@ -20,32 +17,15 @@ export default function Link({
     onClick?: () => void;
     isButton: boolean;
     label: string;
-    linkColor: string;
-    btnBgColor: string;
-    btnColor: string;
 }) {
     return (
         <AppLink href={href} className={`${linkFontWeight}`} onClick={onClick}>
             {isButton && (
-                <Button
-                    size="sm"
-                    style={{
-                        background: btnBgColor,
-                        color: btnColor,
-                    }}
-                    theme={theme}
-                >
+                <Button size="sm" theme={theme}>
                     {label}
                 </Button>
             )}
-            {!isButton && (
-                <PageLink
-                    theme={theme}
-                    style={{ color: linkColor || theme?.colors?.text }}
-                >
-                    {label}
-                </PageLink>
-            )}
+            {!isButton && <PageLink theme={theme}>{label}</PageLink>}
         </AppLink>
     );
 }

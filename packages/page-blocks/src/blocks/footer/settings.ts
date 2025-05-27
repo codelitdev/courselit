@@ -23,8 +23,6 @@ export interface Socials {
 }
 
 export default interface Settings extends WidgetDefaultSettings {
-    foregroundColor?: string;
-    backgroundColor?: string;
     title?: string;
     subtitle?: string;
     sections?: Section[];

@@ -4,14 +4,7 @@ import { ThemeStyle } from "@courselit/page-models";
 
 export function SkeletonCard({ theme }: { theme?: ThemeStyle }) {
     return (
-        <Card
-            style={{
-                border: theme
-                    ? `1px solid ${theme?.colors?.border}`
-                    : undefined,
-            }}
-            className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-        >
+        <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
             <div className="relative aspect-video">
                 <Skeleton className="h-full w-full" />
             </div>

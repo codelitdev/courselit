@@ -1,5 +1,5 @@
+import { ThemeStyle } from "@courselit/page-models";
 import mongoose from "mongoose";
-import { Theme } from "@courselit/common-models";
 
 const TypographySchema = new mongoose.Schema(
     {
@@ -15,19 +15,32 @@ const TypographySchema = new mongoose.Schema(
     { _id: false },
 );
 
-export const ThemeSchema = new mongoose.Schema<Theme>({
+const ColorsSchema = new mongoose.Schema(
+    {
+        background: { type: String, required: true },
+        foreground: { type: String, required: true },
+        card: { type: String, required: true },
+        cardForeground: { type: String, required: true },
+        primary: { type: String, required: true },
+        primaryForeground: { type: String, required: true },
+        secondary: { type: String, required: true },
+        secondaryForeground: { type: String, required: true },
+        muted: { type: String, required: true },
+        mutedForeground: { type: String, required: true },
+        accent: { type: String, required: true },
+        accentForeground: { type: String, required: true },
+        border: { type: String, required: true },
+        destructive: { type: String, required: true },
+        input: { type: String, required: true },
+    },
+    { _id: false },
+);
+
+export const ThemeSchema = new mongoose.Schema<ThemeStyle>({
     colors: {
         type: {
-            primary: { type: String, required: true },
-            secondary: { type: String, required: true },
-            background: { type: String, required: true },
-            border: { type: String, required: true },
-            text: { type: String, required: true },
-            buttonText: { type: String, required: true },
-            success: { type: String, required: true },
-            error: { type: String, required: true },
-            warning: { type: String, required: true },
-            info: { type: String, required: true },
+            light: { type: ColorsSchema, required: true },
+            dark: { type: ColorsSchema, required: true },
         },
         _id: false,
     },

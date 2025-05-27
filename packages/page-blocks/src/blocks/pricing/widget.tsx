@@ -28,16 +28,9 @@ export default function Widget({
         title,
         description,
         headerAlignment,
-        backgroundColor,
-        foregroundColor,
         items,
         maxWidth,
         verticalPadding,
-        buttonBackground,
-        buttonForeground,
-        primaryButtonBackground,
-        cardBorderColor,
-        planTitleColor,
         cssId,
         columns = defaultColumns,
         pricingSwitcher = false,
@@ -55,14 +48,7 @@ export default function Widget({
     const [pricing, setPricing] = useState<"monthly" | "yearly">("yearly");
 
     return (
-        <Section
-            theme={overiddenTheme}
-            style={{
-                backgroundColor,
-                color: foregroundColor,
-            }}
-            id={cssId}
-        >
+        <Section theme={overiddenTheme} id={cssId}>
             <div className={`flex flex-col gap-4`}>
                 <div
                     className={`flex flex-col ${
@@ -119,23 +105,12 @@ export default function Widget({
                         {items.map((item, index) => (
                             <PageCard
                                 key={index}
-                                style={{
-                                    backgroundColor,
-                                    color: foregroundColor,
-                                    borderColor:
-                                        cardBorderColor ||
-                                        overiddenTheme?.colors?.border,
-                                    // border: `1px solid ${cardBorderColor || overiddenTheme?.colors?.border}`,
-                                }}
                                 theme={overiddenTheme}
                                 className="p-0"
                             >
                                 <PageCardContent>
                                     <Preheader
                                         className="pt-4"
-                                        style={{
-                                            color: planTitleColor,
-                                        }}
                                         theme={overiddenTheme}
                                     >
                                         {item.title}
@@ -149,9 +124,6 @@ export default function Widget({
                                     </PageCardHeader>
                                     <div className="grow flex flex-col gap-4">
                                         <Text1
-                                            style={{
-                                                color: foregroundColor,
-                                            }}
                                             component="span"
                                             theme={overiddenTheme}
                                         >
@@ -184,26 +156,10 @@ export default function Widget({
                                         >
                                             <Button
                                                 className="w-full"
-                                                style={{
-                                                    backgroundColor:
-                                                        item.primary
-                                                            ? primaryButtonBackground ||
-                                                              overiddenTheme
-                                                                  ?.colors
-                                                                  ?.primary
-                                                            : buttonBackground ||
-                                                              overiddenTheme
-                                                                  ?.colors
-                                                                  ?.secondary,
-                                                    color: buttonForeground,
-                                                    // borderColor: item.primary
-                                                    //     ? ""
-                                                    //     : cardBorderColor || overiddenTheme?.colors?.border,
-                                                }}
                                                 variant={
                                                     item.primary
                                                         ? "default"
-                                                        : "outline"
+                                                        : "secondary"
                                                 }
                                                 theme={overiddenTheme}
                                             >

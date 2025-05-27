@@ -3,12 +3,9 @@ import Settings, { Link } from "../settings";
 import LinkEditor from "./link-editor";
 import {
     AdminWidgetPanel,
-    ColorSelector,
     Select,
     Button,
     Checkbox,
-    FormField,
-    Form,
     Tooltip,
     PageBuilderSlider,
     MaxWidthSelector,
@@ -36,21 +33,6 @@ export default function AdminWidget({
     theme,
 }: AdminWidgetProps): JSX.Element {
     const [links, setLinks] = useState(settings.links || []);
-    const [appBarBackground, setAppBarBackground] = useState<
-        string | undefined
-    >(settings.appBarBackground);
-    const [logoColor, setLogoColor] = useState<string | undefined>(
-        settings.logoColor,
-    );
-    const [loginBtnBgColor, setLoginBtnBgColor] = useState<string | undefined>(
-        settings.loginBtnBgColor,
-    );
-    const [loginBtnColor, setLoginBtnColor] = useState<string | undefined>(
-        settings.loginBtnColor,
-    );
-    const [linkColor, setLinkColor] = useState<string | undefined>(
-        settings.linkColor,
-    );
     const [linkAlignment, setLinkAlignment] = useState(
         settings.linkAlignment || defaultLinkAlignment,
     );
@@ -70,11 +52,6 @@ export default function AdminWidget({
     useEffect(() => {
         onChange({
             links,
-            logoColor,
-            appBarBackground,
-            loginBtnBgColor,
-            loginBtnColor,
-            linkColor,
             linkAlignment,
             showLoginControl,
             linkFontWeight,
@@ -83,11 +60,6 @@ export default function AdminWidget({
         });
     }, [
         links,
-        logoColor,
-        appBarBackground,
-        loginBtnBgColor,
-        linkColor,
-        loginBtnColor,
         linkAlignment,
         showLoginControl,
         linkFontWeight,
@@ -143,32 +115,6 @@ export default function AdminWidget({
                 </div>
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Design">
-                <ColorSelector
-                    title="Logo color"
-                    value={logoColor || ""}
-                    onChange={(value?: string) => setLogoColor(value)}
-                />
-                <ColorSelector
-                    title="Background color"
-                    value={appBarBackground || ""}
-                    onChange={(value?: string) => setAppBarBackground(value)}
-                />
-                <ColorSelector
-                    title="Button background"
-                    tooltip="Affects the login control and links that are shown as buttons"
-                    value={loginBtnBgColor || ""}
-                    onChange={(value?: string) => setLoginBtnBgColor(value)}
-                />
-                <ColorSelector
-                    title="Button text"
-                    value={loginBtnColor || ""}
-                    onChange={(value?: string) => setLoginBtnColor(value)}
-                />
-                <ColorSelector
-                    title="Links"
-                    value={linkColor || ""}
-                    onChange={(value?: string) => setLinkColor(value)}
-                />
                 <Select
                     title="Link font weight"
                     value={linkFontWeight}
@@ -193,20 +139,6 @@ export default function AdminWidget({
                         setLinkAlignment(value)
                     }
                 />
-                <Form
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                    }}
-                >
-                    <FormField
-                        label="Space between links"
-                        value={spacingBetweenLinks}
-                        type="number"
-                        onChange={(e) =>
-                            setSpacingBetweenLinks(+e.target.value)
-                        }
-                    />
-                </Form>
                 <PageBuilderSlider
                     title="Space between links"
                     value={spacingBetweenLinks}

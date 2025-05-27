@@ -9,10 +9,6 @@ export default interface Settings extends WidgetDefaultSettings {
     buttonAction?: string;
     alignment?: "top" | "bottom" | "left" | "right";
     textAlignment?: Alignment;
-    backgroundColor?: string;
-    color?: string;
-    buttonBackground?: string;
-    buttonForeground?: string;
     successMessage?: Record<string, unknown>;
     failureMessage?: string;
     editingViewShowSuccess: "1" | "0";

@@ -2,16 +2,40 @@ import { Theme, ThemeStyle } from "@courselit/page-models";
 
 const themeStyles: ThemeStyle = {
     colors: {
-        primary: "#1E3A8A", // dark indigo
-        secondary: "#D97706", // amber-600
-        background: "#FFFFFF", // white
-        border: "#E5E7EB", // gray-200
-        text: "#111827", // gray-900
-        buttonText: "#FFFFFF", // high-contrast button text
-        success: "#10B981", // green-500
-        error: "#EF4444", // red-500
-        warning: "#F59E0B", // amber-500
-        info: "#3B82F6", // blue-500
+        light: {
+            background: "#FFFFFF", // white
+            foreground: "#111827", // gray-900
+            card: "#FFFFFF",
+            cardForeground: "#111827",
+            primary: "#1E3A8A", // dark indigo
+            primaryForeground: "#FFFFFF",
+            secondary: "#D97706", // amber-600
+            secondaryForeground: "#FFFFFF",
+            muted: "#9ca3af",
+            mutedForeground: "#9ca3af",
+            accent: "#3B82F6", // blue-500
+            accentForeground: "#FFFFFF",
+            border: "#E5E7EB", // gray-200
+            destructive: "#EF4444", // red-500
+            input: "#FFFFFF",
+        },
+        dark: {
+            background: "#111827", // gray-900
+            foreground: "#FFFFFF",
+            card: "#1F2937", // gray-800
+            cardForeground: "#FFFFFF",
+            primary: "#1E3A8A", // dark indigo
+            primaryForeground: "#FFFFFF",
+            secondary: "#D97706", // amber-600
+            secondaryForeground: "#FFFFFF",
+            muted: "#9ca3af",
+            mutedForeground: "#9ca3af",
+            accent: "#3B82F6", // blue-500
+            accentForeground: "#FFFFFF",
+            border: "#374151", // gray-700
+            destructive: "#EF4444", // red-500
+            input: "#1F2937", // gray-800
+        },
     },
     typography: {
         preheader: {
@@ -73,7 +97,6 @@ const themeStyles: ThemeStyle = {
             fontFamily: "font-open-sans",
             fontSize: "text-base",
             fontWeight: "font-medium",
-            textDecoration: "underline",
         },
         button: {
             fontFamily: "font-playfair-display",

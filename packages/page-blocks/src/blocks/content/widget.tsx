@@ -41,10 +41,6 @@ export default function Widget({
         title,
         description,
         headerAlignment,
-        backgroundColor,
-        foregroundColor,
-        badgeBackgroundColor,
-        badgeForegroundColor,
         cssId,
         maxWidth,
         verticalPadding,
@@ -151,14 +147,7 @@ export default function Widget({
     }, [course]);
 
     return (
-        <Section
-            theme={overiddenTheme}
-            style={{
-                backgroundColor,
-                color: foregroundColor,
-            }}
-            id={cssId}
-        >
+        <Section theme={overiddenTheme} id={cssId}>
             <div className={`flex flex-col gap-4`}>
                 <div
                     className={`flex flex-col mb-4 ${
@@ -203,30 +192,17 @@ export default function Widget({
                         <AccordionItem
                             value={group}
                             key={index}
-                            className="border-b-0"
-                            style={{
-                                borderBottom: `1px solid ${overiddenTheme?.colors?.border}`,
-                            }}
+                            // className="border-b-0"
                         >
                             <AccordionTrigger>
                                 <div className="flex grow justify-between mr-2">
                                     <Text1 theme={overiddenTheme}>
                                         {group}
                                     </Text1>
-                                    <Badge
-                                        style={{
-                                            backgroundColor:
-                                                badgeBackgroundColor,
-                                        }}
-                                    >
+                                    <Badge>
                                         <Caption
                                             theme={overiddenTheme}
                                             className="leading-none"
-                                            style={{
-                                                color:
-                                                    badgeForegroundColor ||
-                                                    "white",
-                                            }}
                                         >
                                             {`${formattedCourse[group].length} lessons`}
                                         </Caption>
@@ -245,34 +221,11 @@ export default function Widget({
                                             />
                                             <Link
                                                 href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
-                                                style={{
-                                                    color: foregroundColor,
-                                                }}
                                             >
                                                 <Text1 theme={overiddenTheme}>
                                                     {lesson.title}
                                                 </Text1>
                                             </Link>
-                                            {!lesson.requiresEnrollment && (
-                                                <Badge
-                                                    style={{
-                                                        backgroundColor:
-                                                            badgeBackgroundColor,
-                                                    }}
-                                                >
-                                                    <Caption
-                                                        theme={overiddenTheme}
-                                                        className="leading-none"
-                                                        style={{
-                                                            color:
-                                                                badgeForegroundColor ||
-                                                                "white",
-                                                        }}
-                                                    >
-                                                        Preview
-                                                    </Caption>
-                                                </Badge>
-                                            )}
                                         </div>
                                     ),
                                 )}

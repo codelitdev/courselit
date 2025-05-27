@@ -28,10 +28,6 @@ const Widget = ({
         title,
         subtitle = "Sign up here to get the latest articles, news and updates.",
         btnText,
-        backgroundColor,
-        foregroundColor,
-        btnBackgroundColor,
-        btnForegroundColor,
         alignment = "left",
         successMessage,
         failureMessage,
@@ -132,14 +128,7 @@ const Widget = ({
     };
 
     return (
-        <Section
-            theme={overiddenTheme}
-            style={{
-                backgroundColor,
-                color: foregroundColor,
-            }}
-            id={cssId}
-        >
+        <Section theme={overiddenTheme} id={cssId}>
             <Form
                 onSubmit={onSubmit}
                 className={`flex flex-col gap-4`}
@@ -217,10 +206,6 @@ const Widget = ({
                     )}
                     <Button
                         theme={overiddenTheme}
-                        style={{
-                            backgroundColor: btnBackgroundColor,
-                            color: btnForegroundColor,
-                        }}
                         disabled={
                             !editing &&
                             (isSubmitting ||

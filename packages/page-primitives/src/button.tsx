@@ -63,10 +63,8 @@ export const Button: React.FC<ButtonProps> = ({
             className={classes}
             style={{
                 ...style,
-                backgroundColor:
-                    style.backgroundColor || theme?.colors?.primary,
-                color: style.color || theme?.colors?.buttonText,
-                borderColor: theme?.colors?.border,
+                backgroundColor: style.backgroundColor,
+                color: style.color,
                 boxShadow:
                     buttonStyles?.shadow === "shadow-custom"
                         ? buttonStyles?.customShadow

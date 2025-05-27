@@ -25,8 +25,6 @@ const Widget = ({
     settings: {
         text,
         alignment,
-        backgroundColor,
-        color,
         cssId,
         maxWidth,
         verticalPadding,
@@ -46,8 +44,6 @@ const Widget = ({
         <Section
             theme={overiddenTheme}
             style={{
-                backgroundColor,
-                color,
                 textAlign: alignment,
             }}
             id={cssId}

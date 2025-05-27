@@ -10,11 +10,11 @@ export interface Link {
 
 export default interface Settings extends WidgetDefaultSettings {
     links: Link[];
-    appBarBackground: string;
-    logoColor: string;
-    loginBtnColor: string;
-    loginBtnBgColor: string;
-    linkColor: string;
+    // appBarBackground: string;
+    // logoColor: string;
+    // loginBtnColor: string;
+    // loginBtnBgColor: string;
+    // linkColor: string;
     linkAlignment: "left" | "right" | "center";
     showLoginControl: boolean;
     linkFontWeight: "font-normal" | "font-light" | "font-bold";

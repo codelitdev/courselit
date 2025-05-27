@@ -4,7 +4,6 @@ import Settings from "./settings";
 import { State } from "@courselit/common-models";
 import {
     titleFontSize as defaultTitleFontSize,
-    // subtitleFontSize as defaultSubtitleFontSize,
     socials as defaultSocials,
     socialIconsSize as defaultSocialIconsSize,
 } from "./defaults";
@@ -31,21 +30,11 @@ export interface WidgetProps {
     state: State;
 }
 
-// const twSubtitleFontSizeMap = {
-//     "1": "text-base",
-//     "2": "text-lg",
-//     "3": "text-xl",
-//     "4": "text-2xl",
-// };
-
 const Widget = ({
     settings: {
-        backgroundColor,
-        foregroundColor,
         verticalPadding,
         sections,
         titleFontSize = defaultTitleFontSize,
-        // subtitleFontSize = defaultSubtitleFontSize,
         socials = defaultSocials,
         socialIconsSize = defaultSocialIconsSize,
         maxWidth,
@@ -58,20 +47,9 @@ const Widget = ({
         maxWidth || theme.theme.structure.page.width;
     overiddenTheme.structure.section.padding.y =
         verticalPadding || theme.theme.structure.section.padding.y;
-    const linkProps = {
-        color: foregroundColor,
-        textDecoration: "none",
-    };
 
     return (
-        <Section
-            theme={overiddenTheme}
-            component="footer"
-            style={{
-                backgroundColor,
-                color: foregroundColor,
-            }}
-        >
+        <Section theme={overiddenTheme} component="footer" className="border-t">
             <div
                 className={`flex flex-col lg:justify-between lg:!flex-row w-full gap-4`}
             >
@@ -86,11 +64,7 @@ const Widget = ({
                         {Object.keys(socials).map((key) => (
                             <React.Fragment key={key}>
                                 {socials[key] && (
-                                    <Link
-                                        key={key}
-                                        href={socials[key]}
-                                        {...linkProps}
-                                    >
+                                    <Link key={key} href={socials[key]}>
                                         {key === "facebook" && (
                                             <Facebook
                                                 width={socialIconsSize}
@@ -167,16 +141,9 @@ const Widget = ({
                                 </Header4>
                                 <div className="flex flex-col gap-2">
                                     {section.links.map((link, index) => (
-                                        <Link
-                                            key={index}
-                                            href={link.href}
-                                            {...linkProps}
-                                        >
+                                        <Link key={index} href={link.href}>
                                             <PageLink
                                                 theme={overiddenTheme}
-                                                style={{
-                                                    color: foregroundColor,
-                                                }}
                                                 className="text-xs"
                                             >
                                                 {link.label}

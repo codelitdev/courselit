@@ -22,7 +22,6 @@ export default function Widget({
     settings: {
         media,
         youtubeLink,
-        backgroundColor,
         mediaRadius = 0,
         cssId,
         playVideoInModal,
@@ -42,13 +41,7 @@ export default function Widget({
     const hasHeroGraphic = youtubeLink || (media && media.mediaId);
 
     return (
-        <Section
-            theme={overiddenTheme}
-            style={{
-                backgroundColor,
-            }}
-            id={cssId}
-        >
+        <Section theme={overiddenTheme} id={cssId}>
             <div className={`flex flex-col gap-4`}>
                 {hasHeroGraphic && (
                     <div>

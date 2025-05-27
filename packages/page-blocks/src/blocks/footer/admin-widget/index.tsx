@@ -3,7 +3,6 @@ import type Settings from "../settings";
 import {
     AdminWidgetPanel,
     Button,
-    ColorSelector,
     IconButton,
     PageBuilderSlider,
     Accordion,
@@ -20,7 +19,6 @@ import { Check } from "@courselit/icons";
 import LinkEditor from "./link-editor";
 import {
     titleFontSize as defaultTitleFontSize,
-    // subtitleFontSize as defaultSubtitleFontSize,
     socials as defaultSocials,
     socialIconsSize as defaultSocialIconsSize,
 } from "../defaults";
@@ -59,12 +57,6 @@ export default function AdminWidget({
             },
         ],
     );
-    const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor,
-    );
-    const [foregroundColor, setForegroundColor] = useState(
-        settings.foregroundColor,
-    );
     const [maxWidth, setMaxWidth] = useState<
         ThemeStyle["structure"]["page"]["width"]
     >(settings.maxWidth);
@@ -83,30 +75,21 @@ export default function AdminWidget({
     const [socialIconsSize, setSocialIconsSize] = useState(
         settings.socialIconsSize || defaultSocialIconsSize,
     );
-    // const [subtitleFontSize, setSubtitleFontSize] = useState(
-    //     settings.subtitleFontSize || defaultSubtitleFontSize,
-    // );
 
     useEffect(() => {
         onChange({
             sections,
-            backgroundColor,
-            foregroundColor,
             maxWidth,
             verticalPadding,
             titleFontSize,
             socials,
             socialIconsSize,
-            // subtitleFontSize,
         });
     }, [
         sections,
-        backgroundColor,
-        foregroundColor,
         maxWidth,
         verticalPadding,
         titleFontSize,
-        // subtitleFontSize,
         socials,
         socialIconsSize,
     ]);
@@ -249,130 +232,36 @@ export default function AdminWidget({
                                     />
                                     <div className="flex justify-end">
                                         <Button
+                                            component="button"
                                             onClick={() =>
                                                 addNewLink(sectionIndex)
                                             }
-                                            fullWidth
                                         >
                                             Add new link
                                         </Button>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <Button
-                                            onClick={() => {
-                                                if (confirmDelete) {
-                                                    const newSections = [
-                                                        ...sections,
-                                                    ];
-                                                    newSections.splice(
-                                                        sectionIndex,
-                                                        1,
-                                                    );
-                                                    setSections(newSections);
-                                                    setConfirmDelete(false);
-                                                } else {
-                                                    setConfirmDelete(true);
-                                                }
-                                            }}
-                                        >
-                                            {confirmDelete
-                                                ? "Sure?"
-                                                : "Delete section"}
-                                        </Button>
-                                        {confirmDelete && (
-                                            <Button
-                                                onClick={() =>
-                                                    setConfirmDelete(false)
-                                                }
-                                                variant="secondary"
-                                            >
-                                                Cancel
-                                            </Button>
-                                        )}
                                     </div>
                                 </AccordionContent>
                             </AccordionItem>
                         ))}
                     </Accordion>
                 )}
-                <Button
-                    onClick={addNewSection}
-                    disabled={sections.length >= 5}
-                    fullWidth
-                >
-                    Add new section
-                </Button>
-            </AdminWidgetPanel>
-            <AdminWidgetPanel title="Social media">
-                <Form className="flex flex-col gap-2">
-                    <FormField
-                        label="Facebook"
-                        value={socials.facebook}
-                        onChange={(e) => setSocial("facebook", e.target.value)}
-                    />
-                    <FormField
-                        label="Twitter"
-                        value={socials.twitter}
-                        onChange={(e) => setSocial("twitter", e.target.value)}
-                    />
-                    <FormField
-                        label="Instagram"
-                        value={socials.instagram}
-                        onChange={(e) => setSocial("instagram", e.target.value)}
-                    />
-                    <FormField
-                        label="YouTube"
-                        value={socials.youtube}
-                        onChange={(e) => setSocial("youtube", e.target.value)}
-                    />
-                    <FormField
-                        label="Linkedin"
-                        value={socials.linkedin}
-                        onChange={(e) => setSocial("linkedin", e.target.value)}
-                    />
-                    <FormField
-                        label="Discord"
-                        value={socials.discord}
-                        onChange={(e) => setSocial("discord", e.target.value)}
-                    />
-                    <FormField
-                        label="Github"
-                        value={socials.github}
-                        onChange={(e) => setSocial("github", e.target.value)}
-                    />
-                </Form>
+                <div className="flex justify-end mt-4">
+                    <Button
+                        component="button"
+                        onClick={addNewSection}
+                        disabled={sections.length >= 5}
+                    >
+                        Add new section
+                    </Button>
+                </div>
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Design">
-                <ColorSelector
-                    title="Text color"
-                    value={foregroundColor || "inherit"}
-                    onChange={(value?: string) => setForegroundColor(value)}
-                />
-                <ColorSelector
-                    title="Background color"
-                    value={backgroundColor || "inherit"}
-                    onChange={(value?: string) => setBackgroundColor(value)}
-                />
                 <PageBuilderSlider
                     title="Title font size"
-                    min={2}
-                    max={4}
                     value={titleFontSize}
                     onChange={setTitleFontSize}
-                />
-                {/* <PageBuilderSlider
-                    title="Subtitle font size"
                     min={1}
                     max={4}
-                    value={subtitleFontSize}
-                    onChange={setSubtitleFontSize}
-                /> */}
-                <PageBuilderSlider
-                    title="Social icons size"
-                    min={16}
-                    max={48}
-                    value={socialIconsSize}
-                    onChange={setSocialIconsSize}
                 />
                 <MaxWidthSelector
                     value={maxWidth || theme.theme.structure.page.width}
@@ -384,6 +273,52 @@ export default function AdminWidget({
                         theme.theme.structure.section.padding.y
                     }
                     onChange={setVerticalPadding}
+                />
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Socials">
+                <Form>
+                    <FormField
+                        label="Facebook"
+                        value={socials.facebook || ""}
+                        onChange={(e) => setSocial("facebook", e.target.value)}
+                    />
+                    <FormField
+                        label="Twitter"
+                        value={socials.twitter || ""}
+                        onChange={(e) => setSocial("twitter", e.target.value)}
+                    />
+                    <FormField
+                        label="Instagram"
+                        value={socials.instagram || ""}
+                        onChange={(e) => setSocial("instagram", e.target.value)}
+                    />
+                    <FormField
+                        label="LinkedIn"
+                        value={socials.linkedin || ""}
+                        onChange={(e) => setSocial("linkedin", e.target.value)}
+                    />
+                    <FormField
+                        label="YouTube"
+                        value={socials.youtube || ""}
+                        onChange={(e) => setSocial("youtube", e.target.value)}
+                    />
+                    <FormField
+                        label="Discord"
+                        value={socials.discord || ""}
+                        onChange={(e) => setSocial("discord", e.target.value)}
+                    />
+                    <FormField
+                        label="GitHub"
+                        value={socials.github || ""}
+                        onChange={(e) => setSocial("github", e.target.value)}
+                    />
+                </Form>
+                <PageBuilderSlider
+                    title="Social icons size"
+                    value={socialIconsSize}
+                    onChange={setSocialIconsSize}
+                    min={16}
+                    max={32}
                 />
             </AdminWidgetPanel>
         </div>

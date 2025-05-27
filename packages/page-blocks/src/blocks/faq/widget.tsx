@@ -21,8 +21,6 @@ export default function Widget({
         title,
         description,
         headerAlignment,
-        backgroundColor,
-        foregroundColor,
         items,
         cssId,
         maxWidth,
@@ -38,14 +36,7 @@ export default function Widget({
         verticalPadding || theme.theme.structure.section.padding.y;
 
     return (
-        <Section
-            theme={overiddenTheme}
-            style={{
-                backgroundColor,
-                color: foregroundColor,
-            }}
-            id={cssId}
-        >
+        <Section theme={overiddenTheme} id={cssId}>
             <div className={`flex flex-col gap-4`}>
                 <div
                     className={`flex flex-col ${
@@ -78,10 +69,7 @@ export default function Widget({
                                 <AccordionItem
                                     key={item.title}
                                     value={`${item.title}-${index}`}
-                                    className="border-b-0"
-                                    style={{
-                                        borderBottom: `1px solid ${overiddenTheme?.colors?.border}`,
-                                    }}
+                                    // className="border-b-0"
                                 >
                                     <AccordionTrigger>
                                         <Text1 theme={overiddenTheme}>

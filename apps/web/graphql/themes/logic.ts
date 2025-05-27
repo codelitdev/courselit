@@ -119,7 +119,10 @@ export const updateDraftTheme = async (
     }
 
     if (colors) {
-        theme.draftTheme.colors = JSON.parse(JSON.stringify(colors));
+        theme.draftTheme.colors.light = JSON.parse(
+            JSON.stringify(colors.light),
+        );
+        theme.draftTheme.colors.dark = JSON.parse(JSON.stringify(colors.dark));
     }
 
     if (typography) {

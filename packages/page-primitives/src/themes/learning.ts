@@ -2,16 +2,40 @@ import { Theme, ThemeStyle } from "@courselit/page-models";
 
 const themeStyles: ThemeStyle = {
     colors: {
-        primary: "#2563EB", // blue-600
-        secondary: "#6366F1", // indigo-500 (slightly lighter for modern look)
-        background: "#F8FAFC", // slate-50 (softer, more modern)
-        border: "#E2E8F0", // slate-200 (softer border)
-        text: "#0F172A", // slate-900 (higher contrast)
-        buttonText: "#FFFFFF", // high-contrast button text
-        success: "#22C55E", // green-500
-        error: "#EF4444", // red-500
-        warning: "#F59E42", // amber-400
-        info: "#3B82F6", // blue-500
+        light: {
+            background: "#f5f5ff",
+            foreground: "#2a2a4a",
+            card: "#ffffff",
+            cardForeground: "#2a2a4a",
+            primary: "#6e56cf",
+            primaryForeground: "#ffffff",
+            secondary: "#e4dfff",
+            secondaryForeground: "#4a4080",
+            muted: "#f0f0fa",
+            mutedForeground: "#6c6c8a",
+            accent: "#d8e6ff",
+            accentForeground: "#2a2a4a",
+            border: "#e0e0f0",
+            destructive: "#ff5470",
+            input: "#e0e0f0",
+        },
+        dark: {
+            background: "#0f0f1a",
+            foreground: "#e2e2f5",
+            card: "#1a1a2e",
+            cardForeground: "#e2e2f5",
+            primary: "#a48fff",
+            primaryForeground: "#0f0f1a",
+            secondary: "#2d2b55",
+            secondaryForeground: "#c4c2ff",
+            muted: "#222244",
+            mutedForeground: "#a0a0c0",
+            accent: "#303060",
+            accentForeground: "#e2e2f5",
+            border: "#303052",
+            destructive: "#ff5470",
+            input: "#303052",
+        },
     },
     typography: {
         preheader: {
@@ -73,7 +97,6 @@ const themeStyles: ThemeStyle = {
             fontFamily: "font-open-sans",
             fontSize: "text-base",
             fontWeight: "font-semibold",
-            textDecoration: "underline",
         },
         button: {
             fontFamily: "font-inter",
@@ -97,9 +120,9 @@ const themeStyles: ThemeStyle = {
         button: {
             padding: { x: "px-6", y: "py-4" },
             border: {
-                width: "border-2",
+                // width: "border-2",
                 radius: "rounded",
-                style: "border-solid",
+                // style: "border-solid",
             },
             shadow: "shadow-lg",
             hover: "transition-all duration-200 ease-in-out hover:bg-blue-700 hover:shadow-xl hover:scale-105",
@@ -126,7 +149,10 @@ const themeStyles: ThemeStyle = {
         input: {
             borderRadius: "rounded-lg",
             padding: { x: "px-5", y: "py-3" },
-            border: { width: "border-2", style: "border-solid" },
+            border: {
+                // width: "border-2",
+                // style: "border-solid"
+            },
             shadow: "shadow",
             hover: "transition-all duration-150 ease-in-out hover:border-blue-400 hover:shadow-md",
             disabled: {

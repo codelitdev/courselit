@@ -17,8 +17,6 @@ export default function Widget({
         products,
         title,
         description,
-        backgroundColor,
-        color,
         headerAlignment,
         maxWidth,
         verticalPadding,
@@ -45,7 +43,6 @@ export default function Widget({
     }, [products]);
 
     const loadCourses = async () => {
-        // const productsArgs = getGraphQLQueryStringFromObject(products);
         const query = `
             query ($ids: [String]) {
                 products: getProducts(ids: $ids, limit: 1000, publicView: true) {
@@ -102,14 +99,7 @@ export default function Widget({
     };
 
     return (
-        <Section
-            theme={overiddenTheme}
-            style={{
-                backgroundColor,
-                color,
-            }}
-            id={cssId}
-        >
+        <Section theme={overiddenTheme} id={cssId}>
             <div className={`flex flex-col w-full gap-4`}>
                 <div
                     className="flex flex-col mb-4"

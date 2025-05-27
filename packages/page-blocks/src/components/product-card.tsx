@@ -24,16 +24,7 @@ export function ProductCard({
     badgeChildren?: any;
 }) {
     return (
-        <PageCard
-            isLink={true}
-            className="overflow-hidden"
-            style={{
-                backgroundColor: theme?.colors?.background,
-                color: theme?.colors?.text,
-                borderColor: theme?.colors?.border,
-            }}
-            theme={theme}
-        >
+        <PageCard isLink={true} className="overflow-hidden" theme={theme}>
             <Link
                 href={href}
                 style={{
@@ -73,15 +64,7 @@ export function ProductCard({
 
 export function ProductCardSkeleton({ theme }: { theme?: ThemeStyle }) {
     return (
-        <PageCard
-            className="overflow-hidden"
-            style={{
-                backgroundColor: theme?.colors?.background,
-                color: theme?.colors?.text,
-                borderColor: theme?.colors?.border,
-            }}
-            theme={theme}
-        >
+        <PageCard className="overflow-hidden" theme={theme}>
             <Skeleton className="aspect-video w-full" />
             <PageCardContent theme={theme}>
                 <Skeleton className="h-6 w-3/4 mb-4" />

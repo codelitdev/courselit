@@ -4,7 +4,6 @@ import ItemEditor from "./item-editor";
 import { Address, Profile, Alignment } from "@courselit/common-models";
 import {
     AdminWidgetPanel,
-    ColorSelector,
     Select,
     TextEditor,
     Button,
@@ -14,9 +13,11 @@ import {
     PageBuilderSlider,
     MaxWidthSelector,
     VerticalPaddingSelector,
+    Button2,
 } from "@courselit/components-library";
 import { columns as defaultColumns } from "../defaults";
 import { Theme, ThemeStyle } from "@courselit/page-models";
+import { PencilIcon } from "lucide-react";
 
 export interface AdminWidgetProps {
     settings: Settings;
@@ -78,18 +79,6 @@ export default function AdminWidget({
     );
     const [buttonAction, setButtonAction] = useState(settings.buttonAction);
     const [buttonCaption, setButtonCaption] = useState(settings.buttonCaption);
-    const [backgroundColor, setBackgroundColor] = useState(
-        settings.backgroundColor,
-    );
-    const [foregroundColor, setForegroundColor] = useState(
-        settings.foregroundColor,
-    );
-    const [buttonBackground, setButtonBackground] = useState(
-        settings.buttonBackground,
-    );
-    const [buttonForeground, setButtonForeground] = useState(
-        settings.buttonForeground,
-    );
     const [items, setItems] = useState<Item[]>(
         settings.items || [dummyItem, dummyItem, dummyItem],
     );
@@ -106,18 +95,6 @@ export default function AdminWidget({
     const [verticalPadding, setVerticalPadding] = useState<
         ThemeStyle["structure"]["section"]["padding"]["y"]
     >(settings.verticalPadding);
-    const [itemBackgroundColor, setItemBackgroundColor] = useState(
-        settings.itemBackgroundColor,
-    );
-    const [itemForegroundColor, setItemForegroundColor] = useState(
-        settings.itemForegroundColor,
-    );
-    const [itemBorderColor, setItemBorderColor] = useState(
-        settings.itemBorderColor,
-    );
-    // const [itemBorderRadius, setItemBorderRadius] = useState(
-    //     settings.itemBorderRadius,
-    // );
     const [cssId, setCssId] = useState(settings.cssId);
     const [columns, setColumns] = useState(settings.columns || defaultColumns);
 
@@ -128,18 +105,10 @@ export default function AdminWidget({
             headerAlignment,
             buttonAction,
             buttonCaption,
-            backgroundColor,
-            foregroundColor,
-            buttonBackground,
-            buttonForeground,
             items,
             itemsAlignment,
             maxWidth,
             verticalPadding,
-            itemBackgroundColor,
-            itemForegroundColor,
-            itemBorderColor,
-            // itemBorderRadius,
             cssId,
             columns,
         });
@@ -152,18 +121,10 @@ export default function AdminWidget({
         headerAlignment,
         buttonAction,
         buttonCaption,
-        backgroundColor,
-        foregroundColor,
-        buttonBackground,
-        buttonForeground,
         items,
         itemsAlignment,
         maxWidth,
         verticalPadding,
-        itemBackgroundColor,
-        itemForegroundColor,
-        itemBorderColor,
-        // itemBorderRadius,
         cssId,
         columns,
     ]);
@@ -248,31 +209,43 @@ export default function AdminWidget({
                         label="Button Action"
                         value={buttonAction}
                         onChange={(e) => setButtonAction(e.target.value)}
-                        fullWidth
                     />
                 </Form>
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Items">
-                <ul className="flex flex-col gap-2">
-                    {items.map((item: Item, index: number) => (
-                        <li
-                            key={item.title}
-                            onClick={() => {
-                                hideActionButtons(true, {
-                                    selectedItem: index,
-                                });
-                            }}
-                            className="p-1 border border-transparent hover:border-slate-300 rounded"
+                <div className="flex flex-col gap-4">
+                    {items.map((item, index) => (
+                        <div
+                            key={index}
+                            className="flex flex-col gap-2 p-2 border rounded"
                         >
-                            {item.title}
-                        </li>
+                            <div className="flex justify-between items-center">
+                                <h3 className="font-medium">
+                                    {item.title || "Untitled"}
+                                </h3>
+                                <Button2
+                                    size="icon"
+                                    variant="outline"
+                                    onClick={() => {
+                                        setItemBeingEditedIndex(index);
+                                        hideActionButtons(true, {});
+                                    }}
+                                >
+                                    <PencilIcon className="w-4 h-4" />
+                                </Button2>
+                            </div>
+                        </div>
                     ))}
-                </ul>
-                <div>
-                    <Button component="button" onClick={addNewItem}>
+                    <Button
+                        component="button"
+                        onClick={addNewItem}
+                        className="w-full"
+                    >
                         Add new item
                     </Button>
                 </div>
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Design">
                 <Select
                     title="Items alignment"
                     value={itemsAlignment}
@@ -282,56 +255,12 @@ export default function AdminWidget({
                     ]}
                     onChange={(value: Alignment) => setItemsAlignment(value)}
                 />
-            </AdminWidgetPanel>
-            <AdminWidgetPanel title="Design">
-                <ColorSelector
-                    title="Background color"
-                    value={backgroundColor || "inherit"}
-                    onChange={(value?: string) => setBackgroundColor(value)}
-                />
-                <ColorSelector
-                    title="Text color"
-                    value={foregroundColor || "inherit"}
-                    onChange={(value?: string) => setForegroundColor(value)}
-                />
-                <ColorSelector
-                    title="Item background color"
-                    value={itemBackgroundColor || "inherit"}
-                    onChange={(value?: string) => setItemBackgroundColor(value)}
-                />
-                <ColorSelector
-                    title="Item text color"
-                    value={itemForegroundColor || "inherit"}
-                    onChange={(value?: string) => setItemForegroundColor(value)}
-                />
-                <ColorSelector
-                    title="Item border color"
-                    value={itemBorderColor || "inherit"}
-                    onChange={(value?: string) => setItemBorderColor(value)}
-                />
-                <ColorSelector
-                    title="CTA button background color"
-                    value={buttonBackground || "inherit"}
-                    onChange={(value?: string) => setButtonBackground(value)}
-                />
-                <ColorSelector
-                    title="CTA button text color"
-                    value={buttonForeground || "inherit"}
-                    onChange={(value?: string) => setButtonForeground(value)}
-                />
-                {/* <PageBuilderSlider
-                    title="Item border radius"
-                    max={40}
-                    min={0}
-                    value={itemBorderRadius}
-                    onChange={setItemBorderRadius}
-                /> */}
                 <PageBuilderSlider
                     title="Columns"
-                    min={2}
-                    max={3}
                     value={columns}
                     onChange={setColumns}
+                    min={2}
+                    max={3}
                 />
                 <MaxWidthSelector
                     value={maxWidth || theme.theme.structure.page.width}
@@ -344,8 +273,6 @@ export default function AdminWidget({
                     }
                     onChange={setVerticalPadding}
                 />
-            </AdminWidgetPanel>
-            <AdminWidgetPanel title="Advanced">
                 <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
         </div>

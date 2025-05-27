@@ -40,12 +40,7 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
     return (
         <Section
             theme={overiddenTheme}
-            className={clsx("sticky top-0 z-10 backdrop-blur")}
-            style={{
-                backgroundColor: `${settings.appBarBackground || overiddenTheme.colors.background}`,
-                color: settings.linkColor,
-                borderBottom: `1px solid ${settings.appBarBackground || overiddenTheme.colors.border}`,
-            }}
+            className={clsx("sticky top-0 z-10 backdrop-blur border-b")}
             component="header"
         >
             <div className={`flex justify-between items-center w-full`}>
@@ -62,14 +57,7 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                                 />
                             </div>
                         )}
-                        <Header4
-                            theme={overiddenTheme}
-                            style={{
-                                color:
-                                    settings.logoColor ||
-                                    overiddenTheme?.colors?.text,
-                            }}
-                        >
+                        <Header4 theme={overiddenTheme}>
                             {state.siteinfo.title}
                         </Header4>
                     </div>
@@ -97,9 +85,6 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                                     linkFontWeight={linkFontWeight}
                                     isButton={link.isButton}
                                     label={link.label}
-                                    linkColor={settings.linkColor}
-                                    btnBgColor={settings.loginBtnBgColor}
-                                    btnColor={settings.loginBtnColor}
                                 />
                             ))}
                 </div>
@@ -116,9 +101,6 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                                         linkFontWeight={linkFontWeight}
                                         isButton={link.isButton}
                                         label={link.label}
-                                        linkColor={settings.linkColor}
-                                        btnBgColor={settings.loginBtnBgColor}
-                                        btnColor={settings.loginBtnColor}
                                     />
                                 ))}
                         </div>
@@ -130,11 +112,6 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                                     <Button2
                                         variant="ghost"
                                         className="relative h-8 w-8 rounded-full"
-                                        style={{
-                                            color: settings.loginBtnColor,
-                                            backgroundColor:
-                                                settings.loginBtnBgColor,
-                                        }}
                                     >
                                         <div>
                                             <Person />
@@ -150,12 +127,6 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                                         >
                                             <PrimitiveLink
                                                 theme={overiddenTheme}
-                                                style={{
-                                                    color:
-                                                        settings.linkColor ||
-                                                        overiddenTheme?.colors
-                                                            ?.text,
-                                                }}
                                                 className="!no-underline"
                                             >
                                                 Dashboard
@@ -174,12 +145,6 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                                     >
                                         <PrimitiveLink
                                             theme={overiddenTheme}
-                                            style={{
-                                                color:
-                                                    settings.linkColor ||
-                                                    overiddenTheme?.colors
-                                                        ?.text,
-                                            }}
                                             className="!no-underline"
                                         >
                                             {state.auth.guest
@@ -194,15 +159,9 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                     <MobileNav
                         title={state.siteinfo.title}
                         logo={state.siteinfo.logo}
-                        color={settings.loginBtnColor}
-                        btnBgColor={settings.loginBtnBgColor}
                         links={settings.links}
-                        linkColor={settings.linkColor}
-                        btnColor={settings.loginBtnColor}
                         linkFontWeight={linkFontWeight}
                         spacingBetweenLinks={spacingBetweenLinks}
-                        appBarBackground={settings.appBarBackground}
-                        logoColor={settings.logoColor}
                         theme={overiddenTheme}
                         showLoginControl={settings.showLoginControl}
                         isGuest={state.auth.guest}

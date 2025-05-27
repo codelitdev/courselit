@@ -6,6 +6,7 @@ import React, {
     useRef,
 } from "react";
 import { ExpandMoreRight } from "@courselit/icons";
+import { Sun, Moon } from "lucide-react";
 import { ColorSelector } from "@courselit/components-library";
 import { capitalize, FetchBuilder, truncate } from "@courselit/utils";
 import {
@@ -30,6 +31,13 @@ import { Theme } from "@courselit/page-models";
 import { ThemeWithDraftState } from "./theme-with-draft-state";
 import useThemes from "../use-themes";
 import { ThemeCardSkeleton } from "./theme-card-skeleton";
+import {
+    Accordion,
+    AccordionItem,
+    AccordionTrigger,
+    AccordionContent,
+} from "@courselit/components-library";
+import { Input } from "@/components/ui/input";
 
 type Section = {
     id: string;
@@ -121,12 +129,108 @@ const structureDisplayNames: Record<string, string> = {
     section: "Section",
 } as const;
 
-const colorOrder = ["primary", "secondary", "background", "text", "border"];
+const colorOrder = ["primary", "accent", "secondary", "border"];
+
+// const colorDisplayNames: Record<string, string> = {
+//     primary: "Primary",
+//     secondary: "Secondary",
+//     background: "Background",
+//     foreground: "Foreground",
+//     card: "Card",
+//     cardForeground: "Card Foreground",
+//     primaryForeground: "Primary Foreground",
+//     secondaryForeground: "Secondary Foreground",
+//     muted: "Muted",
+//     mutedForeground: "Muted Foreground",
+//     accent: "Accent",
+//     accentForeground: "Accent Foreground",
+//     border: "Border",
+//     destructive: "Destructive",
+// } as const;
+
+const colorCategories = [
+    {
+        key: "primary",
+        label: "Primary Colors",
+        colors: [
+            { name: "primary", displayName: "Primary" },
+            { name: "primaryForeground", displayName: "Primary Foreground" },
+        ],
+    },
+    {
+        key: "secondary",
+        label: "Secondary Colors",
+        colors: [
+            { name: "secondary", displayName: "Secondary" },
+            {
+                name: "secondaryForeground",
+                displayName: "Secondary Foreground",
+            },
+        ],
+    },
+    {
+        key: "accent",
+        label: "Accent Colors",
+        colors: [
+            { name: "accent", displayName: "Accent" },
+            { name: "accentForeground", displayName: "Accent Foreground" },
+        ],
+    },
+    {
+        key: "base",
+        label: "Base Colors",
+        colors: [
+            { name: "background", displayName: "Background" },
+            { name: "foreground", displayName: "Foreground" },
+        ],
+    },
+    {
+        key: "card",
+        label: "Card Colors",
+        colors: [
+            { name: "card", displayName: "Card" },
+            { name: "cardForeground", displayName: "Card Foreground" },
+        ],
+    },
+    {
+        key: "popover",
+        label: "Popover Colors",
+        colors: [
+            { name: "popover", displayName: "Popover" },
+            { name: "popoverForeground", displayName: "Popover Foreground" },
+        ],
+    },
+    {
+        key: "muted",
+        label: "Muted Colors",
+        colors: [
+            { name: "muted", displayName: "Muted" },
+            { name: "mutedForeground", displayName: "Muted Foreground" },
+        ],
+    },
+    {
+        key: "border",
+        label: "Border & Input Colors",
+        colors: [
+            { name: "border", displayName: "Border" },
+            { name: "input", displayName: "Input" },
+        ],
+    },
+    {
+        key: "destructive",
+        label: "Destructive Colors",
+        colors: [{ name: "destructive", displayName: "Destructive" }],
+    },
+];
 
 function ThemeEditor({
     onThemeChange,
+    colorMode,
+    onColorModeChange,
 }: {
     onThemeChange: (theme: Theme) => void;
+    colorMode: "light" | "dark";
+    onColorModeChange: (mode: "light" | "dark") => void;
 }) {
     const { themes, theme, setTheme, loadThemes, loaded } = useThemes();
     const [navigationStack, setNavigationStack] = useState<NavigationItem[]>(
@@ -140,6 +244,8 @@ function ThemeEditor({
     const { theme: currentTheme, setTheme: setCurrentTheme } =
         useContext(ThemeContext);
     const selectedThemeRef = useRef<HTMLDivElement>(null);
+    const [openCategory, setOpenCategory] = useState<string | null>(null);
+    // const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
 
     useEffect(() => {
         if (theme) {
@@ -318,8 +424,8 @@ function ThemeEditor({
                                       palette={colorOrder
                                           .map(
                                               (key) =>
-                                                  themeItem.draftTheme
-                                                      ?.colors?.[key],
+                                                  themeItem.draftTheme?.colors
+                                                      ?.light?.[key],
                                           )
                                           .filter(Boolean)}
                                       selected={themeItem.id === theme?.id}
@@ -370,9 +476,8 @@ function ThemeEditor({
                                     palette={colorOrder
                                         .map(
                                             (key) =>
-                                                themeItem.draftTheme?.colors?.[
-                                                    key
-                                                ],
+                                                themeItem.draftTheme?.colors
+                                                    ?.light?.[key],
                                         )
                                         .filter(Boolean)}
                                     selected={themeItem.id === theme?.id}
@@ -551,60 +656,136 @@ function ThemeEditor({
         switch (currentItem.id) {
             case "colors":
                 return (
-                    <div className="space-y-2 p-2">
-                        {[
-                            {
-                                name: "primary",
-                                displayName: "Primary",
-                            },
-                            {
-                                name: "secondary",
-                                displayName: "Secondary",
-                            },
-                            {
-                                name: "background",
-                                displayName: "Background",
-                            },
-                            {
-                                name: "text",
-                                displayName: "Text",
-                            },
-                            {
-                                name: "border",
-                                displayName: "Border",
-                            },
-                            {
-                                name: "buttonText",
-                                displayName: "Button Text",
-                            },
-                        ].map((color) => (
-                            <ColorSelector
-                                key={color.name}
-                                title={color.displayName}
-                                value={theme.draftTheme!.colors[color.name]}
-                                onChange={async (value) => {
-                                    const updatedColors = {
-                                        ...theme.draftTheme!.colors,
-                                        [color.name]: value,
-                                    };
-                                    setTheme({
-                                        ...theme,
-                                        draftTheme: {
-                                            ...theme.draftTheme!,
-                                            colors: updatedColors,
-                                        },
-                                    });
-                                    await updateThemeCategory(
-                                        "colors",
-                                        updatedColors as unknown as Record<
-                                            string,
-                                            string
-                                        >,
-                                    );
-                                }}
-                                allowReset={false}
-                            />
-                        ))}
+                    <div>
+                        <Accordion
+                            type="single"
+                            collapsible
+                            value={openCategory ?? undefined}
+                            onValueChange={setOpenCategory}
+                            className="px-2"
+                        >
+                            {colorCategories.map((category) => (
+                                <AccordionItem
+                                    key={category.key}
+                                    value={category.key}
+                                    className="border rounded-md mb-4"
+                                >
+                                    <AccordionTrigger className="px-2 py-3 text-xs font-semibold rounded-t-md hover:bg-muted transition-colors hover:no-underline data-[state=open]:border-b">
+                                        {category.label}
+                                    </AccordionTrigger>
+                                    <AccordionContent className="px-2 pb-4 pt-2">
+                                        <div className="flex flex-col gap-2">
+                                            {category.colors.map((color) => (
+                                                <div
+                                                    key={color.name}
+                                                    className="mb-2"
+                                                >
+                                                    <div className="text-xs font-medium mb-1">
+                                                        {color.displayName}
+                                                    </div>
+                                                    <div className="flex items-center gap-3 rounded-md">
+                                                        <ColorSelector
+                                                            title=""
+                                                            value={
+                                                                theme
+                                                                    .draftTheme!
+                                                                    .colors[
+                                                                    colorMode
+                                                                ][color.name]
+                                                            }
+                                                            onChange={(
+                                                                value,
+                                                            ) => {
+                                                                const updatedColors =
+                                                                    {
+                                                                        ...theme
+                                                                            .draftTheme!
+                                                                            .colors,
+                                                                        [colorMode]:
+                                                                            {
+                                                                                ...theme
+                                                                                    .draftTheme!
+                                                                                    .colors[
+                                                                                    colorMode
+                                                                                ],
+                                                                                [color.name]:
+                                                                                    value,
+                                                                            },
+                                                                    };
+                                                                setTheme({
+                                                                    ...theme,
+                                                                    draftTheme:
+                                                                        {
+                                                                            ...theme.draftTheme!,
+                                                                            colors: updatedColors,
+                                                                        },
+                                                                });
+                                                                updateThemeCategory(
+                                                                    "colors",
+                                                                    updatedColors as unknown as Record<
+                                                                        string,
+                                                                        string
+                                                                    >,
+                                                                );
+                                                            }}
+                                                            allowReset={false}
+                                                            className="w-10 h-10"
+                                                        />
+                                                        <Input
+                                                            type="text"
+                                                            value={
+                                                                theme
+                                                                    .draftTheme!
+                                                                    .colors[
+                                                                    colorMode
+                                                                ][color.name]
+                                                            }
+                                                            onChange={(e) => {
+                                                                const value =
+                                                                    e.target
+                                                                        .value;
+                                                                const updatedColors =
+                                                                    {
+                                                                        ...theme
+                                                                            .draftTheme!
+                                                                            .colors,
+                                                                        [colorMode]:
+                                                                            {
+                                                                                ...theme
+                                                                                    .draftTheme!
+                                                                                    .colors[
+                                                                                    colorMode
+                                                                                ],
+                                                                                [color.name]:
+                                                                                    value,
+                                                                            },
+                                                                    };
+                                                                setTheme({
+                                                                    ...theme,
+                                                                    draftTheme:
+                                                                        {
+                                                                            ...theme.draftTheme!,
+                                                                            colors: updatedColors,
+                                                                        },
+                                                                });
+                                                                updateThemeCategory(
+                                                                    "colors",
+                                                                    updatedColors as unknown as Record<
+                                                                        string,
+                                                                        string
+                                                                    >,
+                                                                );
+                                                            }}
+                                                            className="w-full text-sm rounded-md focus:ring-2 focus:ring-ring px-3"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
                     </div>
                 );
             case "typography":
@@ -751,9 +932,43 @@ function ThemeEditor({
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </button>
-                        <span className="text-sm font-medium text-muted-foreground">
-                            {navigationStack[navigationStack.length - 1].label}
-                        </span>
+                        <div className="flex items-center justify-between w-full pr-2">
+                            <span className="text-sm font-medium text-muted-foreground">
+                                {
+                                    navigationStack[navigationStack.length - 1]
+                                        .label
+                                }
+                            </span>
+                            {navigationStack[navigationStack.length - 1].id ===
+                                "colors" && (
+                                <button
+                                    className={`relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none ${colorMode === "dark" ? "bg-gray-600" : "bg-gray-300"}`}
+                                    onClick={() =>
+                                        onColorModeChange(
+                                            colorMode === "light"
+                                                ? "dark"
+                                                : "light",
+                                        )
+                                    }
+                                    aria-label="Toggle color mode"
+                                    type="button"
+                                >
+                                    <span
+                                        className={`absolute top-0 left-0 w-6 h-6 rounded-full flex items-center justify-center transition-transform duration-200 ${colorMode === "dark" ? "translate-x-6 bg-zinc-900" : "translate-x-0 bg-white"}`}
+                                        style={{
+                                            boxShadow:
+                                                "0 1px 4px rgba(0,0,0,0.15)",
+                                        }}
+                                    >
+                                        {colorMode === "dark" ? (
+                                            <Moon className="w-4 h-4 text-white" />
+                                        ) : (
+                                            <Sun className="w-4 h-4 text-yellow-500" />
+                                        )}
+                                    </span>
+                                </button>
+                            )}
+                        </div>
                     </div>
                     <div className="py-2">{getCurrentView()}</div>
                 </>

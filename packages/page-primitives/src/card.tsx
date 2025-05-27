@@ -8,6 +8,7 @@ export interface PageCardProps extends React.HTMLAttributes<HTMLDivElement> {
     children: React.ReactNode;
     className?: string;
     theme?: ThemeStyle;
+    style?: Record<string, string>;
 }
 
 export interface PageCardImageProps
@@ -30,7 +31,7 @@ export interface PageCardHeaderProps
     children: React.ReactNode;
     className?: string;
     theme?: ThemeStyle;
-    style?: React.CSSProperties;
+    style?: Record<string, string>;
 }
 
 export const PageCard: React.FC<PageCardProps> = ({
@@ -44,7 +45,7 @@ export const PageCard: React.FC<PageCardProps> = ({
     const cardStyles = theme?.interactives?.card;
     const classes = cn(
         // Base styles
-        "",
+        "bg-card text-card-foreground",
         // Theme interactivity
         cardStyles?.border?.width,
         cardStyles?.border?.radius,
@@ -59,11 +60,8 @@ export const PageCard: React.FC<PageCardProps> = ({
         <div
             style={{
                 ...style,
-                borderColor: style?.borderColor || theme?.colors?.border,
-                backgroundColor:
-                    style?.backgroundColor ||
-                    theme?.colors?.background ||
-                    undefined,
+                borderColor: style?.borderColor,
+                backgroundColor: style?.backgroundColor,
                 boxShadow:
                     cardStyles?.shadow === "shadow-custom"
                         ? cardStyles?.customShadow

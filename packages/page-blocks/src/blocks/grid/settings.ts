@@ -21,15 +21,7 @@ export default interface Settings extends WidgetDefaultSettings {
     itemsAlignment: Alignment;
     buttonCaption?: string;
     buttonAction?: string;
-    buttonBackground?: string;
-    buttonForeground?: string;
-    backgroundColor?: string;
-    foregroundColor?: string;
     items?: Item[];
-    itemBackgroundColor?: string;
-    itemForegroundColor?: string;
-    itemBorderColor?: string;
-    // itemBorderRadius?: number;
     cssId?: string;
     columns?: number;
 }
