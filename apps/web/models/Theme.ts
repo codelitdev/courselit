@@ -51,7 +51,6 @@ const ColorsSchema = new mongoose.Schema(
         shadow2xs: { type: String, required: true },
         shadowXs: { type: String, required: true },
         shadowSm: { type: String, required: true },
-        shadow: { type: String, required: true },
         shadowMd: { type: String, required: true },
         shadowLg: { type: String, required: true },
         shadowXl: { type: String, required: true },

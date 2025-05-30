@@ -6,7 +6,6 @@ import React, {
     useRef,
 } from "react";
 import { ExpandMoreRight } from "@courselit/icons";
-import { Sun, Moon } from "lucide-react";
 import { ColorSelector } from "@courselit/components-library";
 import { capitalize, FetchBuilder, truncate } from "@courselit/utils";
 import {
@@ -261,7 +260,6 @@ const colorCategories = [
             { name: "shadow2xs", displayName: "Shadow 2XS" },
             { name: "shadowXs", displayName: "Shadow XS" },
             { name: "shadowSm", displayName: "Shadow SM" },
-            { name: "shadow", displayName: "Shadow" },
             { name: "shadowMd", displayName: "Shadow MD" },
             { name: "shadowLg", displayName: "Shadow LG" },
             { name: "shadowXl", displayName: "Shadow XL" },
@@ -992,35 +990,6 @@ function ThemeEditor({
                                         .label
                                 }
                             </span>
-                            {navigationStack[navigationStack.length - 1].id ===
-                                "colors" && (
-                                <button
-                                    className={`relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none ${nextTheme === "dark" ? "bg-gray-600" : "bg-gray-300"}`}
-                                    onClick={() => {
-                                        setNextTheme(
-                                            nextTheme === "dark"
-                                                ? "light"
-                                                : "dark",
-                                        );
-                                    }}
-                                    aria-label="Toggle color mode"
-                                    type="button"
-                                >
-                                    <span
-                                        className={`absolute top-0 left-0 w-6 h-6 rounded-full flex items-center justify-center transition-transform duration-200 ${nextTheme === "dark" ? "translate-x-6 bg-zinc-900" : "translate-x-0 bg-white"}`}
-                                        style={{
-                                            boxShadow:
-                                                "0 1px 4px rgba(0,0,0,0.15)",
-                                        }}
-                                    >
-                                        {nextTheme === "dark" ? (
-                                            <Moon className="w-4 h-4 text-white" />
-                                        ) : (
-                                            <Sun className="w-4 h-4 text-yellow-500" />
-                                        )}
-                                    </span>
-                                </button>
-                            )}
                         </div>
                     </div>
                     <div className="py-2">{getCurrentView()}</div>
