@@ -42,14 +42,14 @@ export const Button: React.FC<ButtonProps> = ({
         buttonStyles?.border?.style,
         // buttonStyles?.border?.color,
         buttonStyles?.shadow,
-        // Theme hover states
-        buttonStyles?.hover,
         // Theme disabled states
         disabled && buttonStyles?.disabled?.opacity,
         disabled && buttonStyles?.disabled?.cursor,
         disabled && buttonStyles?.disabled?.color,
         disabled && buttonStyles?.disabled?.background,
         disabled && buttonStyles?.disabled?.border,
+        // User overrides
+        buttonStyles?.custom,
         className,
     );
 

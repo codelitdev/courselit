@@ -1,10 +1,10 @@
 ---
-title: Pages
-description: Pages
+title: Website
+description: Introduction to CourseLit's Build-in Website Builder
 layout: ../../../layouts/MainLayout.astro
 ---
 
-CourseLit comes with a powerful page builder. Using the page builder, you can build all sorts of web pages for various use cases like landing pages, sales pages, email list builder etc.
+CourseLit comes with a powerful website builder. Using the website builder, you can build all sorts of web pages for various use cases like landing pages, sales pages, email list builder etc.
 
 ![CourseLit's Page builder](/assets/pages/page-builder-sections.png)
 

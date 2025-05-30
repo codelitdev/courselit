@@ -125,7 +125,7 @@ export interface Padding {
         | "py-64";
 }
 
-export type HoverStyle = string;
+export type CustomStyle = string;
 
 export interface DisabledStyle {
     color?: string;
@@ -201,32 +201,29 @@ export interface ThemeStyle {
             padding?: Padding;
             border?: Border;
             shadow?: Shadow;
-            hover?: HoverStyle;
+            custom?: CustomStyle;
             disabled?: DisabledStyle;
-            // customShadow?: string;
         };
         link: {
             padding?: Padding;
             border?: Border;
             textShadow?: string;
-            hover?: HoverStyle;
+            custom?: CustomStyle;
             disabled?: DisabledStyle;
         };
         card: {
             padding?: Padding;
             border?: Border;
             shadow?: Shadow;
-            hover?: HoverStyle;
-            // customShadow?: string;
+            custom?: CustomStyle;
         };
         input: {
             borderRadius?: BorderRadius;
             padding?: Padding;
             border?: Border;
             shadow?: Shadow;
-            hover?: HoverStyle;
+            custom?: CustomStyle;
             disabled?: DisabledStyle;
-            // customShadow?: string;
         };
     };
     structure: {

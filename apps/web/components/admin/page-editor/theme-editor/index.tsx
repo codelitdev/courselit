@@ -281,7 +281,13 @@ function ThemeEditor({
     );
     const [collapsedCategories, setCollapsedCategories] = useState<
         Record<string, boolean>
-    >({});
+    >(() => {
+        const initial: Record<string, boolean> = {};
+        typographyCategories.forEach((category) => {
+            initial[category.name] = true;
+        });
+        return initial;
+    });
     const [isLoading, setIsLoading] = useState(true);
     const address = useContext(AddressContext);
     const { theme: currentTheme, setTheme: setCurrentTheme } =
@@ -477,6 +483,16 @@ function ThemeEditor({
                                           e?.stopPropagation?.();
                                           switchTheme(themeItem);
                                       }}
+                                      onEdit={(e) => {
+                                          e?.stopPropagation?.();
+                                          setTheme(themeItem);
+                                          setNavigationStack([
+                                              {
+                                                  id: "categories",
+                                                  label: themeItem.name,
+                                              },
+                                          ]);
+                                      }}
                                       showUseButton={true}
                                       className="cursor-pointer"
                                       ref={
@@ -486,12 +502,6 @@ function ThemeEditor({
                                       }
                                       onClick={() => {
                                           setTheme(themeItem);
-                                          setNavigationStack([
-                                              {
-                                                  id: "categories",
-                                                  label: themeItem.name,
-                                              },
-                                          ]);
                                       }}
                                   />
                               ))}
@@ -529,6 +539,16 @@ function ThemeEditor({
                                         e?.stopPropagation?.();
                                         switchTheme(themeItem);
                                     }}
+                                    onEdit={(e) => {
+                                        e?.stopPropagation?.();
+                                        setTheme(themeItem);
+                                        setNavigationStack([
+                                            {
+                                                id: "categories",
+                                                label: themeItem.name,
+                                            },
+                                        ]);
+                                    }}
                                     showUseButton={true}
                                     className="cursor-pointer"
                                     ref={
@@ -538,12 +558,6 @@ function ThemeEditor({
                                     }
                                     onClick={() => {
                                         setTheme(themeItem);
-                                        setNavigationStack([
-                                            {
-                                                id: "categories",
-                                                label: themeItem.name,
-                                            },
-                                        ]);
                                     }}
                                 />
                             ))

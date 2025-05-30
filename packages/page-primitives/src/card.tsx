@@ -48,8 +48,9 @@ export const PageCard: React.FC<PageCardProps> = ({
         cardStyles?.border?.radius,
         cardStyles?.border?.style,
         cardStyles?.shadow,
-        // Theme hover states
-        isLink ? `cursor-pointer ${cardStyles?.hover}` : "",
+        isLink ? "cursor-pointer" : "",
+        // User overrides
+        cardStyles?.custom,
         className,
     );
 

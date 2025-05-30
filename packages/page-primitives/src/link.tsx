@@ -39,14 +39,14 @@ export const Link: React.FC<LinkProps> = ({
         linkStyles?.border?.width,
         linkStyles?.border?.radius,
         linkStyles?.border?.style,
-        // Theme hover states
-        linkStyles?.hover,
         // Theme disabled states
         disabled && linkStyles?.disabled?.color,
         disabled && linkStyles?.disabled?.background,
         disabled && linkStyles?.disabled?.border,
         disabled && linkStyles?.disabled?.opacity,
         disabled && linkStyles?.disabled?.cursor,
+        // User overrides
+        linkStyles?.custom,
         className,
     );
 

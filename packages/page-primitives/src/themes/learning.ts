@@ -181,7 +181,7 @@ const themeStyles: ThemeStyle = {
                 // style: "border-solid",
             },
             shadow: "shadow-sm",
-            hover: "transition-all duration-200 ease-in-out hover:bg-blue-700 hover:shadow-xl hover:scale-105",
+            custom: "transition-all duration-200 ease-in-out hover:bg-blue-700 hover:shadow-xl hover:scale-105",
             disabled: {
                 background: "#F3F4F6",
                 opacity: "opacity-50",
@@ -190,7 +190,7 @@ const themeStyles: ThemeStyle = {
         },
         link: {
             padding: { x: "px-1", y: "py-0" },
-            hover: "transition-all duration-150 ease-in-out hover:text-blue-700 hover:underline hover:scale-105",
+            custom: "transition-all duration-150 ease-in-out hover:text-blue-700 hover:underline hover:scale-105",
         },
         card: {
             padding: { x: "px-8", y: "py-8" },
@@ -200,7 +200,7 @@ const themeStyles: ThemeStyle = {
                 style: "border-solid",
             },
             shadow: "shadow-sm",
-            hover: "transition-all duration-200 ease-in-out hover:shadow-2xl hover:scale-105",
+            custom: "transition-all duration-200 ease-in-out hover:shadow-2xl hover:scale-105",
         },
         input: {
             borderRadius: "rounded-lg",
@@ -210,7 +210,7 @@ const themeStyles: ThemeStyle = {
                 // style: "border-solid"
             },
             shadow: "shadow-sm",
-            hover: "transition-all duration-150 ease-in-out hover:border-blue-400 hover:shadow-md",
+            custom: "transition-all duration-150 ease-in-out hover:border-blue-400 hover:shadow-md",
             disabled: {
                 background: "#F3F4F6",
                 cursor: "cursor-not-allowed",

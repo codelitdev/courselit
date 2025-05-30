@@ -193,19 +193,19 @@ const themeStyles: ThemeStyle = {
                 y: "py-2",
             },
             border: {
-                width: "border",
+                width: "border-0",
                 radius: "rounded-md",
-                style: "border-solid",
+                // style: "border-solid",
             },
             shadow: "shadow-sm",
             disabled: {
                 opacity: "opacity-50",
                 cursor: "cursor-not-allowed",
             },
-            hover: "",
+            custom: "",
         },
         link: {
-            hover: "",
+            custom: "",
             disabled: {
                 color: "gray-400",
                 cursor: "cursor-not-allowed",
@@ -222,7 +222,7 @@ const themeStyles: ThemeStyle = {
                 style: "border-solid",
             },
             shadow: "shadow-sm",
-            hover: "transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
+            custom: "transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
         },
         input: {
             borderRadius: "rounded-md",
@@ -234,7 +234,7 @@ const themeStyles: ThemeStyle = {
                 style: "border-solid",
             },
             shadow: "shadow-sm",
-            hover: "",
+            custom: "",
             disabled: {
                 opacity: "opacity-50",
                 cursor: "cursor-not-allowed",

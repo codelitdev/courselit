@@ -286,8 +286,6 @@ function LayoutContent({
                                                 ?.shadowXs};
                                             --shadow-sm: ${themeColors?.light
                                                 ?.shadowSm};
-                                            --shadow: ${themeColors?.light
-                                                ?.shadow};
                                             --shadow-md: ${themeColors?.light
                                                 ?.shadowMd};
                                             --shadow-lg: ${themeColors?.light
@@ -466,8 +464,6 @@ function LayoutContent({
                                                 ?.shadowXs};
                                             --shadow-sm: ${themeColors?.dark
                                                 ?.shadowSm};
-                                            --shadow: ${themeColors?.dark
-                                                ?.shadow};
                                             --shadow-md: ${themeColors?.dark
                                                 ?.shadowMd};
                                             --shadow-lg: ${themeColors?.dark

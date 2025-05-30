@@ -2,6 +2,7 @@ import React, { forwardRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/shadcn-utils";
+import { Pencil, Check } from "lucide-react";
 
 interface ThemeCardProps {
     name: string;
@@ -9,6 +10,7 @@ interface ThemeCardProps {
     active?: boolean; // server active
     selected?: boolean; // local preview highlight
     onUse?: (e?: React.MouseEvent) => void;
+    onEdit?: (e?: React.MouseEvent) => void;
     showUseButton?: boolean;
     className?: string;
     onClick?: () => void;
@@ -22,6 +24,7 @@ export const ThemeCard = forwardRef<HTMLDivElement, ThemeCardProps>(
             active = false,
             selected = false,
             onUse,
+            onEdit,
             showUseButton = true,
             className = "",
             onClick,
@@ -45,13 +48,37 @@ export const ThemeCard = forwardRef<HTMLDivElement, ThemeCardProps>(
                         <span className="font-semibold text-[15px] text-foreground truncate">
                             {name}
                         </span>
-                        {/* {active && (
-                        <span className="flex items-center gap-1">
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
-                                Active
-                            </span>
-                        </span>
-                    )} */}
+                        <div className="flex items-center gap-1">
+                            {onEdit && (
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onEdit(e);
+                                    }}
+                                    className="h-8 w-8"
+                                >
+                                    <Pencil className="h-4 w-4" />
+                                </Button>
+                            )}
+                            {showUseButton && (
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    disabled={active}
+                                    onClick={onUse}
+                                    className={cn(
+                                        "h-8 w-8",
+                                        active
+                                            ? "opacity-60 cursor-not-allowed"
+                                            : "",
+                                    )}
+                                >
+                                    <Check className="h-4 w-4" />
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </CardContent>
                 <CardFooter className="flex items-center justify-between pt-0 pb-2 px-2">
@@ -64,20 +91,6 @@ export const ThemeCard = forwardRef<HTMLDivElement, ThemeCardProps>(
                             />
                         ))}
                     </div>
-                    {showUseButton && (
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={active}
-                            onClick={onUse}
-                            className={cn(
-                                "min-w-[56px] px-4 font-medium text-sm rounded-md h-8",
-                                active ? "opacity-60 cursor-not-allowed" : "",
-                            )}
-                        >
-                            {active ? "Active" : "Use"}
-                        </Button>
-                    )}
                 </CardFooter>
             </Card>
         );

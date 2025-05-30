@@ -164,7 +164,7 @@ const themeStyles: ThemeStyle = {
                 style: "border-solid",
             },
             shadow: "shadow-sm",
-            hover: "transition-all duration-200 ease-in-out hover:shadow-none hover:translate-x-1 hover:translate-y-1",
+            custom: "transition-all duration-200 ease-in-out hover:shadow-none hover:translate-x-1 hover:translate-y-1",
             disabled: {
                 background: "#F3F4F6",
                 opacity: "opacity-50",
@@ -173,7 +173,7 @@ const themeStyles: ThemeStyle = {
         },
         link: {
             padding: { x: "px-1", y: "py-0" },
-            hover: "hover:underline",
+            custom: "hover:underline",
         },
         card: {
             padding: { x: "px-6", y: "py-6" },
@@ -183,7 +183,7 @@ const themeStyles: ThemeStyle = {
                 style: "border-solid",
             },
             shadow: "shadow-sm",
-            hover: "transition-all duration-200 ease-in-out hover:translate-y-1",
+            custom: "transition-all duration-200 ease-in-out hover:translate-y-1",
         },
         input: {
             padding: { x: "px-4", y: "py-2" },
@@ -193,7 +193,7 @@ const themeStyles: ThemeStyle = {
                 radius: "rounded-none",
             },
             shadow: "shadow-sm",
-            hover: "transition-all duration-150 ease-in-out hover:shadow-none hover:translate-x-1 hover:translate-y-1",
+            custom: "transition-all duration-150 ease-in-out hover:shadow-none hover:translate-x-1 hover:translate-y-1",
             disabled: {
                 background: "#F3F4F6",
                 cursor: "cursor-not-allowed",
