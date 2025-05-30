@@ -18,10 +18,11 @@ const { product, site, blogPage, communityPage, permissions, defaultPages } =
     constants;
 const { pageNames } = Constants;
 
-export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
+export async function getPage({ id, ctx }: { id?: string; ctx: GQLContext }) {
     await initSharedWidgets(ctx);
     if (!id) {
         return {
+            type: site,
             layout: [
                 ctx.subdomain.sharedWidgets.header,
                 ctx.subdomain.sharedWidgets.footer,

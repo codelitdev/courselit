@@ -50,18 +50,14 @@ type BorderRadius =
     | "rounded-3xl"
     | "rounded-full";
 type Shadow =
+    | "shadow-2xs"
+    | "shadow-xs"
     | "shadow-sm"
-    | "shadow"
     | "shadow-md"
     | "shadow-lg"
     | "shadow-xl"
     | "shadow-2xl"
-    | "shadow-inner"
-    | "shadow-none"
-    | "shadow-neo"
-    | "shadow-neo-sm"
-    | "shadow-neo-lg"
-    | "shadow-custom";
+    | "shadow-none";
 type Cursor = "cursor-not-allowed" | "cursor-default" | "cursor-pointer";
 
 export interface Typography {
@@ -144,6 +140,8 @@ export interface Colors {
     foreground: string;
     card: string;
     cardForeground: string;
+    popover: string;
+    popoverForeground: string;
     primary: string;
     primaryForeground: string;
     secondary: string;
@@ -152,9 +150,30 @@ export interface Colors {
     mutedForeground: string;
     accent: string;
     accentForeground: string;
-    border: string;
     destructive: string;
+    border: string;
     input: string;
+    ring: string;
+    chart1: string;
+    chart2: string;
+    chart3: string;
+    chart4: string;
+    chart5: string;
+    sidebar: string;
+    sidebarForeground: string;
+    sidebarPrimary: string;
+    sidebarPrimaryForeground: string;
+    sidebarAccent: string;
+    sidebarAccentForeground: string;
+    sidebarBorder: string;
+    sidebarRing: string;
+    shadow2xs: string;
+    shadowXs: string;
+    shadowSm: string;
+    shadowMd: string;
+    shadowLg: string;
+    shadowXl: string;
+    shadow2xl: string;
 }
 
 export interface ThemeStyle {
@@ -184,7 +203,7 @@ export interface ThemeStyle {
             shadow?: Shadow;
             hover?: HoverStyle;
             disabled?: DisabledStyle;
-            customShadow?: string;
+            // customShadow?: string;
         };
         link: {
             padding?: Padding;
@@ -198,7 +217,7 @@ export interface ThemeStyle {
             border?: Border;
             shadow?: Shadow;
             hover?: HoverStyle;
-            customShadow?: string;
+            // customShadow?: string;
         };
         input: {
             borderRadius?: BorderRadius;
@@ -207,7 +226,7 @@ export interface ThemeStyle {
             shadow?: Shadow;
             hover?: HoverStyle;
             disabled?: DisabledStyle;
-            customShadow?: string;
+            // customShadow?: string;
         };
     };
     structure: {

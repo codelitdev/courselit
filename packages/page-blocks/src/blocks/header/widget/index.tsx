@@ -7,7 +7,7 @@ import {
     MenuItem2,
     Button2,
 } from "@courselit/components-library";
-import { Person } from "@courselit/icons";
+import { Github, Person } from "@courselit/icons";
 import { WidgetProps } from "@courselit/common-models";
 import MobileNav from "./mobile-nav";
 import {
@@ -19,12 +19,20 @@ import {
     Header4,
     Section,
     Link as PrimitiveLink,
+    Button,
 } from "@courselit/page-primitives";
 import PageLink from "./link";
 import clsx from "clsx";
 import { ThemeStyle } from "@courselit/page-models";
+import { Moon, Sun } from "lucide-react";
+import { useGithubStars } from "./use-github-stars";
 
-export default function Widget({ state, settings }: WidgetProps<Settings>) {
+export default function Widget({
+    state,
+    settings,
+    toggleTheme,
+    nextTheme,
+}: WidgetProps<Settings>) {
     const { theme } = state;
     const overiddenTheme: ThemeStyle = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
@@ -36,6 +44,15 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
     const spacingBetweenLinks =
         settings.spacingBetweenLinks || defaultSpacingBetweenLinks;
     const linkFontWeight = settings.linkFontWeight || defaultLinkFontWeight;
+
+    let stargazers = 0;
+    if (settings.githubRepo && settings.showGithubStars) {
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const { stargazersCount, isLoading, error } = useGithubStars(
+            settings.githubRepo,
+        );
+        stargazers = stargazersCount;
+    }
 
     return (
         <Section
@@ -88,7 +105,43 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
                                 />
                             ))}
                 </div>
-                <div className="flex gap-2 items-center">
+                <div className="flex gap-4 items-center">
+                    {settings.githubRepo && (
+                        <div className="lg:!block hidden">
+                            <AppLink
+                                href={`https://github.com/${settings.githubRepo}`}
+                                openInSameTab={false}
+                            >
+                                <PrimitiveLink
+                                    theme={overiddenTheme}
+                                    className="flex items-center gap-2"
+                                >
+                                    <Github width={24} height={24} />
+                                    {settings.showGithubStars &&
+                                        stargazers > 0 && (
+                                            <span className="text-xs">
+                                                {formatCompactNumber(
+                                                    stargazers,
+                                                )}
+                                            </span>
+                                        )}
+                                </PrimitiveLink>
+                            </AppLink>
+                        </div>
+                    )}
+                    <Button
+                        variant="ghost"
+                        className="relative h-8 w-8 rounded-full"
+                        size="icon"
+                        theme={overiddenTheme}
+                        onClick={() => toggleTheme()}
+                    >
+                        {nextTheme === "dark" ? (
+                            <Sun className="w-4 h-4" />
+                        ) : (
+                            <Moon className="w-4 h-4" />
+                        )}
+                    </Button>
                     {settings.links && (
                         <div className="lg:!block hidden">
                             {settings.links
@@ -170,4 +223,13 @@ export default function Widget({ state, settings }: WidgetProps<Settings>) {
             </div>
         </Section>
     );
+}
+
+function formatCompactNumber(number: number) {
+    if (number >= 1000000) {
+        return (number / 1000000).toFixed(1) + "M";
+    } else if (number >= 1000) {
+        return (number / 1000).toFixed(1) + "K";
+    }
+    return number.toString();
 }

@@ -4,11 +4,13 @@ import LinkEditor from "./link-editor";
 import {
     AdminWidgetPanel,
     Select,
-    Button,
     Checkbox,
     Tooltip,
     PageBuilderSlider,
     MaxWidthSelector,
+    FormField,
+    Form,
+    Button,
 } from "@courselit/components-library";
 import { Help } from "@courselit/icons";
 import {
@@ -48,6 +50,12 @@ export default function AdminWidget({
     const [maxWidth, setMaxWidth] = useState<
         ThemeStyle["structure"]["page"]["width"]
     >(settings.maxWidth);
+    const [githubRepo, setGithubRepo] = useState<string | undefined>(
+        settings.githubRepo,
+    );
+    const [showGithubStars, setShowGithubStars] = useState<boolean | undefined>(
+        settings.showGithubStars || false,
+    );
 
     useEffect(() => {
         onChange({
@@ -57,6 +65,8 @@ export default function AdminWidget({
             linkFontWeight,
             spacingBetweenLinks,
             maxWidth,
+            githubRepo,
+            showGithubStars,
         });
     }, [
         links,
@@ -65,6 +75,8 @@ export default function AdminWidget({
         linkFontWeight,
         spacingBetweenLinks,
         maxWidth,
+        githubRepo,
+        showGithubStars,
     ]);
 
     const onLinkChanged = (index: number, link: Link) => {
@@ -112,6 +124,26 @@ export default function AdminWidget({
                     <Button onClick={addNewLink} fullWidth>
                         Add new link
                     </Button>
+                </div>
+            </AdminWidgetPanel>
+
+            <AdminWidgetPanel title="Github Repo">
+                <Form>
+                    <FormField
+                        label="Github Repo"
+                        value={githubRepo}
+                        onChange={(e) => setGithubRepo(e.target.value)}
+                        placeholder="owner/repo"
+                    />
+                </Form>
+                <div className="flex justify-between">
+                    <div className="flex grow items-center gap-1">
+                        <p>Show Github Stars</p>
+                    </div>
+                    <Checkbox
+                        checked={showGithubStars}
+                        onChange={(value: boolean) => setShowGithubStars(value)}
+                    />
                 </div>
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Design">

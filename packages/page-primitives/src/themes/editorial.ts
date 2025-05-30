@@ -3,38 +3,84 @@ import { Theme, ThemeStyle } from "@courselit/page-models";
 const themeStyles: ThemeStyle = {
     colors: {
         light: {
-            background: "#FFFFFF", // white
-            foreground: "#111827", // gray-900
+            background: "#FFFFFF",
+            foreground: "#111827",
             card: "#FFFFFF",
             cardForeground: "#111827",
-            primary: "#1E3A8A", // dark indigo
+            popover: "#FFFFFF",
+            popoverForeground: "#111827",
+            primary: "#1E3A8A",
             primaryForeground: "#FFFFFF",
-            secondary: "#D97706", // amber-600
+            secondary: "#D97706",
             secondaryForeground: "#FFFFFF",
             muted: "#9ca3af",
             mutedForeground: "#9ca3af",
-            accent: "#3B82F6", // blue-500
+            accent: "#3B82F6",
             accentForeground: "#FFFFFF",
-            border: "#E5E7EB", // gray-200
-            destructive: "#EF4444", // red-500
+            border: "#E5E7EB",
+            destructive: "#EF4444",
             input: "#FFFFFF",
+            ring: "#1E3A8A",
+            chart1: "#1E3A8A",
+            chart2: "#D97706",
+            chart3: "#3B82F6",
+            chart4: "#EF4444",
+            chart5: "#9ca3af",
+            sidebar: "#FFFFFF",
+            sidebarForeground: "#111827",
+            sidebarPrimary: "#1E3A8A",
+            sidebarPrimaryForeground: "#FFFFFF",
+            sidebarAccent: "#3B82F6",
+            sidebarAccentForeground: "#FFFFFF",
+            sidebarBorder: "#E5E7EB",
+            sidebarRing: "#1E3A8A",
+            shadow2xs: "0 1px 2px 0px #E5E7EB",
+            shadowXs: "0 1px 2px 0px #E5E7EB",
+            shadowSm: "0 2px 4px 0px #E5E7EB",
+            shadowMd: "0 4px 12px 0px #E5E7EB",
+            shadowLg: "0 8px 24px 0px #E5E7EB",
+            shadowXl: "0 12px 32px 0px #E5E7EB",
+            shadow2xl: "0 16px 48px 0px #E5E7EB",
         },
         dark: {
-            background: "#111827", // gray-900
+            background: "#111827",
             foreground: "#FFFFFF",
-            card: "#1F2937", // gray-800
+            card: "#1F2937",
             cardForeground: "#FFFFFF",
-            primary: "#1E3A8A", // dark indigo
+            popover: "#1F2937",
+            popoverForeground: "#FFFFFF",
+            primary: "#1E3A8A",
             primaryForeground: "#FFFFFF",
-            secondary: "#D97706", // amber-600
+            secondary: "#D97706",
             secondaryForeground: "#FFFFFF",
             muted: "#9ca3af",
             mutedForeground: "#9ca3af",
-            accent: "#3B82F6", // blue-500
+            accent: "#3B82F6",
             accentForeground: "#FFFFFF",
-            border: "#374151", // gray-700
-            destructive: "#EF4444", // red-500
-            input: "#1F2937", // gray-800
+            border: "#374151",
+            destructive: "#EF4444",
+            input: "#1F2937",
+            ring: "#1E3A8A",
+            chart1: "#1E3A8A",
+            chart2: "#D97706",
+            chart3: "#3B82F6",
+            chart4: "#EF4444",
+            chart5: "#9ca3af",
+            sidebar: "#1F2937",
+            sidebarForeground: "#FFFFFF",
+            sidebarPrimary: "#1E3A8A",
+            sidebarPrimaryForeground: "#FFFFFF",
+            sidebarAccent: "#3B82F6",
+            sidebarAccentForeground: "#FFFFFF",
+            sidebarBorder: "#374151",
+            sidebarRing: "#1E3A8A",
+            shadow2xs: "0 1px 2px 0px #374151",
+            shadowXs: "0 1px 2px 0px #374151",
+            shadowSm: "0 2px 4px 0px #374151",
+            shadowMd: "0 4px 12px 0px #374151",
+            shadowLg: "0 8px 24px 0px #374151",
+            shadowXl: "0 12px 32px 0px #374151",
+            shadow2xl: "0 16px 48px 0px #374151",
         },
     },
     typography: {
@@ -143,7 +189,7 @@ const themeStyles: ThemeStyle = {
                 radius: "rounded-lg",
                 style: "border-solid",
             },
-            shadow: "shadow",
+            shadow: "shadow-sm",
             hover: "transition-shadow duration-200 ease-in hover:shadow-lg",
         },
         input: {

@@ -1,45 +1,45 @@
 "use client";
 
+import { useContext } from "react";
 import {
     AddressContext,
-    ProfileContext,
     ServerConfigContext,
-    SiteInfoContext,
     TypefacesContext,
-    ThemeContext,
 } from "@components/contexts";
+import { ProfileContext } from "@components/contexts";
 import { BaseLayout } from "@components/public/base-layout";
 import { Profile } from "@courselit/common-models";
-import { getPage } from "@ui-lib/utils";
-import { useContext, useEffect, useState } from "react";
 
-export default function HomepageLayout({
-    children,
+export default function ClientSidePage({
+    page,
+    siteinfo,
+    theme,
 }: {
-    children: React.ReactNode;
+    page;
+    siteinfo;
+    theme;
 }) {
-    const [page, setPage] = useState<any>(null);
-    const address = useContext(AddressContext);
-    const siteinfo = useContext(SiteInfoContext);
     const typefaces = useContext(TypefacesContext);
     const config = useContext(ServerConfigContext);
     const { profile } = useContext(ProfileContext);
-    const { theme } = useContext(ThemeContext);
-
-    useEffect(() => {
-        if (address.backend) {
-            getPage(address.backend).then(setPage);
-        }
-    }, [address]);
+    const address = useContext(AddressContext);
 
     if (!page) {
         return null;
     }
 
+    const layoutWithoutHeaderFooter = page?.layout
+        ?.filter((layout: any) => !["header", "footer"].includes(layout.name))
+        ?.map((layout: any) => ({
+            ...layout,
+            settings: layout.settings || {},
+        }));
+
     return (
         <BaseLayout
-            layout={page.layout}
-            title={page.title}
+            layout={layoutWithoutHeaderFooter}
+            title={page.title || page.pageData?.title}
+            pageData={page.pageData}
             typefaces={typefaces}
             siteInfo={siteinfo}
             dispatch={() => {}}
@@ -47,7 +47,7 @@ export default function HomepageLayout({
             state={{
                 config: config,
                 siteinfo,
-                address: address,
+                address,
                 profile: profile as Profile,
                 auth: profile.email
                     ? {
@@ -67,8 +67,6 @@ export default function HomepageLayout({
                     action: null,
                 },
             }}
-        >
-            {children}
-        </BaseLayout>
+        />
     );
 }

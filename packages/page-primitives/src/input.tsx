@@ -7,11 +7,14 @@ export interface InputProps
     extends React.InputHTMLAttributes<HTMLInputElement> {
     theme?: ThemeStyle;
     error?: boolean;
-    style?: React.CSSProperties;
+    // style?: React.CSSProperties;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-    ({ className = "", theme, error = false, style = {}, ...props }, ref) => {
+    (
+        { className = "", theme, error = false, /*style = {},*/ ...props },
+        ref,
+    ) => {
         const inputStyles = theme?.interactives?.input;
         const typographyStyles = theme?.typography?.input;
 
@@ -34,7 +37,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             inputStyles?.border?.style,
             inputStyles?.border?.radius,
             // inputStyles?.border?.color,
-            inputStyles?.shadow === "shadow-custom" ? "" : inputStyles?.shadow,
+            inputStyles?.shadow,
             // Theme hover states
             inputStyles?.hover,
             // Theme disabled states
@@ -48,20 +51,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             className,
         );
 
-        return (
-            <ShadcnInput
-                ref={ref}
-                className={classes}
-                style={{
-                    ...style,
-                    boxShadow:
-                        inputStyles?.shadow === "shadow-custom"
-                            ? inputStyles?.customShadow
-                            : undefined,
-                }}
-                {...props}
-            />
-        );
+        return <ShadcnInput ref={ref} className={classes} {...props} />;
     },
 );
 

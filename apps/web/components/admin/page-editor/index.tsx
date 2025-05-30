@@ -53,6 +53,8 @@ import {
 } from "@/components/ui/select";
 import { ThemeWithDraftState } from "./theme-editor/theme-with-draft-state";
 import useThemes from "./use-themes";
+import NextThemeSwitcher from "./next-theme-switcher";
+import { useTheme } from "next-themes";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
@@ -114,7 +116,7 @@ export default function PageEditor({
     const [pages, setPages] = useState<Page[]>([]);
     const [loadingPages, setLoadingPages] = useState(true);
     const { theme: lastEditedTheme } = useThemes();
-    const [colorMode, setColorMode] = useState<"light" | "dark">("light");
+    const { theme: nextTheme } = useTheme();
 
     const router = useRouter();
     const debouncedSave = useCallback(
@@ -603,8 +605,7 @@ export default function PageEditor({
                     onThemeChange={(theme) => {
                         setDraftTheme(theme);
                     }}
-                    colorMode={colorMode}
-                    onColorModeChange={(mode) => setColorMode(mode)}
+                    colorMode={nextTheme === "dark" ? "dark" : "light"}
                 />
             )}
             {leftPaneContent === "seo" && (
@@ -713,6 +714,13 @@ export default function PageEditor({
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider> */}
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <NextThemeSwitcher />
+                                        </TooltipTrigger>
+                                    </Tooltip>
+                                </TooltipProvider>
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
@@ -872,7 +880,6 @@ export default function PageEditor({
                                             },
                                         })}
                                         dispatch={dispatch}
-                                        colorMode={colorMode}
                                         id={page.pageId}
                                     />
                                 )}
@@ -880,12 +887,6 @@ export default function PageEditor({
                         </ScrollArea>
                     </div>
                 </div>
-                <style jsx global>{`
-                    :root {
-                        --primary-font: ${primaryFontFamily}, sans-serif;
-                        --secondary-font: ${primaryFontFamily}, sans-serif;
-                    }
-                `}</style>
             </div>
         );
     }

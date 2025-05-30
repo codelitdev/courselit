@@ -8,6 +8,7 @@ import type {
     Page,
     PaymentPlan,
     Profile,
+    SiteInfo,
     TextEditorContent,
     Typeface,
 } from "@courselit/common-models";
@@ -16,6 +17,7 @@ import { Constants, UIConstants } from "@courselit/common-models";
 import { createHash, randomInt } from "crypto";
 import { getProtocol } from "../lib/utils";
 import { headers as headersType } from "next/headers";
+import { Theme } from "@courselit/page-models";
 const { permissions } = UIConstants;
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -76,6 +78,8 @@ export const getPage = async (
 ): Promise<
     Pick<
         Page,
+        | "name"
+        | "type"
         | "title"
         | "layout"
         | "pageData"
@@ -88,6 +92,8 @@ export const getPage = async (
         ? `
     query {
         page: getPage(id: "${id}") {
+            type,
+            name,
             title,
             layout,
             pageData,
@@ -104,6 +110,7 @@ export const getPage = async (
         : `
     query {
         page: getPage {
+            type,
             title,
             layout,
             description,
@@ -128,6 +135,77 @@ export const getPage = async (
         console.log("getPage", e.message); // eslint-disable-line no-console
     }
     return undefined as unknown as Page;
+};
+
+export const getSiteInfo = async (
+    backend: string,
+): Promise<
+    | {
+          settings: SiteInfo;
+          theme: Theme;
+      }
+    | undefined
+> => {
+    const query = `
+            { 
+                site: getSiteInfo {
+                    settings {
+                        title,
+                        subtitle,
+                        logo {
+                            file,
+                            caption
+                        },
+                        currencyISOCode,
+                        paymentMethod,
+                        stripeKey,
+                        codeInjectionHead,
+                        codeInjectionBody,
+                        mailingAddress,
+                        hideCourseLitBranding,
+                        razorpayKey,
+                        lemonsqueezyStoreId,
+                        lemonsqueezyOneTimeVariantId,
+                        lemonsqueezySubscriptionMonthlyVariantId,
+                        lemonsqueezySubscriptionYearlyVariantId,
+                    },
+                }
+                theme: getTheme {
+                    themeId
+                    name
+                    theme {
+                        colors
+                        typography
+                        interactives
+                        structure
+                    }
+                }
+            }
+            `;
+    try {
+        const fetch = new FetchBuilder()
+            .setUrl(`${backend}/api/graph`)
+            .setPayload(query)
+            .setIsGraphQLEndpoint(true)
+            .build();
+        const response = await fetch.exec();
+        const transformedTheme: Theme = {
+            id: response.theme.themeId,
+            name: response.theme.name,
+            theme: response.theme.theme,
+        };
+        return {
+            settings: response.site.settings,
+            theme: transformedTheme,
+        };
+    } catch (e: any) {
+        console.log("getSiteInfo", e.message); // eslint-disable-line no-console
+    }
+
+    return undefined as unknown as {
+        settings: SiteInfo;
+        theme: Theme;
+    };
 };
 
 export const isEnrolled = (courseId: string, profile: Profile) =>

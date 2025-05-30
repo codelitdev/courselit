@@ -13,7 +13,6 @@ import {
     fontWeightOptions,
     lineHeightOptions,
     letterSpacingOptions,
-    textAlignOptions,
     textTransformOptions,
     fontFamilyOptions,
 } from "./tailwind-to-human-readable";
@@ -209,7 +208,7 @@ function TypographySelector({
                     </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                         <Label>Text Align</Label>
                         <Select
                             value={value?.textAlign || ""}
@@ -234,7 +233,7 @@ function TypographySelector({
                                 ))}
                             </SelectContent>
                         </Select>
-                    </div>
+                    </div> */}
                     <div className="space-y-2">
                         <Label>Text Transform</Label>
                         <Select

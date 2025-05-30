@@ -38,6 +38,7 @@ import {
     AccordionContent,
 } from "@courselit/components-library";
 import { Input } from "@/components/ui/input";
+import { useTheme } from "next-themes";
 
 type Section = {
     id: string;
@@ -214,6 +215,7 @@ const colorCategories = [
         colors: [
             { name: "border", displayName: "Border" },
             { name: "input", displayName: "Input" },
+            { name: "ring", displayName: "Ring" },
         ],
     },
     {
@@ -221,16 +223,59 @@ const colorCategories = [
         label: "Destructive Colors",
         colors: [{ name: "destructive", displayName: "Destructive" }],
     },
+    {
+        key: "charts",
+        label: "Chart Colors",
+        colors: [
+            { name: "chart1", displayName: "Chart 1" },
+            { name: "chart2", displayName: "Chart 2" },
+            { name: "chart3", displayName: "Chart 3" },
+            { name: "chart4", displayName: "Chart 4" },
+            { name: "chart5", displayName: "Chart 5" },
+        ],
+    },
+    {
+        key: "sidebar",
+        label: "Sidebar Colors",
+        colors: [
+            { name: "sidebar", displayName: "Sidebar" },
+            { name: "sidebarForeground", displayName: "Sidebar Foreground" },
+            { name: "sidebarPrimary", displayName: "Sidebar Primary" },
+            {
+                name: "sidebarPrimaryForeground",
+                displayName: "Sidebar Primary Foreground",
+            },
+            { name: "sidebarAccent", displayName: "Sidebar Accent" },
+            {
+                name: "sidebarAccentForeground",
+                displayName: "Sidebar Accent Foreground",
+            },
+            { name: "sidebarBorder", displayName: "Sidebar Border" },
+            { name: "sidebarRing", displayName: "Sidebar Ring" },
+        ],
+    },
+    {
+        key: "shadows",
+        label: "Shadow Styles",
+        colors: [
+            { name: "shadow2xs", displayName: "Shadow 2XS" },
+            { name: "shadowXs", displayName: "Shadow XS" },
+            { name: "shadowSm", displayName: "Shadow SM" },
+            { name: "shadow", displayName: "Shadow" },
+            { name: "shadowMd", displayName: "Shadow MD" },
+            { name: "shadowLg", displayName: "Shadow LG" },
+            { name: "shadowXl", displayName: "Shadow XL" },
+            { name: "shadow2xl", displayName: "Shadow 2XL" },
+        ],
+    },
 ];
 
 function ThemeEditor({
     onThemeChange,
     colorMode,
-    onColorModeChange,
 }: {
     onThemeChange: (theme: Theme) => void;
     colorMode: "light" | "dark";
-    onColorModeChange: (mode: "light" | "dark") => void;
 }) {
     const { themes, theme, setTheme, loadThemes, loaded } = useThemes();
     const [navigationStack, setNavigationStack] = useState<NavigationItem[]>(
@@ -245,7 +290,7 @@ function ThemeEditor({
         useContext(ThemeContext);
     const selectedThemeRef = useRef<HTMLDivElement>(null);
     const [openCategory, setOpenCategory] = useState<string | null>(null);
-    // const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
+    const { theme: nextTheme, setTheme: setNextTheme } = useTheme();
 
     useEffect(() => {
         if (theme) {
@@ -684,53 +729,61 @@ function ThemeEditor({
                                                         {color.displayName}
                                                     </div>
                                                     <div className="flex items-center gap-3 rounded-md">
-                                                        <ColorSelector
-                                                            title=""
-                                                            value={
-                                                                theme
-                                                                    .draftTheme!
-                                                                    .colors[
-                                                                    colorMode
-                                                                ][color.name]
-                                                            }
-                                                            onChange={(
-                                                                value,
-                                                            ) => {
-                                                                const updatedColors =
-                                                                    {
-                                                                        ...theme
-                                                                            .draftTheme!
-                                                                            .colors,
-                                                                        [colorMode]:
-                                                                            {
-                                                                                ...theme
-                                                                                    .draftTheme!
-                                                                                    .colors[
-                                                                                    colorMode
-                                                                                ],
-                                                                                [color.name]:
-                                                                                    value,
-                                                                            },
-                                                                    };
-                                                                setTheme({
-                                                                    ...theme,
-                                                                    draftTheme:
+                                                        {category.key !==
+                                                            "shadows" && (
+                                                            <ColorSelector
+                                                                title=""
+                                                                value={
+                                                                    theme
+                                                                        .draftTheme!
+                                                                        .colors[
+                                                                        colorMode
+                                                                    ][
+                                                                        color
+                                                                            .name
+                                                                    ]
+                                                                }
+                                                                onChange={(
+                                                                    value,
+                                                                ) => {
+                                                                    const updatedColors =
                                                                         {
-                                                                            ...theme.draftTheme!,
-                                                                            colors: updatedColors,
-                                                                        },
-                                                                });
-                                                                updateThemeCategory(
-                                                                    "colors",
-                                                                    updatedColors as unknown as Record<
-                                                                        string,
-                                                                        string
-                                                                    >,
-                                                                );
-                                                            }}
-                                                            allowReset={false}
-                                                            className="w-10 h-10"
-                                                        />
+                                                                            ...theme
+                                                                                .draftTheme!
+                                                                                .colors,
+                                                                            [colorMode]:
+                                                                                {
+                                                                                    ...theme
+                                                                                        .draftTheme!
+                                                                                        .colors[
+                                                                                        colorMode
+                                                                                    ],
+                                                                                    [color.name]:
+                                                                                        value,
+                                                                                },
+                                                                        };
+                                                                    setTheme({
+                                                                        ...theme,
+                                                                        draftTheme:
+                                                                            {
+                                                                                ...theme.draftTheme!,
+                                                                                colors: updatedColors,
+                                                                            },
+                                                                    });
+                                                                    updateThemeCategory(
+                                                                        "colors",
+                                                                        updatedColors as unknown as Record<
+                                                                            string,
+                                                                            string
+                                                                        >,
+                                                                    );
+                                                                }}
+                                                                allowReset={
+                                                                    false
+                                                                }
+                                                                className="w-10 h-10"
+                                                            />
+                                                        )}
                                                         <Input
                                                             type="text"
                                                             value={
@@ -942,25 +995,25 @@ function ThemeEditor({
                             {navigationStack[navigationStack.length - 1].id ===
                                 "colors" && (
                                 <button
-                                    className={`relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none ${colorMode === "dark" ? "bg-gray-600" : "bg-gray-300"}`}
-                                    onClick={() =>
-                                        onColorModeChange(
-                                            colorMode === "light"
-                                                ? "dark"
-                                                : "light",
-                                        )
-                                    }
+                                    className={`relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none ${nextTheme === "dark" ? "bg-gray-600" : "bg-gray-300"}`}
+                                    onClick={() => {
+                                        setNextTheme(
+                                            nextTheme === "dark"
+                                                ? "light"
+                                                : "dark",
+                                        );
+                                    }}
                                     aria-label="Toggle color mode"
                                     type="button"
                                 >
                                     <span
-                                        className={`absolute top-0 left-0 w-6 h-6 rounded-full flex items-center justify-center transition-transform duration-200 ${colorMode === "dark" ? "translate-x-6 bg-zinc-900" : "translate-x-0 bg-white"}`}
+                                        className={`absolute top-0 left-0 w-6 h-6 rounded-full flex items-center justify-center transition-transform duration-200 ${nextTheme === "dark" ? "translate-x-6 bg-zinc-900" : "translate-x-0 bg-white"}`}
                                         style={{
                                             boxShadow:
                                                 "0 1px 4px rgba(0,0,0,0.15)",
                                         }}
                                     >
-                                        {colorMode === "dark" ? (
+                                        {nextTheme === "dark" ? (
                                             <Moon className="w-4 h-4 text-white" />
                                         ) : (
                                             <Sun className="w-4 h-4 text-yellow-500" />

@@ -69,17 +69,13 @@ export const borderRadiusOptions: TailwindOption[] = [
 
 export const shadowOptions: TailwindOption[] = [
     { label: "None", value: "shadow-none" },
-    { label: "Small", value: "shadow-sm" },
-    { label: "Default", value: "shadow" },
+    { label: "Extra Small", value: "shadow-2xs" },
+    { label: "Small", value: "shadow-xs" },
+    { label: "Default", value: "shadow-sm" },
     { label: "Medium", value: "shadow-md" },
     { label: "Large", value: "shadow-lg" },
     { label: "Extra Large", value: "shadow-xl" },
     { label: "2X Large", value: "shadow-2xl" },
-    { label: "Inner", value: "shadow-inner" },
-    { label: "Neo", value: "shadow-neo" },
-    { label: "Neo Small", value: "shadow-neo-sm" },
-    { label: "Neo Large", value: "shadow-neo-lg" },
-    { label: "Custom", value: "shadow-custom" },
 ];
 
 export const textShadowOptions: TailwindOption[] = [

@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLString } from "graphql";
 import types from "./types";
 import { GraphQLJSONObject } from "graphql-type-json";
-import { Theme } from "@courselit/common-models";
+import { ThemeStyle } from "@courselit/page-models";
 import { switchTheme, updateDraftTheme } from "./logic";
 import GQLContext from "@models/GQLContext";
 
@@ -25,10 +25,10 @@ export default {
                 structure,
             }: {
                 themeId: string;
-                colors?: Theme["colors"];
-                typography?: Theme["typography"];
-                interactives?: Theme["interactives"];
-                structure?: Theme["structure"];
+                colors?: ThemeStyle["colors"];
+                typography?: ThemeStyle["typography"];
+                interactives?: ThemeStyle["interactives"];
+                structure?: ThemeStyle["structure"];
             },
             context: GQLContext,
         ) =>

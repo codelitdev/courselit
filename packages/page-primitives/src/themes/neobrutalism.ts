@@ -3,38 +3,84 @@ import { Theme, ThemeStyle } from "@courselit/page-models";
 const themeStyles: ThemeStyle = {
     colors: {
         light: {
-            background: "#6FFFD7", // mint green
-            foreground: "#000000", // black text
+            background: "#6FFFD7",
+            foreground: "#000000",
             card: "#6FFFD7",
             cardForeground: "#000000",
-            primary: "#FFF700", // vibrant yellow
+            popover: "#6FFFD7",
+            popoverForeground: "#000000",
+            primary: "#FFF700",
             primaryForeground: "#000000",
-            secondary: "#7DF9FF", // vibrant cyan
+            secondary: "#7DF9FF",
             secondaryForeground: "#000000",
             muted: "#9ca3af",
             mutedForeground: "#9ca3af",
-            accent: "#2FF2F2", // neon green-cyan
+            accent: "#2FF2F2",
             accentForeground: "#000000",
-            border: "#000000", // black outlines
-            destructive: "#FF4911", // bright orange-red
-            input: "#000000", // mint green
+            border: "#000000",
+            destructive: "#FF4911",
+            input: "#000000",
+            ring: "#000000",
+            chart1: "#FFF700",
+            chart2: "#7DF9FF",
+            chart3: "#2FF2F2",
+            chart4: "#FF4911",
+            chart5: "#6FFFD7",
+            sidebar: "#6FFFD7",
+            sidebarForeground: "#000000",
+            sidebarPrimary: "#FFF700",
+            sidebarPrimaryForeground: "#000000",
+            sidebarAccent: "#2FF2F2",
+            sidebarAccentForeground: "#000000",
+            sidebarBorder: "#000000",
+            sidebarRing: "#000000",
+            shadow2xs: "1px 1px 0px 0px #000000",
+            shadowXs: "2px 2px 0px 0px #000000",
+            shadowSm: "3px 3px 0px 0px #000000",
+            shadowMd: "5px 5px 0px 0px #000000",
+            shadowLg: "6px 6px 0px 0px #000000",
+            shadowXl: "7px 7px 0px 0px #000000",
+            shadow2xl: "8px 8px 0px 0px #000000",
         },
         dark: {
             background: "#000000",
-            foreground: "#6FFFD7", // mint green
+            foreground: "#6FFFD7",
             card: "#000000",
             cardForeground: "#6FFFD7",
-            primary: "#FFF700", // vibrant yellow
+            popover: "#000000",
+            popoverForeground: "#6FFFD7",
+            primary: "#FFF700",
             primaryForeground: "#000000",
-            secondary: "#7DF9FF", // vibrant cyan
+            secondary: "#7DF9FF",
             secondaryForeground: "#000000",
             muted: "#9ca3af",
             mutedForeground: "#9ca3af",
-            accent: "#2FF2F2", // neon green-cyan
+            accent: "#2FF2F2",
             accentForeground: "#000000",
-            border: "#6FFFD7", // mint green
-            destructive: "#FF4911", // bright orange-red
+            border: "#6FFFD7",
+            destructive: "#FF4911",
             input: "#6FFFD7",
+            ring: "#6FFFD7",
+            chart1: "#FFF700",
+            chart2: "#7DF9FF",
+            chart3: "#2FF2F2",
+            chart4: "#FF4911",
+            chart5: "#6FFFD7",
+            sidebar: "#000000",
+            sidebarForeground: "#6FFFD7",
+            sidebarPrimary: "#FFF700",
+            sidebarPrimaryForeground: "#000000",
+            sidebarAccent: "#2FF2F2",
+            sidebarAccentForeground: "#000000",
+            sidebarBorder: "#6FFFD7",
+            sidebarRing: "#6FFFD7",
+            shadow2xs: "1px 1px 0 0 #6FFFD7",
+            shadowXs: "2px 2px 0 0 #6FFFD7",
+            shadowSm: "3px 3px 0 0 #6FFFD7",
+            shadowMd: "5px 5px 0 0 #6FFFD7",
+            shadowLg: "6px 6px 0 0 #6FFFD7",
+            shadowXl: "7px 7px 0 0 #6FFFD7",
+            shadow2xl: "8px 8px 0 0 #6FFFD7",
         },
     },
     typography: {
@@ -117,8 +163,7 @@ const themeStyles: ThemeStyle = {
                 radius: "rounded-none",
                 style: "border-solid",
             },
-            customShadow: "4px 4px 0 0 #000000",
-            shadow: "shadow-custom",
+            shadow: "shadow-sm",
             hover: "transition-all duration-200 ease-in-out hover:shadow-none hover:translate-x-1 hover:translate-y-1",
             disabled: {
                 background: "#F3F4F6",
@@ -137,8 +182,7 @@ const themeStyles: ThemeStyle = {
                 radius: "rounded-none",
                 style: "border-solid",
             },
-            customShadow: "4px 4px 0 0 #000000",
-            shadow: "shadow-custom",
+            shadow: "shadow-sm",
             hover: "transition-all duration-200 ease-in-out hover:translate-y-1",
         },
         input: {
@@ -148,8 +192,7 @@ const themeStyles: ThemeStyle = {
                 style: "border-solid",
                 radius: "rounded-none",
             },
-            customShadow: "4px 4px 0 0 #000000",
-            shadow: "shadow-custom",
+            shadow: "shadow-sm",
             hover: "transition-all duration-150 ease-in-out hover:shadow-none hover:translate-x-1 hover:translate-y-1",
             disabled: {
                 background: "#F3F4F6",

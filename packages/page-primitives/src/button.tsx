@@ -8,7 +8,6 @@ import type { ThemeStyle } from "@courselit/page-models";
 
 export interface ButtonProps extends ShadcnButtonProps {
     theme?: ThemeStyle;
-    style?: Record<string, string>;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -17,7 +16,6 @@ export const Button: React.FC<ButtonProps> = ({
     disabled = false,
     children,
     className = "",
-    style = {},
     theme,
     ...props
 }) => {
@@ -43,7 +41,7 @@ export const Button: React.FC<ButtonProps> = ({
         buttonStyles?.border?.radius,
         buttonStyles?.border?.style,
         // buttonStyles?.border?.color,
-        buttonStyles?.shadow === "shadow-custom" ? "" : buttonStyles?.shadow,
+        buttonStyles?.shadow,
         // Theme hover states
         buttonStyles?.hover,
         // Theme disabled states
@@ -61,15 +59,6 @@ export const Button: React.FC<ButtonProps> = ({
             size={size}
             disabled={disabled}
             className={classes}
-            style={{
-                ...style,
-                backgroundColor: style.backgroundColor,
-                color: style.color,
-                boxShadow:
-                    buttonStyles?.shadow === "shadow-custom"
-                        ? buttonStyles?.customShadow
-                        : undefined,
-            }}
             {...props}
         >
             {children}

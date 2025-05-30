@@ -1,6 +1,11 @@
 import React, { Fragment, ReactNode } from "react";
 import WidgetByName from "./widget-by-name";
-import { WidgetInstance } from "@courselit/common-models";
+import {
+    State,
+    WidgetDefaultSettings,
+    WidgetInstance,
+    WidgetProps,
+} from "@courselit/common-models";
 import { Footer, Header } from "@courselit/page-blocks";
 import { ArrowDown, Plus, ArrowUp } from "lucide-react";
 import { Toaster } from "@courselit/components-library";
@@ -22,7 +27,6 @@ interface TemplateProps {
     dispatch?: AppDispatch;
     state: Partial<AppState>;
     id?: string;
-    colorMode?: "light" | "dark";
 }
 
 const Template = (props: TemplateProps) => {
@@ -39,12 +43,8 @@ const Template = (props: TemplateProps) => {
         dispatch,
         state,
         id,
-        colorMode,
     } = props;
-    const theme =
-        colorMode === "dark"
-            ? state.theme?.theme?.colors?.dark
-            : state.theme?.theme?.colors?.light;
+    const themeColors = state.theme?.theme?.colors;
 
     if (!layout) return <></>;
     const footer = layout.filter(
@@ -121,101 +121,293 @@ const Template = (props: TemplateProps) => {
                 />
             )}
             <Toaster />
-            <style jsx>{`
-                #${id} {
-                    --background: ${theme?.background
+            <style jsx global>{`
+                :root {
+                    --background: ${themeColors?.light?.background
                         ? formatHSL(
                               convert.hex.hsl(
-                                  theme.background?.replace("#", ""),
+                                  themeColors?.light?.background?.replace(
+                                      "#",
+                                      "",
+                                  ),
                               ),
                           )
                         : ""};
-                    --foreground: ${theme?.foreground
+                    --foreground: ${themeColors?.light?.foreground
                         ? formatHSL(
                               convert.hex.hsl(
-                                  theme.foreground?.replace("#", ""),
+                                  themeColors?.light?.foreground?.replace(
+                                      "#",
+                                      "",
+                                  ),
                               ),
                           )
                         : ""};
-                    --card: ${theme?.card
-                        ? formatHSL(
-                              convert.hex.hsl(theme.card?.replace("#", "")),
-                          )
-                        : ""};
-                    --card-foreground: ${theme?.cardForeground
+                    --card: ${themeColors?.light?.card
                         ? formatHSL(
                               convert.hex.hsl(
-                                  theme.cardForeground?.replace("#", ""),
+                                  themeColors?.light?.card?.replace("#", ""),
                               ),
                           )
                         : ""};
-                    --primary: ${theme?.primary
-                        ? formatHSL(
-                              convert.hex.hsl(theme.primary?.replace("#", "")),
-                          )
-                        : ""};
-                    --primary-foreground: ${theme?.primaryForeground
+                    --card-foreground: ${themeColors?.light?.cardForeground
                         ? formatHSL(
                               convert.hex.hsl(
-                                  theme.primaryForeground?.replace("#", ""),
+                                  themeColors?.light?.cardForeground?.replace(
+                                      "#",
+                                      "",
+                                  ),
                               ),
                           )
                         : ""};
-                    --secondary: ${theme?.secondary
+                    --primary: ${themeColors?.light?.primary
                         ? formatHSL(
                               convert.hex.hsl(
-                                  theme.secondary?.replace("#", ""),
+                                  themeColors?.light?.primary?.replace("#", ""),
                               ),
                           )
                         : ""};
-                    --secondary-foreground: ${theme?.secondaryForeground
+                    --primary-foreground: ${themeColors?.light
+                        ?.primaryForeground
                         ? formatHSL(
                               convert.hex.hsl(
-                                  theme.secondaryForeground?.replace("#", ""),
+                                  themeColors?.light?.primaryForeground?.replace(
+                                      "#",
+                                      "",
+                                  ),
                               ),
                           )
                         : ""};
-                    --muted: ${theme?.muted
-                        ? formatHSL(
-                              convert.hex.hsl(theme.muted?.replace("#", "")),
-                          )
-                        : ""};
-                    --muted-foreground: ${theme?.mutedForeground
+                    --secondary: ${themeColors?.light?.secondary
                         ? formatHSL(
                               convert.hex.hsl(
-                                  theme.mutedForeground?.replace("#", ""),
+                                  themeColors?.light?.secondary?.replace(
+                                      "#",
+                                      "",
+                                  ),
                               ),
                           )
                         : ""};
-                    --accent: ${theme?.accent
-                        ? formatHSL(
-                              convert.hex.hsl(theme.accent?.replace("#", "")),
-                          )
-                        : ""};
-                    --accent-foreground: ${theme?.accentForeground
+                    --secondary-foreground: ${themeColors?.light
+                        ?.secondaryForeground
                         ? formatHSL(
                               convert.hex.hsl(
-                                  theme.accentForeground?.replace("#", ""),
+                                  themeColors?.light?.secondaryForeground?.replace(
+                                      "#",
+                                      "",
+                                  ),
                               ),
                           )
                         : ""};
-                    --border: ${theme?.border
-                        ? formatHSL(
-                              convert.hex.hsl(theme.border?.replace("#", "")),
-                          )
-                        : ""};
-                    --destructive: ${theme?.destructive
+                    --muted: ${themeColors?.light?.muted
                         ? formatHSL(
                               convert.hex.hsl(
-                                  theme.destructive?.replace("#", ""),
+                                  themeColors?.light?.muted?.replace("#", ""),
                               ),
                           )
                         : ""};
-                    --input: ${theme?.input
+                    --muted-foreground: ${themeColors?.light?.mutedForeground
                         ? formatHSL(
-                              convert.hex.hsl(theme.input?.replace("#", "")),
+                              convert.hex.hsl(
+                                  themeColors?.light?.mutedForeground?.replace(
+                                      "#",
+                                      "",
+                                  ),
+                              ),
                           )
                         : ""};
+                    --accent: ${themeColors?.light?.accent
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.accent?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --accent-foreground: ${themeColors?.light?.accentForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.accentForeground?.replace(
+                                      "#",
+                                      "",
+                                  ),
+                              ),
+                          )
+                        : ""};
+                    --border: ${themeColors?.light?.border
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.border?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --destructive: ${themeColors?.light?.destructive
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.destructive?.replace(
+                                      "#",
+                                      "",
+                                  ),
+                              ),
+                          )
+                        : ""};
+                    --input: ${themeColors?.light?.input
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.input?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --shadow-2xs: ${themeColors?.light?.shadow2xs};
+                    --shadow-xs: ${themeColors?.light?.shadowXs};
+                    --shadow-sm: ${themeColors?.light?.shadowSm};
+                    --shadow: ${themeColors?.light?.shadow};
+                    --shadow-md: ${themeColors?.light?.shadowMd};
+                    --shadow-lg: ${themeColors?.light?.shadowLg};
+                    --shadow-xl: ${themeColors?.light?.shadowXl};
+                    --shadow-2xl: ${themeColors?.light?.shadow2xl};
+                }
+                .dark {
+                    --background: ${themeColors?.dark?.background
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.background?.replace(
+                                      "#",
+                                      "",
+                                  ),
+                              ),
+                          )
+                        : ""};
+                    --foreground: ${themeColors?.dark?.foreground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.foreground?.replace(
+                                      "#",
+                                      "",
+                                  ),
+                              ),
+                          )
+                        : ""};
+                    --card: ${themeColors?.dark?.card
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.card?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --card-foreground: ${themeColors?.dark?.cardForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.cardForeground?.replace(
+                                      "#",
+                                      "",
+                                  ),
+                              ),
+                          )
+                        : ""};
+                    --primary: ${themeColors?.dark?.primary
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.primary?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --primary-foreground: ${themeColors?.dark?.primaryForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.primaryForeground?.replace(
+                                      "#",
+                                      "",
+                                  ),
+                              ),
+                          )
+                        : ""};
+                    --secondary: ${themeColors?.dark?.secondary
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.secondary?.replace(
+                                      "#",
+                                      "",
+                                  ),
+                              ),
+                          )
+                        : ""};
+                    --secondary-foreground: ${themeColors?.dark
+                        ?.secondaryForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.secondaryForeground?.replace(
+                                      "#",
+                                      "",
+                                  ),
+                              ),
+                          )
+                        : ""};
+                    --muted: ${themeColors?.dark?.muted
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.muted?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --muted-foreground: ${themeColors?.dark?.mutedForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.mutedForeground?.replace(
+                                      "#",
+                                      "",
+                                  ),
+                              ),
+                          )
+                        : ""};
+                    --accent: ${themeColors?.dark?.accent
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.accent?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --accent-foreground: ${themeColors?.dark?.accentForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.accentForeground?.replace(
+                                      "#",
+                                      "",
+                                  ),
+                              ),
+                          )
+                        : ""};
+                    --border: ${themeColors?.dark?.border
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.border?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --destructive: ${themeColors?.dark?.destructive
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.destructive?.replace(
+                                      "#",
+                                      "",
+                                  ),
+                              ),
+                          )
+                        : ""};
+                    --input: ${themeColors?.dark?.input
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.input?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --shadow-2xs: ${themeColors?.dark?.shadow2xs};
+                    --shadow-xs: ${themeColors?.dark?.shadowXs};
+                    --shadow-sm: ${themeColors?.dark?.shadowSm};
+                    --shadow: ${themeColors?.dark?.shadow};
+                    --shadow-md: ${themeColors?.dark?.shadowMd};
+                    --shadow-lg: ${themeColors?.dark?.shadowLg};
+                    --shadow-xl: ${themeColors?.dark?.shadowXl};
+                    --shadow-2xl: ${themeColors?.dark?.shadow2xl};
                 }
             `}</style>
         </div>
@@ -244,7 +436,7 @@ const EditableWidget = ({
     state,
 }: {
     item: Record<string, any>;
-    pageData: Record<string, unknown>;
+    pageData: WidgetProps<WidgetDefaultSettings>["pageData"];
     editing: boolean;
     onEditClick?: (widgetId: string) => void;
     allowsDownwardMovement?: boolean;
@@ -261,9 +453,7 @@ const EditableWidget = ({
         return (
             <div
                 onClick={() => onEditClick && onEditClick(item.widgetId)}
-                className={`relative ${
-                    editing ? "cursor-pointer" : "cursor-default"
-                } group`}
+                className="relative cursor-pointer group"
             >
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity z-20">
                     <div className="text-white/90 border border-white/50 px-3 py-1.5 rounded text-sm font-medium">
@@ -277,7 +467,7 @@ const EditableWidget = ({
                     id={item.widgetId}
                     editing={true}
                     dispatch={dispatch}
-                    state={state}
+                    state={state as State}
                 />
                 <div className="w-full justify-evenly hidden group-hover:flex absolute bottom-[-16px] z-30">
                     {allowsUpwardMovement && (
@@ -334,7 +524,7 @@ const EditableWidget = ({
             pageData={pageData}
             id={item.widgetId}
             dispatch={dispatch}
-            state={state}
+            state={state as State}
             editing={false}
         />
     );

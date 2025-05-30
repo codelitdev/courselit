@@ -12,7 +12,7 @@ import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { Theme } from "@courselit/page-models";
 
-interface MasterLayoutProps {
+interface BaseLayoutProps {
     title: string;
     siteInfo: any;
     layout: WidgetInstance[];
@@ -28,7 +28,7 @@ interface MasterLayoutProps {
     theme: Theme;
 }
 
-export const MasterLayout = ({
+export const BaseLayout = ({
     title,
     siteInfo,
     children,
@@ -42,13 +42,9 @@ export const MasterLayout = ({
     robotsAllowed = true,
     state,
     theme,
-}: MasterLayoutProps) => {
+}: BaseLayoutProps) => {
     const { status } = useSession();
     state.theme = theme;
-
-    // const primaryFontFamily = typefaces.filter(
-    //     (x) => x.section === "default",
-    // )[0]?.typeface;
 
     useEffect(() => {
         if (status === "authenticated") {
@@ -129,12 +125,6 @@ export const MasterLayout = ({
             >
                 {children}
             </Template>
-            {/* <style jsx global>{`
-                :root {
-                    --primary-font: ${primaryFontFamily}, sans-serif;
-                    --secondary-font: ${primaryFontFamily}, sans-serif;
-                }
-            `}</style> */}
         </>
     );
 };
@@ -150,4 +140,4 @@ const mapStateToProps = (state: AppState) => ({
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
 
-export default connect(mapStateToProps, mapDispatchToProps)(MasterLayout);
+export default connect(mapStateToProps, mapDispatchToProps)(BaseLayout);
