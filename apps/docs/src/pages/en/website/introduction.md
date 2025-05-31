@@ -6,13 +6,13 @@ layout: ../../../layouts/MainLayout.astro
 
 CourseLit comes with a powerful website builder. Using the website builder, you can build all sorts of web pages for various use cases like landing pages, sales pages, email list builder etc.
 
-![CourseLit's Page builder](/assets/pages/page-builder-sections.png)
+![CourseLit's Page builder](/assets/pages/page-builder-home.png)
 
 ## Default pages
 
 When you create a new school, the following pages are automatically created for you.
 
-1. Homepage
+1. Home page
 
 This is your school's landing page hosted at `/`.
 
@@ -34,7 +34,7 @@ Each product that you create, gets its own sales page. This comes handy if you w
 
 ## Next step
 
-[Learn about page blocks](/en/pages/blocks).
+[Learn about page blocks](/en/website/blocks).
 
 ## Stuck somewhere?
 
