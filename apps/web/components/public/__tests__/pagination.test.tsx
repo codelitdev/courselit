@@ -24,8 +24,7 @@ describe("PaginationControls", () => {
             />,
         );
 
-        expect(screen.getByText("2")).toBeInTheDocument();
-        expect(screen.getByText("of 5")).toBeInTheDocument();
+        expect(screen.getByText("2 of 5")).toBeInTheDocument();
     });
 
     it("disables previous button on first page", () => {

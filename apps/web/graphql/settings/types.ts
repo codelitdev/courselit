@@ -10,7 +10,6 @@ import {
 } from "graphql";
 import mediaTypes from "../media/types";
 import { getMedia } from "../media/logic";
-import designTypes from "../design/types";
 const { mediaType } = mediaTypes;
 
 const typefaceType = new GraphQLObjectType({
@@ -122,10 +121,10 @@ const domain = new GraphQLObjectType({
     fields: {
         name: { type: new GraphQLNonNull(GraphQLString) },
         settings: { type: siteType },
-        theme: { type: designTypes.themeType },
         typefaces: { type: new GraphQLList(typefaceType) },
         draftTypefaces: { type: new GraphQLList(typefaceType) },
         quota: { type: quota },
+        lastEditedThemeId: { type: GraphQLString },
     },
 });
 

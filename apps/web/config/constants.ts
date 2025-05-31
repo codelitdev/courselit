@@ -6,6 +6,7 @@ const { permissions } = UIConstants;
 
 export default {
     domainNameForSingleTenancy: "main",
+    schoolNameForSingleTenancy: "My school",
     dbConnectionString:
         process.env.DB_CONNECTION_STRING ||
         `mongodb://localhost/${

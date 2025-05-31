@@ -11,17 +11,19 @@ jobs:
         node-version: '23.x'
     - uses: pnpm/action-setup@v2
       with:
-        version: 8
+        version: 10 
     - run: pnpm install
     - name: Build packages
       run: |
           pnpm --filter @courselit/icons build
+          pnpm --filter @courselit/page-models build
           pnpm --filter @courselit/common-models build
           pnpm --filter @courselit/utils build
           pnpm --filter @courselit/text-editor build
           pnpm --filter @courselit/state-management build
           pnpm --filter @courselit/components-library build
-          pnpm --filter @courselit/common-widgets build
+          pnpm --filter @courselit/page-primitives build
+          pnpm --filter @courselit/page-blocks build
     - name: Running tests
       run: |
         pnpm test

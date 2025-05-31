@@ -21,10 +21,10 @@ export default function TextRenderer({
     }
 
     return (
-        <div className="text-editor flex flex-col-reverse sm:flex-row gap-4">
-            <div className="flex-grow">
+        <span className="text-editor flex flex-col-reverse sm:flex-row gap-4">
+            <span className="flex-grow">
                 <Renderer json={json as any} fontFamily={"inherit"} />
-            </div>
+            </span>
             {showTableOfContent && headings.length > 0 && (
                 <nav className="lg:w-1/4">
                     {contentTableHeader && (
@@ -43,6 +43,6 @@ export default function TextRenderer({
                     </ul>
                 </nav>
             )}
-        </div>
+        </span>
     );
 }

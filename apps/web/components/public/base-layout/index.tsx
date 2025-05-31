@@ -7,16 +7,12 @@ import {
     AppDispatch,
     AppState,
 } from "@courselit/state-management";
-import type {
-    Media,
-    Theme,
-    Typeface,
-    WidgetInstance,
-} from "@courselit/common-models";
+import type { Media, Typeface, WidgetInstance } from "@courselit/common-models";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
+import { Theme } from "@courselit/page-models";
 
-interface MasterLayoutProps {
+interface BaseLayoutProps {
     title: string;
     siteInfo: any;
     layout: WidgetInstance[];
@@ -24,15 +20,15 @@ interface MasterLayoutProps {
     children?: ReactNode;
     childrenOnTop?: boolean;
     typefaces: Typeface[];
-    theme: Theme;
     dispatch: AppDispatch;
     description?: string;
     socialImage?: Media;
     robotsAllowed?: boolean;
     state: AppState;
+    theme: Theme;
 }
 
-export const MasterLayout = ({
+export const BaseLayout = ({
     title,
     siteInfo,
     children,
@@ -45,12 +41,10 @@ export const MasterLayout = ({
     socialImage,
     robotsAllowed = true,
     state,
-}: MasterLayoutProps) => {
+    theme,
+}: BaseLayoutProps) => {
     const { status } = useSession();
-
-    const primaryFontFamily = typefaces.filter(
-        (x) => x.section === "default",
-    )[0]?.typeface;
+    state.theme = theme;
 
     useEffect(() => {
         if (status === "authenticated") {
@@ -131,12 +125,6 @@ export const MasterLayout = ({
             >
                 {children}
             </Template>
-            <style jsx global>{`
-                :root {
-                    --primary-font: ${primaryFontFamily}, sans-serif;
-                    --secondary-font: ${primaryFontFamily}, sans-serif;
-                }
-            `}</style>
         </>
     );
 };
@@ -146,10 +134,10 @@ const mapStateToProps = (state: AppState) => ({
     siteInfo: state.siteinfo,
     address: state.address,
     typefaces: state.typefaces,
-    theme: state.theme,
     state: state,
+    theme: state.theme,
 });
 
 const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
 
-export default connect(mapStateToProps, mapDispatchToProps)(MasterLayout);
+export default connect(mapStateToProps, mapDispatchToProps)(BaseLayout);

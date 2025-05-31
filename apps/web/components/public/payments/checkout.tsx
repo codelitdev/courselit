@@ -5,7 +5,6 @@ import { useContext, useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
     FormControl,
@@ -32,6 +31,7 @@ import {
     AddressContext,
     ProfileContext,
     SiteInfoContext,
+    ThemeContext,
 } from "@components/contexts";
 import { FetchBuilder } from "@courselit/utils";
 import { useRouter } from "next/navigation";
@@ -39,6 +39,15 @@ import { loadStripe } from "@stripe/stripe-js";
 import { getSymbolFromCurrency, useToast } from "@courselit/components-library";
 import { getPlanPrice } from "@ui-lib/utils";
 import Script from "next/script";
+import {
+    Button,
+    Header3,
+    Header4,
+    PageCard,
+    PageCardContent,
+    Text1,
+} from "@courselit/page-primitives";
+import { CHECKOUT_PAGE_ORDER_SUMMARY } from "@ui-config/strings";
 const { PaymentPlanType: paymentPlanType } = Constants;
 
 export interface Product {
@@ -107,6 +116,7 @@ export default function Checkout({
     const stripePromise = loadStripe(siteinfo.stripeKey as string);
     const router = useRouter();
     const { toast } = useToast();
+    const { theme } = useContext(ThemeContext);
 
     useEffect(() => {
         const fetchMembership = async () => {
@@ -301,136 +311,176 @@ export default function Checkout({
     };
 
     const MobileOrderSummary = () => (
-        <div className="md:hidden w-full">
-            <div className="sticky top-0 bg-gray-100 z-10 w-full">
-                <div className="flex items-center justify-between p-4 bg-background border-b w-full">
-                    <div className="flex items-center gap-1">
-                        <ShoppingCart className="h-5 w-5" />
-                        <Button
-                            variant="ghost"
-                            className="p-0 h-auto font-normal hover:bg-transparent flex items-center"
-                            onClick={() =>
-                                setIsOrderSummaryOpen(!isOrderSummaryOpen)
-                            }
+        <div className="md:hidden w-full sticky top-20 z-11 mb-8">
+            <PageCard theme={theme.theme}>
+                <PageCardContent theme={theme.theme} className="p-0">
+                    <div className="w-full">
+                        <div
+                            className="flex items-center justify-between p-4 border-b w-full"
+                            style={{
+                                borderBottomColor: theme.theme.colors.border,
+                            }}
                         >
-                            {isOrderSummaryOpen ? "Hide" : "Show"} order summary
-                            <ChevronUp
-                                className={`h-4 w-4 ml-1 transition-transform duration-200 ${isOrderSummaryOpen ? "" : "rotate-180"}`}
-                            />
-                        </Button>
-                    </div>
-                    <div className="font-medium flex items-center">
-                        {currencySymbol}
-                        {getPlanPrice(
-                            selectedPlan || paymentPlans[0],
-                        ).amount.toFixed(2)}
-                        <span className="text-sm text-muted-foreground ml-1">
-                            {
-                                getPlanPrice(selectedPlan || paymentPlans[0])
-                                    .period
-                            }
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <Collapsible
-                open={isOrderSummaryOpen}
-                onOpenChange={setIsOrderSummaryOpen}
-            >
-                <CollapsibleTrigger className="sr-only">
-                    Toggle order summary
-                </CollapsibleTrigger>
-                <CollapsibleContent className="border-b bg-gray-100">
-                    <div className="p-4 space-y-4">
-                        <div className="flex gap-4">
-                            <div className="h-16 w-16 relative rounded-lg overflow-hidden bg-white">
-                                <Image
-                                    src={
-                                        product.featuredImage ||
-                                        "/courselit_backdrop_square.webp"
+                            <div className="flex items-center gap-1">
+                                <ShoppingCart className="h-5 w-5" />
+                                <Text1
+                                    className="p-0 !m-0 h-auto font-normal hover:bg-transparent flex items-center"
+                                    onClick={() =>
+                                        setIsOrderSummaryOpen(
+                                            !isOrderSummaryOpen,
+                                        )
                                     }
-                                    alt={product.name}
-                                    fill
-                                    className="object-cover"
-                                />
+                                    theme={theme.theme}
+                                >
+                                    {isOrderSummaryOpen ? "Hide" : "Show"} order
+                                    summary
+                                    <ChevronUp
+                                        className={`h-4 w-4 ml-1 transition-transform duration-200 ${isOrderSummaryOpen ? "" : "rotate-180"}`}
+                                    />
+                                </Text1>
                             </div>
-                            <div>
-                                <h3 className="font-medium">{product.name}</h3>
-                                {product.description && (
-                                    <p className="text-sm text-muted-foreground mt-1">
-                                        {product.description}
-                                    </p>
-                                )}
+                            <div className="font-medium flex items-center">
+                                {currencySymbol}
+                                {getPlanPrice(
+                                    selectedPlan || paymentPlans[0],
+                                ).amount.toFixed(2)}
+                                <span className="text-sm text-muted-foreground ml-1">
+                                    {
+                                        getPlanPrice(
+                                            selectedPlan || paymentPlans[0],
+                                        ).period
+                                    }
+                                </span>
                             </div>
                         </div>
+                    </div>
 
-                        {selectedPlan && (
-                            <div className="space-y-4">
-                                <div className="flex justify-between pt-4 border-t">
-                                    <span className="font-medium">Total</span>
-                                    <div className="text-right flex items-center">
-                                        <div className="font-medium">
-                                            {currencySymbol}
-                                            {getPlanPrice(
-                                                selectedPlan,
-                                            ).amount.toFixed(2)}
-                                        </div>
-                                        <div className="text-sm text-muted-foreground ml-1">
-                                            {getPlanPrice(selectedPlan).period}
-                                        </div>
+                    <Collapsible
+                        open={isOrderSummaryOpen}
+                        onOpenChange={setIsOrderSummaryOpen}
+                    >
+                        <CollapsibleTrigger className="sr-only">
+                            Toggle order summary
+                        </CollapsibleTrigger>
+                        <CollapsibleContent
+                            style={{
+                                borderBottomColor: theme.theme.colors.border,
+                            }}
+                        >
+                            <div className="p-4 space-y-4">
+                                <div className="flex gap-4">
+                                    <div className="h-16 w-16 relative rounded-lg overflow-hidden">
+                                        <Image
+                                            src={
+                                                product.featuredImage ||
+                                                "/courselit_backdrop_square.webp"
+                                            }
+                                            alt={product.name}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Header3 theme={theme.theme}>
+                                            {product.name}
+                                        </Header3>
+                                        {product.description && (
+                                            <Text1 theme={theme.theme}>
+                                                {product.description}
+                                            </Text1>
+                                        )}
                                     </div>
                                 </div>
+
+                                {selectedPlan && (
+                                    <div className="space-y-4">
+                                        <div
+                                            className="flex justify-between pt-4 border-t"
+                                            style={{
+                                                borderTopColor:
+                                                    theme.theme.colors.border,
+                                            }}
+                                        >
+                                            <Header3 theme={theme.theme}>
+                                                Total
+                                            </Header3>
+                                            <div className="text-right flex items-center">
+                                                <Header4 className="font-medium">
+                                                    {currencySymbol}
+                                                    {getPlanPrice(
+                                                        selectedPlan,
+                                                    ).amount.toFixed(2)}
+                                                </Header4>
+                                                <Text1 theme={theme.theme}>
+                                                    {
+                                                        getPlanPrice(
+                                                            selectedPlan,
+                                                        ).period
+                                                    }
+                                                </Text1>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
-                </CollapsibleContent>
-            </Collapsible>
+                        </CollapsibleContent>
+                    </Collapsible>
+                </PageCardContent>
+            </PageCard>
         </div>
     );
 
     const DesktopOrderSummary = () => (
-        <div className="bg-gray-50 rounded-lg p-6">
-            <h2 className="text-lg font-semibold mb-4">Order summary</h2>
-            <div className="flex items-start gap-4 pb-4">
-                <div className="h-16 w-16 relative rounded-lg overflow-hidden bg-gray-100">
-                    <Image
-                        src={
-                            product.featuredImage ||
-                            "/courselit_backdrop_square.webp"
-                        }
-                        alt={product.name}
-                        fill
-                        className="object-cover"
-                    />
-                </div>
-                <div>
-                    <h3 className="font-semibold">{product.name}</h3>
-                    {product.description && (
-                        <p className="text-sm text-muted-foreground">
-                            {product.description}
-                        </p>
-                    )}
-                </div>
-            </div>
-            {selectedPlan && (
-                <div className="mt-4 pt-4 border-t">
-                    <div className="flex justify-between items-center">
-                        <span className="font-medium">Total</span>
-                        <span className="font-medium">
-                            {currencySymbol}
-                            {getPlanPrice(selectedPlan).amount.toFixed(2)}
-                            <span className="text-sm text-muted-foreground ml-1">
-                                {getPlanPrice(selectedPlan).period}
-                            </span>
-                        </span>
+        <PageCard theme={theme.theme}>
+            <PageCardContent theme={theme.theme} className="space-y-4">
+                <Header3 theme={theme.theme}>
+                    {CHECKOUT_PAGE_ORDER_SUMMARY}
+                </Header3>
+                <div className="flex items-start gap-4 pb-4">
+                    <div className="h-16 w-16 relative rounded-lg overflow-hidden bg-gray-100">
+                        <Image
+                            src={
+                                product.featuredImage ||
+                                "/courselit_backdrop_square.webp"
+                            }
+                            alt={product.name}
+                            fill
+                            className="object-cover"
+                        />
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                        {getPlanDescription(selectedPlan, currencySymbol)}
-                    </p>
+                    <div>
+                        <Header4 theme={theme.theme}>{product.name}</Header4>
+                        {product.description && (
+                            <Text1 theme={theme.theme}>
+                                {product.description}
+                            </Text1>
+                        )}
+                    </div>
                 </div>
-            )}
-        </div>
+                {selectedPlan && (
+                    <div
+                        className="mt-4 pt-4 border-t"
+                        style={{
+                            borderTopColor: theme.theme.colors.border,
+                        }}
+                    >
+                        <div className="flex justify-between items-center">
+                            <Header4 theme={theme.theme}>Total</Header4>
+                            <Header4 theme={theme.theme}>
+                                {currencySymbol}
+                                {getPlanPrice(selectedPlan).amount.toFixed(2)}
+                                <span className="text-sm text-muted-foreground ml-1">
+                                    {getPlanPrice(selectedPlan).period}
+                                </span>
+                            </Header4>
+                        </div>
+                        <Text1 theme={theme.theme}>
+                            {getPlanDescription(selectedPlan, currencySymbol)}
+                        </Text1>
+                    </div>
+                )}
+            </PageCardContent>
+        </PageCard>
     );
 
     useEffect(() => {
@@ -448,17 +498,17 @@ export default function Checkout({
     }, [siteinfo, (window as any).createLemonSqueezy]);
 
     return (
-        <div className="min-h-screen bg-background w-full">
+        <div className="min-h-screen w-full">
             <div className="w-full">
                 <MobileOrderSummary />
-                <div className="w-full grid md:grid-cols-[1fr,400px] gap-8 items-start px-4 py-8">
+                <div className="w-full grid md:grid-cols-[1fr,400px] gap-8 items-start">
                     <div className="space-y-8">
                         {membershipStatus ===
                             Constants.MembershipStatus.ACTIVE ||
                         membershipStatus ===
                             Constants.MembershipStatus.REJECTED ? (
-                            <div className="">
-                                <h2 className="text-lg mb-4 flex items-center font-semibold gap-2">
+                            <div className="space-y-4">
+                                <Header3 theme={theme.theme}>
                                     {membershipStatus ===
                                     Constants.MembershipStatus.ACTIVE ? (
                                         <Check />
@@ -469,13 +519,13 @@ export default function Checkout({
                                     Constants.MembershipStatus.ACTIVE
                                         ? "Already owned"
                                         : "Access Denied"}
-                                </h2>
-                                <p className="text-muted-foreground mb-8">
+                                </Header3>
+                                <Text1 theme={theme.theme}>
                                     {membershipStatus ===
                                     Constants.MembershipStatus.ACTIVE
                                         ? "You already have access to this resource."
                                         : "You have been rejected and cannot proceed with the checkout."}
-                                </p>
+                                </Text1>
                                 {membershipStatus ===
                                     Constants.MembershipStatus.ACTIVE && (
                                     <Button
@@ -499,6 +549,7 @@ export default function Checkout({
                                             }
                                         }}
                                         className="bg-black text-white hover:bg-black/90"
+                                        theme={theme.theme}
                                     >
                                         Go to the resource
                                     </Button>
@@ -506,10 +557,10 @@ export default function Checkout({
                             </div>
                         ) : (
                             <>
-                                <div>
-                                    <h2 className="text-base font-semibold mb-2">
+                                <div className="space-y-4">
+                                    <Header3 theme={theme.theme}>
                                         Personal Information
-                                    </h2>
+                                    </Header3>
                                     {!isLoggedIn ? (
                                         <LoginForm
                                             onLoginComplete={
@@ -518,18 +569,18 @@ export default function Checkout({
                                         />
                                     ) : (
                                         <div className="text-sm space-y-2">
-                                            <p>
+                                            <Text1 theme={theme.theme}>
                                                 <span className="font-semibold">
                                                     Email:
                                                 </span>{" "}
                                                 {userEmail}
-                                            </p>
-                                            <p>
+                                            </Text1>
+                                            <Text1 theme={theme.theme}>
                                                 <span className="font-semibold">
                                                     Name:
                                                 </span>{" "}
                                                 {userName}
-                                            </p>
+                                            </Text1>
                                         </div>
                                     )}
                                 </div>
@@ -538,10 +589,10 @@ export default function Checkout({
                                         onSubmit={form.handleSubmit(onSubmit)}
                                         className="space-y-6"
                                     >
-                                        <div className="mb-6">
-                                            <h2 className="text-base font-semibold mb-4">
+                                        <div className="mb-6 space-y-4">
+                                            <Header3 theme={theme.theme}>
                                                 Select Payment Plan
-                                            </h2>
+                                            </Header3>
                                             <FormField
                                                 control={form.control}
                                                 name="selectedPlan"
@@ -588,12 +639,16 @@ export default function Checkout({
                                                                                         plan.name
                                                                                     }
                                                                                 </FormLabel>
-                                                                                <p className="text-sm text-muted-foreground">
+                                                                                <Text1
+                                                                                    theme={
+                                                                                        theme.theme
+                                                                                    }
+                                                                                >
                                                                                     {getPlanDescription(
                                                                                         plan,
                                                                                         currencySymbol,
                                                                                     )}
-                                                                                </p>
+                                                                                </Text1>
                                                                             </div>
                                                                         </FormItem>
                                                                     ),
@@ -633,7 +688,6 @@ export default function Checkout({
                                             )}
                                         <Button
                                             type="submit"
-                                            className="w-full bg-black text-white hover:bg-black/90"
                                             disabled={
                                                 isSubmitting ||
                                                 !isLoggedIn ||
@@ -648,6 +702,7 @@ export default function Checkout({
                                                         "joiningReason",
                                                     ))
                                             }
+                                            theme={theme.theme}
                                         >
                                             {isSubmitting
                                                 ? "Working..."

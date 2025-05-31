@@ -4,13 +4,11 @@ import {
     Form,
     FormField,
     FormSubmit,
-    IconButton,
     MediaSelector,
     PageBuilderPropertyHeader,
 } from "@courselit/components-library";
 import {
     BUTTON_SAVE,
-    EDIT_PAGE_SEO_HEADER,
     SEO_FORM_DESC_LABEL,
     SEO_FORM_NAME_LABEL,
     SEO_FORM_ROBOTS_LABEL,
@@ -18,7 +16,6 @@ import {
     SEO_FORM_SOCIAL_IMAGE_TOOLTIP,
 } from "@ui-config/strings";
 import { ChangeEvent, FormEvent, useState } from "react";
-import { Cross as Close } from "@courselit/icons";
 
 export default function SeoEditor({
     title,
@@ -59,13 +56,7 @@ export default function SeoEditor({
     };
 
     return (
-        <div className="flex flex-col">
-            <div className="flex items-center px-2 py-3 justify-between">
-                <h2 className="text-lg font-medium">{EDIT_PAGE_SEO_HEADER}</h2>
-                <IconButton onClick={onClose} variant="soft">
-                    <Close fontSize="small" />
-                </IconButton>
-            </div>
+        <div>
             <Form className="flex flex-col p-2 gap-4" onSubmit={onSubmit}>
                 <FormField
                     required

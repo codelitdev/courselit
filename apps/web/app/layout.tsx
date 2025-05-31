@@ -1,6 +1,7 @@
 import "remirror/styles/all.css";
-import "@courselit/common-widgets/styles.css";
+import "@courselit/page-blocks/styles.css";
 import "@courselit/components-library/styles.css";
+import "@courselit/page-primitives/styles.css";
 import "../styles/globals.css";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
@@ -8,6 +9,7 @@ import { getBackendAddress } from "@ui-lib/utils";
 import { FetchBuilder } from "@courselit/utils";
 import { SiteInfo } from "@courselit/common-models";
 import { SITE_SETTINGS_DEFAULT_TITLE } from "@ui-config/strings";
+import * as fonts from "@/lib/fonts";
 
 export async function generateMetadata(): Promise<Metadata> {
     const headersList = headers();
@@ -16,7 +18,8 @@ export async function generateMetadata(): Promise<Metadata> {
         host: headersList.get("host"),
     });
     const siteInfoQuery = `
-            { site: getSiteInfo {
+            { 
+                site: getSiteInfo {
                     name,
                     settings {
                         title,
@@ -37,17 +40,6 @@ export async function generateMetadata(): Promise<Metadata> {
                         lemonsqueezyOneTimeVariantId,
                         lemonsqueezySubscriptionMonthlyVariantId,
                         lemonsqueezySubscriptionYearlyVariantId,
-                    },
-                    theme {
-                        name,
-                        active,
-                        styles,
-                        url
-                    },
-                    typefaces {
-                        section,
-                        typeface,
-                        fontWeights
                     },
                 }
             }
@@ -82,7 +74,11 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
-            <body>{children}</body>
+            <body
+                className={`${fonts.openSans.variable} ${fonts.montserrat.variable} ${fonts.lato.variable} ${fonts.poppins.variable} ${fonts.sourceSans3.variable} ${fonts.raleway.variable} ${fonts.notoSans.variable} ${fonts.merriweather.variable} ${fonts.inter.variable} ${fonts.alegreya.variable} ${fonts.roboto.variable} ${fonts.mulish.variable} ${fonts.nunito.variable} ${fonts.rubik.variable} ${fonts.playfairDisplay.variable} ${fonts.oswald.variable} ${fonts.ptSans.variable} ${fonts.workSans.variable} ${fonts.robotoSlab.variable} ${fonts.sourceSerif4.variable} ${fonts.bebasNeue.variable} ${fonts.quicksand.variable} font-sans`}
+            >
+                {children}
+            </body>
         </html>
     );
 }

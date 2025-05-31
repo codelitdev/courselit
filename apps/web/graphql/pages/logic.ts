@@ -2,21 +2,27 @@ import { responses } from "../../config/strings";
 import { checkIfAuthenticated } from "../../lib/graphql";
 import GQLContext from "../../models/GQLContext";
 import PageModel, { Page } from "../../models/Page";
-import { getPageResponse } from "./helpers";
+import {
+    copySharedWidgetsToDomain,
+    getPageResponse,
+    initSharedWidgets,
+} from "./helpers";
 import constants from "../../config/constants";
 import Course from "../../models/Course";
-import { checkPermission, generateUniqueId } from "@courselit/utils";
+import { checkPermission } from "@courselit/utils";
 import { Media, User, Constants } from "@courselit/common-models";
 import { Domain } from "../../models/Domain";
 import { homePageTemplate } from "./page-templates";
+import { publishTheme } from "../themes/logic";
 const { product, site, blogPage, communityPage, permissions, defaultPages } =
     constants;
 const { pageNames } = Constants;
 
-export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
+export async function getPage({ id, ctx }: { id?: string; ctx: GQLContext }) {
     await initSharedWidgets(ctx);
     if (!id) {
         return {
+            type: site,
             layout: [
                 ctx.subdomain.sharedWidgets.header,
                 ctx.subdomain.sharedWidgets.footer,
@@ -84,102 +90,6 @@ export async function getPage({ id, ctx }: { id: string; ctx: GQLContext }) {
     }
 }
 
-async function initSharedWidgets(ctx: GQLContext) {
-    let subdomainChanged = false;
-    if (!ctx.subdomain.sharedWidgets.header) {
-        ctx.subdomain.sharedWidgets.header = {
-            name: "header",
-            shared: true,
-            deleteable: false,
-            widgetId: generateUniqueId(),
-            settings: {
-                links: [
-                    {
-                        label: "Products",
-                        href: "/products",
-                        isButton: false,
-                        isPrimary: false,
-                    },
-                    {
-                        label: "Blog",
-                        href: "/blog",
-                        isButton: false,
-                        isPrimary: false,
-                    },
-                    {
-                        label: "Start learning",
-                        href: "/products",
-                        isButton: true,
-                        isPrimary: true,
-                    },
-                ],
-                linkAlignment: "center",
-                showLoginControl: true,
-                linkFontWeight: "font-normal",
-                spacingBetweenLinks: 16,
-                verticalPadding: 16,
-                horizontalPadding: 100,
-            },
-        };
-        subdomainChanged = true;
-    }
-    if (!ctx.subdomain.sharedWidgets.footer) {
-        ctx.subdomain.sharedWidgets.footer = {
-            name: "footer",
-            shared: true,
-            deleteable: false,
-            widgetId: generateUniqueId(),
-            settings: {
-                textColor: "#f8f1f1",
-                backgroundColor: "#000000",
-                sections: [
-                    {
-                        name: "Legal",
-                        links: [
-                            { label: "Terms of use", href: "/p/terms" },
-                            { label: "Privacy policy", href: "/p/privacy" },
-                        ],
-                    },
-                ],
-                foregroundColor: "#ffffff",
-                horizontalPadding: 100,
-                verticalPadding: 88,
-                titleFontSize: 2,
-                sectionHeaderFontSize: "font-semibold",
-                socials: {
-                    facebook: "",
-                    twitter: "https://twitter.com/courselit",
-                    instagram: "",
-                    youtube: "",
-                    linkedin: "",
-                    discord: "",
-                    github: "https://github.com/codelitdev/courselit",
-                },
-                socialIconsSize: 24,
-            },
-        };
-        subdomainChanged = true;
-    }
-    if (!ctx.subdomain.sharedWidgets["newsletter-signup"]) {
-        ctx.subdomain.sharedWidgets["newsletter-signup"] = {
-            name: "newsletter-signup",
-            shared: true,
-            deleteable: true,
-            widgetId: generateUniqueId(),
-            settings: {
-                backgroundColor: "#f5f5f5",
-                alignment: "center",
-                verticalPadding: 88,
-            },
-        };
-        subdomainChanged = true;
-    }
-    if (subdomainChanged) {
-        (ctx.subdomain as any).markModified("sharedWidgets");
-        await (ctx.subdomain as any).save();
-    }
-}
-
 export const updatePage = async ({
     context: ctx,
     pageId,
@@ -206,28 +116,43 @@ export const updatePage = async ({
         domain: ctx.subdomain._id,
     });
 
+    if (!page) {
+        return null;
+    }
+
     if (inputLayout) {
         try {
             let layout;
             try {
                 layout = JSON.parse(inputLayout);
-            } catch (err) {
-                throw new Error(responses.invalid_layout);
-            }
-            for (let widget of layout) {
-                if (widget.shared && widget.widgetId) {
-                    ctx.subdomain.draftSharedWidgets[widget.name] =
-                        Object.assign(
-                            {},
-                            ctx.subdomain.draftSharedWidgets[widget.name],
-                            widget,
-                        );
-                    widget.settings = undefined;
+                const headerWidget = layout.find(
+                    (widget: any) => widget.name === "header",
+                );
+                const footerWidget = layout.find(
+                    (widget: any) => widget.name === "footer",
+                );
+                if (!headerWidget || !footerWidget) {
+                    throw new Error(responses.missing_mandatory_blocks);
                 }
+            } catch (err) {
+                throw new Error(`${responses.invalid_layout}: ${err.message}`);
             }
-            (ctx.subdomain as any).markModified("draftSharedWidgets");
-            await (ctx.subdomain as any).save();
-            page.draftLayout = layout;
+            // for (let widget of layout) {
+            //     if (widget.shared && widget.widgetId) {
+            //         ctx.subdomain.draftSharedWidgets[widget.name] =
+            //             Object.assign(
+            //                 {},
+            //                 ctx.subdomain.draftSharedWidgets[widget.name],
+            //                 widget,
+            //             );
+            //         widget.settings = undefined;
+            //     }
+            // }
+            // (ctx.subdomain as any).markModified("draftSharedWidgets");
+            // await (ctx.subdomain as any).save();
+            const layoutWithSharedWidgetsSettings =
+                await copySharedWidgetsToDomain(layout, ctx.subdomain);
+            page.draftLayout = layoutWithSharedWidgetsSettings;
         } catch (err: any) {
             throw new Error(err.message);
         }
@@ -295,7 +220,11 @@ export const publish = async (
 
     ctx.subdomain.typefaces = ctx.subdomain.draftTypefaces;
     ctx.subdomain.sharedWidgets = ctx.subdomain.draftSharedWidgets;
-    ctx.subdomain.draftSharedWidgets = {};
+    // ctx.subdomain.draftSharedWidgets = {};
+
+    if (ctx.subdomain.themeId) {
+        await publishTheme(ctx.subdomain.themeId, ctx);
+    }
 
     await (ctx.subdomain as any).save();
     await (page as any).save();

@@ -69,8 +69,110 @@ const config: Config = {
                 md: "calc(var(--radius) - 2px)",
                 sm: "calc(var(--radius) - 4px)",
             },
+            fontFamily: {
+                sans: ["var(--font-open-sans)"],
+                montserrat: ["var(--font-montserrat)"],
+                lato: ["var(--font-lato)"],
+                poppins: ["var(--font-poppins)"],
+                sourceSans3: ["var(--font-source-sans-3)"],
+                raleway: ["var(--font-raleway)"],
+                notoSans: ["var(--font-noto-sans)"],
+                merriweather: ["var(--font-merriweather)"],
+                inter: ["var(--font-inter)"],
+                alegreya: ["var(--font-alegreya)"],
+                roboto: ["var(--font-roboto)"],
+                mulish: ["var(--font-mulish)"],
+                nunito: ["var(--font-nunito)"],
+                rubik: ["var(--font-rubik)"],
+                playfairDisplay: ["var(--font-playfair-display)"],
+                oswald: ["var(--font-oswald)"],
+                ptSans: ["var(--font-pt-sans)"],
+                workSans: ["var(--font-work-sans)"],
+                robotoSlab: ["var(--font-roboto-slab)"],
+                sourceSerif4: ["var(--font-source-serif-4)"],
+                bebasNeue: ["var(--font-bebas-neue)"],
+                quicksand: ["var(--font-quicksand)"],
+            },
+            boxShadow: {
+                DEFAULT: "var(--shadow)",
+                "2xs": "var(--shadow-2xs)",
+                xs: "var(--shadow-xs)",
+                sm: "var(--shadow-sm)",
+                md: "var(--shadow-md)",
+                lg: "var(--shadow-lg)",
+                xl: "var(--shadow-xl)",
+                "2xl": "var(--shadow-2xl)",
+            },
         },
     },
     plugins: [require("tailwindcss-animate")],
+    safelist: [
+        {
+            pattern: /text-(sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|8xl)/,
+            variants: ["lg"],
+        },
+        {
+            pattern: /py-(4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20)/,
+        },
+        {
+            pattern: /px-(4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20)/,
+        },
+        "transparent",
+        {
+            pattern:
+                /bg-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(50|100|200|300|400|500|600|700|800|900|950)/,
+            variants: ["hover", "disabled", "dark"],
+        },
+        {
+            pattern:
+                /text-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(50|100|200|300|400|500|600|700|800|900|950)/,
+            variants: ["hover", "disabled", "dark"],
+        },
+        "transition",
+        {
+            pattern: /transition-(all|colors|opacity|shadow|transform|none)/,
+        },
+        {
+            pattern: /duration-(0|75|100|150|200|300|500|700|1000)/,
+        },
+        {
+            pattern: /ease-(in|out|in-out|linear)/,
+            variants: ["hover"],
+        },
+        {
+            pattern:
+                /translate-x-(1|2|3|4|5|6|7|8|9|10|-1|-2|-3|-4|-5|-6|-7|-8|-9|-10)/,
+            variants: ["hover"],
+        },
+        {
+            pattern:
+                /translate-y-(1|2|3|4|5|6|7|8|9|10|-1|-2|-3|-4|-5|-6|-7|-8|-9|-10)/,
+            variants: ["hover"],
+        },
+        {
+            pattern: /scale-(0|50|75|90|95|100|105|110|125|150)/,
+            variants: ["hover"],
+        },
+        {
+            pattern: /shadow-(sm|md|lg|xl|2xl|inner|none)/,
+            variants: ["hover"],
+        },
+        {
+            pattern: /underline/,
+            variants: ["hover"],
+        },
+        {
+            pattern: /border-(solid|dashed|dotted|double|none)/,
+            variants: ["hover"],
+        },
+        {
+            pattern: /shadow-(sm|md|lg|xl|2xl|inner|none)/,
+            variants: ["hover", "dark"],
+        },
+        {
+            pattern: /max-w-(2xl|3xl|4xl|5xl|6xl)/,
+            variants: ["lg"],
+        },
+    ],
 };
 export default config;

@@ -1,7 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ThemeStyle } from "@courselit/page-models";
 
-export function SkeletonCard() {
+export function SkeletonCard({ theme }: { theme?: ThemeStyle }) {
     return (
         <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
             <div className="relative aspect-video">

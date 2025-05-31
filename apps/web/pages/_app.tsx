@@ -1,7 +1,8 @@
 import React from "react";
 import "../styles/globals.css";
-import "@courselit/common-widgets/styles.css";
+import "@courselit/page-blocks/styles.css";
 import "@courselit/components-library/styles.css";
+import "@courselit/page-primitives/styles.css";
 import type { AppProps } from "next/app";
 import { Provider, useStore } from "react-redux";
 import { store as wrapper } from "@courselit/state-management";
@@ -14,8 +15,9 @@ import CodeInjector from "../components/public/code-injector";
 import { useRouter } from "next/router";
 import "remirror/styles/all.css";
 import { getBackendAddress } from "../ui-lib/utils";
-import FontsInjector from "../components/public/fonts-injector";
 import { SessionProvider } from "next-auth/react";
+import * as fonts from "@/lib/fonts";
+import { ThemeProvider } from "../components/next-theme-provider";
 
 type CourseLitProps = AppProps & {};
 
@@ -36,17 +38,19 @@ function MyApp({
     return (
         <SessionProvider session={session}>
             <Provider store={store}>
-                <div
-                    style={
-                        {
-                            //visibility: !mounted ? "hidden" : "visible",
-                        }
-                    }
+                <ThemeProvider
+                    attribute="class"
+                    defaultTheme="system"
+                    enableSystem
+                    disableTransitionOnChange
                 >
-                    <Component {...pageProps} />
-                </div>
-                <CodeInjector router={router} />
-                <FontsInjector router={router} />
+                    <div
+                        className={`${fonts.openSans.variable} ${fonts.montserrat.variable} ${fonts.lato.variable} ${fonts.poppins.variable} ${fonts.sourceSans3.variable} ${fonts.raleway.variable} ${fonts.notoSans.variable} ${fonts.merriweather.variable} ${fonts.inter.variable} ${fonts.alegreya.variable} ${fonts.roboto.variable} ${fonts.mulish.variable} ${fonts.nunito.variable} ${fonts.rubik.variable} ${fonts.playfairDisplay.variable} ${fonts.oswald.variable} ${fonts.ptSans.variable} ${fonts.workSans.variable} ${fonts.robotoSlab.variable} ${fonts.sourceSerif4.variable} ${fonts.bebasNeue.variable} ${fonts.quicksand.variable} font-sans`}
+                    >
+                        <Component {...pageProps} />
+                    </div>
+                    <CodeInjector router={router} />
+                </ThemeProvider>
             </Provider>
         </SessionProvider>
     );

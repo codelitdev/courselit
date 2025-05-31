@@ -20,12 +20,12 @@ import type {
     State,
     SiteInfo,
     //WidgetsData,
-    Theme,
     Typeface,
 } from "@courselit/common-models";
 import { ThunkAction } from "redux-thunk";
 import { AnyAction } from "redux";
 import { ServerConfig } from "@courselit/common-models";
+import { Theme } from "@courselit/page-models";
 
 export function signedIn() {
     return async (dispatch: any) => {
@@ -115,7 +115,8 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
             dispatch(networkAction(true));
 
             const query = `
-            { site: getSiteInfo {
+            { 
+                site: getSiteInfo {
                     name,
                     settings {
                         title,
@@ -133,17 +134,21 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
                         hideCourseLitBranding,
                         razorpayKey,
                     },
-                    theme {
-                        name,
-                        active,
-                        styles,
-                        url
-                    },
                     typefaces {
                         section,
                         typeface,
                         fontWeights
                     },
+                },
+                theme: getTheme {
+                    themeId
+                    name
+                    theme {
+                        colors
+                        typography
+                        interactives
+                        structure
+                    }
                 }
             }
             `;
@@ -156,8 +161,17 @@ export function updateSiteInfo(): ThunkAction<void, State, unknown, AnyAction> {
 
             if (response && response.site) {
                 dispatch(newSiteInfoAvailable(response.site.settings));
-                dispatch(themeAvailable(response.site.theme));
                 dispatch(typefacesAvailable(response.site.typefaces));
+            }
+            if (response && response.theme) {
+                // dispatch(themeAvailable(response.theme));
+                dispatch(
+                    themeAvailable({
+                        id: response.theme.themeId,
+                        name: response.theme.name,
+                        theme: response.theme.theme,
+                    }),
+                );
             }
         } catch (err) {
             console.error(err); // eslint-disable-line no-console
