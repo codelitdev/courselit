@@ -24,7 +24,7 @@ const WidgetByName = ({
     settings,
     pageData,
     editing = false,
-}: Omit<WidgetProps<WidgetDefaultSettings>, "toggleTheme">) => {
+}: Omit<WidgetProps<WidgetDefaultSettings>, "toggleTheme" | "nextTheme">) => {
     const { theme: nextTheme, setTheme: setNextTheme } = useTheme();
 
     const toggleTheme = () => {

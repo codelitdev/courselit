@@ -2,7 +2,11 @@
 
 import { useState, useEffect, useContext } from "react";
 import type { ContentItem } from "@/components/admin/my-content/content";
-import { AddressContext, ProfileContext } from "@components/contexts";
+import {
+    AddressContext,
+    ProfileContext,
+    ThemeContext,
+} from "@components/contexts";
 import { MY_CONTENT_HEADER } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
 import { FetchBuilder } from "@courselit/utils";
@@ -10,8 +14,8 @@ import { Constants, MembershipEntityType } from "@courselit/common-models";
 import { MyContentCard } from "@components/admin/my-content/content-card";
 import { BookOpen, Users } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@components/ui/button";
 import { SkeletonCard } from "@components/skeleton-card";
+import { Button } from "@courselit/page-primitives";
 
 function ContentGrid({
     items,
@@ -45,6 +49,7 @@ export default function Page() {
     const [loading, setLoading] = useState(true);
     const { profile } = useContext(ProfileContext);
     const address = useContext(AddressContext);
+    const { theme } = useContext(ThemeContext);
 
     useEffect(() => {
         const getUserContent = async () => {
@@ -111,13 +116,13 @@ export default function Page() {
             </p>
             {type === Constants.MembershipEntityType.COURSE ? (
                 <Link href="/products" className="text-primary">
-                    <Button variant="outline" size="sm">
+                    <Button size="sm" theme={theme.theme}>
                         Browse products
                     </Button>
                 </Link>
             ) : (
                 <Link href="/communities" className="text-primary">
-                    <Button variant="outline" size="sm">
+                    <Button size="sm" theme={theme.theme}>
                         Browse communities
                     </Button>
                 </Link>

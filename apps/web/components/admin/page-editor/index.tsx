@@ -881,6 +881,7 @@ export default function PageEditor({
                                         })}
                                         dispatch={dispatch}
                                         id={page.pageId}
+                                        injectThemeStyles={true}
                                     />
                                 )}
                             </div>

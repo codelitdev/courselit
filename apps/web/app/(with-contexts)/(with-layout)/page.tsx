@@ -1,4 +1,4 @@
-import { getPage, getSiteInfo } from "@ui-lib/utils";
+import { getFullSiteSetup } from "@ui-lib/utils";
 import { getAddressFromHeaders } from "@/ui-lib/utils";
 import ClientSidePage from "./p/[id]/client-side-page";
 import { headers } from "next/headers";
@@ -15,14 +15,14 @@ export async function generateMetadata(
     parent: ResolvingMetadata,
 ): Promise<Metadata> {
     const address = getAddressFromHeaders(headers);
-    const siteInfo = await getSiteInfo(address);
+    const siteInfo = await getFullSiteSetup(address, "homepage");
     if (!siteInfo) {
         return {
             title: "CourseLit",
         };
     }
 
-    const page = await getPage(address, "homepage");
+    const page = siteInfo.page;
 
     const title = page.title || siteInfo.settings.title;
     const socialImage = page.socialImage || siteInfo.settings.logo;
@@ -63,16 +63,14 @@ export async function generateMetadata(
 
 export default async function Page() {
     const address = getAddressFromHeaders(headers);
-    const siteInfo = await getSiteInfo(address);
+    const siteInfo = await getFullSiteSetup(address, "homepage");
     if (!siteInfo) {
         return null;
     }
 
-    const page = await getPage(address, "homepage");
-
     return (
         <ClientSidePage
-            page={page}
+            page={siteInfo.page}
             siteinfo={siteInfo.settings}
             theme={siteInfo.theme}
         />

@@ -72,22 +72,21 @@ export const canAccessDashboard = (profile: Profile) => {
 export const constructThumbnailUrlFromFileUrl = (url: string) =>
     url ? url.replace(url.split("/").pop(), "thumb.webp") : null;
 
+type FrontEndPage = Pick<
+    Page,
+    | "name"
+    | "type"
+    | "title"
+    | "layout"
+    | "pageData"
+    | "description"
+    | "socialImage"
+    | "robotsAllowed"
+>;
 export const getPage = async (
     backend: string,
     id?: string,
-): Promise<
-    Pick<
-        Page,
-        | "name"
-        | "type"
-        | "title"
-        | "layout"
-        | "pageData"
-        | "description"
-        | "socialImage"
-        | "robotsAllowed"
-    >
-> => {
+): Promise<FrontEndPage> => {
     const query = id
         ? `
     query {
@@ -139,49 +138,33 @@ export const getPage = async (
 
 export const getSiteInfo = async (
     backend: string,
-): Promise<
-    | {
-          settings: SiteInfo;
-          theme: Theme;
-      }
-    | undefined
-> => {
+): Promise<SiteInfo | undefined> => {
     const query = `
-            { 
-                site: getSiteInfo {
-                    settings {
-                        title,
-                        subtitle,
-                        logo {
-                            file,
-                            caption
-                        },
-                        currencyISOCode,
-                        paymentMethod,
-                        stripeKey,
-                        codeInjectionHead,
-                        codeInjectionBody,
-                        mailingAddress,
-                        hideCourseLitBranding,
-                        razorpayKey,
-                        lemonsqueezyStoreId,
-                        lemonsqueezyOneTimeVariantId,
-                        lemonsqueezySubscriptionMonthlyVariantId,
-                        lemonsqueezySubscriptionYearlyVariantId,
+        query { 
+            site: getSiteInfo {
+                settings {
+                    title,
+                    subtitle,
+                    logo {
+                        file,
+                        caption
                     },
-                }
-                theme: getTheme {
-                    themeId
-                    name
-                    theme {
-                        colors
-                        typography
-                        interactives
-                        structure
-                    }
-                }
+                    currencyISOCode,
+                    paymentMethod,
+                    stripeKey,
+                    codeInjectionHead,
+                    codeInjectionBody,
+                    mailingAddress,
+                    hideCourseLitBranding,
+                    razorpayKey,
+                    lemonsqueezyStoreId,
+                    lemonsqueezyOneTimeVariantId,
+                    lemonsqueezySubscriptionMonthlyVariantId,
+                    lemonsqueezySubscriptionYearlyVariantId,
+                },
             }
-            `;
+        }
+    `;
     try {
         const fetch = new FetchBuilder()
             .setUrl(`${backend}/api/graph`)
@@ -189,23 +172,122 @@ export const getSiteInfo = async (
             .setIsGraphQLEndpoint(true)
             .build();
         const response = await fetch.exec();
+        return response.site.settings;
+    } catch (e: any) {
+        console.log("getSiteInfo", e.message); // eslint-disable-line no-console
+    }
+};
+
+export const getFullSiteSetup = async (
+    backend: string,
+    id?: string,
+): Promise<
+    | {
+          settings: SiteInfo;
+          theme: Theme;
+          page: FrontEndPage;
+      }
+    | undefined
+> => {
+    const query = `
+        query ($id: String) { 
+            theme: getTheme {
+                themeId
+                name
+                theme {
+                    colors
+                    typography
+                    interactives
+                    structure
+                }
+            }
+            page: getPage(id: $id) {
+                type,
+                name,
+                title,
+                layout,
+                pageData,
+                description,
+                socialImage {
+                    file,
+                    caption, 
+                    mimeType
+                },
+                robotsAllowed,
+            }
+        }
+        `;
+    const fetch = new FetchBuilder()
+        .setUrl(`${backend}/api/graph`)
+        .setPayload({ query, variables: { id } })
+        .setIsGraphQLEndpoint(true)
+        .build();
+
+    const settings = await getSiteInfo(backend);
+    if (!settings) {
+        return undefined;
+    }
+
+    try {
+        const response = await fetch.exec();
         const transformedTheme: Theme = {
             id: response.theme.themeId,
             name: response.theme.name,
             theme: response.theme.theme,
         };
         return {
-            settings: response.site.settings,
+            settings,
             theme: transformedTheme,
+            page: response.page,
         };
     } catch (e: any) {
         console.log("getSiteInfo", e.message); // eslint-disable-line no-console
+        return undefined;
     }
+};
 
-    return undefined as unknown as {
-        settings: SiteInfo;
-        theme: Theme;
-    };
+export const getProfile = async (
+    backend: string,
+): Promise<Partial<Profile> | null> => {
+    const query = `
+        { profile: getUser {
+            name,
+            id,
+            email,
+            userId,
+            bio,
+            permissions,
+            purchases {
+                courseId,
+                completedLessons,
+                accessibleGroups
+            }
+            avatar {
+                    mediaId,
+                    originalFileName,
+                    mimeType,
+                    size,
+                    access,
+                    file,
+                    thumbnail,
+                    caption
+                },
+            }
+        }
+        `;
+    const fetch = new FetchBuilder()
+        .setUrl(`${backend}/api/graph`)
+        .setPayload(query)
+        .setIsGraphQLEndpoint(true)
+        .build();
+
+    try {
+        const response = await fetch.exec();
+        return response.profile;
+    } catch (e: any) {
+        console.log("getProfile", e.message); // eslint-disable-line no-console
+        return null;
+    }
 };
 
 export const isEnrolled = (courseId: string, profile: Profile) =>

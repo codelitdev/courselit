@@ -10,15 +10,16 @@ import {
 } from "@components/contexts";
 import { BaseLayout } from "@components/public/base-layout";
 import { Profile } from "@courselit/common-models";
-import { getPage } from "@ui-lib/utils";
-import { useContext, useEffect, useState } from "react";
+import { getFullSiteSetup } from "@ui-lib/utils";
+import { useContext } from "react";
 
 export default function HomepageLayout({
     children,
+    siteInfo,
 }: {
     children: React.ReactNode;
+    siteInfo: Awaited<ReturnType<typeof getFullSiteSetup>>;
 }) {
-    const [page, setPage] = useState<any>(null);
     const address = useContext(AddressContext);
     const siteinfo = useContext(SiteInfoContext);
     const typefaces = useContext(TypefacesContext);
@@ -26,20 +27,10 @@ export default function HomepageLayout({
     const { profile } = useContext(ProfileContext);
     const { theme } = useContext(ThemeContext);
 
-    useEffect(() => {
-        if (address.backend) {
-            getPage(address.backend).then(setPage);
-        }
-    }, [address]);
-
-    if (!page) {
-        return null;
-    }
-
     return (
         <BaseLayout
-            layout={page.layout}
-            title={page.title}
+            layout={siteInfo!.page.layout}
+            title={siteInfo!.page.title || ""}
             typefaces={typefaces}
             siteInfo={siteinfo}
             dispatch={() => {}}
@@ -49,7 +40,7 @@ export default function HomepageLayout({
                 siteinfo,
                 address: address,
                 profile: profile as Profile,
-                auth: profile.email
+                auth: profile?.email
                     ? {
                           guest: false,
                           checked: true,

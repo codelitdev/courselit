@@ -8,9 +8,9 @@ export const AddressContext = createContext(defaultState.address);
 export const SiteInfoContext = createContext(defaultState.siteinfo);
 
 export const ProfileContext = createContext<{
-    profile: Partial<Profile>;
+    profile: Partial<Profile> | null;
     setProfile: any;
-}>({ profile: defaultState.profile, setProfile: undefined });
+}>({ profile: null, setProfile: undefined });
 
 export const TypefacesContext = createContext(defaultState.typefaces);
 
