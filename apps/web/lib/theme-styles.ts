@@ -18,7 +18,7 @@ export function generateThemeStyles(theme: Theme): string {
     }
 
     return `
-        :root {
+        .courselit-theme {
             /* Light theme colors */
             --background: ${lightColors.background ? formatHSL(convert.hex.hsl(lightColors.background.replace("#", ""))) : ""};
             --foreground: ${lightColors.foreground ? formatHSL(convert.hex.hsl(lightColors.foreground.replace("#", ""))) : ""};
@@ -60,7 +60,7 @@ export function generateThemeStyles(theme: Theme): string {
             --shadow-2xl: ${lightColors.shadow2xl};
         }
 
-        .dark {
+        .dark .courselit-theme {
             /* Dark theme colors */
             --background: ${darkColors.background ? formatHSL(convert.hex.hsl(darkColors.background.replace("#", ""))) : ""};
             --foreground: ${darkColors.foreground ? formatHSL(convert.hex.hsl(darkColors.foreground.replace("#", ""))) : ""};

@@ -6,11 +6,13 @@ import { AppDispatch, AppState } from "@courselit/state-management";
 import convert, { HSL } from "color-convert";
 import EditableWidget from "./editable-widget";
 
+type PageData = Record<string, unknown> & {
+    pageType?: "product" | "site" | "blog" | "community";
+};
+
 interface TemplateProps {
-    layout: WidgetInstance[];
-    pageData: Record<string, unknown> & {
-        pageType: "product" | "site" | "blog" | "community";
-    };
+    layout: Partial<WidgetInstance>[];
+    pageData: PageData;
     editing?: boolean;
     onEditClick?: (widgetId: string) => void;
     children?: ReactNode;
@@ -37,8 +39,6 @@ const Template = (props: TemplateProps) => {
         onMoveWidgetDown,
         dispatch,
         state,
-        id,
-        injectThemeStyles = false,
     } = props;
     const themeColors = state.theme?.theme?.colors;
 
@@ -77,7 +77,7 @@ const Template = (props: TemplateProps) => {
     );
 
     return (
-        <div className="flex flex-col font-primary" id={id}>
+        <div className="flex flex-col font-primary courselit-theme">
             {header && (
                 <EditableWidget
                     item={header}
@@ -117,332 +117,295 @@ const Template = (props: TemplateProps) => {
                 />
             )}
             <Toaster />
-            {injectThemeStyles && (
-                <style jsx global>{`
-                    :root {
-                        --background: ${themeColors?.light?.background
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.light?.background?.replace(
-                                          "#",
-                                          "",
-                                      ),
+            {/* {injectThemeStyles && ( */}
+            <style jsx global>{`
+                .courselit-theme {
+                    --background: ${themeColors?.light?.background
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.background?.replace(
+                                      "#",
+                                      "",
                                   ),
-                              )
-                            : ""};
-                        --foreground: ${themeColors?.light?.foreground
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.light?.foreground?.replace(
-                                          "#",
-                                          "",
-                                      ),
+                              ),
+                          )
+                        : ""};
+                    --foreground: ${themeColors?.light?.foreground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.foreground?.replace(
+                                      "#",
+                                      "",
                                   ),
-                              )
-                            : ""};
-                        --card: ${themeColors?.light?.card
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.light?.card?.replace(
-                                          "#",
-                                          "",
-                                      ),
+                              ),
+                          )
+                        : ""};
+                    --card: ${themeColors?.light?.card
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.card?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --card-foreground: ${themeColors?.light?.cardForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.cardForeground?.replace(
+                                      "#",
+                                      "",
                                   ),
-                              )
-                            : ""};
-                        --card-foreground: ${themeColors?.light?.cardForeground
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.light?.cardForeground?.replace(
-                                          "#",
-                                          "",
-                                      ),
+                              ),
+                          )
+                        : ""};
+                    --primary: ${themeColors?.light?.primary
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.primary?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --primary-foreground: ${themeColors?.light
+                        ?.primaryForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.primaryForeground?.replace(
+                                      "#",
+                                      "",
                                   ),
-                              )
-                            : ""};
-                        --primary: ${themeColors?.light?.primary
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.light?.primary?.replace(
-                                          "#",
-                                          "",
-                                      ),
+                              ),
+                          )
+                        : ""};
+                    --secondary: ${themeColors?.light?.secondary
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.secondary?.replace(
+                                      "#",
+                                      "",
                                   ),
-                              )
-                            : ""};
-                        --primary-foreground: ${themeColors?.light
-                            ?.primaryForeground
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.light?.primaryForeground?.replace(
-                                          "#",
-                                          "",
-                                      ),
+                              ),
+                          )
+                        : ""};
+                    --secondary-foreground: ${themeColors?.light
+                        ?.secondaryForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.secondaryForeground?.replace(
+                                      "#",
+                                      "",
                                   ),
-                              )
-                            : ""};
-                        --secondary: ${themeColors?.light?.secondary
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.light?.secondary?.replace(
-                                          "#",
-                                          "",
-                                      ),
+                              ),
+                          )
+                        : ""};
+                    --muted: ${themeColors?.light?.muted
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.muted?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --muted-foreground: ${themeColors?.light?.mutedForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.mutedForeground?.replace(
+                                      "#",
+                                      "",
                                   ),
-                              )
-                            : ""};
-                        --secondary-foreground: ${themeColors?.light
-                            ?.secondaryForeground
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.light?.secondaryForeground?.replace(
-                                          "#",
-                                          "",
-                                      ),
+                              ),
+                          )
+                        : ""};
+                    --accent: ${themeColors?.light?.accent
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.accent?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --accent-foreground: ${themeColors?.light?.accentForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.accentForeground?.replace(
+                                      "#",
+                                      "",
                                   ),
-                              )
-                            : ""};
-                        --muted: ${themeColors?.light?.muted
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.light?.muted?.replace(
-                                          "#",
-                                          "",
-                                      ),
+                              ),
+                          )
+                        : ""};
+                    --border: ${themeColors?.light?.border
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.border?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --destructive: ${themeColors?.light?.destructive
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.destructive?.replace(
+                                      "#",
+                                      "",
                                   ),
-                              )
-                            : ""};
-                        --muted-foreground: ${themeColors?.light
-                            ?.mutedForeground
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.light?.mutedForeground?.replace(
-                                          "#",
-                                          "",
-                                      ),
+                              ),
+                          )
+                        : ""};
+                    --input: ${themeColors?.light?.input
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.light?.input?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --shadow-2xs: ${themeColors?.light?.shadow2xs};
+                    --shadow-xs: ${themeColors?.light?.shadowXs};
+                    --shadow-sm: ${themeColors?.light?.shadowSm};
+                    --shadow-md: ${themeColors?.light?.shadowMd};
+                    --shadow-lg: ${themeColors?.light?.shadowLg};
+                    --shadow-xl: ${themeColors?.light?.shadowXl};
+                    --shadow-2xl: ${themeColors?.light?.shadow2xl};
+                }
+                .dark .courselit-theme {
+                    --background: ${themeColors?.dark?.background
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.background?.replace(
+                                      "#",
+                                      "",
                                   ),
-                              )
-                            : ""};
-                        --accent: ${themeColors?.light?.accent
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.light?.accent?.replace(
-                                          "#",
-                                          "",
-                                      ),
+                              ),
+                          )
+                        : ""};
+                    --foreground: ${themeColors?.dark?.foreground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.foreground?.replace(
+                                      "#",
+                                      "",
                                   ),
-                              )
-                            : ""};
-                        --accent-foreground: ${themeColors?.light
-                            ?.accentForeground
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.light?.accentForeground?.replace(
-                                          "#",
-                                          "",
-                                      ),
+                              ),
+                          )
+                        : ""};
+                    --card: ${themeColors?.dark?.card
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.card?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --card-foreground: ${themeColors?.dark?.cardForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.cardForeground?.replace(
+                                      "#",
+                                      "",
                                   ),
-                              )
-                            : ""};
-                        --border: ${themeColors?.light?.border
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.light?.border?.replace(
-                                          "#",
-                                          "",
-                                      ),
+                              ),
+                          )
+                        : ""};
+                    --primary: ${themeColors?.dark?.primary
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.primary?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --primary-foreground: ${themeColors?.dark?.primaryForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.primaryForeground?.replace(
+                                      "#",
+                                      "",
                                   ),
-                              )
-                            : ""};
-                        --destructive: ${themeColors?.light?.destructive
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.light?.destructive?.replace(
-                                          "#",
-                                          "",
-                                      ),
+                              ),
+                          )
+                        : ""};
+                    --secondary: ${themeColors?.dark?.secondary
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.secondary?.replace(
+                                      "#",
+                                      "",
                                   ),
-                              )
-                            : ""};
-                        --input: ${themeColors?.light?.input
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.light?.input?.replace(
-                                          "#",
-                                          "",
-                                      ),
+                              ),
+                          )
+                        : ""};
+                    --secondary-foreground: ${themeColors?.dark
+                        ?.secondaryForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.secondaryForeground?.replace(
+                                      "#",
+                                      "",
                                   ),
-                              )
-                            : ""};
-                        --shadow-2xs: ${themeColors?.light?.shadow2xs};
-                        --shadow-xs: ${themeColors?.light?.shadowXs};
-                        --shadow-sm: ${themeColors?.light?.shadowSm};
-                        --shadow-md: ${themeColors?.light?.shadowMd};
-                        --shadow-lg: ${themeColors?.light?.shadowLg};
-                        --shadow-xl: ${themeColors?.light?.shadowXl};
-                        --shadow-2xl: ${themeColors?.light?.shadow2xl};
-                    }
-                    .dark {
-                        --background: ${themeColors?.dark?.background
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.dark?.background?.replace(
-                                          "#",
-                                          "",
-                                      ),
+                              ),
+                          )
+                        : ""};
+                    --muted: ${themeColors?.dark?.muted
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.muted?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --muted-foreground: ${themeColors?.dark?.mutedForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.mutedForeground?.replace(
+                                      "#",
+                                      "",
                                   ),
-                              )
-                            : ""};
-                        --foreground: ${themeColors?.dark?.foreground
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.dark?.foreground?.replace(
-                                          "#",
-                                          "",
-                                      ),
+                              ),
+                          )
+                        : ""};
+                    --accent: ${themeColors?.dark?.accent
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.accent?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --accent-foreground: ${themeColors?.dark?.accentForeground
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.accentForeground?.replace(
+                                      "#",
+                                      "",
                                   ),
-                              )
-                            : ""};
-                        --card: ${themeColors?.dark?.card
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.dark?.card?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --border: ${themeColors?.dark?.border
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.border?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --destructive: ${themeColors?.dark?.destructive
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.destructive?.replace(
+                                      "#",
+                                      "",
                                   ),
-                              )
-                            : ""};
-                        --card-foreground: ${themeColors?.dark?.cardForeground
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.dark?.cardForeground?.replace(
-                                          "#",
-                                          "",
-                                      ),
-                                  ),
-                              )
-                            : ""};
-                        --primary: ${themeColors?.dark?.primary
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.dark?.primary?.replace(
-                                          "#",
-                                          "",
-                                      ),
-                                  ),
-                              )
-                            : ""};
-                        --primary-foreground: ${themeColors?.dark
-                            ?.primaryForeground
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.dark?.primaryForeground?.replace(
-                                          "#",
-                                          "",
-                                      ),
-                                  ),
-                              )
-                            : ""};
-                        --secondary: ${themeColors?.dark?.secondary
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.dark?.secondary?.replace(
-                                          "#",
-                                          "",
-                                      ),
-                                  ),
-                              )
-                            : ""};
-                        --secondary-foreground: ${themeColors?.dark
-                            ?.secondaryForeground
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.dark?.secondaryForeground?.replace(
-                                          "#",
-                                          "",
-                                      ),
-                                  ),
-                              )
-                            : ""};
-                        --muted: ${themeColors?.dark?.muted
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.dark?.muted?.replace(
-                                          "#",
-                                          "",
-                                      ),
-                                  ),
-                              )
-                            : ""};
-                        --muted-foreground: ${themeColors?.dark?.mutedForeground
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.dark?.mutedForeground?.replace(
-                                          "#",
-                                          "",
-                                      ),
-                                  ),
-                              )
-                            : ""};
-                        --accent: ${themeColors?.dark?.accent
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.dark?.accent?.replace(
-                                          "#",
-                                          "",
-                                      ),
-                                  ),
-                              )
-                            : ""};
-                        --accent-foreground: ${themeColors?.dark
-                            ?.accentForeground
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.dark?.accentForeground?.replace(
-                                          "#",
-                                          "",
-                                      ),
-                                  ),
-                              )
-                            : ""};
-                        --border: ${themeColors?.dark?.border
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.dark?.border?.replace(
-                                          "#",
-                                          "",
-                                      ),
-                                  ),
-                              )
-                            : ""};
-                        --destructive: ${themeColors?.dark?.destructive
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.dark?.destructive?.replace(
-                                          "#",
-                                          "",
-                                      ),
-                                  ),
-                              )
-                            : ""};
-                        --input: ${themeColors?.dark?.input
-                            ? formatHSL(
-                                  convert.hex.hsl(
-                                      themeColors?.dark?.input?.replace(
-                                          "#",
-                                          "",
-                                      ),
-                                  ),
-                              )
-                            : ""};
-                        --shadow-2xs: ${themeColors?.dark?.shadow2xs};
-                        --shadow-xs: ${themeColors?.dark?.shadowXs};
-                        --shadow-sm: ${themeColors?.dark?.shadowSm};
-                        --shadow-md: ${themeColors?.dark?.shadowMd};
-                        --shadow-lg: ${themeColors?.dark?.shadowLg};
-                        --shadow-xl: ${themeColors?.dark?.shadowXl};
-                        --shadow-2xl: ${themeColors?.dark?.shadow2xl};
-                    }
-                `}</style>
-            )}
+                              ),
+                          )
+                        : ""};
+                    --input: ${themeColors?.dark?.input
+                        ? formatHSL(
+                              convert.hex.hsl(
+                                  themeColors?.dark?.input?.replace("#", ""),
+                              ),
+                          )
+                        : ""};
+                    --shadow-2xs: ${themeColors?.dark?.shadow2xs};
+                    --shadow-xs: ${themeColors?.dark?.shadowXs};
+                    --shadow-sm: ${themeColors?.dark?.shadowSm};
+                    --shadow-md: ${themeColors?.dark?.shadowMd};
+                    --shadow-lg: ${themeColors?.dark?.shadowLg};
+                    --shadow-xl: ${themeColors?.dark?.shadowXl};
+                    --shadow-2xl: ${themeColors?.dark?.shadow2xl};
+                }
+            `}</style>
+            {/* )} */}
         </div>
     );
 };

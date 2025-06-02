@@ -866,7 +866,6 @@ export default function PageEditor({
                                         pageData={page.pageData || {}}
                                         editing={true}
                                         onEditClick={onWidgetClicked}
-                                        selectedWidget={selectedWidget}
                                         onAddWidgetBelow={onAddWidgetBelow}
                                         onMoveWidgetDown={onMoveWidgetDown}
                                         onMoveWidgetUp={onMoveWidgetUp}
@@ -880,8 +879,6 @@ export default function PageEditor({
                                             },
                                         })}
                                         dispatch={dispatch}
-                                        id={page.pageId}
-                                        injectThemeStyles={true}
                                     />
                                 )}
                             </div>

@@ -13,9 +13,9 @@ export default function NextThemeSwitcher() {
             size="icon"
         >
             {isDark ? (
-                <Moon className="w-4 h-4" />
-            ) : (
                 <Sun className="w-4 h-4" />
+            ) : (
+                <Moon className="w-4 h-4" />
             )}
         </Button>
     );
