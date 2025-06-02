@@ -6,9 +6,16 @@ function formatHSL(hsl: HSL): string {
 }
 
 export function generateThemeStyles(theme: Theme): string {
-    const { colors } = theme.theme;
+    const { colors } = theme?.theme;
+    if (!colors) {
+        return "";
+    }
+
     const lightColors = colors.light;
     const darkColors = colors.dark;
+    if (!lightColors || !darkColors) {
+        return "";
+    }
 
     return `
         :root {
