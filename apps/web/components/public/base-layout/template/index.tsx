@@ -96,16 +96,16 @@ const Template = (props: TemplateProps) => {
                 />
             )}
             {childrenOnTop && (
-                <Fragment>
+                <div className="min-h-screen bg-background">
                     {children}
                     {pageWidgets}
-                </Fragment>
+                </div>
             )}
             {!childrenOnTop && (
-                <Fragment>
+                <div className="min-h-screen bg-background">
                     {pageWidgets}
                     {children}
-                </Fragment>
+                </div>
             )}
             {footer && (
                 <EditableWidget
