@@ -37,32 +37,32 @@
         }
 
         :is(h1) {
-            @apply text-4xl font-semibold mb-5;
+            @apply text-4xl font-bold mb-4;
             color: inherit;
         }
 
         :is(h2) {
-            @apply text-3xl font-semibold mb-4;
+            @apply text-3xl font-bold mb-4;
             color: inherit;
         }
 
         :is(h3) {
-            @apply text-2xl font-semibold mb-3;
+            @apply text-2xl font-semibold mb-4;
             color: inherit;
         }
 
         :is(h4) {
-            @apply text-xl font-semibold mb-2;
+            @apply text-xl font-semibold mb-4;
             color: inherit;
         }
 
         :is(h5) {
-            @apply text-lg font-semibold mb-1;
+            @apply text-lg font-semibold mb-4;
             color: inherit;
         }
 
         :is(h6) {
-            @apply text-base font-semibold mb-1;
+            @apply text-base font-semibold mb-4;
             color: inherit;
         }
 

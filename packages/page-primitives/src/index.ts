@@ -17,4 +17,5 @@ export * from "./card";
 export * from "./label";
 export * from "./section";
 export * from "./badge";
+export * from "./switch";
 export * from "./themes";

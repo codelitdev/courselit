@@ -2,7 +2,7 @@ import React from "react";
 import { useState } from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
-import { Link, Switch, TextRenderer } from "@courselit/components-library";
+import { Link, TextRenderer } from "@courselit/components-library";
 import { columns as defaultColumns } from "./defaults";
 import {
     Button,
@@ -14,9 +14,11 @@ import {
     Subheader1,
     Text1,
     Text2,
+    Switch,
 } from "@courselit/page-primitives";
 import { Preheader } from "@courselit/page-primitives";
 import { ThemeStyle } from "@courselit/page-models";
+import clsx from "clsx";
 
 const twGridColsMap = {
     2: "lg:grid-cols-2",
@@ -83,7 +85,7 @@ export default function Widget({
                             <div className="mt-1">
                                 <Switch
                                     checked={pricing === "yearly"}
-                                    onChange={(value: boolean) => {
+                                    onCheckedChange={(value: boolean) => {
                                         setPricing(
                                             value ? "yearly" : "monthly",
                                         );
@@ -100,17 +102,24 @@ export default function Widget({
                 </div>
                 {items && items.length > 0 && (
                     <div
-                        className={`grid grid-cols-1 md:grid-cols-2 ${twGridColsMap[columns]} gap-4 justify-center items-stretch`}
+                        className={clsx(
+                            "grid gap-4 justify-center items-stretch",
+                            "grid-cols-1 md:grid-cols-2",
+                            twGridColsMap[columns],
+                        )}
                     >
                         {items.map((item, index) => (
                             <PageCard
                                 key={index}
                                 theme={overiddenTheme}
-                                className="p-0"
+                                className=""
                             >
-                                <PageCardContent>
+                                <PageCardContent
+                                    className="h-full flex flex-col"
+                                    theme={overiddenTheme}
+                                >
                                     <Preheader
-                                        className="pt-4"
+                                        className=""
                                         theme={overiddenTheme}
                                     >
                                         {item.title}
@@ -131,7 +140,7 @@ export default function Widget({
                                                 json={item.description}
                                             />
                                         </Text1>
-                                        <div className="">
+                                        <div className="grow">
                                             {item.features
                                                 ?.split(",")
                                                 .map((x) => x.trim())

@@ -87,7 +87,7 @@ export const PageCardContent: React.FC<PageCardContentProps> = ({
     const cardStyles = theme?.interactives?.card;
     const classes = cn(
         // Base styles
-        "p-4 pt-0",
+        "p-4",
         // Theme interactivity
         cardStyles?.padding?.x,
         cardStyles?.padding?.y,

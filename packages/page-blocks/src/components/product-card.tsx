@@ -24,13 +24,11 @@ export function ProductCard({
     badgeChildren?: any;
 }) {
     return (
-        <PageCard isLink={true} className="overflow-hidden" theme={theme}>
-            <Link
-                href={href}
-                style={{
-                    height: "100%",
-                    display: "block",
-                }}
+        <Link href={href} className="flex">
+            <PageCard
+                isLink={true}
+                className="flex flex-col overflow-hidden"
+                theme={theme}
             >
                 <PageCardImage
                     src={image}
@@ -38,8 +36,10 @@ export function ProductCard({
                     className="aspect-video object-cover"
                     theme={theme}
                 />
-                <PageCardContent theme={theme} className="h-full">
-                    <PageCardHeader theme={theme}>{title}</PageCardHeader>
+                <PageCardContent theme={theme} className="flex flex-col grow">
+                    <PageCardHeader theme={theme} className="grow">
+                        {title}
+                    </PageCardHeader>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <Image
@@ -57,8 +57,8 @@ export function ProductCard({
                         )}
                     </div>
                 </PageCardContent>
-            </Link>
-        </PageCard>
+            </PageCard>
+        </Link>
     );
 }
 

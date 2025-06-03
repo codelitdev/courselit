@@ -9,7 +9,7 @@ import {
     PageCardHeader,
     PageCardContent,
     PageCardImage,
-    Subheader1,
+    Text1,
 } from "@courselit/page-primitives";
 
 interface ItemmProps {
@@ -33,8 +33,8 @@ export default function Itemm({
     theme,
 }: ItemmProps) {
     return (
-        <PageCard className="h-full flex flex-col" theme={theme}>
-            <PageCardContent className="" theme={theme}>
+        <PageCard className="h-full" theme={theme}>
+            <PageCardContent className="h-full flex flex-col" theme={theme}>
                 <PageCardHeader theme={theme}>
                     <div
                         className={`flex gap-4 ${
@@ -64,21 +64,21 @@ export default function Itemm({
                     </div>
                 </PageCardHeader>
                 <article
-                    className={`flex flex-col ${
+                    className={`grow flex flex-col ${
                         alignment === "center" ? "items-center" : "items-start"
                     }`}
                 >
                     {description && (
                         <div
-                            className={`mb-2 ${
+                            className={`grow mb-2 ${
                                 alignment === "center"
                                     ? "text-center"
                                     : "text-left"
                             }`}
                         >
-                            <Subheader1 theme={theme}>
+                            <Text1 theme={theme}>
                                 <TextRenderer json={description} />
-                            </Subheader1>
+                            </Text1>
                         </div>
                     )}
                 </article>
