@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { Drawer, Image, Link as AppLink } from "@courselit/components-library";
+import { Image, Link as AppLink } from "@courselit/components-library";
 import { Link } from "../settings";
 import { Media } from "@courselit/common-models";
 import { ThemeStyle } from "@courselit/page-models";
-import { Header4, Button } from "@courselit/page-primitives";
+import { Header4, Button, Drawer } from "@courselit/page-primitives";
 import PageLink from "./link";
 import { MenuIcon } from "lucide-react";
 
@@ -38,6 +38,7 @@ const MobileNav = (props: MobileNavSettings) => {
                 </Button>
             }
             side="right"
+            theme={theme}
         >
             <AppLink
                 href="/"

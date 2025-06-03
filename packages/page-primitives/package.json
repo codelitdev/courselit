@@ -44,6 +44,7 @@
     },
     "dependencies": {
         "@courselit/page-models": "workspace:^",
+        "@radix-ui/react-dialog": "^1.1.14",
         "@radix-ui/react-label": "^2.1.2",
         "@radix-ui/react-slot": "^1.2.0",
         "@radix-ui/react-switch": "^1.2.2",

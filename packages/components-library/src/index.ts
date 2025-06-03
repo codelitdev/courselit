@@ -43,7 +43,6 @@ import DragAndDrop from "./drag-and-drop";
 export { Button as Button2 } from "./components/ui/button";
 export * from "./menu";
 export * from "./components/ui/avatar";
-export * from "./drawer";
 export * from "./components/ui/accordion";
 export * from "./components/ui/slider";
 export * from "./components/ui/card";

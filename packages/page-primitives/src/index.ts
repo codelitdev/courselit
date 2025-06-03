@@ -19,3 +19,4 @@ export * from "./section";
 export * from "./badge";
 export * from "./switch";
 export * from "./themes";
+export * from "./drawer";
