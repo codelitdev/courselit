@@ -3,13 +3,11 @@
 import { Breadcrumbs, TextRenderer } from "@courselit/components-library";
 import {
     Header1,
-    Subheader2,
     Caption,
     Text1,
     Text2,
 } from "@courselit/page-primitives";
 import Image from "next/image";
-import { BLOG_UPDATED_PREFIX } from "@ui-config/strings";
 import { formattedLocaleDate, truncate } from "@ui-lib/utils";
 import useProduct from "@/hooks/use-product";
 import { AddressContext, ThemeContext } from "@components/contexts";
@@ -21,7 +19,7 @@ export default function Post({ courseId }: { courseId: string }) {
     const { theme } = useContext(ThemeContext);
     const { product: post, loaded } = useProduct(courseId, address);
 
-    if (!post) {
+    if (!loaded && !post) {
         return null;
     }
 
@@ -35,10 +33,10 @@ export default function Post({ courseId }: { courseId: string }) {
                 <Text2 className="cursor-pointer" theme={theme.theme}>
                     <Link href="/blog">Blog</Link>
                 </Text2>
-                <Text2 theme={theme.theme}>{truncate(post.title, 20)}</Text2>
+                <Text2 theme={theme.theme}>{truncate(post?.title, 20)}</Text2>
             </Breadcrumbs>
-            <Header1 theme={theme.theme}>{post.title}</Header1>
-            <div className="flex items-center gap-4">
+            <Header1 theme={theme.theme}>{post?.title}</Header1>
+            <div className="flex items-center gap-4 mb-6">
                 <Image
                     src={
                         post.featuredImage?.file ||
@@ -49,21 +47,19 @@ export default function Post({ courseId }: { courseId: string }) {
                     height={32}
                     className="rounded-full"
                 />
-                <div className="flex flex-col gap-1">
-                    <Subheader2 theme={theme.theme}>
-                        {post.creatorName}
-                    </Subheader2>
+                <div className="flex items-center gap-2">
+                    <Text2 theme={theme.theme}>{post.creatorName}</Text2>
                     <Caption theme={theme.theme}>
-                        <span className="font-semibold">
-                            {BLOG_UPDATED_PREFIX}:
-                        </span>{" "}
-                        {formattedLocaleDate(post.updatedAt, "long")}
+                        · {formattedLocaleDate(post.updatedAt, "long")}
                     </Caption>
                 </div>
             </div>
             {post.description && (
                 <Text1 theme={theme.theme}>
-                    <TextRenderer json={JSON.parse(post.description)} />
+                    <TextRenderer
+                        json={JSON.parse(post.description)}
+                        showTableOfContent={true}
+                    />
                 </Text1>
             )}
         </>

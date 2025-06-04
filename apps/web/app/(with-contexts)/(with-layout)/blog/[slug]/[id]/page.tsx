@@ -16,7 +16,7 @@ export default function BlogPost({
 
     return (
         <Section theme={theme.theme}>
-            <div className="flex flex-col gap-4 min-h-[80vh]">
+            <div className="flex flex-col gap-4 max-w-[640px] mx-auto">
                 <Post courseId={params.id} />
             </div>
         </Section>
