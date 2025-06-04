@@ -13,6 +13,7 @@ import useProduct from "@/hooks/use-product";
 import { AddressContext, ThemeContext } from "@components/contexts";
 import { useContext } from "react";
 import Link from "next/link";
+import { Image as CourselitImage } from "@courselit/components-library";
 
 export default function Post({ courseId }: { courseId: string }) {
     const address = useContext(AddressContext);
@@ -39,22 +40,32 @@ export default function Post({ courseId }: { courseId: string }) {
             <div className="flex items-center gap-4 mb-6">
                 <Image
                     src={
-                        post.featuredImage?.file ||
+                        post?.user?.avatar?.file ||
                         "/courselit_backdrop_square.webp"
                     }
-                    alt={post.featuredImage?.caption || ""}
+                    alt={post?.user?.name || ""}
                     width={32}
                     height={32}
-                    className="rounded-full"
+                    className="rounded-full aspect-square"
                 />
                 <div className="flex items-center gap-2">
-                    <Text2 theme={theme.theme}>{post.creatorName}</Text2>
+                    <Text2 theme={theme.theme}>{post?.creatorName}</Text2>
                     <Caption theme={theme.theme}>
-                        · {formattedLocaleDate(post.updatedAt, "long")}
+                        · {formattedLocaleDate(post?.updatedAt, "long")}
                     </Caption>
                 </div>
             </div>
-            {post.description && (
+            {post?.featuredImage && (
+                <div className="mb-4 border rounded overflow-hidden">
+                        <CourselitImage
+                            alt={post.featuredImage.caption || ""}
+                            src={post.featuredImage.file!}
+                            loading="eager"
+                            sizes="50vw"
+                        />
+                </div>
+            )}
+            {post?.description && (
                 <Text1 theme={theme.theme}>
                     <TextRenderer
                         json={JSON.parse(post.description)}
