@@ -37,7 +37,6 @@ import {
     AccordionContent,
 } from "@courselit/components-library";
 import { Input } from "@/components/ui/input";
-import { useTheme } from "next-themes";
 
 type Section = {
     id: string;
@@ -294,7 +293,6 @@ function ThemeEditor({
         useContext(ThemeContext);
     const selectedThemeRef = useRef<HTMLDivElement>(null);
     const [openCategory, setOpenCategory] = useState<string | null>(null);
-    const { theme: nextTheme, setTheme: setNextTheme } = useTheme();
 
     useEffect(() => {
         if (theme) {

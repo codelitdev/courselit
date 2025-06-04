@@ -1,9 +1,8 @@
-import React, { Fragment, ReactNode } from "react";
+import React, { ReactNode } from "react";
 import { WidgetInstance } from "@courselit/common-models";
 import { Footer, Header } from "@courselit/page-blocks";
 import { Toaster } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
-import { HSL } from "color-convert";
 import EditableWidget from "./editable-widget";
 import { generateThemeStyles } from "@/lib/theme-styles";
 import { Theme } from "@courselit/page-models";
@@ -42,7 +41,6 @@ const Template = (props: TemplateProps) => {
         dispatch,
         state,
     } = props;
-    const themeColors = state.theme?.theme?.colors;
 
     if (!layout) return <></>;
     const footer = layout.filter(
@@ -125,7 +123,3 @@ const Template = (props: TemplateProps) => {
 };
 
 export default Template;
-
-function formatHSL(hsl: HSL): string {
-    return `${hsl[0]} ${hsl[1]}% ${hsl[2]}%`;
-}
