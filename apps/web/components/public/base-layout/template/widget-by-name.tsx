@@ -1,20 +1,9 @@
 import React from "react";
-import widgets from "../../../../ui-config/widgets";
-import type { AppState, AppDispatch } from "@courselit/state-management";
-import { COMPONENT_MISSING_SUFFIX } from "../../../../ui-config/strings";
-import WidgetErrorBoundary from "./widget-error-boundary";
+import widgets from "@/ui-config/widgets";
+import { COMPONENT_MISSING_SUFFIX } from "@/ui-config/strings";
+import WidgetErrorBoundary from "@/components/public/base-layout/template/widget-error-boundary";
 import { useTheme } from "next-themes";
 import { WidgetDefaultSettings, WidgetProps } from "@courselit/common-models";
-
-interface WidgetByNameProps {
-    id: string;
-    name: string;
-    state: Partial<AppState>;
-    dispatch?: AppDispatch;
-    settings: Record<string, unknown>;
-    pageData: Record<string, unknown>;
-    editing: boolean;
-}
 
 const WidgetByName = ({
     id,
@@ -25,7 +14,7 @@ const WidgetByName = ({
     pageData,
     editing = false,
 }: Omit<WidgetProps<WidgetDefaultSettings>, "toggleTheme" | "nextTheme">) => {
-    const { theme: nextTheme, setTheme: setNextTheme } = useTheme();
+    const { resolvedTheme: nextTheme, setTheme: setNextTheme } = useTheme();
 
     const toggleTheme = () => {
         const themeNext = nextTheme === "dark" ? "light" : "dark";
