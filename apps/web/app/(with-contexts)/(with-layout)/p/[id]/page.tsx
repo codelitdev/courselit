@@ -3,6 +3,7 @@ import { getAddressFromHeaders } from "@/ui-lib/utils";
 import ClientSidePage from "./client-side-page";
 import { headers } from "next/headers";
 import type { Metadata, ResolvingMetadata } from "next";
+import { Media } from "@courselit/common-models";
 
 type Props = {
     params: {
@@ -26,9 +27,11 @@ export async function generateMetadata(
     }
 
     const title = page.title || page.pageData?.title || page.name;
-    const socialImage = page.socialImage || siteInfo.settings.logo;
-    const description =
-        page.description || (page.pageData?.description as string);
+    const socialImage: Media | undefined =
+        page.socialImage ||
+        (page.pageData?.featuredImage as Media) ||
+        siteInfo.settings.logo;
+    const description = page.description;
 
     return {
         generator: "CourseLit",
