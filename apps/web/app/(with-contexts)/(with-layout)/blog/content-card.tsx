@@ -17,16 +17,7 @@ export function BlogContentCard({ product }: { product: Course }) {
     const { theme } = uiTheme;
 
     return (
-        <PageCard
-            isLink={true}
-            className="overflow-hidden"
-            style={{
-                backgroundColor: theme?.colors?.background,
-                color: theme?.colors?.text,
-                borderColor: theme?.colors?.border,
-            }}
-            theme={theme}
-        >
+        <PageCard isLink={true} className="overflow-hidden" theme={theme}>
             <Link
                 href={`/blog/${product.slug}/${product.courseId}`}
                 style={{

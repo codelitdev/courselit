@@ -8,7 +8,7 @@ export const Text2: React.FC<
     const typographyStyles = theme?.typography?.text2;
     const classes = cn(
         // Base styles
-        "text-sm leading-7 [&:not(:first-child)]:mt-6",
+        "text-sm",
         // Theme overrides
         typographyStyles?.fontFamily,
         typographyStyles?.fontSize,

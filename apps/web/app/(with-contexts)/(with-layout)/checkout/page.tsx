@@ -9,7 +9,7 @@ export default function CheckoutPage() {
     const { theme } = useContext(ThemeContext);
     return (
         <Section theme={theme.theme}>
-            <div className="flex flex-col min-h-[80vh]">
+            <div className="flex flex-col">
                 <Header1 theme={theme.theme} className="mb-8">
                     Checkout
                 </Header1>

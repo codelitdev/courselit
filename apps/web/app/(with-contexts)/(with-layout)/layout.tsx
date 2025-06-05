@@ -9,9 +9,11 @@ export default async function Layout({
 }: {
     children: React.ReactNode;
 }) {
-    const session = await auth();
     const address = getAddressFromHeaders(headers);
-    const siteInfo = await getFullSiteSetup(address);
+    const [siteInfo, session] = await Promise.all([
+        getFullSiteSetup(address),
+        auth(),
+    ]);
 
     if (!siteInfo) {
         return null;

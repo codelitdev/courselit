@@ -15,14 +15,15 @@ export async function generateMetadata(
     parent: ResolvingMetadata,
 ): Promise<Metadata> {
     const address = getAddressFromHeaders(headers);
-    const siteInfo = await getFullSiteSetup(address);
+    const [siteInfo, page] = await Promise.all([
+        getFullSiteSetup(address),
+        getPage(address, params.id),
+    ]);
     if (!siteInfo) {
         return {
             title: `${(await parent)?.title?.absolute}`,
         };
     }
-
-    const page = await getPage(address, params.id);
 
     const title = page.title || page.pageData?.title || page.name;
     const socialImage = page.socialImage || siteInfo.settings.logo;
@@ -64,12 +65,13 @@ export async function generateMetadata(
 
 export default async function Page({ params }: Props) {
     const address = getAddressFromHeaders(headers);
-    const siteInfo = await getFullSiteSetup(address);
+    const [siteInfo, page] = await Promise.all([
+        getFullSiteSetup(address),
+        getPage(address, params.id),
+    ]);
     if (!siteInfo) {
         return null;
     }
-
-    const page = await getPage(address, params.id);
 
     return (
         <ClientSidePage

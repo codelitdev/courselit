@@ -23,10 +23,25 @@ export async function generateMetadata(): Promise<Metadata> {
 
     return {
         title: `${siteInfo?.title || SITE_SETTINGS_DEFAULT_TITLE}`,
+        description: siteInfo?.subtitle || "",
         openGraph: {
+            title: `${siteInfo?.title || SITE_SETTINGS_DEFAULT_TITLE}`,
+            description: siteInfo?.subtitle || "",
             images: [
-                siteInfo?.logo?.file as any,
-                "/courselit_backdrop_square.webp",
+                {
+                    url: siteInfo?.logo?.file as any,
+                    alt: siteInfo?.logo?.caption || "",
+                },
+            ],
+        },
+        twitter: {
+            title: `${siteInfo?.title || SITE_SETTINGS_DEFAULT_TITLE}`,
+            description: siteInfo?.subtitle || "",
+            images: [
+                {
+                    url: siteInfo?.logo?.file as any,
+                    alt: siteInfo?.logo?.caption || "",
+                },
             ],
         },
         generator: "CourseLit",

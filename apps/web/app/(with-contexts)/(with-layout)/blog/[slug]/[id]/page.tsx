@@ -26,15 +26,18 @@ export default async function ProductPage({
     course: Course;
 }) {
     const address = getAddressFromHeaders(headers);
-    const siteInfo = await getFullSiteSetup(address);
+    const [product, siteInfo] = await Promise.all([
+        getProduct(address, params.id),
+        getFullSiteSetup(address),
+    ]);
     if (!siteInfo) {
         return null;
     }
 
     const { theme } = siteInfo;
-    const product = await getProduct(address, params.id);
+
     if (!product) {
-        return null;
+        return <Section theme={theme.theme}>Post not found</Section>;
     }
 
     return (
