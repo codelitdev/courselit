@@ -5,6 +5,7 @@ import { Image, VideoWithPreview } from "@courselit/components-library";
 import { isVideo } from "@courselit/utils";
 import { Section } from "@courselit/page-primitives";
 import { ThemeStyle } from "@courselit/page-models";
+import clsx from "clsx";
 
 const twRoundedMap = {
     "0": "rounded-none",
@@ -46,7 +47,10 @@ export default function Widget({
                 {hasHeroGraphic && (
                     <div>
                         <div
-                            className={`w-full text-center overflow-hidden ${twRoundedMap[mediaRadius]}`}
+                            className={clsx(
+                                "w-full text-center overflow-hidden border",
+                                twRoundedMap[mediaRadius],
+                            )}
                             style={{
                                 width: "100%",
                             }}
@@ -72,7 +76,10 @@ export default function Widget({
                 )}
                 {!hasHeroGraphic && (
                     <div
-                        className={`w-full text-center overflow-hidden ${twRoundedMap[mediaRadius]}`}
+                        className={clsx(
+                            "w-full text-center overflow-hidden border",
+                            twRoundedMap[mediaRadius],
+                        )}
                         style={{
                             width: "100%",
                         }}
