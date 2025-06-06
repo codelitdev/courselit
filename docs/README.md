@@ -101,3 +101,35 @@ You can add additional functionality to your application via building your own w
 ## Environment variables
 
 Have a look at the [docker-compose.yml](../deployment/docker/docker-compose.yml) file to know what all environment variables are available for you to tweak.
+
+## Applying DB Migrations
+
+The migrations are located in the [apps/web/.migrations](../apps/web/.migrations) directory. The migrations are named like `DD-MM-YY_HH-MM-<migration-purpose>.js` so that they can be sorted chronologically.
+
+### To Apply a Migration
+
+Since the migrations are complete scripts, you need to have some development chops—not much, though.
+
+1. Initialize a blank Node project. In your terminal, create a blank Node project:
+
+```
+mkdir migration
+cd migration
+npm init -y
+```
+
+2. Install dependencies.
+
+    You can refer to the first few lines of the migration to see which dependencies are required. Most of the time, you'll be good to go after running the following command:
+
+```
+npm i mongoose nanoid
+```
+
+3. Copy the migration script into this new project folder.
+
+4. Run the script:
+
+```
+DB_CONNECTION_STRING=mongodb://<mongodb-url> node migration-script.js
+```
