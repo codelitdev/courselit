@@ -5,6 +5,9 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
+import { ThemeContext } from "@components/contexts";
+import { Caption, Text2 } from "@courselit/page-primitives";
+import { useContext } from "react";
 
 interface PaginationControlsProps {
     currentPage: number;
@@ -17,6 +20,9 @@ export function PaginationControls({
     totalPages,
     onPageChange,
 }: PaginationControlsProps) {
+    const { theme: uiTheme } = useContext(ThemeContext);
+    const { theme } = uiTheme;
+
     return (
         <Pagination>
             <PaginationContent className="flex items-center space-x-6">
@@ -34,15 +40,14 @@ export function PaginationControls({
                                 : ""
                         }
                     >
-                        <span className="text-sm">Previous</span>
+                        <Caption theme={theme}>Previous</Caption>
                     </PaginationPrevious>
                 </PaginationItem>
 
-                <div className="flex items-center space-x-2 text-sm">
-                    <span>{currentPage}</span>
-                    <span className="text-muted-foreground">
-                        of {totalPages}
-                    </span>
+                <div>
+                    <Text2 theme={theme}>
+                        {currentPage} of {totalPages}
+                    </Text2>
                 </div>
 
                 <PaginationItem>
@@ -62,7 +67,7 @@ export function PaginationControls({
                                 : ""
                         }
                     >
-                        <span className="text-sm">Next</span>
+                        <Caption theme={theme}>Next</Caption>
                     </PaginationNext>
                 </PaginationItem>
             </PaginationContent>

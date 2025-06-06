@@ -3,9 +3,9 @@ import Auth from "../auth";
 import Message from "../message";
 import Profile from "../profile";
 import SiteInfo from "../site-info";
-import Theme from "../theme";
 import { Typeface } from "../typeface";
 import { ServerConfig } from "../server-config";
+import { Theme } from "@courselit/page-models";
 
 export default interface State {
     auth: Auth;

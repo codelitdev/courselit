@@ -1,0 +1,60 @@
+{
+    "name": "@courselit/page-primitives",
+    "version": "0.0.0",
+    "description": "Page primitives for CourseLit",
+    "author": "Rajat Saxena <hi@codelit.dev>",
+    "homepage": "https://github.com/codelitdev/courselit#readme",
+    "license": "MIT",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": "./dist",
+        "./styles.css": "./dist/index.css"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/codelitdev/courselit.git"
+    },
+    "scripts": {
+        "test": "echo \"Error: run tests from root\" && exit 1",
+        "clean": "rimraf dist/",
+        "prepublishOnly": "pnpm run build",
+        "build": "tsup",
+        "tsc:build": "tsc",
+        "dev": "tsup --watch",
+        "check-types": "tsc --noEmit"
+    },
+    "bugs": {
+        "url": "https://github.com/codelitdev/courselit/issues"
+    },
+    "devDependencies": {
+        "@types/react": "^18.0.0",
+        "autoprefixer": "^10.4.14",
+        "eslint": "^8.57.0",
+        "postcss": "^8.4.27",
+        "rimraf": "^4.1.1",
+        "tailwind-config": "workspace:^",
+        "tailwindcss": "3",
+        "tsconfig": "workspace:^",
+        "tsup": "6.6.0",
+        "typescript": "^5.8.3",
+        "typescript-eslint": "^7.4.0"
+    },
+    "dependencies": {
+        "@courselit/page-models": "workspace:^",
+        "@radix-ui/react-dialog": "^1.1.14",
+        "@radix-ui/react-label": "^2.1.2",
+        "@radix-ui/react-slot": "^1.2.0",
+        "@radix-ui/react-switch": "^1.2.2",
+        "class-variance-authority": "^0.7.0",
+        "clsx": "^2.1.1",
+        "lucide-react": "^0.503.0",
+        "tailwind-merge": "^3.2.0",
+        "tw-animate-css": "^1.2.8"
+    },
+    "peerDependencies": {
+        "react": "^18.0.0"
+    }
+}

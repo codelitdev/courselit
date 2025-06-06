@@ -1,9 +1,8 @@
 import LayoutWithContext from "./layout-with-context";
 import React from "react";
 import { auth } from "@/auth";
-import { FetchBuilder } from "@courselit/utils";
 import { headers } from "next/headers";
-import { getBackendAddress } from "@ui-lib/utils";
+import { getAddressFromHeaders, getFullSiteSetup } from "@ui-lib/utils";
 import { defaultState } from "@components/default-state";
 import { decode } from "base-64";
 import { ServerConfig, SiteInfo } from "@courselit/common-models";
@@ -13,56 +12,10 @@ export default async function Layout({
 }: {
     children: React.ReactNode;
 }) {
-    const headersList = headers();
-    const address = getBackendAddress({
-        "x-forwarded-proto": headersList.get("x-forwarded-proto"),
-        host: headersList.get("host"),
-    });
+    const address = getAddressFromHeaders(headers);
     const session = await auth();
 
-    const siteInfoQuery = `
-            { site: getSiteInfo {
-                    name,
-                    settings {
-                        title,
-                        subtitle,
-                        logo {
-                            file,
-                            caption
-                        },
-                        currencyISOCode,
-                        paymentMethod,
-                        stripeKey,
-                        codeInjectionHead,
-                        codeInjectionBody,
-                        mailingAddress,
-                        hideCourseLitBranding,
-                        razorpayKey,
-                        lemonsqueezyStoreId,
-                        lemonsqueezyOneTimeVariantId,
-                        lemonsqueezySubscriptionMonthlyVariantId,
-                        lemonsqueezySubscriptionYearlyVariantId,
-                    },
-                    theme {
-                        name,
-                        active,
-                        styles,
-                        url
-                    },
-                    typefaces {
-                        section,
-                        typeface,
-                        fontWeights
-                    },
-                }
-            }
-            `;
-    const siteInfoFetch = new FetchBuilder()
-        .setUrl(`${address}/api/graph`)
-        .setPayload(siteInfoQuery)
-        .setIsGraphQLEndpoint(true)
-        .build();
-    const siteInfoResponse = await siteInfoFetch.exec();
+    const siteSetup = await getFullSiteSetup(address);
     const config: ServerConfig = {
         turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || "",
         queueServer: process.env.QUEUE_SERVER || "",
@@ -71,8 +24,8 @@ export default async function Layout({
     return (
         <LayoutWithContext
             address={address}
-            siteinfo={formatSiteInfo(siteInfoResponse.site.settings)}
-            typefaces={siteInfoResponse.site.typefaces}
+            siteinfo={formatSiteInfo(siteSetup?.settings)}
+            theme={siteSetup?.theme || defaultState.theme}
             config={config}
             session={session}
         >

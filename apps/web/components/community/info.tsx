@@ -118,9 +118,9 @@ export function CommunityInfo({
                     className="w-full aspect-video object-cover rounded-lg"
                 />
                 <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">
+                    <div className="text-sm text-muted-foreground">
                         {description && <TextRenderer json={description} />}
-                    </p>
+                    </div>
                     <p className="text-sm">
                         <strong>{memberCount.toLocaleString()}</strong> members
                     </p>

@@ -1,14 +1,19 @@
 import React, { ReactNode } from "react";
-import WidgetByName from "./widget-by-name";
 import { WidgetInstance } from "@courselit/common-models";
-import { Footer, Header } from "@courselit/common-widgets";
-import { ArrowDownward, ArrowUpward } from "@courselit/icons";
-import { Button, Toaster } from "@courselit/components-library";
+import { Footer, Header } from "@courselit/page-blocks";
+import { Toaster } from "@courselit/components-library";
 import { AppDispatch, AppState } from "@courselit/state-management";
+import EditableWidget from "./editable-widget";
+import { generateThemeStyles } from "@/lib/theme-styles";
+import { Theme } from "@courselit/page-models";
+
+type PageData = Record<string, unknown> & {
+    pageType?: "product" | "site" | "blog" | "community";
+};
 
 interface TemplateProps {
-    layout: WidgetInstance[];
-    pageData: Record<string, unknown>;
+    layout: Partial<WidgetInstance>[];
+    pageData: PageData;
     editing?: boolean;
     onEditClick?: (widgetId: string) => void;
     children?: ReactNode;
@@ -18,105 +23,9 @@ interface TemplateProps {
     onMoveWidgetDown?: (index: number) => void;
     dispatch?: AppDispatch;
     state: Partial<AppState>;
+    id?: string;
+    injectThemeStyles?: boolean;
 }
-
-const EditableWidget = ({
-    item,
-    pageData,
-    editing,
-    onEditClick,
-    allowsUpwardMovement = false,
-    allowsDownwardMovement = false,
-    allowsWidgetAddition = false,
-    index,
-    onAddWidgetBelow,
-    onMoveWidgetUp,
-    onMoveWidgetDown,
-    dispatch,
-    state,
-}: {
-    item: Record<string, any>;
-    pageData: Record<string, unknown>;
-    editing: boolean;
-    onEditClick?: (widgetId: string) => void;
-    allowsDownwardMovement?: boolean;
-    allowsUpwardMovement?: boolean;
-    allowsWidgetAddition?: boolean;
-    index: number;
-    onAddWidgetBelow?: (index: number) => void;
-    onMoveWidgetUp?: (index: number) => void;
-    onMoveWidgetDown?: (index: number) => void;
-    state: Partial<AppState>;
-    dispatch?: AppDispatch;
-}) => {
-    if (editing) {
-        return (
-            <div
-                onClick={() => onEditClick && onEditClick(item.widgetId)}
-                className={`relative ${
-                    editing ? "cursor-pointer" : "cursor-default"
-                } after:content-[''] after:absolute after:w-full after:h-full after:top-0 after:left-0 after:bg-black/30 after:opacity-0 hover:after:opacity-100 group`}
-            >
-                <WidgetByName
-                    name={item.name}
-                    settings={item.settings || {}}
-                    pageData={pageData}
-                    id={item.widgetId}
-                    editing={true}
-                    dispatch={dispatch}
-                    state={state}
-                />
-                <div className="w-full justify-evenly hidden group-hover:flex absolute bottom-[-16px] z-10">
-                    {allowsUpwardMovement && (
-                        <Button
-                            component="button"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onMoveWidgetUp && onMoveWidgetUp(index);
-                            }}
-                        >
-                            <ArrowUpward /> Move up
-                        </Button>
-                    )}
-                    {allowsWidgetAddition && (
-                        <Button
-                            component="button"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onAddWidgetBelow && onAddWidgetBelow(index);
-                            }}
-                        >
-                            Add widget below{" "}
-                        </Button>
-                    )}
-                    {allowsDownwardMovement && (
-                        <Button
-                            component="button"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onMoveWidgetDown && onMoveWidgetDown(index);
-                            }}
-                        >
-                            Move down <ArrowDownward />
-                        </Button>
-                    )}
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <WidgetByName
-            name={item.name}
-            settings={item.settings || {}}
-            pageData={pageData}
-            id={item.widgetId}
-            dispatch={dispatch}
-            state={state}
-            editing={false}
-        />
-    );
-};
 
 const Template = (props: TemplateProps) => {
     const {
@@ -132,6 +41,7 @@ const Template = (props: TemplateProps) => {
         dispatch,
         state,
     } = props;
+
     if (!layout) return <></>;
     const footer = layout.filter(
         (widget) => widget.name === Footer.metadata.name,
@@ -165,8 +75,9 @@ const Template = (props: TemplateProps) => {
             />
         ),
     );
+
     return (
-        <div className="flex flex-col font-primary">
+        <div className="flex flex-col courselit-theme">
             {header && (
                 <EditableWidget
                     item={header}
@@ -183,13 +94,13 @@ const Template = (props: TemplateProps) => {
                 />
             )}
             {childrenOnTop && (
-                <div className="flex flex-col min-h-[80vh]">
+                <div className="min-h-screen bg-background">
                     {children}
                     {pageWidgets}
                 </div>
             )}
             {!childrenOnTop && (
-                <div className="flex flex-col min-h-[80vh]">
+                <div className="min-h-screen bg-background">
                     {pageWidgets}
                     {children}
                 </div>
@@ -206,6 +117,7 @@ const Template = (props: TemplateProps) => {
                 />
             )}
             <Toaster />
+            <style>{generateThemeStyles(state.theme as Theme)}</style>
         </div>
     );
 };

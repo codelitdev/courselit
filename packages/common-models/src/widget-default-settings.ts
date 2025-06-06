@@ -4,6 +4,7 @@ import {
     PageTypeProduct,
     PageTypeSite,
 } from ".";
+import type { ThemeStyle } from "@courselit/page-models";
 
 type PageType =
     | PageTypeProduct
@@ -13,4 +14,6 @@ type PageType =
 
 export default interface WidgetDefaultSettings {
     type: PageType;
+    verticalPadding: ThemeStyle["structure"]["section"]["padding"]["y"];
+    maxWidth?: ThemeStyle["structure"]["page"]["width"];
 }

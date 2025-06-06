@@ -21,18 +21,15 @@ export default function TextRenderer({
     }
 
     return (
-        <div className="text-editor flex flex-col-reverse sm:flex-row gap-4">
-            <div className="flex-grow">
-                <Renderer json={json as any} fontFamily={"inherit"} />
-            </div>
+        <span className="text-editor flex flex-col gap-4">
             {showTableOfContent && headings.length > 0 && (
-                <nav className="lg:w-1/4">
+                <nav className="border p-4 rounded mb-4">
                     {contentTableHeader && (
-                        <h2 className="font-semibold mb-4">
+                        <h2 className="font-medium mb-4">
                             {contentTableHeader}
                         </h2>
                     )}
-                    <ul className="flex flex-col gap-2 underline">
+                    <ul className="flex flex-col text-sm gap-2 underline">
                         {headings.map(
                             ({ text, id }: { text: string; id: string }) => (
                                 <li key={id}>
@@ -43,6 +40,9 @@ export default function TextRenderer({
                     </ul>
                 </nav>
             )}
-        </div>
+            <span className="flex-grow">
+                <Renderer json={json as any} fontFamily={"inherit"} />
+            </span>
+        </span>
     );
 }

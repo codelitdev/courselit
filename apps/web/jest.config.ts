@@ -25,6 +25,8 @@ const config: Config = {
         "next-auth": "<rootDir>/__mocks__/next-auth.ts",
         "@courselit/utils": "<rootDir>/../../packages/utils/src",
         "@courselit/common-logic": "<rootDir>/../../packages/common-logic/src",
+        "@courselit/page-primitives":
+            "<rootDir>/../../packages/page-primitives/src",
         nanoid: "<rootDir>/__mocks__/nanoid.ts",
         slugify: "<rootDir>/__mocks__/slugify.ts",
         "@models/(.*)": "<rootDir>/models/$1",

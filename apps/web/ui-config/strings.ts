@@ -545,6 +545,7 @@ export const MAIL_TABLE_HEADER_ENTRANTS = "Entrants";
 export const MAIL_TABLE_HEADER_SENT_ON = "Sent on";
 export const TOOLTIP_USER_PAGE_SEND_MAIL = "Send mail to the current selection";
 export const EDIT_PAGE_BUTTON_FONTS = "Fonts";
+export const EDIT_PAGE_BUTTON_THEME = "Theme";
 export const EDIT_PAGE_BUTTON_SEO = "SEO";
 export const SEO_FORM_NAME_LABEL = "Title";
 export const SEO_FORM_DESC_LABEL = "Description";
@@ -595,7 +596,6 @@ export const MAIL_REQUEST_FORM_REASON_PLACEHOLDER =
     "Please be as detailed as possible. This will help us review your application better.";
 export const DASHBOARD_SELECT_HEADER = "Duration";
 export const DELETE_EMAIL_MENU = "Delete";
-export const LOGIN_SUCCESS = "Login successful. Redirecting...";
 export const OVERVIEW_HEADER = "Overview";
 export const HELP_HEADER = "Help";
 export const COMMUNITY_HEADER = "Community";
@@ -624,3 +624,5 @@ export const SEQUENCE_UNPUBLISHED_WARNING =
 export const PRODUCT_EMPTY_WARNING =
     "Your product is empty. Add some content to make it look interesting.";
 export const BLOG_UPDATED_PREFIX = "Updated";
+export const HEADER_HELP = "Help";
+export const CHECKOUT_PAGE_ORDER_SUMMARY = "Order summary";

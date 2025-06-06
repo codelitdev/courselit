@@ -43,7 +43,6 @@ import DragAndDrop from "./drag-and-drop";
 export { Button as Button2 } from "./components/ui/button";
 export * from "./menu";
 export * from "./components/ui/avatar";
-export * from "./drawer";
 export * from "./components/ui/accordion";
 export * from "./components/ui/slider";
 export * from "./components/ui/card";
@@ -55,9 +54,10 @@ export * from "./paginated-table";
 import getSymbolFromCurrency from "currency-symbol-map";
 export * from "./content-card";
 export * from "./skeleton-card";
-export * from "./product-card";
 export * from "./video-with-preview";
 export * from "./image";
+export * from "./vertical-padding-selector";
+export * from "./max-width-selector";
 
 export {
     PriceTag,

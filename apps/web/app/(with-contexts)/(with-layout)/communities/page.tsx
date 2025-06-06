@@ -1,13 +1,16 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useContext } from "react";
 import { CommunitiesList } from "./communities-list";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ThemeContext } from "@components/contexts";
+import { Header1, Section } from "@courselit/page-primitives";
 
 export default function CommunitiesPage() {
     const searchParams = useSearchParams();
     const page = parseInt(searchParams?.get("page") || "1");
     const router = useRouter();
+    const { theme } = useContext(ThemeContext);
 
     const handlePageChange = useCallback(
         (value: number) => {
@@ -17,13 +20,15 @@ export default function CommunitiesPage() {
     );
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-8">Communities</h1>
-            <CommunitiesList
-                page={page}
-                onPageChange={handlePageChange}
-                itemsPerPage={1}
-            />
-        </div>
+        <Section theme={theme.theme}>
+            <div className="flex flex-col gap-4">
+                <Header1 theme={theme.theme}>Communities</Header1>
+                <CommunitiesList
+                    page={page}
+                    onPageChange={handlePageChange}
+                    itemsPerPage={10}
+                />
+            </div>
+        </Section>
     );
 }

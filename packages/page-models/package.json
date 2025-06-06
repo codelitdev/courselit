@@ -1,0 +1,39 @@
+{
+    "name": "@courselit/page-models",
+    "version": "0.0.0",
+    "description": "CourseLit Page Builder's models",
+    "author": "Rajat Saxena <hi@rajatsaxena.dev>",
+    "homepage": "https://github.com/codelitdev/courselit#readme",
+    "license": "MIT",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "directories": {
+        "lib": "src"
+    },
+    "files": [
+        "dist"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/codelitdev/courselit.git"
+    },
+    "scripts": {
+        "test": "echo \"Error: run tests from root\" && exit 1",
+        "build": "tsc",
+        "clean": "rimraf dist/",
+        "prepublishOnly": "pnpm run build"
+    },
+    "bugs": {
+        "url": "https://github.com/codelitdev/courselit/issues"
+    },
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^5.18.0",
+        "@typescript-eslint/parser": "^5.18.0",
+        "eslint": "^8.12.0",
+        "rimraf": "^4.1.1",
+        "typescript": "^5.8.3"
+    }
+}
