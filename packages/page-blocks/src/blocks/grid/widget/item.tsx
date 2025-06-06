@@ -76,7 +76,7 @@ export default function Itemm({
                                     : "text-left"
                             }`}
                         >
-                            <Text1 theme={theme}>
+                            <Text1 theme={theme} component="span">
                                 <TextRenderer json={description} />
                             </Text1>
                         </div>

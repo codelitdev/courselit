@@ -247,7 +247,7 @@ export async function copySharedWidgetsToDomain(
     domain: GQLContext["subdomain"],
 ) {
     for (let widget of layout) {
-        if (widget.shared && widget.widgetId) {
+        if (widget.widgetId && isSharedWidget(widget)) {
             domain.draftSharedWidgets[widget.name] = Object.assign(
                 {},
                 domain.draftSharedWidgets[widget.name],
@@ -259,4 +259,8 @@ export async function copySharedWidgetsToDomain(
     (domain as any).markModified("draftSharedWidgets");
     await (domain as any).save();
     return layout;
+}
+
+function isSharedWidget(widget: any) {
+    return ["header", "footer"].includes(widget.name);
 }

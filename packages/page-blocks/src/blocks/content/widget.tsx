@@ -167,7 +167,7 @@ export default function Widget({
                                     : "text-left"
                             }`}
                         >
-                            <Subheader1 theme={overiddenTheme}>
+                            <Subheader1 theme={overiddenTheme} component="span">
                                 <TextRenderer json={description} />
                             </Subheader1>
                         </div>

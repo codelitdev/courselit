@@ -172,7 +172,10 @@ export default function Widget({
                                         : "mb-0",
                                 )}
                             >
-                                <Subheader1 theme={overiddenTheme}>
+                                <Subheader1
+                                    theme={overiddenTheme}
+                                    component="span"
+                                >
                                     <TextRenderer json={description} />
                                 </Subheader1>
                             </div>

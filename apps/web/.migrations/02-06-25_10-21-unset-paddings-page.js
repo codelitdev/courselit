@@ -1,7 +1,3 @@
-/**
- * Run the following script OR use the following MongoDB command:
- * db.pages.updateMany({}, { $unset: { "layout.$[].settings.horizontalPadding": "", "layout.$[].settings.verticalPadding": "", "draftLayout.$[].settings.horizontalPadding": "", "draftLayout.$[].settings.verticalPadding": "" } })
- */
 import mongoose from "mongoose";
 import { nanoid } from "nanoid";
 
@@ -74,12 +70,35 @@ PageSchema.index(
 
 const Page = mongoose.model("Page", PageSchema);
 
-const unsetPaddings = async (page) => {
-    console.log(`Unsetting paddings for domain: ${page.domain}`);
+const DomainSchema = new mongoose.Schema(
+    {
+        name: { type: String, required: true, unique: true },
+        sharedWidgets: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {},
+        },
+        draftSharedWidgets: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {},
+        },
+    },
+    {
+        timestamps: true,
+    },
+);
+const Domain = mongoose.model("Domain", DomainSchema);
 
-    // Update layout widgets
+const unsetPaddingsOnPage = async (page, domain) => {
+    console.log(`Migrating ${page.pageId} of ${page.domain}`);
+
     if (page.layout && page.layout.length > 0) {
         page.layout.forEach((widget) => {
+            if (widget.name === "newsletter-signup") {
+                widget.shared = false;
+                widget.settings =
+                    domain.sharedWidgets["newsletter-signup"]?.settings;
+            }
+
             if (widget.settings) {
                 delete widget.settings.horizontalPadding;
                 delete widget.settings.verticalPadding;
@@ -87,9 +106,14 @@ const unsetPaddings = async (page) => {
         });
     }
 
-    // Update draftLayout widgets
     if (page.draftLayout && page.draftLayout.length > 0) {
         page.draftLayout.forEach((widget) => {
+            if (widget.name === "newsletter-signup") {
+                widget.shared = false;
+                widget.settings =
+                    domain.draftSharedWidgets["newsletter-signup"]?.settings;
+            }
+
             if (widget.settings) {
                 delete widget.settings.horizontalPadding;
                 delete widget.settings.verticalPadding;
@@ -100,22 +124,95 @@ const unsetPaddings = async (page) => {
     page.markModified("layout");
     page.markModified("draftLayout");
     await page.save();
-    console.log(`Updated paddings for domain: ${page.domain}\n`);
+    console.log(`Migrated ${page.pageId} of ${page.domain}\n`);
 };
 
-const migratePaddings = async () => {
+const migratePages = async () => {
     const pages = await Page.find({});
     for (const page of pages) {
         try {
-            await unsetPaddings(page);
+            const domain = await Domain.findOne({ _id: page.domain });
+            await unsetPaddingsOnPage(page, domain);
         } catch (error) {
-            console.error(`Error updating paddings for domain: ${page.domain}`);
+            console.error(`Error migrating ${page.pageId} of ${page.domain}`);
+            console.error(error);
+        }
+    }
+};
+
+const unsetPaddingOnSharedWidgets = async (domain) => {
+    console.log(`Migrating shared widgets for domain: ${domain.name}`);
+    if (Object.keys(domain.sharedWidgets).length > 0) {
+        for (const widget of Object.values(domain.sharedWidgets)) {
+            if (widget.settings) {
+                delete widget.settings.horizontalPadding;
+                delete widget.settings.verticalPadding;
+            }
+        }
+    }
+
+    if (
+        domain.draftSharedWidgets &&
+        Object.keys(domain.draftSharedWidgets).length > 0
+    ) {
+        for (const widget of Object.values(domain.draftSharedWidgets)) {
+            if (widget.settings) {
+                delete widget.settings.horizontalPadding;
+                delete widget.settings.verticalPadding;
+            }
+        }
+    }
+
+    domain.markModified("sharedWidgets");
+    domain.markModified("draftSharedWidgets");
+    await domain.save();
+    console.log(`Migrated shared widgets for domain: ${domain.name}\n`);
+};
+
+const removeNewsLetterSignupFromSharedWidgets = async (domain) => {
+    console.log(
+        `Migrating news letter signup from shared widgets for domain: ${domain.name}`,
+    );
+    if (domain.sharedWidgets && Object.keys(domain.sharedWidgets).length > 0) {
+        for (const widget of Object.values(domain.sharedWidgets)) {
+            if (widget.name === "newsletter-signup") {
+                delete domain.sharedWidgets[widget.name];
+            }
+        }
+    }
+    if (
+        domain.draftSharedWidgets &&
+        Object.keys(domain.draftSharedWidgets).length > 0
+    ) {
+        for (const widget of Object.values(domain.draftSharedWidgets)) {
+            if (widget.name === "newsletter-signup") {
+                delete domain.draftSharedWidgets[widget.name];
+            }
+        }
+    }
+    domain.markModified("sharedWidgets");
+    domain.markModified("draftSharedWidgets");
+    await domain.save();
+    console.log(`Migrated news letter signup for domain: ${domain.name}\n`);
+};
+
+const migrateSharedWidgets = async () => {
+    const domains = await Domain.find({});
+    for (const domain of domains) {
+        try {
+            await unsetPaddingOnSharedWidgets(domain);
+            await removeNewsLetterSignupFromSharedWidgets(domain);
+        } catch (error) {
+            console.error(
+                `Error updating shared widgets for domain: ${domain.name}`,
+            );
             console.error(error);
         }
     }
 };
 
 (async () => {
-    await migratePaddings();
+    await migratePages();
+    await migrateSharedWidgets();
     mongoose.connection.close();
 })();
