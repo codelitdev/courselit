@@ -108,4 +108,7 @@ export default {
 
     // mails
     minMailingAddressLength: 10,
+
+    // payment plan
+    internalPaymentPlanName: "Internal Payment Plan",
 } as const;

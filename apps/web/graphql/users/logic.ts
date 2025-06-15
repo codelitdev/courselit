@@ -34,7 +34,10 @@ import { addMailJob } from "@/services/queue";
 import { getPaymentMethodFromSettings } from "@/payments-new";
 import { checkForInvalidPermissions } from "@/lib/check-invalid-permissions";
 import { activateMembership } from "@/app/api/payment/helpers";
-import { getInternalPaymentPlan } from "../paymentplans/logic";
+import {
+    createInternalPaymentPlan,
+    getInternalPaymentPlan,
+} from "../paymentplans/logic";
 import {
     convertFiltersToDBConditions,
     InternalMembership,
@@ -374,6 +377,7 @@ export async function createUser({
     if (isNewUser) {
         if (superAdmin) {
             await initMandatoryPages(domain, createdUser);
+            await createInternalPaymentPlan(domain, createdUser.userId);
         }
 
         await recordActivity({
