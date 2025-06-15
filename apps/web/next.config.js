@@ -25,12 +25,7 @@ const nextConfig = {
         "@courselit/common-widgets",
         "@courselit/components-library",
     ],
-    serverExternalPackages: [
-        "pug",
-        "liquidjs",
-        "mongoose",
-        "mongodb",
-    ],
+    serverExternalPackages: ["pug", "mongoose", "mongodb"],
 };
 
 module.exports = nextConfig;
