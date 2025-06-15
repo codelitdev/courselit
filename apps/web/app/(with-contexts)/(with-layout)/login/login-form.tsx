@@ -32,6 +32,7 @@ import {
 } from "@/ui-config/strings";
 import Link from "next/link";
 import { TriangleAlert } from "lucide-react";
+import { useRecaptcha } from "@/hooks/use-recaptcha";
 import { useRouter } from "next/navigation";
 
 export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
@@ -42,15 +43,58 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
+    const { executeRecaptcha } = useRecaptcha();
     const router = useRouter();
 
     const requestCode = async function (e: FormEvent) {
         e.preventDefault();
-        const url = `/api/auth/code/generate?email=${encodeURIComponent(
-            email,
-        )}`;
+        setLoading(true);
+        setError("");
+
+        if (!executeRecaptcha) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: "reCAPTCHA service not available. Please try again later.",
+                variant: "destructive",
+            });
+            setLoading(false);
+            return;
+        }
+
+        const recaptchaToken = await executeRecaptcha("login_code_request");
+        if (!recaptchaToken) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: "reCAPTCHA validation failed. Please try again.",
+                variant: "destructive",
+            });
+            setLoading(false);
+            return;
+        }
+
         try {
-            setLoading(true);
+            const recaptchaVerificationResponse = await fetch("/api/recaptcha", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: recaptchaToken }),
+            });
+
+            const recaptchaData = await recaptchaVerificationResponse.json();
+
+            if (!recaptchaVerificationResponse.ok || !recaptchaData.success || (recaptchaData.score && recaptchaData.score < 0.5)) {
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: `reCAPTCHA verification failed. ${recaptchaData.score ? `Score: ${recaptchaData.score.toFixed(2)}.` : ''} Please try again.`,
+                    variant: "destructive",
+                });
+                setLoading(false);
+                return;
+            }
+
+            // Proceed with code generation if reCAPTCHA is successful
+            const url = `/api/auth/code/generate?email=${encodeURIComponent(
+                email,
+            )}`;
             const response = await fetch(url);
             const resp = await response.json();
             if (response.ok) {
@@ -58,11 +102,19 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
             } else {
                 toast({
                     title: TOAST_TITLE_ERROR,
-                    description: resp.error,
+                    description: resp.error || "Failed to request code.",
                     variant: "destructive",
                 });
             }
-        } finally {
+        } catch (err) {
+            console.error("Error during requestCode:", err);
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: "An unexpected error occurred. Please try again.",
+                variant: "destructive",
+            });
+        }
+        finally {
             setLoading(false);
         }
     };
