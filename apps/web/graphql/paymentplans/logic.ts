@@ -13,6 +13,7 @@ import constants from "@config/constants";
 import { checkPermission } from "@courselit/utils";
 import PaymentPlanModel from "@models/PaymentPlan";
 import { getPaymentMethodFromSettings } from "@/payments-new";
+import { Domain } from "@models/Domain";
 const { MembershipEntityType: membershipEntityType } = Constants;
 const { permissions } = constants;
 
@@ -65,6 +66,7 @@ export async function getPlans({
         domain: ctx.subdomain._id,
         planId: { $in: planIds },
         archived: false,
+        internal: false,
     }).lean();
 }
 
@@ -256,5 +258,18 @@ export async function getInternalPaymentPlan(ctx: any) {
     return await PaymentPlanModel.findOne({
         domain: ctx.subdomain._id,
         internal: true,
+    });
+}
+
+export async function createInternalPaymentPlan(
+    domain: Domain,
+    userId: string,
+) {
+    return await PaymentPlanModel.create({
+        domain: domain._id,
+        name: constants.internalPaymentPlanName,
+        type: Constants.PaymentPlanType.FREE,
+        internal: true,
+        userId: userId,
     });
 }
