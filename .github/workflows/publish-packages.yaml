@@ -1,0 +1,62 @@
+name: Publish Npm packages
+
+on:
+  push:
+    branches:
+      - main 
+    tags-ignore:
+      - '**'
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+env:
+  CI: true
+
+jobs:
+  publish-packages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v1
+
+      - name: Configure CI Git User
+        run: |
+          git config --global user.name 'Rajat Saxena'
+          git config --global user.email 'hi@sub.rajatsaxena.dev'
+          git remote set-url origin https://$GITHUB_ACTOR:$GITHUB_PAT@github.com/codelitdev/courselit
+        env:
+          GITHUB_PAT: ${{ secrets.PAT }}
+
+      - name: Checkout and pull branch
+        run: |
+          LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+          git checkout $LATEST_TAG
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install Packages
+        run: pnpm install
+
+      - name: Authenticate with Registry
+        run: |
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
+          pnpm whoami
+        env:
+          NPM_TOKEN: ${{ secrets.NPM }}
+
+      - name: Create and publish versions
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          commit: "chore: update versions"
+          title: "chore: update versions"
+          publish: pnpm ci:publish 
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+          NPM_TOKEN: ${{ secrets.NPM }}
+
+      - name: Echo changeset output
+        run: echo "${{ steps.changesets.outputs.hasChangesets }}"

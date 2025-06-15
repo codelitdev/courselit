@@ -2,6 +2,7 @@
     "name": "@courselit/page-blocks",
     "version": "0.57.10",
     "description": "A collection of common widgets for CourseLit LMS",
+    "private": true,
     "keywords": [
         "widgets",
         "lms",

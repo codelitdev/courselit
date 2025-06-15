@@ -2,6 +2,7 @@
     "name": "@courselit/icons",
     "version": "0.22.10",
     "description": "Icons for CourseLit",
+    "private": true,
     "author": "Rajat Saxena <hi@codelit.dev>",
     "homepage": "https://github.com/codelitdev/courselit#readme",
     "license": "MIT",

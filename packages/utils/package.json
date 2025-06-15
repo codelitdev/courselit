@@ -6,6 +6,7 @@
     "homepage": "https://github.com/codelitdev/courselit#readme",
     "license": "MIT",
     "types": "dist/index.d.ts",
+    "private": true,
     "exports": {
         ".": {
             "import": "./dist/index.mjs",

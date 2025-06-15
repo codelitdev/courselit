@@ -27,6 +27,7 @@ COPY packages/components-library /app/packages/components-library
 COPY packages/state-management /app/packages/state-management
 COPY packages/text-editor /app/packages/text-editor
 COPY packages/utils /app/packages/utils
+COPY packages/email-editor /app/packages/email-editor
 COPY apps/web /app/apps/web
 
 # Install dependencies based on the preferred package manager

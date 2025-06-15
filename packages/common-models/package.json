@@ -2,6 +2,7 @@
     "name": "@courselit/common-models",
     "version": "0.57.10",
     "description": "Models shared between the main app and other packages of CourseLit.",
+    "private": true,
     "author": "Rajat Saxena <hi@rajatsaxena.dev>",
     "homepage": "https://github.com/codelitdev/courselit#readme",
     "license": "MIT",
