@@ -5,7 +5,7 @@ import { useEmailEditor } from "@/context/email-editor-context";
 import type { Content } from "@/types/email-editor";
 import { AddBlockButton } from "./add-block-button";
 import { Trash, Copy, ChevronUp, ChevronDown } from "lucide-react";
-import blockRegistry from "@/lib/block-registry";
+import { useBlockRegistry } from "@/context/block-registry-context";
 
 interface BlockWrapperProps {
     block: Content;
@@ -35,6 +35,7 @@ export function BlockWrapper({
     const [isControlsHovered, setIsControlsHovered] = useState(false);
     const controlsRef = useRef<HTMLDivElement>(null);
     const blockRef = useRef<HTMLDivElement>(null);
+    const blockRegistry = useBlockRegistry();
 
     const isMoving = movingBlockId === block.id;
     const isSelected = selectedBlockId === block.id;

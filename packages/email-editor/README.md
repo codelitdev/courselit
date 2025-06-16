@@ -26,3 +26,16 @@ In your CSS file, add
 - [TailwindCSS](https://tailwindcss.com/)
 - [Shadcn/ui](https://ui.shadcn.com/)
 - [React email](https://react.email/)
+
+## Usage
+
+To show the email editor
+
+```js
+import { EmailEditor } from "@courselit/email-editor";
+import "@courselit/email-editor/styles.css";
+
+export default App() {
+    return (<EmailEditor  />)
+}
+```

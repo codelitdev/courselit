@@ -14,7 +14,7 @@ export function EditorLayout({
     return (
         <div className="h-screen bg-gray-100 flex overflow-hidden">
             {/* Left Pane - Editor */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden h-full">
                 <div className="flex-1 rounded-xl border bg-white shadow-sm m-4 flex flex-col overflow-hidden">
                     <div className="flex-1 overflow-y-auto">{editor}</div>
                 </div>

@@ -1,9 +1,8 @@
 "use client";
 
 import { useEmailEditor } from "@/context/email-editor-context";
-import { X, ChevronRight, Save, Code, Copy, Check } from "lucide-react";
+import { X, ChevronRight, Code, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import blockRegistry from "@/lib/block-registry";
 import { EmailSettings } from "./email-settings";
 import { renderEmailToHtml } from "@/lib/email-renderer";
 import { useState } from "react";
@@ -14,6 +13,7 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog";
+import { useBlockRegistry } from "@/context/block-registry-context";
 
 interface BlockSettingsPanelProps {
     blockId: string | null;
@@ -25,10 +25,11 @@ export function BlockSettingsPanel({ blockId }: BlockSettingsPanelProps) {
     const [isHtmlDialogOpen, setIsHtmlDialogOpen] = useState(false);
     const [exportedHtml, setExportedHtml] = useState("");
     const [isCopied, setIsCopied] = useState(false);
+    const blockRegistry = useBlockRegistry();
 
-    const handleSave = () => {
-        alert("Email saved! Check console for data.");
-    };
+    // const handleSave = () => {
+    //     alert("Email saved! Check console for data.");
+    // };
 
     const handleExportHtml = async () => {
         const html = await renderEmailToHtml(email);
@@ -58,11 +59,11 @@ export function BlockSettingsPanel({ blockId }: BlockSettingsPanelProps) {
                 <div className="flex-1 overflow-y-auto p-4">
                     <EmailSettings />
 
-                    <div className="mt-6 space-y-2 border-t pt-4">
-                        <Button className="w-full" onClick={handleSave}>
+                    <div className="mt-6 space-y-2 pt-4">
+                        {/* <Button className="w-full" onClick={handleSave}>
                             <Save className="h-4 w-4 mr-2" />
                             Save Template
-                        </Button>
+                        </Button> */}
                         <Button
                             variant="outline"
                             className="w-full"

@@ -12,7 +12,9 @@
         "LICENSE.md"
     ],
     "exports": {
-        ".": "./dist"
+        ".": "./dist",
+        "./styles.css": "./dist/index.css",
+        "./blocks": "./dist/blocks"
     },
     "publishConfig": {
         "access": "public"

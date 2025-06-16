@@ -16,7 +16,7 @@ export function SettingsSection({
     className = "",
 }: SettingsSectionProps) {
     return (
-        <div className={cn("space-y-4 border-t pt-4 mt-4", className)}>
+        <div className={cn("space-y-4 pb-4 mb-4", className)}>
             {title && (
                 <div className="text-sm font-medium text-gray-700">{title}</div>
             )}

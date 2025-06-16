@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { useEmailEditor } from "@/context/email-editor-context";
 import { Plus } from "lucide-react";
-import blockRegistry from "@/lib/block-registry";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { BlockType } from "@/types/email-editor";
+import { useBlockRegistry } from "@/context/block-registry-context";
 
 interface AddBlockButtonProps {
     position: "above" | "below";
@@ -19,6 +19,7 @@ interface AddBlockButtonProps {
 export function AddBlockButton({ position, index }: AddBlockButtonProps) {
     const { addBlock } = useEmailEditor();
     const [isOpen, setIsOpen] = useState(false);
+    const blockRegistry = useBlockRegistry();
 
     const blockTypes = Object.values(blockRegistry).map((block) => ({
         type: block.metadata.name as BlockType,
