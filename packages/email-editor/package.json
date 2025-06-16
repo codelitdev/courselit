@@ -67,6 +67,6 @@
         "uuid": "^11.1.0"
     },
     "peerDependencies": {
-        "react": "^18.0.0"
+        "react": ">=18.0.0"
     }
 }
