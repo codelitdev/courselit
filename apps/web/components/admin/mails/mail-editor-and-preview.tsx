@@ -2,6 +2,7 @@ import { FormField } from "@courselit/components-library";
 import { renderEmailContent } from "@courselit/utils";
 import { ChangeEvent, useEffect, useState } from "react";
 import { EmailEditor } from "@courselit/email-editor";
+import "@courselit/email-editor/styles.css";
 
 export function MailEditorAndPreview({
     content,
