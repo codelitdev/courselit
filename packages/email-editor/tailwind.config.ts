@@ -1,7 +1,4 @@
-import sharedConfig from "tailwind-config/tailwind.config";
-
 const config = {
-    presets: [sharedConfig],
     darkMode: ["class"],
     content: ["./src/**/*.{ts,tsx}"],
     prefix: "",
