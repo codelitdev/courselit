@@ -37,8 +37,8 @@ jobs:
         with:
           version: 8
 
-    #   - name: Install Packages
-    #     run: pnpm install
+      - name: Install Packages
+        run: pnpm install
 
       - name: Authenticate with Registry
         run: |
