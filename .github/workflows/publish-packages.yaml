@@ -29,8 +29,8 @@ jobs:
 
       - name: Checkout and pull branch
         run: |
-          LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
-          git checkout $LATEST_TAG
+          git checkout ${{ github.ref_name }}
+          git pull origin ${{ github.ref_name }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
