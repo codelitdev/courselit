@@ -12,20 +12,14 @@ export function EditorLayout({
     showSettings = true,
 }: EditorLayoutProps) {
     return (
-        <div className="h-screen bg-gray-100 flex overflow-hidden">
-            {/* Left Pane - Editor */}
-            <div className="flex-1 flex flex-col overflow-hidden h-full">
-                <div className="flex-1 rounded-xl border bg-white shadow-sm m-4 flex flex-col overflow-hidden">
-                    <div className="flex-1 overflow-y-auto">{editor}</div>
-                </div>
+        <div className="h-full w-full bg-gray-100 flex gap-4 p-4">
+            <div className="flex-1 rounded-xl border bg-white shadow-sm overflow-y-auto">
+                {editor}
             </div>
 
-            {/* Right Pane - Settings */}
             {showSettings && settings && (
-                <div className="w-80 flex flex-col overflow-hidden">
-                    <div className="flex-1 rounded-xl border bg-white shadow-sm m-4 mr-4 flex flex-col overflow-hidden">
-                        {settings}
-                    </div>
+                <div className="w-80 rounded-xl border bg-white shadow-sm overflow-y-auto">
+                    {settings}
                 </div>
             )}
         </div>

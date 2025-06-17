@@ -1,18 +1,7 @@
-"use client";
-
 import { useEmailEditor } from "@/context/email-editor-context";
-import { X, ChevronRight, Code, Copy, Check } from "lucide-react";
+import { X, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmailSettings } from "./email-settings";
-import { renderEmailToHtml } from "@/lib/email-renderer";
-import { useState } from "react";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-} from "@/components/ui/dialog";
 import { useBlockRegistry } from "@/context/block-registry-context";
 
 interface BlockSettingsPanelProps {
@@ -22,26 +11,7 @@ interface BlockSettingsPanelProps {
 export function BlockSettingsPanel({ blockId }: BlockSettingsPanelProps) {
     const { email, setSelectedBlockId } = useEmailEditor();
 
-    const [isHtmlDialogOpen, setIsHtmlDialogOpen] = useState(false);
-    const [exportedHtml, setExportedHtml] = useState("");
-    const [isCopied, setIsCopied] = useState(false);
     const blockRegistry = useBlockRegistry();
-
-    // const handleSave = () => {
-    //     alert("Email saved! Check console for data.");
-    // };
-
-    const handleExportHtml = async () => {
-        const html = await renderEmailToHtml(email);
-        setExportedHtml(html);
-        setIsHtmlDialogOpen(true);
-    };
-
-    const handleCopyHtml = () => {
-        navigator.clipboard.writeText(exportedHtml);
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
-    };
 
     if (!blockId) {
         return (
@@ -58,60 +28,6 @@ export function BlockSettingsPanel({ blockId }: BlockSettingsPanelProps) {
                 </div>
                 <div className="flex-1 overflow-y-auto p-4">
                     <EmailSettings />
-
-                    <div className="mt-6 space-y-2 pt-4">
-                        {/* <Button className="w-full" onClick={handleSave}>
-                            <Save className="h-4 w-4 mr-2" />
-                            Save Template
-                        </Button> */}
-                        <Button
-                            variant="outline"
-                            className="w-full"
-                            onClick={handleExportHtml}
-                        >
-                            <Code className="h-4 w-4 mr-2" />
-                            Export HTML
-                        </Button>
-                    </div>
-
-                    <Dialog
-                        open={isHtmlDialogOpen}
-                        onOpenChange={setIsHtmlDialogOpen}
-                    >
-                        <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
-                            <DialogHeader>
-                                <DialogTitle>Exported HTML</DialogTitle>
-                            </DialogHeader>
-                            <div className="flex-1 overflow-y-auto my-4">
-                                <textarea
-                                    value={exportedHtml}
-                                    readOnly
-                                    className="w-full h-[400px] p-3 border rounded-md font-mono text-xs resize-none bg-gray-50"
-                                />
-                            </div>
-                            <DialogFooter>
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setIsHtmlDialogOpen(false)}
-                                >
-                                    Close
-                                </Button>
-                                <Button onClick={handleCopyHtml}>
-                                    {isCopied ? (
-                                        <>
-                                            <Check className="h-4 w-4 mr-2" />
-                                            Copied!
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Copy className="h-4 w-4 mr-2" />
-                                            Copy HTML
-                                        </>
-                                    )}
-                                </Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
                 </div>
             </div>
         );

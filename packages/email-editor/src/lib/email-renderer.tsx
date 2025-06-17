@@ -106,11 +106,15 @@ export function EmailTemplate({
     );
 }
 
-export async function renderEmailToHtml(
-    email: Email,
-    utmParams?: UtmParams,
-    blocks?: BlockComponent[],
-): Promise<string> {
+export async function renderEmailToHtml({
+    email,
+    utmParams,
+    blocks,
+}: {
+    email: Email;
+    utmParams?: UtmParams;
+    blocks?: BlockComponent[];
+}): Promise<string> {
     try {
         const template = (
             <BlockRegistryProvider blocks={blocks}>
