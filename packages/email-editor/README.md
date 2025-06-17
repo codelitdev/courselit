@@ -1,6 +1,6 @@
 # Introduction
 
-A WYSIWYG email editor by CourseLit.
+A WYSIWYG email editor by [CourseLit](https://courselit.app).
 
 ## Installation
 
@@ -18,6 +18,21 @@ In your CSS file, add
 
 ```css
 @source "./node_modules/@courselit/email-editor";
+# ... remaining code ...
+```
+
+#### 2. Tailwind v3
+
+In your tailwind config, add
+
+```js
+module.exports = {
+    content: [
+        // ... remaining code ...
+        "./node_modules/@courselit/email-editor",
+    ],
+    // ... remaining code ...
+};
 ```
 
 ## Tech Stack

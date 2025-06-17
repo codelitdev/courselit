@@ -1,6 +1,6 @@
 {
     "name": "@courselit/email-editor",
-    "version": "0.1.0-alpha.1",
+    "version": "0.1.0-alpha.2",
     "description": "Email Editor by CourseLit",
     "author": "CourseLit <hi@codelit.dev>",
     "homepage": "https://github.com/codelitdev/courselit#readme",
@@ -9,7 +9,7 @@
     "files": [
         "dist",
         "README.md",
-        "LICENSE.md"
+        "LICENSE"
     ],
     "exports": {
         ".": "./dist",
