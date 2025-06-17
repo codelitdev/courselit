@@ -20,7 +20,7 @@
     "prettier": "prettier --write packages apps docs *.md",
     "build": "pnpm -r --filter=!@courselit/docs run build",
     "clean": "pnpm -r run clean",
-    "ci:publish": "pnpm publish -r",
+    "ci:publish": "pnpm publish -r --no-git-checks",
     "dev": "pnpm --filter @courselit/web dev",
     "prepare": "husky",
     "release": "./release.sh",

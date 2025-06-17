@@ -7,5 +7,20 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@courselit/web"]
+  "ignore": [
+    "@courselit/web",
+    "@courselit/state-management",
+    "@courselit/utils",
+    "@courselit/queue",
+    "@courselit/icons",
+    "@courselit/components-library",
+    "tsconfig",
+    "tailwind-config",
+    "@courselit/page-blocks",
+    "@courselit/text-editor",
+    "@courselit/common-logic",
+    "@courselit/page-primitives",
+    "@courselit/common-models",
+    "@courselit/docs"
+  ]
 }
