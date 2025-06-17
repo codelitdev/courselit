@@ -38,3 +38,5 @@ report*.json
 
 # Dev tools files
 .eslintcache
+
+.npmrc
