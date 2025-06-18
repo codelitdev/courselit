@@ -84,6 +84,16 @@ pnpm dev
 
 That's it! Now you can dive into the code base.
 
+## Releasing packages
+
+We use changeset to automate at the process of publishing packages to NPM.
+
+Run the following command to add a changeset
+
+```sh
+pnpm exec changeset
+```
+
 ## Medialit
 
 CourseLit uses [MediaLit](https://medialit.cloud) as its backend for managing media assets. It is a paid service and you need to have an account on it to store your files in the cloud.

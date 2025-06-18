@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - rajat1saxena/issue590
     tags-ignore:
       - '**'
 
