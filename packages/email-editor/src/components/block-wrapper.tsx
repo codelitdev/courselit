@@ -1,18 +1,17 @@
-"use client";
-
 import { useState, useRef } from "react";
 import { useEmailEditor } from "@/context/email-editor-context";
-import type { Content } from "@/types/email-editor";
+import type { Content, Style } from "@/types/email-editor";
 import { AddBlockButton } from "./add-block-button";
 import { Trash, Copy, ChevronUp, ChevronDown } from "lucide-react";
 import { useBlockRegistry } from "@/context/block-registry-context";
 
 interface BlockWrapperProps {
-    block: Content;
+    block: Required<Content>;
     index: number;
     isFirst: boolean;
     isLast: boolean;
     isFixed?: boolean;
+    style?: Style;
 }
 
 export function BlockWrapper({
@@ -21,6 +20,7 @@ export function BlockWrapper({
     isFirst,
     isLast,
     isFixed = false,
+    style,
 }: BlockWrapperProps) {
     const {
         deleteBlock,
@@ -63,7 +63,7 @@ export function BlockWrapper({
         }
 
         const BlockComponent = blockComponent.block;
-        return <BlockComponent block={block} />;
+        return <BlockComponent block={block} style={style} />;
     };
 
     // Calculate if move buttons should be disabled

@@ -1,45 +1,42 @@
-"use client";
-
-import type { Content } from "@/types/email-editor";
+import type { Content, Style } from "@/types/email-editor";
 import type { SeparatorBlockSettings } from "./types";
 import { Hr, Section } from "@react-email/components";
 
 interface SeparatorBlockProps {
     block: Content & { settings: SeparatorBlockSettings };
+    style?: Style;
 }
 
-export function SeparatorBlock({ block }: SeparatorBlockProps) {
+export function SeparatorBlock({ block, style }: SeparatorBlockProps) {
     const {
-        color = "#e2e8f0",
+        color = style?.colors.border,
         thickness = "1px",
-        marginY = "16px",
-        style = "solid",
+        style: borderStyle = "solid",
         // Common block settings
+        paddingTop = style?.structure.section.padding?.y,
+        paddingBottom = style?.structure.section.padding?.y,
         backgroundColor = "transparent",
-        foregroundColor = "#000000",
-        paddingTop = "0px",
-        paddingBottom = "0px",
     } = block.settings;
 
-    // Section style
-    const sectionStyle = {
-        backgroundColor,
-        color: foregroundColor,
-        paddingTop,
-        paddingBottom,
-    };
-
     return (
-        <Section style={sectionStyle}>
-            <Hr
+        <Section>
+            <div
                 style={{
-                    borderColor: color,
-                    borderWidth: thickness,
-                    borderStyle: style,
-                    margin: `${marginY} 0`,
-                    width: "100%",
+                    paddingTop,
+                    paddingBottom,
+                    backgroundColor,
                 }}
-            />
+            >
+                <Hr
+                    style={{
+                        backgroundColor: "transparent",
+                        borderTop: `${thickness} ${borderStyle} ${color}`,
+                        marginTop: paddingTop,
+                        marginBottom: paddingBottom,
+                        width: "100%",
+                    }}
+                />
+            </div>
         </Section>
     );
 }

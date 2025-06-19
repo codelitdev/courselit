@@ -1,5 +1,3 @@
-"use client";
-
 import { useEmailEditor } from "@/context/email-editor-context";
 import type { Content } from "@/types/email-editor";
 import type { ImageBlockSettings } from "./types";
@@ -12,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 
 interface ImageSettingsProps {
-    block: Content & { settings: ImageBlockSettings };
+    block: Required<Content> & { settings: ImageBlockSettings };
 }
 
 export function ImageSettings({ block }: ImageSettingsProps) {
@@ -117,7 +115,10 @@ export function ImageSettings({ block }: ImageSettingsProps) {
                         type="button"
                         variant="outline"
                         size="icon"
-                        onClick={handleImageUpload}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            handleImageUpload();
+                        }}
                         title="Browse for image"
                     >
                         <Upload className="h-4 w-4" />
@@ -132,7 +133,10 @@ export function ImageSettings({ block }: ImageSettingsProps) {
                     {sampleImages.map((url, index) => (
                         <button
                             key={index}
-                            onClick={() => handleSettingChange("src", url)}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleSettingChange("src", url);
+                            }}
                             className="aspect-square rounded border-2 border-transparent hover:border-blue-500 overflow-hidden transition-colors"
                         >
                             <img
@@ -199,7 +203,7 @@ export function ImageSettings({ block }: ImageSettingsProps) {
                         handleSettingChange("borderRadius", `${value}px`)
                     }
                     min={0}
-                    max={50}
+                    max={250}
                     defaultValue={0}
                 />
 
@@ -245,14 +249,14 @@ export function ImageSettings({ block }: ImageSettingsProps) {
                     defaultValue="transparent"
                 />
 
-                <SettingsColorPicker
+                {/* <SettingsColorPicker
                     label="Foreground Color"
                     value={block.settings.foregroundColor || "#000000"}
                     onChange={(value) =>
                         handleSettingChange("foregroundColor", value)
                     }
                     defaultValue="#000000"
-                />
+                /> */}
 
                 <SettingsSlider
                     label="Padding Top"

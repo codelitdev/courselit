@@ -1,10 +1,7 @@
-"use client";
-
 import type React from "react";
 
 import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -75,9 +72,22 @@ export function SettingsColorPicker({
                     )}
                 </div>
                 <div className="flex items-center">
-                    <div
-                        className="w-4 h-4 rounded-sm mr-2"
-                        style={{ backgroundColor: localValue }}
+                    <input
+                        type="color"
+                        value={localValue}
+                        onChange={handleChange}
+                        className="w-8 h-8 rounded-sm mr-2 cursor-pointer"
+                        style={{
+                            appearance: "none",
+                            WebkitAppearance: "none",
+                            MozAppearance: "none",
+                            border: "none",
+                            outline: "none",
+                            padding: 0,
+                            background: "none",
+                            borderRadius: "0.125rem",
+                        }}
+                        aria-label={`Select ${label} color`}
                     />
                     <button
                         type="button"
@@ -89,13 +99,6 @@ export function SettingsColorPicker({
                     </button>
                 </div>
             </div>
-            <Input
-                id={`color-${label.replace(/\s+/g, "-").toLowerCase()}`}
-                type="color"
-                value={localValue}
-                onChange={handleChange}
-                className="w-full h-8 p-1"
-            />
         </div>
     );
 }

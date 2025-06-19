@@ -9,7 +9,7 @@ import { SettingsSwitch } from "@/components/settings/settings-switch";
 import { SettingsSection } from "@/components/settings/settings-section";
 
 interface LinkSettingsProps {
-    block: Content & { settings: LinkBlockSettings };
+    block: Required<Content> & { settings: LinkBlockSettings };
 }
 
 export function LinkSettings({ block }: LinkSettingsProps) {
@@ -57,14 +57,6 @@ export function LinkSettings({ block }: LinkSettingsProps) {
         { value: "18px", label: "18px" },
         { value: "20px", label: "20px" },
         { value: "24px", label: "24px" },
-    ];
-
-    // Font weight options
-    const fontWeightOptions = [
-        { value: "400", label: "Regular (400)" },
-        { value: "500", label: "Medium (500)" },
-        { value: "600", label: "Semi-Bold (600)" },
-        { value: "700", label: "Bold (700)" },
     ];
 
     // Text decoration options
@@ -129,20 +121,20 @@ export function LinkSettings({ block }: LinkSettingsProps) {
                 <SettingsSection title="Button Settings">
                     <SettingsColorPicker
                         label="Button Color"
-                        value={block.settings.buttonColor || "#0284c7"}
+                        value={block.settings.buttonColor || ""}
                         onChange={(value) =>
                             handleSettingChange("buttonColor", value)
                         }
-                        defaultValue="#0284c7"
+                        defaultValue=""
                     />
 
                     <SettingsColorPicker
                         label="Button Text Color"
-                        value={block.settings.buttonTextColor || "#ffffff"}
+                        value={block.settings.buttonTextColor || ""}
                         onChange={(value) =>
                             handleSettingChange("buttonTextColor", value)
                         }
-                        defaultValue="#ffffff"
+                        defaultValue=""
                     />
 
                     {/* Border Radius Slider */}
@@ -211,13 +203,11 @@ export function LinkSettings({ block }: LinkSettingsProps) {
 
                         <SettingsColorPicker
                             label="Color"
-                            value={
-                                block.settings.buttonBorderColor || "#0284c7"
-                            }
+                            value={block.settings.buttonBorderColor || ""}
                             onChange={(value) =>
                                 handleSettingChange("buttonBorderColor", value)
                             }
-                            defaultValue="#0284c7"
+                            defaultValue=""
                         />
                     </SettingsSection>
                 </SettingsSection>
@@ -228,11 +218,11 @@ export function LinkSettings({ block }: LinkSettingsProps) {
                 <SettingsSection title="Link Style">
                     <SettingsColorPicker
                         label="Text Color"
-                        value={block.settings.textColor || "#0284c7"}
+                        value={block.settings.textColor || ""}
                         onChange={(value) =>
                             handleSettingChange("textColor", value)
                         }
-                        defaultValue="#0284c7"
+                        defaultValue=""
                     />
 
                     <SettingsSelect
@@ -243,16 +233,6 @@ export function LinkSettings({ block }: LinkSettingsProps) {
                         }
                         options={fontSizeOptions}
                         defaultValue="16px"
-                    />
-
-                    <SettingsSelect
-                        label="Font Weight"
-                        value={block.settings.fontWeight || "400"}
-                        onChange={(value) =>
-                            handleSettingChange("fontWeight", value)
-                        }
-                        options={fontWeightOptions}
-                        defaultValue="400"
                     />
 
                     <SettingsSelect
@@ -271,21 +251,21 @@ export function LinkSettings({ block }: LinkSettingsProps) {
             <SettingsSection title="Block Settings">
                 <SettingsColorPicker
                     label="Background Color"
-                    value={block.settings.backgroundColor || "transparent"}
+                    value={block.settings.backgroundColor || ""}
                     onChange={(value) =>
                         handleSettingChange("backgroundColor", value)
                     }
-                    defaultValue="transparent"
+                    defaultValue=""
                 />
 
-                <SettingsColorPicker
+                {/* <SettingsColorPicker
                     label="Foreground Color"
                     value={block.settings.foregroundColor || "#000000"}
                     onChange={(value) =>
                         handleSettingChange("foregroundColor", value)
                     }
                     defaultValue="#000000"
-                />
+                /> */}
 
                 <SettingsSlider
                     label="Padding Top"

@@ -1,5 +1,3 @@
-"use client";
-
 import { useEmailEditor } from "@/context/email-editor-context";
 import { SettingsColorPicker } from "@/components/settings/settings-color-picker";
 import { SettingsSelect } from "@/components/settings/settings-select";
@@ -144,6 +142,22 @@ export function EmailSettings() {
                     onChange={(value) =>
                         handleStyleChange(
                             ["typography", "header", "fontFamily"],
+                            value,
+                        )
+                    }
+                    options={fontFamilyOptions}
+                    defaultValue="Arial, sans-serif"
+                />
+
+                <SettingsSelect
+                    label="Link Font Family"
+                    value={
+                        email.style.typography.link.fontFamily ||
+                        "Arial, sans-serif"
+                    }
+                    onChange={(value) =>
+                        handleStyleChange(
+                            ["typography", "link", "fontFamily"],
                             value,
                         )
                     }

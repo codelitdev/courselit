@@ -1,4 +1,4 @@
-import type { CommonBlockSettings } from "@/types/common-block-settings";
+import type { CommonBlockSettings } from "@/types/email-editor";
 
 export interface ImageBlockSettings extends CommonBlockSettings {
     src: string;

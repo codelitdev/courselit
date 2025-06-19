@@ -1,80 +1,83 @@
 export interface Style {
     colors: {
-        background: string;
-        foreground: string;
-        border: string;
-        accent: string;
-        accentForeground: string;
+        background: `#${string}`;
+        foreground: `#${string}`;
+        border: `#${string}`;
+        accent: `#${string}`;
+        accentForeground: `#${string}`;
     };
     typography: {
         header: {
             fontFamily?: string;
-            fontSize?: string;
-            fontWeight?: string;
-            lineHeight?: string;
             letterSpacing?: string;
-            textTransform?: string;
+            textTransform?: "uppercase" | "lowercase" | "capitalize" | "none";
             textDecoration?: string;
         };
         text: {
             fontFamily?: string;
-            fontSize?: string;
-            fontWeight?: string;
+            fontSize?: `${number}px`;
             lineHeight?: string;
             letterSpacing?: string;
-            textTransform?: string;
-            textDecoration?: string;
+            textTransform?: "uppercase" | "lowercase" | "capitalize" | "none";
+            textDecoration?: "underline" | "none" | "line-through";
         };
         link: {
             fontFamily?: string;
-            fontSize?: string;
-            fontWeight?: string;
+            fontSize?: `${number}px`;
             lineHeight?: string;
             letterSpacing?: string;
-            textTransform?: string;
-            textDecoration?: string;
+            textTransform?: "uppercase" | "lowercase" | "capitalize" | "none";
+            textDecoration?: "underline" | "none" | "line-through";
         };
     };
     interactives: {
         button: {
             padding?: {
-                x?: string;
-                y?: string;
+                x?: `${number}px`;
+                y?: `${number}px`;
             };
             border?: {
-                width?: string;
-                radius?: string;
+                width?: `${number}px`;
+                radius?: `${number}px`;
                 style?: string;
             };
         };
         link: {
             padding?: {
-                x?: string;
-                y?: string;
+                x?: `${number}px`;
+                y?: `${number}px`;
             };
         };
     };
     structure: {
         page: {
-            background?: string;
-            foreground?: string;
-            width?: string;
-            marginY?: string;
+            background?: `#${string}`;
+            foreground?: `#${string}`;
+            width?: `${number}px`;
+            marginY?: `${number}px`;
+            borderWidth?: `${number}px`;
+            borderStyle?: string;
+            borderRadius?: `${number}px`;
         };
         section: {
             padding?: {
-                x?: string;
-                y?: string;
+                x?: `${number}px`;
+                y?: `${number}px`;
             };
         };
     };
 }
 
-export type BlockType = "text" | "image" | "separator" | "link";
+export interface CommonBlockSettings {
+    backgroundColor?: `#${string}`;
+    paddingTop?: `${number}px`;
+    paddingBottom?: `${number}px`;
+    paddingX?: `${number}px`;
+}
 
 export interface Content {
-    id: string;
-    blockType: BlockType;
+    id?: string;
+    blockType: string;
     settings: Record<string, any>;
     style?: Partial<Style>;
 }

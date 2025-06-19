@@ -1,5 +1,3 @@
-"use client";
-
 import { useEmailEditor } from "@/context/email-editor-context";
 import type { Content } from "@/types/email-editor";
 import type { SeparatorBlockSettings } from "./types";
@@ -9,7 +7,7 @@ import { SettingsSelect } from "@/components/settings/settings-select";
 import { SettingsSection } from "@/components/settings/settings-section";
 
 interface SeparatorSettingsProps {
-    block: Content & { settings: SeparatorBlockSettings };
+    block: Required<Content> & { settings: SeparatorBlockSettings };
 }
 
 export function SeparatorSettings({ block }: SeparatorSettingsProps) {
@@ -36,7 +34,6 @@ export function SeparatorSettings({ block }: SeparatorSettingsProps) {
 
     // Get numeric values from settings
     const thickness = pxToNumber(block.settings.thickness, 1);
-    const marginY = pxToNumber(block.settings.marginY, 16);
     const paddingTop = pxToNumber(block.settings.paddingTop, 0);
     const paddingBottom = pxToNumber(block.settings.paddingBottom, 0);
 
@@ -52,9 +49,9 @@ export function SeparatorSettings({ block }: SeparatorSettingsProps) {
         <div className="space-y-4">
             <SettingsColorPicker
                 label="Color"
-                value={block.settings.color || "#e2e8f0"}
+                value={block.settings.color || "transparent"}
                 onChange={(value) => handleSettingChange("color", value)}
-                defaultValue="#e2e8f0"
+                defaultValue=""
             />
 
             <SettingsSlider
@@ -76,17 +73,6 @@ export function SeparatorSettings({ block }: SeparatorSettingsProps) {
                 defaultValue="solid"
             />
 
-            <SettingsSlider
-                label="Vertical Margin"
-                value={marginY}
-                onChange={(value) =>
-                    handleSettingChange("marginY", `${value}px`)
-                }
-                min={0}
-                max={100}
-                defaultValue={16}
-            />
-
             {/* Common Block Settings */}
             <SettingsSection title="Block Settings">
                 <SettingsColorPicker
@@ -98,14 +84,14 @@ export function SeparatorSettings({ block }: SeparatorSettingsProps) {
                     defaultValue="transparent"
                 />
 
-                <SettingsColorPicker
+                {/* <SettingsColorPicker
                     label="Foreground Color"
                     value={block.settings.foregroundColor || "#000000"}
                     onChange={(value) =>
                         handleSettingChange("foregroundColor", value)
                     }
                     defaultValue="#000000"
-                />
+                /> */}
 
                 <SettingsSlider
                     label="Padding Top"

@@ -1,5 +1,5 @@
 import { EmailEditorProvider } from "@/context/email-editor-context";
-import { EmailEditor as EmailEditorComponent } from "./email-editor";
+import { EmailEditor } from "./components/email-editor";
 import type { Email } from "@/types/email-editor";
 import { BlockRegistryProvider } from "@/context/block-registry-context";
 import type { BlockComponent } from "@/types/block-registry";
@@ -10,11 +10,15 @@ interface EmailEditorProps {
     blocks?: BlockComponent[];
 }
 
-export function EmailEditor({ email, onChange, blocks }: EmailEditorProps) {
+export function EmailEditorWithProviders({
+    email,
+    onChange,
+    blocks,
+}: EmailEditorProps) {
     return (
         <BlockRegistryProvider blocks={blocks}>
             <EmailEditorProvider initialEmail={email} onChange={onChange}>
-                <EmailEditorComponent />
+                <EmailEditor />
             </EmailEditorProvider>
         </BlockRegistryProvider>
     );

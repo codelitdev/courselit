@@ -1,23 +1,27 @@
-import type { Content } from "@/types/email-editor";
+import type { Content, Style } from "@/types/email-editor";
 import type { LinkBlockSettings } from "./types";
 import { Link, Section, Button } from "@react-email/components";
 
 interface LinkBlockProps {
     block: Content & { settings: LinkBlockSettings };
+    style?: Style;
 }
 
-export function LinkBlock({ block }: LinkBlockProps) {
+export function LinkBlock({ block, style }: LinkBlockProps) {
     const {
         text = "Link Text",
         url = "#",
         alignment = "left",
-        textColor = "#0284c7",
-        fontSize = "16px",
-        fontWeight = "400",
-        textDecoration = "underline",
+        fontSize = block.settings.fontSize ||
+            style?.typography.link.fontSize ||
+            "16px",
+        textDecoration = block.settings.textDecoration ||
+            style?.typography.link.textDecoration ||
+            "underline",
         isButton = false,
-        buttonColor = "#0284c7",
-        buttonTextColor = "#ffffff",
+        textColor = style?.colors.accent,
+        buttonColor = style?.colors.accent,
+        buttonTextColor = style?.colors.accentForeground,
         buttonBorderRadius = "4px",
         buttonPaddingX = "16px",
         buttonPaddingY = "8px",
@@ -25,67 +29,91 @@ export function LinkBlock({ block }: LinkBlockProps) {
         buttonBorderStyle = "solid",
         buttonBorderColor = "#0284c7",
         backgroundColor = "transparent",
-        foregroundColor = "#000000",
-        paddingTop = "0px",
-        paddingBottom = "0px",
+        // foregroundColor = style?.colors.accent || "#000000",
+        paddingTop = style?.structure.section.padding?.y,
+        paddingBottom = style?.structure.section.padding?.y,
     } = block.settings;
-
-    // Common section styles
-    const sectionStyle = {
-        backgroundColor,
-        color: foregroundColor,
-        paddingTop,
-        paddingBottom,
-        textAlign: alignment,
-    };
 
     // If it's a button, use the Button component
     if (isButton) {
         return (
-            <Section style={sectionStyle}>
-                <Button
-                    href={url}
+            <Section>
+                <div
                     style={{
-                        backgroundColor: buttonColor,
-                        color: buttonTextColor,
-                        borderRadius: buttonBorderRadius,
-                        padding: `${buttonPaddingY} ${buttonPaddingX}`,
-                        fontSize,
-                        fontWeight,
-                        textDecoration: "none",
-                        display: "inline-block",
-                        textAlign: "center",
-                        border:
-                            buttonBorderWidth !== "0px"
-                                ? `${buttonBorderWidth} ${buttonBorderStyle} ${buttonBorderColor}`
-                                : "none",
-                        fontFamily: "sans-serif",
-                        lineHeight: "100%",
-                        maxWidth: "100%",
+                        paddingTop,
+                        paddingBottom,
+                        backgroundColor,
+                        textAlign: alignment,
                     }}
                 >
-                    {text}
-                </Button>
+                    <Button
+                        href={url}
+                        style={{
+                            backgroundColor:
+                                buttonColor || style?.colors.accent,
+                            color:
+                                buttonTextColor ||
+                                style?.colors.accentForeground,
+                            borderRadius: buttonBorderRadius,
+                            padding: `${buttonPaddingY} ${buttonPaddingX}`,
+                            fontSize,
+                            textDecoration: "none",
+                            display: "inline-block",
+                            textAlign: "center",
+                            border:
+                                buttonBorderWidth !== "0px"
+                                    ? `${buttonBorderWidth} ${buttonBorderStyle} ${buttonBorderColor}`
+                                    : "none",
+                            fontFamily:
+                                block.settings.fontFamily ||
+                                style?.typography.link.fontFamily ||
+                                "Arial, sans-serif",
+                            lineHeight:
+                                block.settings.lineHeight ||
+                                style?.typography.link.lineHeight ||
+                                "1.5",
+                            maxWidth: "100%",
+                        }}
+                    >
+                        {text}
+                    </Button>
+                </div>
             </Section>
         );
     }
 
     // Otherwise, use the Link component
     return (
-        <Section style={sectionStyle}>
-            <Link
-                href={url}
+        <Section>
+            <div
                 style={{
-                    color: textColor,
-                    fontSize,
-                    fontWeight,
-                    textDecoration,
-                    display: "inline-block", // Ensure the link is selectable even when empty
-                    padding: "4px 0", // Add minimal padding to ensure the link is clickable
+                    paddingTop,
+                    paddingBottom,
+                    backgroundColor,
+                    textAlign: alignment,
                 }}
             >
-                {text}
-            </Link>
+                <Link
+                    href={url}
+                    style={{
+                        color: textColor,
+                        fontSize,
+                        textDecoration,
+                        display: "inline-block", // Ensure the link is selectable even when empty
+                        padding: "4px 0", // Add minimal padding to ensure the link is clickable
+                        fontFamily:
+                            block.settings.fontFamily ||
+                            style?.typography.link.fontFamily ||
+                            "Arial, sans-serif",
+                        lineHeight:
+                            block.settings.lineHeight ||
+                            style?.typography.link.lineHeight ||
+                            "1.5",
+                    }}
+                >
+                    {text}
+                </Link>
+            </div>
         </Section>
     );
 }

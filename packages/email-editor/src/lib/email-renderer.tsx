@@ -96,6 +96,12 @@ export function EmailTemplate({
                             color:
                                 email.style.structure.page.foreground ||
                                 email.style.colors.foreground,
+                            borderWidth: email.style.structure.page.borderWidth,
+                            borderStyle: email.style.structure.page.borderStyle,
+                            borderColor: email.style.colors.border,
+                            borderRadius:
+                                email.style.structure.page.borderRadius,
+                            overflow: "hidden",
                         }}
                     >
                         {email.content.map((block) => renderBlock(block))}

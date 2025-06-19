@@ -1,5 +1,5 @@
 import { useEmailEditor } from "@/context/email-editor-context";
-import type { Content } from "@/types/email-editor";
+import type { Content, Style } from "@/types/email-editor";
 import type { TextBlockSettings } from "./types";
 import { SettingsTextarea } from "@/components/settings/settings-textarea";
 import { SettingsSelect } from "@/components/settings/settings-select";
@@ -8,10 +8,11 @@ import { SettingsSlider } from "@/components/settings/settings-slider";
 import { SettingsSection } from "@/components/settings/settings-section";
 
 interface TextSettingsProps {
-    block: Content & { settings: TextBlockSettings };
+    block: Required<Content> & { settings: TextBlockSettings };
+    style?: Style;
 }
 
-export function TextSettings({ block }: TextSettingsProps) {
+export function TextSettings({ block, style }: TextSettingsProps) {
     const { updateBlock } = useEmailEditor();
 
     const handleSettingChange = (key: string, value: any) => {
@@ -99,10 +100,10 @@ export function TextSettings({ block }: TextSettingsProps) {
 
             <SettingsSelect
                 label="Font Family"
-                value={block.settings.fontFamily || "Arial, sans-serif"}
+                value={block.settings.fontFamily || ""}
                 onChange={(value) => handleSettingChange("fontFamily", value)}
                 options={fontFamilyOptions}
-                defaultValue="Arial, sans-serif"
+                defaultValue=""
             />
 
             <SettingsSelect
@@ -121,12 +122,12 @@ export function TextSettings({ block }: TextSettingsProps) {
                 defaultValue="1.5"
             />
 
-            <SettingsColorPicker
+            {/* <SettingsColorPicker
                 label="Text Color"
                 value={block.settings.textColor || "#000000"}
                 onChange={(value) => handleSettingChange("textColor", value)}
                 defaultValue="#000000"
-            />
+            /> */}
 
             {/* Common Block Settings */}
             <SettingsSection title="Block Settings">
@@ -150,24 +151,38 @@ export function TextSettings({ block }: TextSettingsProps) {
 
                 <SettingsSlider
                     label="Padding Top"
-                    value={paddingTop}
+                    value={pxToNumber(
+                        block.settings.paddingTop ||
+                            style?.structure.section.padding?.y,
+                        16,
+                    )}
                     onChange={(value) =>
                         handleSettingChange("paddingTop", `${value}px`)
                     }
                     min={0}
                     max={100}
-                    defaultValue={0}
+                    defaultValue={pxToNumber(
+                        style?.structure.section.padding?.y,
+                        16,
+                    )}
                 />
 
                 <SettingsSlider
                     label="Padding Bottom"
-                    value={paddingBottom}
+                    value={pxToNumber(
+                        block.settings.paddingBottom ||
+                            style?.structure.section.padding?.y,
+                        16,
+                    )}
                     onChange={(value) =>
                         handleSettingChange("paddingBottom", `${value}px`)
                     }
                     min={0}
                     max={100}
-                    defaultValue={0}
+                    defaultValue={pxToNumber(
+                        style?.structure.section.padding?.y,
+                        16,
+                    )}
                 />
             </SettingsSection>
         </div>

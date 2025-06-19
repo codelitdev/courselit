@@ -1,4 +1,3 @@
-"use client";
 import { useState } from "react";
 import { useEmailEditor } from "@/context/email-editor-context";
 import { BlockWrapper } from "./block-wrapper";
@@ -33,7 +32,7 @@ export function EmailEditor() {
             >
                 {/* Container equivalent - Apply container styles here */}
                 <div
-                    className="email-container mx-auto shadow-lg"
+                    className="email-container mx-auto"
                     style={{
                         width: email.style.structure.page.width,
                         margin: `0px auto`,
@@ -42,6 +41,11 @@ export function EmailEditor() {
                             email.style.structure.page.foreground ||
                             email.style.colors.foreground,
                         maxWidth: "800px",
+                        borderWidth: email.style.structure.page.borderWidth,
+                        borderStyle: email.style.structure.page.borderStyle,
+                        borderColor: email.style.colors.border,
+                        borderRadius: email.style.structure.page.borderRadius,
+                        overflow: "hidden",
                     }}
                 >
                     {email.content.length === 0 && (
@@ -58,11 +62,12 @@ export function EmailEditor() {
                         {first && (
                             <BlockWrapper
                                 key={first.id}
-                                block={first}
+                                block={first as Required<Content>}
                                 index={0}
                                 isFirst={true}
                                 isLast={false}
                                 isFixed={true}
+                                style={email.style}
                             />
                         )}
 
@@ -70,11 +75,12 @@ export function EmailEditor() {
                         {middleBlocks.map((block: Content, index: number) => (
                             <BlockWrapper
                                 key={block.id}
-                                block={block}
+                                block={block as Required<Content>}
                                 index={index + 1}
                                 isFirst={false}
                                 isLast={false}
                                 isFixed={false}
+                                style={email.style}
                             />
                         ))}
 
@@ -82,11 +88,12 @@ export function EmailEditor() {
                         {last && (
                             <BlockWrapper
                                 key={last.id}
-                                block={last}
+                                block={last as Required<Content>}
                                 index={email.content.length - 1}
                                 isFirst={false}
                                 isLast={true}
                                 isFixed={true}
+                                style={email.style}
                             />
                         )}
                     </div>

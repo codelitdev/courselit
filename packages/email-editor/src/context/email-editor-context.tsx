@@ -1,4 +1,3 @@
-"use client";
 import {
     createContext,
     useContext,
@@ -7,7 +6,7 @@ import {
     useEffect,
     type ReactNode,
 } from "react";
-import type { Email, Content, BlockType, Style } from "../types/email-editor";
+import type { Email, Content, Style } from "../types/email-editor";
 import type { TextBlockSettings } from "../blocks/text/types";
 import type { ImageBlockSettings } from "../blocks/image/types";
 import type { SeparatorBlockSettings } from "../blocks/separator/types";
@@ -18,7 +17,7 @@ interface EmailEditorContextType {
     email: Email;
     updateEmail: (email: Email) => void;
     updateEmailStyle: (style: Partial<Style>) => void;
-    addBlock: (blockType: BlockType, index: number) => void;
+    addBlock: (blockType: string, index: number) => void;
     updateBlock: (id: string, content: Partial<Content>) => void;
     deleteBlock: (id: string) => void;
     moveBlock: (id: string, direction: "up" | "down") => void;
@@ -69,12 +68,32 @@ function isObject(item: any) {
     return item && typeof item === "object" && !Array.isArray(item);
 }
 
+function getEmailWithBlockIds(email: Email): Email {
+    return {
+        style: email.style,
+        meta: email.meta,
+        content: email.content.map((block) => ({
+            ...block,
+            id: generateId(),
+        })),
+    };
+}
+
+function stripBlockIds(email: Email): Email {
+    return {
+        ...email,
+        content: email.content.map((block) => ({ ...block, id: undefined })),
+    };
+}
+
 export function EmailEditorProvider({
     children,
     initialEmail,
     onChange,
 }: EmailEditorProviderProps) {
-    const [email, setEmail] = useState<Email>(initialEmail || defaultEmail);
+    const [email, setEmail] = useState<Email>(
+        getEmailWithBlockIds(initialEmail || defaultEmail),
+    );
     const [movingBlockId, setMovingBlockId] = useState<string | null>(null);
     const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
 
@@ -89,7 +108,7 @@ export function EmailEditorProvider({
         (newEmail: Email) => {
             setEmail(newEmail);
             if (onChange) {
-                onChange(newEmail);
+                onChange(stripBlockIds(newEmail));
             }
         },
         [onChange],
@@ -114,7 +133,7 @@ export function EmailEditorProvider({
     );
 
     const addBlock = useCallback(
-        (blockType: BlockType, index: number) => {
+        (blockType: string, index: number) => {
             const newBlock: Content = {
                 id: generateId(),
                 blockType,
@@ -316,7 +335,7 @@ export function useEmailEditor() {
 }
 
 function getDefaultSettingsForBlockType(
-    blockType: BlockType,
+    blockType: string,
 ): Record<string, any> {
     // Common settings for all blocks
     const commonSettings = {
@@ -360,7 +379,6 @@ function getDefaultSettingsForBlockType(
                 alignment: "left",
                 textColor: "#0284c7",
                 fontSize: "16px",
-                fontWeight: "400",
                 textDecoration: "underline",
                 isButton: false,
             } as LinkBlockSettings;

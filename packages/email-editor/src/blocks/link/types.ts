@@ -1,4 +1,4 @@
-import type { CommonBlockSettings } from "@/types/common-block-settings";
+import type { CommonBlockSettings } from "@/types/email-editor";
 
 export interface LinkBlockSettings extends CommonBlockSettings {
     text: string;
@@ -6,7 +6,6 @@ export interface LinkBlockSettings extends CommonBlockSettings {
     alignment?: "left" | "center" | "right";
     textColor?: string;
     fontSize?: string;
-    fontWeight?: string;
     textDecoration?: string;
 
     // Button mode settings

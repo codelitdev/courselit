@@ -1,10 +1,9 @@
-import type { CommonBlockSettings } from "@/types/common-block-settings";
+import type { CommonBlockSettings } from "@/types/email-editor";
 
 export interface TextBlockSettings extends CommonBlockSettings {
     content: string;
     alignment?: "left" | "center" | "right" | "justify";
     fontFamily?: string;
-    fontSize?: string;
-    lineHeight?: string;
-    textColor?: string;
+    fontSize?: `${number}px`;
+    lineHeight?: `${number}`;
 }

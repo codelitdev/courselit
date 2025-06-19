@@ -64,7 +64,8 @@ export function BlockSettingsPanel({ blockId }: BlockSettingsPanelProps) {
     const SettingsComponent = blockComponent.settings;
     const capitalizedBlockName = blockComponent.metadata.displayName;
 
-    const handleClose = () => {
+    const handleClose = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
         setSelectedBlockId(null);
     };
 
@@ -78,19 +79,25 @@ export function BlockSettingsPanel({ blockId }: BlockSettingsPanelProps) {
                 <div className="flex items-center">
                     <Button
                         onClick={handleEmailBreadcrumbClick}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                        className=""
+                        variant="ghost"
                     >
                         Email
                     </Button>
                     <ChevronRight className="h-4 w-4 mx-1 text-gray-400" />
                     <span className="font-medium">{capitalizedBlockName}</span>
                 </div>
-                <Button variant="ghost" size="icon" onClick={handleClose}>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleClose}
+                    type="button"
+                >
                     <X className="h-4 w-4" />
                 </Button>
             </div>
             <div className="flex-1 overflow-y-auto p-4">
-                <SettingsComponent block={block} />
+                <SettingsComponent block={block} style={email.style} />
             </div>
         </div>
     );
