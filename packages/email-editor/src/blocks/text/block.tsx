@@ -1,4 +1,3 @@
-import { useEmailEditor } from "@/context/email-editor-context";
 import { Section, Markdown } from "@react-email/components";
 import type { Content, Style } from "@/types/email-editor";
 import type { TextBlockSettings } from "./types";
@@ -6,10 +5,10 @@ import type { TextBlockSettings } from "./types";
 interface TextBlockProps {
     block: Content & { settings: TextBlockSettings };
     style?: Style;
+    selectedBlockId?: string | null;
 }
 
-export function TextBlock({ block, style }: TextBlockProps) {
-    const { selectedBlockId } = useEmailEditor();
+export function TextBlock({ block, style, selectedBlockId }: TextBlockProps) {
     const isSelected = selectedBlockId === block.id;
 
     // Get common block settings

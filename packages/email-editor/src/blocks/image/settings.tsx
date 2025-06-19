@@ -1,5 +1,4 @@
-import { useEmailEditor } from "@/context/email-editor-context";
-import type { Content } from "@/types/email-editor";
+import type { Content, Style } from "@/types/email-editor";
 import type { ImageBlockSettings } from "./types";
 import { SettingsInput } from "@/components/settings/settings-input";
 import { SettingsSelect } from "@/components/settings/settings-select";
@@ -11,11 +10,15 @@ import { Upload } from "lucide-react";
 
 interface ImageSettingsProps {
     block: Required<Content> & { settings: ImageBlockSettings };
+    style?: Style;
+    updateBlock: (id: string, content: Partial<Content>) => void;
 }
 
-export function ImageSettings({ block }: ImageSettingsProps) {
-    const { updateBlock } = useEmailEditor();
-
+export function ImageSettings({
+    block,
+    style,
+    updateBlock,
+}: ImageSettingsProps) {
     const handleSettingChange = (key: string, value: any) => {
         updateBlock(block.id, {
             settings: {
@@ -203,7 +206,7 @@ export function ImageSettings({ block }: ImageSettingsProps) {
                         handleSettingChange("borderRadius", `${value}px`)
                     }
                     min={0}
-                    max={250}
+                    max={50}
                     defaultValue={0}
                 />
 
@@ -214,7 +217,7 @@ export function ImageSettings({ block }: ImageSettingsProps) {
                         handleSettingChange("borderWidth", `${value}px`)
                     }
                     min={0}
-                    max={10}
+                    max={20}
                     defaultValue={0}
                 />
 
@@ -249,35 +252,40 @@ export function ImageSettings({ block }: ImageSettingsProps) {
                     defaultValue="transparent"
                 />
 
-                {/* <SettingsColorPicker
-                    label="Foreground Color"
-                    value={block.settings.foregroundColor || "#000000"}
-                    onChange={(value) =>
-                        handleSettingChange("foregroundColor", value)
-                    }
-                    defaultValue="#000000"
-                /> */}
-
                 <SettingsSlider
                     label="Padding Top"
-                    value={paddingTop}
+                    value={pxToNumber(
+                        block.settings.paddingTop ||
+                            style?.structure.section.padding?.y,
+                        16,
+                    )}
                     onChange={(value) =>
                         handleSettingChange("paddingTop", `${value}px`)
                     }
                     min={0}
                     max={100}
-                    defaultValue={0}
+                    defaultValue={pxToNumber(
+                        style?.structure.section.padding?.y,
+                        16,
+                    )}
                 />
 
                 <SettingsSlider
                     label="Padding Bottom"
-                    value={paddingBottom}
+                    value={pxToNumber(
+                        block.settings.paddingBottom ||
+                            style?.structure.section.padding?.y,
+                        16,
+                    )}
                     onChange={(value) =>
                         handleSettingChange("paddingBottom", `${value}px`)
                     }
                     min={0}
                     max={100}
-                    defaultValue={0}
+                    defaultValue={pxToNumber(
+                        style?.structure.section.padding?.y,
+                        16,
+                    )}
                 />
             </SettingsSection>
         </div>

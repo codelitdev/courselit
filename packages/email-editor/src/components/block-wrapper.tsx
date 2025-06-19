@@ -1,9 +1,8 @@
 import { useState, useRef } from "react";
-import { useEmailEditor } from "@/context/email-editor-context";
 import type { Content, Style } from "@/types/email-editor";
+import type { BlockRegistry } from "../types/block-registry";
 import { AddBlockButton } from "./add-block-button";
 import { Trash, Copy, ChevronUp, ChevronDown } from "lucide-react";
-import { useBlockRegistry } from "@/context/block-registry-context";
 
 interface BlockWrapperProps {
     block: Required<Content>;
@@ -12,6 +11,15 @@ interface BlockWrapperProps {
     isLast: boolean;
     isFixed?: boolean;
     style?: Style;
+    blockRegistry: BlockRegistry;
+    selectedBlockId: string | null;
+    setSelectedBlockId: (id: string | null) => void;
+    deleteBlock: (id: string) => void;
+    moveBlock: (id: string, direction: "up" | "down") => void;
+    duplicateBlock: (id: string) => void;
+    movingBlockId: string | null;
+    addBlock: (blockType: string, index: number) => void;
+    totalBlocks: number;
 }
 
 export function BlockWrapper({
@@ -21,21 +29,20 @@ export function BlockWrapper({
     isLast,
     isFixed = false,
     style,
+    blockRegistry,
+    selectedBlockId,
+    setSelectedBlockId,
+    deleteBlock,
+    moveBlock,
+    duplicateBlock,
+    movingBlockId,
+    addBlock,
+    totalBlocks,
 }: BlockWrapperProps) {
-    const {
-        deleteBlock,
-        moveBlock,
-        duplicateBlock,
-        movingBlockId,
-        selectedBlockId,
-        setSelectedBlockId,
-        email,
-    } = useEmailEditor();
     const [isHovered, setIsHovered] = useState(false);
     const [isControlsHovered, setIsControlsHovered] = useState(false);
     const controlsRef = useRef<HTMLDivElement>(null);
     const blockRef = useRef<HTMLDivElement>(null);
-    const blockRegistry = useBlockRegistry();
 
     const isMoving = movingBlockId === block.id;
     const isSelected = selectedBlockId === block.id;
@@ -63,12 +70,18 @@ export function BlockWrapper({
         }
 
         const BlockComponent = blockComponent.block;
-        return <BlockComponent block={block} style={style} />;
+        return (
+            <BlockComponent
+                block={block}
+                style={style}
+                selectedBlockId={selectedBlockId}
+            />
+        );
     };
 
     // Calculate if move buttons should be disabled
     const canMoveUp = !isFixed && index > 1; // Can't move into first position (index 0)
-    const canMoveDown = !isFixed && index < email.content.length - 2; // Can't move into last position
+    const canMoveDown = !isFixed && index < totalBlocks - 2; // Can't move into last position
 
     // Check if we should show any controls at all
     const hasAnyControls = !isFixed || (!isFirst && !isLast);
@@ -109,6 +122,8 @@ export function BlockWrapper({
                             <AddBlockButton
                                 position="below"
                                 index={index + 1}
+                                addBlock={addBlock}
+                                blockRegistry={blockRegistry}
                             />
                         </div>
                     </div>

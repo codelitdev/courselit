@@ -1,22 +1,26 @@
 import { useState } from "react";
-import { useEmailEditor } from "@/context/email-editor-context";
 import { Plus } from "lucide-react";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { useBlockRegistry } from "@/context/block-registry-context";
+import type { BlockRegistry } from "../types/block-registry";
 
 interface AddBlockButtonProps {
     position: "above" | "below";
     index: number;
+    addBlock: (blockType: string, index: number) => void;
+    blockRegistry: BlockRegistry;
 }
 
-export function AddBlockButton({ position, index }: AddBlockButtonProps) {
-    const { addBlock } = useEmailEditor();
+export function AddBlockButton({
+    position,
+    index,
+    addBlock,
+    blockRegistry,
+}: AddBlockButtonProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const blockRegistry = useBlockRegistry();
 
     const blockTypes = Object.values(blockRegistry).map((block) => ({
         type: block.metadata.name,

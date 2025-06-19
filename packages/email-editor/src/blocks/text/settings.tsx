@@ -1,4 +1,3 @@
-import { useEmailEditor } from "@/context/email-editor-context";
 import type { Content, Style } from "@/types/email-editor";
 import type { TextBlockSettings } from "./types";
 import { SettingsTextarea } from "@/components/settings/settings-textarea";
@@ -10,11 +9,10 @@ import { SettingsSection } from "@/components/settings/settings-section";
 interface TextSettingsProps {
     block: Required<Content> & { settings: TextBlockSettings };
     style?: Style;
+    updateBlock: (id: string, content: Partial<Content>) => void;
 }
 
-export function TextSettings({ block, style }: TextSettingsProps) {
-    const { updateBlock } = useEmailEditor();
-
+export function TextSettings({ block, style, updateBlock }: TextSettingsProps) {
     const handleSettingChange = (key: string, value: any) => {
         updateBlock(block.id, {
             settings: {

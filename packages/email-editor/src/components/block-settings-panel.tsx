@@ -1,18 +1,29 @@
-import { useEmailEditor } from "@/context/email-editor-context";
 import { X, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmailSettings } from "./email-settings";
-import { useBlockRegistry } from "@/context/block-registry-context";
+import type { Email, Style } from "../types/email-editor";
+import type { BlockRegistry } from "../types/block-registry";
+import type { Content } from "../types/email-editor";
 
 interface BlockSettingsPanelProps {
     blockId: string | null;
+    email: Email;
+    setSelectedBlockId: (id: string | null) => void;
+    blockRegistry: BlockRegistry;
+    updateEmail: (email: Email) => void;
+    updateEmailStyle: (style: Partial<Style>) => void;
+    updateBlock: (id: string, content: Partial<Content>) => void;
 }
 
-export function BlockSettingsPanel({ blockId }: BlockSettingsPanelProps) {
-    const { email, setSelectedBlockId } = useEmailEditor();
-
-    const blockRegistry = useBlockRegistry();
-
+export function BlockSettingsPanel({
+    blockId,
+    email,
+    setSelectedBlockId,
+    blockRegistry,
+    updateEmail,
+    updateEmailStyle,
+    updateBlock,
+}: BlockSettingsPanelProps) {
     if (!blockId) {
         return (
             <div className="flex flex-col h-full">
@@ -27,7 +38,11 @@ export function BlockSettingsPanel({ blockId }: BlockSettingsPanelProps) {
                     </Button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4">
-                    <EmailSettings />
+                    <EmailSettings
+                        email={email}
+                        updateEmail={updateEmail}
+                        updateEmailStyle={updateEmailStyle}
+                    />
                 </div>
             </div>
         );
@@ -97,7 +112,11 @@ export function BlockSettingsPanel({ blockId }: BlockSettingsPanelProps) {
                 </Button>
             </div>
             <div className="flex-1 overflow-y-auto p-4">
-                <SettingsComponent block={block} style={email.style} />
+                <SettingsComponent
+                    block={block}
+                    style={email.style}
+                    updateBlock={updateBlock}
+                />
             </div>
         </div>
     );

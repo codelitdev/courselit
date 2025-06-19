@@ -1,13 +1,21 @@
-import { useEmailEditor } from "@/context/email-editor-context";
 import { SettingsColorPicker } from "@/components/settings/settings-color-picker";
 import { SettingsSelect } from "@/components/settings/settings-select";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { SettingsSlider } from "@/components/settings/settings-slider";
 import { SettingsInput } from "@/components/settings/settings-input";
+import type { Email, Style } from "../types/email-editor";
 
-export function EmailSettings() {
-    const { email, updateEmailStyle, updateEmail } = useEmailEditor();
+interface EmailSettingsProps {
+    email: Email;
+    updateEmail: (email: Email) => void;
+    updateEmailStyle: (style: Partial<Style>) => void;
+}
 
+export function EmailSettings({
+    email,
+    updateEmail,
+    updateEmailStyle,
+}: EmailSettingsProps) {
     const handleStyleChange = (path: string[], value: any) => {
         // Create a nested update based on the path
         const update: any = {};
@@ -206,14 +214,70 @@ export function EmailSettings() {
                     min={0}
                     max={100}
                     defaultValue={20}
-                    tooltip="Vertical margin around the email (0px - 100px)"
+                    tooltip="Vertical margin around the email container"
                 />
 
+                <SettingsSlider
+                    label="Page Border Width"
+                    value={pxToNumber(
+                        email.style.structure.page.borderWidth,
+                        0,
+                    )}
+                    onChange={(value) =>
+                        handleStyleChange(
+                            ["structure", "page", "borderWidth"],
+                            `${value}px`,
+                        )
+                    }
+                    min={0}
+                    max={20}
+                    defaultValue={0}
+                    tooltip="Border width around the email container"
+                />
+
+                <SettingsSelect
+                    label="Page Border Style"
+                    value={email.style.structure.page.borderStyle || "solid"}
+                    onChange={(value) =>
+                        handleStyleChange(
+                            ["structure", "page", "borderStyle"],
+                            value,
+                        )
+                    }
+                    options={[
+                        { value: "solid", label: "Solid" },
+                        { value: "dashed", label: "Dashed" },
+                        { value: "dotted", label: "Dotted" },
+                        { value: "double", label: "Double" },
+                    ]}
+                    defaultValue="solid"
+                />
+
+                <SettingsSlider
+                    label="Page Border Radius"
+                    value={pxToNumber(
+                        email.style.structure.page.borderRadius,
+                        0,
+                    )}
+                    onChange={(value) =>
+                        handleStyleChange(
+                            ["structure", "page", "borderRadius"],
+                            `${value}px`,
+                        )
+                    }
+                    min={0}
+                    max={50}
+                    defaultValue={0}
+                    tooltip="Border radius for rounded corners"
+                />
+            </SettingsSection>
+
+            <SettingsSection title="Section Structure">
                 <SettingsSlider
                     label="Section Padding X"
                     value={pxToNumber(
                         email.style.structure.section.padding?.x,
-                        24,
+                        16,
                     )}
                     onChange={(value) =>
                         handleStyleChange(
@@ -223,8 +287,8 @@ export function EmailSettings() {
                     }
                     min={0}
                     max={100}
-                    defaultValue={24}
-                    tooltip="Horizontal padding for email sections"
+                    defaultValue={16}
+                    tooltip="Horizontal padding inside sections"
                 />
 
                 <SettingsSlider
@@ -242,7 +306,7 @@ export function EmailSettings() {
                     min={0}
                     max={100}
                     defaultValue={16}
-                    tooltip="Vertical padding for email sections"
+                    tooltip="Vertical padding inside sections"
                 />
             </SettingsSection>
         </div>
