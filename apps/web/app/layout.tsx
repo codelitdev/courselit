@@ -3,7 +3,6 @@ import "@courselit/page-blocks/styles.css";
 import "@courselit/components-library/styles.css";
 import "@courselit/page-primitives/styles.css";
 import "../styles/globals.css";
-import Script from "next/script";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import {
@@ -70,13 +69,6 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                 className={`${fonts.openSans.variable} ${fonts.montserrat.variable} ${fonts.lato.variable} ${fonts.poppins.variable} ${fonts.sourceSans3.variable} ${fonts.raleway.variable} ${fonts.notoSans.variable} ${fonts.merriweather.variable} ${fonts.inter.variable} ${fonts.alegreya.variable} ${fonts.roboto.variable} ${fonts.mulish.variable} ${fonts.nunito.variable} ${fonts.rubik.variable} ${fonts.playfairDisplay.variable} ${fonts.oswald.variable} ${fonts.ptSans.variable} ${fonts.workSans.variable} ${fonts.robotoSlab.variable} ${fonts.sourceSerif4.variable} ${fonts.bebasNeue.variable} ${fonts.quicksand.variable} font-sans ${inter.className}`}
             >
                 {children}
-                {/* Conditionally load the Google reCAPTCHA v3 script. Only loads if the site key is set in environment variables. */}
-                {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
-                    <Script
-                        src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`}
-                        strategy="afterInteractive" // Load after the page becomes interactive to avoid blocking initial render.
-                    />
-                )}
             </body>
         </html>
     );

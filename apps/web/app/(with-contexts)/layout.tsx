@@ -19,6 +19,7 @@ export default async function Layout({
     const config: ServerConfig = {
         turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || "",
         queueServer: process.env.QUEUE_SERVER || "",
+        recaptchaSiteKey: process.env.RECAPTCHA_SITE_KEY || "",
     };
 
     return (
