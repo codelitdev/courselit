@@ -4,9 +4,18 @@ import {
     FormField,
     Dialog2,
     useToast,
+    Link,
 } from "@courselit/components-library";
 import { AppDispatch, actionCreators } from "@courselit/state-management";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import {
+    ChangeEvent,
+    FormEvent,
+    useEffect,
+    useState,
+    useRef,
+    useCallback,
+    useMemo,
+} from "react";
 import { FetchBuilder } from "@courselit/utils";
 import {
     Address,
@@ -31,11 +40,9 @@ import {
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import FilterContainer from "@components/admin/users/filter-container";
-import { useCallback } from "react";
-import { useMemo } from "react";
 import { PaperPlane, Clock } from "@courselit/icons";
 import { isDateInFuture } from "../../../lib/utils";
-import { MailEditorAndPreview } from "./mail-editor-and-preview";
+import { Email as EmailContent } from "@courselit/email-editor";
 const { networkAction } = actionCreators;
 
 interface MailEditorProps {
@@ -49,7 +56,7 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
     const [filtersAggregator, setFiltersAggregator] =
         useState<UserFilterAggregator>("or");
     const [subject, setSubject] = useState("");
-    const [content, setContent] = useState("");
+    const [content, setContent] = useState<EmailContent | null>(null);
     const [delay, setDelay] = useState(0);
     const [showScheduleInput, setShowScheduleInput] = useState(false);
     const [emailId, setEmailId] = useState();
@@ -59,6 +66,19 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
     const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
     const [report, setReport] = useState<SequenceReport>();
     const [status, setStatus] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Refs to track initial values and prevent saving during load
+    const initialValues = useRef({
+        subject: "",
+        content: null,
+        delay: 0,
+        filters: [] as UserFilter[],
+        filtersAggregator: "or" as UserFilterAggregator,
+    });
+    const isInitialLoad = useRef(true);
+    const saveTimeoutRef = useRef<NodeJS.Timeout>();
+
     const { toast } = useToast();
 
     const fetch = useMemo(
@@ -78,7 +98,14 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                     emails {
                         emailId,
                         templateId,
-                        content,
+                        content {
+                            content {
+                                blockType,
+                                settings
+                            },
+                            style,
+                            meta
+                        },
                         subject,
                         delayInMillis,
                         published
@@ -111,6 +138,17 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
             const response = await fetcher.exec();
             if (response.sequence) {
                 const { sequence } = response;
+
+                // Set initial values in ref
+                initialValues.current = {
+                    subject: sequence.emails[0].subject,
+                    content: sequence.emails[0].content,
+                    delay: sequence.emails[0].delayInMillis,
+                    filters: sequence.filter?.filters || [],
+                    filtersAggregator: sequence.filter?.aggregator || "or",
+                };
+
+                // Update state
                 setSubject(sequence.emails[0].subject);
                 setContent(sequence.emails[0].content);
                 setDelay(sequence.emails[0].delayInMillis);
@@ -132,109 +170,160 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
         } finally {
             dispatch && dispatch(networkAction(false));
             setLoaded(true);
+            isInitialLoad.current = false;
         }
-    }, [dispatch, fetch, id]);
+    }, [dispatch, fetch, id, toast]);
 
     useEffect(() => {
         loadSequence();
     }, [loadSequence]);
 
-    // TODO: debounce this
-    const saveSequence = useCallback(async () => {
-        if (!emailId) {
+    // Debounced save function
+    const debouncedSave = useCallback(async () => {
+        if (!emailId || isInitialLoad.current) {
             return;
         }
 
-        const mutation = `
-        mutation updateSequence(
-            $sequenceId: String!,
-            $emailId: String!,
-            $title: String,
-            $filter: String,
-            $content: String,
-            $delayInMillis: Float,
-        ) {
-            sequence: updateSequence(
-                sequenceId: $sequenceId,
-                title: $title,
-                filter: $filter,
-            ) {
-                sequenceId,
-            },
-            mail: updateMailInSequence(
-                sequenceId: $sequenceId,
-                emailId: $emailId,
-                subject: $title,
-                content: $content,
-                delayInMillis: $delayInMillis, 
-            ) {
-                sequenceId,
-                title,
-                emails {
-                    emailId,
-                    templateId,
-                    content,
-                    subject,
-                    delayInMillis,
-                    published
-                },
-                filter {
-                    aggregator,
-                    filters {
-                        name,
-                        condition,
-                        value,
-                        valueLabel
-                    },
-                }
-            },
-        }`;
+        // Check if values have actually changed
+        const hasChanged =
+            subject !== initialValues.current.subject ||
+            content !== initialValues.current.content ||
+            delay !== initialValues.current.delay ||
+            JSON.stringify(filters) !==
+                JSON.stringify(initialValues.current.filters) ||
+            filtersAggregator !== initialValues.current.filtersAggregator;
 
-        const fetcher = fetch
-            .setPayload({
-                query: mutation,
-                variables: {
-                    sequenceId: id,
-                    emailId,
-                    title: subject,
-                    filter: JSON.stringify({
-                        aggregator: filtersAggregator,
-                        filters,
-                    }),
-                    //templateId: $templateId,
-                    content,
-                    delayInMillis: delay,
-                },
-            })
-            .build();
-
-        try {
-            dispatch && dispatch(networkAction(true));
-            await fetcher.exec();
-        } catch (e: any) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: e.message,
-                variant: "destructive",
-            });
-        } finally {
-            dispatch && dispatch(networkAction(false));
+        if (!hasChanged) {
+            return;
         }
+
+        // Clear existing timeout
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+
+        // Set new timeout for debounced save
+        saveTimeoutRef.current = setTimeout(async () => {
+            setIsSaving(true);
+
+            const mutation = `
+            mutation updateSequence(
+                $sequenceId: String!,
+                $emailId: String!,
+                $title: String,
+                $filter: String,
+                $content: String,
+                $delayInMillis: Float,
+            ) {
+                sequence: updateSequence(
+                    sequenceId: $sequenceId,
+                    title: $title,
+                    filter: $filter,
+                ) {
+                    sequenceId,
+                },
+                mail: updateMailInSequence(
+                    sequenceId: $sequenceId,
+                    emailId: $emailId,
+                    subject: $title,
+                    content: $content,
+                    delayInMillis: $delayInMillis, 
+                ) {
+                    sequenceId,
+                    title,
+                    emails {
+                        emailId,
+                        templateId,
+                        content {
+                            content {
+                                blockType,
+                                settings
+                            },
+                            style,
+                            meta
+                        },
+                        subject,
+                        delayInMillis,
+                        published
+                    },
+                    filter {
+                        aggregator,
+                        filters {
+                            name,
+                            condition,
+                            value,
+                            valueLabel
+                        },
+                    }
+                },
+            }`;
+
+            const fetcher = fetch
+                .setPayload({
+                    query: mutation,
+                    variables: {
+                        sequenceId: id,
+                        emailId,
+                        title: subject,
+                        filter: JSON.stringify({
+                            aggregator: filtersAggregator,
+                            filters,
+                        }),
+                        content: JSON.stringify(content),
+                        delayInMillis: delay,
+                    },
+                })
+                .build();
+
+            try {
+                dispatch && dispatch(networkAction(true));
+                await fetcher.exec();
+
+                // Update initial values after successful save
+                initialValues.current = {
+                    subject,
+                    content,
+                    delay,
+                    filters: [...filters],
+                    filtersAggregator,
+                };
+            } catch (e: any) {
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: e.message,
+                    variant: "destructive",
+                });
+            } finally {
+                dispatch && dispatch(networkAction(false));
+                setIsSaving(false);
+            }
+        }, 1000); // 1 second debounce
     }, [
-        dispatch,
+        emailId,
+        subject,
         content,
         delay,
-        filtersAggregator,
-        fetch,
-        subject,
         filters,
+        filtersAggregator,
         id,
-        emailId,
+        fetch,
+        dispatch,
+        toast,
     ]);
 
+    // Trigger debounced save when values change
     useEffect(() => {
-        saveSequence();
-    }, [saveSequence]);
+        debouncedSave();
+    }, [debouncedSave]);
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+        };
+    }, []);
 
     const onSubmit = async (e: FormEvent, sendLater: boolean = false) => {
         e.preventDefault();
@@ -440,10 +529,13 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
     };
 
     const isPublished = useMemo(() => {
-        return [
-            Constants.sequenceStatus[1],
-            Constants.sequenceStatus[3],
-        ].includes(status);
+        return Boolean(
+            status &&
+                [
+                    Constants.sequenceStatus[1],
+                    Constants.sequenceStatus[3],
+                ].includes(status),
+        );
     }, [status]);
 
     if (!loaded) {
@@ -474,11 +566,16 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                         setSubject(e.target.value)
                     }
                 />
-                <MailEditorAndPreview
+                <Link
+                    href={`/dashboard/mail/${id}/${emailId}?redirectTo=/dashboard/mails/broadcast/${id}`}
+                >
+                    Edit Email
+                </Link>
+                {/* <MailEditorAndPreview
                     content={content}
                     onChange={setContent}
                     disabled={isPublished}
-                />
+                /> */}
                 {showScheduleInput && (
                     <FormField
                         value={new Date(
@@ -496,75 +593,94 @@ function MailEditor({ id, address, dispatch }: MailEditorProps) {
                         }}
                     />
                 )}
-                {[
-                    Constants.sequenceStatus[0],
-                    Constants.sequenceStatus[2],
-                ].includes(status) && (
-                    <div className="flex gap-2">
-                        {!showScheduleInput && (
-                            <div className="flex gap-2">
-                                <Dialog2
-                                    open={confirmationDialogOpen}
-                                    onOpenChange={setConfirmationDialogOpen}
-                                    title={`${DIALOG_SEND_HEADER} to ${filteredUsersCount} contacts?`}
-                                    trigger={
-                                        <Button>
-                                            <div className="flex items-center gap-2">
-                                                <PaperPlane />
-                                                {BTN_SEND}
-                                            </div>
-                                        </Button>
-                                    }
-                                    onClick={onSubmit}
-                                />
-                                <Button
-                                    variant={
-                                        showScheduleInput ? "classic" : "soft"
-                                    }
-                                    className="gap-2"
-                                    onClick={(
-                                        e: ChangeEvent<HTMLInputElement>,
-                                    ) => {
-                                        setShowScheduleInput(true);
-                                    }}
-                                >
-                                    <Clock />
-                                    {BTN_SCHEDULE}
-                                </Button>
-                            </div>
-                        )}
-                        {showScheduleInput && (
-                            <>
-                                <Dialog2
-                                    title={`${DIALOG_SEND_HEADER} to ${filteredUsersCount} contacts?`}
-                                    open={confirmationDialogOpen}
-                                    onOpenChange={setConfirmationDialogOpen}
-                                    trigger={
-                                        <Button>
-                                            <div className="flex items-center gap-2">
-                                                <Clock />
-                                                {BTN_SCHEDULE}
-                                            </div>
-                                        </Button>
-                                    }
-                                    onClick={(e) => onSubmit(e, true)}
-                                />
-                                <Button
-                                    variant="soft"
-                                    onClick={(
-                                        e: ChangeEvent<HTMLInputElement>,
-                                    ) => {
-                                        e.preventDefault();
-                                        setShowScheduleInput(false);
-                                        setDelay(0);
-                                    }}
-                                >
-                                    {BUTTON_CANCEL_TEXT}
-                                </Button>
-                            </>
-                        )}
-                    </div>
-                )}
+                {status &&
+                    [
+                        Constants.sequenceStatus[0],
+                        Constants.sequenceStatus[2],
+                    ].includes(status) && (
+                        <div className="flex gap-2">
+                            {!showScheduleInput && (
+                                <div className="flex gap-2">
+                                    <Dialog2
+                                        open={confirmationDialogOpen}
+                                        onOpenChange={setConfirmationDialogOpen}
+                                        title={`${DIALOG_SEND_HEADER} to ${filteredUsersCount} contacts?`}
+                                        trigger={
+                                            <Button>
+                                                <div className="flex items-center gap-2">
+                                                    <PaperPlane />
+                                                    {BTN_SEND}
+                                                </div>
+                                            </Button>
+                                        }
+                                        onClick={onSubmit}
+                                    >
+                                        <div className="p-4">
+                                            <p>
+                                                Are you sure you want to send
+                                                this email to{" "}
+                                                {filteredUsersCount} contacts?
+                                            </p>
+                                        </div>
+                                    </Dialog2>
+                                    <Button
+                                        variant={
+                                            showScheduleInput
+                                                ? "classic"
+                                                : "soft"
+                                        }
+                                        className="gap-2"
+                                        onClick={(
+                                            e: ChangeEvent<HTMLInputElement>,
+                                        ) => {
+                                            setShowScheduleInput(true);
+                                        }}
+                                    >
+                                        <Clock />
+                                        {BTN_SCHEDULE}
+                                    </Button>
+                                </div>
+                            )}
+                            {showScheduleInput && (
+                                <>
+                                    <Dialog2
+                                        title={`${DIALOG_SEND_HEADER} to ${filteredUsersCount} contacts?`}
+                                        open={confirmationDialogOpen}
+                                        onOpenChange={setConfirmationDialogOpen}
+                                        trigger={
+                                            <Button>
+                                                <div className="flex items-center gap-2">
+                                                    <Clock />
+                                                    {BTN_SCHEDULE}
+                                                </div>
+                                            </Button>
+                                        }
+                                        onClick={(e) => onSubmit(e, true)}
+                                    >
+                                        <div className="p-4">
+                                            <p>
+                                                Are you sure you want to
+                                                schedule this email to{" "}
+                                                {filteredUsersCount} contacts?
+                                            </p>
+                                        </div>
+                                    </Dialog2>
+                                    <Button
+                                        variant="soft"
+                                        onClick={(
+                                            e: ChangeEvent<HTMLInputElement>,
+                                        ) => {
+                                            e.preventDefault();
+                                            setShowScheduleInput(false);
+                                            setDelay(0);
+                                        }}
+                                    >
+                                        {BUTTON_CANCEL_TEXT}
+                                    </Button>
+                                </>
+                            )}
+                        </div>
+                    )}
             </Form>
             {status === Constants.sequenceStatus[1] &&
                 isDateInFuture(new Date(delay)) &&

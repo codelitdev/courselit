@@ -3,12 +3,12 @@ import { SettingsSelect } from "@/components/settings/settings-select";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { SettingsSlider } from "@/components/settings/settings-slider";
 import { SettingsInput } from "@/components/settings/settings-input";
-import type { Email, Style } from "../types/email-editor";
+import type { Email, EmailStyle } from "../types/email-editor";
 
 interface EmailSettingsProps {
     email: Email;
     updateEmail: (email: Email) => void;
-    updateEmailStyle: (style: Partial<Style>) => void;
+    updateEmailStyle: (style: Partial<EmailStyle>) => void;
 }
 
 export function EmailSettings({

@@ -12,7 +12,6 @@ import {
     removeRuleForBroadcast,
     updateSequenceSentAt,
     getDomain,
-    getTemplate,
 } from "./queries";
 import { sendMail } from "../mail";
 import { Liquid } from "liquidjs";
@@ -21,6 +20,7 @@ import redis from "../redis";
 import mongoose from "mongoose";
 import sequenceQueue from "./sequence-queue";
 import { AdminSequence, InternalUser } from "@courselit/common-logic";
+import { renderEmailToHtml } from "@courselit/email-editor";
 const liquidEngine = new Liquid();
 
 new Worker(
@@ -197,21 +197,23 @@ async function attemptMailSending({
         return;
     }
     // const content = email.content;
-    let content = await liquidEngine.parseAndRender(
-        email.content,
+    const content = await liquidEngine.parseAndRender(
+        await renderEmailToHtml({
+            email: email.content,
+        }),
         templatePayload,
     );
-    if (email.templateId) {
-        const template = await getTemplate(email.templateId);
-        if (template) {
-            content = await liquidEngine.parseAndRender(
-                template.content,
-                Object.assign({}, templatePayload, {
-                    content: content,
-                }),
-            );
-        }
-    }
+    // if (email.templateId) {
+    //     const template = await getTemplate(email.templateId);
+    //     if (template) {
+    //         content = await liquidEngine.parseAndRender(
+    //             template.content,
+    //             Object.assign({}, templatePayload, {
+    //                 content: content,
+    //             }),
+    //         );
+    //     }
+    // }
     try {
         await sendMail({
             from,

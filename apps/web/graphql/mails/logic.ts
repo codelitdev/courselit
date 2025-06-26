@@ -20,7 +20,7 @@ import {
     buildQueryFromSearchData,
     createTemplateAndSendMail,
     removeRule,
-    validateEmail,
+    verifyMandatoryTags,
 } from "./helpers";
 import MailRequestStatusModel, {
     MailRequestStatus,
@@ -28,6 +28,7 @@ import MailRequestStatusModel, {
 import { getPlans } from "../paymentplans/logic";
 import { activateMembership } from "@/app/api/payment/helpers";
 import { AdminSequence } from "@courselit/common-logic";
+import { defaultEmail } from "@courselit/email-editor";
 
 const { permissions } = constants;
 
@@ -82,7 +83,7 @@ export async function createSequence(
             emails: [
                 {
                     emailId,
-                    content: internal.default_email_content,
+                    content: defaultEmail,
                     subject:
                         type === "broadcast"
                             ? internal.default_email_broadcast_subject
@@ -180,9 +181,11 @@ export async function getSequence(
         throw new Error(responses.action_not_allowed);
     }
 
-    return Object.assign({}, sequence, {
+    const result = Object.assign({}, sequence, {
         entrantsCount: sequence?.entrantsCount || 0,
     });
+
+    return result;
 }
 
 export async function updateMail({
@@ -770,11 +773,12 @@ export async function addMailToSequence(
     // );
 
     const emailId = generateUniqueId();
-    const oneDayInMillis =
-        +process.env.SEQUENCE_DELAY_BETWEEN_MAILS || 86400000;
+    const oneDayInMillis = +(
+        process.env.SEQUENCE_DELAY_BETWEEN_MAILS || 86400000
+    );
     const email = {
         emailId,
-        content: internal.default_email_content,
+        content: defaultEmail,
         subject: internal.default_email_sequence_subject,
         delayInMillis: oneDayInMillis,
     };
@@ -831,20 +835,18 @@ export async function updateMailInSequence({
         (email: Email) => email.emailId === emailId,
     );
 
+    if (!email) {
+        throw new Error(responses.item_not_found);
+    }
+
     if (subject) {
         email.subject = subject;
     }
     if (content) {
-        email.content = content;
-    }
-    if (previewText) {
-        email.previewText = previewText;
+        email.content = JSON.parse(content);
     }
     if (typeof delayInMillis === "number") {
         email.delayInMillis = delayInMillis;
-    }
-    if (templateId) {
-        email.templateId = templateId;
     }
     if (typeof published === "boolean") {
         email.published = published;
@@ -862,7 +864,7 @@ export async function updateMailInSequence({
         email.action.data = actionData;
     }
 
-    validateEmail(email.content);
+    verifyMandatoryTags(email.content?.content || []);
 
     await (sequence as any).save();
 

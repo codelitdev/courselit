@@ -1,10 +1,10 @@
-import type { Content, Style } from "@/types/email-editor";
+import type { EmailBlock, EmailStyle } from "@/types/email-editor";
 import type { LinkBlockSettings } from "./types";
 import { Link, Section, Button } from "@react-email/components";
 
 interface LinkBlockProps {
-    block: Content & { settings: LinkBlockSettings };
-    style?: Style;
+    block: EmailBlock & { settings: LinkBlockSettings };
+    style?: EmailStyle;
 }
 
 export function LinkBlock({ block, style }: LinkBlockProps) {

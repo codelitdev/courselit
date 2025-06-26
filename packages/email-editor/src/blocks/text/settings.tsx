@@ -1,4 +1,4 @@
-import type { Content, Style } from "@/types/email-editor";
+import type { EmailBlock, EmailStyle } from "@/types/email-editor";
 import type { TextBlockSettings } from "./types";
 import { SettingsTextarea } from "@/components/settings/settings-textarea";
 import { SettingsSelect } from "@/components/settings/settings-select";
@@ -7,9 +7,9 @@ import { SettingsSlider } from "@/components/settings/settings-slider";
 import { SettingsSection } from "@/components/settings/settings-section";
 
 interface TextSettingsProps {
-    block: Required<Content> & { settings: TextBlockSettings };
-    style?: Style;
-    updateBlock: (id: string, content: Partial<Content>) => void;
+    block: Required<EmailBlock> & { settings: TextBlockSettings };
+    style?: EmailStyle;
+    updateBlock: (id: string, content: Partial<EmailBlock>) => void;
 }
 
 export function TextSettings({ block, style, updateBlock }: TextSettingsProps) {

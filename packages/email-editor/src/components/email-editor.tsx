@@ -3,7 +3,7 @@ import { BlockWrapper } from "./block-wrapper";
 import { AddBlockButton } from "./add-block-button";
 import { BlockSettingsPanel } from "./block-settings-panel";
 import { EditorLayout } from "./layout/editor-layout";
-import type { Content, Email, Style } from "../types/email-editor";
+import type { EmailBlock, Email, EmailStyle } from "../types/email-editor";
 import type { BlockRegistry } from "../types/block-registry";
 import { defaultEmail } from "../lib/default-email";
 import "../index.css";
@@ -45,6 +45,7 @@ function getEmailWithBlockIds(email: Email): Email {
         content: email.content.map((block) => ({
             ...block,
             id: generateId(),
+            settings: block.settings || {},
         })),
     };
 }
@@ -145,7 +146,7 @@ export function EmailEditor({
     );
 
     const updateEmailStyle = useCallback(
-        (styleUpdate: Partial<Style>) => {
+        (styleUpdate: Partial<EmailStyle>) => {
             setEmail((prevEmail) => {
                 const newEmail = {
                     ...prevEmail,
@@ -164,7 +165,7 @@ export function EmailEditor({
 
     const addBlock = useCallback(
         (blockType: string, index: number) => {
-            const newBlock: Content = {
+            const newBlock: EmailBlock = {
                 id: generateId(),
                 blockType,
                 settings: getDefaultSettingsForBlockType(blockType),
@@ -180,6 +181,7 @@ export function EmailEditor({
             };
 
             setEmail(newEmail);
+            setSelectedBlockId(newBlock.id!);
 
             if (onChange) {
                 onChange(stripBlockIds(newEmail));
@@ -189,7 +191,7 @@ export function EmailEditor({
     );
 
     const updateBlock = useCallback(
-        (id: string, content: Partial<Content>) => {
+        (id: string, content: Partial<EmailBlock>) => {
             const newEmail = {
                 ...email,
                 content: email.content.map((block) =>
@@ -206,32 +208,32 @@ export function EmailEditor({
         [email, onChange],
     );
 
-    const updateBlockStyle = useCallback(
-        (id: string, style: Partial<Style>) => {
-            const newEmail = {
-                ...email,
-                content: email.content.map((block) => {
-                    if (block.id === id) {
-                        return {
-                            ...block,
-                            style: {
-                                ...(block.style || {}),
-                                ...style,
-                            },
-                        };
-                    }
-                    return block;
-                }),
-            };
+    // const updateBlockStyle = useCallback(
+    //     (id: string, style: Partial<Style>) => {
+    //         const newEmail = {
+    //             ...email,
+    //             content: email.content.map((block) => {
+    //                 if (block.id === id) {
+    //                     return {
+    //                         ...block,
+    //                         style: {
+    //                             ...(block.style || {}),
+    //                             ...style,
+    //                         },
+    //                     };
+    //                 }
+    //                 return block;
+    //             }),
+    //         };
 
-            setEmail(newEmail);
+    //         setEmail(newEmail);
 
-            if (onChange) {
-                onChange(stripBlockIds(newEmail));
-            }
-        },
-        [email, onChange],
-    );
+    //         if (onChange) {
+    //             onChange(stripBlockIds(newEmail));
+    //         }
+    //     },
+    //     [email, onChange],
+    // );
 
     const deleteBlock = useCallback(
         (id: string) => {
@@ -324,6 +326,7 @@ export function EmailEditor({
             };
 
             setEmail(newEmail);
+            setSelectedBlockId(duplicatedBlock.id!);
 
             if (onChange) {
                 onChange(stripBlockIds(newEmail));
@@ -388,7 +391,7 @@ export function EmailEditor({
                         {first && (
                             <BlockWrapper
                                 key={first.id}
-                                block={first as Required<Content>}
+                                block={first as Required<EmailBlock>}
                                 index={0}
                                 isFirst={true}
                                 isLast={false}
@@ -407,32 +410,34 @@ export function EmailEditor({
                         )}
 
                         {/* Middle Blocks - Movable */}
-                        {middleBlocks.map((block: Content, index: number) => (
-                            <BlockWrapper
-                                key={block.id}
-                                block={block as Required<Content>}
-                                index={index + 1}
-                                isFirst={false}
-                                isLast={false}
-                                isFixed={false}
-                                style={email.style}
-                                blockRegistry={blockRegistry}
-                                selectedBlockId={selectedBlockId}
-                                setSelectedBlockId={setSelectedBlockId}
-                                deleteBlock={deleteBlock}
-                                moveBlock={moveBlock}
-                                duplicateBlock={duplicateBlock}
-                                movingBlockId={movingBlockId}
-                                addBlock={addBlock}
-                                totalBlocks={email.content.length}
-                            />
-                        ))}
+                        {middleBlocks.map(
+                            (block: EmailBlock, index: number) => (
+                                <BlockWrapper
+                                    key={block.id}
+                                    block={block as Required<EmailBlock>}
+                                    index={index + 1}
+                                    isFirst={false}
+                                    isLast={false}
+                                    isFixed={false}
+                                    style={email.style}
+                                    blockRegistry={blockRegistry}
+                                    selectedBlockId={selectedBlockId}
+                                    setSelectedBlockId={setSelectedBlockId}
+                                    deleteBlock={deleteBlock}
+                                    moveBlock={moveBlock}
+                                    duplicateBlock={duplicateBlock}
+                                    movingBlockId={movingBlockId}
+                                    addBlock={addBlock}
+                                    totalBlocks={email.content.length}
+                                />
+                            ),
+                        )}
 
                         {/* Last Block - Fixed */}
                         {last && (
                             <BlockWrapper
                                 key={last.id}
-                                block={last as Required<Content>}
+                                block={last as Required<EmailBlock>}
                                 index={email.content.length - 1}
                                 isFirst={false}
                                 isLast={true}

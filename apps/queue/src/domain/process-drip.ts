@@ -6,6 +6,7 @@ import { getMemberships } from "./queries";
 import { Constants } from "@courselit/common-models";
 import { InternalUser } from "@courselit/common-logic";
 import { FilterQuery, UpdateQuery } from "mongoose";
+import { renderEmailToHtml } from "@courselit/email-editor";
 const liquidEngine = new Liquid();
 
 export async function processDrip() {
@@ -121,7 +122,10 @@ export async function processDrip() {
                         };
                         if (firstGroupWithDripEmailSet.drip?.email?.content) {
                             const content = await liquidEngine.parseAndRender(
-                                firstGroupWithDripEmailSet.drip.email.content,
+                                await renderEmailToHtml({
+                                    email: firstGroupWithDripEmailSet.drip.email
+                                        .content,
+                                }),
                                 templatePayload,
                             );
                             await mailQueue.add("mail", {

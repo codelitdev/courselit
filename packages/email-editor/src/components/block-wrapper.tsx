@@ -1,16 +1,16 @@
 import { useState, useRef } from "react";
-import type { Content, Style } from "@/types/email-editor";
+import type { EmailBlock, EmailStyle } from "@/types/email-editor";
 import type { BlockRegistry } from "../types/block-registry";
 import { AddBlockButton } from "./add-block-button";
 import { Trash, Copy, ChevronUp, ChevronDown } from "lucide-react";
 
 interface BlockWrapperProps {
-    block: Required<Content>;
+    block: Required<EmailBlock>;
     index: number;
     isFirst: boolean;
     isLast: boolean;
     isFixed?: boolean;
-    style?: Style;
+    style?: EmailStyle;
     blockRegistry: BlockRegistry;
     selectedBlockId: string | null;
     setSelectedBlockId: (id: string | null) => void;

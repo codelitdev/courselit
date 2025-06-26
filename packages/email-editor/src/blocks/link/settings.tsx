@@ -1,4 +1,4 @@
-import type { Content, Style } from "@/types/email-editor";
+import type { EmailBlock, EmailStyle } from "@/types/email-editor";
 import type { LinkBlockSettings } from "./types";
 import { SettingsInput } from "@/components/settings/settings-input";
 import { SettingsSelect } from "@/components/settings/settings-select";
@@ -8,9 +8,9 @@ import { SettingsSection } from "@/components/settings/settings-section";
 import { SettingsSwitch } from "@/components/settings/settings-switch";
 
 interface LinkSettingsProps {
-    block: Required<Content> & { settings: LinkBlockSettings };
-    style?: Style;
-    updateBlock: (id: string, content: Partial<Content>) => void;
+    block: Required<EmailBlock> & { settings: LinkBlockSettings };
+    style?: EmailStyle;
+    updateBlock: (id: string, content: Partial<EmailBlock>) => void;
 }
 
 export function LinkSettings({ block, style, updateBlock }: LinkSettingsProps) {

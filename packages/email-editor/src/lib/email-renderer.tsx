@@ -1,9 +1,10 @@
 import React from "react";
 import { render, pretty } from "@react-email/render";
 import { Html, Head, Preview, Body, Container } from "@react-email/components";
-import type { Email, Content } from "../types/email-editor";
+import type { Email, EmailBlock } from "../types/email-editor";
 import type { LinkBlockSettings } from "@/blocks/link/types";
 import type { BlockRegistry } from "../types/block-registry";
+import { Text, Link as LinkBlock, Separator, Image } from "@/blocks";
 
 export interface UtmParams {
     source: string;
@@ -35,7 +36,7 @@ export function EmailTemplate({
     blockRegistry: BlockRegistry;
 }) {
     // Function to render a block based on its type
-    const renderBlock = (block: Content) => {
+    const renderBlock = (block: EmailBlock) => {
         const blockComponent = blockRegistry[block.blockType];
         if (!blockComponent) {
             return (
@@ -64,7 +65,13 @@ export function EmailTemplate({
 
         // Use the block component directly
         const BlockComponent = blockComponent.block;
-        return <BlockComponent key={block.id} block={modifiedBlock} />;
+        return (
+            <BlockComponent
+                key={block.id}
+                block={modifiedBlock}
+                style={email.style}
+            />
+        );
     };
 
     return (
@@ -116,7 +123,7 @@ export async function renderEmailToHtml({
     try {
         // Create block registry from blocks or use defaults
         const blockRegistry: BlockRegistry = {};
-        const defaultBlocks = blocks || [];
+        const defaultBlocks = blocks || [Text, LinkBlock, Separator, Image];
 
         for (const block of defaultBlocks) {
             blockRegistry[block.metadata.name] = block;

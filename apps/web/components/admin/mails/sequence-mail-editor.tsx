@@ -63,8 +63,14 @@ const SequenceMailEditor = ({
                         subject,
                         delayInMillis,
                         published,
-                        content,
-                        previewText,
+                        content {
+                            content {
+                                blockType,
+                                settings
+                            },
+                            style,
+                            meta
+                        },
                     },
                     trigger {
                         type,

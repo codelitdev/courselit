@@ -1,4 +1,4 @@
-import type { Content, Style } from "@/types/email-editor";
+import type { EmailBlock, EmailStyle } from "@/types/email-editor";
 import type { ImageBlockSettings } from "./types";
 import { SettingsInput } from "@/components/settings/settings-input";
 import { SettingsSelect } from "@/components/settings/settings-select";
@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 
 interface ImageSettingsProps {
-    block: Required<Content> & { settings: ImageBlockSettings };
-    style?: Style;
-    updateBlock: (id: string, content: Partial<Content>) => void;
+    block: Required<EmailBlock> & { settings: ImageBlockSettings };
+    style?: EmailStyle;
+    updateBlock: (id: string, content: Partial<EmailBlock>) => void;
 }
 
 export function ImageSettings({

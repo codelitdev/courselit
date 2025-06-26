@@ -1,10 +1,10 @@
-import { Content } from "@/types/email-editor";
+import { EmailBlock } from "@/types/email-editor";
 import type { ImageBlockSettings } from "./types";
 import { Img, Section } from "@react-email/components";
 import { ImageIcon } from "lucide-react";
 
 interface ImageBlockProps {
-    block: Content & { settings: ImageBlockSettings };
+    block: EmailBlock & { settings: ImageBlockSettings };
 }
 
 export function ImageBlock({ block }: ImageBlockProps) {

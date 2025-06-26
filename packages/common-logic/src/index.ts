@@ -7,3 +7,4 @@ export * from "./models/user-segment";
 export * from "./models/user-filter";
 export * from "./models/course";
 export * from "./models/rule";
+export * from "./models/email";

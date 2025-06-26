@@ -1,10 +1,10 @@
 import { Section, Markdown } from "@react-email/components";
-import type { Content, Style } from "@/types/email-editor";
+import type { EmailBlock, EmailStyle } from "@/types/email-editor";
 import type { TextBlockSettings } from "./types";
 
 interface TextBlockProps {
-    block: Content & { settings: TextBlockSettings };
-    style?: Style;
+    block: EmailBlock & { settings: TextBlockSettings };
+    style?: EmailStyle;
     selectedBlockId?: string | null;
 }
 

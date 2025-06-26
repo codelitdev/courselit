@@ -1,9 +1,9 @@
 import { X, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmailSettings } from "./email-settings";
-import type { Email, Style } from "../types/email-editor";
+import type { Email, EmailStyle } from "../types/email-editor";
 import type { BlockRegistry } from "../types/block-registry";
-import type { Content } from "../types/email-editor";
+import type { EmailBlock } from "../types/email-editor";
 
 interface BlockSettingsPanelProps {
     blockId: string | null;
@@ -11,8 +11,8 @@ interface BlockSettingsPanelProps {
     setSelectedBlockId: (id: string | null) => void;
     blockRegistry: BlockRegistry;
     updateEmail: (email: Email) => void;
-    updateEmailStyle: (style: Partial<Style>) => void;
-    updateBlock: (id: string, content: Partial<Content>) => void;
+    updateEmailStyle: (style: Partial<EmailStyle>) => void;
+    updateBlock: (id: string, content: Partial<EmailBlock>) => void;
 }
 
 export function BlockSettingsPanel({

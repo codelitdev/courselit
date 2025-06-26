@@ -1,4 +1,4 @@
-import type { Content, Style } from "@/types/email-editor";
+import type { EmailBlock, EmailStyle } from "@/types/email-editor";
 import type { SeparatorBlockSettings } from "./types";
 import { SettingsColorPicker } from "@/components/settings/settings-color-picker";
 import { SettingsSlider } from "@/components/settings/settings-slider";
@@ -6,9 +6,9 @@ import { SettingsSelect } from "@/components/settings/settings-select";
 import { SettingsSection } from "@/components/settings/settings-section";
 
 interface SeparatorSettingsProps {
-    block: Required<Content> & { settings: SeparatorBlockSettings };
-    style?: Style;
-    updateBlock: (id: string, content: Partial<Content>) => void;
+    block: Required<EmailBlock> & { settings: SeparatorBlockSettings };
+    style?: EmailStyle;
+    updateBlock: (id: string, content: Partial<EmailBlock>) => void;
 }
 
 export function SeparatorSettings({

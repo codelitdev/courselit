@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { EmailTemplate as PublicEmailTemplate } from "@courselit/common-models";
+import { EmailContentSchema } from "@courselit/common-logic";
 
 interface EmailTemplate extends PublicEmailTemplate {
     domain: mongoose.Schema.Types.ObjectId;
@@ -11,7 +12,7 @@ const EmailTemplateSchema = new mongoose.Schema<EmailTemplate>({
     templateId: { type: String, required: true },
     title: { type: String, required: true },
     creatorId: { type: String, required: true },
-    content: { type: String, required: true },
+    content: { type: EmailContentSchema, required: true },
 });
 
 EmailTemplateSchema.index(

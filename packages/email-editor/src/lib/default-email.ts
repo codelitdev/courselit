@@ -1,6 +1,6 @@
-import type { Email, Style } from "@/types/email-editor";
+import type { Email, EmailStyle } from "@/types/email-editor";
 
-export const defaultStyle: Style = {
+export const defaultStyle: EmailStyle = {
     colors: {
         background: "#ffffff",
         foreground: "#000000",

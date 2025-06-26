@@ -1,4 +1,4 @@
-export interface Style {
+export interface EmailStyle {
     colors: {
         background: `#${string}`;
         foreground: `#${string}`;
@@ -75,11 +75,10 @@ export interface CommonBlockSettings {
     paddingX?: `${number}px`;
 }
 
-export interface Content {
+export interface EmailBlock {
     id?: string;
     blockType: string;
     settings: Record<string, any>;
-    style?: Partial<Style>;
 }
 
 export interface EmailMeta {
@@ -92,7 +91,7 @@ export interface EmailMeta {
 }
 
 export interface Email {
-    style: Style;
+    style: EmailStyle;
     meta: EmailMeta;
-    content: Content[];
+    content: EmailBlock[];
 }
