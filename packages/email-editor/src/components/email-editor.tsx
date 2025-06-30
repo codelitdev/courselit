@@ -171,23 +171,26 @@ export function EmailEditor({
                 settings: getDefaultSettingsForBlockType(blockType),
             };
 
-            const newEmail = {
-                ...email,
-                content: [
-                    ...email.content.slice(0, index),
-                    newBlock,
-                    ...email.content.slice(index),
-                ],
-            };
+            setEmail((prevEmail) => {
+                const newEmail = {
+                    ...prevEmail,
+                    content: [
+                        ...prevEmail.content.slice(0, index),
+                        newBlock,
+                        ...prevEmail.content.slice(index),
+                    ],
+                };
 
-            setEmail(newEmail);
+                if (onChange) {
+                    onChange(stripBlockIds(newEmail));
+                }
+
+                return newEmail;
+            });
+
             setSelectedBlockId(newBlock.id!);
-
-            if (onChange) {
-                onChange(stripBlockIds(newEmail));
-            }
         },
-        [email, onChange],
+        [onChange],
     );
 
     const updateBlock = useCallback(
@@ -237,46 +240,52 @@ export function EmailEditor({
 
     const deleteBlock = useCallback(
         (id: string) => {
-            // Don't allow deleting if there's only one block left
-            if (email.content.length <= 1) {
-                return;
-            }
+            setEmail((prevEmail) => {
+                // Don't allow deleting if there's only one block left
+                if (prevEmail.content.length <= 1) {
+                    return prevEmail;
+                }
 
-            const newEmail = {
-                ...email,
-                content: email.content.filter((block) => block.id !== id),
-            };
+                const newEmail = {
+                    ...prevEmail,
+                    content: prevEmail.content.filter(
+                        (block) => block.id !== id,
+                    ),
+                };
 
-            setEmail(newEmail);
+                if (onChange) {
+                    onChange(stripBlockIds(newEmail));
+                }
 
-            if (onChange) {
-                onChange(stripBlockIds(newEmail));
-            }
+                return newEmail;
+            });
 
             // If the deleted block was selected, clear selection
-            if (selectedBlockId === id) {
-                setSelectedBlockId(null);
-            }
+            setSelectedBlockId((prevSelectedId) => {
+                if (prevSelectedId === id) {
+                    return null;
+                }
+                return prevSelectedId;
+            });
         },
-        [email, selectedBlockId, onChange],
+        [onChange],
     );
 
     const moveBlock = useCallback(
         (id: string, direction: "up" | "down") => {
-            const index = email.content.findIndex((block) => block.id === id);
-            if (
-                (direction === "up" && index === 0) ||
-                (direction === "down" && index === email.content.length - 1)
-            ) {
-                return;
-            }
+            setEmail((prevEmail) => {
+                const index = prevEmail.content.findIndex(
+                    (block) => block.id === id,
+                );
+                if (
+                    (direction === "up" && index === 0) ||
+                    (direction === "down" &&
+                        index === prevEmail.content.length - 1)
+                ) {
+                    return prevEmail;
+                }
 
-            // Set the moving block ID to trigger animation
-            setMovingBlockId(id);
-
-            // Delay the actual move to allow animation to start
-            setTimeout(() => {
-                const newContent = [...email.content];
+                const newContent = [...prevEmail.content];
                 const [movedBlock] = newContent.splice(index, 1);
                 newContent.splice(
                     direction === "up" ? index - 1 : index + 1,
@@ -285,54 +294,63 @@ export function EmailEditor({
                 );
 
                 const newEmail = {
-                    ...email,
+                    ...prevEmail,
                     content: newContent,
                 };
-
-                setEmail(newEmail);
 
                 if (onChange) {
                     onChange(stripBlockIds(newEmail));
                 }
 
-                // Clear the moving block ID after animation completes
-                setTimeout(() => {
-                    setMovingBlockId(null);
-                }, 300);
-            }, 50);
+                return newEmail;
+            });
+
+            // Set the moving block ID to trigger animation
+            setMovingBlockId(id);
+
+            // Clear the moving block ID after animation completes
+            setTimeout(() => {
+                setMovingBlockId(null);
+            }, 350);
         },
-        [email, onChange],
+        [onChange],
     );
 
     const duplicateBlock = useCallback(
         (id: string) => {
-            const blockToDuplicate = email.content.find(
-                (block) => block.id === id,
-            );
-            if (!blockToDuplicate) return;
+            setEmail((prevEmail) => {
+                const blockToDuplicate = prevEmail.content.find(
+                    (block) => block.id === id,
+                );
+                if (!blockToDuplicate) return prevEmail;
 
-            const index = email.content.findIndex((block) => block.id === id);
-            const duplicatedBlock = {
-                ...blockToDuplicate,
-                id: generateId(),
-            };
+                const index = prevEmail.content.findIndex(
+                    (block) => block.id === id,
+                );
+                const duplicatedBlock = {
+                    ...blockToDuplicate,
+                    id: generateId(),
+                };
 
-            const newContent = [...email.content];
-            newContent.splice(index + 1, 0, duplicatedBlock);
+                const newContent = [...prevEmail.content];
+                newContent.splice(index + 1, 0, duplicatedBlock);
 
-            const newEmail = {
-                ...email,
-                content: newContent,
-            };
+                const newEmail = {
+                    ...prevEmail,
+                    content: newContent,
+                };
 
-            setEmail(newEmail);
-            setSelectedBlockId(duplicatedBlock.id!);
+                if (onChange) {
+                    onChange(stripBlockIds(newEmail));
+                }
 
-            if (onChange) {
-                onChange(stripBlockIds(newEmail));
-            }
+                // Set the selection immediately after creating the duplicated block
+                setSelectedBlockId(duplicatedBlock.id!);
+
+                return newEmail;
+            });
         },
-        [email, onChange],
+        [onChange],
     );
 
     // Separate first, middle, and last blocks

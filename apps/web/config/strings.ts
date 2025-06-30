@@ -160,7 +160,5 @@ export const internal = {
     default_email_broadcast_subject: "Untitled broadcast",
     default_email_sequence_subject: "First email",
     default_email_sequence_name: "Untitled Sequence",
-    // default_email_content:
-    //     "<p>Replace this with actual content.</p>\n<p>You can use <b>HTML</b>.</p>\n<p>We also support <a href='https://shopify.github.io/liquid/'>Liquid</a>.</p>\n<br>\n<p>Our mailing address is:</p>\n<p>{{ address }}</p>\n<a href=\"{{ unsubscribe_link}}\">Unsubscribe</a>",
     joining_reason_creator: "Joined as creator",
 };

@@ -36,7 +36,7 @@ const EmailActionSchema = new mongoose.Schema(
     { _id: false },
 );
 
-const EmailContentSchema = new mongoose.Schema(
+export const EmailContentSchema = new mongoose.Schema(
     {
         content: { type: [EmailContentBlockSchema], required: true },
         style: { type: EmailStyleSchema, required: true },

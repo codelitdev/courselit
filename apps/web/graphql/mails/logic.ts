@@ -62,6 +62,31 @@ export async function createSubscription(
     return true;
 }
 
+const defaultEmailContent = {
+    ...defaultEmail,
+    content: [
+        {
+            blockType: "text",
+            settings: {
+                content: "# Your Company Name\n\nThis is some paragraph text.",
+                alignment: "left",
+                fontSize: "24px",
+            },
+        },
+        {
+            blockType: "text",
+            settings: {
+                content: "{{address}}\n\n{{unsubscribe_link}}",
+                alignment: "center",
+                fontSize: "12px",
+                foregroundColor: "#64748b",
+                paddingTop: "0px",
+                paddingBottom: "0px",
+            },
+        },
+    ],
+};
+
 export async function createSequence(
     ctx: GQLContext,
     type: (typeof Constants.mailTypes)[number],
@@ -83,7 +108,7 @@ export async function createSequence(
             emails: [
                 {
                     emailId,
-                    content: defaultEmail,
+                    content: defaultEmailContent,
                     subject:
                         type === "broadcast"
                             ? internal.default_email_broadcast_subject
@@ -778,7 +803,7 @@ export async function addMailToSequence(
     );
     const email = {
         emailId,
-        content: defaultEmail,
+        content: defaultEmailContent,
         subject: internal.default_email_sequence_subject,
         delayInMillis: oneDayInMillis,
     };
@@ -822,10 +847,14 @@ export async function updateMailInSequence({
         throw new Error(responses.action_not_allowed);
     }
 
-    const sequence: AdminSequence = await SequenceModel.findOne({
+    const sequence: AdminSequence | null = await SequenceModel.findOne({
         sequenceId,
         domain: ctx.subdomain._id,
     });
+
+    if (!sequence) {
+        return null;
+    }
 
     if (broadcastPublished(sequence)) {
         return sequence;
