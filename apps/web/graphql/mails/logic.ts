@@ -1,6 +1,6 @@
 import constants from "@config/constants";
 import GQLContext from "@models/GQLContext";
-import UserModel, { User } from "@models/User";
+import UserModel from "@models/User";
 import { error } from "../../services/logger";
 import { createUser, getMembership } from "../users/logic";
 import MailModel, { Mail } from "@models/Mail";
@@ -29,6 +29,7 @@ import { getPlans } from "../paymentplans/logic";
 import { activateMembership } from "@/app/api/payment/helpers";
 import { AdminSequence } from "@courselit/common-logic";
 import { defaultEmail } from "@courselit/email-editor";
+import { User } from "@courselit/common-models";
 
 const { permissions } = constants;
 
@@ -76,7 +77,7 @@ const defaultEmailContent = {
         {
             blockType: "text",
             settings: {
-                content: "{{address}}\n\n{{unsubscribe_link}}",
+                content: "{{address}}\n\n[Unsubscribe]({{unsubscribe_link}})",
                 alignment: "center",
                 fontSize: "12px",
                 foregroundColor: "#64748b",
@@ -236,10 +237,14 @@ export async function updateMail({
         throw new Error(responses.action_not_allowed);
     }
 
-    const sequence: AdminSequence = await SequenceModel.findOne({
+    const sequence: AdminSequence | null = await SequenceModel.findOne({
         sequenceId,
         domain: ctx.subdomain._id,
     });
+
+    if (!sequence) {
+        return null;
+    }
 
     if (broadcastPublished(sequence)) {
         return sequence;
@@ -294,10 +299,14 @@ export async function updateSequence({
         throw new Error(responses.action_not_allowed);
     }
 
-    const sequence: AdminSequence = await SequenceModel.findOne({
+    const sequence: AdminSequence | null = await SequenceModel.findOne({
         sequenceId,
         domain: ctx.subdomain._id,
     });
+
+    if (!sequence) {
+        return null;
+    }
 
     if (broadcastPublished(sequence)) {
         return sequence;
@@ -464,73 +473,6 @@ const broadcastPublished = (sequence: AdminSequence): boolean =>
             | (typeof Constants.sequenceStatus)[1]
             | (typeof Constants.sequenceStatus)[3],
     );
-
-// export async function toggleEmailPublishStatus({
-//     ctx,
-//     sequenceId,
-//     emailId,
-// }: {
-//     ctx: GQLContext;
-//     sequenceId: string;
-//     emailId: string;
-// }): Promise<boolean> {
-//     checkIfAuthenticated(ctx);
-
-//     if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
-//         throw new Error(responses.action_not_allowed);
-//     }
-
-//     const sequence = await SequenceModel.findOne({
-//         domain: ctx.subdomain._id,
-//         sequenceId,
-//     });
-//     if (!sequence) {
-//         return false;
-//     }
-
-//     const email = sequence.emails.find(
-//         (email: Email) => email.emailId === emailId,
-//     );
-//     if (!email) {
-//         return false;
-//     }
-
-//     if (sequence.type === "broadcast" && sequence.report?.broadcast?.lockedAt) {
-//         return false;
-//     }
-
-//     if (email.delayInMillis && email.delayInMillis < new Date().getTime()) {
-//         throw new Error(responses.past_date);
-//     }
-
-//     email.published = !email.published;
-
-//     await sequence.save();
-
-//     if (sequence.type === "broadcast") {
-//         if (email.published) {
-//             if (email.delayInMillis) {
-//                 await addRuleToSendLater({ sequence, ctx });
-//             } else {
-//                 await Promise.all([
-//                     addBroadcastToOngoingSequence({ sequence, ctx }),
-//                     (async () => {
-//                         sequence.report = {
-//                             broadcast: {
-//                                 lockedAt: new Date(),
-//                             },
-//                         };
-//                         await (sequence as any).save();
-//                     })(),
-//                 ]);
-//             }
-//         } else {
-//             await removeRuleToSendLater({ sequence, ctx });
-//         }
-//     }
-
-//     return sequence;
-// }
 
 export async function startSequence({
     ctx,

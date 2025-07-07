@@ -5,6 +5,7 @@
     "author": "CourseLit <hi@codelit.dev>",
     "homepage": "https://github.com/codelitdev/courselit#readme",
     "license": "MIT",
+    "main": "dist/index.mjs",
     "types": "dist/index.d.ts",
     "files": [
         "dist",
@@ -12,7 +13,7 @@
         "LICENSE"
     ],
     "exports": {
-        ".": "./dist",
+        ".": "./dist/index.mjs",
         "./styles.css": "./dist/index.css",
         "./blocks": "./dist/blocks"
     },

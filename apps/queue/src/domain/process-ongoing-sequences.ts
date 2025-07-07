@@ -21,6 +21,7 @@ import mongoose from "mongoose";
 import sequenceQueue from "./sequence-queue";
 import { AdminSequence, InternalUser } from "@courselit/common-logic";
 import { renderEmailToHtml } from "@courselit/email-editor";
+import { getUnsubLink } from "../utils/get-unsub-link";
 const liquidEngine = new Liquid();
 
 new Worker(
@@ -179,11 +180,7 @@ async function attemptMailSending({
         : `${creator.email} <${creator.email}>`;
     const to = user.email;
     const subject = email.subject;
-    const unsubscribeLink = `https://${
-        domain.customDomain
-            ? `${domain.customDomain}`
-            : `${domain.name}.${process.env.DOMAIN}`
-    }/api/unsubscribe/${user.unsubscribeToken}`;
+    const unsubscribeLink = getUnsubLink(domain, user.unsubscribeToken);
     const templatePayload = {
         subscriber: {
             email: user.email,
@@ -203,17 +200,6 @@ async function attemptMailSending({
         }),
         templatePayload,
     );
-    // if (email.templateId) {
-    //     const template = await getTemplate(email.templateId);
-    //     if (template) {
-    //         content = await liquidEngine.parseAndRender(
-    //             template.content,
-    //             Object.assign({}, templatePayload, {
-    //                 content: content,
-    //             }),
-    //         );
-    //     }
-    // }
     try {
         await sendMail({
             from,

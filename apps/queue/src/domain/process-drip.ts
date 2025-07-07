@@ -1,12 +1,14 @@
-import CourseModel, { Course } from "./model/course";
+import CourseModel from "./model/course";
 import UserModel from "./model/user";
 import mailQueue from "./queue";
 import { Liquid } from "liquidjs";
-import { getMemberships } from "./queries";
+import { getDomain, getMemberships } from "./queries";
 import { Constants } from "@courselit/common-models";
-import { InternalUser } from "@courselit/common-logic";
+import { InternalCourse, InternalUser } from "@courselit/common-logic";
 import { FilterQuery, UpdateQuery } from "mongoose";
 import { renderEmailToHtml } from "@courselit/email-editor";
+import { getSiteUrl } from "../utils/get-site-url";
+import { getUnsubLink } from "../utils/get-unsub-link";
 const liquidEngine = new Liquid();
 
 export async function processDrip() {
@@ -17,13 +19,13 @@ export async function processDrip() {
             `Starting process of drips at ${new Date().toDateString()}`,
         );
 
-        const courseQuery: FilterQuery<Course> = {
+        const courseQuery: FilterQuery<InternalCourse> = {
             "groups.drip": { $exists: true },
         };
         // @ts-ignore - Mongoose type compatibility issue
         const courses = (await CourseModel.find(
             courseQuery,
-        ).lean()) as unknown as Course[];
+        ).lean()) as unknown as InternalCourse[];
 
         const nowUTC = new Date().getTime();
 
@@ -78,7 +80,7 @@ export async function processDrip() {
                             group.drip.delayInMillis >= 0 &&
                             nowUTC >= lastDripAtUTC + group.drip.delayInMillis,
                     )
-                    .map((group) => group.id);
+                    .map((group) => (group as any)._id);
 
                 const allAccessibleGroupIds = [
                     ...new Set([
@@ -109,16 +111,26 @@ export async function processDrip() {
                     await UserModel.updateOne(updateQuery, updateData);
 
                     const firstGroupWithDripEmailSet = course.groups.find(
-                        (group) => group.id === newGroupIds[0],
+                        (group) => (group as any)._id === newGroupIds[0],
                     );
 
                     if (firstGroupWithDripEmailSet) {
+                        const domain = await getDomain(course.domain);
                         const templatePayload = {
                             subscriber: {
                                 email: user.email,
                                 name: user.name,
                                 tags: user.tags,
                             },
+                            product: {
+                                title: course.title,
+                                url: `${getSiteUrl(domain)}/course/${course.slug}/${course.courseId}`,
+                            },
+                            address: domain.settings.mailingAddress,
+                            unsubscribe_link: getUnsubLink(
+                                domain,
+                                user.unsubscribeToken,
+                            ),
                         };
                         if (firstGroupWithDripEmailSet.drip?.email?.content) {
                             const content = await liquidEngine.parseAndRender(

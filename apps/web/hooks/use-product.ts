@@ -1,9 +1,9 @@
 import { Address, Course } from "@courselit/common-models";
 import { Lesson } from "@courselit/common-models";
 import { useToast } from "@courselit/components-library";
-import { FetchBuilder } from "@courselit/utils";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { useCallback, useEffect, useState } from "react";
+import { useGraphQLFetch } from "./use-graphql-fetch";
 
 export type ProductWithAdminProps = Partial<
     Omit<Course, "paymentPlans"> &
@@ -23,6 +23,7 @@ export default function useProduct(
     const { toast } = useToast();
     const [loaded, setLoaded] = useState(false);
     const [hasError, setHasError] = useState(false);
+    const fetch = useGraphQLFetch();
 
     const loadProduct = useCallback(
         async (courseId: string) => {
@@ -53,7 +54,14 @@ export default function useProduct(
                             delayInMillis,
                             dateInUTC,
                             email {
-                                content,
+                                content {
+                                    content {
+                                        blockType,
+                                        settings
+                                    },
+                                    style,
+                                    meta
+                                },
                                 subject
                             }
                         }
@@ -91,13 +99,9 @@ export default function useProduct(
                 }
             }
         `;
-            const fetch = new FetchBuilder()
-                .setUrl(`${address.backend}/api/graph`)
-                .setPayload(query)
-                .setIsGraphQLEndpoint(true)
-                .build();
+            const fetchInstance = fetch.setPayload(query).build();
             try {
-                const response = await fetch.exec();
+                const response = await fetchInstance.exec();
                 if (response.course) {
                     setProduct(response.course);
                 } else {
@@ -115,7 +119,7 @@ export default function useProduct(
                 setLoaded(true);
             }
         },
-        [address?.backend, hasError],
+        [fetch, hasError],
     );
 
     useEffect(() => {

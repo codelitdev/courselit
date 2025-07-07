@@ -225,6 +225,7 @@ const types = {
     sequenceTrigger,
     sequenceTriggerType,
     sequenceEmailActionType,
+    sequenceEmailContent,
     mailRequestStatus,
 };
 export default types;

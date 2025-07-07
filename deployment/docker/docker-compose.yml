@@ -108,7 +108,10 @@ services:
     #     - EMAIL_USER=${EMAIL_USER?'EMAIL_USER environment variable is not defined'}
     #     - EMAIL_PASS=${EMAIL_PASS?'EMAIL_PASS environment variable is not defined'}
     #     - EMAIL_HOST=${EMAIL_HOST?'EMAIL_HOST environment variable is not defined'}
+    #     # The following secret is used by CourseLit app to sign jobs sent to the queue.
+    #     - COURSELIT_JWT_SECRET=${COURSELIT_JWT_SECRET?'COURSELIT_JWT_SECRET environment variable is not defined'}
     #     - REDIS_HOST=redis
+    #     - DOMAIN=courselit.app
     #   expose:
     #     - "80"
     #   restart: on-failure
