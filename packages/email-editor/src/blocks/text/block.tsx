@@ -104,6 +104,7 @@ export function TextBlock({ block, style, selectedBlockId }: TextBlockProps) {
                                 block.settings.textDecoration ||
                                 style?.typography.text.textDecoration ||
                                 "none",
+                            margin: "0",
                         },
                         link: {
                             color: style?.colors.accent || "inherit",

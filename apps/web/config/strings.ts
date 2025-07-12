@@ -98,7 +98,7 @@ export const responses = {
         "Email delivery failed for all recipients",
     courses_cannot_be_downloaded: "A course cannot be offered as a download.",
     apikey_already_exists: "Apikey with that name already exists",
-    sequence_details_missing: "Some sequence details are missing",
+    sequence_details_missing: "The following settings are missing",
     invalid_emails_order: "Invalid emails order",
     no_published_emails: "No published emails",
     sequence_not_active: "Sequence not active",

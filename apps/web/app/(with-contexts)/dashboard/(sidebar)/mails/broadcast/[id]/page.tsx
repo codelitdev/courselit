@@ -7,7 +7,6 @@ import { BROADCASTS } from "@ui-config/strings";
 import { useContext } from "react";
 import { PaperPlane, Clock } from "@courselit/icons";
 import {
-    Button,
     Form,
     FormField,
     Dialog2,
@@ -48,6 +47,7 @@ import { useSequence } from "@/hooks/use-sequence";
 import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
 import FilterContainer from "@components/admin/users/filter-container";
 import EmailViewer from "@components/admin/mails/email-viewer";
+import { Button } from "@components/ui/button";
 
 const breadcrumbs = [
     { label: BROADCASTS, href: "/dashboard/mails?tab=Broadcasts" },
@@ -63,6 +63,7 @@ export default function Page({
 }) {
     const address = useContext(AddressContext);
     const { id } = params;
+    const { sequence, loading, error, loadSequence } = useSequence();
     const [filters, setFilters] = useState<UserFilter[]>([]);
     const [filtersAggregator, setFiltersAggregator] =
         useState<UserFilterAggregator>("or");
@@ -76,9 +77,6 @@ export default function Page({
     const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
     const [report, setReport] = useState<SequenceReport>();
     const [status, setStatus] = useState<SequenceStatus | null>(null);
-
-    // Use the sequence hook
-    const { sequence, loading, error, loadSequence } = useSequence();
 
     // Refs to track initial values and prevent saving during load
     const initialValues = useRef({
@@ -140,7 +138,6 @@ export default function Page({
         }
     }, [error, toast]);
 
-    // Debounced save function
     const debouncedSave = useCallback(async () => {
         if (!emailId || isInitialLoad.current) {
             return;
@@ -248,7 +245,7 @@ export default function Page({
                 };
             } catch (e: any) {
                 toast({
-                    title: `${TOAST_TITLE_ERROR}: ${e.message}`,
+                    title: TOAST_TITLE_ERROR,
                     description: e.message,
                     variant: "destructive",
                 });
@@ -285,7 +282,7 @@ export default function Page({
 
         if (!subject.trim()) {
             toast({
-                title: `${TOAST_TITLE_ERROR}: ${ERROR_SUBJECT_EMPTY}`,
+                title: TOAST_TITLE_ERROR,
                 description: ERROR_SUBJECT_EMPTY,
                 variant: "destructive",
             });
@@ -295,7 +292,7 @@ export default function Page({
 
         if (sendLater && delay === 0) {
             toast({
-                title: `${TOAST_TITLE_ERROR}: ${ERROR_DELAY_EMPTY}`,
+                title: TOAST_TITLE_ERROR,
                 description: ERROR_DELAY_EMPTY,
                 variant: "destructive",
             });
@@ -388,7 +385,7 @@ export default function Page({
             }
         } catch (e: any) {
             toast({
-                title: `${TOAST_TITLE_ERROR}: ${e.message}`,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
                 variant: "destructive",
             });
@@ -461,7 +458,7 @@ export default function Page({
             }
         } catch (e: any) {
             toast({
-                title: `${TOAST_TITLE_ERROR}: ${e.message}`,
+                title: TOAST_TITLE_ERROR,
                 description: e.message,
                 variant: "destructive",
             });
@@ -512,12 +509,14 @@ export default function Page({
                 </div>
                 <fieldset>
                     <label className="mb-1 font-medium">To</label>
-                    <FilterContainer
-                        filter={{ aggregator: filtersAggregator, filters }}
-                        onChange={onFilterChange}
-                        disabled={!isEditable}
-                        address={address}
-                    />
+                    {!isInitialLoad.current && (
+                        <FilterContainer
+                            filter={{ aggregator: filtersAggregator, filters }}
+                            onChange={onFilterChange}
+                            disabled={!isEditable}
+                            address={address}
+                        />
+                    )}
                 </fieldset>
                 <Form className="flex flex-col gap-4" onSubmit={onSubmit}>
                     <FormField
@@ -528,25 +527,6 @@ export default function Page({
                             setSubject(e.target.value)
                         }
                     />
-                    {/* {isEditable && (
-                    <div>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2"
-                        onClick={(e) => {
-                            e.preventDefault();
-                        }}
-                        href={`/dashboard/mail/${id}/${emailId}?redirectTo=/dashboard/mails/broadcast/${id}`}
-                        component="link"
-                    >
-                        <span className="flex items-center gap-2">
-                            <Edit className="h-4 w-4" />
-                            Edit Email
-                        </span>
-                    </Button>
-                    </div>
-                )} */}
                     <EmailViewer
                         content={content}
                         emailEditorLink={

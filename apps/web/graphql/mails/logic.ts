@@ -125,6 +125,10 @@ export async function createSequence(
                         : Constants.EventType.PRODUCT_PURCHASED,
             },
             emailsOrder: [emailId],
+            filter: {
+                aggregator: "or",
+                filters: [],
+            },
         };
         const sequence = await SequenceModel.create(sequenceObj);
         return sequence;
@@ -324,6 +328,11 @@ export async function updateSequence({
 
     if (filter) {
         sequence.filter = JSON.parse(filter);
+    } else {
+        sequence.filter = {
+            aggregator: "or",
+            filters: [],
+        };
     }
     if (title) {
         sequence.title = title;
@@ -524,7 +533,7 @@ export async function startSequence({
     }
 
     if (sequence.type === "broadcast") {
-        if (!sequence.filter) {
+        if (!sequence.filter || sequence.filter?.filters?.length === 0) {
             throw new Error(`${responses.sequence_details_missing}: filter`);
         }
     }
