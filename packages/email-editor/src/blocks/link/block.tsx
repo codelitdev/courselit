@@ -40,10 +40,9 @@ export function LinkBlock({ block, style }: LinkBlockProps) {
             <Section>
                 <div
                     style={{
-                        paddingTop,
-                        paddingBottom,
                         backgroundColor,
                         textAlign: alignment,
+                        padding: `${paddingTop} ${style?.structure.section.padding?.x} ${paddingBottom} ${style?.structure.section.padding?.x}`,
                     }}
                 >
                     <Button
@@ -87,10 +86,9 @@ export function LinkBlock({ block, style }: LinkBlockProps) {
         <Section>
             <div
                 style={{
-                    paddingTop,
-                    paddingBottom,
                     backgroundColor,
                     textAlign: alignment,
+                    padding: `${paddingTop} ${style?.structure.section.padding?.x} ${paddingBottom} ${style?.structure.section.padding?.x}`,
                 }}
             >
                 <Link

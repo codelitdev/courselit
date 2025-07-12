@@ -13,7 +13,6 @@ import {
     BUTTON_SAVE,
     COMPOSE_SEQUENCE_EDIT_DELAY,
     TOAST_TITLE_ERROR,
-    MAIL_PREVIEW_TITLE,
     MAIL_SUBJECT_PLACEHOLDER,
     PAGE_HEADER_EDIT_MAIL,
 } from "@ui-config/strings";
@@ -46,7 +45,7 @@ export default function Page({
     ];
     const [delay, setDelay] = useState<number>(0);
     const [subject, setSubject] = useState<string>("");
-    const [previewText, setPreviewText] = useState<string>("");
+    // const [previewText, setPreviewText] = useState<string>("");
     const [content, setContent] = useState<EmailContent | null>(null);
     const [email, setEmail] = useState<Email | null>(null);
     const [published, setPublished] = useState<"unpublished" | "published">(
@@ -127,7 +126,7 @@ export default function Page({
                 setEmail(email);
                 setDelay(email.delayInMillis / 86400000);
                 setSubject(email.subject);
-                setPreviewText(email.content?.meta?.previewText || "");
+                // setPreviewText(email.content?.meta?.previewText || "");
                 setContent(email.content || null);
                 setPublished(email.published ? "published" : "unpublished");
             }
@@ -146,7 +145,6 @@ export default function Page({
                 $actionType: SequenceEmailActionType
                 $actionData: String
                 $published: Boolean
-                $previewText: String
             ) {
                 sequence: updateMailInSequence(
                     sequenceId: $sequenceId,
@@ -158,7 +156,6 @@ export default function Page({
                     actionType: $actionType,
                     actionData: $actionData,
                     published: $published,
-                    previewText: $previewText
                 ) {
                     sequenceId,
                     title,
@@ -166,9 +163,15 @@ export default function Page({
                         emailId,
                         subject,
                         delayInMillis,
-                        previewText,
                         published,
-                        content
+                        content {
+                            content {
+                                blockType,
+                                settings
+                            },
+                            style,
+                            meta
+                        }
                     },
                     trigger {
                         type,
@@ -190,10 +193,10 @@ export default function Page({
                     sequenceId,
                     emailId: email?.emailId,
                     subject,
-                    content,
+                    content: JSON.stringify(content),
                     delayInMillis: delay * 86400000,
                     published: published === "published",
-                    previewText,
+                    // previewText,
                 },
             })
             .build();
@@ -207,7 +210,7 @@ export default function Page({
                     setEmail(email);
                     setDelay(email.delayInMillis / 86400000);
                     setSubject(email.subject);
-                    setPreviewText(email.previewText || "");
+                    // setPreviewText(email.previewText || "");
                     setContent(email.content);
                     setPublished(email.published ? "published" : "unpublished");
                 }
@@ -227,7 +230,7 @@ export default function Page({
         content,
         delay,
         published,
-        previewText,
+        // previewText,
     ]);
 
     useEffect(() => {
@@ -261,9 +264,9 @@ export default function Page({
                                 (subject === email?.subject &&
                                     content === email?.content &&
                                     delay === email?.delayInMillis / 86400000 &&
-                                    previewText ===
-                                        (email?.content?.meta?.previewText ||
-                                            "") &&
+                                    // previewText ===
+                                    //     (email?.content?.meta?.previewText ||
+                                    //         "") &&
                                     published ===
                                         (email?.published
                                             ? "published"
@@ -316,14 +319,14 @@ export default function Page({
                                 setSubject(e.target.value)
                             }
                         />
-                        <FormField
+                        {/* <FormField
                             value={previewText}
                             label={MAIL_PREVIEW_TITLE}
                             onChange={(e: ChangeEvent<HTMLInputElement>) =>
                                 setPreviewText(e.target.value)
                             }
                             tooltip="This text will be shown in the email client before opening the email."
-                        />
+                        /> */}
                     </Form>
                     {/* <Button
                         variant="outline"
@@ -342,7 +345,7 @@ export default function Page({
                     </Button> */}
                     <EmailViewer
                         content={content}
-                        emailEditorLink={`/dashboard/mail/${sequenceId}/${mailId}?redirectTo=/dashboard/mails/sequence/${sequenceId}/${mailId}`}
+                        emailEditorLink={`/dashboard/mail/sequence/${sequenceId}/${mailId}?redirectTo=/dashboard/mails/sequence/${sequenceId}/${mailId}`}
                     />
                 </div>
             </div>

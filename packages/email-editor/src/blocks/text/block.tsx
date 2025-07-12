@@ -27,10 +27,9 @@ export function TextBlock({ block, style, selectedBlockId }: TextBlockProps) {
         <Section>
             <div
                 style={{
-                    paddingTop,
-                    paddingBottom,
                     backgroundColor,
                     color: foregroundColor,
+                    padding: `${paddingTop} ${style?.structure.section.padding?.x} ${paddingBottom} ${style?.structure.section.padding?.x}`,
                 }}
             >
                 <Markdown
@@ -140,9 +139,6 @@ export function TextBlock({ block, style, selectedBlockId }: TextBlockProps) {
                         textAlign: block.settings.alignment || "left",
                         fontSize: block.settings.fontSize || "16px",
                         lineHeight: block.settings.lineHeight || "1.5",
-                        paddingTop: paddingTop,
-                        paddingBottom: paddingBottom,
-                        padding: `${paddingTop} ${style?.structure.section.padding?.x} ${paddingBottom} ${style?.structure.section.padding?.x}`,
                     }}
                 >
                     {content}

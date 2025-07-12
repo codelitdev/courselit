@@ -764,7 +764,7 @@ export async function updateMailInSequence({
     emailId,
     subject,
     content,
-    previewText,
+    // previewText,
     delayInMillis,
     actionType,
     actionData,
@@ -776,7 +776,7 @@ export async function updateMailInSequence({
     emailId: string;
     subject?: string;
     content?: string;
-    previewText?: string;
+    // previewText?: string;
     delayInMillis?: number;
     actionType?: (typeof Constants.emailActionTypes)[number];
     actionData?: Record<string, unknown>;

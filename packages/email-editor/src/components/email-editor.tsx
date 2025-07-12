@@ -60,13 +60,7 @@ function stripBlockIds(email: Email): Email {
 function getDefaultSettingsForBlockType(
     blockType: string,
 ): Record<string, any> {
-    // Common settings for all blocks
-    const commonSettings = {
-        backgroundColor: "transparent",
-        foregroundColor: "#000000",
-        paddingTop: "0px",
-        paddingBottom: "0px",
-    };
+    const commonSettings = {};
 
     switch (blockType) {
         case "text":

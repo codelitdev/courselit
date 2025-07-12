@@ -551,7 +551,7 @@ export default function Page({
                         content={content}
                         emailEditorLink={
                             isEditable
-                                ? `/dashboard/mail/${id}/${emailId}?redirectTo=/dashboard/mails/broadcast/${id}`
+                                ? `/dashboard/mail/sequence/${id}/${emailId}?redirectTo=/dashboard/mails/broadcast/${id}`
                                 : ""
                         }
                     />

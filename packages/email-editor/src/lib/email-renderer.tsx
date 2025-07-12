@@ -84,15 +84,13 @@ export function EmailTemplate({
                 style={{
                     backgroundColor: email.style.colors.background,
                     color: email.style.colors.foreground,
-                    margin: email.style.structure.page.marginY || "0",
-                    padding: "0",
                     fontFamily: email.style.typography.text.fontFamily,
+                    padding: `${email.style.structure.page.marginY || "0"} 0`,
                 }}
             >
                 <Container
                     style={{
-                        width: email.style.structure.page.width,
-                        margin: `${email.style.structure.page.marginY || "0"} auto`,
+                        maxWidth: email.style.structure.page.width,
                         backgroundColor: email.style.structure.page.background,
                         color:
                             email.style.structure.page.foreground ||

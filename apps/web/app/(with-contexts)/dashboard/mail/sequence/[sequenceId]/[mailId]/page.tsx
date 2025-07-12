@@ -24,7 +24,7 @@ export default function EmailEditorPage({
 
     return (
         <EditorLayout
-            src={`/dashboard/mail/${params.sequenceId}/${params.mailId}/internal`}
+            src={`/dashboard/mail/sequence/${params.sequenceId}/${params.mailId}/internal`}
             redirectTo={redirectTo || "/dashboard/mails?tab=Broadcasts"}
         />
     );
