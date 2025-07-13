@@ -571,24 +571,20 @@ export default function Page({
                                         }
                                         onClick={onSubmit}
                                     >
-                                        <div className="p-4">
-                                            <p>
-                                                Are you sure you want to send
-                                                this email to{" "}
-                                                {filteredUsersCount} contacts?
-                                            </p>
-                                        </div>
+                                        <p>
+                                            Are you sure you want to send this
+                                            email to {filteredUsersCount}{" "}
+                                            contacts?
+                                        </p>
                                     </Dialog2>
                                     <Button
                                         variant={
                                             showScheduleInput
-                                                ? "classic"
-                                                : "soft"
+                                                ? "secondary"
+                                                : "ghost"
                                         }
                                         className="gap-2"
-                                        onClick={(
-                                            e: ChangeEvent<HTMLInputElement>,
-                                        ) => {
+                                        onClick={() => {
                                             setShowScheduleInput(true);
                                         }}
                                     >
@@ -622,10 +618,8 @@ export default function Page({
                                         </div>
                                     </Dialog2>
                                     <Button
-                                        variant="soft"
-                                        onClick={(
-                                            e: ChangeEvent<HTMLInputElement>,
-                                        ) => {
+                                        variant="secondary"
+                                        onClick={(e) => {
                                             e.preventDefault();
                                             setShowScheduleInput(false);
                                             setDelay(0);
@@ -646,7 +640,7 @@ export default function Page({
                                 <Clock /> Scheduled for{" "}
                                 {new Date(delay).toLocaleString()}
                             </p>
-                            <Button variant="soft" onClick={cancelSending}>
+                            <Button variant="secondary" onClick={cancelSending}>
                                 {BUTTON_CANCEL_SCHEDULED_MAIL}
                             </Button>
                         </div>

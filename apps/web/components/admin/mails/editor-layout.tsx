@@ -1,4 +1,4 @@
-import { Button2 } from "@courselit/components-library";
+import { Button } from "@/components/ui/button";
 import { CheckCircled, Sync } from "@courselit/icons";
 import { Check, Copy } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
@@ -151,7 +151,7 @@ export const VariableDisplay = ({
                 <div className="font-mono text-sm bg-muted px-2 py-1 rounded text-slate-700 font-semibold inline-block cursor-pointer hover:bg-muted/80 transition-colors">
                     {variable}
                 </div>
-                <Button2
+                <Button
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -162,7 +162,7 @@ export const VariableDisplay = ({
                     ) : (
                         <Copy className="h-3 w-3" />
                     )}
-                </Button2>
+                </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-1 ml-1">
                 {description}

@@ -23,7 +23,7 @@ import { FetchBuilder } from "@courselit/utils";
 import { useRouter } from "next/navigation";
 import { ThunkDispatch } from "redux-thunk";
 import {
-    Button,
+    // Button,
     Tabbs,
     Card,
     CardHeader,
@@ -37,6 +37,7 @@ import { AnyAction } from "redux";
 import RequestForm from "./request-form";
 import SequencesList from "./sequences-list";
 const { networkAction } = actionCreators;
+import { Button } from "@components/ui/button";
 
 interface MailsProps {
     address: Address;
