@@ -145,6 +145,7 @@ DB_CONNECTION_STRING=mongodb://<mongodb-url> node migration-script.js
 ```
 
 ## Supported By
+
 <a href="https://vercel.com/oss">
   <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge.svg" />
 </a>
