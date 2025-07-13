@@ -1,7 +1,7 @@
 import { Button2 } from "@courselit/components-library";
 import { CheckCircled, Sync } from "@courselit/icons";
 import { Check, Copy } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export const EmailEditorLayout = ({
     children,
@@ -11,68 +11,120 @@ export const EmailEditorLayout = ({
     children: React.ReactNode;
     isSaving?: boolean;
     type?: "sequence" | "product";
-}) => (
-    <div className="flex flex-col h-screen bg-muted/10">
-        <div className="flex w-full h-full gap-4 p-4 bg-muted/10">
-            <div className="max-w-[220px] flex flex-col">
-                <div className="flex items-center mb-4">
-                    <h2 className="text-base font-semibold text-gray-800">
-                        Variables
-                    </h2>
-                </div>
-                <div className="flex flex-col gap-5 flex-1">
-                    <p className="text-xs text-muted-foreground mb-1">
-                        You can use the following variables in your content.
-                    </p>
-                    <p className="text-xs text-muted-foreground mb-2">
-                        These will be replaced with the actual data while
-                        sending emails.
-                    </p>
-                    <div className="flex flex-col gap-3">
-                        {type === "product" && (
-                            <>
-                                <VariableDisplay
-                                    variable="{{ product.title }}"
-                                    description="The title of the product"
-                                />
-                                <VariableDisplay
-                                    variable="{{ product.url }}"
-                                    description="The URL of the product"
-                                />
-                            </>
+}) => {
+    const [showSavedToast, setShowSavedToast] = useState(false);
+    const [prevIsSaving, setPrevIsSaving] = useState(isSaving);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        // Hide toast when starting a new save operation
+        if (!prevIsSaving && isSaving) {
+            setShowSavedToast(false);
+            // Clear any existing timer
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+                timerRef.current = null;
+            }
+        }
+
+        // Show toast when saving changes from true to false (save completed)
+        if (prevIsSaving && !isSaving) {
+            setShowSavedToast(true);
+            // Clear any existing timer before setting a new one
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+            }
+            timerRef.current = setTimeout(() => {
+                setShowSavedToast(false);
+                timerRef.current = null;
+            }, 5000);
+        }
+        setPrevIsSaving(isSaving);
+    }, [isSaving, prevIsSaving]);
+
+    // Cleanup timer on unmount
+    useEffect(() => {
+        return () => {
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+            }
+        };
+    }, []);
+
+    return (
+        <div className="flex flex-col h-screen bg-muted/10">
+            <div className="flex w-full h-full gap-4 p-4 bg-muted/10">
+                <div className="max-w-[220px] flex flex-col">
+                    <div className="flex items-center mb-4">
+                        <h2 className="text-base font-semibold text-gray-800">
+                            Variables
+                        </h2>
+                    </div>
+                    <div className="flex flex-col gap-5 flex-1">
+                        <p className="text-xs text-muted-foreground mb-1">
+                            You can use the following variables in your content.
+                        </p>
+                        <p className="text-xs text-muted-foreground mb-2">
+                            These will be replaced with the actual data while
+                            sending emails.
+                        </p>
+                        <div className="flex flex-col gap-3">
+                            {type === "product" && (
+                                <>
+                                    <VariableDisplay
+                                        variable="{{ product.title }}"
+                                        description="The title of the product"
+                                    />
+                                    <VariableDisplay
+                                        variable="{{ product.url }}"
+                                        description="The URL of the product"
+                                    />
+                                </>
+                            )}
+                            <VariableDisplay
+                                variable="{{ subscriber.email }}"
+                                description="The email of the subscriber"
+                            />
+                            <VariableDisplay
+                                variable="{{ subscriber.name }}"
+                                description="The name of the subscriber"
+                            />
+                            <VariableDisplay
+                                variable="{{ address }}"
+                                description="Your mailing address"
+                            />
+                            <VariableDisplay
+                                variable="{{ unsubscribe_link }}"
+                                description="A link to unsubscribe from the marketing emails"
+                            />
+                        </div>
+                    </div>
+                    <div className="flex items-center mt-4 h-6">
+                        {isSaving && (
+                            <div className="flex items-center gap-2">
+                                <Sync className="h-4 w-4 animate-spin text-muted-foreground" />
+                                <span className="text-sm text-muted-foreground">
+                                    Saving...
+                                </span>
+                            </div>
                         )}
-                        <VariableDisplay
-                            variable="{{ subscriber.email }}"
-                            description="The email of the subscriber"
-                        />
-                        <VariableDisplay
-                            variable="{{ subscriber.name }}"
-                            description="The name of the subscriber"
-                        />
-                        <VariableDisplay
-                            variable="{{ address }}"
-                            description="Your mailing address"
-                        />
-                        <VariableDisplay
-                            variable="{{ unsubscribe_link }}"
-                            description="A link to unsubscribe from the marketing emails"
-                        />
+                        {showSavedToast && (
+                            <div className="flex items-center gap-2 bg-background border px-3 py-1 rounded-md shadow-sm animate-in fade-in-0 duration-300">
+                                <CheckCircled className="h-4 w-4 text-primary" />
+                                <span className="text-sm font-medium text-foreground">
+                                    Changes are saved
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
-                <div className="flex items-center mt-4">
-                    {isSaving ? (
-                        <Sync className="h-4 w-4 animate-spin text-muted-foreground" />
-                    ) : (
-                        <CheckCircled className="h-4 w-4 text-green-500" />
-                    )}
+                <div className="w-full rounded-xl overflow-hidden border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm">
+                    {children}
                 </div>
             </div>
-            <div className="w-full rounded-xl overflow-hidden border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm">
-                {children}
-            </div>
         </div>
-    </div>
-);
+    );
+};
 
 export const VariableDisplay = ({
     variable,
