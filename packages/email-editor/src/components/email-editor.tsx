@@ -120,7 +120,7 @@ export function EmailEditor({
     );
     const [movingBlockId, setMovingBlockId] = useState<string | null>(null);
     const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
-    const [showSettings, setShowSettings] = useState(true);
+    const [showSettings] = useState(true);
 
     // Update email when initialEmail prop changes
     useEffect(() => {

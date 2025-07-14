@@ -38,7 +38,7 @@ export default function DripEmailEditorPage({
             src={`/dashboard/mail/drip/${productId}/${sectionId}/internal`}
             redirectTo={
                 redirectTo ||
-                "/dashboard/product/${productId}/content/section/${sectionId}"
+                `/dashboard/product/${productId}/content/section/${sectionId}`
             }
             title={
                 productLoaded

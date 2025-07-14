@@ -72,7 +72,7 @@ export default function Page({
     const [delay, setDelay] = useState(0);
     const [showScheduleInput, setShowScheduleInput] = useState(false);
     const [emailId, setEmailId] = useState<string | undefined>();
-    const [published, setPublished] = useState(true);
+    // const [published, setPublished] = useState(true);
     const [filteredUsersCount, setFilteredUsersCount] = useState(0);
     const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
     const [report, setReport] = useState<SequenceReport>();
@@ -115,7 +115,7 @@ export default function Page({
             setContent(sequence.emails[0].content);
             setDelay(sequence.emails[0].delayInMillis);
             setEmailId(sequence.emails[0].emailId);
-            setPublished(sequence.emails[0].published);
+            // setPublished(sequence.emails[0].published);
             if (sequence.filter) {
                 setFilters(sequence.filter.filters);
                 setFiltersAggregator(sequence.filter.aggregator);
@@ -370,7 +370,7 @@ export default function Page({
                 setContent(sequence.emails[0].content);
                 setDelay(sequence.emails[0].delayInMillis);
                 setEmailId(sequence.emails[0].emailId);
-                setPublished(sequence.emails[0].published);
+                // setPublished(sequence.emails[0].published);
                 if (sequence.filter) {
                     setFilters(sequence.filter.filters);
                     setFiltersAggregator(sequence.filter.aggregator);
@@ -448,7 +448,7 @@ export default function Page({
                 setContent(sequence.emails[0].content);
                 setDelay(sequence.emails[0].delayInMillis);
                 setEmailId(sequence.emails[0].emailId);
-                setPublished(sequence.emails[0].published);
+                // setPublished(sequence.emails[0].published);
                 if (sequence.filter) {
                     setFilters(sequence.filter.filters);
                     setFiltersAggregator(sequence.filter.aggregator);
@@ -578,11 +578,7 @@ export default function Page({
                                         </p>
                                     </Dialog2>
                                     <Button
-                                        variant={
-                                            showScheduleInput
-                                                ? "secondary"
-                                                : "ghost"
-                                        }
+                                        variant="ghost"
                                         className="gap-2"
                                         onClick={() => {
                                             setShowScheduleInput(true);

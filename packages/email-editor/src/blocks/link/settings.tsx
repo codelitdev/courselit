@@ -33,11 +33,6 @@ export function LinkSettings({ block, style, updateBlock }: LinkSettingsProps) {
         return match ? Number.parseInt(match[1], 10) : defaultValue;
     };
 
-    // Get numeric values from settings
-    const fontSize = pxToNumber(block.settings.fontSize, 16);
-    const paddingTop = pxToNumber(block.settings.paddingTop, 0);
-    const paddingBottom = pxToNumber(block.settings.paddingBottom, 0);
-
     // Font size options
     const fontSizeOptions = [
         { value: "12px", label: "12px" },

@@ -48,8 +48,6 @@ export function ImageSettings({
     // Get numeric values from settings
     const borderRadius = pxToNumber(block.settings.borderRadius, 0);
     const borderWidth = pxToNumber(block.settings.borderWidth, 0);
-    const paddingTop = pxToNumber(block.settings.paddingTop, 0);
-    const paddingBottom = pxToNumber(block.settings.paddingBottom, 0);
 
     // Sample images
     const sampleImages = [
