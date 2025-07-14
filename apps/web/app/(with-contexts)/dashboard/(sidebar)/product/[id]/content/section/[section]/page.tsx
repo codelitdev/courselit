@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/tooltip";
 import { HelpCircle } from "lucide-react";
 import Link from "next/link";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
     COURSE_CONTENT_HEADER,
     EDIT_SECTION_HEADER,
@@ -60,6 +62,7 @@ export default function SectionPage({
     const [date, setDate] = useState<number>();
     const [emailContent, setEmailContent] = useState<EmailContent | null>(null);
     const [emailSubject, setEmailSubject] = useState("");
+    const [emailId, setEmailId] = useState("");
     const address = useContext(AddressContext);
     const { product } = useProduct(productId, address);
     const [loading, setLoading] = useState(false);
@@ -102,6 +105,7 @@ export default function SectionPage({
                     setDate(group.drip?.dateInUTC);
                 }
                 setNotifyUsers(!!group.drip?.email);
+                setEmailId(group.drip?.email?.emailId || "");
                 setEmailContent(
                     group.drip?.email?.content ||
                         ({
@@ -217,6 +221,7 @@ export default function SectionPage({
                                 meta
                             },
                             subject
+                            emailId
                         }
                     }
                 }
@@ -256,6 +261,11 @@ export default function SectionPage({
                 // router.replace(
                 //     `/dashboard/product/${productId}/content`,
                 // );
+                setEmailId(
+                    response.course.groups.find(
+                        (group) => group.id === sectionId,
+                    )?.drip?.email?.emailId || "",
+                );
                 toast({
                     title: TOAST_TITLE_SUCCESS,
                     description: TOAST_DESCRIPTION_CHANGES_SAVED,
@@ -518,9 +528,24 @@ export default function SectionPage({
                                                             }
                                                         />
                                                     </div>
+                                                    {!emailId && (
+                                                        <Alert>
+                                                            <AlertCircle className="h-4 w-4" />
+                                                            <AlertDescription>
+                                                                Please save the
+                                                                changes first to
+                                                                enable email
+                                                                editing
+                                                            </AlertDescription>
+                                                        </Alert>
+                                                    )}
                                                     <EmailViewer
                                                         content={emailContent}
-                                                        emailEditorLink={`/dashboard/mail/drip/${productId}/${sectionId}?redirectTo=/dashboard/product/${productId}/content/section/${sectionId}`}
+                                                        emailEditorLink={
+                                                            emailId
+                                                                ? `/dashboard/mail/drip/${productId}/${sectionId}?redirectTo=/dashboard/product/${productId}/content/section/${sectionId}`
+                                                                : undefined
+                                                        }
                                                     />
                                                 </div>
                                             )

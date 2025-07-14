@@ -63,6 +63,7 @@ export default function useProduct(
                                     meta
                                 },
                                 subject
+                                emailId
                             }
                         }
                     },

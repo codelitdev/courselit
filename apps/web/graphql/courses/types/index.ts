@@ -77,6 +77,7 @@ const dripEmail = new GraphQLObjectType({
             type: new GraphQLNonNull(sequenceTypes.sequenceEmailContent),
         },
         subject: { type: new GraphQLNonNull(GraphQLString) },
+        emailId: { type: new GraphQLNonNull(GraphQLString) },
     },
 });
 
