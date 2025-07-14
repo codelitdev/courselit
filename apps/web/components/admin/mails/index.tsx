@@ -3,7 +3,6 @@ import {
     Address,
     Constants,
     Domain,
-    Sequence,
     SequenceType,
 } from "@courselit/common-models";
 import {
@@ -54,22 +53,9 @@ export default function Mails({
     selectedTab,
     loading,
 }: MailsProps) {
-    const [broadcastPage, setBroadcastPage] = useState(1);
-    const [page, setPage] = useState(1);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [broadcastCount, setBroadcastCount] = useState(0);
-    const [_, setSequenceCount] = useState(0);
-    const [__, setMails] = useState([]);
-    const [broadcasts, setBroadcasts] = useState<
-        Pick<Sequence, "sequenceId" | "title" | "emails">[]
-    >([]);
     const [siteInfo, setSiteInfo] = useState<Domain>();
     const router = useRouter();
     const { toast } = useToast();
-
-    const handleBroadcastPageChange = (newPage: number) => {
-        setBroadcastPage(newPage);
-    };
 
     const fetch = new FetchBuilder()
         .setUrl(`${address.backend}/api/graph`)
@@ -114,93 +100,7 @@ export default function Mails({
         getSiteInfo();
     }, []);
 
-    const loadBroadcasts = async () => {
-        const query = `
-            query GetBroadcasts($page: Int) {
-                broadcasts: getBroadcasts(
-                    offset: $page
-                ) {
-                    sequenceId,
-                    emails {
-                        subject,
-                        published
-                    }
-                    title
-                },
-            }`;
-
-        const fetcher = fetch
-            .setPayload({
-                query,
-                variables: {
-                    page: broadcastPage,
-                },
-            })
-            .build();
-
-        try {
-            dispatch && dispatch(networkAction(true));
-            const response = await fetcher.exec();
-            if (response.broadcasts) {
-                setBroadcasts(response.broadcasts);
-            }
-        } catch (e: any) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: e.message,
-                variant: "destructive",
-            });
-        } finally {
-            dispatch && dispatch(networkAction(false));
-        }
-    };
-
-    useEffect(() => {
-        loadBroadcasts();
-    }, [broadcastPage]);
-
-    const loadSequenceCount = async (type: SequenceType) => {
-        const query = `
-            query getSequenceCount($type: SequenceType) {
-                count: getSequenceCount(type: $type) 
-            }`;
-
-        const fetcher = fetch
-            .setPayload({
-                query,
-                variables: {
-                    type,
-                },
-            })
-            .build();
-
-        try {
-            dispatch && dispatch(networkAction(true));
-            const response = await fetcher.exec();
-            if (response.count) {
-                if (type === Constants.mailTypes[0].toUpperCase()) {
-                    setBroadcastCount(response.count);
-                }
-                if (type === Constants.mailTypes[1].toUpperCase()) {
-                    setSequenceCount(response.count);
-                }
-            }
-        } catch (e: any) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: e.message,
-                variant: "destructive",
-            });
-        } finally {
-            dispatch && dispatch(networkAction(false));
-        }
-    };
-
-    useEffect(() => {
-        loadSequenceCount(Constants.mailTypes[0].toUpperCase() as SequenceType);
-    }, []);
-
-    const createSequence = async (type: SequenceType) => {
+    const createSequence = async (type: SequenceType): Promise<void> => {
         const mutation = `
         mutation createSequence(
             $type: SequenceType!
@@ -247,7 +147,7 @@ export default function Mails({
         }
     };
 
-    const onPrimaryButtonClick = () => {
+    const onPrimaryButtonClick = (): void => {
         if (selectedTab === BROADCASTS) {
             createSequence("broadcast");
         } else if (selectedTab === SEQUENCES) {

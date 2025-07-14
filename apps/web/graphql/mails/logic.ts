@@ -892,6 +892,6 @@ export async function getSequences({
 
     return sequences.map((sequence) => ({
         ...sequence,
-        entrantsCount: sequence.entrants.length,
+        entrantsCount: sequence.entrants?.length || 0,
     }));
 }
