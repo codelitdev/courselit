@@ -193,10 +193,14 @@ export default function DashboardPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem asChild>
-                                    <Link href={`/p/${product?.pageId}`}>
+                                    <a
+                                        href={`/p/${encodeURIComponent(product?.pageId!)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
                                         <Eye className="mr-2 h-4 w-4" />
                                         {VIEW_PAGE_MENU_ITEM}
-                                    </Link>
+                                    </a>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem asChild>
