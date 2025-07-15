@@ -32,7 +32,7 @@ Fill out the form and hit `Save`.
 
 ## Next step
 
-Let's see [how to send broadcast emails](/en/email-marketing/broadcast-mails).
+Let's see [how to send broadcast emails](/en/email-marketing/broadcasts).
 
 ## Stuck somewhere?
 

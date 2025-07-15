@@ -86,8 +86,8 @@ export const SIDEBAR: Sidebar = {
                 link: "en/email-marketing/mail-access-request",
             },
             {
-                text: "Broadcast mails",
-                link: "en/email-marketing/broadcast-mails",
+                text: "Broadcasts",
+                link: "en/email-marketing/broadcasts",
             },
             {
                 text: "Sequences (Campaigns)",
