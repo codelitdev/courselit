@@ -61,6 +61,7 @@ export const DELETE_TAG_POPUP_DESC =
 export const NEW_COURSE_PAGE_HEADING = "Add course";
 export const EDIT_PRODUCT_HEADER = "Edit product";
 export const EDIT_BLOG = "Edit blog";
+export const EDIT_EMAIL = "Edit email";
 export const MEDIA_MANAGER_DIALOG_TITLE = "Add media";
 export const BUTTON_NEW_COURSE = "New";
 export const BUTTON_DONE_TEXT = "Done";

@@ -42,8 +42,7 @@ import { Filter } from "lucide-react";
 import { Input } from "@components/ui/input";
 const FilterChip = dynamic(() => import("./filter-chip"));
 const FilterSave = dynamic(() => import("./filter-save"));
-const FilterEditor = dynamic(() => import("./filter-editor"));
-const FilterEditor2 = dynamic(() => import("./filter-editor-2"));
+const FilterEditor = dynamic(() => import("./filter-editor-2"));
 const { networkAction } = actionCreators;
 
 interface FilterContainerProps {
@@ -217,7 +216,7 @@ export default function FilterContainer({
     }, [loadCount]);
 
     const searchByEmail = useCallback(async () => {
-        const newFilters = [
+        const newFilters: UserFilter[] = [
             ...internalFilters,
             {
                 name: "email",
@@ -238,58 +237,6 @@ export default function FilterContainer({
     return (
         <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-                {/* <Popover
-                    open={segmentSelectOpen}
-                    setOpen={setSegmentSelectOpen}
-                    title={
-                        <span className="flex items-center gap-2">
-                            <PieChart />
-                            {
-                                segments.filter(
-                                    (segment) =>
-                                        segment.segmentId === activeSegment,
-                                )[0]?.name
-                            }
-                        </span>
-                    }
-                    disabled={disabled}
-                >
-                    <SegmentEditor
-                        address={address}
-                        dispatch={dispatch}
-                        segments={segments}
-                        selectedSegment={activeSegment}
-                        dismissPopover={({
-                            selectedSegment,
-                            segments: receivedSegments,
-                            cancelled,
-                        }) => {
-                            if (!cancelled) {
-                                if (receivedSegments) {
-                                    mapSegments(receivedSegments);
-                                }
-                                const selectedSeg = segments.find(
-                                    (segment) =>
-                                        segment.segmentId === selectedSegment,
-                                );
-                                setInternalFilters([
-                                    ...selectedSeg.filter.filters,
-                                ]);
-                                setInternalAggregator(
-                                    selectedSeg.filter.aggregator,
-                                );
-                                setActiveSegment(selectedSegment);
-                                onChange({
-                                    filters: [...selectedSeg.filter.filters],
-                                    aggregator: selectedSeg.filter.aggregator,
-                                    segmentId: selectedSegment,
-                                    count,
-                                });
-                            }
-                            setSegmentSelectOpen(false);
-                        }}
-                    />
-                </Popover> */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button
@@ -342,35 +289,6 @@ export default function FilterContainer({
                         }}
                     />
                 </DropdownMenu>
-                {/* <Popover
-                    open={filterOpen}
-                    setOpen={setFilterOpen}
-                    title={
-                        <span className="flex items-center gap-2">
-                            <Settings />
-                            {USER_FILTER_BTN_LABEL}
-                        </span>
-                    }
-                    disabled={disabled}
-                >
-                    <FilterEditor
-                        dismissPopover={(filter: UserFilter) => {
-                            if (filter) {
-                                const newFilters = [...internalFilters, filter];
-                                setInternalFilters(newFilters);
-                                onChange({
-                                    filters: newFilters,
-                                    aggregator: internalAggregator,
-                                    segmentId: activeSegment,
-                                    count,
-                                });
-                            }
-                            setFilterOpen(false);
-                        }}
-                        address={address}
-                        dispatch={dispatch}
-                    />
-                </Popover> */}
                 <DropdownMenu open={filterOpen} onOpenChange={setFilterOpen}>
                     <DropdownMenuTrigger asChild>
                         <Button
@@ -383,7 +301,7 @@ export default function FilterContainer({
                             {USER_FILTER_BTN_LABEL}
                         </Button>
                     </DropdownMenuTrigger>
-                    <FilterEditor2
+                    <FilterEditor
                         dismissPopover={(filter?: UserFilter) => {
                             if (filter) {
                                 const newFilters = [...internalFilters, filter];
@@ -410,35 +328,18 @@ export default function FilterContainer({
                     }}
                     className="flex-1 relative max-w-sm"
                 >
-                    {/* <FormField
-                        type="email"
-                        onChange={(e) => setSearchEmail(e.target.value)}
-                        value={searchEmail}
-                        required
-                        placeholder="Search by email"
-                        disabled={disabled}
-                        endIcon={
-                                <span className="flex gap-2">
-                                    <IconButton
-                                        type="submit"
-                                        variant="soft"
-                                        onClick={(e: MouseEvent) => {
-                                            e.preventDefault();
-                                            searchByEmail();
-                                        }}
-                                        disabled={!searchEmail}
-                                    >
-                                        <Search />
-                                    </IconButton>
-                            </span>
-                        }
-                    /> */}
                     <div>
                         <Input
                             placeholder="Search by email"
                             value={searchEmail}
                             onChange={(e) => setSearchEmail(e.target.value)}
+                            onBlur={() => {
+                                if (searchEmail) {
+                                    searchByEmail();
+                                }
+                            }}
                             className="pr-10"
+                            disabled={disabled}
                         />
                         <Button
                             type="button"
@@ -482,10 +383,11 @@ export default function FilterContainer({
                     {internalFilters.map((filter, index) => (
                         <FilterChip
                             onRemove={(index: number) => {
-                                internalFilters.splice(index, 1);
-                                setInternalFilters([...internalFilters]);
+                                const newFilters = [...internalFilters];
+                                newFilters.splice(index, 1);
+                                setInternalFilters(newFilters);
                                 onChange({
-                                    filters: [...internalFilters],
+                                    filters: newFilters,
                                     aggregator: internalAggregator,
                                     segmentId: activeSegment,
                                     count,

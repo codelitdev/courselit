@@ -19,6 +19,7 @@ COPY packages/icons /app/packages/icons
 COPY packages/tailwind-config /app/packages/tailwind-config
 COPY packages/tsconfig /app/packages/tsconfig
 COPY packages/page-models /app/packages/page-models
+COPY packages/email-editor /app/packages/email-editor
 COPY packages/common-models /app/packages/common-models
 COPY packages/common-logic /app/packages/common-logic
 COPY packages/page-primitives /app/packages/page-primitives

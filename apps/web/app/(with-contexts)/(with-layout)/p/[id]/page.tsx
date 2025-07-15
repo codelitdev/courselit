@@ -4,6 +4,7 @@ import ClientSidePage from "./client-side-page";
 import { headers } from "next/headers";
 import type { Metadata, ResolvingMetadata } from "next";
 import { Media } from "@courselit/common-models";
+import { notFound } from "next/navigation";
 
 type Props = {
     params: {
@@ -26,7 +27,13 @@ export async function generateMetadata(
         };
     }
 
-    const title = page.title || page.pageData?.title || page.name;
+    if (!page) {
+        return {
+            title: "Page not found",
+        };
+    }
+
+    const title = page?.title || page.pageData?.title || page.name;
     const socialImage: Media | undefined =
         page.socialImage ||
         (page.pageData?.featuredImage as Media) ||
@@ -74,6 +81,10 @@ export default async function Page({ params }: Props) {
     ]);
     if (!siteInfo) {
         return null;
+    }
+
+    if (!page) {
+        return notFound();
     }
 
     return (

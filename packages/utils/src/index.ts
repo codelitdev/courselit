@@ -7,7 +7,6 @@ export { default as checkPermission } from "./check-permissions";
 export { default as getGraphQLQueryFields } from "./get-graphql-query-fields";
 export { default as getGraphQLQueryStringFromObject } from "./get-graphql-query-string-from-object";
 export { default as slugify } from "@sindresorhus/slugify";
-export { default as renderEmailContent } from "./render-email-content";
 export { default as jwtUtils } from "./jwt-utils";
 export { getPlanPrice } from "./get-plan-price";
 export { truncate } from "./truncate";

@@ -20,7 +20,7 @@ export default function MailHub() {
 
     const breadcrumbs = [{ label: tab, href: "#" }];
 
-    if (!checkPermission(profile.permissions!, [permissions.manageSite])) {
+    if (!checkPermission(profile?.permissions!, [permissions.manageSite])) {
         return <LoadingScreen />;
     }
 

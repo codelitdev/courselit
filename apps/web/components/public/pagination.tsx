@@ -13,12 +13,14 @@ interface PaginationControlsProps {
     currentPage: number;
     totalPages: number;
     onPageChange: (page: number) => void;
+    disabled?: boolean;
 }
 
 export function PaginationControls({
     currentPage,
     totalPages,
     onPageChange,
+    disabled = false,
 }: PaginationControlsProps) {
     const { theme: uiTheme } = useContext(ThemeContext);
     const { theme } = uiTheme;
@@ -31,11 +33,16 @@ export function PaginationControls({
                         href="#"
                         onClick={(e) => {
                             e.preventDefault();
-                            if (currentPage > 1) onPageChange(currentPage - 1);
+                            if (!disabled && currentPage > 1)
+                                onPageChange(currentPage - 1);
                         }}
-                        aria-disabled={currentPage === 1 || totalPages === 0}
+                        aria-disabled={
+                            disabled || currentPage === 1 || totalPages === 0
+                                ? "true"
+                                : undefined
+                        }
                         className={
-                            currentPage === 1 || totalPages === 0
+                            disabled || currentPage === 1 || totalPages === 0
                                 ? "pointer-events-none opacity-50"
                                 : ""
                         }
@@ -55,14 +62,20 @@ export function PaginationControls({
                         href="#"
                         onClick={(e) => {
                             e.preventDefault();
-                            if (currentPage < totalPages)
+                            if (!disabled && currentPage < totalPages)
                                 onPageChange(currentPage + 1);
                         }}
                         aria-disabled={
-                            currentPage === totalPages || totalPages === 0
+                            disabled ||
+                            currentPage === totalPages ||
+                            totalPages === 0
+                                ? "true"
+                                : undefined
                         }
                         className={
-                            currentPage === totalPages || totalPages === 0
+                            disabled ||
+                            currentPage === totalPages ||
+                            totalPages === 0
                                 ? "pointer-events-none opacity-50"
                                 : ""
                         }

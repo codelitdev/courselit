@@ -44,6 +44,7 @@
     "dependencies": {
         "@courselit/common-models": "workspace:^",
         "@courselit/utils": "workspace:^",
+        "@courselit/email-editor": "workspace:^",
         "mongoose": "^8.13.1"
     }
 }

@@ -12,6 +12,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 # copy project related files
 COPY packages/tsconfig ./packages/tsconfig
 COPY packages/page-models ./packages/page-models
+COPY packages/email-editor ./packages/email-editor
 COPY packages/common-models ./packages/common-models
 COPY packages/common-logic ./packages/common-logic
 COPY packages/utils ./packages/utils

@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, useContext, useEffect, useState } from "react";
-import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/tooltip";
 import { HelpCircle } from "lucide-react";
 import Link from "next/link";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
     COURSE_CONTENT_HEADER,
     EDIT_SECTION_HEADER,
@@ -35,18 +37,20 @@ import useProduct from "../../../../../../../../../hooks/use-product";
 import { AddressContext } from "@components/contexts";
 import DashboardContent from "@components/admin/dashboard-content";
 import { Constants, DripType, UIConstants } from "@courselit/common-models";
-import { MailEditorAndPreview } from "@components/admin/mails/mail-editor-and-preview";
 import { Form, useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import Resources from "@components/resources";
+import EmailViewer from "@components/admin/mails/email-viewer";
+import { defaultEmail, Email as EmailContent } from "@courselit/email-editor";
 
-export default function SectionPage() {
+export default function SectionPage({
+    params,
+}: {
+    params: { id: string; section: string };
+}) {
     const { toast } = useToast();
     const router = useRouter();
-    const params = useParams();
-    const searchParams = useSearchParams();
-    const productId = params.id as string;
-    const sectionId = params.section as string;
+    const { id: productId, section: sectionId } = params;
     // const afterSectionId = searchParams.get("after");
 
     const [sectionName, setSectionName] = useState("");
@@ -56,8 +60,9 @@ export default function SectionPage() {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [delay, setDelay] = useState(0);
     const [date, setDate] = useState<number>();
-    const [emailContent, setEmailContent] = useState("");
+    const [emailContent, setEmailContent] = useState<EmailContent | null>(null);
     const [emailSubject, setEmailSubject] = useState("");
+    const [emailId, setEmailId] = useState("");
     const address = useContext(AddressContext);
     const { product } = useProduct(productId, address);
     const [loading, setLoading] = useState(false);
@@ -100,11 +105,37 @@ export default function SectionPage() {
                     setDate(group.drip?.dateInUTC);
                 }
                 setNotifyUsers(!!group.drip?.email);
+                setEmailId(group.drip?.email?.emailId || "");
                 setEmailContent(
                     group.drip?.email?.content ||
-                        `Hi {{ subscriber.name }},
-                    \n<p>A new section is now available in <a href='${address.frontend}/course/${product.slug}/${product.courseId}'>${product.title}</a>.</p>
-                    \nCheers!`,
+                        ({
+                            ...defaultEmail,
+                            content: [
+                                {
+                                    blockType: "text",
+                                    settings: {
+                                        content: "Hi {{ subscriber.name }},",
+                                    },
+                                },
+                                {
+                                    blockType: "text",
+                                    settings: {
+                                        content:
+                                            "A new section is now available in [{{product.title}}]({{product.url}})",
+                                    },
+                                },
+                                {
+                                    blockType: "text",
+                                    settings: {
+                                        content:
+                                            "{{address}}\n\n{{unsubscribe_link}}",
+                                        alignment: "center",
+                                        fontSize: "12px",
+                                        foregroundColor: "#64748b",
+                                    },
+                                },
+                            ],
+                        } as EmailContent),
                 );
                 setEmailSubject(
                     group.drip?.email?.subject ||
@@ -157,7 +188,7 @@ export default function SectionPage() {
 
         await updateGroup();
 
-        router.push(`/dashboard/product/${productId}/content`);
+        // router.push(`/dashboard/product/${productId}/content`);
     };
 
     const updateGroup = async () => {
@@ -181,8 +212,16 @@ export default function SectionPage() {
                         delayInMillis,
                         dateInUTC,
                         email {
-                            content,
+                            content {
+                                content {
+                                    blockType,
+                                    settings
+                                },
+                                style,
+                                meta
+                            },
                             subject
+                            emailId
                         }
                     }
                 }
@@ -206,7 +245,7 @@ export default function SectionPage() {
                               email: notifyUsers
                                   ? {
                                         subject: emailSubject,
-                                        content: emailContent,
+                                        content: JSON.stringify(emailContent),
                                     }
                                   : undefined,
                           }
@@ -222,6 +261,11 @@ export default function SectionPage() {
                 // router.replace(
                 //     `/dashboard/product/${productId}/content`,
                 // );
+                setEmailId(
+                    response.course.groups.find(
+                        (group) => group.id === sectionId,
+                    )?.drip?.email?.emailId || "",
+                );
                 toast({
                     title: TOAST_TITLE_SUCCESS,
                     description: TOAST_DESCRIPTION_CHANGES_SAVED,
@@ -467,7 +511,7 @@ export default function SectionPage() {
 
                                         {
                                             notifyUsers && (
-                                                <div>
+                                                <div className="space-y-4">
                                                     <div className="space-y-2">
                                                         <Label>
                                                             {
@@ -484,10 +528,23 @@ export default function SectionPage() {
                                                             }
                                                         />
                                                     </div>
-                                                    <MailEditorAndPreview
+                                                    {!emailId && (
+                                                        <Alert>
+                                                            <AlertCircle className="h-4 w-4" />
+                                                            <AlertDescription>
+                                                                Please save the
+                                                                changes first to
+                                                                enable email
+                                                                editing
+                                                            </AlertDescription>
+                                                        </Alert>
+                                                    )}
+                                                    <EmailViewer
                                                         content={emailContent}
-                                                        onChange={
-                                                            setEmailContent
+                                                        emailEditorLink={
+                                                            emailId
+                                                                ? `/dashboard/mail/drip/${productId}/${sectionId}?redirectTo=/dashboard/product/${productId}/content/section/${sectionId}`
+                                                                : undefined
                                                         }
                                                     />
                                                 </div>

@@ -86,7 +86,7 @@ type FrontEndPage = Pick<
 export const getPage = async (
     backend: string,
     id?: string,
-): Promise<FrontEndPage> => {
+): Promise<FrontEndPage | null> => {
     const query = id
         ? `
     query {
@@ -133,7 +133,7 @@ export const getPage = async (
     } catch (e: any) {
         console.log("getPage", e.message); // eslint-disable-line no-console
     }
-    return undefined as unknown as Page;
+    return null;
 };
 
 export const getSiteInfo = async (

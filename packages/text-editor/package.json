@@ -2,6 +2,7 @@
     "name": "@courselit/text-editor",
     "version": "0.34.10",
     "description": "A text editor based on Remirror",
+    "private": true,
     "keywords": [
         "text editor",
         "prose mirror",

@@ -37,6 +37,8 @@ import { getPlans } from "../paymentplans/logic";
 import MembershipModel from "@models/Membership";
 import { getActivities } from "../activities/logic";
 import { ActivityType } from "@courselit/common-models/dist/constants";
+import { verifyMandatoryTags } from "../mails/helpers";
+import { Email } from "@courselit/email-editor";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -708,21 +710,34 @@ export const updateGroup = async ({
     }
 
     if (drip) {
-        $set["groups.$.drip.status"] = drip.status;
-        $set["groups.$.drip.type"] = drip.type;
+        if (drip.status) {
+            $set["groups.$.drip.status"] = drip.status;
+        }
+        if (drip.type) {
+            $set["groups.$.drip.type"] = drip.type;
+        }
         if (drip.type === Constants.dripType[0]) {
-            $set["groups.$.drip.delayInMillis"] = drip.delayInMillis * 86400000;
-            $set["groups.$.drip.dateInUTC"] = null;
-        } else {
-            $set["groups.$.drip.delayInMillis"] = null;
+            if (drip.delayInMillis) {
+                $set["groups.$.drip.delayInMillis"] =
+                    drip.delayInMillis * 86400000;
+            }
             $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
+        }
+        if (drip.type === Constants.dripType[1]) {
+            $set["groups.$.drip.delayInMillis"] = null;
+            if (drip.dateInUTC) {
+                $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
+            }
         }
         if (drip.email) {
             if (!drip.email.content || !drip.email.subject) {
                 throw new Error(responses.invalid_drip_email);
             }
+            const parsedContent: Email = JSON.parse(drip.email.content);
+            verifyMandatoryTags(parsedContent.content);
+
             $set["groups.$.drip.email"] = {
-                content: drip.email.content,
+                content: parsedContent,
                 subject: drip.email.subject,
                 published: true,
                 delayInMillis: 0,
