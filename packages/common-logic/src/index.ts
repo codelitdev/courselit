@@ -8,3 +8,5 @@ export * from "./models/user-filter";
 export * from "./models/course";
 export * from "./models/rule";
 export * from "./models/email";
+export * from "./models/email-delivery";
+export * from "./models/email-event";

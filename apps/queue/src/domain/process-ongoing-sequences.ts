@@ -19,9 +19,12 @@ import { Worker } from "bullmq";
 import redis from "../redis";
 import mongoose from "mongoose";
 import sequenceQueue from "./sequence-queue";
+import EmailDelivery from "./model/email-delivery";
 import { AdminSequence, InternalUser } from "@courselit/common-logic";
-import { renderEmailToHtml } from "@courselit/email-editor";
+import { Email as EmailType, renderEmailToHtml } from "@courselit/email-editor";
 import { getUnsubLink } from "../utils/get-unsub-link";
+import { getSiteUrl } from "../utils/get-site-url";
+import { jwtUtils } from "@courselit/utils";
 const liquidEngine = new Liquid();
 
 new Worker(
@@ -38,6 +41,11 @@ new Worker(
 );
 
 export async function processOngoingSequences(): Promise<void> {
+    if (!process.env.PIXEL_SIGNING_SECRET) {
+        throw new Error(
+            "PIXEL_SIGNING_SECRET environment variable is not defined",
+        );
+    }
     // eslint-disable-next-line no-constant-condition
     while (true) {
         // eslint-disable-next-line no-console
@@ -194,9 +202,37 @@ async function attemptMailSending({
         return;
     }
     // const content = email.content;
+    const pixelPayload = {
+        userId: user.userId,
+        sequenceId: ongoingSequence.sequenceId,
+        emailId: email.emailId,
+    };
+    const pixelToken = jwtUtils.generateToken(
+        pixelPayload,
+        process.env.PIXEL_SIGNING_SECRET,
+        "365d",
+    );
+    const pixelUrl = `${getSiteUrl(domain)}/api/pixel?d=${pixelToken}`;
+    const emailContentWithPixel: EmailType = {
+        content: [
+            ...email.content.content,
+            {
+                blockType: "image",
+                settings: {
+                    src: pixelUrl,
+                    width: "1px",
+                    height: "1px",
+                    alt: "CourseLit Pixel",
+                },
+            },
+        ],
+        style: email.content.style,
+        meta: email.content.meta,
+    };
+
     const content = await liquidEngine.parseAndRender(
         await renderEmailToHtml({
-            email: email.content,
+            email: emailContentWithPixel,
         }),
         templatePayload,
     );
@@ -206,6 +242,13 @@ async function attemptMailSending({
             to,
             subject,
             html: content,
+        });
+        // @ts-ignore - Mongoose type compatibility issue
+        await EmailDelivery.create({
+            domain: (domain as any).id,
+            sequenceId: sequence.sequenceId,
+            userId: user.userId,
+            emailId: email.emailId,
         });
     } catch (err: any) {
         ongoingSequence.retryCount++;
