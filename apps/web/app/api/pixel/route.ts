@@ -7,6 +7,8 @@ import { Constants, Sequence, User } from "@courselit/common-models";
 import { error } from "@/services/logger";
 import { jwtUtils } from "@courselit/utils";
 
+export const dynamic = "force-dynamic";
+
 function getJwtSecret(): string {
     const jwtSecret = process.env.PIXEL_SIGNING_SECRET;
     if (!jwtSecret) {
