@@ -25,6 +25,7 @@ import { Email as EmailType, renderEmailToHtml } from "@courselit/email-editor";
 import { getUnsubLink } from "../utils/get-unsub-link";
 import { getSiteUrl } from "../utils/get-site-url";
 import { jwtUtils } from "@courselit/utils";
+import { JSDOM } from "jsdom";
 const liquidEngine = new Liquid();
 
 new Worker(
@@ -212,7 +213,7 @@ async function attemptMailSending({
         process.env.PIXEL_SIGNING_SECRET,
         "365d",
     );
-    const pixelUrl = `${getSiteUrl(domain)}/api/pixel?d=${pixelToken}`;
+    const pixelUrl = `${getSiteUrl(domain)}/api/track/open?d=${pixelToken}`;
     const emailContentWithPixel: EmailType = {
         content: [
             ...email.content.content,
@@ -236,12 +237,21 @@ async function attemptMailSending({
         }),
         templatePayload,
     );
+
+    const contentWithTrackedLinks = transformLinksForClickTracking(
+        content,
+        user.userId,
+        ongoingSequence.sequenceId,
+        email.emailId,
+        domain,
+    );
+
     try {
         await sendMail({
             from,
             to,
             subject,
-            html: content,
+            html: contentWithTrackedLinks,
         });
         // @ts-ignore - Mongoose type compatibility issue
         await EmailDelivery.create({
@@ -263,5 +273,58 @@ async function attemptMailSending({
             await ongoingSequence.save();
         }
         throw err;
+    }
+}
+
+function transformLinksForClickTracking(
+    htmlContent: string,
+    userId: string,
+    sequenceId: string,
+    emailId: string,
+    domain: Domain,
+): string {
+    try {
+        const dom = new JSDOM(htmlContent);
+        const document = dom.window.document;
+
+        const links = document.querySelectorAll("a");
+
+        links.forEach((link, index) => {
+            const originalUrl = link.getAttribute("href");
+
+            if (!originalUrl) return;
+
+            if (
+                originalUrl.includes("/api/track") ||
+                originalUrl.includes("/api/unsubscribe") ||
+                originalUrl.startsWith("mailto:") ||
+                originalUrl.startsWith("tel:") ||
+                originalUrl.startsWith("#")
+            ) {
+                return;
+            }
+
+            const linkPayload = {
+                userId,
+                sequenceId,
+                emailId,
+                index,
+                link: encodeURIComponent(originalUrl),
+            };
+
+            const linkToken = jwtUtils.generateToken(
+                linkPayload,
+                process.env.PIXEL_SIGNING_SECRET,
+                "365d",
+            );
+            const trackingUrl = `${getSiteUrl(domain)}/api/track/click?d=${linkToken}`;
+
+            link.setAttribute("href", trackingUrl);
+        });
+
+        return dom.serialize();
+    } catch (error) {
+        logger.error("Error transforming links with jsdom:", error);
+        return htmlContent;
     }
 }
