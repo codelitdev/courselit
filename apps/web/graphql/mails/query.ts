@@ -3,6 +3,7 @@ import {
     GraphQLList,
     GraphQLNonNull,
     GraphQLString,
+    GraphQLFloat,
 } from "graphql";
 import types from "./types";
 import {
@@ -14,6 +15,9 @@ import {
     getSequence,
     getSequenceCount,
     getSequences,
+    getSequenceOpenRate,
+    getSequenceClickThroughRate,
+    getEmailSentCount,
 } from "./logic";
 import SearchData from "./models/search-data";
 import GQLContext from "../../models/GQLContext";
@@ -116,6 +120,39 @@ const queries = {
         type: types.mailRequestStatus,
         resolve: (_: any, {}: {}, context: GQLContext) =>
             getMailRequestStatus(context),
+    },
+    getEmailSentCount: {
+        type: new GraphQLNonNull(GraphQLInt),
+        args: {
+            sequenceId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: (
+            _: any,
+            { sequenceId }: { sequenceId: string },
+            context: GQLContext,
+        ) => getEmailSentCount({ ctx: context, sequenceId }),
+    },
+    getSequenceOpenRate: {
+        type: new GraphQLNonNull(GraphQLFloat),
+        args: {
+            sequenceId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: (
+            _: any,
+            { sequenceId }: { sequenceId: string },
+            context: GQLContext,
+        ) => getSequenceOpenRate({ ctx: context, sequenceId }),
+    },
+    getSequenceClickThroughRate: {
+        type: new GraphQLNonNull(GraphQLFloat),
+        args: {
+            sequenceId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: (
+            _: any,
+            { sequenceId }: { sequenceId: string },
+            context: GQLContext,
+        ) => getSequenceClickThroughRate({ ctx: context, sequenceId }),
     },
 };
 

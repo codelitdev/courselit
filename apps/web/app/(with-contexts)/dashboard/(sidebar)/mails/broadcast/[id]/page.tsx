@@ -4,19 +4,19 @@ import DashboardContent from "@components/admin/dashboard-content";
 import { isDateInFuture } from "@/lib/utils";
 import { AddressContext } from "@components/contexts";
 import { BROADCASTS } from "@ui-config/strings";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { PaperPlane, Clock } from "@courselit/icons";
 import {
     Form,
     FormField,
     Dialog2,
     useToast,
+    Tabbs,
 } from "@courselit/components-library";
 import {
     ChangeEvent,
     FormEvent,
     useEffect,
-    useState,
     useRef,
     useCallback,
     useMemo,
@@ -48,6 +48,8 @@ import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
 import FilterContainer from "@components/admin/users/filter-container";
 import EmailViewer from "@components/admin/mails/email-viewer";
 import { Button } from "@components/ui/button";
+import { truncate } from "@courselit/utils";
+import EmailAnalytics from "@components/admin/mails/email-analytics";
 
 const breadcrumbs = [
     { label: BROADCASTS, href: "/dashboard/mails?tab=Broadcasts" },
@@ -77,6 +79,7 @@ export default function Page({
     const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
     const [report, setReport] = useState<SequenceReport>();
     const [status, setStatus] = useState<SequenceStatus | null>(null);
+    const [activeTab, setActiveTab] = useState("Compose");
 
     // Refs to track initial values and prevent saving during load
     const initialValues = useRef({
@@ -501,147 +504,181 @@ export default function Page({
 
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
-            <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-4xl font-semibold mb-4">
-                        {PAGE_HEADER_EDIT_MAIL}
-                    </h1>
-                </div>
-                <fieldset>
-                    <label className="mb-1 font-medium">To</label>
-                    {!isInitialLoad.current && (
-                        <FilterContainer
-                            filter={{ aggregator: filtersAggregator, filters }}
-                            onChange={onFilterChange}
-                            disabled={!isEditable}
-                            address={address}
-                        />
-                    )}
-                </fieldset>
-                <Form className="flex flex-col gap-4" onSubmit={onSubmit}>
-                    <FormField
-                        value={subject}
-                        disabled={!isEditable}
-                        label={MAIL_SUBJECT_PLACEHOLDER}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setSubject(e.target.value)
-                        }
-                    />
-                    <EmailViewer
-                        content={content}
-                        emailEditorLink={
-                            isEditable
-                                ? `/dashboard/mail/sequence/${id}/${emailId}?redirectTo=/dashboard/mails/broadcast/${id}`
-                                : ""
-                        }
-                    />
-                    {showScheduleInput && (
-                        <FormField
-                            value={new Date(
-                                (delay || new Date().getTime()) -
-                                    new Date().getTimezoneOffset() * 60000,
-                            )
-                                .toISOString()
-                                .slice(0, 16)}
-                            type="datetime-local"
-                            label={FORM_MAIL_SCHEDULE_TIME_LABEL}
-                            min={new Date().toISOString().slice(0, 16)}
-                            disabled={!isEditable}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                                const selectedDate = new Date(e.target.value);
-                                setDelay(selectedDate.getTime());
-                            }}
-                        />
-                    )}
-                    {isEditable && (
-                        <div className="flex gap-2">
-                            {!showScheduleInput && (
+            <div className="flex items-center justify-between mb-4">
+                <h1 className="text-4xl font-semibold">
+                    {truncate(subject || PAGE_HEADER_EDIT_MAIL, 50)}
+                </h1>
+            </div>
+            <Tabbs
+                items={["Compose", "Analytics"]}
+                value={activeTab}
+                onChange={setActiveTab}
+            >
+                <div className="mt-4">
+                    <div className="flex flex-col gap-4">
+                        <fieldset>
+                            <label className="mb-1 font-medium">To</label>
+                            {!isInitialLoad.current && (
+                                <FilterContainer
+                                    filter={{
+                                        aggregator: filtersAggregator,
+                                        filters,
+                                    }}
+                                    onChange={onFilterChange}
+                                    disabled={!isEditable}
+                                    address={address}
+                                />
+                            )}
+                        </fieldset>
+                        <Form
+                            className="flex flex-col gap-4"
+                            onSubmit={onSubmit}
+                        >
+                            <FormField
+                                value={subject}
+                                disabled={!isEditable}
+                                label={MAIL_SUBJECT_PLACEHOLDER}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                    setSubject(e.target.value)
+                                }
+                            />
+                            <EmailViewer
+                                content={content}
+                                emailEditorLink={
+                                    isEditable
+                                        ? `/dashboard/mail/sequence/${id}/${emailId}?redirectTo=/dashboard/mails/broadcast/${id}`
+                                        : ""
+                                }
+                            />
+                            {showScheduleInput && (
+                                <FormField
+                                    value={new Date(
+                                        (delay || new Date().getTime()) -
+                                            new Date().getTimezoneOffset() *
+                                                60000,
+                                    )
+                                        .toISOString()
+                                        .slice(0, 16)}
+                                    type="datetime-local"
+                                    label={FORM_MAIL_SCHEDULE_TIME_LABEL}
+                                    min={new Date().toISOString().slice(0, 16)}
+                                    disabled={!isEditable}
+                                    onChange={(
+                                        e: ChangeEvent<HTMLInputElement>,
+                                    ) => {
+                                        const selectedDate = new Date(
+                                            e.target.value,
+                                        );
+                                        setDelay(selectedDate.getTime());
+                                    }}
+                                />
+                            )}
+                            {isEditable && (
                                 <div className="flex gap-2">
-                                    <Dialog2
-                                        open={confirmationDialogOpen}
-                                        onOpenChange={setConfirmationDialogOpen}
-                                        title={`${DIALOG_SEND_HEADER} to ${filteredUsersCount} contacts?`}
-                                        trigger={
-                                            <Button>
-                                                <div className="flex items-center gap-2">
-                                                    <PaperPlane />
-                                                    {BTN_SEND}
-                                                </div>
+                                    {!showScheduleInput && (
+                                        <div className="flex gap-2">
+                                            <Dialog2
+                                                open={confirmationDialogOpen}
+                                                onOpenChange={
+                                                    setConfirmationDialogOpen
+                                                }
+                                                title={`${DIALOG_SEND_HEADER} to ${filteredUsersCount} contacts?`}
+                                                trigger={
+                                                    <Button>
+                                                        <div className="flex items-center gap-2">
+                                                            <PaperPlane />
+                                                            {BTN_SEND}
+                                                        </div>
+                                                    </Button>
+                                                }
+                                                onClick={onSubmit}
+                                            >
+                                                <p>
+                                                    Are you sure you want to
+                                                    send this email to{" "}
+                                                    {filteredUsersCount}{" "}
+                                                    contacts?
+                                                </p>
+                                            </Dialog2>
+                                            <Button
+                                                variant="ghost"
+                                                className="gap-2"
+                                                onClick={() => {
+                                                    setShowScheduleInput(true);
+                                                }}
+                                            >
+                                                <Clock />
+                                                {BTN_SCHEDULE}
                                             </Button>
-                                        }
-                                        onClick={onSubmit}
-                                    >
-                                        <p>
-                                            Are you sure you want to send this
-                                            email to {filteredUsersCount}{" "}
-                                            contacts?
-                                        </p>
-                                    </Dialog2>
+                                        </div>
+                                    )}
+                                    {showScheduleInput && (
+                                        <>
+                                            <Dialog2
+                                                title={`${DIALOG_SEND_HEADER} to ${filteredUsersCount} contacts?`}
+                                                open={confirmationDialogOpen}
+                                                onOpenChange={
+                                                    setConfirmationDialogOpen
+                                                }
+                                                trigger={
+                                                    <Button>
+                                                        <div className="flex items-center gap-2">
+                                                            <Clock />
+                                                            {BTN_SCHEDULE}
+                                                        </div>
+                                                    </Button>
+                                                }
+                                                onClick={(e) =>
+                                                    onSubmit(e, true)
+                                                }
+                                            >
+                                                <div className="p-4">
+                                                    <p>
+                                                        Are you sure you want to
+                                                        schedule this email to{" "}
+                                                        {filteredUsersCount}{" "}
+                                                        contacts?
+                                                    </p>
+                                                </div>
+                                            </Dialog2>
+                                            <Button
+                                                variant="secondary"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    setShowScheduleInput(false);
+                                                    setDelay(0);
+                                                }}
+                                            >
+                                                {BUTTON_CANCEL_TEXT}
+                                            </Button>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </Form>
+                        {status === "active" &&
+                            isDateInFuture(new Date(delay)) &&
+                            !report?.broadcast?.lockedAt && (
+                                <div>
+                                    <p className="flex items-center gap-2 text-sm mb-4 font-semibold text-slate-600">
+                                        <Clock /> Scheduled for{" "}
+                                        {new Date(delay).toLocaleString()}
+                                    </p>
                                     <Button
-                                        variant="ghost"
-                                        className="gap-2"
-                                        onClick={() => {
-                                            setShowScheduleInput(true);
-                                        }}
+                                        variant="secondary"
+                                        onClick={cancelSending}
                                     >
-                                        <Clock />
-                                        {BTN_SCHEDULE}
+                                        {BUTTON_CANCEL_SCHEDULED_MAIL}
                                     </Button>
                                 </div>
                             )}
-                            {showScheduleInput && (
-                                <>
-                                    <Dialog2
-                                        title={`${DIALOG_SEND_HEADER} to ${filteredUsersCount} contacts?`}
-                                        open={confirmationDialogOpen}
-                                        onOpenChange={setConfirmationDialogOpen}
-                                        trigger={
-                                            <Button>
-                                                <div className="flex items-center gap-2">
-                                                    <Clock />
-                                                    {BTN_SCHEDULE}
-                                                </div>
-                                            </Button>
-                                        }
-                                        onClick={(e) => onSubmit(e, true)}
-                                    >
-                                        <div className="p-4">
-                                            <p>
-                                                Are you sure you want to
-                                                schedule this email to{" "}
-                                                {filteredUsersCount} contacts?
-                                            </p>
-                                        </div>
-                                    </Dialog2>
-                                    <Button
-                                        variant="secondary"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            setShowScheduleInput(false);
-                                            setDelay(0);
-                                        }}
-                                    >
-                                        {BUTTON_CANCEL_TEXT}
-                                    </Button>
-                                </>
-                            )}
-                        </div>
-                    )}
-                </Form>
-                {status === "active" &&
-                    isDateInFuture(new Date(delay)) &&
-                    !report?.broadcast?.lockedAt && (
-                        <div>
-                            <p className="flex items-center gap-2 text-sm mb-4 font-semibold text-slate-600">
-                                <Clock /> Scheduled for{" "}
-                                {new Date(delay).toLocaleString()}
-                            </p>
-                            <Button variant="secondary" onClick={cancelSending}>
-                                {BUTTON_CANCEL_SCHEDULED_MAIL}
-                            </Button>
-                        </div>
-                    )}
-            </div>
+                    </div>
+                </div>
+                <div className="mt-4">
+                    <h2 className="text-2xl font-semibold mb-4">Analytics</h2>
+                    <EmailAnalytics sequence={sequence} report={report} />
+                </div>
+            </Tabbs>
         </DashboardContent>
     );
 }
