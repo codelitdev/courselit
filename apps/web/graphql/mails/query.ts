@@ -18,10 +18,13 @@ import {
     getSequenceOpenRate,
     getSequenceClickThroughRate,
     getEmailSentCount,
+    getSubscribers,
+    getSubscribersCount,
 } from "./logic";
 import SearchData from "./models/search-data";
 import GQLContext from "../../models/GQLContext";
 import { SequenceType } from "@courselit/common-models";
+import userTypes from "../users/types";
 
 const queries = {
     getMail: {
@@ -153,6 +156,34 @@ const queries = {
             { sequenceId }: { sequenceId: string },
             context: GQLContext,
         ) => getSequenceClickThroughRate({ ctx: context, sequenceId }),
+    },
+    getSubscribers: {
+        type: new GraphQLList(userTypes.userType),
+        args: {
+            sequenceId: { type: new GraphQLNonNull(GraphQLString) },
+            page: { type: GraphQLInt },
+            limit: { type: GraphQLInt },
+        },
+        resolve: (
+            _: any,
+            {
+                sequenceId,
+                page,
+                limit,
+            }: { sequenceId: string; page?: number; limit?: number },
+            context: GQLContext,
+        ) => getSubscribers({ ctx: context, sequenceId, page, limit }),
+    },
+    getSubscribersCount: {
+        type: new GraphQLNonNull(GraphQLInt),
+        args: {
+            sequenceId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: (
+            _: any,
+            { sequenceId }: { sequenceId: string },
+            context: GQLContext,
+        ) => getSubscribersCount({ ctx: context, sequenceId }),
     },
 };
 

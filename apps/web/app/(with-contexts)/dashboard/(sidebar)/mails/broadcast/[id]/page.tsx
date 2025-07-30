@@ -675,8 +675,7 @@ export default function Page({
                     </div>
                 </div>
                 <div className="mt-4">
-                    <h2 className="text-2xl font-semibold mb-4">Analytics</h2>
-                    <EmailAnalytics sequence={sequence} report={report} />
+                    <EmailAnalytics sequence={sequence} />
                 </div>
             </Tabbs>
         </DashboardContent>

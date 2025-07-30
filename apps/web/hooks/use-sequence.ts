@@ -73,6 +73,15 @@ export function useSequence(): UseSequenceReturn {
                     },
                     status,
                     entrantsCount,
+                    trigger {
+                        type,
+                        data
+                    },
+                    from {
+                        name,
+                        email
+                    },
+                    emailsOrder,
                 }
             }`;
 

@@ -993,3 +993,71 @@ export async function getSequenceClickThroughRate({
 
     return (uniqueClickerCount / uniqueRecipientsCount.length) * 100 || 0;
 }
+
+export async function getSubscribers({
+    ctx,
+    sequenceId,
+    page = 1,
+    limit = 10,
+}: {
+    ctx: GQLContext;
+    sequenceId: string;
+    page?: number;
+    limit?: number;
+}): Promise<User[]> {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const sequence = await SequenceModel.findOne({
+        domain: ctx.subdomain._id,
+        sequenceId,
+    });
+
+    if (!sequence) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const skip = (page - 1) * limit;
+
+    const subscribers = await UserModel.find({
+        domain: ctx.subdomain._id,
+        userId: { $in: sequence.entrants },
+    })
+        .skip(skip)
+        .limit(limit);
+
+    return subscribers;
+}
+
+export async function getSubscribersCount({
+    ctx,
+    sequenceId,
+}: {
+    ctx: GQLContext;
+    sequenceId: string;
+}): Promise<number> {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const sequence = await SequenceModel.findOne({
+        domain: ctx.subdomain._id,
+        sequenceId,
+    });
+
+    if (!sequence) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const count = await UserModel.countDocuments({
+        domain: ctx.subdomain._id,
+        userId: { $in: sequence.entrants },
+    });
+
+    return count;
+}
