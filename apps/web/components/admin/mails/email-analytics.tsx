@@ -98,10 +98,10 @@ export default function EmailAnalytics({ sequence }: EmailAnalyticsProps) {
     // Show placeholder for broadcast that has been sent but analytics not yet available
     if (sequence.entrantsCount <= 0) {
         return (
-            <div className="bg-white rounded-lg border shadow-sm p-8 text-center">
+            <div className="bg-card rounded-lg border shadow-sm p-8 text-center">
                 <div className="max-w-md mx-auto">
                     <div className="mb-4">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                             <svg
                                 className="w-8 h-8 text-muted-foreground"
                                 fill="none"
@@ -141,7 +141,7 @@ export default function EmailAnalytics({ sequence }: EmailAnalyticsProps) {
     return (
         <div className="space-y-6">
             {/* Compact Analytics Summary */}
-            <div className="bg-white rounded-lg border shadow-sm p-4">
+            <div className="bg-card rounded-lg border shadow-sm p-4">
                 <h3 className="text-lg font-semibold mb-4">
                     Email Performance
                 </h3>

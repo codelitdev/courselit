@@ -597,6 +597,7 @@ export const MAIL_REQUEST_FORM_REASON_PLACEHOLDER =
     "Please be as detailed as possible. This will help us review your application better.";
 export const DASHBOARD_SELECT_HEADER = "Duration";
 export const DELETE_EMAIL_MENU = "Delete";
+export const DELETE_EMAIL_DIALOG_HEADER = "Delete email";
 export const OVERVIEW_HEADER = "Overview";
 export const HELP_HEADER = "Help";
 export const COMMUNITY_HEADER = "Community";

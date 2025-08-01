@@ -3,6 +3,7 @@
 import DashboardContent from "@components/admin/dashboard-content";
 import { AddressContext } from "@components/contexts";
 import {
+    DELETE_EMAIL_DIALOG_HEADER,
     PAGE_HEADER_EDIT_SEQUENCE,
     SEQUENCES,
     TOAST_SEQUENCE_SAVED,
@@ -25,7 +26,6 @@ import {
     Menu2,
     MenuItem,
     FormSubmit,
-    Skeleton,
     Badge,
 } from "@courselit/components-library";
 import { Community, Course } from "@courselit/common-models";
@@ -61,15 +61,11 @@ export default function Page({
     const { sequence, loading, error, loadSequence } = useSequence();
     const [activeTab, setActiveTab] = useState("Compose");
     const [buttonLoading, setButtonLoading] = useState(false);
-    const { toast } = useToast();
-    const fetch = useGraphQLFetch();
-
-    // Sequence editor state
     const [title, setTitle] = useState("");
     const [from, setFrom] = useState("");
     const [fromEmail, setFromEmail] = useState("");
     const [triggerType, setTriggerType] = useState("SUBSCRIBER_ADDED");
-    const [triggerData, setTriggerData] = useState("");
+    const [triggerData, setTriggerData] = useState<string | null>(null);
     const [emails, setEmails] = useState<any[]>([]);
     const [tags, setTags] = useState<TagWithDetails[]>([]);
     const [products, setProducts] = useState<
@@ -80,6 +76,8 @@ export default function Page({
     >([]);
     const [emailsOrder, setEmailsOrder] = useState<string[]>([]);
     const [status, setStatus] = useState<string | null>(null);
+    const { toast } = useToast();
+    const fetch = useGraphQLFetch();
 
     // Load sequence on mount
     useEffect(() => {
@@ -92,32 +90,13 @@ export default function Page({
             setTitle(sequence.title || "");
             setFrom(sequence.from?.name || "");
             setFromEmail(sequence.from?.email || "");
-            setTriggerType(sequence.trigger?.type || "SUBSCRIBER_ADDED");
-            setTriggerData(sequence.trigger?.data || "");
+            setTriggerType(sequence.trigger?.type);
+            setTriggerData(sequence.trigger?.data || null);
             setEmails(sequence.emails || []);
             setEmailsOrder(sequence.emailsOrder || []);
             setStatus(sequence.status);
         }
     }, [sequence]);
-
-    // Load dependent data based on trigger type
-    useEffect(() => {
-        if (
-            (triggerType === "TAG_ADDED" || triggerType === "TAG_REMOVED") &&
-            tags.length === 0
-        ) {
-            getTags();
-        }
-        if (triggerType === "PRODUCT_PURCHASED" && products.length === 0) {
-            getProducts();
-        }
-        if (
-            triggerType === "COMMUNITY_JOINED" ||
-            (triggerType === "COMMUNITY_LEFT" && communities.length === 0)
-        ) {
-            getCommunities();
-        }
-    }, [triggerType]);
 
     const getTags = useCallback(async () => {
         const query = `
@@ -186,28 +165,29 @@ export default function Page({
         }
     }, [fetch, toast]);
 
+    useEffect(() => {
+        if (
+            (triggerType === "TAG_ADDED" || triggerType === "TAG_REMOVED") &&
+            tags.length === 0
+        ) {
+            getTags();
+        }
+        if (triggerType === "PRODUCT_PURCHASED" && products.length === 0) {
+            getProducts();
+        }
+        if (
+            triggerType === "COMMUNITY_JOINED" ||
+            (triggerType === "COMMUNITY_LEFT" && communities.length === 0)
+        ) {
+            getCommunities();
+        }
+    }, [triggerType]);
+
     const addMailToSequence = useCallback(async () => {
         const query = `
             mutation AddMailToSequence($sequenceId: String!) {
                 sequence: addMailToSequence(sequenceId: $sequenceId) {
                     sequenceId,
-                    title,
-                    emails {
-                        emailId,
-                        subject,
-                        delayInMillis,
-                        published
-                    },
-                    trigger {
-                        type,
-                        data
-                    },
-                    from {
-                        name,
-                        email
-                    },
-                    emailsOrder,
-                    status
                 }
             }`;
 
@@ -218,8 +198,11 @@ export default function Page({
         try {
             const response = await fetcher.exec();
             if (response.sequence) {
-                // Reload sequence data after action
                 await loadSequence(id);
+                toast({
+                    title: TOAST_TITLE_SUCCESS,
+                    description: "New email added to sequence",
+                });
             }
         } catch (e: any) {
             toast({
@@ -249,23 +232,6 @@ export default function Page({
                     emailsOrder: $emailsOrder
                 ) {
                     sequenceId,
-                    title,
-                    emails {
-                        emailId,
-                        subject,
-                        delayInMillis,
-                        published
-                    },
-                    trigger {
-                        type,
-                        data
-                    },
-                    from {
-                        name,
-                        email
-                    },
-                    emailsOrder,
-                    status
                 }
             }`;
 
@@ -326,23 +292,6 @@ export default function Page({
                 emailId: $emailId
             ) {
                 sequenceId,
-                title,
-                emails {
-                    emailId,
-                    subject,
-                    delayInMillis,
-                    published
-                },
-                trigger {
-                    type,
-                    data
-                },
-                from {
-                    name,
-                    email
-                },
-                emailsOrder,
-                status
             }
         }`;
 
@@ -359,7 +308,6 @@ export default function Page({
             try {
                 const response = await fetcher.exec();
                 if (response.sequence) {
-                    // Reload sequence data after action
                     await loadSequence(id);
                 }
             } catch (e: any) {
@@ -391,23 +339,6 @@ export default function Page({
                     sequenceId: $sequenceId
                 ) {
                     sequenceId,
-                    title,
-                    emails {
-                        emailId,
-                        subject,
-                        delayInMillis,
-                        published
-                    },
-                    trigger {
-                        type,
-                        data
-                    },
-                    from {
-                        name,
-                        email
-                    },
-                    emailsOrder,
-                    status
                 }
             }`
                     : `
@@ -418,23 +349,6 @@ export default function Page({
                     sequenceId: $sequenceId
                 ) {
                     sequenceId,
-                    title,
-                    emails {
-                        emailId,
-                        subject,
-                        delayInMillis,
-                        published
-                    },
-                    trigger {
-                        type,
-                        data
-                    },
-                    from {
-                        name,
-                        email
-                    },
-                    emailsOrder,
-                    status
                 }
             }`;
 
@@ -450,7 +364,6 @@ export default function Page({
             try {
                 const response = await fetcher.exec();
                 if (response.sequence) {
-                    // Reload sequence data after action
                     await loadSequence(id);
                 }
             } catch (e: any) {
@@ -509,228 +422,193 @@ export default function Page({
             >
                 <div className="mt-4">
                     <div className="flex flex-col gap-4">
-                        {!sequence && (
-                            <div className="flex flex-col gap-4 mb-8">
-                                <div className="flex flex-col gap-2">
-                                    <Skeleton className="h-3 w-full" />
-                                    <Skeleton className="h-6 w-full" />
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <Skeleton className="h-3 w-full" />
-                                    <Skeleton className="h-6 w-full" />
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <Skeleton className="h-3 w-full" />
-                                    <Skeleton className="h-6 w-full" />
-                                </div>
-                            </div>
-                        )}
-                        {sequence && (
-                            <Form
-                                className="flex flex-col gap-4 mb-8"
-                                onSubmit={onSubmit}
-                            >
-                                <FormField
-                                    value={title}
-                                    label={COMPOSE_SEQUENCE_FORM_TITLE}
-                                    onChange={(
-                                        e: ChangeEvent<HTMLInputElement>,
-                                    ) => setTitle(e.target.value)}
-                                />
-                                <FormField
-                                    value={from}
-                                    label={COMPOSE_SEQUENCE_FORM_FROM}
-                                    onChange={(
-                                        e: ChangeEvent<HTMLInputElement>,
-                                    ) => setFrom(e.target.value)}
-                                    placeholder={COMPOSE_SEQUENCE_FROM_PLC}
-                                />
-                                <Select
-                                    value={triggerType}
-                                    onChange={(value: string) =>
-                                        setTriggerType(value)
+                        <Form
+                            className="flex flex-col gap-4 mb-8"
+                            onSubmit={onSubmit}
+                        >
+                            <FormField
+                                value={title}
+                                label={COMPOSE_SEQUENCE_FORM_TITLE}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                    setTitle(e.target.value)
+                                }
+                            />
+                            <FormField
+                                value={from}
+                                label={COMPOSE_SEQUENCE_FORM_FROM}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                    setFrom(e.target.value)
+                                }
+                                placeholder={COMPOSE_SEQUENCE_FROM_PLC}
+                            />
+                            <Select
+                                value={triggerType}
+                                onChange={(value: string) => {
+                                    if (value && value !== triggerType) {
+                                        setTriggerType(value);
                                     }
-                                    title={COMPOSE_SEQUENCE_ENTRANCE_CONDITION}
-                                    options={[
-                                        {
-                                            label: "Tag added",
-                                            value: "TAG_ADDED",
-                                        },
-                                        {
-                                            label: "Tag removed",
-                                            value: "TAG_REMOVED",
-                                        },
-                                        {
-                                            label: "Product purchased",
-                                            value: "PRODUCT_PURCHASED",
-                                        },
-                                        {
-                                            label: "Subscriber added",
-                                            value: "SUBSCRIBER_ADDED",
-                                        },
-                                        {
-                                            label: "Community joined",
-                                            value: "COMMUNITY_JOINED",
-                                        },
-                                        {
-                                            label: "Community left",
-                                            value: "COMMUNITY_LEFT",
-                                        },
-                                    ]}
+                                }}
+                                title={COMPOSE_SEQUENCE_ENTRANCE_CONDITION}
+                                options={[
+                                    {
+                                        label: "Tag added",
+                                        value: "TAG_ADDED",
+                                    },
+                                    {
+                                        label: "Tag removed",
+                                        value: "TAG_REMOVED",
+                                    },
+                                    {
+                                        label: "Product purchased",
+                                        value: "PRODUCT_PURCHASED",
+                                    },
+                                    {
+                                        label: "Subscriber added",
+                                        value: "SUBSCRIBER_ADDED",
+                                    },
+                                    {
+                                        label: "Community joined",
+                                        value: "COMMUNITY_JOINED",
+                                    },
+                                    {
+                                        label: "Community left",
+                                        value: "COMMUNITY_LEFT",
+                                    },
+                                ]}
+                            />
+                            {triggerType !== "SUBSCRIBER_ADDED" && (
+                                <Select
+                                    value={triggerData || ""}
+                                    onChange={(value: string) =>
+                                        setTriggerData(value)
+                                    }
+                                    title={
+                                        COMPOSE_SEQUENCE_ENTRANCE_CONDITION_DATA
+                                    }
+                                    options={(() => {
+                                        switch (triggerType) {
+                                            case "TAG_ADDED":
+                                            case "TAG_REMOVED":
+                                                return tags.map((tag) => ({
+                                                    label: tag.tag,
+                                                    value: tag.tag,
+                                                }));
+                                            case "PRODUCT_PURCHASED":
+                                                return products.map(
+                                                    (product) => ({
+                                                        label: product.title,
+                                                        value: product.courseId,
+                                                    }),
+                                                );
+                                            case "COMMUNITY_JOINED":
+                                            case "COMMUNITY_LEFT":
+                                                return communities.map(
+                                                    (community) => ({
+                                                        label: community.name,
+                                                        value: community.communityId,
+                                                    }),
+                                                );
+                                            default:
+                                                return [];
+                                        }
+                                    })()}
                                 />
-                                {triggerType !== "SUBSCRIBER_ADDED" && (
-                                    <Select
-                                        value={triggerData}
-                                        onChange={(value: string) =>
-                                            setTriggerData(value)
-                                        }
-                                        title={
-                                            COMPOSE_SEQUENCE_ENTRANCE_CONDITION_DATA
-                                        }
-                                        options={(() => {
-                                            switch (triggerType) {
-                                                case "TAG_ADDED":
-                                                case "TAG_REMOVED":
-                                                    return tags.map((tag) => ({
-                                                        label: tag.tag,
-                                                        value: tag.tag,
-                                                    }));
-                                                case "PRODUCT_PURCHASED":
-                                                    return products.map(
-                                                        (product) => ({
-                                                            label: product.title,
-                                                            value: product.courseId,
-                                                        }),
-                                                    );
-                                                case "COMMUNITY_JOINED":
-                                                case "COMMUNITY_LEFT":
-                                                    return communities.map(
-                                                        (community) => ({
-                                                            label: community.name,
-                                                            value: community.communityId,
-                                                        }),
-                                                    );
-                                                default:
-                                                    return [];
-                                            }
-                                        })()}
-                                    />
-                                )}
-                                <div className="flex justify-between">
-                                    <FormSubmit
-                                        text="Save"
-                                        loading={loading}
-                                        disabled={
-                                            loading ||
-                                            !title ||
-                                            !from ||
-                                            triggerType === "" ||
-                                            (triggerType !==
-                                                "SUBSCRIBER_ADDED" &&
-                                                !triggerData) ||
-                                            (sequence.title === title &&
-                                                sequence.from?.name === from &&
-                                                sequence.from?.email ===
-                                                    fromEmail &&
-                                                sequence.trigger?.type ===
-                                                    triggerType &&
-                                                sequence.trigger?.data ===
-                                                    triggerData)
-                                        }
-                                    />
-                                </div>
-                            </Form>
-                        )}
+                            )}
+                            <div className="flex justify-between">
+                                <FormSubmit
+                                    text="Save"
+                                    loading={loading}
+                                    disabled={
+                                        !title ||
+                                        !from ||
+                                        triggerType === "" ||
+                                        (triggerType !== "SUBSCRIBER_ADDED" &&
+                                            !triggerData) ||
+                                        (sequence.title === title &&
+                                            sequence.from?.name === from &&
+                                            sequence.from?.email ===
+                                                fromEmail &&
+                                            sequence.trigger?.type ===
+                                                triggerType &&
+                                            sequence.trigger?.data ===
+                                                triggerData)
+                                    }
+                                />
+                            </div>
+                        </Form>
                         <div className="flex flex-col gap-2">
                             <h2 className="font-semibold">Emails</h2>
                             <div className="flex flex-col gap-2 mb-2">
-                                {!sequence && (
-                                    <div className="flex flex-col gap-2">
-                                        <div className="flex gap-2 items-center">
-                                            <Skeleton className="h-8 w-[100px]" />
-                                            <Skeleton className="h-8 w-full" />
-                                            <Skeleton className="h-8 w-8" />
-                                        </div>
-                                        <div className="flex gap-2 items-center">
-                                            <Skeleton className="h-8 w-[100px]" />
-                                            <Skeleton className="h-8 w-full" />
-                                            <Skeleton className="h-8 w-8" />
-                                        </div>
-                                    </div>
-                                )}
-                                {sequence &&
-                                    emails.map((email) => (
-                                        <div
-                                            key={email.emailId}
-                                            className="flex gap-2 items-center"
-                                        >
-                                            <Badge variant="secondary">
-                                                {Math.round(
-                                                    email.delayInMillis /
-                                                        (1000 * 60 * 60 * 24),
-                                                )}{" "}
-                                                day
-                                            </Badge>
-                                            <Link
-                                                href={`/dashboard/mails/sequence/${id}/${
-                                                    email.emailId
-                                                }`}
-                                                style={{
-                                                    flex: "1",
-                                                }}
-                                            >
-                                                <div
-                                                    className={`hover:bg-slate-100 rounded px-3 py-1 text-slate-600 ${
-                                                        email.published
-                                                            ? ""
-                                                            : "text-slate-400"
-                                                    }`}
-                                                >
-                                                    {email.subject}
-                                                </div>
-                                            </Link>
-                                            <Menu2
-                                                icon={<MoreVert />}
-                                                variant="soft"
-                                            >
-                                                <MenuItem
-                                                    component="dialog"
-                                                    title={DELETE_EMAIL_MENU}
-                                                    triggerChildren={
-                                                        DELETE_EMAIL_MENU
-                                                    }
-                                                    onClick={() =>
-                                                        deleteMail({
-                                                            emailId:
-                                                                email.emailId,
-                                                        })
-                                                    }
-                                                />
-                                            </Menu2>
-                                        </div>
-                                    ))}
-                            </div>
-                            {!sequence && (
-                                <Skeleton className="h-8 w-[100px]" />
-                            )}
-                            {sequence && (
-                                <div>
-                                    <Button
-                                        variant="outline"
-                                        onClick={addMailToSequence}
-                                        disabled={loading}
-                                        size="sm"
+                                {emails.map((email) => (
+                                    <div
+                                        key={email.emailId}
+                                        className="flex gap-2 px-2 items-center border rounded hover:bg-accent"
                                     >
-                                        <Add />
-                                        New mail
-                                    </Button>
-                                </div>
-                            )}
+                                        <Badge variant="secondary">
+                                            {Math.round(
+                                                email.delayInMillis /
+                                                    (1000 * 60 * 60 * 24),
+                                            )}{" "}
+                                            day
+                                        </Badge>
+                                        <Link
+                                            href={`/dashboard/mails/sequence/${id}/${
+                                                email.emailId
+                                            }`}
+                                            style={{
+                                                flex: "1",
+                                            }}
+                                        >
+                                            <div className="rounded px-3 py-1">
+                                                {truncate(email.subject, 70)}
+                                            </div>
+                                        </Link>
+                                        {!email.published && (
+                                            <Badge
+                                                variant="outline"
+                                                className="text-xs"
+                                            >
+                                                Draft
+                                            </Badge>
+                                        )}
+                                        <Menu2
+                                            icon={<MoreVert />}
+                                            variant="soft"
+                                        >
+                                            <MenuItem
+                                                component="dialog"
+                                                title={
+                                                    DELETE_EMAIL_DIALOG_HEADER
+                                                }
+                                                triggerChildren={
+                                                    DELETE_EMAIL_MENU
+                                                }
+                                                onClick={() =>
+                                                    deleteMail({
+                                                        emailId: email.emailId,
+                                                    })
+                                                }
+                                            />
+                                        </Menu2>
+                                    </div>
+                                ))}
+                            </div>
+                            <div>
+                                <Button
+                                    variant="outline"
+                                    onClick={addMailToSequence}
+                                    disabled={loading}
+                                    size="sm"
+                                >
+                                    <Add />
+                                    New mail
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div className="mt-4">
-                    {sequence && <EmailAnalytics sequence={sequence} />}
+                    <EmailAnalytics sequence={sequence} />
                 </div>
             </Tabbs>
         </DashboardContent>
