@@ -32,13 +32,15 @@ export default function Menu({
             </Trigger>
             <Portal>
                 <Content
-                    className="min-w-[180px] bg-white rounded p-1 shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]"
+                    className="min-w-[180px] bg-popover rounded p-1 shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]"
                     style={style}
                 >
                     {children}
                     <Arrow
                         fill={
-                            style ? style.backgroundColor || "white" : "white"
+                            style
+                                ? style.backgroundColor || "hsl(var(--popover))"
+                                : "hsl(var(--popover))"
                         }
                     />
                 </Content>

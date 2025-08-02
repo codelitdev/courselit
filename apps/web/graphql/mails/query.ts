@@ -3,6 +3,7 @@ import {
     GraphQLList,
     GraphQLNonNull,
     GraphQLString,
+    GraphQLFloat,
 } from "graphql";
 import types from "./types";
 import {
@@ -14,10 +15,16 @@ import {
     getSequence,
     getSequenceCount,
     getSequences,
+    getSequenceOpenRate,
+    getSequenceClickThroughRate,
+    getEmailSentCount,
+    getSubscribers,
+    getSubscribersCount,
 } from "./logic";
 import SearchData from "./models/search-data";
 import GQLContext from "../../models/GQLContext";
 import { SequenceType } from "@courselit/common-models";
+import userTypes from "../users/types";
 
 const queries = {
     getMail: {
@@ -116,6 +123,67 @@ const queries = {
         type: types.mailRequestStatus,
         resolve: (_: any, {}: {}, context: GQLContext) =>
             getMailRequestStatus(context),
+    },
+    getEmailSentCount: {
+        type: new GraphQLNonNull(GraphQLInt),
+        args: {
+            sequenceId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: (
+            _: any,
+            { sequenceId }: { sequenceId: string },
+            context: GQLContext,
+        ) => getEmailSentCount({ ctx: context, sequenceId }),
+    },
+    getSequenceOpenRate: {
+        type: new GraphQLNonNull(GraphQLFloat),
+        args: {
+            sequenceId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: (
+            _: any,
+            { sequenceId }: { sequenceId: string },
+            context: GQLContext,
+        ) => getSequenceOpenRate({ ctx: context, sequenceId }),
+    },
+    getSequenceClickThroughRate: {
+        type: new GraphQLNonNull(GraphQLFloat),
+        args: {
+            sequenceId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: (
+            _: any,
+            { sequenceId }: { sequenceId: string },
+            context: GQLContext,
+        ) => getSequenceClickThroughRate({ ctx: context, sequenceId }),
+    },
+    getSubscribers: {
+        type: new GraphQLList(userTypes.userType),
+        args: {
+            sequenceId: { type: new GraphQLNonNull(GraphQLString) },
+            page: { type: GraphQLInt },
+            limit: { type: GraphQLInt },
+        },
+        resolve: (
+            _: any,
+            {
+                sequenceId,
+                page,
+                limit,
+            }: { sequenceId: string; page?: number; limit?: number },
+            context: GQLContext,
+        ) => getSubscribers({ ctx: context, sequenceId, page, limit }),
+    },
+    getSubscribersCount: {
+        type: new GraphQLNonNull(GraphQLInt),
+        args: {
+            sequenceId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: (
+            _: any,
+            { sequenceId }: { sequenceId: string },
+            context: GQLContext,
+        ) => getSubscribersCount({ ctx: context, sequenceId }),
     },
 };
 

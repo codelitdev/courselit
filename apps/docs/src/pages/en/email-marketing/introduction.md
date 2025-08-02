@@ -20,9 +20,12 @@ Send one-off emails to selected recipients for quick updates or newsletters.
 
 Automatically send a series of emails triggered by specific events in the system.
 
-## Next Step
+## Next Steps
 
-Learn [how to send broadcast emails](/en/email-marketing/broadcasts) to your audience.
+Now that you understand the email marketing capabilities, you can:
+
+- [Send broadcast emails](/en/email-marketing/broadcasts)
+- [Set up automated email sequences](/en/email-marketing/sequences)
 
 ## Stuck Somewhere?
 

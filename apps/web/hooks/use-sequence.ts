@@ -40,6 +40,7 @@ export function useSequence(): UseSequenceReturn {
                 sequence: getSequence(sequenceId: $sequenceId) {
                     sequenceId,
                     title,
+                    type,
                     emails {
                         emailId,
                         templateId,
@@ -70,7 +71,17 @@ export function useSequence(): UseSequenceReturn {
                             sentAt
                         }
                     },
-                    status
+                    status,
+                    entrantsCount,
+                    trigger {
+                        type,
+                        data
+                    },
+                    from {
+                        name,
+                        email
+                    },
+                    emailsOrder,
                 }
             }`;
 

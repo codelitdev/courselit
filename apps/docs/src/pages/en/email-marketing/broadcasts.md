@@ -64,11 +64,14 @@ Click the `Schedule` button to see an additional input box to enter the date and
 
 Once an email is scheduled, you will see the time it will be sent at the bottom, as shown below. Simply click the `Cancel sending` button to cancel the scheduled send.
 
-![Cancel Scheduled Mail](/assets/emails/scheduled-mail.jpeg)
+![Cancel Scheduled Mail](/assets/emails/scheduled-mail.png)
 
-## Next Step
+## Next Steps
 
-Let's see how to send automated email campaigns (also known as sequences) when something happens in your school. [Click here](/en/email-marketing/sequences).
+Now that you understand how to send broadcasts, you can also see:
+
+- [Set up automated email sequences](/en/email-marketing/sequences)
+- [Track your email performance with analytics](/en/email-marketing/analytics)
 
 ## Stuck Somewhere?
 
