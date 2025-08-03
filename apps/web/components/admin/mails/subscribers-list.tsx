@@ -95,15 +95,6 @@ export default function SubscribersList({ sequenceId }: SubscribersListProps) {
         }
     }, [loadSubscribers]);
 
-    const handleRemoveSubscriber = (userId: string) => {
-        // TODO: Implement remove subscriber functionality
-        toast({
-            title: "Feature Coming Soon",
-            description:
-                "Remove subscriber functionality will be available soon.",
-        });
-    };
-
     if (loading && subscribers.length === 0) {
         return (
             <div className="space-y-4">

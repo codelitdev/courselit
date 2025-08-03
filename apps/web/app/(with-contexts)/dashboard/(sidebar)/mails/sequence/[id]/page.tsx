@@ -58,7 +58,7 @@ export default function Page({
 }) {
     const address = useContext(AddressContext);
     const { id } = params;
-    const { sequence, loading, error, loadSequence } = useSequence();
+    const { sequence, loading, loadSequence } = useSequence();
     const [activeTab, setActiveTab] = useState("Compose");
     const [buttonLoading, setButtonLoading] = useState(false);
     const [title, setTitle] = useState("");
