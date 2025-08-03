@@ -30,6 +30,8 @@ import { activateMembership } from "@/app/api/payment/helpers";
 import { AdminSequence } from "@courselit/common-logic";
 import { defaultEmail } from "@courselit/email-editor";
 import { User } from "@courselit/common-models";
+import EmailDeliveryModel from "@models/EmailDelivery";
+import EmailEventModel from "@models/EmailEvent";
 
 const { permissions } = constants;
 
@@ -140,41 +142,6 @@ export async function createSequence(
     }
 }
 
-// export async function createBroadcast(
-//     ctx: GQLContext,
-// ): Promise<(Sequence & { creatorId: string }) | null> {
-//     checkIfAuthenticated(ctx);
-
-//     if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
-//         throw new Error(responses.action_not_allowed);
-//     }
-
-//     try {
-//         const sequenceObj: Partial<AdminSequence> = {
-//             domain: ctx.subdomain._id,
-//             type: <SequenceType>Constants.mailTypes[0],
-//             title: " ",
-//             creatorId: ctx.user.userId,
-//             emails: [
-//                 {
-//                     templateId: "123",
-//                     content: " ",
-//                     subject: " ",
-//                     delayInMillis: 0,
-//                     published: false,
-//                 },
-//             ],
-//         };
-//         const sequence = await SequenceModel.create(sequenceObj);
-//         return sequence;
-//     } catch (e: any) {
-//         error(e.message, {
-//             stack: e.stack,
-//         });
-//         throw e;
-//     }
-// }
-
 export async function getMail(
     mailId: string,
     ctx: GQLContext,
@@ -212,7 +179,7 @@ export async function getSequence(
     }
 
     const result = Object.assign({}, sequence, {
-        entrantsCount: sequence?.entrantsCount || 0,
+        entrantsCount: (sequence as any)?.entrants?.length || 0,
     });
 
     return result;
@@ -894,4 +861,203 @@ export async function getSequences({
         ...sequence,
         entrantsCount: sequence.entrants?.length || 0,
     }));
+}
+
+export async function getEmailSentCount({
+    ctx,
+    sequenceId,
+}: {
+    ctx: GQLContext;
+    sequenceId: string;
+}): Promise<number> {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const sequence = await SequenceModel.findOne({
+        domain: ctx.subdomain._id,
+        sequenceId,
+    });
+
+    if (!sequence) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const emailCount = await EmailDeliveryModel.countDocuments({
+        domain: ctx.subdomain._id,
+        sequenceId,
+    });
+
+    return emailCount;
+}
+
+export async function getSequenceOpenRate({
+    ctx,
+    sequenceId,
+}: {
+    ctx: GQLContext;
+    sequenceId: string;
+}): Promise<number> {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const sequence = await SequenceModel.findOne({
+        domain: ctx.subdomain._id,
+        sequenceId,
+    });
+
+    if (!sequence) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const openEvents = await EmailEventModel.aggregate([
+        {
+            $match: {
+                domain: ctx.subdomain._id,
+                sequenceId,
+                action: Constants.EmailEventAction.OPEN,
+            },
+        },
+        {
+            $group: {
+                _id: {
+                    // sequenceId: "$sequenceId",
+                    userId: "$userId",
+                },
+                count: { $sum: 1 },
+            },
+        },
+    ]);
+
+    const uniqueOpenersCount = openEvents.length;
+
+    const uniqueRecipientsCount = await EmailDeliveryModel.distinct("userId", {
+        domain: ctx.subdomain._id,
+        sequenceId,
+    });
+
+    return (uniqueOpenersCount / uniqueRecipientsCount.length) * 100 || 0;
+}
+
+export async function getSequenceClickThroughRate({
+    ctx,
+    sequenceId,
+}: {
+    ctx: GQLContext;
+    sequenceId: string;
+}): Promise<number> {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const sequence = await SequenceModel.findOne({
+        domain: ctx.subdomain._id,
+        sequenceId,
+    });
+
+    if (!sequence) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const clickEvents = await EmailEventModel.aggregate([
+        {
+            $match: {
+                domain: ctx.subdomain._id,
+                sequenceId,
+                action: Constants.EmailEventAction.CLICK,
+            },
+        },
+        {
+            $group: {
+                _id: {
+                    userId: "$userId",
+                },
+                count: { $sum: 1 },
+            },
+        },
+    ]);
+
+    const uniqueClickerCount = clickEvents.length;
+
+    const uniqueRecipientsCount = await EmailDeliveryModel.distinct("userId", {
+        domain: ctx.subdomain._id,
+        sequenceId,
+    });
+
+    return (uniqueClickerCount / uniqueRecipientsCount.length) * 100 || 0;
+}
+
+export async function getSubscribers({
+    ctx,
+    sequenceId,
+    page = 1,
+    limit = 10,
+}: {
+    ctx: GQLContext;
+    sequenceId: string;
+    page?: number;
+    limit?: number;
+}): Promise<User[]> {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const sequence = await SequenceModel.findOne({
+        domain: ctx.subdomain._id,
+        sequenceId,
+    });
+
+    if (!sequence) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const skip = (page - 1) * limit;
+
+    const subscribers = await UserModel.find({
+        domain: ctx.subdomain._id,
+        userId: { $in: sequence.entrants },
+    })
+        .skip(skip)
+        .limit(limit);
+
+    return subscribers;
+}
+
+export async function getSubscribersCount({
+    ctx,
+    sequenceId,
+}: {
+    ctx: GQLContext;
+    sequenceId: string;
+}): Promise<number> {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const sequence = await SequenceModel.findOne({
+        domain: ctx.subdomain._id,
+        sequenceId,
+    });
+
+    if (!sequence) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const count = await UserModel.countDocuments({
+        domain: ctx.subdomain._id,
+        userId: { $in: sequence.entrants },
+    });
+
+    return count;
 }

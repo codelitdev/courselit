@@ -45,7 +45,6 @@ export default function Page({
     ];
     const [delay, setDelay] = useState<number>(0);
     const [subject, setSubject] = useState<string>("");
-    // const [previewText, setPreviewText] = useState<string>("");
     const [content, setContent] = useState<EmailContent | null>(null);
     const [email, setEmail] = useState<Email | null>(null);
     const [published, setPublished] = useState<"unpublished" | "published">(
@@ -54,66 +53,6 @@ export default function Page({
     const { toast } = useToast();
     const fetch = useGraphQLFetch();
     const { sequence, loading, error, loadSequence } = useSequence();
-
-    // const loadSequence = useCallback(async () => {
-    //     const query = `
-    //         query GetSequence($sequenceId: String!) {
-    //             sequence: getSequence(sequenceId: $sequenceId) {
-    //                 sequenceId,
-    //                 title,
-    //                 emails {
-    //                     emailId,
-    //                     subject,
-    //                     delayInMillis,
-    //                     published,
-    //                     content {
-    //                         content {
-    //                             blockType,
-    //                             settings
-    //                         },
-    //                         style,
-    //                         meta
-    //                     },
-    //                 },
-    //                 trigger {
-    //                     type,
-    //                     data
-    //                 },
-    //                 from {
-    //                     name,
-    //                     email
-    //                 },
-    //                 emailsOrder,
-    //                 status
-    //             }
-    //         }`;
-
-    //     const fetcher = fetch
-    //         .setPayload({ query, variables: { sequenceId } })
-    //         .build();
-
-    //     try {
-    //         const response = await fetcher.exec();
-    //         if (response.sequence) {
-    //             const { sequence } = response;
-    //             const email = sequence.emails.find((e) => e.emailId === mailId);
-    //             if (email) {
-    //                 setEmail(email);
-    //                 setDelay(email.delayInMillis / 86400000);
-    //                 setSubject(email.subject);
-    //                 setPreviewText(email.previewText || "");
-    //                 setContent(email.content);
-    //                 setPublished(email.published ? "published" : "unpublished");
-    //             }
-    //         }
-    //     } catch (e: any) {
-    //         toast({
-    //             title: TOAST_TITLE_ERROR,
-    //             description: e.message,
-    //             variant: "destructive",
-    //         });
-    //     }
-    // }, [fetch, sequenceId]);
 
     useEffect(() => {
         loadSequence(sequenceId);
@@ -297,7 +236,11 @@ export default function Page({
                                     value={published}
                                     onChange={(
                                         value: "unpublished" | "published",
-                                    ) => setPublished(value)}
+                                    ) => {
+                                        if (value) {
+                                            setPublished(value);
+                                        }
+                                    }}
                                     title="Status"
                                     options={[
                                         {
@@ -319,30 +262,7 @@ export default function Page({
                                 setSubject(e.target.value)
                             }
                         />
-                        {/* <FormField
-                            value={previewText}
-                            label={MAIL_PREVIEW_TITLE}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                setPreviewText(e.target.value)
-                            }
-                            tooltip="This text will be shown in the email client before opening the email."
-                        /> */}
                     </Form>
-                    {/* <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2"
-                        onClick={(e) => {
-                            e.preventDefault();
-                        }}
-                        href={`/dashboard/mail/${sequenceId}/${mailId}?redirectTo=/dashboard/mails/sequence/${sequenceId}/${mailId}`}
-                        component="link"
-                    >
-                        <span className="flex items-center gap-2">
-                            <Edit className="h-4 w-4" />
-                            Edit Email
-                        </span>
-                    </Button> */}
                     <EmailViewer
                         content={content}
                         emailEditorLink={`/dashboard/mail/sequence/${sequenceId}/${mailId}?redirectTo=/dashboard/mails/sequence/${sequenceId}/${mailId}`}

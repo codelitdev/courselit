@@ -24,7 +24,11 @@ Here, you will see all the sequences you have configured.
 
 1. Click the `New sequence` button on the right, in the `Sequences` hub.
 
-2. Let's get acquainted with the interface. In the following image, we have marked all the sections. To see the description of a section, note its number in the screenshot and find its description below.
+You will be redirected to the sequence compose screen. The active tab will be `Compose`.
+
+2. Let's get acquainted with the interface.
+
+In the following image, we have marked all the sections. To see the description of a section, note its number in the screenshot and find its description below.
 
     -   1. **Sequence Name**: The internal name of the sequence.
     -   2. **From**: The sender's name that is displayed in the emails sent.
@@ -47,15 +51,20 @@ Here, you will see all the sequences you have configured.
 
 4. Start adding emails to this sequence. When you create a new sequence, an empty email is added to it by default.
 
+    ![Sequence add email](/assets/emails/compose-sequence-add-email.jpeg)
+
 5. Let's understand what information an email row shows:
+
+    ![Sequence email row](/assets/emails/compose-sequence-email-row.jpeg)
 
     -   1. **Delay Since the Last Sent Email**: This shows the time to wait (in days) since the last email before dispatching this email.
     -   2. **Subject**: The subject of the email.
-    -   3. **Context Menu**: Contains options like `Delete`, etc.
+    -   3. **Published**: The status of the email. Only published emails are sent to users.
+    -   4. **Context Menu**: Contains options like `Delete`, etc.
 
     > The default email has `0 days` as the delay, which means the email will be sent immediately after the user enters the sequence, as it is the first email in the sequence.
 
-6. To edit the body of an email, click on the subject. This will open the email compose screen as shown below.
+6. To edit an email, click on the subject. This will open the email compose screen as shown below.
 
 7. Let's get acquainted with the email compose interface:
 
@@ -90,9 +99,12 @@ Here, you will see all the sequences you have configured.
 11. Add more emails to the sequence by clicking on the `New email` button.
 12. Keep editing your sequence until you think it's perfect. Once you are satisfied with your sequence, hit the `Start` button to begin sending this sequence to users.
 
-## Next Step
+## Next Steps
 
-Let's see how you can create and edit your website's pages. [Click here](/en/pages/introduction).
+Now that you understand how to create email sequences, you can also see:
+
+- [Send one-off broadcasts](/en/email-marketing/broadcasts)
+- [Track your email performance with analytics](/en/email-marketing/analytics)
 
 ## Stuck Somewhere?
 
