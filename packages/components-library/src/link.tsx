@@ -19,7 +19,8 @@ export default function Link({
     className = "",
     onClick,
 }: LinkProps) {
-    const isInternal = href && href.startsWith("/");
+    const isInternal =
+        href && href.startsWith("/") && !href.startsWith("/dashboard");
     const isInPageNavigation = href && href.startsWith("#");
     const router = useRouter();
 

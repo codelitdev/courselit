@@ -49,9 +49,7 @@ function MyApp({
                     >
                         <Component {...pageProps} />
                     </div>
-                    <CodeInjector
-                        isAdminPage={router.pathname.startsWith("/dashboard")}
-                    />
+                    <CodeInjector />
                 </ThemeProvider>
             </Provider>
         </SessionProvider>

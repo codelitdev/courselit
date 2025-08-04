@@ -1,39 +1,21 @@
 "use client";
 
-import React, { useContext } from "react";
+import React from "react";
 import { connect } from "react-redux";
 import { AppState } from "@courselit/state-management";
-import { usePathname } from "next/navigation";
-import { SiteInfoContext } from "@components/contexts";
 
 type InjectionSection = "head" | "body";
 
 interface CodeInjectorProps {
-    isAdminPage?: boolean;
     head?: string;
     body?: string;
 }
 
-export const CodeInjectorWrapper = () => {
-    const siteInfo = useContext(SiteInfoContext);
-    const pathname = usePathname();
-
-    return (
-        <CodeInjector
-            isAdminPage={pathname?.startsWith("/dashboard")}
-            head={siteInfo?.codeInjectionHead}
-            body={siteInfo?.codeInjectionBody}
-        />
-    );
-};
-
 export class CodeInjector extends React.Component<CodeInjectorProps> {
     componentDidMount() {
-        if (!this.props.isAdminPage) {
-            const targetTagsForInjection: InjectionSection[] = ["head", "body"];
-            for (const target of targetTagsForInjection) {
-                this.injectCodeIn(target);
-            }
+        const targetTagsForInjection: InjectionSection[] = ["head", "body"];
+        for (const target of targetTagsForInjection) {
+            this.injectCodeIn(target);
         }
     }
 
