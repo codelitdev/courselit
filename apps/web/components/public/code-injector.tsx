@@ -1,22 +1,35 @@
-import React from "react";
+"use client";
+
+import React, { useContext } from "react";
 import { connect } from "react-redux";
 import { AppState } from "@courselit/state-management";
+import { usePathname } from "next/navigation";
+import { SiteInfoContext } from "@components/contexts";
 
 type InjectionSection = "head" | "body";
 
 interface CodeInjectorProps {
-    router: Record<string, unknown>;
+    isAdminPage?: boolean;
     head?: string;
     body?: string;
 }
 
-class CodeInjector extends React.Component<CodeInjectorProps> {
-    isAnAdminPage() {
-        return /^\/dashboard/.test(this.props.router.asPath as string);
-    }
+export const CodeInjectorWrapper = () => {
+    const siteInfo = useContext(SiteInfoContext);
+    const pathname = usePathname();
 
+    return (
+        <CodeInjector
+            isAdminPage={pathname?.startsWith("/dashboard")}
+            head={siteInfo?.codeInjectionHead}
+            body={siteInfo?.codeInjectionBody}
+        />
+    );
+};
+
+export class CodeInjector extends React.Component<CodeInjectorProps> {
     componentDidMount() {
-        if (!this.isAnAdminPage()) {
+        if (!this.props.isAdminPage) {
             const targetTagsForInjection: InjectionSection[] = ["head", "body"];
             for (const target of targetTagsForInjection) {
                 this.injectCodeIn(target);
@@ -36,7 +49,7 @@ class CodeInjector extends React.Component<CodeInjectorProps> {
                 this.copyAttributes(elem, script);
                 elem = script;
             }
-            (document as Record<string, any>)[targetHTMLTag].appendChild(elem);
+            (document as Record<string, any>)[targetHTMLTag]?.appendChild(elem);
         }
     }
 
@@ -52,7 +65,7 @@ class CodeInjector extends React.Component<CodeInjectorProps> {
     }
 
     render() {
-        return <></>;
+        return null;
     }
 }
 

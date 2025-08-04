@@ -12,6 +12,7 @@ import { BaseLayout } from "@components/public/base-layout";
 import { Profile } from "@courselit/common-models";
 import { getFullSiteSetup } from "@ui-lib/utils";
 import { useContext } from "react";
+import { CodeInjectorWrapper } from "@components/public/code-injector";
 
 export default function HomepageLayout({
     children,
@@ -60,6 +61,7 @@ export default function HomepageLayout({
             }}
         >
             {children}
+            <CodeInjectorWrapper />
         </BaseLayout>
     );
 }
