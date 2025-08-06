@@ -1,19 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
-/**
- * API route handler for verifying a Google reCAPTCHA v3 token.
- * Expects a POST request with a JSON body containing a `token` property.
- *
- * @param {NextRequest} request - The incoming Next.js API request object.
- * @returns {Promise<NextResponse>} A Next.js API response object.
- */
 export async function POST(request: NextRequest) {
     const secretKey = process.env.RECAPTCHA_SECRET_KEY;
     if (!secretKey) {
         console.error("reCAPTCHA secret key not found.");
         return NextResponse.json(
             { error: "Internal server error" },
-            { status: 500 }
+            { status: 500 },
         );
     }
 
@@ -23,7 +16,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
         return NextResponse.json(
             { error: "Invalid request body" },
-            { status: 400 }
+            { status: 400 },
         );
     }
 
@@ -32,7 +25,7 @@ export async function POST(request: NextRequest) {
     if (!token) {
         return NextResponse.json(
             { error: "reCAPTCHA token not found" },
-            { status: 400 }
+            { status: 400 },
         );
     }
 
@@ -47,14 +40,14 @@ export async function POST(request: NextRequest) {
                     "Content-Type": "application/x-www-form-urlencoded",
                 },
                 body: formData,
-            }
+            },
         );
 
         if (!response.ok) {
             console.error("Failed to verify reCAPTCHA token with Google");
             return NextResponse.json(
                 { error: "Failed to verify reCAPTCHA token" },
-                { status: 500 }
+                { status: 500 },
             );
         }
 
@@ -71,7 +64,7 @@ export async function POST(request: NextRequest) {
         console.error("Error verifying reCAPTCHA token:", error);
         return NextResponse.json(
             { error: "Error verifying reCAPTCHA token" },
-            { status: 500 }
+            { status: 500 },
         );
     }
 }

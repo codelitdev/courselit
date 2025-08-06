@@ -16,7 +16,6 @@ import { Session } from "next-auth";
 import { Theme } from "@courselit/page-models";
 import { ThemeProvider as NextThemesProvider } from "@components/next-theme-provider";
 import { defaultState } from "@components/default-state";
-import RecaptchaScriptLoader from "@components/recaptcha-script-loader";
 
 function LayoutContent({
     address,
@@ -110,7 +109,6 @@ function LayoutContent({
                             >
                                 <Suspense fallback={null}>{children}</Suspense>
                             </ProfileContext.Provider>
-                            <RecaptchaScriptLoader />
                         </NextThemesProvider>
                     </ServerConfigContext.Provider>
                 </ThemeContext.Provider>

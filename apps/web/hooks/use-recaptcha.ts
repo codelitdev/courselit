@@ -12,16 +12,10 @@ export const useRecaptcha = () => {
     const recaptchaSiteKey = serverConfig?.recaptchaSiteKey;
 
     const executeRecaptcha = useCallback(
-        /**
-         * Executes the reCAPTCHA challenge.
-         *
-         * @param {string} action - The action to perform.
-         * @returns {Promise<string | null>} A promise that resolves with the reCAPTCHA token, or null if reCAPTCHA is not available or the site key is not set.
-         */
         async (action: string): Promise<string | null> => {
             if (!recaptchaSiteKey) {
                 console.error(
-                    "reCAPTCHA site key not found in ServerConfigContext."
+                    "reCAPTCHA site key not found in ServerConfigContext.",
                 );
                 return null;
             }
@@ -36,26 +30,26 @@ export const useRecaptcha = () => {
                         if (!recaptchaSiteKey) {
                             // Double check, though already checked above
                             console.error(
-                                "reCAPTCHA site key became unavailable before execution."
+                                "reCAPTCHA site key became unavailable before execution.",
                             );
                             resolve(null);
                             return;
                         }
                         const token = await window.grecaptcha.execute(
                             recaptchaSiteKey,
-                            { action }
+                            { action },
                         );
                         resolve(token);
                     });
                 });
             } else {
                 console.error(
-                    "reCAPTCHA (window.grecaptcha) not available. Ensure the script is loaded."
+                    "reCAPTCHA (window.grecaptcha) not available. Ensure the script is loaded.",
                 );
                 return null;
             }
         },
-        [recaptchaSiteKey] // Dependency array includes recaptchaSiteKey
+        [recaptchaSiteKey], // Dependency array includes recaptchaSiteKey
     );
 
     return { executeRecaptcha };

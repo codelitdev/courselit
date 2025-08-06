@@ -1,6 +1,6 @@
 "use client";
 
-import { ThemeContext } from "@components/contexts";
+import { ServerConfigContext, ThemeContext } from "@components/contexts";
 import {
     Button,
     Caption,
@@ -33,7 +33,7 @@ import {
 import Link from "next/link";
 import { TriangleAlert } from "lucide-react";
 import { useRecaptcha } from "@/hooks/use-recaptcha";
-import { useRouter } from "next/navigation";
+import RecaptchaScriptLoader from "@/components/recaptcha-script-loader";
 
 export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
     const { theme } = useContext(ThemeContext);
@@ -43,55 +43,77 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
+    const serverConfig = useContext(ServerConfigContext);
     const { executeRecaptcha } = useRecaptcha();
-    const router = useRouter();
 
     const requestCode = async function (e: FormEvent) {
         e.preventDefault();
         setLoading(true);
         setError("");
 
-        if (!executeRecaptcha) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: "reCAPTCHA service not available. Please try again later.",
-                variant: "destructive",
-            });
-            setLoading(false);
-            return;
-        }
-
-        const recaptchaToken = await executeRecaptcha("login_code_request");
-        if (!recaptchaToken) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: "reCAPTCHA validation failed. Please try again.",
-                variant: "destructive",
-            });
-            setLoading(false);
-            return;
-        }
-
-        try {
-            const recaptchaVerificationResponse = await fetch("/api/recaptcha", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ token: recaptchaToken }),
-            });
-
-            const recaptchaData = await recaptchaVerificationResponse.json();
-
-            if (!recaptchaVerificationResponse.ok || !recaptchaData.success || (recaptchaData.score && recaptchaData.score < 0.5)) {
+        if (serverConfig.recaptchaSiteKey) {
+            if (!executeRecaptcha) {
                 toast({
                     title: TOAST_TITLE_ERROR,
-                    description: `reCAPTCHA verification failed. ${recaptchaData.score ? `Score: ${recaptchaData.score.toFixed(2)}.` : ''} Please try again.`,
+                    description:
+                        "reCAPTCHA service not available. Please try again later.",
                     variant: "destructive",
                 });
                 setLoading(false);
                 return;
             }
 
-            // Proceed with code generation if reCAPTCHA is successful
+            const recaptchaToken = await executeRecaptcha("login_code_request");
+            if (!recaptchaToken) {
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description:
+                        "reCAPTCHA validation failed. Please try again.",
+                    variant: "destructive",
+                });
+                setLoading(false);
+                return;
+            }
+            try {
+                const recaptchaVerificationResponse = await fetch(
+                    "/api/recaptcha",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ token: recaptchaToken }),
+                    },
+                );
+
+                const recaptchaData =
+                    await recaptchaVerificationResponse.json();
+
+                if (
+                    !recaptchaVerificationResponse.ok ||
+                    !recaptchaData.success ||
+                    (recaptchaData.score && recaptchaData.score < 0.5)
+                ) {
+                    toast({
+                        title: TOAST_TITLE_ERROR,
+                        description: `reCAPTCHA verification failed. ${recaptchaData.score ? `Score: ${recaptchaData.score.toFixed(2)}.` : ""} Please try again.`,
+                        variant: "destructive",
+                    });
+                    setLoading(false);
+                    return;
+                }
+            } catch (err) {
+                console.error("Error during reCAPTCHA verification:", err);
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description:
+                        "reCAPTCHA verification failed. Please try again.",
+                    variant: "destructive",
+                });
+                setLoading(false);
+                return;
+            }
+        }
+
+        try {
             const url = `/api/auth/code/generate?email=${encodeURIComponent(
                 email,
             )}`;
@@ -113,8 +135,7 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
                 description: "An unexpected error occurred. Please try again.",
                 variant: "destructive",
             });
-        }
-        finally {
+        } finally {
             setLoading(false);
         }
     };
@@ -131,11 +152,6 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
             if (response?.error) {
                 setError(`Can't sign you in at this time`);
             } else {
-                // toast({
-                //     title: TOAST_TITLE_SUCCESS,
-                //     description: LOGIN_SUCCESS,
-                // });
-                // router.replace(redirectTo || "/dashboard/my-content");
                 window.location.href = redirectTo || "/dashboard/my-content";
             }
         } finally {
@@ -151,7 +167,8 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
                         {error && (
                             <div
                                 style={{
-                                    color: theme?.theme?.colors?.error,
+                                    color: theme?.theme?.colors?.light
+                                        ?.destructive,
                                 }}
                                 className="flex items-center gap-2 mb-4"
                             >
@@ -270,6 +287,7 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
                     </div>
                 </div>
             </div>
+            <RecaptchaScriptLoader />
         </Section>
     );
 }
