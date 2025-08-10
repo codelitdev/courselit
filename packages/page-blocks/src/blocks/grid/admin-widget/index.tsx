@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import Settings, { Item } from "../settings";
+import Settings, { Item, SvgStyle } from "../settings";
 import ItemEditor from "./item-editor";
 import { Address, Profile, Alignment } from "@courselit/common-models";
 import {
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     Select,
     TextEditor,
     Button,
@@ -14,10 +15,13 @@ import {
     MaxWidthSelector,
     VerticalPaddingSelector,
     Button2,
+    Checkbox,
+    Tooltip,
 } from "@courselit/components-library";
 import { columns as defaultColumns } from "../defaults";
 import { Theme, ThemeStyle } from "@courselit/page-models";
-import { PencilIcon } from "lucide-react";
+import { PencilIcon, WandSparkles, HelpCircle } from "lucide-react";
+import SvgStyleEditor from "./svg-style-editor";
 
 export interface AdminWidgetProps {
     settings: Settings;
@@ -97,6 +101,20 @@ export default function AdminWidget({
     >(settings.verticalPadding);
     const [cssId, setCssId] = useState(settings.cssId);
     const [columns, setColumns] = useState(settings.columns || defaultColumns);
+    const [svgStyle, setSvgStyle] = useState<SvgStyle>(
+        settings.svgStyle || {
+            width: 36,
+            height: 36,
+            svgColor: "#000000",
+            backgroundColor: "#ffffff",
+            borderRadius: 8,
+            borderWidth: 1,
+            borderStyle: "solid",
+            borderColor: "#e2e8f0",
+        },
+    );
+    const [svgInline, setSvgInline] = useState(settings.svgInline || false);
+    const [editingSvgStyle, setEditingSvgStyle] = useState(false);
 
     const onSettingsChanged = () =>
         onChange({
@@ -111,6 +129,8 @@ export default function AdminWidget({
             verticalPadding,
             cssId,
             columns,
+            svgStyle,
+            svgInline,
         });
 
     useEffect(() => {
@@ -127,6 +147,8 @@ export default function AdminWidget({
         verticalPadding,
         cssId,
         columns,
+        svgStyle,
+        svgInline,
     ]);
 
     const onItemChange = (newItemData: Item) => {
@@ -165,13 +187,30 @@ export default function AdminWidget({
                 onDelete={onDelete}
                 profile={profile}
                 address={address}
+                svgStyle={svgStyle}
+            />
+        );
+    }
+
+    if (editingSvgStyle) {
+        return (
+            <SvgStyleEditor
+                svgStyle={svgStyle}
+                onChange={(style: SvgStyle) => {
+                    setSvgStyle(style);
+                    setEditingSvgStyle(false);
+                    hideActionButtons(false, {});
+                }}
             />
         );
     }
 
     return (
-        <div className="flex flex-col gap-4 mb-4">
-            <AdminWidgetPanel title="Header">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["header", "call-to-action", "items", "design"]}
+        >
+            <AdminWidgetPanel title="Header" value="header">
                 <Form>
                     <FormField
                         label="Title"
@@ -198,7 +237,7 @@ export default function AdminWidget({
                     onChange={(value: Alignment) => setHeaderAlignment(value)}
                 />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Call to action">
+            <AdminWidgetPanel title="Call to action" value="call-to-action">
                 <Form>
                     <FormField
                         label="Button Text"
@@ -212,7 +251,7 @@ export default function AdminWidget({
                     />
                 </Form>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Items">
+            <AdminWidgetPanel title="Items" value="items">
                 <div className="flex flex-col gap-4">
                     {items.map((item, index) => (
                         <div
@@ -245,7 +284,7 @@ export default function AdminWidget({
                     </Button>
                 </div>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Design">
+            <AdminWidgetPanel title="Design" value="design">
                 <Select
                     title="Items alignment"
                     value={itemsAlignment}
@@ -273,8 +312,37 @@ export default function AdminWidget({
                     }
                     onChange={setVerticalPadding}
                 />
+                <div className="flex justify-between mt-2">
+                    <div className="flex grow items-center gap-1">
+                        <p>Icon inline</p>
+                        <Tooltip title="The icon (if used) will show inline with the item header">
+                            <HelpCircle className="w-4 h-4" />
+                        </Tooltip>
+                    </div>
+                    <Checkbox
+                        checked={svgInline}
+                        onChange={(value: boolean) => setSvgInline(value)}
+                    />
+                </div>
+                <div className="flex justify-between mt-2">
+                    <div className="flex grow items-center gap-1">
+                        <p>Icon style</p>
+                    </div>
+                    <Button2
+                        size="icon"
+                        variant="outline"
+                        onClick={() => {
+                            setEditingSvgStyle(true);
+                            hideActionButtons(true, {});
+                        }}
+                    >
+                        <WandSparkles className="w-4 h-4" />
+                    </Button2>
+                </div>
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Advanced" value="advanced">
                 <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
-        </div>
+        </AdminWidgetPanelContainer>
     );
 }

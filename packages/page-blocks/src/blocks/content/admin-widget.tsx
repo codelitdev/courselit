@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Settings from "./settings";
 import {
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     Select,
     TextEditor,
     Form,
@@ -51,8 +52,11 @@ export default function AdminWidget({
     }, [title, description, headerAlignment, maxWidth, verticalPadding, cssId]);
 
     return (
-        <div className="flex flex-col gap-4 mb-4">
-            <AdminWidgetPanel title="Header">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["header", "design"]}
+        >
+            <AdminWidgetPanel title="Header" value="header">
                 <Form>
                     <FormField
                         label="Title"
@@ -79,16 +83,16 @@ export default function AdminWidget({
                     onChange={(value: Alignment) => setHeaderAlignment(value)}
                 />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Design">
+            <AdminWidgetPanel title="Design" value="design">
                 <MaxWidthSelector value={maxWidth} onChange={setMaxWidth} />
                 <VerticalPaddingSelector
                     value={verticalPadding}
                     onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Advanced">
+            <AdminWidgetPanel title="Advanced" value="advanced">
                 <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
-        </div>
+        </AdminWidgetPanelContainer>
     );
 }

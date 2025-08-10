@@ -265,91 +265,91 @@ export const getPages = async (
 };
 
 export const initMandatoryPages = async (domain: Domain, user: User) => {
-    await PageModel.insertMany<Page>([
+    await PageModel.bulkWrite([
         {
-            domain: domain._id,
-            pageId: defaultPages[0],
-            type: site,
-            creatorId: user.userId,
-            name: pageNames.home,
-            entityId: domain.name,
-            layout: [
-                {
-                    name: "header",
-                    deleteable: false,
-                    shared: true,
+            updateOne: {
+                filter: { domain: domain._id, pageId: defaultPages[0] },
+                update: {
+                    $setOnInsert: {
+                        domain: domain._id,
+                        pageId: defaultPages[0],
+                        type: site,
+                        creatorId: user.userId,
+                        name: pageNames.home,
+                        entityId: domain.name,
+                        layout: [
+                            { name: "header", deleteable: false, shared: true },
+                            ...homePageTemplate,
+                            { name: "footer", deleteable: false, shared: true },
+                        ],
+                        draftLayout: [],
+                    },
                 },
-                ...homePageTemplate,
-                {
-                    name: "footer",
-                    deleteable: false,
-                    shared: true,
-                },
-            ],
-            draftLayout: [],
+                upsert: true,
+            },
         },
         {
-            domain: domain._id,
-            pageId: defaultPages[2],
-            type: site,
-            creatorId: user.userId,
-            name: pageNames.privacy,
-            entityId: domain.name,
-            layout: [
-                {
-                    name: "header",
-                    deleteable: false,
-                    shared: true,
+            updateOne: {
+                filter: { domain: domain._id, pageId: defaultPages[2] },
+                update: {
+                    $setOnInsert: {
+                        domain: domain._id,
+                        pageId: defaultPages[2],
+                        type: site,
+                        creatorId: user.userId,
+                        name: pageNames.privacy,
+                        entityId: domain.name,
+                        layout: [
+                            { name: "header", deleteable: false, shared: true },
+                            { name: "footer", deleteable: false, shared: true },
+                        ],
+                        draftLayout: [],
+                    },
                 },
-                {
-                    name: "footer",
-                    deleteable: false,
-                    shared: true,
-                },
-            ],
-            draftLayout: [],
+                upsert: true,
+            },
         },
         {
-            domain: domain._id,
-            pageId: defaultPages[1],
-            type: site,
-            creatorId: user.userId,
-            name: pageNames.terms,
-            entityId: domain.name,
-            layout: [
-                {
-                    name: "header",
-                    deleteable: false,
-                    shared: true,
+            updateOne: {
+                filter: { domain: domain._id, pageId: defaultPages[1] },
+                update: {
+                    $setOnInsert: {
+                        domain: domain._id,
+                        pageId: defaultPages[1],
+                        type: site,
+                        creatorId: user.userId,
+                        name: pageNames.terms,
+                        entityId: domain.name,
+                        layout: [
+                            { name: "header", deleteable: false, shared: true },
+                            { name: "footer", deleteable: false, shared: true },
+                        ],
+                        draftLayout: [],
+                    },
                 },
-                {
-                    name: "footer",
-                    deleteable: false,
-                    shared: true,
-                },
-            ],
-            draftLayout: [],
+                upsert: true,
+            },
         },
         {
-            domain: domain._id,
-            pageId: defaultPages[3],
-            type: blogPage,
-            creatorId: user.userId,
-            name: pageNames.blog,
-            entityId: domain.name,
-            layout: [
-                {
-                    name: "header",
-                    deleteable: false,
-                    shared: true,
+            updateOne: {
+                filter: { domain: domain._id, pageId: defaultPages[3] },
+                update: {
+                    $setOnInsert: {
+                        domain: domain._id,
+                        pageId: defaultPages[3],
+                        type: blogPage,
+                        creatorId: user.userId,
+                        name: pageNames.blog,
+                        entityId: domain.name,
+                        layout: [
+                            { name: "header", deleteable: false, shared: true },
+                            { name: "footer", deleteable: false, shared: true },
+                        ],
+                        draftLayout: [],
+                    },
                 },
-                {
-                    name: "footer",
-                    deleteable: false,
-                    shared: true,
-                },
-            ],
-            draftLayout: [],
+                upsert: true,
+            },
         },
     ]);
 };

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     Select,
     TextEditor,
     PageBuilderSlider,
@@ -67,8 +68,11 @@ const AdminWidget = ({
     }, [content, alignment, maxWidth, verticalPadding, cssId, fontSize]);
 
     return (
-        <div className="flex flex-col gap-4 mb-4">
-            <AdminWidgetPanel title="Basic">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["basic", "design"]}
+        >
+            <AdminWidgetPanel title="Basic" value="basic">
                 <div>
                     <p className="mb-1 font-medium">Text</p>
                     <TextEditor
@@ -79,7 +83,7 @@ const AdminWidget = ({
                     />
                 </div>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Design">
+            <AdminWidgetPanel title="Design" value="design">
                 <Select
                     title="Alignment"
                     value={alignment}
@@ -111,10 +115,10 @@ const AdminWidget = ({
                     onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Advanced">
+            <AdminWidgetPanel title="Advanced" value="advanced">
                 <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
-        </div>
+        </AdminWidgetPanelContainer>
     );
 };
 

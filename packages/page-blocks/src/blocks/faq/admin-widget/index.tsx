@@ -6,6 +6,7 @@ import { Theme, ThemeStyle } from "@courselit/page-models";
 import { AppDispatch } from "@courselit/state-management";
 import {
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     Select,
     TextEditor,
     Button,
@@ -159,8 +160,11 @@ export default function AdminWidget({
     }
 
     return (
-        <div className="flex flex-col gap-4 mb-4">
-            <AdminWidgetPanel title="Header">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["header", "items", "design"]}
+        >
+            <AdminWidgetPanel title="Header" value="header">
                 <Form>
                     <FormField
                         label="Title"
@@ -178,7 +182,7 @@ export default function AdminWidget({
                     </div>
                 </Form>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Items">
+            <AdminWidgetPanel title="Items" value="items">
                 <ul className="flex flex-col gap-2">
                     {items.map((item: Item, index: number) => (
                         <li
@@ -200,7 +204,7 @@ export default function AdminWidget({
                     </Button>
                 </div>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Design">
+            <AdminWidgetPanel title="Design" value="design">
                 <Select
                     title="Header alignment"
                     value={headerAlignment}
@@ -222,9 +226,9 @@ export default function AdminWidget({
                     onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Advanced">
+            <AdminWidgetPanel title="Advanced" value="advanced">
                 <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
-        </div>
+        </AdminWidgetPanelContainer>
     );
 }

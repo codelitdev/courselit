@@ -30,6 +30,8 @@ export default function Widget({
         columns = defaultColumns,
         maxWidth,
         verticalPadding,
+        svgInline,
+        svgStyle,
     },
     state: { theme },
 }: WidgetProps<Settings>): JSX.Element {
@@ -85,6 +87,8 @@ export default function Widget({
                                             item={item}
                                             alignment={itemsAlignment}
                                             theme={overiddenTheme}
+                                            svgStyle={svgStyle}
+                                            svgInline={svgInline}
                                         />
                                     </div>
                                 </div>
