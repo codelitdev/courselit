@@ -4,6 +4,7 @@ import ItemEditor from "./item-editor";
 import { Address, Alignment } from "@courselit/common-models";
 import {
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     Select,
     TextEditor,
     Form,
@@ -183,8 +184,11 @@ export default function AdminWidget({
     }
 
     return (
-        <div className="flex flex-col gap-4 mb-4">
-            <AdminWidgetPanel title="Header">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["header", "design"]}
+        >
+            <AdminWidgetPanel title="Header" value="header">
                 <Form className="flex flex-col gap-4">
                     <FormField
                         label="Title"
@@ -231,7 +235,7 @@ export default function AdminWidget({
                     )}
                 </Form>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Design">
+            <AdminWidgetPanel title="Design" value="design">
                 <Select
                     title="Header alignment"
                     value={headerAlignment}
@@ -260,9 +264,9 @@ export default function AdminWidget({
                     onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Advanced">
+            <AdminWidgetPanel title="Advanced" value="advanced">
                 <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
-        </div>
+        </AdminWidgetPanelContainer>
     );
 }

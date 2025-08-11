@@ -5,6 +5,7 @@ import { capitalize, FetchBuilder } from "@courselit/utils";
 import { actionCreators, AppDispatch } from "@courselit/state-management";
 import {
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     Select,
     TextEditor,
     IconButton,
@@ -135,8 +136,11 @@ export default function AdminWidget({
     };
 
     return (
-        <div className="flex flex-col gap-4 mb-4">
-            <AdminWidgetPanel title="Header">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["header", "products", "design"]}
+        >
+            <AdminWidgetPanel title="Header" value="header">
                 <Form>
                     <FormField
                         value={title}
@@ -171,7 +175,7 @@ export default function AdminWidget({
                 </div>
             )}
             {productsLoaded && (
-                <AdminWidgetPanel title="Products">
+                <AdminWidgetPanel title="Products" value="products">
                     <Select
                         title="Select a product"
                         value={""}
@@ -213,7 +217,7 @@ export default function AdminWidget({
                     </ul>
                 </AdminWidgetPanel>
             )}
-            <AdminWidgetPanel title="Design">
+            <AdminWidgetPanel title="Design" value="design">
                 <MaxWidthSelector
                     value={maxWidth || theme.theme.structure.page.width}
                     onChange={setMaxWidth}
@@ -226,9 +230,9 @@ export default function AdminWidget({
                     onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Advanced">
+            <AdminWidgetPanel title="Advanced" value="advanced">
                 <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
-        </div>
+        </AdminWidgetPanelContainer>
     );
 }

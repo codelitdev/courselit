@@ -9,6 +9,7 @@ import { Theme, ThemeStyle } from "@courselit/page-models";
 import Settings from "./settings";
 import {
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     MediaSelector,
     Select,
     TextEditor,
@@ -157,8 +158,11 @@ export default function AdminWidget({
     ]);
 
     return (
-        <div className="flex flex-col gap-4 mb-4">
-            <AdminWidgetPanel title="Basic">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["basic", "media", "calls-to-action", "design"]}
+        >
+            <AdminWidgetPanel title="Basic" value="basic">
                 <Form>
                     <FormField
                         label="Title"
@@ -176,7 +180,7 @@ export default function AdminWidget({
                     />
                 </div>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Media">
+            <AdminWidgetPanel title="Media" value="media">
                 <Form>
                     <FormField
                         label="YouTube/Vimeo Link"
@@ -259,7 +263,7 @@ export default function AdminWidget({
                     onChange={(value: AspectRatio) => setAspectRatio(value)}
                 />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Calls to action">
+            <AdminWidgetPanel title="Calls to action" value="calls-to-action">
                 <Accordion type="single" collapsible>
                     <AccordionItem value="primary">
                         <AccordionTrigger>Primary button</AccordionTrigger>
@@ -307,7 +311,7 @@ export default function AdminWidget({
                     </AccordionItem>
                 </Accordion>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Design">
+            <AdminWidgetPanel title="Design" value="design">
                 <Select
                     title="Style"
                     value={style}
@@ -371,9 +375,9 @@ export default function AdminWidget({
                     onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Advanced">
+            <AdminWidgetPanel title="Advanced" value="advanced">
                 <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
-        </div>
+        </AdminWidgetPanelContainer>
     );
 }

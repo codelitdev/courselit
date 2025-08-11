@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import type Settings from "../settings";
 import {
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     Button,
     IconButton,
     PageBuilderSlider,
@@ -154,8 +155,11 @@ export default function AdminWidget({
     };
 
     return (
-        <div className="flex flex-col gap-4 mb-4">
-            <AdminWidgetPanel title="Sections">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["sections", "design", "socials"]}
+        >
+            <AdminWidgetPanel title="Sections" value="sections">
                 {sections && (
                     <Accordion type="single" collapsible className="w-full">
                         {sections.map((section, sectionIndex) => (
@@ -255,7 +259,7 @@ export default function AdminWidget({
                     </Button>
                 </div>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Design">
+            <AdminWidgetPanel title="Design" value="design">
                 <PageBuilderSlider
                     title="Title font size"
                     value={titleFontSize}
@@ -275,7 +279,7 @@ export default function AdminWidget({
                     onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Socials">
+            <AdminWidgetPanel title="Socials" value="socials">
                 <Form>
                     <FormField
                         label="Facebook"
@@ -321,6 +325,6 @@ export default function AdminWidget({
                     max={32}
                 />
             </AdminWidgetPanel>
-        </div>
+        </AdminWidgetPanelContainer>
     );
 }
