@@ -25,18 +25,25 @@ import { Theme, ThemeStyle } from "@courselit/page-models";
 const hasYouTubeContent = (content: string): boolean => {
     const lowerContent = content.toLowerCase();
     return (
-        lowerContent.includes("youtube.com") ||
-        lowerContent.includes("youtu.be") ||
-        lowerContent.includes("youtube-nocookie.com") ||
-        lowerContent.includes("youtube.com/embed/")
+        lowerContent.startsWith("https://www.youtube.com") ||
+        lowerContent.startsWith("https://www.youtube-nocookie.com") ||
+        lowerContent.startsWith("https://youtube.com") ||
+        lowerContent.startsWith("https://youtube-nocookie.com") ||
+        lowerContent.startsWith("https://youtu.be") ||
+        lowerContent.startsWith("https://youtube.com/embed/") ||
+        lowerContent.startsWith("https://www.youtube.com/embed/") ||
+        lowerContent.startsWith("https://www.youtube-nocookie.com/embed/") ||
+        lowerContent.startsWith("https://youtube.com/watch?v=") ||
+        lowerContent.startsWith("https://www.youtube.com/watch?v=") ||
+        lowerContent.startsWith("https://www.youtube-nocookie.com/watch?v=")
     );
 };
 
 const hasVimeoContent = (content: string): boolean => {
     const lowerContent = content.toLowerCase();
     return (
-        lowerContent.includes("vimeo.com") ||
-        lowerContent.includes("player.vimeo.com")
+        lowerContent.startsWith("https://vimeo.com") ||
+        lowerContent.startsWith("https://player.vimeo.com")
     );
 };
 

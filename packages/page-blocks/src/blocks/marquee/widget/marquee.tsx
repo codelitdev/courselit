@@ -25,9 +25,6 @@ export default function Marquee({
     const containerRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
 
-    // Convert children to array
-    const childrenArray = React.Children.toArray(children);
-
     useEffect(() => {
         if (containerRef.current && contentRef.current) {
             const calculateWidth = () => {

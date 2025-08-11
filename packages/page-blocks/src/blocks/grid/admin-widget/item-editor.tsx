@@ -45,16 +45,6 @@ export default function ItemEditor({
         item.mediaAlignment || "bottom",
     );
     const [svgText, setSvgText] = useState(item.svgText);
-    const [deleteConfirmation, setDeleteConfirmation] = useState(false);
-
-    const onDeleteItem = () => {
-        if (deleteConfirmation) {
-            onDelete();
-        } else {
-            setDeleteConfirmation(true);
-            setTimeout(() => setDeleteConfirmation(false), 2000);
-        }
-    };
 
     const itemChanged = () =>
         onChange({
