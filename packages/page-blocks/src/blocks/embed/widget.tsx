@@ -1,8 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import { WidgetProps } from "@courselit/common-models";
-import {
-    height as defaultHeight,
-} from "./defaults";
+import { height as defaultHeight } from "./defaults";
 import Settings from "./settings";
 import { ThemeStyle } from "@courselit/page-models";
 import { Section } from "@courselit/page-primitives";
