@@ -1430,45 +1430,6 @@ export function CommunityForum({
                                                         {post.commentsCount}
                                                     </Button>
                                                 </div>
-                                                {/* 
-                                    <div className="space-y-4 max-h-[300px] overflow-y-auto">
-                                        {post.comments.map((comment) => (
-                                            <Comment
-                                                key={comment.id}
-                                                comment={comment}
-                                                onLike={(commentId) =>
-                                                    handleCommentLike(
-                                                        post.id,
-                                                        commentId,
-                                                    )
-                                                }
-                                                onReply={(commentId, content) =>
-                                                    handleCommentReply(
-                                                        post.id,
-                                                        commentId,
-                                                        content,
-                                                    )
-                                                }
-                                            />
-                                        ))}
-                                        <div ref={commentsEndRef} />
-                                    </div>
-                                    <Textarea
-                                        placeholder="Add a comment..."
-                                        value={newComments[post.postId] || ""}
-                                        onChange={(e) =>
-                                            handleNewCommentChange(
-                                                post.postId,
-                                                e.target.value,
-                                            )
-                                        }
-                                    />
-                                    <Button
-                                        onClick={() => handlePostComment(post.postId)}
-                                    >
-                                        Post Comment
-                                    </Button>
-*/}
                                                 <CommentSection
                                                     membership={membership}
                                                     postId={post.postId}
