@@ -306,7 +306,7 @@ export function Comment({
                             }}
                             disabled={isPosting}
                         >
-                            {isReplying ? "Replying..." : "Reply"}
+                            Reply
                         </Button>
                     </div>
                 </div>
@@ -325,6 +325,7 @@ export function Comment({
                         onDelete={onDelete}
                         membership={membership}
                         depth={depth + 1}
+                        isPosting={isPosting}
                     />
                 ))}
             <Dialog
