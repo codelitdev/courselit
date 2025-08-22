@@ -24,14 +24,22 @@ const PaymentPlanSchema = new mongoose.Schema<InternalPaymentPlan>(
             required: true,
             enum: Object.values(Constants.PaymentPlanType),
         },
+        entityId: { type: String, required: true },
+        entityType: {
+            type: String,
+            required: true,
+            enum: Object.values(Constants.MembershipEntityType),
+        },
+        userId: { type: String, required: true },
         oneTimeAmount: { type: Number },
         emiAmount: { type: Number },
         emiTotalInstallments: { type: Number },
         subscriptionMonthlyAmount: { type: Number },
         subscriptionYearlyAmount: { type: Number },
-        userId: { type: String, required: true },
         archived: { type: Boolean, default: false },
         internal: { type: Boolean, default: false },
+        description: { type: String },
+        includedProducts: { type: [String], default: [] },
     },
     {
         timestamps: true,
@@ -60,6 +68,12 @@ PaymentPlanSchema.pre("save", async function (next) {
     }
     next();
 });
+
+// Add indexes for common query patterns
+PaymentPlanSchema.index({ domain: 1, entityId: 1, entityType: 1, archived: 1 });
+PaymentPlanSchema.index({ domain: 1, internal: 1 });
+PaymentPlanSchema.index({ domain: 1, planId: 1, archived: 1 });
+PaymentPlanSchema.index({ domain: 1, archived: 1, type: 1 });
 
 export default mongoose.models.PaymentPlan ||
     mongoose.model("PaymentPlan", PaymentPlanSchema);

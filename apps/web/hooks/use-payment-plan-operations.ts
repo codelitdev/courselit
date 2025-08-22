@@ -76,8 +76,8 @@ export function usePaymentPlanOperations({
 
     const onPlanArchived = async (planId: string) => {
         const query = `
-            mutation ArchivePlan($planId: String!, $entityId: String!, $entityType: MembershipEntityType!) {
-                plan: archivePlan(planId: $planId, entityId: $entityId, entityType: $entityType) {
+            mutation ArchivePlan($planId: String!) {
+                plan: archivePlan(planId: $planId) {
                     planId
                     name
                     type
@@ -96,8 +96,6 @@ export function usePaymentPlanOperations({
                 query,
                 variables: {
                     planId,
-                    entityId: id,
-                    entityType: entityType.toUpperCase(),
                 },
             })
             .setIsGraphQLEndpoint(true)

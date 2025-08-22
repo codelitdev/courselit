@@ -4,16 +4,17 @@ import {
     MembershipEntityType,
     PaymentPlan,
     Constants,
-    Community,
     PaymentPlanType,
 } from "@courselit/common-models";
-import CourseModel, { Course } from "@models/Course";
+import CourseModel from "@models/Course";
 import CommunityModel, { InternalCommunity } from "@models/Community";
 import constants from "@config/constants";
 import { checkPermission } from "@courselit/utils";
-import PaymentPlanModel from "@models/PaymentPlan";
-import { getPaymentMethodFromSettings } from "@/payments-new";
+import PaymentPlanModel, { InternalPaymentPlan } from "@models/PaymentPlan";
 import { Domain } from "@models/Domain";
+import { InternalCourse } from "@courselit/common-logic";
+import GQLContext from "@models/GQLContext";
+import { checkDuplicatePlan, validatePaymentPlan } from "./helpers";
 const { MembershipEntityType: membershipEntityType } = Constants;
 const { permissions } = constants;
 
@@ -21,12 +22,12 @@ async function fetchEntity(
     entityType: MembershipEntityType,
     entityId: string,
     ctx: any,
-): Promise<Course | InternalCommunity | null> {
+): Promise<InternalCourse | InternalCommunity | null> {
     if (entityType === membershipEntityType.COURSE) {
         return (await CourseModel.findOne({
             domain: ctx.subdomain._id,
             courseId: entityId,
-        })) as Course;
+        })) as InternalCourse;
     } else if (entityType === membershipEntityType.COMMUNITY) {
         return (await CommunityModel.findOne({
             domain: ctx.subdomain._id,
@@ -37,7 +38,10 @@ async function fetchEntity(
     return null;
 }
 
-function checkEntityPermission(entityType: MembershipEntityType, ctx: any) {
+function checkEntityManagementPermission(
+    entityType: MembershipEntityType,
+    ctx: any,
+) {
     if (entityType === membershipEntityType.COURSE) {
         if (
             !checkPermission(ctx.user.permissions, [permissions.manageCourse])
@@ -55,19 +59,74 @@ function checkEntityPermission(entityType: MembershipEntityType, ctx: any) {
     }
 }
 
+export async function getPlan({ planId, ctx }: { planId: string; ctx: any }) {
+    checkIfAuthenticated(ctx);
+
+    const plan = await PaymentPlanModel.findOne({
+        domain: ctx.subdomain._id,
+        planId,
+        archived: false,
+    });
+
+    if (!plan) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const entity = await fetchEntity(plan.entityType, plan.entityId, ctx);
+
+    if (!entity) {
+        throw new Error(responses.item_not_found);
+    }
+
+    checkEntityManagementPermission(plan.entityType, ctx);
+
+    return plan;
+}
+
 export async function getPlans({
-    planIds,
+    entityId,
+    entityType,
     ctx,
 }: {
-    planIds: string[];
+    entityId: string;
+    entityType: MembershipEntityType;
     ctx: any;
 }): Promise<PaymentPlan[]> {
     return PaymentPlanModel.find<PaymentPlan>({
         domain: ctx.subdomain._id,
-        planId: { $in: planIds },
+        entityId,
+        entityType,
         archived: false,
         internal: false,
-    }).lean();
+    }).lean() as unknown as PaymentPlan[];
+}
+
+export async function getPlansForEntity({
+    entityId,
+    entityType,
+    ctx,
+}: {
+    entityId: string;
+    entityType: MembershipEntityType;
+    ctx: any;
+}): Promise<PaymentPlan[]> {
+    checkIfAuthenticated(ctx);
+
+    const entity = await fetchEntity(entityType, entityId, ctx);
+
+    if (!entity) {
+        throw new Error(responses.item_not_found);
+    }
+
+    checkEntityManagementPermission(entityType, ctx);
+
+    return (await PaymentPlanModel.find<PaymentPlan>({
+        domain: ctx.subdomain._id,
+        entityId,
+        entityType,
+        archived: false,
+        internal: false,
+    }).lean()) as unknown as PaymentPlan[];
 }
 
 export async function createPlan({
@@ -80,6 +139,7 @@ export async function createPlan({
     subscriptionYearlyAmount,
     entityId,
     entityType,
+    description,
     ctx,
 }: {
     name: string;
@@ -91,71 +151,23 @@ export async function createPlan({
     subscriptionYearlyAmount?: number;
     entityId: string;
     entityType: MembershipEntityType;
-    ctx: any;
+    description?: string;
+    ctx: GQLContext;
 }): Promise<PaymentPlan> {
     checkIfAuthenticated(ctx);
 
-    if (type === Constants.PaymentPlanType.ONE_TIME && !oneTimeAmount) {
-        throw new Error(
-            "One-time amount is required for one-time payment plan",
-        );
-    }
-    if (
-        type === Constants.PaymentPlanType.EMI &&
-        (!emiAmount || !emiTotalInstallments)
-    ) {
-        throw new Error(
-            "EMI amounts and total installments are required for EMI payment plan",
-        );
-    }
-    if (
-        type === Constants.PaymentPlanType.SUBSCRIPTION &&
-        ((!subscriptionMonthlyAmount && !subscriptionYearlyAmount) ||
-            (subscriptionMonthlyAmount && subscriptionYearlyAmount))
-    ) {
-        throw new Error(
-            "Either monthly or yearly amount is required for subscription payment plan, but not both",
-        );
-    }
-
     const entity = await fetchEntity(entityType, entityId, ctx);
-
     if (!entity) {
         throw new Error(responses.item_not_found);
     }
 
-    checkEntityPermission(entityType, ctx);
+    checkEntityManagementPermission(entityType, ctx);
 
-    const existingPlansForEntity = await PaymentPlanModel.find<PaymentPlan>({
-        domain: ctx.subdomain._id,
-        planId: { $in: (entity as Course | Community).paymentPlans },
-        archived: false,
-    });
-
-    for (const plan of existingPlansForEntity) {
-        if (plan.type === type) {
-            if (plan.type !== Constants.PaymentPlanType.SUBSCRIPTION) {
-                throw new Error(responses.duplicate_payment_plan);
-            }
-            if (subscriptionMonthlyAmount && plan.subscriptionMonthlyAmount) {
-                throw new Error(responses.duplicate_payment_plan);
-            }
-            if (subscriptionYearlyAmount && plan.subscriptionYearlyAmount) {
-                throw new Error(responses.duplicate_payment_plan);
-            }
-        }
-    }
-
-    const paymentMethod = await getPaymentMethodFromSettings(
-        ctx.subdomain.settings,
-    );
-    if (!paymentMethod && type !== Constants.PaymentPlanType.FREE) {
-        throw new Error(responses.payment_info_required);
-    }
-
-    const paymentPlan = await PaymentPlanModel.create({
+    const paymentPlanPayload: Partial<InternalPaymentPlan> = {
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
+        entityId,
+        entityType,
         name,
         type,
         oneTimeAmount,
@@ -163,28 +175,49 @@ export async function createPlan({
         emiTotalInstallments,
         subscriptionMonthlyAmount,
         subscriptionYearlyAmount,
-    });
+        description,
+    };
 
-    if (entity.paymentPlans.length === 0) {
-        (entity as Course | Community).defaultPaymentPlan = paymentPlan.planId;
+    await validatePaymentPlan(paymentPlanPayload, ctx.subdomain.settings);
+    await checkDuplicatePlan(paymentPlanPayload);
+
+    const paymentPlan = await PaymentPlanModel.create(paymentPlanPayload);
+
+    if (!entity.defaultPaymentPlan) {
+        (entity as InternalCourse | InternalCommunity).defaultPaymentPlan =
+            paymentPlan.planId;
     }
-
-    (entity as Course | Community).paymentPlans.push(paymentPlan.planId);
     await (entity as any).save();
 
     return paymentPlan;
 }
 
-export async function archivePaymentPlan({
+export async function updatePlan({
     planId,
     entityId,
     entityType,
+    name,
+    type,
+    oneTimeAmount,
+    emiAmount,
+    emiTotalInstallments,
+    subscriptionMonthlyAmount,
+    subscriptionYearlyAmount,
+    description,
     ctx,
 }: {
     planId: string;
     entityId: string;
     entityType: MembershipEntityType;
-    ctx: any;
+    name?: string;
+    type?: PaymentPlanType;
+    oneTimeAmount?: number;
+    emiAmount?: number;
+    emiTotalInstallments?: number;
+    subscriptionMonthlyAmount?: number;
+    subscriptionYearlyAmount?: number;
+    description?: string;
+    ctx: GQLContext;
 }): Promise<PaymentPlan> {
     checkIfAuthenticated(ctx);
 
@@ -194,19 +227,71 @@ export async function archivePaymentPlan({
         throw new Error(responses.item_not_found);
     }
 
-    checkEntityPermission(entityType, ctx);
+    checkEntityManagementPermission(entityType, ctx);
 
     const paymentPlan = await PaymentPlanModel.findOne({
         domain: ctx.subdomain._id,
         planId,
+        archived: false,
     });
 
     if (!paymentPlan) {
         throw new Error(responses.item_not_found);
     }
 
+    const updateFields: Partial<PaymentPlan> = {};
+
+    if (name !== undefined) updateFields.name = name;
+    if (type !== undefined) updateFields.type = type;
+    if (oneTimeAmount !== undefined) updateFields.oneTimeAmount = oneTimeAmount;
+    if (emiAmount !== undefined) updateFields.emiAmount = emiAmount;
+    if (emiTotalInstallments !== undefined)
+        updateFields.emiTotalInstallments = emiTotalInstallments;
+    if (subscriptionMonthlyAmount !== undefined)
+        updateFields.subscriptionMonthlyAmount = subscriptionMonthlyAmount;
+    if (subscriptionYearlyAmount !== undefined)
+        updateFields.subscriptionYearlyAmount = subscriptionYearlyAmount;
+    if (description !== undefined) updateFields.description = description;
+
+    await paymentPlan.save();
+
+    return paymentPlan;
+}
+
+export async function archivePaymentPlan({
+    planId,
+    ctx,
+}: {
+    planId: string;
+    ctx: any;
+}): Promise<PaymentPlan> {
+    checkIfAuthenticated(ctx);
+
+    const paymentPlan = await PaymentPlanModel.findOne({
+        domain: ctx.subdomain._id,
+        planId,
+        archived: false,
+    });
+
+    if (!paymentPlan) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const entity = await fetchEntity(
+        paymentPlan.entityType,
+        paymentPlan.entityId,
+        ctx,
+    );
+
+    if (!entity) {
+        throw new Error(responses.item_not_found);
+    }
+
+    checkEntityManagementPermission(paymentPlan.entityType, ctx);
+
     if (
-        (entity as Community | Course).defaultPaymentPlan === paymentPlan.planId
+        (entity as InternalCommunity | InternalCourse).defaultPaymentPlan ===
+        paymentPlan.planId
     ) {
         throw new Error(responses.default_payment_plan_cannot_be_archived);
     }
@@ -236,7 +321,7 @@ export async function changeDefaultPlan({
         throw new Error(responses.item_not_found);
     }
 
-    checkEntityPermission(entityType, ctx);
+    checkEntityManagementPermission(entityType, ctx);
 
     const paymentPlan = await PaymentPlanModel.findOne({
         domain: ctx.subdomain._id,
@@ -248,7 +333,8 @@ export async function changeDefaultPlan({
         throw new Error(responses.item_not_found);
     }
 
-    (entity as Community | Course).defaultPaymentPlan = paymentPlan.planId;
+    (entity as InternalCommunity | InternalCourse).defaultPaymentPlan =
+        paymentPlan.planId;
     await (entity as any).save();
 
     return paymentPlan;
@@ -271,5 +357,7 @@ export async function createInternalPaymentPlan(
         type: Constants.PaymentPlanType.FREE,
         internal: true,
         userId: userId,
+        entityId: "",
+        entityType: membershipEntityType.COURSE,
     });
 }

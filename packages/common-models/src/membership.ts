@@ -24,4 +24,5 @@ export interface Membership {
     sessionId: string;
     createdAt?: Date;
     updatedAt?: Date;
+    isIncludedInPlan?: boolean;
 }

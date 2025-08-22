@@ -194,7 +194,8 @@ export async function getCommunities({
         products: community.products,
         joiningReasonText: community.joiningReasonText,
         paymentPlans: await getPlans({
-            planIds: community.paymentPlans,
+            entityId: community.communityId,
+            entityType: Constants.MembershipEntityType.COMMUNITY,
             ctx,
         }),
         defaultPaymentPlan: community.defaultPaymentPlan,
@@ -297,7 +298,8 @@ export async function updateCommunity({
     }
 
     const plans = await getPlans({
-        planIds: community.paymentPlans,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
         ctx,
     });
     if (enabled !== undefined) {
@@ -427,12 +429,20 @@ export async function joinCommunity({
         throw new Error(responses.item_not_found);
     }
 
-    if (community.paymentPlans.length === 0) {
+    const communityPaymentPlans = await getPlans({
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+        ctx,
+    });
+
+    if (communityPaymentPlans.length === 0) {
         throw new Error(responses.community_has_no_payment_plans);
     }
 
     const freePaymentPlanOfCommunity = await PaymentPlanModel.findOne({
-        planId: { $in: community.paymentPlans },
+        domain: ctx.subdomain._id,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
         type: Constants.PaymentPlanType.FREE,
         archived: false,
     });
@@ -896,7 +906,8 @@ async function formatCommunity(
         products: community.products,
         joiningReasonText: community.joiningReasonText,
         paymentPlans: await getPlans({
-            planIds: community.paymentPlans,
+            entityId: community.communityId,
+            entityType: Constants.MembershipEntityType.COMMUNITY,
             ctx,
         }),
         defaultPaymentPlan: community.defaultPaymentPlan,

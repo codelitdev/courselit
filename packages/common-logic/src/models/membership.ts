@@ -40,6 +40,7 @@ export const MembershipSchema = new mongoose.Schema<InternalMembership>(
         rejectionReason: { type: String },
         subscriptionId: { type: String },
         subscriptionMethod: { type: String },
+        isIncludedInPlan: Boolean,
     },
     {
         timestamps: true,

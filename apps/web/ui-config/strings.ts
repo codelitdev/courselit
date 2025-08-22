@@ -612,6 +612,14 @@ export const NEW_COMMUNITY_BUTTON = "New community";
 export const COMMUNITY_FIELD_NAME = "Community name";
 export const COMMUNITY_NEW_BTN_CAPTION = "Create";
 export const COMMUNITY_SETTINGS = "Manage";
+
+// Payment Plan strings
+export const NEW_PAYMENT_PLAN_HEADER = "New Payment Plan";
+export const EDIT_PAYMENT_PLAN_HEADER = "Edit Payment Plan";
+export const PAYMENT_PLANS_HEADER = "Payment Plans";
+export const NEW_PAYMENT_PLAN_DESCRIPTION =
+    "Configure a new payment plan for your";
+export const EDIT_PAYMENT_PLAN_DESCRIPTION = "Update the configuration for";
 export const TOAST_TITLE_SUCCESS = "Success";
 export const TOAST_SEQUENCE_SAVED = "Sequence changes saved successfully";
 export const TOAST_TITLE_ERROR = "Error";

@@ -1,5 +1,4 @@
 import { Media } from "./media";
-import { PaymentPlan } from "./payment-plan";
 import { TextEditorContent } from "./text-editor-content";
 
 export interface Community {
@@ -13,7 +12,6 @@ export interface Community {
     pageId: string;
     products: string[];
     autoAcceptMembers: boolean;
-    paymentPlans: PaymentPlan[];
     defaultPaymentPlan?: string;
     featuredImage?: Media;
     membersCount: number;

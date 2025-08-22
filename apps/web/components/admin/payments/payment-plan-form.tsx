@@ -1,0 +1,638 @@
+"use client";
+
+import { useContext, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Save, Loader2 } from "lucide-react";
+import {
+    PaymentPlanType,
+    Constants,
+    MembershipEntityType,
+} from "@courselit/common-models";
+import { usePaymentPlanOperations } from "@/hooks/use-payment-plan-operations";
+import { useRouter } from "next/navigation";
+import { getSymbolFromCurrency, useToast } from "@courselit/components-library";
+import {
+    BUTTON_SAVE,
+    BUTTON_SAVING,
+    FORM_NEW_PRODUCT_TITLE,
+    FORM_NEW_PRODUCT_TITLE_PLC,
+    FORM_NEW_PRODUCT_SELECT,
+    PRICING_FREE_LABEL,
+    PRICING_PAID_LABEL,
+    SEO_FORM_DESC_LABEL,
+} from "@/ui-config/strings";
+import { SiteInfoContext } from "@components/contexts";
+
+const { PaymentPlanType: paymentPlanType } = Constants;
+
+export const formSchema = z
+    .object({
+        name: z.string().min(1, "Name is required"),
+        description: z.string().optional(),
+        type: z.enum([
+            paymentPlanType.FREE,
+            paymentPlanType.ONE_TIME,
+            paymentPlanType.SUBSCRIPTION,
+            paymentPlanType.EMI,
+        ] as const),
+        oneTimeAmount: z
+            .number()
+            .min(0, "Amount cannot be negative")
+            .optional(),
+        emiAmount: z.number().min(0, "Amount cannot be negative").optional(),
+        emiTotalInstallments: z
+            .number()
+            .min(0, "Installments cannot be negative")
+            .optional(),
+        subscriptionMonthlyAmount: z
+            .number()
+            .min(0, "Amount cannot be negative")
+            .optional(),
+        subscriptionYearlyAmount: z
+            .number()
+            .min(0, "Amount cannot be negative")
+            .optional(),
+        subscriptionType: z.enum(["monthly", "yearly"] as const).optional(),
+        includedProducts: z.array(z.string()).default([]),
+    })
+    .refine(
+        (data) => {
+            if (data.type === paymentPlanType.SUBSCRIPTION) {
+                if (data.subscriptionType === "monthly") {
+                    return (
+                        data.subscriptionMonthlyAmount !== undefined &&
+                        data.subscriptionMonthlyAmount > 0
+                    );
+                }
+                if (data.subscriptionType === "yearly") {
+                    return (
+                        data.subscriptionYearlyAmount !== undefined &&
+                        data.subscriptionYearlyAmount > 0
+                    );
+                }
+            }
+            if (data.type === paymentPlanType.ONE_TIME) {
+                return (
+                    data.oneTimeAmount !== undefined && data.oneTimeAmount > 0
+                );
+            }
+            if (data.type === paymentPlanType.EMI) {
+                return (
+                    data.emiAmount !== undefined &&
+                    data.emiAmount > 0 &&
+                    data.emiTotalInstallments !== undefined &&
+                    data.emiTotalInstallments > 0
+                );
+            }
+            return true;
+        },
+        {
+            message:
+                "Please fill in all required fields for the selected plan type",
+            path: ["type"],
+        },
+    );
+
+export type PaymentPlanFormData = z.infer<typeof formSchema>;
+
+interface PaymentPlanFormProps {
+    initialData?: Partial<PaymentPlanFormData>;
+    entityId: string;
+    entityType: MembershipEntityType;
+}
+
+export function PaymentPlanForm({
+    initialData,
+    entityId,
+    entityType,
+}: PaymentPlanFormProps) {
+    const [planType, setPlanType] = useState<PaymentPlanType>(
+        initialData?.type || paymentPlanType.FREE,
+    );
+    const [subscriptionType, setSubscriptionType] = useState<
+        "monthly" | "yearly"
+    >(initialData?.subscriptionType || "monthly");
+    const [isFormSubmitting, setIsFormSubmitting] = useState(false);
+
+    const paymentPlanOperations = usePaymentPlanOperations({
+        id: entityId,
+        entityType,
+    });
+    const router = useRouter();
+    const { toast } = useToast();
+    const siteinfo = useContext(SiteInfoContext);
+    const currencySymbol = getSymbolFromCurrency(
+        siteinfo.currencyISOCode || "USD",
+    );
+    const currencyISOCode = siteinfo.currencyISOCode?.toUpperCase() || "USD";
+
+    const form = useForm<PaymentPlanFormData>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            name: "",
+            description: "",
+            type: paymentPlanType.FREE,
+            oneTimeAmount: 0,
+            emiAmount: 0,
+            emiTotalInstallments: 0,
+            subscriptionMonthlyAmount: 0,
+            subscriptionYearlyAmount: 0,
+            subscriptionType: "monthly",
+            includedProducts: [],
+            ...initialData,
+        },
+    });
+
+    async function handleSubmit(values: PaymentPlanFormData) {
+        setIsFormSubmitting(true);
+        try {
+            const { planId } =
+                await paymentPlanOperations.onPlanSubmitted(values);
+            router.push(
+                `/dashboard/paymentplan/${entityType?.toLowerCase()}/${entityId}/edit/${planId}`,
+            );
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: error.message || "Failed to create payment plan",
+                variant: "destructive",
+            });
+        } finally {
+            setIsFormSubmitting(false);
+        }
+    }
+
+    return (
+        <Form {...form}>
+            <form
+                onSubmit={form.handleSubmit(handleSubmit)}
+                className="space-y-8"
+            >
+                <BasicInformationSection
+                    form={form}
+                    planType={planType}
+                    setPlanType={setPlanType}
+                />
+
+                <Separator className="my-8" />
+                <PricingSection
+                    form={form}
+                    planType={planType}
+                    setPlanType={setPlanType}
+                    subscriptionType={subscriptionType}
+                    setSubscriptionType={setSubscriptionType}
+                    currencySymbol={currencySymbol}
+                    currencyISOCode={currencyISOCode}
+                />
+
+                <Separator className="my-8" />
+                <IncludedProductsSection form={form} />
+
+                <Button type="submit" disabled={isFormSubmitting}>
+                    {isFormSubmitting ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                        <Save className="h-4 w-4 mr-2" />
+                    )}
+                    {isFormSubmitting ? BUTTON_SAVING : BUTTON_SAVE}
+                </Button>
+            </form>
+        </Form>
+    );
+}
+
+// Basic Information Section Component
+function BasicInformationSection({
+    form,
+    planType,
+    setPlanType,
+}: {
+    form: any;
+    planType: PaymentPlanType;
+    setPlanType: (type: PaymentPlanType) => void;
+}) {
+    return (
+        <div className="space-y-4">
+            <div className="space-y-2">
+                <Label className="text-base font-medium">
+                    Basic Information
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                    Configure the basic details of your payment plan
+                </p>
+            </div>
+            <div className="space-y-6">
+                <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }: any) => (
+                        <FormItem>
+                            <FormLabel>{FORM_NEW_PRODUCT_TITLE}</FormLabel>
+                            <FormControl>
+                                <Input
+                                    placeholder={FORM_NEW_PRODUCT_TITLE_PLC}
+                                    {...field}
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }: any) => (
+                        <FormItem>
+                            <FormLabel>{SEO_FORM_DESC_LABEL}</FormLabel>
+                            <FormControl>
+                                <Textarea
+                                    placeholder="Enter plan description"
+                                    {...field}
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+        </div>
+    );
+}
+
+// Pricing Section Component
+function PricingSection({
+    form,
+    planType,
+    setPlanType,
+    subscriptionType,
+    setSubscriptionType,
+    currencySymbol,
+    currencyISOCode,
+}: {
+    form: any;
+    planType: PaymentPlanType;
+    setPlanType: (type: PaymentPlanType) => void;
+    subscriptionType: "monthly" | "yearly";
+    setSubscriptionType: (type: "monthly" | "yearly") => void;
+    currencySymbol?: string;
+    currencyISOCode?: string;
+}) {
+    return (
+        <div className="space-y-4">
+            <div className="space-y-2">
+                <Label className="text-base font-medium">Pricing</Label>
+                <p className="text-sm text-muted-foreground">
+                    Set the pricing structure for your payment plan
+                </p>
+            </div>
+            <div className="space-y-6">
+                <FormField
+                    control={form.control}
+                    name="type"
+                    render={({ field }: any) => (
+                        <FormItem>
+                            <FormLabel>{FORM_NEW_PRODUCT_SELECT}</FormLabel>
+                            <Select
+                                onValueChange={(value: PaymentPlanType) => {
+                                    field.onChange(value);
+                                    setPlanType(value);
+                                }}
+                                defaultValue={field.value}
+                            >
+                                <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a plan type" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value={paymentPlanType.FREE}>
+                                        {PRICING_FREE_LABEL}
+                                    </SelectItem>
+                                    <SelectItem
+                                        value={paymentPlanType.ONE_TIME}
+                                    >
+                                        {PRICING_PAID_LABEL}
+                                    </SelectItem>
+                                    <SelectItem
+                                        value={paymentPlanType.SUBSCRIPTION}
+                                    >
+                                        Subscription
+                                    </SelectItem>
+                                    <SelectItem value={paymentPlanType.EMI}>
+                                        EMI
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                {planType === paymentPlanType.ONE_TIME && (
+                    <FormField
+                        control={form.control}
+                        name="oneTimeAmount"
+                        render={({ field }: any) => (
+                            <FormItem>
+                                <FormLabel>One-time Amount</FormLabel>
+                                <FormControl>
+                                    <div className="flex items-center border rounded-md">
+                                        <span className="text-muted-foreground text-sm pl-2">
+                                            {currencySymbol}
+                                        </span>
+                                        <Input
+                                            type="number"
+                                            className="border-0 focus-visible:ring-0 focus:outline-none"
+                                            placeholder="Enter amount"
+                                            {...field}
+                                            onChange={(e) =>
+                                                field.onChange(
+                                                    parseFloat(e.target.value),
+                                                )
+                                            }
+                                        />
+                                        <span className="text-muted-foreground text-sm pr-2">
+                                            {currencyISOCode}
+                                        </span>
+                                    </div>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                )}
+
+                {planType === paymentPlanType.EMI && (
+                    <div className="space-y-4">
+                        <div>
+                            <FormLabel>
+                                Monthly Payments (All fields required)
+                            </FormLabel>
+                            <div className="flex items-center gap-2 mt-2">
+                                <div className="flex-1">
+                                    <FormField
+                                        control={form.control}
+                                        name="emiTotalInstallments"
+                                        render={({ field }: any) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <div className="flex items-center border rounded-md">
+                                                        <Input
+                                                            type="number"
+                                                            className="border-0 focus-visible:ring-0 focus:outline-none"
+                                                            placeholder="Enter number"
+                                                            {...field}
+                                                            onChange={(e) =>
+                                                                field.onChange(
+                                                                    parseInt(
+                                                                        e.target
+                                                                            .value,
+                                                                    ),
+                                                                )
+                                                            }
+                                                        />
+                                                        <span className="text-muted-foreground text-sm pr-2">
+                                                            payments
+                                                        </span>
+                                                    </div>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                                <span className="text-muted-foreground">×</span>
+                                <div className="flex-1">
+                                    <FormField
+                                        control={form.control}
+                                        name="emiAmount"
+                                        render={({ field }: any) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <div className="flex items-center border rounded-md">
+                                                        <span className="text-muted-foreground text-sm pl-2">
+                                                            {currencySymbol}
+                                                        </span>
+                                                        <Input
+                                                            type="number"
+                                                            className="border-0 focus-visible:ring-0 focus:outline-none"
+                                                            placeholder="Enter amount"
+                                                            {...field}
+                                                            onChange={(e) =>
+                                                                field.onChange(
+                                                                    parseFloat(
+                                                                        e.target
+                                                                            .value,
+                                                                    ),
+                                                                )
+                                                            }
+                                                        />
+                                                        <span className="text-muted-foreground text-sm pr-2">
+                                                            {currencyISOCode}
+                                                        </span>
+                                                    </div>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex items-center mt-2">
+                                <span className="text-muted-foreground text-sm mr-1">
+                                    Total:
+                                </span>
+                                <span className="font-medium">
+                                    {currencySymbol}
+                                    {(form.watch("emiAmount") || 0) *
+                                        (form.watch("emiTotalInstallments") ||
+                                            0)}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {planType === paymentPlanType.SUBSCRIPTION && (
+                    <div className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="subscriptionType"
+                            render={({ field }: any) => (
+                                <FormItem>
+                                    <FormLabel>Subscription Type</FormLabel>
+                                    <Select
+                                        onValueChange={(
+                                            value: "monthly" | "yearly",
+                                        ) => {
+                                            field.onChange(value);
+                                            setSubscriptionType(value);
+                                        }}
+                                        value={field.value}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select subscription type" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="monthly">
+                                                Monthly
+                                            </SelectItem>
+                                            <SelectItem value="yearly">
+                                                Yearly
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        {subscriptionType === "monthly" && (
+                            <FormField
+                                control={form.control}
+                                name="subscriptionMonthlyAmount"
+                                render={({ field }: any) => (
+                                    <FormItem>
+                                        <FormLabel>Monthly Amount</FormLabel>
+                                        <FormControl>
+                                            <div className="flex items-center border rounded-md">
+                                                <span className="text-muted-foreground text-sm pl-2">
+                                                    {currencySymbol}
+                                                </span>
+                                                <Input
+                                                    type="number"
+                                                    className="border-0 focus-visible:ring-0 focus:outline-none"
+                                                    placeholder="Enter monthly amount"
+                                                    {...field}
+                                                    onChange={(e) =>
+                                                        field.onChange(
+                                                            parseFloat(
+                                                                e.target.value,
+                                                            ),
+                                                        )
+                                                    }
+                                                />
+                                                <span className="text-muted-foreground text-sm pr-2">
+                                                    {currencyISOCode}
+                                                </span>
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        )}
+
+                        {subscriptionType === "yearly" && (
+                            <FormField
+                                control={form.control}
+                                name="subscriptionYearlyAmount"
+                                render={({ field }: any) => (
+                                    <FormItem>
+                                        <FormLabel>Yearly Amount</FormLabel>
+                                        <FormControl>
+                                            <div className="flex items-center border rounded-md">
+                                                <span className="text-muted-foreground text-sm pl-2">
+                                                    {currencySymbol}
+                                                </span>
+                                                <Input
+                                                    type="number"
+                                                    className="border-0 focus-visible:ring-0 focus:outline-none"
+                                                    placeholder="Enter yearly amount"
+                                                    {...field}
+                                                    onChange={(e) =>
+                                                        field.onChange(
+                                                            parseFloat(
+                                                                e.target.value,
+                                                            ),
+                                                        )
+                                                    }
+                                                />
+                                                <span className="text-muted-foreground text-sm pr-2">
+                                                    {currencyISOCode}
+                                                </span>
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// Included Products Section Component
+function IncludedProductsSection({ form }: { form: any }) {
+    return (
+        <div className="space-y-4">
+            <div className="space-y-2">
+                <Label className="text-base font-medium">
+                    Included Products
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                    Specify which products are included with this payment plan
+                </p>
+            </div>
+            <div className="space-y-6">
+                <FormField
+                    control={form.control}
+                    name="includedProducts"
+                    render={({ field }: any) => (
+                        <FormItem>
+                            <FormLabel>Products</FormLabel>
+                            <FormControl>
+                                <Input
+                                    placeholder="Enter product IDs (comma-separated)"
+                                    value={field.value?.join(", ") || ""}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        const products = value
+                                            .split(",")
+                                            .map((p) => p.trim())
+                                            .filter((p) => p.length > 0);
+                                        field.onChange(products);
+                                    }}
+                                />
+                            </FormControl>
+                            <p className="text-sm text-muted-foreground">
+                                Enter product IDs separated by commas. Users
+                                with this plan will have access to these
+                                products.
+                            </p>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+        </div>
+    );
+}

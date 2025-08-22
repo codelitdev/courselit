@@ -29,7 +29,6 @@ import {
     Badge,
     Form,
     FormField,
-    getSymbolFromCurrency,
     Image,
     Link,
     MediaSelector,
@@ -225,6 +224,8 @@ export default function Page({
                         planId
                         name
                         type
+                        entityId
+                        entityType
                         oneTimeAmount
                         emiAmount
                         emiTotalInstallments
@@ -301,6 +302,8 @@ export default function Page({
                         planId
                         name
                         type
+                        entityId
+                        entityType
                         oneTimeAmount
                         emiAmount
                         emiTotalInstallments
@@ -511,8 +514,8 @@ export default function Page({
 
     const onPlanArchived = async (planId: string) => {
         const query = `
-            mutation ArchivePlan($planId: String!, $entityId: String!, $entityType: MembershipEntityType!) {
-                plan: archivePlan(planId: $planId, entityId: $entityId, entityType: $entityType) {
+            mutation ArchivePlan($planId: String!) {
+                plan: archivePlan(planId: $planId) {
                     planId
                     name
                     type
@@ -531,9 +534,6 @@ export default function Page({
                     query,
                     variables: {
                         planId,
-                        entityId: id,
-                        entityType:
-                            MembershipEntityType.COMMUNITY.toUpperCase(),
                     },
                 })
                 .setIsGraphQLEndpoint(true)
@@ -789,23 +789,11 @@ export default function Page({
                         ...plan,
                         type: plan.type.toLowerCase() as PaymentPlanType,
                     }))}
-                    onPlanSubmit={onPlanSubmitted}
                     onPlanArchived={onPlanArchived}
-                    allowedPlanTypes={[
-                        paymentPlanType.SUBSCRIPTION,
-                        paymentPlanType.FREE,
-                        paymentPlanType.ONE_TIME,
-                        paymentPlanType.EMI,
-                    ]}
-                    currencySymbol={getSymbolFromCurrency(
-                        siteinfo.currencyISOCode || "USD",
-                    )}
-                    currencyISOCode={
-                        siteinfo.currencyISOCode?.toUpperCase() || "USD"
-                    }
                     onDefaultPlanChanged={onDefaultPlanChanged}
                     defaultPaymentPlanId={defaultPaymentPlan}
-                    paymentMethod={siteinfo.paymentMethod}
+                    entityId={id}
+                    entityType={MembershipEntityType.COMMUNITY}
                 />
             </div>
             <Separator className="my-8" />

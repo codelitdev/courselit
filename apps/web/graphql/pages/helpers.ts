@@ -35,16 +35,6 @@ export async function getPageResponse(
                     courseId: course.courseId,
                     leadMagnet: course.leadMagnet,
                     defaultPaymentPlan: course.defaultPaymentPlan,
-                    paymentPlans: course.paymentPlans.map((p) => ({
-                        emiAmount: p.emiAmount,
-                        emiTotalInstallments: p.emiTotalInstallments,
-                        subscriptionMonthlyAmount: p.subscriptionMonthlyAmount,
-                        subscriptionYearlyAmount: p.subscriptionYearlyAmount,
-                        type: p.type,
-                        oneTimeAmount: p.oneTimeAmount,
-                        name: p.name,
-                        planId: p.planId,
-                    })),
                 };
             }
             break;
@@ -60,29 +50,12 @@ export async function getPageResponse(
                     description: community.description,
                     communityId: community.communityId,
                     defaultPaymentPlan: community.defaultPaymentPlan,
-                    paymentPlans: community.paymentPlans.map((p) => ({
-                        emiAmount: p.emiAmount,
-                        emiTotalInstallments: p.emiTotalInstallments,
-                        subscriptionMonthlyAmount: p.subscriptionMonthlyAmount,
-                        subscriptionYearlyAmount: p.subscriptionYearlyAmount,
-                        type: p.type,
-                        oneTimeAmount: p.oneTimeAmount,
-                        name: p.name,
-                        planId: p.planId,
-                    })),
                     membersCount: community.membersCount,
                     featuredImage: community.featuredImage,
                 };
             }
             break;
     }
-    // const pageData =
-    //     page.type.toLowerCase() === constants.product
-    //         ? await getCourse(
-    //               page.entityId!,
-    //               ctx.subdomain._id as unknown as string,
-    //           )
-    //         : {};
 
     const sharedWidgetsToDraftSharedWidgets = (widget) =>
         widget.shared

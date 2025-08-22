@@ -23,6 +23,8 @@ import { getUser } from "../../users/logic";
 const { lessonMetaType } = lessonTypes;
 const { course, download, blog, costPaid, costEmail, costFree } = constants;
 import sequenceTypes from "../../mails/types";
+import { getPlansForEntity } from "@/graphql/paymentplans/logic";
+import GQLContext from "@/models/GQLContext";
 
 const courseStatusType = new GraphQLEnumType({
     name: "CoursePrivacyType",
@@ -154,6 +156,12 @@ const courseType = new GraphQLObjectType({
         firstLesson: { type: GraphQLString },
         paymentPlans: {
             type: new GraphQLList(paymentPlansTypes.paymentPlan),
+            resolve: (course, _, ctx: GQLContext, __) =>
+                getPlansForEntity({
+                    entityId: course.courseId,
+                    entityType: Constants.MembershipEntityType.COURSE,
+                    ctx,
+                }),
         },
         defaultPaymentPlan: { type: GraphQLString },
         sales: { type: GraphQLFloat },

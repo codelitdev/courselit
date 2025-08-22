@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { AddressContext } from "@components/contexts";
 import { FetchBuilder } from "@courselit/utils";
 import { Community } from "@courselit/common-models";
+import { useToast } from "@courselit/components-library";
 
 export const useCommunity = (id?: string | null) => {
     const [community, setCommunity] = useState<
@@ -14,6 +15,7 @@ export const useCommunity = (id?: string | null) => {
     const address = useContext(AddressContext);
     const [error, setError] = useState<string | null>(null);
     const [loaded, setLoaded] = useState<boolean>(false);
+    const { toast } = useToast();
 
     useEffect(() => {
         if (!id) {
@@ -37,6 +39,8 @@ export const useCommunity = (id?: string | null) => {
                         planId
                         name
                         type
+                        entityId
+                        entityType
                         oneTimeAmount
                         emiAmount
                         emiTotalInstallments
@@ -73,6 +77,11 @@ export const useCommunity = (id?: string | null) => {
                 }
             } catch (err: any) {
                 setError(err.message);
+                // toast({
+                //     title: TOAST_TITLE_ERROR,
+                //     description: err.message,
+                //     variant: "destructive",
+                // });
             } finally {
                 setLoaded(true);
             }

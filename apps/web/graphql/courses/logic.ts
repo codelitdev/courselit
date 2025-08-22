@@ -84,13 +84,14 @@ export const getCourseOrThrow = async (
 };
 
 async function formatCourse(courseId: string, ctx: GQLContext) {
-    const course: InternalCourse | null = await CourseModel.findOne({
+    const course: InternalCourse | null = (await CourseModel.findOne({
         courseId,
         domain: ctx.subdomain._id,
-    }).lean();
+    }).lean()) as unknown as InternalCourse;
 
     const paymentPlans = await getPlans({
-        planIds: course!.paymentPlans,
+        entityId: course!.courseId,
+        entityType: Constants.MembershipEntityType.COURSE,
         ctx,
     });
 
@@ -502,7 +503,8 @@ export const getProducts = async ({
         const paymentPlans =
             course.type !== constants.blog
                 ? await getPlans({
-                      planIds: course.paymentPlans,
+                      entityId: course.courseId,
+                      entityType: Constants.MembershipEntityType.COURSE,
                       ctx,
                   })
                 : undefined;

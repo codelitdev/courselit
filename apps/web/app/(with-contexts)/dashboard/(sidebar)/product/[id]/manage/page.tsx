@@ -47,7 +47,6 @@ import {
 } from "@components/contexts";
 import { truncate } from "@ui-lib/utils";
 import {
-    getSymbolFromCurrency,
     MediaSelector,
     TextEditor,
     TextEditorEmptyDoc,
@@ -580,16 +579,6 @@ export default function SettingsPage() {
                             ...plan,
                             type: plan.type.toLowerCase() as PaymentPlanType,
                         }))}
-                        onPlanSubmit={async (values) => {
-                            try {
-                                await onPlanSubmitted(values);
-                            } catch (err: any) {
-                                toast({
-                                    title: TOAST_TITLE_ERROR,
-                                    description: err.message,
-                                });
-                            }
-                        }}
                         onPlanArchived={async (id) => {
                             try {
                                 await onPlanArchived(id);
@@ -601,18 +590,6 @@ export default function SettingsPage() {
                                 });
                             }
                         }}
-                        allowedPlanTypes={[
-                            paymentPlanType.SUBSCRIPTION,
-                            paymentPlanType.FREE,
-                            paymentPlanType.ONE_TIME,
-                            paymentPlanType.EMI,
-                        ]}
-                        currencySymbol={getSymbolFromCurrency(
-                            siteinfo.currencyISOCode || "USD",
-                        )}
-                        currencyISOCode={
-                            siteinfo.currencyISOCode?.toUpperCase() || "USD"
-                        }
                         onDefaultPlanChanged={async (id) => {
                             try {
                                 await onDefaultPlanChanged(id);
@@ -624,7 +601,8 @@ export default function SettingsPage() {
                             }
                         }}
                         defaultPaymentPlanId={defaultPaymentPlan}
-                        paymentMethod={siteinfo.paymentMethod}
+                        entityId={productId}
+                        entityType={MembershipEntityType.COURSE}
                     />
                 </div>
 

@@ -7,7 +7,6 @@ export interface InternalCommunity extends Omit<Community, "paymentPlans"> {
     domain: mongoose.Types.ObjectId;
     createdAt: Date;
     updatedAt: Date;
-    paymentPlans: string[];
     deleted: boolean;
 }
 
@@ -28,7 +27,7 @@ const CommunitySchema = new mongoose.Schema<InternalCommunity>(
         autoAcceptMembers: { type: Boolean, default: false },
         joiningReasonText: { type: String },
         pageId: { type: String, required: true },
-        paymentPlans: [String],
+        // paymentPlans: [String],
         defaultPaymentPlan: { type: String },
         featuredImage: MediaSchema,
         deleted: { type: Boolean, default: false },
