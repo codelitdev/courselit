@@ -24,7 +24,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Save, Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Save, Loader2, X, Package, Info, DollarSign } from "lucide-react";
 import {
     PaymentPlanType,
     Constants,
@@ -39,16 +40,21 @@ import {
     FORM_NEW_PRODUCT_TITLE,
     FORM_NEW_PRODUCT_TITLE_PLC,
     FORM_NEW_PRODUCT_SELECT,
-    PRICING_FREE_LABEL,
-    PRICING_PAID_LABEL,
+    PAYMENT_PLAN_FREE_LABEL,
+    PAYMENT_PLAN_ONETIME_LABEL,
+    PAYMENT_PLAN_SUBSCRIPTION_LABEL,
+    PAYMENT_PLAN_EMI_LABEL,
     SEO_FORM_DESC_LABEL,
 } from "@/ui-config/strings";
 import { SiteInfoContext } from "@components/contexts";
+import { useProducts } from "@/hooks/use-products";
+import { capitalize } from "@courselit/utils";
 
 const { PaymentPlanType: paymentPlanType } = Constants;
 
 export const formSchema = z
     .object({
+        planId: z.string().optional(),
         name: z.string().min(1, "Name is required"),
         description: z.string().optional(),
         type: z.enum([
@@ -168,11 +174,19 @@ export function PaymentPlanForm({
     async function handleSubmit(values: PaymentPlanFormData) {
         setIsFormSubmitting(true);
         try {
-            const { planId } =
-                await paymentPlanOperations.onPlanSubmitted(values);
-            router.push(
-                `/dashboard/paymentplan/${entityType?.toLowerCase()}/${entityId}/edit/${planId}`,
-            );
+            if (initialData?.planId) {
+                await paymentPlanOperations.onPlanUpdated(values);
+                toast({
+                    title: "Payment plan updated",
+                    description: "Payment plan updated successfully",
+                });
+            } else {
+                const { planId } =
+                    await paymentPlanOperations.onPlanSubmitted(values);
+                router.push(
+                    `/dashboard/paymentplan/${entityType?.toLowerCase()}/${entityId}/edit/${planId}`,
+                );
+            }
         } catch (error) {
             toast({
                 title: "Error",
@@ -236,9 +250,12 @@ function BasicInformationSection({
     return (
         <div className="space-y-4">
             <div className="space-y-2">
-                <Label className="text-base font-medium">
-                    Basic Information
-                </Label>
+                <div className="flex items-center gap-2">
+                    <Info className="h-5 w-5 text-primary" />
+                    <Label className="text-base font-medium">
+                        Basic Information
+                    </Label>
+                </div>
                 <p className="text-sm text-muted-foreground">
                     Configure the basic details of your payment plan
                 </p>
@@ -303,7 +320,10 @@ function PricingSection({
     return (
         <div className="space-y-4">
             <div className="space-y-2">
-                <Label className="text-base font-medium">Pricing</Label>
+                <div className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-primary" />
+                    <Label className="text-base font-medium">Pricing</Label>
+                </div>
                 <p className="text-sm text-muted-foreground">
                     Set the pricing structure for your payment plan
                 </p>
@@ -329,20 +349,20 @@ function PricingSection({
                                 </FormControl>
                                 <SelectContent>
                                     <SelectItem value={paymentPlanType.FREE}>
-                                        {PRICING_FREE_LABEL}
+                                        {PAYMENT_PLAN_FREE_LABEL}
                                     </SelectItem>
                                     <SelectItem
                                         value={paymentPlanType.ONE_TIME}
                                     >
-                                        {PRICING_PAID_LABEL}
+                                        {PAYMENT_PLAN_ONETIME_LABEL}
                                     </SelectItem>
                                     <SelectItem
                                         value={paymentPlanType.SUBSCRIPTION}
                                     >
-                                        Subscription
+                                        {PAYMENT_PLAN_SUBSCRIPTION_LABEL}
                                     </SelectItem>
                                     <SelectItem value={paymentPlanType.EMI}>
-                                        EMI
+                                        {PAYMENT_PLAN_EMI_LABEL}
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
@@ -490,6 +510,18 @@ function PricingSection({
                                         ) => {
                                             field.onChange(value);
                                             setSubscriptionType(value);
+
+                                            if (value === "monthly") {
+                                                form.setValue(
+                                                    "subscriptionYearlyAmount",
+                                                    0,
+                                                );
+                                            } else {
+                                                form.setValue(
+                                                    "subscriptionMonthlyAmount",
+                                                    0,
+                                                );
+                                            }
                                         }}
                                         value={field.value}
                                     >
@@ -592,18 +624,23 @@ function PricingSection({
 
 // Included Products Section Component
 function IncludedProductsSection({ form }: { form: any }) {
+    const { products, loading: productsLoading } = useProducts(1, 1000);
+
     return (
         <div className="space-y-4">
             <div className="space-y-2">
-                <Label className="text-base font-medium">
-                    Included Products
-                </Label>
+                <div className="flex items-center gap-2">
+                    <Package className="h-5 w-5 text-primary" />
+                    <Label className="text-base font-medium">
+                        Included Products
+                    </Label>
+                </div>
                 <p className="text-sm text-muted-foreground">
                     Specify which products are included with this payment plan
                 </p>
             </div>
             <div className="space-y-6">
-                <FormField
+                {/* <FormField
                     control={form.control}
                     name="includedProducts"
                     render={({ field }: any) => (
@@ -631,8 +668,198 @@ function IncludedProductsSection({ form }: { form: any }) {
                             <FormMessage />
                         </FormItem>
                     )}
-                />
+                /> */}
+                <div className="space-y-2">
+                    <Label htmlFor="product-select">Add Product</Label>
+                    <Select
+                        value=""
+                        onValueChange={(value) => {
+                            const currentProducts =
+                                form.getValues("includedProducts") || [];
+                            if (!currentProducts.includes(value)) {
+                                form.setValue("includedProducts", [
+                                    ...currentProducts,
+                                    value,
+                                ]);
+                            }
+                        }}
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a product to add" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {productsLoading ? (
+                                <div className="p-2 text-center text-sm text-muted-foreground">
+                                    Loading products...
+                                </div>
+                            ) : (
+                                products
+                                    .filter(
+                                        (product) =>
+                                            !form
+                                                .watch("includedProducts")
+                                                ?.includes(product.courseId),
+                                    )
+                                    .map((product) => (
+                                        <SelectItem
+                                            key={product.courseId}
+                                            value={product.courseId}
+                                        >
+                                            <div className="flex justify-between items-center w-full">
+                                                <span>{product.title}</span>
+                                                <span className="text-sm text-muted-foreground ml-2">
+                                                    {capitalize(product.type)}
+                                                </span>
+                                            </div>
+                                        </SelectItem>
+                                    ))
+                            )}
+                            {!productsLoading &&
+                                products.filter(
+                                    (product) =>
+                                        !form
+                                            .watch("includedProducts")
+                                            ?.includes(product.courseId),
+                                ).length === 0 && (
+                                    <div className="p-2 text-center text-sm text-muted-foreground">
+                                        {products.length === 0
+                                            ? "No products available"
+                                            : "All products already added"}
+                                    </div>
+                                )}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {/* Display Selected Products */}
+                {form.watch("includedProducts")?.length > 0 && (
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                            <Label className="text-sm font-medium">
+                                Selected Products
+                            </Label>
+                            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                                {form.watch("includedProducts")?.length}{" "}
+                                selected
+                            </span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {form
+                                .watch("includedProducts")
+                                ?.map((productId: string) => {
+                                    const product = products.find(
+                                        (p) => p.courseId === productId,
+                                    );
+                                    return product ? (
+                                        <div
+                                            key={productId}
+                                            className="group relative inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg transition-all duration-200 hover:shadow-md hover:border-primary/30"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-2 h-2 rounded-full bg-primary opacity-60"></div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-medium text-foreground line-clamp-1">
+                                                        {product.title}
+                                                    </span>
+                                                    <span className="text-xs text-muted-foreground capitalize">
+                                                        {product.type}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => {
+                                                    const currentProducts =
+                                                        form.getValues(
+                                                            "includedProducts",
+                                                        ) || [];
+                                                    const updatedProducts =
+                                                        currentProducts.filter(
+                                                            (id: string) =>
+                                                                id !==
+                                                                productId,
+                                                        );
+                                                    form.setValue(
+                                                        "includedProducts",
+                                                        updatedProducts,
+                                                    );
+                                                }}
+                                                className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </Button>
+                                        </div>
+                                    ) : null;
+                                })}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
 }
+
+// PaymentPlanForm Skeleton Component
+export const PaymentPlanFormSkeleton = () => (
+    <div className="space-y-8 animate-pulse">
+        {/* Basic Information Section */}
+        <div className="space-y-4">
+            <div className="space-y-2">
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-4 w-64" />
+            </div>
+            <div className="space-y-6">
+                <div className="space-y-2">
+                    <Skeleton className="h-5 w-16" />
+                    <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-20 w-full" />
+                </div>
+            </div>
+        </div>
+
+        <Skeleton className="h-px w-full" />
+
+        {/* Pricing Section */}
+        <div className="space-y-4">
+            <div className="space-y-2">
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-4 w-80" />
+            </div>
+            <div className="space-y-6">
+                <div className="space-y-2">
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-10 w-full" />
+                </div>
+            </div>
+        </div>
+
+        <Skeleton className="h-px w-full" />
+
+        {/* Included Products Section */}
+        <div className="space-y-4">
+            <div className="space-y-2">
+                <Skeleton className="h-6 w-36" />
+                <Skeleton className="h-4 w-96" />
+            </div>
+            <div className="space-y-6">
+                <div className="space-y-2">
+                    <Skeleton className="h-5 w-20" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-4 w-72" />
+                </div>
+            </div>
+        </div>
+
+        {/* Submit Button */}
+        <Skeleton className="h-10 w-24" />
+    </div>
+);

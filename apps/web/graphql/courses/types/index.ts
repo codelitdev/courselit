@@ -23,7 +23,7 @@ import { getUser } from "../../users/logic";
 const { lessonMetaType } = lessonTypes;
 const { course, download, blog, costPaid, costEmail, costFree } = constants;
 import sequenceTypes from "../../mails/types";
-import { getPlansForEntity } from "@/graphql/paymentplans/logic";
+import { getPlans } from "@/graphql/paymentplans/logic";
 import GQLContext from "@/models/GQLContext";
 
 const courseStatusType = new GraphQLEnumType({
@@ -157,7 +157,7 @@ const courseType = new GraphQLObjectType({
         paymentPlans: {
             type: new GraphQLList(paymentPlansTypes.paymentPlan),
             resolve: (course, _, ctx: GQLContext, __) =>
-                getPlansForEntity({
+                getPlans({
                     entityId: course.courseId,
                     entityType: Constants.MembershipEntityType.COURSE,
                     ctx,

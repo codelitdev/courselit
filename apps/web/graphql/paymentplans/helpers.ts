@@ -1,8 +1,10 @@
-import { PaymentPlan, Constants } from "@courselit/common-models";
+import { PaymentPlan, Constants, Course } from "@courselit/common-models";
 import { responses } from "@config/strings";
 import { getPaymentMethodFromSettings } from "@/payments-new";
 import GQLContext from "@models/GQLContext";
 import PaymentPlanModel, { InternalPaymentPlan } from "@models/PaymentPlan";
+import CourseModel from "@models/Course";
+import { ObjectId } from "mongodb";
 
 export const validatePaymentPlan = async (
     paymentPlan: Partial<PaymentPlan>,
@@ -83,5 +85,38 @@ export const checkDuplicatePlan = async (
                 throw new Error(responses.duplicate_payment_plan);
             }
         }
+    }
+};
+
+export const checkIncludedProducts = async (
+    domain: ObjectId,
+    paymentPlan: Partial<InternalPaymentPlan>,
+) => {
+    if (
+        !paymentPlan.includedProducts ||
+        paymentPlan.includedProducts?.length === 0
+    )
+        return;
+
+    const products = (await CourseModel.find(
+        {
+            domain,
+            courseId: { $in: paymentPlan.includedProducts },
+        },
+        {
+            courseId: 1,
+        },
+    ).lean()) as unknown as Course[];
+
+    let nonExistingProducts: string[] = [];
+    for (const product of paymentPlan.includedProducts) {
+        if (!products.some((p) => p.courseId === product)) {
+            nonExistingProducts.push(product);
+        }
+    }
+    if (nonExistingProducts.length > 0) {
+        throw new Error(
+            `Products ${nonExistingProducts.join(", ")} do not exist`,
+        );
     }
 };

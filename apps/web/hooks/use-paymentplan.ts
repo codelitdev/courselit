@@ -23,8 +23,8 @@ export const usePaymentPlan = (
 
         const loadPaymentPlan = async () => {
             const query = `
-            query ($id: String!, $entityId: String!, $entityType: MembershipEntityType!) {
-                paymentPlan: getPaymentPlan(id: $id, entityId: $entityId, entityType: $entityType) {
+            query ($id: String!) {
+                paymentPlan: getPaymentPlan(id: $id) {
                     planId
                     name
                     type
@@ -35,6 +35,8 @@ export const usePaymentPlan = (
                     emiTotalInstallments
                     subscriptionMonthlyAmount
                     subscriptionYearlyAmount
+                    description
+                    includedProducts
                 }
             }
             `;
@@ -44,8 +46,6 @@ export const usePaymentPlan = (
                     query,
                     variables: {
                         id,
-                        entityId,
-                        entityType: entityType.toUpperCase(),
                     },
                 })
                 .setIsGraphQLEndpoint(true)

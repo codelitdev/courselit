@@ -14,7 +14,11 @@ import PaymentPlanModel, { InternalPaymentPlan } from "@models/PaymentPlan";
 import { Domain } from "@models/Domain";
 import { InternalCourse } from "@courselit/common-logic";
 import GQLContext from "@models/GQLContext";
-import { checkDuplicatePlan, validatePaymentPlan } from "./helpers";
+import {
+    checkDuplicatePlan,
+    checkIncludedProducts,
+    validatePaymentPlan,
+} from "./helpers";
 const { MembershipEntityType: membershipEntityType } = Constants;
 const { permissions } = constants;
 
@@ -141,6 +145,7 @@ export async function createPlan({
     entityType,
     description,
     ctx,
+    includedProducts,
 }: {
     name: string;
     type: PaymentPlanType;
@@ -153,6 +158,7 @@ export async function createPlan({
     entityType: MembershipEntityType;
     description?: string;
     ctx: GQLContext;
+    includedProducts?: string[];
 }): Promise<PaymentPlan> {
     checkIfAuthenticated(ctx);
 
@@ -176,10 +182,12 @@ export async function createPlan({
         subscriptionMonthlyAmount,
         subscriptionYearlyAmount,
         description,
+        includedProducts,
     };
 
     await validatePaymentPlan(paymentPlanPayload, ctx.subdomain.settings);
     await checkDuplicatePlan(paymentPlanPayload);
+    await checkIncludedProducts(ctx.subdomain._id, paymentPlanPayload);
 
     const paymentPlan = await PaymentPlanModel.create(paymentPlanPayload);
 
@@ -194,8 +202,6 @@ export async function createPlan({
 
 export async function updatePlan({
     planId,
-    entityId,
-    entityType,
     name,
     type,
     oneTimeAmount,
@@ -205,10 +211,9 @@ export async function updatePlan({
     subscriptionYearlyAmount,
     description,
     ctx,
+    includedProducts,
 }: {
     planId: string;
-    entityId: string;
-    entityType: MembershipEntityType;
     name?: string;
     type?: PaymentPlanType;
     oneTimeAmount?: number;
@@ -218,16 +223,9 @@ export async function updatePlan({
     subscriptionYearlyAmount?: number;
     description?: string;
     ctx: GQLContext;
+    includedProducts?: string[];
 }): Promise<PaymentPlan> {
     checkIfAuthenticated(ctx);
-
-    const entity = await fetchEntity(entityType, entityId, ctx);
-
-    if (!entity) {
-        throw new Error(responses.item_not_found);
-    }
-
-    checkEntityManagementPermission(entityType, ctx);
 
     const paymentPlan = await PaymentPlanModel.findOne({
         domain: ctx.subdomain._id,
@@ -239,19 +237,35 @@ export async function updatePlan({
         throw new Error(responses.item_not_found);
     }
 
-    const updateFields: Partial<PaymentPlan> = {};
+    const entity = await fetchEntity(
+        paymentPlan.entityType,
+        paymentPlan.entityId,
+        ctx,
+    );
 
-    if (name !== undefined) updateFields.name = name;
-    if (type !== undefined) updateFields.type = type;
-    if (oneTimeAmount !== undefined) updateFields.oneTimeAmount = oneTimeAmount;
-    if (emiAmount !== undefined) updateFields.emiAmount = emiAmount;
+    if (!entity) {
+        throw new Error(responses.item_not_found);
+    }
+
+    checkEntityManagementPermission(paymentPlan.entityType, ctx);
+
+    if (name !== undefined) paymentPlan.name = name;
+    if (type !== undefined) paymentPlan.type = type;
+    if (oneTimeAmount !== undefined) paymentPlan.oneTimeAmount = oneTimeAmount;
+    if (emiAmount !== undefined) paymentPlan.emiAmount = emiAmount;
     if (emiTotalInstallments !== undefined)
-        updateFields.emiTotalInstallments = emiTotalInstallments;
+        paymentPlan.emiTotalInstallments = emiTotalInstallments;
     if (subscriptionMonthlyAmount !== undefined)
-        updateFields.subscriptionMonthlyAmount = subscriptionMonthlyAmount;
+        paymentPlan.subscriptionMonthlyAmount = subscriptionMonthlyAmount;
     if (subscriptionYearlyAmount !== undefined)
-        updateFields.subscriptionYearlyAmount = subscriptionYearlyAmount;
-    if (description !== undefined) updateFields.description = description;
+        paymentPlan.subscriptionYearlyAmount = subscriptionYearlyAmount;
+    if (description !== undefined) paymentPlan.description = description;
+    if (includedProducts !== undefined)
+        paymentPlan.includedProducts = includedProducts;
+
+    await validatePaymentPlan(paymentPlan, ctx.subdomain.settings);
+    await checkDuplicatePlan(paymentPlan, true);
+    await checkIncludedProducts(ctx.subdomain._id, paymentPlan);
 
     await paymentPlan.save();
 
@@ -360,4 +374,38 @@ export async function createInternalPaymentPlan(
         entityId: "",
         entityType: membershipEntityType.COURSE,
     });
+}
+
+export async function getIncludedProducts({
+    entityId,
+    entityType,
+    ctx,
+}: {
+    entityId: string;
+    entityType: MembershipEntityType;
+    ctx: GQLContext;
+}) {
+    const paymentPlans = (await PaymentPlanModel.find(
+        {
+            domain: ctx.subdomain._id,
+            entityId,
+            entityType,
+            archived: false,
+        },
+        {
+            includedProducts: 1,
+        },
+    ).lean()) as unknown as PaymentPlan[];
+
+    const allIncludedProducts = paymentPlans.flatMap(
+        (plan) => plan.includedProducts || [],
+    );
+
+    const products = (await CourseModel.find({
+        domain: ctx.subdomain._id,
+        courseId: { $in: allIncludedProducts },
+        published: true,
+    }).lean()) as unknown as InternalCourse[];
+
+    return products;
 }

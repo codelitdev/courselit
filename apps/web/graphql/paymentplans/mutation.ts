@@ -1,4 +1,9 @@
-import { GraphQLInt, GraphQLNonNull, GraphQLString } from "graphql";
+import {
+    GraphQLInt,
+    GraphQLList,
+    GraphQLNonNull,
+    GraphQLString,
+} from "graphql";
 import types from "./types";
 import {
     archivePaymentPlan,
@@ -28,6 +33,7 @@ const mutations = {
             subscriptionMonthlyAmount: { type: GraphQLInt },
             subscriptionYearlyAmount: { type: GraphQLInt },
             description: { type: GraphQLString },
+            includedProducts: { type: new GraphQLList(GraphQLString) },
         },
         resolve: async (
             _: any,
@@ -42,6 +48,7 @@ const mutations = {
                 entityId,
                 entityType,
                 description,
+                includedProducts,
             }: {
                 name: string;
                 type: PaymentPlanType;
@@ -53,6 +60,7 @@ const mutations = {
                 entityId: string;
                 entityType: MembershipEntityType;
                 description?: string;
+                includedProducts?: string[];
             },
             ctx: any,
         ) =>
@@ -68,16 +76,13 @@ const mutations = {
                 entityType,
                 description,
                 ctx,
+                includedProducts,
             }),
     },
     updatePlan: {
         type: types.paymentPlan,
         args: {
             planId: { type: new GraphQLNonNull(GraphQLString) },
-            entityId: { type: new GraphQLNonNull(GraphQLString) },
-            entityType: {
-                type: new GraphQLNonNull(userTypes.membershipEntityType),
-            },
             name: { type: GraphQLString },
             type: { type: types.paymentPlanType },
             oneTimeAmount: { type: GraphQLInt },
@@ -86,6 +91,7 @@ const mutations = {
             subscriptionMonthlyAmount: { type: GraphQLInt },
             subscriptionYearlyAmount: { type: GraphQLInt },
             description: { type: GraphQLString },
+            includedProducts: { type: new GraphQLList(GraphQLString) },
         },
         resolve: async (
             _: any,
@@ -98,14 +104,11 @@ const mutations = {
                 emiTotalInstallments,
                 subscriptionMonthlyAmount,
                 subscriptionYearlyAmount,
-                entityId,
-                entityType,
                 description,
+                includedProducts,
             }: {
                 planId: string;
-                type: PaymentPlanType;
-                entityId: string;
-                entityType: MembershipEntityType;
+                type?: PaymentPlanType;
                 name?: string;
                 oneTimeAmount?: number;
                 emiAmount?: number;
@@ -113,13 +116,12 @@ const mutations = {
                 subscriptionMonthlyAmount?: number;
                 subscriptionYearlyAmount?: number;
                 description?: string;
+                includedProducts?: string[];
             },
             ctx: any,
         ) =>
             updatePlan({
                 planId,
-                entityId,
-                entityType,
                 name,
                 type,
                 oneTimeAmount,
@@ -129,6 +131,7 @@ const mutations = {
                 subscriptionYearlyAmount,
                 description,
                 ctx,
+                includedProducts,
             }),
     },
     archivePlan: {

@@ -2,10 +2,13 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Loader2 } from "lucide-react";
 import { Constants, MembershipEntityType } from "@courselit/common-models";
 import DashboardContent from "@/components/admin/dashboard-content";
-import { PaymentPlanForm } from "@/components/admin/payments/payment-plan-form";
+import {
+    PaymentPlanForm,
+    PaymentPlanFormSkeleton,
+} from "@/components/admin/payments/payment-plan-form";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
     COMMUNITY_SETTINGS,
     EDIT_PAYMENT_PLAN_HEADER,
@@ -43,7 +46,6 @@ export default function EditPaymentPlanPage() {
         },
         { label: EDIT_PAYMENT_PLAN_HEADER, href: "#" },
     ];
-
     const { paymentPlan, loaded: paymentPlanLoaded } = usePaymentPlan(
         planId,
         entityId,
@@ -61,9 +63,17 @@ export default function EditPaymentPlanPage() {
     if (!paymentPlanLoaded) {
         return (
             <DashboardContent breadcrumbs={breadcrumbs}>
-                <div className="flex items-center justify-center h-64">
-                    <Loader2 className="h-8 w-8 animate-spin" />
+                <div className="space-y-2">
+                    <div className="flex flex-col lg:flex-row gap-4 lg:items-center justify-between mb-8">
+                        <div>
+                            <h1 className="text-4xl font-semibold">
+                                {EDIT_PAYMENT_PLAN_HEADER}
+                            </h1>
+                            <Skeleton className="h-5 w-64 mt-2" />
+                        </div>
+                    </div>
                 </div>
+                <PaymentPlanFormSkeleton />
             </DashboardContent>
         );
     }
@@ -87,6 +97,7 @@ export default function EditPaymentPlanPage() {
                 initialData={
                     paymentPlan
                         ? {
+                              planId: paymentPlan.planId,
                               name: paymentPlan.name,
                               description: paymentPlan.description,
                               type: paymentPlan.type,

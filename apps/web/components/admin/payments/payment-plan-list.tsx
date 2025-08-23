@@ -108,146 +108,147 @@ export default function PaymentPlanList({
         <div className="w-full max-w-md mx-auto p-2 space-y-2">
             <div className="space-y-2">
                 {paymentPlans.map((plan) => (
-                    <Link
+                    <div
                         key={plan.planId}
-                        href={`/dashboard/paymentplan/${plan.entityType?.toLowerCase()}/${plan.entityId}/edit/${plan.planId}`}
+                        className="p-2 border rounded-md bg-background hover:border-primary/50 transition-colors"
                     >
-                        <div className="p-2 border rounded-md bg-background hover:border-primary/50 transition-colors">
-                            <div className="flex justify-between items-center mb-1">
-                                <h3 className="text-sm font-medium">
+                        <div className="flex justify-between items-center mb-1">
+                            <Link
+                                href={`/dashboard/paymentplan/${plan.entityType?.toLowerCase()}/${plan.entityId}/edit/${plan.planId}`}
+                            >
+                                <h3 className="text-sm font-medium hover:underline">
                                     {plan.name}
                                 </h3>
-                                <div className="flex items-center space-x-2">
+                            </Link>
+                            <div className="flex items-center space-x-2">
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    onDefaultPlanChanged?.(
+                                                        plan.planId,
+                                                    );
+                                                }}
+                                                disabled={
+                                                    defaultPaymentPlanId ===
+                                                    plan.planId
+                                                }
+                                            >
+                                                <Star
+                                                    className={`h-3 w-3`}
+                                                    color={
+                                                        defaultPaymentPlanId ===
+                                                        plan.planId
+                                                            ? "black"
+                                                            : "#d3d3d3"
+                                                    }
+                                                />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Make default</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <Dialog
+                                    open={isDialogOpen}
+                                    onOpenChange={setIsDialogOpen}
+                                >
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-6 w-6"
-                                                    onClick={() =>
-                                                        onDefaultPlanChanged?.(
-                                                            plan.planId,
-                                                        )
-                                                    }
-                                                    disabled={
-                                                        defaultPaymentPlanId ===
-                                                        plan.planId
-                                                    }
-                                                >
-                                                    <Star
-                                                        className={`h-3 w-3`}
-                                                        color={
-                                                            defaultPaymentPlanId ===
-                                                            plan.planId
-                                                                ? "black"
-                                                                : "#d3d3d3"
-                                                        }
-                                                    />
-                                                </Button>
+                                                <DialogTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-6 w-6"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            setPlanToArchive(
+                                                                plan,
+                                                            );
+                                                            setIsDialogOpen(
+                                                                true,
+                                                            );
+                                                        }}
+                                                    >
+                                                        <Archive className="h-3 w-3" />
+                                                    </Button>
+                                                </DialogTrigger>
                                             </TooltipTrigger>
                                             <TooltipContent>
-                                                <p>Make default</p>
+                                                <p>Archive plan</p>
                                             </TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
-                                    <Dialog
-                                        open={isDialogOpen}
-                                        onOpenChange={setIsDialogOpen}
-                                    >
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <DialogTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-6 w-6"
-                                                            onClick={() => {
-                                                                setPlanToArchive(
-                                                                    plan,
-                                                                );
-                                                                setIsDialogOpen(
-                                                                    true,
-                                                                );
-                                                            }}
-                                                        >
-                                                            <Archive className="h-3 w-3" />
-                                                        </Button>
-                                                    </DialogTrigger>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>Archive plan</p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                        <DialogContent>
-                                            <DialogHeader>
-                                                <DialogTitle>
-                                                    Are you sure you want to
-                                                    archive this plan?
-                                                </DialogTitle>
-                                                <DialogDescription>
-                                                    This action cannot be
-                                                    undone. This will
-                                                    permanently archive the
-                                                    payment plan &quot;
-                                                    {planToArchive?.name}
-                                                    &quot;.
-                                                </DialogDescription>
-                                            </DialogHeader>
-                                            <DialogFooter>
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() => {
-                                                        setPlanToArchive(null);
-                                                        setIsDialogOpen(false);
-                                                    }}
-                                                >
-                                                    Cancel
-                                                </Button>
-                                                <Button
-                                                    variant="destructive"
-                                                    onClick={() =>
-                                                        planToArchive &&
-                                                        handleArchive(
-                                                            planToArchive,
-                                                        )
-                                                    }
-                                                >
-                                                    Archive
-                                                </Button>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                    </Dialog>
-                                </div>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <span className="text-xs">
-                                    {(() => {
-                                        const planAmount = getPlanAmount(
-                                            plan,
-                                            currencySymbol,
-                                        );
-                                        return typeof planAmount === "string"
-                                            ? planAmount
-                                            : `${planAmount.amount} × ${planAmount.installments}`;
-                                    })()}
-                                </span>
-                                <Badge
-                                    variant="secondary"
-                                    className="rounded-full px-1.5 py-0.5 text-[10px]"
-                                >
-                                    {getPlanTypeLabel(plan)}
-                                </Badge>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>
+                                                Are you sure you want to archive
+                                                this plan?
+                                            </DialogTitle>
+                                            <DialogDescription>
+                                                This action cannot be undone.
+                                                This will permanently archive
+                                                the payment plan &quot;
+                                                {planToArchive?.name}
+                                                &quot;.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <DialogFooter>
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => {
+                                                    setPlanToArchive(null);
+                                                    setIsDialogOpen(false);
+                                                }}
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                variant="destructive"
+                                                onClick={() =>
+                                                    planToArchive &&
+                                                    handleArchive(planToArchive)
+                                                }
+                                            >
+                                                Archive
+                                            </Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
                             </div>
                         </div>
-                    </Link>
+                        <div className="flex items-center space-x-2">
+                            <span className="text-xs">
+                                {(() => {
+                                    const planAmount = getPlanAmount(
+                                        plan,
+                                        currencySymbol,
+                                    );
+                                    return typeof planAmount === "string"
+                                        ? planAmount
+                                        : `${planAmount.amount} × ${planAmount.installments}`;
+                                })()}
+                            </span>
+                            <Badge
+                                variant="secondary"
+                                className="rounded-full px-1.5 py-0.5 text-[10px]"
+                            >
+                                {getPlanTypeLabel(plan)}
+                            </Badge>
+                        </div>
+                    </div>
                 ))}
-                <Link
-                    href={`/dashboard/paymentplan/${entityType}/${entityId}/new`}
-                >
-                    <div className="p-2 border border-dashed rounded-md bg-background hover:border-primary/50 transition-colors group cursor-pointer mt-4">
+                <div className="p-2 border border-dashed rounded-md bg-background hover:border-primary/50 transition-colors group cursor-pointer mt-4">
+                    <Link
+                        href={`/dashboard/paymentplan/${entityType}/${entityId}/new`}
+                    >
                         <div className="flex justify-between items-center mb-1">
                             <h3 className="text-sm font-medium text-muted-foreground group-hover:text-primary">
                                 New Plan
@@ -271,8 +272,8 @@ export default function PaymentPlanList({
                                 Payment frequency
                             </Badge>
                         </div>
-                    </div>
-                </Link>
+                    </Link>
+                </div>
             </div>
         </div>
     );

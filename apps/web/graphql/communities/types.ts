@@ -15,7 +15,7 @@ import userTypes from "../users/types";
 import { getUser } from "../users/logic";
 import GQLContext from "@models/GQLContext";
 import paymentPlansTypes from "../paymentplans/types";
-import { getPlansForEntity } from "../paymentplans/logic";
+import { getPlans } from "../paymentplans/logic";
 
 const communityReportContentType = new GraphQLEnumType({
     name: "CommunityReportContentType",
@@ -52,7 +52,7 @@ const community = new GraphQLObjectType({
         paymentPlans: {
             type: new GraphQLList(paymentPlansTypes.paymentPlan),
             resolve: (community, _, ctx: GQLContext, __) =>
-                getPlansForEntity({
+                getPlans({
                     entityId: community.communityId,
                     entityType: Constants.MembershipEntityType.COMMUNITY,
                     ctx,
