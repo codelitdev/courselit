@@ -635,7 +635,7 @@ export async function sendCourseOverMail(
 
     const membership = await getMembership({
         domainId: ctx.subdomain._id,
-        userId: dbUser.userId,
+        userId: dbUser!.userId,
         entityType: Constants.MembershipEntityType.COURSE,
         entityId: course.courseId,
         planId: paymentPlans[0].planId,
@@ -647,7 +647,7 @@ export async function sendCourseOverMail(
         return true;
     }
 
-    await createTemplateAndSendMail({ course, ctx, user: dbUser });
+    await createTemplateAndSendMail({ course, ctx, user: dbUser! });
     return true;
 }
 

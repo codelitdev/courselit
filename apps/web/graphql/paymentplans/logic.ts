@@ -19,6 +19,10 @@ import {
     checkIncludedProducts,
     validatePaymentPlan,
 } from "./helpers";
+import mongoose from "mongoose";
+import MembershipModel from "@models/Membership";
+import { runPostMembershipTasks } from "../users/logic";
+import ActivityModel from "@models/Activity";
 const { MembershipEntityType: membershipEntityType } = Constants;
 const { permissions } = constants;
 
@@ -408,4 +412,62 @@ export async function getIncludedProducts({
     }).lean()) as unknown as InternalCourse[];
 
     return products;
+}
+
+export async function addIncludedProductsMemberships({
+    domain,
+    userId,
+    paymentPlan,
+    sessionId,
+}: {
+    domain: mongoose.Types.ObjectId;
+    userId: string;
+    paymentPlan: PaymentPlan;
+    sessionId: string;
+}) {
+    const courses = await CourseModel.find({
+        domain,
+        courseId: { $in: paymentPlan.includedProducts },
+        published: true,
+    });
+
+    for (const course of courses) {
+        const membership = await MembershipModel.create({
+            domain,
+            userId,
+            entityId: course.courseId,
+            entityType: Constants.MembershipEntityType.COURSE,
+            paymentPlanId: paymentPlan.planId,
+            status: Constants.MembershipStatus.ACTIVE,
+            sessionId,
+            isIncludedInPlan: true,
+        });
+
+        await runPostMembershipTasks({ domain, membership, paymentPlan });
+    }
+}
+
+export async function deleteMembershipsActivatedViaPaymentPlan({
+    domain,
+    userId,
+    paymentPlanId,
+}: {
+    domain: mongoose.Types.ObjectId;
+    userId: string;
+    paymentPlanId: string;
+}) {
+    await ActivityModel.deleteMany({
+        domain,
+        userId,
+        type: constants.activityTypes[0],
+        "metadata.isIncludedInPlan": true,
+        "metadata.paymentPlanId": paymentPlanId,
+    });
+    await MembershipModel.deleteMany({
+        domain,
+        userId,
+        paymentPlanId: paymentPlanId,
+        entityType: Constants.MembershipEntityType.COURSE,
+        isIncludedInPlan: true,
+    });
 }

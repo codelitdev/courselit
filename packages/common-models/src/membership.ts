@@ -16,7 +16,7 @@ export interface Membership {
     entityType: MembershipEntityType;
     status: MembershipStatus;
     role: MembershipRole;
-    paymentPlanId?: string;
+    paymentPlanId: string;
     subscriptionId?: string;
     subscriptionMethod?: string;
     joiningReason?: string;

@@ -48,7 +48,7 @@ const PaymentPlanSchema = new mongoose.Schema<InternalPaymentPlan>(
 
 PaymentPlanSchema.pre("save", async function (next) {
     if (this.internal) {
-        const existingInternalPlan = await this.constructor.findOne({
+        const existingInternalPlan = await (this.constructor as any).findOne({
             domain: this.domain,
             internal: true,
             _id: { $ne: this._id },

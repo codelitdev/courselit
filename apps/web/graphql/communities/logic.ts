@@ -16,6 +16,7 @@ import {
     CommunityReportType,
     CommunityReportStatus,
     MembershipRole,
+    PaymentPlan,
 } from "@courselit/common-models";
 import CommunityPostModel from "@models/CommunityPost";
 import {
@@ -27,7 +28,11 @@ import CommunityCommentModel from "@models/CommunityComment";
 import PageModel from "@models/Page";
 import PaymentPlanModel from "@models/PaymentPlan";
 import MembershipModel from "@models/Membership";
-import { getPlans } from "../paymentplans/logic";
+import {
+    addIncludedProductsMemberships,
+    deleteMembershipsActivatedViaPaymentPlan,
+    getPlans,
+} from "../paymentplans/logic";
 import { getPaymentMethodFromSettings } from "@/payments-new";
 import CommunityReportModel, {
     InternalCommunityReport,
@@ -49,6 +54,7 @@ import { addNotification } from "@/services/queue";
 import { hasActiveSubscription } from "../users/logic";
 import { internal } from "@config/strings";
 import { hasCommunityPermission as hasPermission } from "@ui-lib/utils";
+import ActivityModel from "@models/Activity";
 
 const { permissions, communityPage } = constants;
 
@@ -905,11 +911,6 @@ async function formatCommunity(
         pageId: community.pageId,
         products: community.products,
         joiningReasonText: community.joiningReasonText,
-        paymentPlans: await getPlans({
-            entityId: community.communityId,
-            entityType: Constants.MembershipEntityType.COMMUNITY,
-            ctx,
-        }),
         defaultPaymentPlan: community.defaultPaymentPlan,
         featuredImage: community.featuredImage,
         membersCount: await getMembersCount({
@@ -956,10 +957,6 @@ export async function updateMemberStatus({
     rejectionReason?: string;
 }): Promise<Membership> {
     checkIfAuthenticated(ctx);
-
-    // if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-    //     throw new Error(responses.action_not_allowed);
-    // }
 
     if (ctx.user.userId === userId) {
         throw new Error(responses.action_not_allowed);
@@ -1016,12 +1013,33 @@ export async function updateMemberStatus({
             );
         }
         targetMember.rejectionReason = rejectionReason;
+
+        if (targetMember.paymentPlanId) {
+            await deleteMembershipsActivatedViaPaymentPlan({
+                domain: ctx.subdomain._id,
+                userId: targetMember.userId,
+                paymentPlanId: targetMember.paymentPlanId,
+            });
+        }
     }
 
     targetMember.status = nextStatus;
 
     if (targetMember.status === Constants.MembershipStatus.ACTIVE) {
         targetMember.rejectionReason = undefined;
+        const paymentPlan = (await PaymentPlanModel.findOne({
+            domain: ctx.subdomain._id,
+            planId: targetMember.paymentPlanId,
+        })) as PaymentPlan;
+
+        if (targetMember.paymentPlanId) {
+            await addIncludedProductsMemberships({
+                domain: ctx.subdomain._id,
+                userId: targetMember.userId,
+                paymentPlan,
+                sessionId: targetMember.sessionId,
+            });
+        }
 
         await addNotification({
             domain: ctx.subdomain._id.toString(),
@@ -1722,6 +1740,14 @@ export async function leaveCommunity({
         await paymentMethod?.cancel(member.subscriptionId);
     }
 
+    if (member.paymentPlanId) {
+        await deleteMembershipsActivatedViaPaymentPlan({
+            domain: ctx.subdomain._id,
+            userId: member.userId,
+            paymentPlanId: member.paymentPlanId,
+        });
+    }
+
     await member.deleteOne();
 
     return true;
@@ -1769,7 +1795,45 @@ export async function deleteCommunity({
         },
     );
 
+    await deleteMemberships(community, ctx);
+
     return await formatCommunity(community, ctx);
+}
+
+async function deleteMemberships(
+    community: InternalCommunity,
+    ctx: GQLContext,
+) {
+    const paymentPlans = await PaymentPlanModel.find({
+        domain: ctx.subdomain._id,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+    });
+
+    for (const paymentPlan of paymentPlans) {
+        if (
+            paymentPlan.includedProducts &&
+            paymentPlan.includedProducts.length > 0
+        ) {
+            await ActivityModel.deleteMany({
+                domain: ctx.subdomain._id,
+                type: constants.activityTypes[0],
+                "metadata.isIncludedInPlan": true,
+                "metadata.paymentPlanId": paymentPlan.planId,
+            });
+            await MembershipModel.deleteMany({
+                domain: ctx.subdomain._id,
+                paymentPlanId: paymentPlan.planId,
+                entityType: Constants.MembershipEntityType.COURSE,
+                isIncludedInPlan: true,
+            });
+        }
+        await MembershipModel.deleteMany({
+            domain: ctx.subdomain._id,
+            paymentPlanId: paymentPlan.planId,
+        });
+        await paymentPlan.deleteOne();
+    }
 }
 
 export async function reportCommunityContent({
