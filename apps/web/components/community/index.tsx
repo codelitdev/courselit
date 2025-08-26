@@ -654,6 +654,8 @@ export function CommunityForum({
                             poster={media.media.thumbnail}
                             className="h-48 aspect-video object-cover rounded-md"
                             controls
+                            controlsList="nodownload" // eslint-disable-line react/no-unknown-property
+                            onContextMenu={(e) => e.preventDefault()}
                         >
                             Your browser does not support the video tag.
                         </video>
