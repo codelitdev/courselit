@@ -3,6 +3,7 @@ import Group from "./group";
 import { ProductPriceType, CourseType, ProductAccessType } from "./constants";
 import Lesson from "./lesson";
 import User from "./user";
+import { PaymentPlan } from "./payment-plan";
 
 export type ProductPriceType =
     (typeof ProductPriceType)[keyof typeof ProductPriceType];
@@ -33,4 +34,5 @@ export interface Course {
     leadMagnet?: boolean;
     lessons?: Lesson[];
     user: User;
+    paymentPlans?: PaymentPlan[];
 }

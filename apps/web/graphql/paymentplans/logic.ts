@@ -375,7 +375,7 @@ export async function createInternalPaymentPlan(
         type: Constants.PaymentPlanType.FREE,
         internal: true,
         userId: userId,
-        entityId: "",
+        entityId: "internal",
         entityType: membershipEntityType.COURSE,
     });
 }
@@ -470,4 +470,17 @@ export async function deleteMembershipsActivatedViaPaymentPlan({
         entityType: Constants.MembershipEntityType.COURSE,
         isIncludedInPlan: true,
     });
+}
+
+export async function deleteProductsFromPaymentPlans({
+    domain,
+    courseId,
+}: {
+    domain: mongoose.Types.ObjectId;
+    courseId: string;
+}) {
+    await PaymentPlanModel.updateMany(
+        { domain, includedProducts: { $in: [courseId] } },
+        { $pull: { includedProducts: courseId } },
+    );
 }

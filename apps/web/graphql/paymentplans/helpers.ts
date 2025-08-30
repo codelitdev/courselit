@@ -18,6 +18,14 @@ export const validatePaymentPlan = async (
         throw new Error("Payment plan type is required");
     }
 
+    if (
+        paymentPlan.entityType === Constants.MembershipEntityType.COURSE &&
+        paymentPlan.includedProducts &&
+        paymentPlan.includedProducts.length > 0
+    ) {
+        throw new Error("Included products are not allowed for course");
+    }
+
     const paymentMethod = await getPaymentMethodFromSettings(settings);
     if (!paymentMethod && paymentPlan.type !== Constants.PaymentPlanType.FREE) {
         throw new Error(responses.payment_info_required);
@@ -102,6 +110,12 @@ export const checkIncludedProducts = async (
         {
             domain,
             courseId: { $in: paymentPlan.includedProducts },
+            type: {
+                $in: [
+                    Constants.CourseType.COURSE,
+                    Constants.CourseType.DOWNLOAD,
+                ],
+            },
         },
         {
             courseId: 1,

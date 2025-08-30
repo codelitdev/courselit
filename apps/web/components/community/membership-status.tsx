@@ -97,7 +97,7 @@ export default function MembershipStatus({
     }
 
     return (
-        <div>
+        <div className="space-y-4">
             {innerStatus?.toLowerCase() ===
                 Constants.MembershipStatus.PENDING && (
                 <Alert>

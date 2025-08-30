@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Constants, MembershipEntityType } from "@courselit/common-models";
+import { Constants } from "@courselit/common-models";
 import DashboardContent from "@/components/admin/dashboard-content";
 import {
     PaymentPlanForm,
@@ -26,8 +26,10 @@ const {
 export default function EditPaymentPlanPage() {
     const params = useParams();
     const router = useRouter();
-
-    const entityType = params?.type as MembershipEntityType;
+    const type = params?.type as "community" | "product";
+    const entityType = type === "community" 
+        ? membershipEntityType.COMMUNITY 
+        : membershipEntityType.COURSE;
     const entityId = params?.id as string;
     const planId = params?.planid as string;
     const { product, community } = useEntityValidation(entityType, entityId);
@@ -38,11 +40,11 @@ export default function EditPaymentPlanPage() {
                 entityType === membershipEntityType.COMMUNITY
                     ? truncate(community?.name || "...", 10)
                     : truncate(product?.title || "...", 10),
-            href: `/dashboard/${entityType}/${entityId}`,
+            href: `/dashboard/${type}/${entityId}`,
         },
         {
             label: COMMUNITY_SETTINGS,
-            href: `/dashboard/${entityType === membershipEntityType.COMMUNITY ? "community" : "product"}/${entityId}/manage`,
+            href: `/dashboard/${type}/${entityId}/manage`,
         },
         { label: EDIT_PAYMENT_PLAN_HEADER, href: "#" },
     ];

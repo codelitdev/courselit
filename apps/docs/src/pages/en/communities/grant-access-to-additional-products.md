@@ -18,4 +18,5 @@ layout: ../../../layouts/MainLayout.astro
 2.  Will the included product's email sequences be triggered?
     Yes, the included product's email sequences will be triggered.
 
-        ![User edit screen](/assets/communities/member-permissions.png)
+3.  Can I add unpublished products to the additional products?
+    No, only published and visible products can be added as additional products. Additionally, only published products will be added to the user's account upon joining the community.

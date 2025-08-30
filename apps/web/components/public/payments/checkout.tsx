@@ -433,8 +433,10 @@ export default function Checkout({
                                                                 {paymentPlans.map(
                                                                     (plan) => {
                                                                         const isRecommended =
+                                                                            paymentPlans.length >
+                                                                                1 &&
                                                                             plan.planId ===
-                                                                            product.defaultPaymentPlanId;
+                                                                                product.defaultPaymentPlanId;
 
                                                                         return (
                                                                             <PaymentPlanCard

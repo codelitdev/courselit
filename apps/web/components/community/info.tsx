@@ -199,9 +199,9 @@ export function CommunityInfo({
                                             Are you sure you want to leave this
                                             community? <br></br> <br></br>
                                             You’ll lose access to all community
-                                            content and discussions, and any
-                                            ongoing subscription will be
-                                            canceled.
+                                            content, discussions and included
+                                            products. Ongoing subscription will
+                                            also be canceled, if any.
                                         </DialogDescription>
                                     </DialogHeader>
                                     <DialogFooter>

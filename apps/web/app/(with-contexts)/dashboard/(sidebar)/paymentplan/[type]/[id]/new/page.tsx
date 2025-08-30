@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { Constants, MembershipEntityType } from "@courselit/common-models";
+import { Constants } from "@courselit/common-models";
 import DashboardContent from "@/components/admin/dashboard-content";
 import { PaymentPlanForm } from "@/components/admin/payments/payment-plan-form";
 import {
@@ -16,7 +16,10 @@ const { MembershipEntityType: membershipEntityType } = Constants;
 
 export default function NewPaymentPlanPage() {
     const params = useParams();
-    const entityType = params?.type as MembershipEntityType;
+    const type = params?.type as "community" | "product";
+    const entityType = type === "community" 
+        ? membershipEntityType.COMMUNITY 
+        : membershipEntityType.COURSE;
     const entityId = params?.id as string;
     const { product, community } = useEntityValidation(entityType, entityId);
 
@@ -26,11 +29,11 @@ export default function NewPaymentPlanPage() {
                 entityType === membershipEntityType.COMMUNITY
                     ? truncate(community?.name || "...", 10)
                     : truncate(product?.title || "...", 10),
-            href: `/dashboard/${entityType}/${entityId}`,
+            href: `/dashboard/${type}/${entityId}`,
         },
         {
             label: COMMUNITY_SETTINGS,
-            href: `/dashboard/${entityType}/${entityId}/manage`,
+            href: `/dashboard/${type}/${entityId}/manage`,
         },
         { label: NEW_PAYMENT_PLAN_HEADER, href: "#" },
     ];

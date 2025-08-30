@@ -31,6 +31,7 @@ import MembershipModel from "@models/Membership";
 import {
     addIncludedProductsMemberships,
     deleteMembershipsActivatedViaPaymentPlan,
+    getInternalPaymentPlan,
     getPlans,
 } from "../paymentplans/logic";
 import { getPaymentMethodFromSettings } from "@/payments-new";
@@ -117,6 +118,7 @@ export async function createCommunity({
         pageId,
     });
 
+    const paymentPlan = await getInternalPaymentPlan(ctx);
     await MembershipModel.create({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
@@ -125,6 +127,7 @@ export async function createCommunity({
         status: Constants.MembershipStatus.ACTIVE,
         joiningReason: internal.joining_reason_creator,
         role: Constants.MembershipRole.MODERATE,
+        paymentPlanId: paymentPlan.planId,
     });
 
     return community;
@@ -1774,28 +1777,16 @@ export async function deleteCommunity({
         throw new Error(responses.item_not_found);
     }
 
-    await PageModel.updateOne(
-        {
-            domain: ctx.subdomain._id,
-            pageId: community.pageId,
-            entityId: community.communityId,
-        },
-        {
-            deleted: true,
-        },
-    );
-
-    await CommunityModel.updateOne(
-        {
-            domain: ctx.subdomain._id,
-            communityId: id,
-        },
-        {
-            deleted: true,
-        },
-    );
-
     await deleteMemberships(community, ctx);
+    await PageModel.deleteOne({
+        domain: ctx.subdomain._id,
+        pageId: community.pageId,
+        entityId: community.communityId,
+    });
+    await CommunityModel.deleteOne({
+        domain: ctx.subdomain._id,
+        communityId: id,
+    });
 
     return await formatCommunity(community, ctx);
 }

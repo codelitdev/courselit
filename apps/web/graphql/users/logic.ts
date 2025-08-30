@@ -174,7 +174,6 @@ export const inviteCustomer = async (
     }
 
     const paymentPlan = await getInternalPaymentPlan(ctx);
-
     const membership = await getMembership({
         domainId: ctx.subdomain._id,
         userId: user.userId,
@@ -632,6 +631,16 @@ async function getUserContentInternal(ctx: GQLContext, user: User) {
 
     for (const membership of memberships) {
         if (membership.entityType === Constants.MembershipEntityType.COURSE) {
+            const distinctCourse = content.some(
+                (item: any) =>
+                    item.entityType === Constants.MembershipEntityType.COURSE &&
+                    item.entity.id === membership.entityId,
+            );
+
+            if (distinctCourse) {
+                continue;
+            }
+
             const course = await CourseModel.findOne({
                 courseId: membership.entityId,
                 domain: ctx.subdomain._id,

@@ -19,11 +19,7 @@ import {
     DialogTrigger,
     DialogFooter,
 } from "@/components/ui/dialog";
-import {
-    Constants,
-    MembershipEntityType,
-    PaymentPlan,
-} from "@courselit/common-models";
+import { Constants, PaymentPlan } from "@courselit/common-models";
 import { capitalize } from "@courselit/utils";
 import Link from "next/link";
 import { SiteInfoContext } from "@/components/contexts";
@@ -88,7 +84,7 @@ export default function PaymentPlanList({
     onDefaultPlanChanged?: (planId: string) => void;
     defaultPaymentPlanId?: string;
     entityId: string;
-    entityType: MembershipEntityType;
+    entityType: "community" | "product";
 }) {
     const [planToArchive, setPlanToArchive] = useState<PaymentPlan | null>(
         null,
@@ -114,7 +110,7 @@ export default function PaymentPlanList({
                     >
                         <div className="flex justify-between items-center mb-1">
                             <Link
-                                href={`/dashboard/paymentplan/${plan.entityType?.toLowerCase()}/${plan.entityId}/edit/${plan.planId}`}
+                                href={`/dashboard/paymentplan/${entityType}/${plan.entityId}/edit/${plan.planId}`}
                             >
                                 <h3 className="text-sm font-medium hover:underline">
                                     {plan.name}

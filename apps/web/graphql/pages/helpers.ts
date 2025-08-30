@@ -5,6 +5,7 @@ import { Page } from "../../models/Page";
 import { getCommunity } from "../communities/logic";
 import { getCourse } from "../courses/logic";
 import { generateUniqueId } from "@courselit/utils";
+import { getPlans } from "../paymentplans/logic";
 
 export async function getPageResponse(
     page: Page,
@@ -35,6 +36,22 @@ export async function getPageResponse(
                     courseId: course.courseId,
                     leadMagnet: course.leadMagnet,
                     defaultPaymentPlan: course.defaultPaymentPlan,
+                    paymentPlans: (
+                        await getPlans({
+                            entityId: course.courseId,
+                            entityType: Constants.MembershipEntityType.COURSE,
+                            ctx,
+                        })
+                    ).map((p) => ({
+                        emiAmount: p.emiAmount,
+                        emiTotalInstallments: p.emiTotalInstallments,
+                        subscriptionMonthlyAmount: p.subscriptionMonthlyAmount,
+                        subscriptionYearlyAmount: p.subscriptionYearlyAmount,
+                        type: p.type,
+                        oneTimeAmount: p.oneTimeAmount,
+                        name: p.name,
+                        planId: p.planId,
+                    })),
                 };
             }
             break;
@@ -52,6 +69,23 @@ export async function getPageResponse(
                     defaultPaymentPlan: community.defaultPaymentPlan,
                     membersCount: community.membersCount,
                     featuredImage: community.featuredImage,
+                    paymentPlans: (
+                        await getPlans({
+                            entityId: community.communityId,
+                            entityType:
+                                Constants.MembershipEntityType.COMMUNITY,
+                            ctx,
+                        })
+                    ).map((p) => ({
+                        emiAmount: p.emiAmount,
+                        emiTotalInstallments: p.emiTotalInstallments,
+                        subscriptionMonthlyAmount: p.subscriptionMonthlyAmount,
+                        subscriptionYearlyAmount: p.subscriptionYearlyAmount,
+                        type: p.type,
+                        oneTimeAmount: p.oneTimeAmount,
+                        name: p.name,
+                        planId: p.planId,
+                    })),
                 };
             }
             break;

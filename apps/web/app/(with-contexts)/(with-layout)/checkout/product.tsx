@@ -88,7 +88,7 @@ export default function ProductCheckout() {
                         emiAmount
                         emiTotalInstallments
                         subscriptionMonthlyAmount
-                        subscriptionYearlyAmont
+                        subscriptionYearlyAmount
                         description
                         includedProducts
                     }

@@ -17,7 +17,6 @@ import {
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import { ChangeEvent, useContext, useEffect, useState } from "react";
-import { FetchBuilder } from "@courselit/utils";
 import {
     PaymentPlan,
     Constants,
@@ -58,7 +57,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { Edit, FlagTriangleRight, Users, X } from "lucide-react";
+import { Edit, FlagTriangleRight, Loader2, Users, X } from "lucide-react";
 import {
     Select,
     SelectContent,
@@ -69,8 +68,10 @@ import {
 import PaymentPlanList from "@components/admin/payments/payment-plan-list";
 import { useCommunity } from "@/hooks/use-community";
 import { Button } from "@components/ui/button";
+import { Input } from "@/components/ui/input";
 import { redirect, useRouter } from "next/navigation";
 import { useMembership } from "@/hooks/use-membership";
+import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
 const { PaymentPlanType: paymentPlanType, MembershipEntityType } = Constants;
 
 export default function Page({
@@ -112,7 +113,10 @@ export default function Page({
     const { community, error, loaded: communityLoaded } = useCommunity(id);
     const { membership, loaded: membershipLoaded } = useMembership(id);
     const [defaultPaymentPlan, setDefaultPaymentPlan] = useState("");
+    const [deleteConfirmation, setDeleteConfirmation] = useState("");
+    const [isDeleting, setIsDeleting] = useState(false);
     const router = useRouter();
+    const fetch = useGraphQLFetch()
 
     useEffect(() => {
         if (communityLoaded && community) {
@@ -133,11 +137,8 @@ export default function Page({
         }
     }, [community, communityLoaded, membership, membershipLoaded]);
 
-    const fetcher = new FetchBuilder()
-        .setUrl(`${address.backend}/api/graph`)
-        .setIsGraphQLEndpoint(true);
-
     const handleDeleteConfirm = async () => {
+        setIsDeleting(true);
         const query = `
             mutation DeleteCommunity($id: String!) {
                 community: deleteCommunity(id: $id) {
@@ -146,7 +147,7 @@ export default function Page({
             }
         `;
 
-        const fetchRequest = fetcher
+        const fetchRequest = fetch
             .setPayload({
                 query,
                 variables: {
@@ -170,6 +171,8 @@ export default function Page({
                 description: error.message,
                 variant: "destructive",
             });
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -246,7 +249,7 @@ export default function Page({
                 }
             }
         `;
-        const fetchRequest = fetcher
+        const fetchRequest = fetch
             .setPayload({
                 query,
                 variables: {
@@ -325,8 +328,7 @@ export default function Page({
             }
         `;
         try {
-            const fetchRequest = new FetchBuilder()
-                .setUrl(`${address.backend}/api/graph`)
+            const fetchRequest = fetch
                 .setPayload({
                     query,
                     variables: {
@@ -366,8 +368,7 @@ export default function Page({
                 }
             `;
             try {
-                const fetchRequest = new FetchBuilder()
-                    .setUrl(`${address.backend}/api/graph`)
+                const fetchRequest = fetch 
                     .setPayload({
                         query,
                         variables: {
@@ -396,7 +397,7 @@ export default function Page({
         }
     };
 
-    const handleDeleteCategory = (category: Category) => {
+    const handleDeleteCategory = (category: string) => {
         setDeletingCategory(category);
         setMigrationCategory("");
     };
@@ -411,8 +412,7 @@ export default function Page({
                 }
             `;
             try {
-                const fetchRequest = new FetchBuilder()
-                    .setUrl(`${address.backend}/api/graph`)
+                const fetchRequest = fetch
                     .setPayload({
                         query,
                         variables: {
@@ -443,74 +443,73 @@ export default function Page({
         }
     };
 
-    const onPlanSubmitted = async (plan: PaymentPlan) => {
-        const query = `
-            mutation CreatePlan(
-                $name: String!, 
-                $type: PaymentPlanType!, 
-                $entityId: String!,
-                $entityType: MembershipEntityType!
-                $oneTimeAmount: Int, 
-                $emiAmount: Int,
-                $emiTotalInstallments: Int,
-                $subscriptionMonthlyAmount: Int,
-                $subscriptionYearlyAmount: Int,
-            ) {
-                plan: createPlan(
-                    name: $name, 
-                    type: $type, 
-                    entityId: $entityId,
-                    entityType: $entityType,
-                    oneTimeAmount: $oneTimeAmount, 
-                    emiAmount: $emiAmount,
-                    emiTotalInstallments: $emiTotalInstallments,
-                    subscriptionMonthlyAmount: $subscriptionMonthlyAmount,
-                    subscriptionYearlyAmount: $subscriptionYearlyAmount,
-                ) {
-                    planId
-                    name
-                    type
-                    oneTimeAmount
-                    emiAmount
-                    emiTotalInstallments
-                    subscriptionMonthlyAmount
-                    subscriptionYearlyAmount
-                }
-            }
-        `;
-        try {
-            const fetchRequest = new FetchBuilder()
-                .setUrl(`${address.backend}/api/graph`)
-                .setPayload({
-                    query,
-                    variables: {
-                        name: plan.name,
-                        type: plan.type,
-                        entityId: id,
-                        entityType:
-                            MembershipEntityType.COMMUNITY.toUpperCase(),
-                        oneTimeAmount: plan.oneTimeAmount,
-                        emiAmount: plan.emiAmount,
-                        emiTotalInstallments: plan.emiTotalInstallments,
-                        subscriptionMonthlyAmount:
-                            plan.subscriptionMonthlyAmount,
-                        subscriptionYearlyAmount: plan.subscriptionYearlyAmount,
-                    },
-                })
-                .setIsGraphQLEndpoint(true)
-                .build();
-            const response = await fetchRequest.exec();
-            if (response.plan) {
-                setPaymentPlans([...paymentPlans, response.plan]);
-            }
-        } catch (error: any) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: error.message,
-                variant: "destructive",
-            });
-        }
-    };
+    // const onPlanSubmitted = async (plan: PaymentPlan) => {
+    //     const query = `
+    //         mutation CreatePlan(
+    //             $name: String!, 
+    //             $type: PaymentPlanType!, 
+    //             $entityId: String!,
+    //             $entityType: MembershipEntityType!
+    //             $oneTimeAmount: Int, 
+    //             $emiAmount: Int,
+    //             $emiTotalInstallments: Int,
+    //             $subscriptionMonthlyAmount: Int,
+    //             $subscriptionYearlyAmount: Int,
+    //         ) {
+    //             plan: createPlan(
+    //                 name: $name, 
+    //                 type: $type, 
+    //                 entityId: $entityId,
+    //                 entityType: $entityType,
+    //                 oneTimeAmount: $oneTimeAmount, 
+    //                 emiAmount: $emiAmount,
+    //                 emiTotalInstallments: $emiTotalInstallments,
+    //                 subscriptionMonthlyAmount: $subscriptionMonthlyAmount,
+    //                 subscriptionYearlyAmount: $subscriptionYearlyAmount,
+    //             ) {
+    //                 planId
+    //                 name
+    //                 type
+    //                 oneTimeAmount
+    //                 emiAmount
+    //                 emiTotalInstallments
+    //                 subscriptionMonthlyAmount
+    //                 subscriptionYearlyAmount
+    //             }
+    //         }
+    //     `;
+    //     try {
+    //         const fetchRequest = fetch
+    //             .setPayload({
+    //                 query,
+    //                 variables: {
+    //                     name: plan.name,
+    //                     type: plan.type,
+    //                     entityId: id,
+    //                     entityType:
+    //                         MembershipEntityType.COMMUNITY.toUpperCase(),
+    //                     oneTimeAmount: plan.oneTimeAmount,
+    //                     emiAmount: plan.emiAmount,
+    //                     emiTotalInstallments: plan.emiTotalInstallments,
+    //                     subscriptionMonthlyAmount:
+    //                         plan.subscriptionMonthlyAmount,
+    //                     subscriptionYearlyAmount: plan.subscriptionYearlyAmount,
+    //                 },
+    //             })
+    //             .setIsGraphQLEndpoint(true)
+    //             .build();
+    //         const response = await fetchRequest.exec();
+    //         if (response.plan) {
+    //             setPaymentPlans([...paymentPlans, response.plan]);
+    //         }
+    //     } catch (error: any) {
+    //         toast({
+    //             title: TOAST_TITLE_ERROR,
+    //             description: error.message,
+    //             variant: "destructive",
+    //         });
+    //     }
+    // };
 
     const onPlanArchived = async (planId: string) => {
         const query = `
@@ -528,8 +527,7 @@ export default function Page({
             }
         `;
         try {
-            const fetchRequest = new FetchBuilder()
-                .setUrl(`${address.backend}/api/graph`)
+            const fetchRequest = fetch
                 .setPayload({
                     query,
                     variables: {
@@ -562,8 +560,7 @@ export default function Page({
             }
         `;
         try {
-            const fetchRequest = new FetchBuilder()
-                .setUrl(`${address.backend}/api/graph`)
+            const fetchRequest = fetch
                 .setPayload({
                     query,
                     variables: {
@@ -801,7 +798,7 @@ export default function Page({
                 <h3 className="text-lg font-semibold text-destructive">
                     {DANGER_ZONE_HEADER}
                 </h3>
-                <AlertDialog>
+                <AlertDialog onOpenChange={(open) => !open && (setDeleteConfirmation(""), setIsDeleting(false))}>
                     <AlertDialogTrigger asChild>
                         <Button variant="destructive">Delete Community</Button>
                     </AlertDialogTrigger>
@@ -815,10 +812,34 @@ export default function Page({
                                 will be permanently deleted.
                             </AlertDialogDescription>
                         </AlertDialogHeader>
+                        <div className="py-4">
+                            <Label htmlFor="delete-confirmation" className="text-sm font-medium">
+                                Type &quot;delete&quot; to confirm
+                            </Label>
+                            <Input
+                                id="delete-confirmation"
+                                type="text"
+                                placeholder="Type 'delete' to confirm"
+                                value={deleteConfirmation}
+                                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                                className="mt-2"
+                            />
+                        </div>
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDeleteConfirm}>
-                                Delete
+                            <AlertDialogAction 
+                                onClick={handleDeleteConfirm}
+                                disabled={deleteConfirmation !== "delete" || isDeleting}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isDeleting ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Deleting...
+                                    </>
+                                ) : (
+                                    "Delete"
+                                )}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>

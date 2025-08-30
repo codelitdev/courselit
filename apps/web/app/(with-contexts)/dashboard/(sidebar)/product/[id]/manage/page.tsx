@@ -6,22 +6,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Trash2 } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react";
+
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    DialogClose,
-} from "@/components/ui/dialog";
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
     APP_MESSAGE_COURSE_DELETED,
     APP_MESSAGE_COURSE_SAVED,
     BTN_DELETE_COURSE,
-    BUTTON_CANCEL_TEXT,
     COURSE_SETTINGS_CARD_HEADER,
     DANGER_ZONE_HEADER,
     MANAGE_COURSES_PAGE_HEADING,
@@ -39,7 +40,7 @@ import {
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
-import { redirect, useParams } from "next/navigation";
+import { redirect, useParams, useRouter } from "next/navigation";
 import {
     AddressContext,
     ProfileContext,
@@ -165,11 +166,12 @@ const withErrorHandling = async (
 
 export default function SettingsPage() {
     const { toast } = useToast();
+    const router = useRouter();
     const params = useParams();
-    const productId = params.id as string;
+    const productId = params?.id as string;
     const [errors, setErrors] = useState({});
     const address = useContext(AddressContext);
-    const { product, loaded: productLoaded } = useProduct(productId, address);
+    const { product, loaded: productLoaded } = useProduct(productId);
     const profile = useContext(ProfileContext);
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState<{
@@ -200,6 +202,8 @@ export default function SettingsPage() {
         { label: COURSE_SETTINGS_CARD_HEADER, href: "#" },
     ];
     const [refresh, setRefresh] = useState(0);
+    const [deleteConfirmation, setDeleteConfirmation] = useState("");
+    const [isDeleting, setIsDeleting] = useState(false);
     const siteinfo = useContext(SiteInfoContext);
     const {
         paymentPlans,
@@ -426,10 +430,14 @@ export default function SettingsPage() {
             .build();
 
         try {
-            setLoading(true);
+            setIsDeleting(true);
             const response = await fetch.exec();
 
             if (response.result) {
+                toast({
+                    title: TOAST_TITLE_SUCCESS,
+                    description: APP_MESSAGE_COURSE_DELETED,
+                });
                 redirect("/dashboard/products");
             }
         } catch (err: any) {
@@ -439,10 +447,12 @@ export default function SettingsPage() {
                 variant: "destructive",
             });
         } finally {
+            setIsDeleting(false);
             toast({
                 title: TOAST_TITLE_SUCCESS,
                 description: APP_MESSAGE_COURSE_DELETED,
             });
+            router.push("/dashboard/products");
         }
     };
 
@@ -602,7 +612,7 @@ export default function SettingsPage() {
                         }}
                         defaultPaymentPlanId={defaultPaymentPlan}
                         entityId={productId}
-                        entityType={MembershipEntityType.COURSE}
+                        entityType={"product"}
                     />
                 </div>
 
@@ -739,8 +749,13 @@ export default function SettingsPage() {
                     <h2 className="text-destructive font-semibold">
                         {DANGER_ZONE_HEADER}
                     </h2>
-                    <Dialog>
-                        <DialogTrigger asChild>
+                    <AlertDialog
+                        onOpenChange={(open) =>
+                            !open &&
+                            (setDeleteConfirmation(""), setIsDeleting(false))
+                        }
+                    >
+                        <AlertDialogTrigger asChild>
                             <Button
                                 type="button"
                                 variant="destructive"
@@ -749,35 +764,57 @@ export default function SettingsPage() {
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 {BTN_DELETE_COURSE}
                             </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>
-                                    Are you sure you want to delete this
-                                    product?
-                                </DialogTitle>
-                                <DialogDescription>
-                                    This action cannot be undone. This will
-                                    permanently delete the product and remove
-                                    all associated data from our servers.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <DialogFooter>
-                                <DialogClose asChild>
-                                    <Button variant="outline">
-                                        {BUTTON_CANCEL_TEXT}
-                                    </Button>
-                                </DialogClose>
-                                <Button
-                                    variant="destructive"
-                                    onClick={deleteProduct}
-                                    disabled={loading}
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                    Are you absolutely sure?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action is irreversible. All product
+                                    data will be permanently deleted.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <div className="py-4">
+                                <Label
+                                    htmlFor="delete-confirmation"
+                                    className="text-sm font-medium"
                                 >
-                                    {BTN_DELETE_COURSE}
-                                </Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
+                                    Type &quot;delete&quot; to confirm
+                                </Label>
+                                <Input
+                                    id="delete-confirmation"
+                                    type="text"
+                                    placeholder="Type 'delete' to confirm"
+                                    value={deleteConfirmation}
+                                    onChange={(e) =>
+                                        setDeleteConfirmation(e.target.value)
+                                    }
+                                    className="mt-2"
+                                />
+                            </div>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={deleteProduct}
+                                    disabled={
+                                        deleteConfirmation !== "delete" ||
+                                        isDeleting
+                                    }
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isDeleting ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Deleting...
+                                        </>
+                                    ) : (
+                                        "Delete"
+                                    )}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             </div>
         </DashboardContent>

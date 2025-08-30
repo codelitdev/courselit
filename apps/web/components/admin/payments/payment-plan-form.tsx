@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -30,6 +30,7 @@ import {
     PaymentPlanType,
     Constants,
     MembershipEntityType,
+    Course,
 } from "@courselit/common-models";
 import { usePaymentPlanOperations } from "@/hooks/use-payment-plan-operations";
 import { useRouter } from "next/navigation";
@@ -49,6 +50,7 @@ import {
 import { SiteInfoContext } from "@components/contexts";
 import { useProducts } from "@/hooks/use-products";
 import { capitalize } from "@courselit/utils";
+import { Badge } from "@components/ui/badge";
 
 const { PaymentPlanType: paymentPlanType } = Constants;
 
@@ -183,8 +185,13 @@ export function PaymentPlanForm({
             } else {
                 const { planId } =
                     await paymentPlanOperations.onPlanSubmitted(values);
+                const type =
+                    entityType.toLowerCase() ===
+                    Constants.MembershipEntityType.COMMUNITY
+                        ? "community"
+                        : "product";
                 router.push(
-                    `/dashboard/paymentplan/${entityType?.toLowerCase()}/${entityId}/edit/${planId}`,
+                    `/dashboard/paymentplan/${type}/${entityId}/edit/${planId}`,
                 );
             }
         } catch (error) {
@@ -222,7 +229,9 @@ export function PaymentPlanForm({
                 />
 
                 <Separator className="my-8" />
-                <IncludedProductsSection form={form} />
+                {entityType === Constants.MembershipEntityType.COMMUNITY && (
+                    <IncludedProductsSection form={form} />
+                )}
 
                 <Button type="submit" disabled={isFormSubmitting}>
                     {isFormSubmitting ? (
@@ -317,6 +326,8 @@ function PricingSection({
     currencySymbol?: string;
     currencyISOCode?: string;
 }) {
+    const siteinfo = useContext(SiteInfoContext);
+
     return (
         <div className="space-y-4">
             <div className="space-y-2">
@@ -353,15 +364,20 @@ function PricingSection({
                                     </SelectItem>
                                     <SelectItem
                                         value={paymentPlanType.ONE_TIME}
+                                        disabled={!siteinfo.paymentMethod}
                                     >
                                         {PAYMENT_PLAN_ONETIME_LABEL}
                                     </SelectItem>
                                     <SelectItem
                                         value={paymentPlanType.SUBSCRIPTION}
+                                        disabled={!siteinfo.paymentMethod}
                                     >
                                         {PAYMENT_PLAN_SUBSCRIPTION_LABEL}
                                     </SelectItem>
-                                    <SelectItem value={paymentPlanType.EMI}>
+                                    <SelectItem
+                                        value={paymentPlanType.EMI}
+                                        disabled={!siteinfo.paymentMethod}
+                                    >
                                         {PAYMENT_PLAN_EMI_LABEL}
                                     </SelectItem>
                                 </SelectContent>
@@ -624,7 +640,18 @@ function PricingSection({
 
 // Included Products Section Component
 function IncludedProductsSection({ form }: { form: any }) {
-    const { products, loading: productsLoading } = useProducts(1, 1000);
+    const filters = useMemo(
+        () => [
+            Constants.CourseType.COURSE.toUpperCase(),
+            Constants.CourseType.DOWNLOAD.toUpperCase(),
+        ],
+        [],
+    );
+    const { products, loading: productsLoading } = useProducts(
+        1,
+        1000,
+        filters,
+    );
 
     return (
         <div className="space-y-4">
@@ -640,35 +667,6 @@ function IncludedProductsSection({ form }: { form: any }) {
                 </p>
             </div>
             <div className="space-y-6">
-                {/* <FormField
-                    control={form.control}
-                    name="includedProducts"
-                    render={({ field }: any) => (
-                        <FormItem>
-                            <FormLabel>Products</FormLabel>
-                            <FormControl>
-                                <Input
-                                    placeholder="Enter product IDs (comma-separated)"
-                                    value={field.value?.join(", ") || ""}
-                                    onChange={(e) => {
-                                        const value = e.target.value;
-                                        const products = value
-                                            .split(",")
-                                            .map((p) => p.trim())
-                                            .filter((p) => p.length > 0);
-                                        field.onChange(products);
-                                    }}
-                                />
-                            </FormControl>
-                            <p className="text-sm text-muted-foreground">
-                                Enter product IDs separated by commas. Users
-                                with this plan will have access to these
-                                products.
-                            </p>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                /> */}
                 <div className="space-y-2">
                     <Label htmlFor="product-select">Add Product</Label>
                     <Select
@@ -694,6 +692,13 @@ function IncludedProductsSection({ form }: { form: any }) {
                                 </div>
                             ) : (
                                 products
+                                    .filter(
+                                        (
+                                            product: Course & {
+                                                published: boolean;
+                                            },
+                                        ) => product.published,
+                                    )
                                     .filter(
                                         (product) =>
                                             !form
@@ -747,9 +752,13 @@ function IncludedProductsSection({ form }: { form: any }) {
                             {form
                                 .watch("includedProducts")
                                 ?.map((productId: string) => {
-                                    const product = products.find(
+                                    const product:
+                                        | (Course & { published: boolean })
+                                        | undefined = products.find(
                                         (p) => p.courseId === productId,
-                                    );
+                                    ) as
+                                        | (Course & { published: boolean })
+                                        | undefined;
                                     return product ? (
                                         <div
                                             key={productId}
@@ -757,13 +766,22 @@ function IncludedProductsSection({ form }: { form: any }) {
                                         >
                                             <div className="flex items-center gap-2">
                                                 <div className="w-2 h-2 rounded-full bg-primary opacity-60"></div>
-                                                <div className="flex flex-col">
+                                                <div className="flex flex-col gap-1">
                                                     <span className="text-sm font-medium text-foreground line-clamp-1">
                                                         {product.title}
                                                     </span>
-                                                    <span className="text-xs text-muted-foreground capitalize">
-                                                        {product.type}
-                                                    </span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs text-muted-foreground capitalize">
+                                                            {capitalize(
+                                                                product.type,
+                                                            )}
+                                                        </span>
+                                                        {!product.published && (
+                                                            <Badge variant="destructive">
+                                                                Unpublished
+                                                            </Badge>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                             <Button

@@ -95,6 +95,8 @@ export default function useProduct(id?: string | null): {
                         emiTotalInstallments
                         subscriptionMonthlyAmount
                         subscriptionYearlyAmount
+                        entityId
+                        entityType
                     }
                     leadMagnet
                     defaultPaymentPlan
