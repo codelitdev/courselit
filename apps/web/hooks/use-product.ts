@@ -97,6 +97,7 @@ export default function useProduct(id?: string | null): {
                         subscriptionYearlyAmount
                         entityId
                         entityType
+                        includedProducts
                     }
                     leadMagnet
                     defaultPaymentPlan

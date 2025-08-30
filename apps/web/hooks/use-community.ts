@@ -46,6 +46,7 @@ export const useCommunity = (id?: string | null) => {
                         emiTotalInstallments
                         subscriptionMonthlyAmount
                         subscriptionYearlyAmount
+                        includedProducts
                     }
                     defaultPaymentPlan
                     featuredImage {

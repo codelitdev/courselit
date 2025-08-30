@@ -238,6 +238,15 @@ export default function PaymentPlanList({
                             >
                                 {getPlanTypeLabel(plan)}
                             </Badge>
+                            {plan.includedProducts &&
+                                plan.includedProducts.length > 0 && (
+                                    <Badge
+                                        variant="outline"
+                                        className="rounded-full px-1.5 py-0.5 text-[10px]"
+                                    >
+                                        {`+${plan.includedProducts.length} products`}
+                                    </Badge>
+                                )}
                         </div>
                     </div>
                 ))}
