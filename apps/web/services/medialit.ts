@@ -1,5 +1,5 @@
 import { Media } from "@courselit/common-models";
-import { responses } from "../config/strings.ts";
+import { responses } from "../config/strings";
 
 const medialitServer = process.env.MEDIALIT_SERVER || "https://medialit.cloud";
 
@@ -108,15 +108,124 @@ export async function deleteMedia(mediaId: string): Promise<boolean> {
         throw new Error(response.error);
     }
 
-    if (response.message === "success") {
-        return true;
-    } else {
-        throw new Error(response.message);
-    }
+    return response.message === "success";
 }
 
 function checkMediaLitAPIKeyOrThrow() {
     if (!process.env.MEDIALIT_APIKEY) {
         throw new Error(responses.medialit_apikey_notfound);
+    }
+}
+
+// Chunked upload functions
+export interface ChunkedUploadInit {
+    fileName: string;
+    fileSize: number;
+    mimeType: string;
+    totalChunks: number;
+    access?: string;
+    caption?: string;
+    group?: string;
+}
+
+export interface ChunkedUploadResponse {
+    uploadId: string;
+    message: string;
+}
+
+export interface ChunkUploadResponse {
+    message: string;
+    uploadedChunks: number;
+    totalChunks: number;
+}
+
+export async function initializeChunkedUpload(
+    params: ChunkedUploadInit,
+    presignedUrl: string,
+): Promise<ChunkedUploadResponse> {
+    const response = await fetch(`${presignedUrl.replace('/create', '/chunked/init')}`, {
+        method: "POST",
+        headers: {
+            "content-type": "application/json",
+        },
+        body: JSON.stringify(params),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to initialize chunked upload");
+    }
+
+    return response.json();
+}
+
+export async function uploadChunk(
+    uploadId: string,
+    chunkNumber: number,
+    chunk: Blob,
+    presignedUrl: string,
+): Promise<ChunkUploadResponse> {
+    const formData = new FormData();
+    formData.append("chunk", chunk);
+    formData.append("chunkNumber", chunkNumber.toString());
+
+    const baseUrl = presignedUrl.split('?')[0].replace('/create', '');
+    const queryParams = presignedUrl.split('?')[1] || '';
+    const uploadUrl = `${baseUrl}/chunked/upload/${uploadId}?${queryParams}`;
+
+    const response = await fetch(uploadUrl, {
+        method: "POST",
+        body: formData,
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to upload chunk");
+    }
+
+    return response.json();
+}
+
+export async function completeChunkedUpload(
+    uploadId: string,
+    presignedUrl: string,
+): Promise<Media> {
+    const baseUrl = presignedUrl.split('?')[0].replace('/create', '');
+    const queryParams = presignedUrl.split('?')[1] || '';
+    const completeUrl = `${baseUrl}/chunked/complete/${uploadId}?${queryParams}`;
+
+    const response = await fetch(completeUrl, {
+        method: "POST",
+        headers: {
+            "content-type": "application/json",
+        },
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to complete chunked upload");
+    }
+
+    return response.json();
+}
+
+export async function abortChunkedUpload(
+    uploadId: string,
+    presignedUrl: string,
+): Promise<void> {
+    const baseUrl = presignedUrl.split('?')[0].replace('/create', '');
+    const queryParams = presignedUrl.split('?')[1] || '';
+    const abortUrl = `${baseUrl}/chunked/abort/${uploadId}?${queryParams}`;
+
+    const response = await fetch(abortUrl, {
+        method: "DELETE",
+        headers: {
+            "content-type": "application/json",
+        },
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to abort chunked upload");
     }
 }
