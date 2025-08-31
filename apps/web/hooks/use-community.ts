@@ -2,7 +2,6 @@ import { useContext, useEffect, useState } from "react";
 import { AddressContext } from "@components/contexts";
 import { FetchBuilder } from "@courselit/utils";
 import { Community } from "@courselit/common-models";
-import { useToast } from "@courselit/components-library";
 
 export const useCommunity = (id?: string | null) => {
     const [community, setCommunity] = useState<
@@ -15,7 +14,6 @@ export const useCommunity = (id?: string | null) => {
     const address = useContext(AddressContext);
     const [error, setError] = useState<string | null>(null);
     const [loaded, setLoaded] = useState<boolean>(false);
-    const { toast } = useToast();
 
     useEffect(() => {
         if (!id) {

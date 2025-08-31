@@ -9,8 +9,6 @@ export async function generateMetadata(
     },
     parent: ResolvingMetadata,
 ): Promise<Metadata> {
-    const { type, id } = params;
-
     return {
         title: `${NEW_PAYMENT_PLAN_HEADER} | ${(await parent)?.title?.absolute}`,
     };
