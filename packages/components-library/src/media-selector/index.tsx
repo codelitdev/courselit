@@ -9,7 +9,7 @@ import { FetchBuilder } from "@courselit/utils";
 import Form from "../form";
 import FormField from "../form-field";
 import React from "react";
-import { Button2, PageBuilderPropertyHeader, Tooltip, useToast } from "..";
+import { Button2, PageBuilderPropertyHeader, Tooltip, uploadFileInChunks, useToast } from "..";
 import { X } from "lucide-react";
 
 interface Strings {
@@ -124,9 +124,6 @@ const MediaSelector = (props: MediaSelectorProps) => {
                 uploading: true,
             }),
         );
-
-        // Use local chunked upload utility
-        const { uploadFileInChunks } = await import("../chunked-upload");
             
         return uploadFileInChunks({
             file,
