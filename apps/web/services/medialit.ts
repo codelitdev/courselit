@@ -143,7 +143,15 @@ export async function initializeChunkedUpload(
     params: ChunkedUploadInit,
     presignedUrl: string,
 ): Promise<ChunkedUploadResponse> {
-    const response = await fetch(`${presignedUrl.replace('/create', '/chunked/init')}`, {
+    // Extract base URL and query params from presigned URL
+    const url = new URL(presignedUrl);
+    const baseUrl = `${url.protocol}//${url.host}`;
+    const queryParams = url.search;
+    
+    // Construct chunked init URL
+    const initUrl = `${baseUrl}/media/chunked/init${queryParams}`;
+    
+    const response = await fetch(initUrl, {
         method: "POST",
         headers: {
             "content-type": "application/json",
@@ -169,9 +177,13 @@ export async function uploadChunk(
     formData.append("chunk", chunk);
     formData.append("chunkNumber", chunkNumber.toString());
 
-    const baseUrl = presignedUrl.split('?')[0].replace('/create', '');
-    const queryParams = presignedUrl.split('?')[1] || '';
-    const uploadUrl = `${baseUrl}/chunked/upload/${uploadId}?${queryParams}`;
+    // Extract base URL and query params from presigned URL
+    const url = new URL(presignedUrl);
+    const baseUrl = `${url.protocol}//${url.host}`;
+    const queryParams = url.search;
+    
+    // Construct chunk upload URL
+    const uploadUrl = `${baseUrl}/media/chunked/upload/${uploadId}${queryParams}`;
 
     const response = await fetch(uploadUrl, {
         method: "POST",
@@ -190,9 +202,13 @@ export async function completeChunkedUpload(
     uploadId: string,
     presignedUrl: string,
 ): Promise<Media> {
-    const baseUrl = presignedUrl.split('?')[0].replace('/create', '');
-    const queryParams = presignedUrl.split('?')[1] || '';
-    const completeUrl = `${baseUrl}/chunked/complete/${uploadId}?${queryParams}`;
+    // Extract base URL and query params from presigned URL
+    const url = new URL(presignedUrl);
+    const baseUrl = `${url.protocol}//${url.host}`;
+    const queryParams = url.search;
+    
+    // Construct complete upload URL
+    const completeUrl = `${baseUrl}/media/chunked/complete/${uploadId}${queryParams}`;
 
     const response = await fetch(completeUrl, {
         method: "POST",
@@ -213,9 +229,13 @@ export async function abortChunkedUpload(
     uploadId: string,
     presignedUrl: string,
 ): Promise<void> {
-    const baseUrl = presignedUrl.split('?')[0].replace('/create', '');
-    const queryParams = presignedUrl.split('?')[1] || '';
-    const abortUrl = `${baseUrl}/chunked/abort/${uploadId}?${queryParams}`;
+    // Extract base URL and query params from presigned URL
+    const url = new URL(presignedUrl);
+    const baseUrl = `${url.protocol}//${url.host}`;
+    const queryParams = url.search;
+    
+    // Construct abort upload URL
+    const abortUrl = `${baseUrl}/media/chunked/abort/${uploadId}${queryParams}`;
 
     const response = await fetch(abortUrl, {
         method: "DELETE",
