@@ -10,11 +10,16 @@ import mongoose from "mongoose";
 import User from "@models/User";
 import { Constants } from "@courselit/common-models";
 import Course from "@models/Course";
+import PaymentPlan from "@models/PaymentPlan";
 
 jest.mock("@models/Domain");
 jest.mock("@models/User");
 jest.mock("@models/Course");
+jest.mock("@models/PaymentPlan");
 jest.mock("@/auth");
+jest.mock("../../helpers");
+jest.mock("@/graphql/users/logic");
+jest.mock("@/payments-new");
 
 describe("Payment Initiate Route", () => {
     let mockRequest: NextRequest;
@@ -49,6 +54,35 @@ describe("Payment Initiate Route", () => {
                 email: "test@test.com",
             },
         });
+
+        // Mock PaymentPlan.exists to return true by default
+        (PaymentPlan.exists as jest.Mock).mockResolvedValue(true);
+
+        // Mock PaymentPlan.findOne
+        (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            planId: "planA",
+            type: Constants.PaymentPlanType.FREE,
+            entityId: "course-123",
+            entityType: Constants.MembershipEntityType.COURSE,
+            archived: false,
+            internal: false,
+        });
+
+        // Mock getMembership
+        const { getMembership } = require("@/graphql/users/logic");
+        (getMembership as jest.Mock).mockResolvedValue({
+            membershipId: "membership-123",
+            userId: "tester",
+            entityId: "course-123",
+            entityType: Constants.MembershipEntityType.COURSE,
+            status: Constants.MembershipStatus.PENDING,
+            planId: "planA",
+            save: jest.fn().mockResolvedValue(true),
+        });
+
+        // Mock activateMembership
+        const { activateMembership } = require("../../helpers");
+        (activateMembership as jest.Mock).mockResolvedValue(undefined);
 
         // (getUser as jest.Mock).mockResolvedValue({
         //     userId: 'tester',
@@ -112,6 +146,10 @@ describe("Payment Initiate Route", () => {
             title: "Test Course",
             paymentPlans: ["planC", "planB"],
         });
+
+        // Override PaymentPlan.exists to return false (plan doesn't belong to entity)
+        (PaymentPlan.exists as jest.Mock).mockResolvedValue(false);
+
         const response = await POST(mockRequest);
         expect(response.status).toBe(404);
     });
