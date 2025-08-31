@@ -73,6 +73,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
     const fileInput: React.RefObject<HTMLInputElement> = React.createRef();
     const [selectedFile, setSelectedFile] = useState<File | undefined>();
     const [caption, setCaption] = useState("");
+    const [uploadProgress, setUploadProgress] = useState(0);
     const { toast } = useToast();
     const {
         strings,
@@ -131,8 +132,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
             access,
             caption: uploadData.caption || caption,
             onProgress: (progress) => {
-                // You can add progress tracking here if needed
-                console.log(`Upload progress: ${progress.percentage}%`);
+                setUploadProgress(progress.percentage);
             },
             onError: (error) => {
                 console.error("Chunked upload error:", error);
@@ -160,6 +160,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
             setUploading(false);
             setSelectedFile(undefined);
             setCaption("");
+            setUploadProgress(0);
             setDialogOpened(false);
         }
     };
@@ -271,6 +272,20 @@ const MediaSelector = (props: MediaSelectorProps) => {
                                     className="mt-2"
                                     required
                                 />
+                                {uploading && (
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex justify-between text-sm">
+                                            <span>Upload Progress</span>
+                                            <span>{uploadProgress}%</span>
+                                        </div>
+                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                            <div 
+                                                className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                                                style={{ width: `${uploadProgress}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                                 <FormField
                                     label={"Caption"}
                                     name="caption"
