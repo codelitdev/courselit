@@ -8,6 +8,8 @@ on:
 jobs:
   publish-docker-images:
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --no-network-family-autoselection --network-family-autoselection-attempt-timeout=5000
     steps:
       - name: checkout
         uses: actions/checkout@v1
