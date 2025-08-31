@@ -106,7 +106,8 @@ const MediaSelector = (props: MediaSelectorProps) => {
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/media/presigned`)
             .setIsGraphQLEndpoint(false)
-            .setPayload({ chunked })
+            .setPayload(JSON.stringify({ chunked }))
+            .setHeaders({ "Content-Type": "application/json" })
             .build();
         const response = await fetch.exec();
         return response.url;
