@@ -579,11 +579,42 @@ export function CommunityForum({
     const uploadFile = async (file: File) => {
         try {
             const presignedUrl = await getPresignedUrl();
-            const media = await uploadToServer(presignedUrl, file);
-            return media;
+            
+            // Use chunked upload for files larger than 10MB
+            const useChunkedUpload = file.size > 10 * 1024 * 1024;
+            
+            if (useChunkedUpload) {
+                const media = await uploadFileInChunks(presignedUrl, file);
+                return media;
+            } else {
+                const media = await uploadToServer(presignedUrl, file);
+                return media;
+            }
         } catch (err) {
             throw new Error(`Media upload: ${err.message}`);
         }
+    };
+
+    const uploadFileInChunks = async (
+        presignedUrl: string,
+        file: File,
+    ): Promise<Media> => {
+        const { uploadFileInChunks: uploadChunked } = await import("../../lib/chunked-upload");
+        
+        return uploadChunked({
+            file,
+            presignedUrl,
+            access: "public",
+            caption: file.name,
+            group: community?.name,
+            onProgress: (progress) => {
+                // You can add progress tracking here if needed
+                console.log(`Upload progress: ${progress.percentage}%`);
+            },
+            onError: (error) => {
+                console.error("Chunked upload error:", error);
+            },
+        });
     };
 
     const uploadToServer = async (

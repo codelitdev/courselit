@@ -9,7 +9,7 @@ import { FetchBuilder } from "@courselit/utils";
 import Form from "../form";
 import FormField from "../form-field";
 import React from "react";
-import { Button2, PageBuilderPropertyHeader, Tooltip, useToast } from "..";
+import { Button2, PageBuilderPropertyHeader, Tooltip, uploadFileInChunks, useToast } from "..";
 import { X } from "lucide-react";
 
 interface Strings {
@@ -71,7 +71,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
     };
     const [uploadData, setUploadData] = useState(defaultUploadData);
     const fileInput: React.RefObject<HTMLInputElement> = React.createRef();
-    const [selectedFile, setSelectedFile] = useState();
+    const [selectedFile, setSelectedFile] = useState<File | undefined>();
     const [caption, setCaption] = useState("");
     const { toast } = useToast();
     const {
@@ -112,30 +112,32 @@ const MediaSelector = (props: MediaSelectorProps) => {
     }, [dialogOpened]);
 
     const uploadToServer = async (presignedUrl: string): Promise<Media> => {
-        const fD = new FormData();
-        fD.append("caption", (uploadData.caption = caption));
-        fD.append("access", uploadData.public ? "public" : "private");
-        fD.append("file", selectedFile);
-
+        const file = selectedFile;
+        if (!file) {
+            throw new Error("No file selected");
+        }
+        
+        const access = uploadData.public ? "public" : "private";
+        
         setUploadData(
             Object.assign({}, uploadData, {
                 uploading: true,
             }),
         );
-        const res = await fetch(presignedUrl, {
-            method: "POST",
-            body: fD,
+            
+        return uploadFileInChunks({
+            file,
+            presignedUrl,
+            access,
+            caption: uploadData.caption || caption,
+            onProgress: (progress) => {
+                // You can add progress tracking here if needed
+                console.log(`Upload progress: ${progress.percentage}%`);
+            },
+            onError: (error) => {
+                console.error("Chunked upload error:", error);
+            },
         });
-        if (res.status === 200) {
-            const media = await res.json();
-            if (media) {
-                delete media.group;
-            }
-            return media;
-        } else {
-            const resp = await res.json();
-            throw new Error(resp.error);
-        }
     };
 
     const uploadFile = async (e: React.FormEvent<HTMLFormElement>) => {
