@@ -30,13 +30,13 @@ jobs:
         id: metaapp
         uses: docker/metadata-action@v3
         with:
-          images: codelit/courselit-app
+          images: egjoka/courselit-app
 
       - name: Docker meta for the queue 
         id: metaqueue
         uses: docker/metadata-action@v3
         with:
-          images: codelit/courselit-queue
+          images: egjoka/courselit-queue
 
       - name: Build and push app 
         id: docker_build_app
