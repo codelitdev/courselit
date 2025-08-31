@@ -125,48 +125,22 @@ const MediaSelector = (props: MediaSelectorProps) => {
             }),
         );
 
-        // Use chunked upload for files larger than 10MB
-        const useChunkedUpload = file.size > 10 * 1024 * 1024;
-        
-        if (useChunkedUpload) {
-            // Use local chunked upload utility
-            const { uploadFileInChunks } = await import("../chunked-upload");
+        // Use local chunked upload utility
+        const { uploadFileInChunks } = await import("../chunked-upload");
             
-            return uploadFileInChunks({
-                file,
-                presignedUrl,
-                access,
-                caption: uploadData.caption || caption,
-                onProgress: (progress) => {
-                    // You can add progress tracking here if needed
-                    console.log(`Upload progress: ${progress.percentage}%`);
-                },
-                onError: (error) => {
-                    console.error("Chunked upload error:", error);
-                },
-            });
-        } else {
-            // Regular upload for smaller files
-            const fD = new FormData();
-            fD.append("caption", (uploadData.caption = caption));
-            fD.append("access", access);
-            fD.append("file", file);
-
-            const res = await fetch(presignedUrl, {
-                method: "POST",
-                body: fD,
-            });
-            if (res.status === 200) {
-                const media = await res.json();
-                if (media) {
-                    delete media.group;
-                }
-                return media;
-            } else {
-                const resp = await res.json();
-                throw new Error(resp.error);
-            }
-        }
+        return uploadFileInChunks({
+            file,
+            presignedUrl,
+            access,
+            caption: uploadData.caption || caption,
+            onProgress: (progress) => {
+                // You can add progress tracking here if needed
+                console.log(`Upload progress: ${progress.percentage}%`);
+            },
+            onError: (error) => {
+                console.error("Chunked upload error:", error);
+            },
+        });
     };
 
     const uploadFile = async (e: React.FormEvent<HTMLFormElement>) => {
