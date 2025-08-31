@@ -46,7 +46,7 @@ export class ChunkedUploader {
     async upload(): Promise<Media> {
         try {
             const totalChunks = Math.ceil(this.file.size / this.chunkSize);
-            
+
             // Initialize chunked upload
             const initParams: ChunkedUploadInit = {
                 fileName: this.file.name,
@@ -58,12 +58,19 @@ export class ChunkedUploader {
                 group: this.options.group,
             };
 
-            const initResponse = await initializeChunkedUpload(initParams, this.presignedUrl);
+            const initResponse = await initializeChunkedUpload(
+                initParams,
+                this.presignedUrl,
+            );
             this.uploadId = initResponse.uploadId;
 
             // Upload chunks
             let uploadedBytes = 0;
-            for (let chunkNumber = 0; chunkNumber < totalChunks; chunkNumber++) {
+            for (
+                let chunkNumber = 0;
+                chunkNumber < totalChunks;
+                chunkNumber++
+            ) {
                 if (this.aborted) {
                     throw new Error("Upload aborted");
                 }
@@ -72,7 +79,12 @@ export class ChunkedUploader {
                 const end = Math.min(start + this.chunkSize, this.file.size);
                 const chunk = this.file.slice(start, end);
 
-                await uploadChunk(this.uploadId, chunkNumber, chunk, this.presignedUrl);
+                await uploadChunk(
+                    this.uploadId,
+                    chunkNumber,
+                    chunk,
+                    this.presignedUrl,
+                );
 
                 uploadedBytes += chunk.size;
 
@@ -81,7 +93,9 @@ export class ChunkedUploader {
                     const progress: ChunkedUploadProgress = {
                         uploadedChunks: chunkNumber + 1,
                         totalChunks,
-                        percentage: Math.round((uploadedBytes / this.file.size) * 100),
+                        percentage: Math.round(
+                            (uploadedBytes / this.file.size) * 100,
+                        ),
                         uploadedBytes,
                         totalBytes: this.file.size,
                     };
@@ -90,17 +104,23 @@ export class ChunkedUploader {
             }
 
             // Complete upload
-            const media = await completeChunkedUpload(this.uploadId, this.presignedUrl);
+            const media = await completeChunkedUpload(
+                this.uploadId,
+                this.presignedUrl,
+            );
             return media;
         } catch (error) {
             if (this.uploadId && !this.aborted) {
                 try {
                     await abortChunkedUpload(this.uploadId, this.presignedUrl);
                 } catch (abortError) {
-                    console.error("Failed to abort chunked upload:", abortError);
+                    console.error(
+                        "Failed to abort chunked upload:",
+                        abortError,
+                    );
                 }
             }
-            
+
             if (this.options.onError) {
                 this.options.onError(error as Error);
             }
@@ -116,11 +136,16 @@ export class ChunkedUploader {
     }
 }
 
-export async function uploadFileInChunks(options: ChunkedUploadOptions): Promise<Media> {
+export async function uploadFileInChunks(
+    options: ChunkedUploadOptions,
+): Promise<Media> {
     const uploader = new ChunkedUploader(options);
     return uploader.upload();
 }
 
-export function shouldUseChunkedUpload(file: File, threshold: number = 10 * 1024 * 1024): boolean {
+export function shouldUseChunkedUpload(
+    file: File,
+    threshold: number = 10 * 1024 * 1024,
+): boolean {
     return file.size > threshold; // Default 10MB threshold
-} 
+}

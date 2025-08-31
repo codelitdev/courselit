@@ -147,10 +147,10 @@ export async function initializeChunkedUpload(
     const url = new URL(presignedUrl);
     const baseUrl = `${url.protocol}//${url.host}`;
     const queryParams = url.search;
-    
+
     // Construct chunked init URL
     const initUrl = `${baseUrl}/media/chunked/init${queryParams}`;
-    
+
     const response = await fetch(initUrl, {
         method: "POST",
         headers: {
@@ -181,7 +181,7 @@ export async function uploadChunk(
     const url = new URL(presignedUrl);
     const baseUrl = `${url.protocol}//${url.host}`;
     const queryParams = url.search;
-    
+
     // Construct chunk upload URL
     const uploadUrl = `${baseUrl}/media/chunked/upload/${uploadId}${queryParams}`;
 
@@ -206,7 +206,7 @@ export async function completeChunkedUpload(
     const url = new URL(presignedUrl);
     const baseUrl = `${url.protocol}//${url.host}`;
     const queryParams = url.search;
-    
+
     // Construct complete upload URL
     const completeUrl = `${baseUrl}/media/chunked/complete/${uploadId}${queryParams}`;
 
@@ -233,7 +233,7 @@ export async function abortChunkedUpload(
     const url = new URL(presignedUrl);
     const baseUrl = `${url.protocol}//${url.host}`;
     const queryParams = url.search;
-    
+
     // Construct abort upload URL
     const abortUrl = `${baseUrl}/media/chunked/abort/${uploadId}${queryParams}`;
 

@@ -38,12 +38,10 @@ import CssIdField from "./css-id-field";
 import Select from "./select";
 import Tooltip from "./tooltip";
 import DragAndDrop from "./drag-and-drop";
-import { 
-    uploadFileInChunks, 
+import {
+    uploadFileInChunks,
     shouldUseChunkedUpload,
     ChunkedUploader,
-    type ChunkedUploadOptions,
-    type ChunkedUploadProgress 
 } from "./chunked-upload";
 
 export { Button as Button2 } from "./components/ui/button";
