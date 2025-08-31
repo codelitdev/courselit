@@ -38,6 +38,9 @@ WORKDIR /app
 
 COPY --from=deps /app/ ./
 
+# Add ca-certificates to the builder image
+RUN apk add --no-cache ca-certificates 
+
 # Build all workspaces
 RUN pnpm run build
 
