@@ -9,7 +9,13 @@ import { FetchBuilder } from "@courselit/utils";
 import Form from "../form";
 import FormField from "../form-field";
 import React from "react";
-import { Button2, PageBuilderPropertyHeader, Tooltip, uploadFileInChunks, useToast } from "..";
+import {
+    Button2,
+    PageBuilderPropertyHeader,
+    Tooltip,
+    uploadFileInChunks,
+    useToast,
+} from "..";
 import { X } from "lucide-react";
 
 interface Strings {
@@ -96,10 +102,11 @@ const MediaSelector = (props: MediaSelectorProps) => {
         props.onSelection(media);
     };
 
-    const getPresignedUrl = async () => {
+    const getPresignedUrl = async (chunked = false) => {
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/media/presigned`)
             .setIsGraphQLEndpoint(false)
+            .setPayload({ chunked })
             .build();
         const response = await fetch.exec();
         return response.url;
@@ -117,18 +124,21 @@ const MediaSelector = (props: MediaSelectorProps) => {
         if (!file) {
             throw new Error("No file selected");
         }
-        
+
         const access = uploadData.public ? "public" : "private";
-        
+
         setUploadData(
             Object.assign({}, uploadData, {
                 uploading: true,
             }),
         );
-            
+
+        // Get a chunked presigned URL with longer validity
+        const chunkedPresignedUrl = await getPresignedUrl(true);
+
         return uploadFileInChunks({
             file,
-            presignedUrl,
+            presignedUrl: chunkedPresignedUrl,
             access,
             caption: uploadData.caption || caption,
             onProgress: (progress) => {
@@ -279,9 +289,11 @@ const MediaSelector = (props: MediaSelectorProps) => {
                                             <span>{uploadProgress}%</span>
                                         </div>
                                         <div className="w-full bg-gray-200 rounded-full h-2">
-                                            <div 
-                                                className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-                                                style={{ width: `${uploadProgress}%` }}
+                                            <div
+                                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                                style={{
+                                                    width: `${uploadProgress}%`,
+                                                }}
                                             />
                                         </div>
                                     </div>

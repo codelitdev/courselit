@@ -579,10 +579,10 @@ export function CommunityForum({
     const uploadFile = async (file: File) => {
         try {
             const presignedUrl = await getPresignedUrl();
-            
+
             // Use chunked upload for files larger than 10MB
             const useChunkedUpload = file.size > 10 * 1024 * 1024;
-            
+
             if (useChunkedUpload) {
                 const media = await uploadFileInChunks(presignedUrl, file);
                 return media;
@@ -599,8 +599,10 @@ export function CommunityForum({
         presignedUrl: string,
         file: File,
     ): Promise<Media> => {
-        const { uploadFileInChunks: uploadChunked } = await import("../../lib/chunked-upload");
-        
+        const { uploadFileInChunks: uploadChunked } = await import(
+            "../../lib/chunked-upload"
+        );
+
         return uploadChunked({
             file,
             presignedUrl,
@@ -609,7 +611,7 @@ export function CommunityForum({
             group: community?.name,
             onProgress: (progress) => {
                 // You can add progress tracking here if needed
-                console.log(`Upload progress: ${progress.percentage}%`);
+                console.error(`Upload progress: ${progress.percentage}%`);
             },
             onError: (error) => {
                 console.error("Chunked upload error:", error);
