@@ -31,6 +31,8 @@ const config: Config = {
         slugify: "<rootDir>/__mocks__/slugify.ts",
         "@models/(.*)": "<rootDir>/models/$1",
         "@/auth": "<rootDir>/auth.ts",
+        "@/payments-new": "<rootDir>/payments-new",
+        "@/graphql/(.*)": "<rootDir>/graphql/$1",
     },
 };
 
