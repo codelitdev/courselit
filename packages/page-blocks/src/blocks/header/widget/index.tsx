@@ -57,7 +57,7 @@ export default function Widget({
     return (
         <Section
             theme={overiddenTheme}
-            className={clsx("sticky top-0 z-10 backdrop-blur border-b")}
+            className={clsx("sticky top-0 z-20 backdrop-blur border-b")}
             component="header"
         >
             <div className={`flex justify-between items-center w-full`}>

@@ -73,7 +73,7 @@ If drip configuration is enabled for a section, a student won't be able to acces
 ### Notify Users When a Section Has Dripped
 
 1. Click on the `Send email notification` checkbox.
-2. Compose your email. Learn more about the email composition interface [here](/en/email-marketing/broadcast-mails#compose-your-email).
+2. Compose your email. Learn more about the email composition interface [here](/en/email-marketing/broadcasts#compose-your-email).
 3. Click `Continue` to save it.
 
 ![Drip Notification](/assets/products/drip-notify-email.jpeg)

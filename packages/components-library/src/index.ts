@@ -11,7 +11,6 @@ import TextEditor, { emptyDoc as TextEditorEmptyDoc } from "./text-editor";
 import TextRenderer from "./text-renderer";
 import LessonIcon from "./lesson-icon";
 import ColorSelector from "./color-selector";
-import AdminWidgetPanel from "./admin-widget-panel";
 import Button from "./button";
 import IconButton from "./icon-button";
 import Form from "./form";
@@ -41,14 +40,17 @@ import Tooltip from "./tooltip";
 import DragAndDrop from "./drag-and-drop";
 
 export { Button as Button2 } from "./components/ui/button";
-export * from "./menu";
 export * from "./components/ui/avatar";
 export * from "./components/ui/accordion";
 export * from "./components/ui/slider";
 export * from "./components/ui/card";
 export * from "./components/ui/badge";
 export * from "./components/ui/skeleton";
+export * from "./components/ui/textarea";
+export * from "./components/ui/alert";
 
+export * from "./admin-widget-panel";
+export * from "./menu";
 export * from "./toast2";
 export * from "./paginated-table";
 import getSymbolFromCurrency from "currency-symbol-map";
@@ -58,6 +60,7 @@ export * from "./video-with-preview";
 export * from "./image";
 export * from "./vertical-padding-selector";
 export * from "./max-width-selector";
+export * from "./lib/utils";
 
 export {
     PriceTag,
@@ -72,7 +75,6 @@ export {
     TextRenderer,
     LessonIcon,
     ColorSelector,
-    AdminWidgetPanel,
     Button,
     IconButton,
     Form,

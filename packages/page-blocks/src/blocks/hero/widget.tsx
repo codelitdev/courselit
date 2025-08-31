@@ -5,13 +5,13 @@ import {
     Image,
     TextRenderer,
     VideoWithPreview,
+    Link,
 } from "@courselit/components-library";
 import { isVideo } from "@courselit/utils";
 import clsx from "clsx";
 import {
     Button,
     Header1,
-    Link,
     Subheader1,
     Section,
 } from "@courselit/page-primitives";
@@ -184,10 +184,7 @@ export default function Widget({
                             className={`flex flex-col md:!flex-row gap-2 w-full ${contentAlignment === "center" ? "md:!justify-center" : ""}`}
                         >
                             {buttonAction && buttonCaption && (
-                                <Link
-                                    href={buttonAction}
-                                    theme={overiddenTheme}
-                                >
+                                <Link href={buttonAction}>
                                     <Button
                                         theme={overiddenTheme}
                                         className="w-full md:min-w-[150px]"
@@ -198,10 +195,7 @@ export default function Widget({
                             )}
                             {secondaryButtonAction &&
                                 secondaryButtonCaption && (
-                                    <Link
-                                        href={secondaryButtonAction}
-                                        theme={overiddenTheme}
-                                    >
+                                    <Link href={secondaryButtonAction}>
                                         <Button
                                             theme={overiddenTheme}
                                             className="w-full md:min-w-[150px]"

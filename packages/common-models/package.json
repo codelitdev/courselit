@@ -2,6 +2,7 @@
     "name": "@courselit/common-models",
     "version": "0.57.10",
     "description": "Models shared between the main app and other packages of CourseLit.",
+    "private": true,
     "author": "Rajat Saxena <hi@rajatsaxena.dev>",
     "homepage": "https://github.com/codelitdev/courselit#readme",
     "license": "MIT",
@@ -39,6 +40,7 @@
     "dependencies": {
         "redux": "^4.2.1",
         "redux-thunk": "^2.4.1",
-        "@courselit/page-models": "workspace:^"
+        "@courselit/page-models": "workspace:^",
+        "@courselit/email-editor": "workspace:^"
     }
 }

@@ -3,6 +3,7 @@ import Settings, { Link } from "../settings";
 import LinkEditor from "./link-editor";
 import {
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     Select,
     Checkbox,
     Tooltip,
@@ -99,8 +100,11 @@ export default function AdminWidget({
     };
 
     return (
-        <div className="flex flex-col gap-4 mb-4">
-            <AdminWidgetPanel title="Links">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["links", "github-repo", "design"]}
+        >
+            <AdminWidgetPanel title="Links" value="links">
                 <DragAndDrop
                     items={links.map((link: Link, index: number) => ({
                         link,
@@ -127,7 +131,7 @@ export default function AdminWidget({
                 </div>
             </AdminWidgetPanel>
 
-            <AdminWidgetPanel title="Github Repo">
+            <AdminWidgetPanel title="Github Repo" value="github-repo">
                 <Form>
                     <FormField
                         label="Github Repo"
@@ -146,7 +150,7 @@ export default function AdminWidget({
                     />
                 </div>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Design">
+            <AdminWidgetPanel title="Design" value="design">
                 <Select
                     title="Link font weight"
                     value={linkFontWeight}
@@ -183,7 +187,7 @@ export default function AdminWidget({
                     onChange={setMaxWidth}
                 />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Other settings">
+            <AdminWidgetPanel title="Other settings" value="other-settings">
                 <div className="flex justify-between">
                     <div className="flex grow items-center gap-1">
                         <p>Show login button</p>
@@ -199,6 +203,6 @@ export default function AdminWidget({
                     />
                 </div>
             </AdminWidgetPanel>
-        </div>
+        </AdminWidgetPanelContainer>
     );
 }

@@ -4,15 +4,64 @@
 
 .text-editor {
     .remirror-theme {
-        :is(a) {
-            @apply underline;
+        /* Base paragraph spacing for consistent rhythm */
+        :is(p) {
+            @apply leading-relaxed mb-6 text-base;
+            line-height: 1.7;
         }
 
+        /* Consistent heading spacing with proper hierarchy */
+        *:not(:first-child) ~ :is(h1, h2, h3, h4, h5, h6) {
+            @apply mt-16 mb-6;
+        }
+
+        :is(h1) {
+            @apply text-4xl font-bold mb-8 mt-16;
+            color: inherit;
+            line-height: 1.2;
+        }
+
+        :is(h2) {
+            @apply text-3xl font-bold mb-6 mt-12;
+            color: inherit;
+            line-height: 1.3;
+        }
+
+        :is(h3) {
+            @apply text-2xl font-semibold mb-5 mt-10;
+            color: inherit;
+            line-height: 1.4;
+        }
+
+        :is(h4) {
+            @apply text-xl font-semibold mb-4 mt-8;
+            color: inherit;
+            line-height: 1.4;
+        }
+
+        :is(h5) {
+            @apply text-lg font-semibold mb-4 mt-6;
+            color: inherit;
+            line-height: 1.5;
+        }
+
+        :is(h6) {
+            @apply text-base font-semibold mb-3 mt-5;
+            color: inherit;
+            line-height: 1.5;
+        }
+
+        /* List spacing for better readability */
         :is(ul, ol) {
-            @apply mb-4;
+            @apply mb-6 mt-2;
 
             :is(p) {
                 @apply !mb-0;
+            }
+
+            :is(li) {
+                @apply mb-3 leading-relaxed;
+                line-height: 1.6;
             }
         }
 
@@ -24,72 +73,67 @@
             @apply list-decimal ml-6;
         }
 
-        :is(ol) {
+        /* Remove duplicate rule */
+        /* :is(ol) {
             @apply list-decimal;
-        }
+        } */
 
-        :is(p) {
-            @apply leading-loose mb-4;
-        }
-
-        *:not(:first-child) ~ :is(h1, h2, h3, h4, h5, h6) {
-            @apply mt-12;
-        }
-
-        :is(h1) {
-            @apply text-4xl font-bold mb-4;
-            color: inherit;
-        }
-
-        :is(h2) {
-            @apply text-3xl font-bold mb-4;
-            color: inherit;
-        }
-
-        :is(h3) {
-            @apply text-2xl font-semibold mb-4;
-            color: inherit;
-        }
-
-        :is(h4) {
-            @apply text-xl font-semibold mb-4;
-            color: inherit;
-        }
-
-        :is(h5) {
-            @apply text-lg font-semibold mb-4;
-            color: inherit;
-        }
-
-        :is(h6) {
-            @apply text-base font-semibold mb-4;
-            color: inherit;
-        }
-
+        /* Remove margin from last paragraph in divs */
         :is(div) > p:last-of-type {
             @apply mb-0;
         }
 
+        /* Code block styling */
         :is(pre) {
+            @apply mb-6 mt-4 p-4 bg-gray-50 rounded-lg;
+
             :is(code) {
                 @apply !bg-transparent !px-0 !py-0 !rounded-none !border-none !text-base;
             }
         }
 
+        /* Blockquote with better spacing */
         :is(blockquote) {
-            @apply italic border-l-4 border-slate-200 text-slate-500 pl-2;
+            @apply italic border-l-4 border-slate-200 text-slate-500 pl-6 py-2 mb-6 mt-4;
+            line-height: 1.6;
 
             :is(p) {
                 @apply !mb-0;
             }
         }
 
+        /* Inline code styling */
         :is(code) {
-            @apply bg-gray-100 px-1 py-0.5 rounded border border-gray-200;
+            @apply bg-gray-100 px-2 py-1 rounded border border-gray-200 text-sm;
         }
 
+        /* Image spacing for better visual flow */
         :is(img) {
-            @apply !w-full !h-auto mb-4 !rounded mt-2 border;
+            @apply !w-full !h-auto mb-8 mt-6;
+        }
+
+        /* Link styling */
+        :is(a) {
+            @apply underline decoration-dotted decoration-2 underline-offset-2 transition-all duration-200 hover:decoration-solid;
+        }
+
+        /* Better spacing for content sections */
+        :is(div) {
+            @apply mb-6;
+        }
+
+        /* Table spacing */
+        :is(table) {
+            @apply mb-6 mt-4 w-full;
+        }
+
+        :is(th, td) {
+            @apply p-3 border border-gray-200;
+        }
+
+        /* Horizontal rule spacing */
+        :is(hr) {
+            @apply my-8 border-gray-200;
         }
     }
 }

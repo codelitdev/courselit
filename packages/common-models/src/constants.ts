@@ -176,3 +176,8 @@ export const EventType = {
     COMMUNITY_JOINED: "community:joined",
     COMMUNITY_LEFT: "community:left",
 } as const;
+export const EmailEventAction = {
+    OPEN: "open",
+    CLICK: "click",
+    BOUNCE: "bounce",
+} as const;

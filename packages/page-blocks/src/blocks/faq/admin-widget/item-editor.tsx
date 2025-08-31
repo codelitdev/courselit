@@ -6,7 +6,6 @@ import {
     Form,
     FormField,
     Tooltip,
-    AdminWidgetPanel,
 } from "@courselit/components-library";
 import { Address, Auth, Profile } from "@courselit/common-models";
 import { AppDispatch } from "@courselit/state-management";
@@ -39,39 +38,37 @@ export default function ItemEditor({
 
     return (
         <div className="flex flex-col">
-            <Form>
-                <AdminWidgetPanel title="Edit item">
-                    <FormField
-                        label="Title"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+            <Form onSubmit={(e) => e.preventDefault()}>
+                <FormField
+                    label="Title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                />
+                <div>
+                    <p className="mb-1 font-medium">Description</p>
+                    <TextEditor
+                        initialContent={description}
+                        onChange={(state: any) => setDescription(state)}
+                        showToolbar={false}
+                        url={address.backend}
                     />
-                    <div>
-                        <p className="mb-1 font-medium">Description</p>
-                        <TextEditor
-                            initialContent={description}
-                            onChange={(state: any) => setDescription(state)}
-                            showToolbar={false}
-                            url={address.backend}
-                        />
-                    </div>
-                    <div className="flex justify-between">
-                        <Tooltip title="Delete">
-                            <Button
-                                component="button"
-                                onClick={onDelete}
-                                variant="soft"
-                            >
-                                Delete
-                            </Button>
-                        </Tooltip>
-                        <Tooltip title="Go back">
-                            <Button component="button" onClick={itemChanged}>
-                                Done
-                            </Button>
-                        </Tooltip>
-                    </div>
-                </AdminWidgetPanel>
+                </div>
+                <div className="flex justify-between">
+                    <Tooltip title="Delete">
+                        <Button
+                            component="button"
+                            onClick={onDelete}
+                            variant="soft"
+                        >
+                            Delete
+                        </Button>
+                    </Tooltip>
+                    <Tooltip title="Go back">
+                        <Button component="button" onClick={itemChanged}>
+                            Done
+                        </Button>
+                    </Tooltip>
+                </div>
             </Form>
         </div>
     );

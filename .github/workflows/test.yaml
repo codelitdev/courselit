@@ -17,6 +17,7 @@ jobs:
       run: |
           pnpm --filter @courselit/icons build
           pnpm --filter @courselit/page-models build
+          pnpm --filter @courselit/email-editor build
           pnpm --filter @courselit/common-models build
           pnpm --filter @courselit/utils build
           pnpm --filter @courselit/text-editor build

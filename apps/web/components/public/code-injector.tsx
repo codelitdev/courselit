@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { connect } from "react-redux";
 import { AppState } from "@courselit/state-management";
@@ -5,22 +7,15 @@ import { AppState } from "@courselit/state-management";
 type InjectionSection = "head" | "body";
 
 interface CodeInjectorProps {
-    router: Record<string, unknown>;
     head?: string;
     body?: string;
 }
 
-class CodeInjector extends React.Component<CodeInjectorProps> {
-    isAnAdminPage() {
-        return /^\/dashboard/.test(this.props.router.asPath as string);
-    }
-
+export class CodeInjector extends React.Component<CodeInjectorProps> {
     componentDidMount() {
-        if (!this.isAnAdminPage()) {
-            const targetTagsForInjection: InjectionSection[] = ["head", "body"];
-            for (const target of targetTagsForInjection) {
-                this.injectCodeIn(target);
-            }
+        const targetTagsForInjection: InjectionSection[] = ["head", "body"];
+        for (const target of targetTagsForInjection) {
+            this.injectCodeIn(target);
         }
     }
 
@@ -36,7 +31,7 @@ class CodeInjector extends React.Component<CodeInjectorProps> {
                 this.copyAttributes(elem, script);
                 elem = script;
             }
-            (document as Record<string, any>)[targetHTMLTag].appendChild(elem);
+            (document as Record<string, any>)[targetHTMLTag]?.appendChild(elem);
         }
     }
 
@@ -52,7 +47,7 @@ class CodeInjector extends React.Component<CodeInjectorProps> {
     }
 
     render() {
-        return <></>;
+        return null;
     }
 }
 

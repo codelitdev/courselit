@@ -1,6 +1,6 @@
 {
   "name": "@courselit/web",
-  "version": "0.60.0",
+  "version": "0.61.12",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -19,6 +19,7 @@
     "@courselit/page-primitives": "workspace:^",
     "@courselit/state-management": "workspace:^",
     "@courselit/utils": "workspace:^",
+    "@courselit/email-editor": "workspace:^",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-alert-dialog": "^1.1.2",
     "@radix-ui/react-avatar": "^1.1.3",

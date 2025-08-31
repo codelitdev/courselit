@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { Comment as CommentType } from "./mock-data";
 import { useRouter } from "next/navigation";
-import { capitalize, FetchBuilder } from "@courselit/utils";
+import { capitalize, FetchBuilder, truncate } from "@courselit/utils";
 import { AddressContext, ProfileContext } from "@components/contexts";
 import { PaginatedTable, useToast } from "@courselit/components-library";
 import {
@@ -1122,7 +1122,7 @@ export function CommunityForum({
                                                                         post
                                                                             .user
                                                                             .avatar
-                                                                            ?.thumbnail ||
+                                                                            ?.file ||
                                                                         "/courselit_backdrop_square.webp"
                                                                     }
                                                                     alt={`${post.user.name}'s avatar`}
@@ -1194,8 +1194,11 @@ export function CommunityForum({
                                                     <p className="text-base mb-4 font-semibold line-clamp-3">
                                                         {post.title}
                                                     </p>
-                                                    <p className="text-sm mb-4 line-clamp-3">
-                                                        {post.content}
+                                                    <p className="text-sm mb-4 whitespace-pre-wrap">
+                                                        {truncate(
+                                                            post.content,
+                                                            500,
+                                                        )}
                                                     </p>
                                                     {post.media && (
                                                         <div className="flex gap-2 overflow-x-auto">
@@ -1245,7 +1248,7 @@ export function CommunityForum({
                                             </Card>
                                         </DialogTrigger>
                                         <DialogContent
-                                            className="sm:max-w-[600px] w-full overflow-y-auto max-h-[calc(100vh-4rem)] my-8"
+                                            className="sm:max-w-[600px] w-full overflow-y-auto max-h-[80vh] my-8"
                                             aria-describedby={undefined}
                                         >
                                             <VisuallyHidden>
@@ -1261,7 +1264,7 @@ export function CommunityForum({
                                                                 src={
                                                                     post.user
                                                                         .avatar
-                                                                        ?.thumbnail ||
+                                                                        ?.file ||
                                                                     "/courselit_backdrop_square.webp"
                                                                 }
                                                                 alt={`${post.user.name}'s avatar`}
@@ -1375,10 +1378,10 @@ export function CommunityForum({
                                                     </DropdownMenu>
                                                 </div>
                                                 <div>
-                                                    <p className="text-base mb-4 font-semibold line-clamp-3">
+                                                    <p className="text-base mb-4 font-semibold">
                                                         {post.title}
                                                     </p>
-                                                    <p className="text-sm mb-4 line-clamp-3">
+                                                    <p className="text-sm mb-4 whitespace-pre-wrap">
                                                         {post.content}
                                                     </p>
                                                 </div>
@@ -1427,45 +1430,6 @@ export function CommunityForum({
                                                         {post.commentsCount}
                                                     </Button>
                                                 </div>
-                                                {/* 
-                                    <div className="space-y-4 max-h-[300px] overflow-y-auto">
-                                        {post.comments.map((comment) => (
-                                            <Comment
-                                                key={comment.id}
-                                                comment={comment}
-                                                onLike={(commentId) =>
-                                                    handleCommentLike(
-                                                        post.id,
-                                                        commentId,
-                                                    )
-                                                }
-                                                onReply={(commentId, content) =>
-                                                    handleCommentReply(
-                                                        post.id,
-                                                        commentId,
-                                                        content,
-                                                    )
-                                                }
-                                            />
-                                        ))}
-                                        <div ref={commentsEndRef} />
-                                    </div>
-                                    <Textarea
-                                        placeholder="Add a comment..."
-                                        value={newComments[post.postId] || ""}
-                                        onChange={(e) =>
-                                            handleNewCommentChange(
-                                                post.postId,
-                                                e.target.value,
-                                            )
-                                        }
-                                    />
-                                    <Button
-                                        onClick={() => handlePostComment(post.postId)}
-                                    >
-                                        Post Comment
-                                    </Button>
-*/}
                                                 <CommentSection
                                                     membership={membership}
                                                     postId={post.postId}

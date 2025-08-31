@@ -3,6 +3,7 @@ import type { Address, Media, Profile } from "@courselit/common-models";
 import Settings from "./settings";
 import {
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     MediaSelector,
     Form,
     FormField,
@@ -86,8 +87,11 @@ export default function AdminWidget({
     ]);
 
     return (
-        <div className="flex flex-col gap-4 mb-4">
-            <AdminWidgetPanel title="Media">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["media", "design"]}
+        >
+            <AdminWidgetPanel title="Media" value="media">
                 <Form>
                     <FormField
                         label="YouTube/Vimeo Link"
@@ -165,7 +169,7 @@ export default function AdminWidget({
                     </div>
                 )}
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Design">
+            <AdminWidgetPanel title="Design" value="design">
                 <PageBuilderSlider
                     title="Media border radius"
                     value={mediaBorderRadius}
@@ -185,9 +189,9 @@ export default function AdminWidget({
                     onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Advanced">
+            <AdminWidgetPanel title="Advanced" value="advanced">
                 <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
-        </div>
+        </AdminWidgetPanelContainer>
     );
 }

@@ -47,6 +47,7 @@ interface CommentProps {
     onDelete: (comment: CommunityComment | CommunityCommentReply) => void;
     depth?: number;
     membership: Pick<Membership, "status" | "role" | "rejectionReason">;
+    isPosting?: boolean;
 }
 
 export function Comment({
@@ -57,6 +58,7 @@ export function Comment({
     onDelete,
     membership,
     depth = 0,
+    isPosting = false,
 }: CommentProps) {
     const [isReplying, setIsReplying] = useState(false);
     const [replyContent, setReplyContent] = useState("");
@@ -238,7 +240,7 @@ export function Comment({
                             </DropdownMenu>
                         )}
                     </div>
-                    <p className="text-sm mt-1">
+                    <p className="text-sm mt-1 whitespace-pre-wrap">
                         {comment.deleted ? (
                             <span className="italic text-gray-500">
                                 {DELETED_COMMENT_PLACEHOLDER}
@@ -302,6 +304,7 @@ export function Comment({
                                     setIsReplying(false);
                                 }
                             }}
+                            disabled={isPosting}
                         >
                             Reply
                         </Button>
@@ -322,6 +325,7 @@ export function Comment({
                         onDelete={onDelete}
                         membership={membership}
                         depth={depth + 1}
+                        isPosting={isPosting}
                     />
                 ))}
             <Dialog

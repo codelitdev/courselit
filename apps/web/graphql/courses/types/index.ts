@@ -22,6 +22,7 @@ import paymentPlansTypes from "../../paymentplans/types";
 import { getUser } from "../../users/logic";
 const { lessonMetaType } = lessonTypes;
 const { course, download, blog, costPaid, costEmail, costFree } = constants;
+import sequenceTypes from "../../mails/types";
 
 const courseStatusType = new GraphQLEnumType({
     name: "CoursePrivacyType",
@@ -72,8 +73,11 @@ const dripEmailInput = new GraphQLInputObjectType({
 const dripEmail = new GraphQLObjectType({
     name: "DripEmail",
     fields: {
-        content: { type: new GraphQLNonNull(GraphQLString) },
+        content: {
+            type: new GraphQLNonNull(sequenceTypes.sequenceEmailContent),
+        },
         subject: { type: new GraphQLNonNull(GraphQLString) },
+        emailId: { type: new GraphQLNonNull(GraphQLString) },
     },
 });
 

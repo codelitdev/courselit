@@ -98,7 +98,7 @@ export const responses = {
         "Email delivery failed for all recipients",
     courses_cannot_be_downloaded: "A course cannot be offered as a download.",
     apikey_already_exists: "Apikey with that name already exists",
-    sequence_details_missing: "Some sequence details are missing",
+    sequence_details_missing: "The following settings are missing",
     invalid_emails_order: "Invalid emails order",
     no_published_emails: "No published emails",
     sequence_not_active: "Sequence not active",
@@ -160,7 +160,5 @@ export const internal = {
     default_email_broadcast_subject: "Untitled broadcast",
     default_email_sequence_subject: "First email",
     default_email_sequence_name: "Untitled Sequence",
-    default_email_content:
-        "<p>Replace this with actual content.</p>\n<p>You can use <b>HTML</b>.</p>\n<p>We also support <a href='https://shopify.github.io/liquid/'>Liquid</a>.</p>\n<br>\n<p>Our mailing address is:</p>\n<p>{{ address }}</p>\n<a href=\"{{ unsubscribe_link}}\">Unsubscribe</a>",
     joining_reason_creator: "Joined as creator",
 };

@@ -76,15 +76,31 @@ const sequenceEmailAction = new GraphQLObjectType({
     },
 });
 
+const sequenceEmailBlock = new GraphQLObjectType({
+    name: "SequenceEmailBlock",
+    fields: {
+        blockType: { type: new GraphQLNonNull(GraphQLString) },
+        settings: { type: GraphQLJSONObject },
+    },
+});
+
+const sequenceEmailContent = new GraphQLObjectType({
+    name: "SequenceEmailContent",
+    fields: {
+        content: { type: new GraphQLList(sequenceEmailBlock) },
+        style: { type: new GraphQLNonNull(GraphQLJSONObject) },
+        meta: { type: new GraphQLNonNull(GraphQLJSONObject) },
+    },
+});
+
 const sequenceEmail = new GraphQLObjectType({
     name: "SequenceEmail",
     fields: {
         emailId: { type: new GraphQLNonNull(GraphQLString) },
-        content: { type: new GraphQLNonNull(GraphQLString) },
+        content: { type: new GraphQLNonNull(sequenceEmailContent) },
         subject: { type: new GraphQLNonNull(GraphQLString) },
         delayInMillis: { type: new GraphQLNonNull(GraphQLFloat) },
         published: { type: new GraphQLNonNull(GraphQLBoolean) },
-        previewText: { type: GraphQLString },
         templateId: { type: GraphQLString },
         action: { type: sequenceEmailAction },
     },
@@ -209,6 +225,7 @@ const types = {
     sequenceTrigger,
     sequenceTriggerType,
     sequenceEmailActionType,
+    sequenceEmailContent,
     mailRequestStatus,
 };
 export default types;

@@ -12,7 +12,6 @@ import {
     removeRuleForBroadcast,
     updateSequenceSentAt,
     getDomain,
-    getTemplate,
 } from "./queries";
 import { sendMail } from "../mail";
 import { Liquid } from "liquidjs";
@@ -20,7 +19,13 @@ import { Worker } from "bullmq";
 import redis from "../redis";
 import mongoose from "mongoose";
 import sequenceQueue from "./sequence-queue";
+import EmailDelivery from "./model/email-delivery";
 import { AdminSequence, InternalUser } from "@courselit/common-logic";
+import { Email as EmailType, renderEmailToHtml } from "@courselit/email-editor";
+import { getUnsubLink } from "../utils/get-unsub-link";
+import { getSiteUrl } from "../utils/get-site-url";
+import { jwtUtils } from "@courselit/utils";
+import { JSDOM } from "jsdom";
 const liquidEngine = new Liquid();
 
 new Worker(
@@ -37,6 +42,11 @@ new Worker(
 );
 
 export async function processOngoingSequences(): Promise<void> {
+    if (!process.env.PIXEL_SIGNING_SECRET) {
+        throw new Error(
+            "PIXEL_SIGNING_SECRET environment variable is not defined",
+        );
+    }
     // eslint-disable-next-line no-constant-condition
     while (true) {
         // eslint-disable-next-line no-console
@@ -179,11 +189,7 @@ async function attemptMailSending({
         : `${creator.email} <${creator.email}>`;
     const to = user.email;
     const subject = email.subject;
-    const unsubscribeLink = `https://${
-        domain.customDomain
-            ? `${domain.customDomain}`
-            : `${domain.name}.${process.env.DOMAIN}`
-    }/api/unsubscribe/${user.unsubscribeToken}`;
+    const unsubscribeLink = getUnsubLink(domain, user.unsubscribeToken);
     const templatePayload = {
         subscriber: {
             email: user.email,
@@ -197,27 +203,62 @@ async function attemptMailSending({
         return;
     }
     // const content = email.content;
-    let content = await liquidEngine.parseAndRender(
-        email.content,
+    const pixelPayload = {
+        userId: user.userId,
+        sequenceId: ongoingSequence.sequenceId,
+        emailId: email.emailId,
+    };
+    const pixelToken = jwtUtils.generateToken(
+        pixelPayload,
+        process.env.PIXEL_SIGNING_SECRET,
+        "365d",
+    );
+    const pixelUrl = `${getSiteUrl(domain)}/api/track/open?d=${pixelToken}`;
+    const emailContentWithPixel: EmailType = {
+        content: [
+            ...email.content.content,
+            {
+                blockType: "image",
+                settings: {
+                    src: pixelUrl,
+                    width: "1px",
+                    height: "1px",
+                    alt: "CourseLit Pixel",
+                },
+            },
+        ],
+        style: email.content.style,
+        meta: email.content.meta,
+    };
+
+    const content = await liquidEngine.parseAndRender(
+        await renderEmailToHtml({
+            email: emailContentWithPixel,
+        }),
         templatePayload,
     );
-    if (email.templateId) {
-        const template = await getTemplate(email.templateId);
-        if (template) {
-            content = await liquidEngine.parseAndRender(
-                template.content,
-                Object.assign({}, templatePayload, {
-                    content: content,
-                }),
-            );
-        }
-    }
+
+    const contentWithTrackedLinks = transformLinksForClickTracking(
+        content,
+        user.userId,
+        ongoingSequence.sequenceId,
+        email.emailId,
+        domain,
+    );
+
     try {
         await sendMail({
             from,
             to,
             subject,
-            html: content,
+            html: contentWithTrackedLinks,
+        });
+        // @ts-ignore - Mongoose type compatibility issue
+        await EmailDelivery.create({
+            domain: (domain as any).id,
+            sequenceId: sequence.sequenceId,
+            userId: user.userId,
+            emailId: email.emailId,
         });
     } catch (err: any) {
         ongoingSequence.retryCount++;
@@ -232,5 +273,58 @@ async function attemptMailSending({
             await ongoingSequence.save();
         }
         throw err;
+    }
+}
+
+function transformLinksForClickTracking(
+    htmlContent: string,
+    userId: string,
+    sequenceId: string,
+    emailId: string,
+    domain: Domain,
+): string {
+    try {
+        const dom = new JSDOM(htmlContent);
+        const document = dom.window.document;
+
+        const links = document.querySelectorAll("a");
+
+        links.forEach((link, index) => {
+            const originalUrl = link.getAttribute("href");
+
+            if (!originalUrl) return;
+
+            if (
+                originalUrl.includes("/api/track") ||
+                originalUrl.includes("/api/unsubscribe") ||
+                originalUrl.startsWith("mailto:") ||
+                originalUrl.startsWith("tel:") ||
+                originalUrl.startsWith("#")
+            ) {
+                return;
+            }
+
+            const linkPayload = {
+                userId,
+                sequenceId,
+                emailId,
+                index,
+                link: encodeURIComponent(originalUrl),
+            };
+
+            const linkToken = jwtUtils.generateToken(
+                linkPayload,
+                process.env.PIXEL_SIGNING_SECRET,
+                "365d",
+            );
+            const trackingUrl = `${getSiteUrl(domain)}/api/track/click?d=${linkToken}`;
+
+            link.setAttribute("href", trackingUrl);
+        });
+
+        return dom.serialize();
+    } catch (error) {
+        logger.error("Error transforming links with jsdom:", error);
+        return htmlContent;
     }
 }

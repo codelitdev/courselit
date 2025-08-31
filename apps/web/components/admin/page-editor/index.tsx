@@ -829,7 +829,7 @@ export default function PageEditor({
                                     leftPaneContent === "widgets"
                                         ? EDIT_PAGE_ADD_WIDGET_TITLE
                                         : leftPaneContent === "editor"
-                                          ? "Edit Widget"
+                                          ? "Edit Block"
                                           : leftPaneContent === "fonts"
                                             ? "Fonts"
                                             : leftPaneContent === "theme"

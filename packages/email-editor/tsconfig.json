@@ -1,0 +1,19 @@
+{
+    "exclude": ["dist", "build", "node_modules"],
+    "compilerOptions": {
+        "outDir": "./dist",
+        "lib": ["dom", "es2017"],
+        "strict": true,
+        "jsx": "react-jsx",
+        "module": "esnext",
+        "moduleResolution": "node",
+        "target": "es2017",
+        "skipLibCheck": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["src/*"]
+        },
+        "allowSyntheticDefaultImports": true
+    },
+    "include": ["src/**/*"]
+}

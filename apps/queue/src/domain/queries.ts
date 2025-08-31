@@ -62,7 +62,7 @@ export async function updateSequenceSentAt(sequenceId: string): Promise<any> {
     );
 }
 
-export async function getDomain(id: mongoose.Schema.Types.ObjectId) {
+export async function getDomain(id: mongoose.Types.ObjectId) {
     // @ts-ignore - Mongoose type compatibility issue
     return await DomainModel.findById(id);
 }

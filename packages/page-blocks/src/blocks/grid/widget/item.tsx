@@ -1,5 +1,5 @@
 import React from "react";
-import { Item } from "../settings";
+import { Item, SvgStyle } from "../settings";
 import { TextRenderer, Link } from "@courselit/components-library";
 import { Alignment } from "@courselit/common-models";
 import { ThemeStyle } from "@courselit/page-models";
@@ -11,12 +11,15 @@ import {
     PageCardImage,
     Text1,
 } from "@courselit/page-primitives";
+import { processedSvg } from "../helpers";
 
 interface ItemmProps {
     item: Item;
     alignment: Alignment;
     borderRadius?: number;
     theme: ThemeStyle;
+    svgStyle: SvgStyle;
+    svgInline: boolean;
 }
 
 export default function Itemm({
@@ -27,10 +30,12 @@ export default function Itemm({
         buttonCaption,
         media,
         mediaAlignment,
+        svgText,
     },
     alignment,
-    // borderRadius,
     theme,
+    svgStyle,
+    svgInline,
 }: ItemmProps) {
     return (
         <PageCard className="h-full" theme={theme}>
@@ -45,13 +50,32 @@ export default function Itemm({
                                 : "flex-col"
                         }`}
                     >
-                        <span
-                            className={`${
-                                alignment === "center" ? "text-center" : ""
-                            }`}
+                        <div
+                            className={`flex ${svgInline ? "flex-row gap-2 items-center" : `flex-col gap-4 ${alignment === "center" ? "items-center" : "items-start"}`}`}
                         >
+                            {svgText && (
+                                <div
+                                    className="flex justify-center items-center"
+                                    style={{
+                                        width: `${svgStyle.width}px`,
+                                        height: `${svgStyle.height}px`,
+                                        backgroundColor:
+                                            svgStyle.backgroundColor,
+                                        borderRadius: `${svgStyle.borderRadius}px`,
+                                        borderWidth: `${svgStyle.borderWidth}px`,
+                                        borderStyle: svgStyle.borderStyle,
+                                        borderColor: svgStyle.borderColor,
+                                        padding: "8px",
+                                    }}
+                                    dangerouslySetInnerHTML={{
+                                        __html:
+                                            processedSvg(svgText, svgStyle) ||
+                                            '<div class="text-red-500">Invalid SVG</div>',
+                                    }}
+                                />
+                            )}
                             {title}
-                        </span>
+                        </div>
                         {media && media.file && (
                             <div className="mb-4">
                                 <PageCardImage

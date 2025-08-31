@@ -1,14 +1,27 @@
 "use client";
 
 import DashboardContent from "@components/admin/dashboard-content";
-import SequenceMailEditor from "@components/admin/mails/sequence-mail-editor";
-import { AddressContext } from "@components/contexts";
+import { PAGE_HEADER_EDIT_SEQUENCE, SEQUENCES } from "@ui-config/strings";
 import {
+    Button,
+    Form,
+    FormField,
+    Select,
+    useToast,
+} from "@courselit/components-library";
+import {
+    BUTTON_SAVE,
+    COMPOSE_SEQUENCE_EDIT_DELAY,
+    TOAST_TITLE_ERROR,
+    MAIL_SUBJECT_PLACEHOLDER,
     PAGE_HEADER_EDIT_MAIL,
-    PAGE_HEADER_EDIT_SEQUENCE,
-    SEQUENCES,
 } from "@ui-config/strings";
-import { useContext } from "react";
+import { ChangeEvent, useCallback, useEffect, useState } from "react";
+import { Email as EmailContent } from "@courselit/email-editor";
+import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
+import { Email } from "@courselit/common-models";
+import EmailViewer from "@components/admin/mails/email-viewer";
+import { useSequence } from "@/hooks/use-sequence";
 
 export default function Page({
     params,
@@ -18,27 +31,244 @@ export default function Page({
         mailId: string;
     };
 }) {
-    const address = useContext(AddressContext);
-    const { id, mailId } = params;
+    const { id: sequenceId, mailId } = params;
     const breadcrumbs = [
         { label: SEQUENCES, href: "/dashboard/mails?tab=Sequences" },
         {
             label: PAGE_HEADER_EDIT_SEQUENCE,
-            href: `/dashboard/mails/sequence/${id}`,
+            href: `/dashboard/mails/sequence/${sequenceId}`,
         },
         {
             label: PAGE_HEADER_EDIT_MAIL,
             href: "#",
         },
     ];
+    const [delay, setDelay] = useState<number>(0);
+    const [subject, setSubject] = useState<string>("");
+    const [content, setContent] = useState<EmailContent | null>(null);
+    const [email, setEmail] = useState<Email | null>(null);
+    const [published, setPublished] = useState<"unpublished" | "published">(
+        "unpublished",
+    );
+    const { toast } = useToast();
+    const fetch = useGraphQLFetch();
+    const { sequence, loading, error, loadSequence } = useSequence();
+
+    useEffect(() => {
+        loadSequence(sequenceId);
+    }, [loadSequence, sequenceId]);
+
+    useEffect(() => {
+        if (sequence) {
+            const email = sequence.emails.find((e) => e.emailId === mailId);
+            if (email) {
+                setEmail(email);
+                setDelay(email.delayInMillis / 86400000);
+                setSubject(email.subject);
+                // setPreviewText(email.content?.meta?.previewText || "");
+                setContent(email.content || null);
+                setPublished(email.published ? "published" : "unpublished");
+            }
+        }
+    }, [sequence, mailId]);
+
+    const updateMail = useCallback(async () => {
+        const query = `
+            mutation UpdateMail(
+                $sequenceId: String!
+                $emailId: String!
+                $subject: String
+                $content: String
+                $delayInMillis: Float
+                $templateId: String
+                $actionType: SequenceEmailActionType
+                $actionData: String
+                $published: Boolean
+            ) {
+                sequence: updateMailInSequence(
+                    sequenceId: $sequenceId,
+                    emailId: $emailId,
+                    subject: $subject,
+                    content: $content,
+                    delayInMillis: $delayInMillis,
+                    templateId: $templateId,
+                    actionType: $actionType,
+                    actionData: $actionData,
+                    published: $published,
+                ) {
+                    sequenceId,
+                    title,
+                    emails {
+                        emailId,
+                        subject,
+                        delayInMillis,
+                        published,
+                        content {
+                            content {
+                                blockType,
+                                settings
+                            },
+                            style,
+                            meta
+                        }
+                    },
+                    trigger {
+                        type,
+                        data
+                    },
+                    from {
+                        name,
+                        email
+                    },
+                    emailsOrder,
+                    status
+                }
+            }`;
+
+        const fetcher = fetch
+            .setPayload({
+                query,
+                variables: {
+                    sequenceId,
+                    emailId: email?.emailId,
+                    subject,
+                    content: JSON.stringify(content),
+                    delayInMillis: delay * 86400000,
+                    published: published === "published",
+                    // previewText,
+                },
+            })
+            .build();
+
+        try {
+            const response = await fetcher.exec();
+            if (response.sequence) {
+                const { sequence } = response;
+                const email = sequence.emails.find((e) => e.emailId === mailId);
+                if (email) {
+                    setEmail(email);
+                    setDelay(email.delayInMillis / 86400000);
+                    setSubject(email.subject);
+                    // setPreviewText(email.previewText || "");
+                    setContent(email.content);
+                    setPublished(email.published ? "published" : "unpublished");
+                }
+            }
+        } catch (e: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
+        }
+    }, [
+        fetch,
+        sequenceId,
+        email,
+        subject,
+        content,
+        delay,
+        published,
+        // previewText,
+    ]);
+
+    useEffect(() => {
+        if (error) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: error,
+                variant: "destructive",
+            });
+        }
+    }, [error, toast]);
+
+    if (loading || !sequence) {
+        return null;
+    }
 
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
-            <SequenceMailEditor
-                sequenceId={id as string}
-                mailId={mailId as string}
-                address={address}
-            />
+            <div className="flex flex-col gap-4">
+                <div className="flex justify-between items-center mb-8">
+                    <h1 className="text-4xl font-semibold mb-4">
+                        {PAGE_HEADER_EDIT_MAIL}
+                    </h1>
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={updateMail}
+                            disabled={
+                                !subject ||
+                                !content ||
+                                delay < 0 ||
+                                (subject === email?.subject &&
+                                    content === email?.content &&
+                                    delay === email?.delayInMillis / 86400000 &&
+                                    // previewText ===
+                                    //     (email?.content?.meta?.previewText ||
+                                    //         "") &&
+                                    published ===
+                                        (email?.published
+                                            ? "published"
+                                            : "unpublished"))
+                            }
+                        >
+                            {BUTTON_SAVE}
+                        </Button>
+                    </div>
+                </div>
+                <div>
+                    <Form className="flex flex-col gap-4 mb-8">
+                        <div className="flex gap-8">
+                            <FormField
+                                type="number"
+                                min={0}
+                                value={delay}
+                                label={COMPOSE_SEQUENCE_EDIT_DELAY}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                    setDelay(+e.target.value)
+                                }
+                                endIcon={<span>days</span>}
+                                className="w-1/2"
+                                tooltip="The delay in days after which the email will be sent after the last mail."
+                            />
+                            <div className="w-1/2 self-end">
+                                <Select
+                                    value={published}
+                                    onChange={(
+                                        value: "unpublished" | "published",
+                                    ) => {
+                                        if (value) {
+                                            setPublished(value);
+                                        }
+                                    }}
+                                    title="Status"
+                                    options={[
+                                        {
+                                            label: "Published",
+                                            value: "published",
+                                        },
+                                        {
+                                            label: "Unpublished",
+                                            value: "unpublished",
+                                        },
+                                    ]}
+                                />
+                            </div>
+                        </div>
+                        <FormField
+                            value={subject}
+                            label={MAIL_SUBJECT_PLACEHOLDER}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                setSubject(e.target.value)
+                            }
+                        />
+                    </Form>
+                    <EmailViewer
+                        content={content}
+                        emailEditorLink={`/dashboard/mail/sequence/${sequenceId}/${mailId}?redirectTo=/dashboard/mails/sequence/${sequenceId}/${mailId}`}
+                    />
+                </div>
+            </div>
         </DashboardContent>
     );
 }

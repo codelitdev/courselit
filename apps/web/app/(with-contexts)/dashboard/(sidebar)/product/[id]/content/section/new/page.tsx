@@ -82,8 +82,16 @@ export default function SectionPage() {
                             delayInMillis,
                             dateInUTC,
                             email {
-                                content,
+                                content {
+                                    content {
+                                        blockType,
+                                        settings
+                                    },
+                                    style,
+                                    meta
+                                },
                                 subject
+                                emailId
                             }
                         }
                     }

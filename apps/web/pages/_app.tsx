@@ -49,7 +49,7 @@ function MyApp({
                     >
                         <Component {...pageProps} />
                     </div>
-                    <CodeInjector router={router} />
+                    <CodeInjector />
                 </ThemeProvider>
             </Provider>
         </SessionProvider>

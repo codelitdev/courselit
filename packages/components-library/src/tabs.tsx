@@ -30,10 +30,10 @@ export default function Tabs(props: TabsProps) {
                 value={value}
                 onValueChange={onChange}
             >
-                <List className="shrink-0 flex border-b border-slate-200">
+                <List className="shrink-0 flex border-b border-border">
                     {items.map((item) => (
                         <Trigger
-                            className="bg-white px-5 h-[45px] flex items-center justify-center text-[15px] leading-none select-none hover:text-black data-[state=active]:text-black data-[state=active]:shadow-[inset_0_-1px_0_0,0_1px_0_0] data-[state=active]:shadow-current data-[state=active]:focus:relative data-[state=active]:focus:shadow-[0_0_0_2px] data-[state=active]:focus:shadow-black outline-none cursor-pointer"
+                            className="bg-background px-5 h-[45px] flex items-center justify-center text-[15px] leading-none select-none text-muted-foreground hover:text-foreground data-[state=active]:text-foreground data-[state=active]:shadow-[inset_0_-1px_0_0,0_1px_0_0] data-[state=active]:shadow-current data-[state=active]:focus:relative data-[state=active]:focus:shadow-[0_0_0_2px] data-[state=active]:focus:shadow-ring outline-none cursor-pointer"
                             value={item}
                             key={item}
                         >
@@ -52,10 +52,10 @@ export default function Tabs(props: TabsProps) {
 
     return (
         <Root className="flex flex-col w-full" defaultValue={defaultV}>
-            <List className="shrink-0 flex border-b border-slate-200">
+            <List className="shrink-0 flex border-b border-border">
                 {items.map((item) => (
                     <Trigger
-                        className="bg-white px-5 h-[45px] flex items-center justify-center text-[15px] leading-none select-none hover:text-black data-[state=active]:text-black data-[state=active]:shadow-[inset_0_-1px_0_0,0_1px_0_0] data-[state=active]:shadow-current data-[state=active]:focus:relative data-[state=active]:focus:shadow-[0_0_0_2px] data-[state=active]:focus:shadow-black outline-none cursor-default"
+                        className="bg-background px-5 h-[45px] flex items-center justify-center text-[15px] leading-none select-none text-muted-foreground hover:text-foreground data-[state=active]:text-foreground data-[state=active]:shadow-[inset_0_-1px_0_0,0_1px_0_0] data-[state=active]:shadow-current data-[state=active]:focus:relative data-[state=active]:focus:shadow-[0_0_0_2px] data-[state=active]:focus:shadow-ring outline-none cursor-default"
                         value={item}
                         key={item}
                     >
