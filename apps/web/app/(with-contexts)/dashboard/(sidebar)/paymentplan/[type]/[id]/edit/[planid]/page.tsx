@@ -27,9 +27,10 @@ export default function EditPaymentPlanPage() {
     const params = useParams();
     const router = useRouter();
     const type = params?.type as "community" | "product";
-    const entityType = type === "community" 
-        ? membershipEntityType.COMMUNITY 
-        : membershipEntityType.COURSE;
+    const entityType =
+        type === "community"
+            ? membershipEntityType.COMMUNITY
+            : membershipEntityType.COURSE;
     const entityId = params?.id as string;
     const planId = params?.planid as string;
     const { product, community } = useEntityValidation(entityType, entityId);
@@ -101,7 +102,7 @@ export default function EditPaymentPlanPage() {
                         ? {
                               planId: paymentPlan.planId,
                               name: paymentPlan.name,
-                              description: paymentPlan.description,
+                              description: paymentPlan.description || "",
                               type: paymentPlan.type,
                               oneTimeAmount: paymentPlan.oneTimeAmount,
                               emiAmount: paymentPlan.emiAmount,

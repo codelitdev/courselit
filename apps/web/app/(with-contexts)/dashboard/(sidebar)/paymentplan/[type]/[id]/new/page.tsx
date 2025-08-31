@@ -17,9 +17,10 @@ const { MembershipEntityType: membershipEntityType } = Constants;
 export default function NewPaymentPlanPage() {
     const params = useParams();
     const type = params?.type as "community" | "product";
-    const entityType = type === "community" 
-        ? membershipEntityType.COMMUNITY 
-        : membershipEntityType.COURSE;
+    const entityType =
+        type === "community"
+            ? membershipEntityType.COMMUNITY
+            : membershipEntityType.COURSE;
     const entityId = params?.id as string;
     const { product, community } = useEntityValidation(entityType, entityId);
 

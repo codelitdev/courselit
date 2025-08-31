@@ -116,7 +116,7 @@ export default function Page({
     const [deleteConfirmation, setDeleteConfirmation] = useState("");
     const [isDeleting, setIsDeleting] = useState(false);
     const router = useRouter();
-    const fetch = useGraphQLFetch()
+    const fetch = useGraphQLFetch();
 
     useEffect(() => {
         if (communityLoaded && community) {
@@ -368,7 +368,7 @@ export default function Page({
                 }
             `;
             try {
-                const fetchRequest = fetch 
+                const fetchRequest = fetch
                     .setPayload({
                         query,
                         variables: {
@@ -446,22 +446,22 @@ export default function Page({
     // const onPlanSubmitted = async (plan: PaymentPlan) => {
     //     const query = `
     //         mutation CreatePlan(
-    //             $name: String!, 
-    //             $type: PaymentPlanType!, 
+    //             $name: String!,
+    //             $type: PaymentPlanType!,
     //             $entityId: String!,
     //             $entityType: MembershipEntityType!
-    //             $oneTimeAmount: Int, 
+    //             $oneTimeAmount: Int,
     //             $emiAmount: Int,
     //             $emiTotalInstallments: Int,
     //             $subscriptionMonthlyAmount: Int,
     //             $subscriptionYearlyAmount: Int,
     //         ) {
     //             plan: createPlan(
-    //                 name: $name, 
-    //                 type: $type, 
+    //                 name: $name,
+    //                 type: $type,
     //                 entityId: $entityId,
     //                 entityType: $entityType,
-    //                 oneTimeAmount: $oneTimeAmount, 
+    //                 oneTimeAmount: $oneTimeAmount,
     //                 emiAmount: $emiAmount,
     //                 emiTotalInstallments: $emiTotalInstallments,
     //                 subscriptionMonthlyAmount: $subscriptionMonthlyAmount,
@@ -798,7 +798,12 @@ export default function Page({
                 <h3 className="text-lg font-semibold text-destructive">
                     {DANGER_ZONE_HEADER}
                 </h3>
-                <AlertDialog onOpenChange={(open) => !open && (setDeleteConfirmation(""), setIsDeleting(false))}>
+                <AlertDialog
+                    onOpenChange={(open) =>
+                        !open &&
+                        (setDeleteConfirmation(""), setIsDeleting(false))
+                    }
+                >
                     <AlertDialogTrigger asChild>
                         <Button variant="destructive">Delete Community</Button>
                     </AlertDialogTrigger>
@@ -813,7 +818,10 @@ export default function Page({
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <div className="py-4">
-                            <Label htmlFor="delete-confirmation" className="text-sm font-medium">
+                            <Label
+                                htmlFor="delete-confirmation"
+                                className="text-sm font-medium"
+                            >
                                 Type &quot;delete&quot; to confirm
                             </Label>
                             <Input
@@ -821,15 +829,20 @@ export default function Page({
                                 type="text"
                                 placeholder="Type 'delete' to confirm"
                                 value={deleteConfirmation}
-                                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                                onChange={(e) =>
+                                    setDeleteConfirmation(e.target.value)
+                                }
                                 className="mt-2"
                             />
                         </div>
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction 
+                            <AlertDialogAction
                                 onClick={handleDeleteConfirm}
-                                disabled={deleteConfirmation !== "delete" || isDeleting}
+                                disabled={
+                                    deleteConfirmation !== "delete" ||
+                                    isDeleting
+                                }
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isDeleting ? (
