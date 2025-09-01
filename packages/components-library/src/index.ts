@@ -38,6 +38,11 @@ import CssIdField from "./css-id-field";
 import Select from "./select";
 import Tooltip from "./tooltip";
 import DragAndDrop from "./drag-and-drop";
+import {
+    uploadFileInChunks,
+    shouldUseChunkedUpload,
+    ChunkedUploader,
+} from "./chunked-upload";
 
 export { Button as Button2 } from "./components/ui/button";
 export * from "./components/ui/avatar";
@@ -105,4 +110,7 @@ export {
     CssIdField,
     DragAndDrop,
     getSymbolFromCurrency,
+    uploadFileInChunks,
+    shouldUseChunkedUpload,
+    ChunkedUploader,
 };

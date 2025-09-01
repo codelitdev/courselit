@@ -9,7 +9,13 @@ import { FetchBuilder } from "@courselit/utils";
 import Form from "../form";
 import FormField from "../form-field";
 import React from "react";
-import { Button2, PageBuilderPropertyHeader, Tooltip, useToast } from "..";
+import {
+    Button2,
+    PageBuilderPropertyHeader,
+    Tooltip,
+    uploadFileInChunks,
+    useToast,
+} from "..";
 import { X } from "lucide-react";
 
 interface Strings {
@@ -71,8 +77,9 @@ const MediaSelector = (props: MediaSelectorProps) => {
     };
     const [uploadData, setUploadData] = useState(defaultUploadData);
     const fileInput: React.RefObject<HTMLInputElement> = React.createRef();
-    const [selectedFile, setSelectedFile] = useState();
+    const [selectedFile, setSelectedFile] = useState<File | undefined>();
     const [caption, setCaption] = useState("");
+    const [uploadProgress, setUploadProgress] = useState(0);
     const { toast } = useToast();
     const {
         strings,
@@ -95,10 +102,12 @@ const MediaSelector = (props: MediaSelectorProps) => {
         props.onSelection(media);
     };
 
-    const getPresignedUrl = async () => {
+    const getPresignedUrl = async (chunked = false) => {
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/media/presigned`)
             .setIsGraphQLEndpoint(false)
+            .setPayload(JSON.stringify({ chunked }))
+            .setHeaders({ "Content-Type": "application/json" })
             .build();
         const response = await fetch.exec();
         return response.url;
@@ -112,30 +121,34 @@ const MediaSelector = (props: MediaSelectorProps) => {
     }, [dialogOpened]);
 
     const uploadToServer = async (presignedUrl: string): Promise<Media> => {
-        const fD = new FormData();
-        fD.append("caption", (uploadData.caption = caption));
-        fD.append("access", uploadData.public ? "public" : "private");
-        fD.append("file", selectedFile);
+        const file = selectedFile;
+        if (!file) {
+            throw new Error("No file selected");
+        }
+
+        const access = uploadData.public ? "public" : "private";
 
         setUploadData(
             Object.assign({}, uploadData, {
                 uploading: true,
             }),
         );
-        const res = await fetch(presignedUrl, {
-            method: "POST",
-            body: fD,
+
+        // Get a chunked presigned URL with longer validity
+        const chunkedPresignedUrl = await getPresignedUrl(true);
+
+        return uploadFileInChunks({
+            file,
+            presignedUrl: chunkedPresignedUrl,
+            access,
+            caption: uploadData.caption || caption,
+            onProgress: (progress) => {
+                setUploadProgress(progress.percentage);
+            },
+            onError: (error) => {
+                console.error("Chunked upload error:", error);
+            },
         });
-        if (res.status === 200) {
-            const media = await res.json();
-            if (media) {
-                delete media.group;
-            }
-            return media;
-        } else {
-            const resp = await res.json();
-            throw new Error(resp.error);
-        }
     };
 
     const uploadFile = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -158,6 +171,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
             setUploading(false);
             setSelectedFile(undefined);
             setCaption("");
+            setUploadProgress(0);
             setDialogOpened(false);
         }
     };
@@ -269,6 +283,22 @@ const MediaSelector = (props: MediaSelectorProps) => {
                                     className="mt-2"
                                     required
                                 />
+                                {uploading && (
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex justify-between text-sm">
+                                            <span>Upload Progress</span>
+                                            <span>{uploadProgress}%</span>
+                                        </div>
+                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                            <div
+                                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                                style={{
+                                                    width: `${uploadProgress}%`,
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                                 <FormField
                                     label={"Caption"}
                                     name="caption"

@@ -1,4 +1,4 @@
-name: Publish NPM Packages
+name: Publish Docker Images
 
 on:
   push:
@@ -8,6 +8,8 @@ on:
 jobs:
   publish-docker-images:
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --dns-result-order=ipv4first --no-network-family-autoselection --network-family-autoselection-attempt-timeout=5000
     steps:
       - name: checkout
         uses: actions/checkout@v1
@@ -30,13 +32,13 @@ jobs:
         id: metaapp
         uses: docker/metadata-action@v3
         with:
-          images: codelit/courselit-app
+          images: egjoka/courselit-app
 
       - name: Docker meta for the queue 
         id: metaqueue
         uses: docker/metadata-action@v3
         with:
-          images: codelit/courselit-queue
+          images: egjoka/courselit-queue
 
       - name: Build and push app 
         id: docker_build_app

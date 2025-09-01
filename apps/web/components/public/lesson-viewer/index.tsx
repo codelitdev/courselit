@@ -187,7 +187,7 @@ const LessonViewer = ({
 
     return (
         <div className="h-full">
-            <article className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
+            <article className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[70rem] mx-auto">
                 {!lesson && !error && (
                     <div className="flex flex-col">
                         <Skeleton className="h-12 w-full mb-4" />
@@ -224,6 +224,7 @@ const LessonViewer = ({
                             <div>
                                 <video
                                     controls
+                                    autoPlay
                                     controlsList="nodownload" // eslint-disable-line react/no-unknown-property
                                     key={lesson.lessonId}
                                     className="w-full rounded mb-2"
