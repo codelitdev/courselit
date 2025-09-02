@@ -1,9 +1,9 @@
-import { Address, Course } from "@courselit/common-models";
+import { Course } from "@courselit/common-models";
 import { Lesson } from "@courselit/common-models";
 import { useToast } from "@courselit/components-library";
-import { TOAST_TITLE_ERROR } from "@ui-config/strings";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useGraphQLFetch } from "./use-graphql-fetch";
+import { AddressContext } from "@components/contexts";
 
 export type ProductWithAdminProps = Partial<
     Omit<Course, "paymentPlans"> &
@@ -13,16 +13,17 @@ export type ProductWithAdminProps = Partial<
         }
 >;
 
-export default function useProduct(
-    id: string,
-    address: Address,
-): { product: ProductWithAdminProps | undefined | null; loaded: boolean } {
+export default function useProduct(id?: string | null): {
+    product: ProductWithAdminProps | undefined | null;
+    loaded: boolean;
+} {
     const [product, setProduct] = useState<
         ProductWithAdminProps | undefined | null
     >();
     const { toast } = useToast();
     const [loaded, setLoaded] = useState(false);
     const [hasError, setHasError] = useState(false);
+    const address = useContext(AddressContext);
     const fetch = useGraphQLFetch();
 
     const loadProduct = useCallback(
@@ -94,6 +95,9 @@ export default function useProduct(
                         emiTotalInstallments
                         subscriptionMonthlyAmount
                         subscriptionYearlyAmount
+                        entityId
+                        entityType
+                        includedProducts
                     }
                     leadMagnet
                     defaultPaymentPlan
@@ -111,11 +115,11 @@ export default function useProduct(
             } catch (err: any) {
                 setHasError(true);
                 setProduct(null);
-                toast({
-                    title: TOAST_TITLE_ERROR,
-                    description: err.message,
-                    variant: "destructive",
-                });
+                // toast({
+                //     title: TOAST_TITLE_ERROR,
+                //     description: err.message,
+                //     variant: "destructive",
+                // });
             } finally {
                 setLoaded(true);
             }

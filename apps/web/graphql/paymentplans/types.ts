@@ -2,11 +2,13 @@ import {
     GraphQLEnumType,
     GraphQLFloat,
     GraphQLInt,
+    GraphQLList,
     GraphQLNonNull,
     GraphQLObjectType,
     GraphQLString,
 } from "graphql";
 import { Constants } from "@courselit/common-models";
+import userTypes from "../users/types";
 const { PaymentPlanType } = Constants;
 
 const paymentPlanType = new GraphQLEnumType({
@@ -25,11 +27,17 @@ const paymentPlan = new GraphQLObjectType({
         planId: { type: new GraphQLNonNull(GraphQLString) },
         name: { type: new GraphQLNonNull(GraphQLString) },
         type: { type: new GraphQLNonNull(paymentPlanType) },
+        entityId: { type: new GraphQLNonNull(GraphQLString) },
+        entityType: {
+            type: new GraphQLNonNull(userTypes.membershipEntityType),
+        },
         oneTimeAmount: { type: GraphQLFloat },
         emiAmount: { type: GraphQLInt },
         emiTotalInstallments: { type: GraphQLInt },
         subscriptionMonthlyAmount: { type: GraphQLInt },
         subscriptionYearlyAmount: { type: GraphQLInt },
+        description: { type: GraphQLString },
+        includedProducts: { type: new GraphQLList(GraphQLString) },
     },
 });
 

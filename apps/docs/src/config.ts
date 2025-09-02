@@ -69,14 +69,13 @@ export const SIDEBAR: Sidebar = {
             { text: "Introduction", link: "en/communities/introduction" },
             { text: "Create a community", link: "en/communities/create" },
             { text: "Manage members", link: "en/communities/manage-members" },
-            { text: "Set a price", link: "en/communities/set-a-price" },
-            {
-                text: "Manage permissions",
-                link: "en/communities/manage-member-permissions",
-            },
             {
                 text: "Manage reported content",
                 link: "en/communities/manage-reported-content",
+            },
+            {
+                text: "Unlock additional products",
+                link: "en/communities/grant-access-to-additional-products",
             },
         ],
         "Email marketing and automation": [

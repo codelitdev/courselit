@@ -595,19 +595,20 @@ export async function sendCourseOverMail(
     email: string,
     ctx: GQLContext,
 ): Promise<boolean> {
-    const course = await CourseModel.findOne({
+    const course = (await CourseModel.findOne({
         courseId,
         domain: ctx.subdomain._id,
         published: true,
         leadMagnet: true,
-    }).lean();
+    }).lean()) as unknown as InternalCourse;
 
     if (!course) {
         throw new Error(responses.item_not_found);
     }
 
     const paymentPlans = await getPlans({
-        planIds: course.paymentPlans,
+        entityId: course.courseId,
+        entityType: Constants.MembershipEntityType.COURSE,
         ctx,
     });
 
@@ -634,7 +635,7 @@ export async function sendCourseOverMail(
 
     const membership = await getMembership({
         domainId: ctx.subdomain._id,
-        userId: dbUser.userId,
+        userId: dbUser!.userId,
         entityType: Constants.MembershipEntityType.COURSE,
         entityId: course.courseId,
         planId: paymentPlans[0].planId,
@@ -646,7 +647,7 @@ export async function sendCourseOverMail(
         return true;
     }
 
-    await createTemplateAndSendMail({ course, ctx, user: dbUser });
+    await createTemplateAndSendMail({ course, ctx, user: dbUser! });
     return true;
 }
 

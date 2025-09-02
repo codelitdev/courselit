@@ -434,7 +434,6 @@ export const DELETE_SECTION_HEADER = "Delete section";
 export const PRICING_HEADER = "Pricing";
 export const PRICING_DROPDOWN = "Pricing model";
 export const PRICING_FREE = Constants.ProductPriceType.FREE;
-export const PRICING_FREE_LABEL = "Free";
 export const PRICING_FREE_SUBTITLE =
     "People can access the content for free. The user needs to be signed in.";
 export const PRICING_EMAIL = Constants.ProductPriceType.EMAIL;
@@ -443,6 +442,11 @@ export const PRICING_EMAIL_SUBTITLE =
     "People will be sent the content over email. The user needs not be signed in.";
 export const PRICING_PAID = Constants.ProductPriceType.PAID;
 export const PRICING_PAID_LABEL = "Paid";
+export const PRICING_FREE_LABEL = "Free";
+export const PAYMENT_PLAN_FREE_LABEL = "Free";
+export const PAYMENT_PLAN_ONETIME_LABEL = "One-time";
+export const PAYMENT_PLAN_SUBSCRIPTION_LABEL = "Subscription";
+export const PAYMENT_PLAN_EMI_LABEL = "EMI";
 export const PRICING_PAID_SUBTITLE =
     "People can access the content after a one time payment. The user needs to be signed in.";
 export const PRICING_PAID_NO_PAYMENT_METHOD =
@@ -612,6 +616,14 @@ export const NEW_COMMUNITY_BUTTON = "New community";
 export const COMMUNITY_FIELD_NAME = "Community name";
 export const COMMUNITY_NEW_BTN_CAPTION = "Create";
 export const COMMUNITY_SETTINGS = "Manage";
+
+// Payment Plan strings
+export const NEW_PAYMENT_PLAN_HEADER = "New Payment Plan";
+export const EDIT_PAYMENT_PLAN_HEADER = "Edit Payment Plan";
+export const PAYMENT_PLANS_HEADER = "Payment Plans";
+export const NEW_PAYMENT_PLAN_DESCRIPTION =
+    "Configure a new payment plan for your";
+export const EDIT_PAYMENT_PLAN_DESCRIPTION = "Update the configuration for";
 export const TOAST_TITLE_SUCCESS = "Success";
 export const TOAST_SEQUENCE_SAVED = "Sequence changes saved successfully";
 export const TOAST_TITLE_ERROR = "Error";

@@ -1,9 +1,9 @@
 import { Media } from "./media";
 import Group from "./group";
 import { ProductPriceType, CourseType, ProductAccessType } from "./constants";
-import { PaymentPlan } from "./payment-plan";
 import Lesson from "./lesson";
 import User from "./user";
+import { PaymentPlan } from "./payment-plan";
 
 export type ProductPriceType =
     (typeof ProductPriceType)[keyof typeof ProductPriceType];
@@ -28,11 +28,11 @@ export interface Course {
     type: CourseType;
     pageId?: string;
     groups?: Group[];
-    paymentPlans: PaymentPlan[];
     defaultPaymentPlan?: string;
     createdAt: Date;
     updatedAt: Date;
     leadMagnet?: boolean;
     lessons?: Lesson[];
     user: User;
+    paymentPlans?: PaymentPlan[];
 }

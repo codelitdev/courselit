@@ -16,6 +16,7 @@ import {
     CommunityReportType,
     CommunityReportStatus,
     MembershipRole,
+    PaymentPlan,
 } from "@courselit/common-models";
 import CommunityPostModel from "@models/CommunityPost";
 import {
@@ -27,7 +28,12 @@ import CommunityCommentModel from "@models/CommunityComment";
 import PageModel from "@models/Page";
 import PaymentPlanModel from "@models/PaymentPlan";
 import MembershipModel from "@models/Membership";
-import { getPlans } from "../paymentplans/logic";
+import {
+    addIncludedProductsMemberships,
+    deleteMembershipsActivatedViaPaymentPlan,
+    getInternalPaymentPlan,
+    getPlans,
+} from "../paymentplans/logic";
 import { getPaymentMethodFromSettings } from "@/payments-new";
 import CommunityReportModel, {
     InternalCommunityReport,
@@ -49,6 +55,7 @@ import { addNotification } from "@/services/queue";
 import { hasActiveSubscription } from "../users/logic";
 import { internal } from "@config/strings";
 import { hasCommunityPermission as hasPermission } from "@ui-lib/utils";
+import ActivityModel from "@models/Activity";
 
 const { permissions, communityPage } = constants;
 
@@ -111,6 +118,7 @@ export async function createCommunity({
         pageId,
     });
 
+    const paymentPlan = await getInternalPaymentPlan(ctx);
     await MembershipModel.create({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
@@ -119,6 +127,7 @@ export async function createCommunity({
         status: Constants.MembershipStatus.ACTIVE,
         joiningReason: internal.joining_reason_creator,
         role: Constants.MembershipRole.MODERATE,
+        paymentPlanId: paymentPlan.planId,
     });
 
     return community;
@@ -194,7 +203,8 @@ export async function getCommunities({
         products: community.products,
         joiningReasonText: community.joiningReasonText,
         paymentPlans: await getPlans({
-            planIds: community.paymentPlans,
+            entityId: community.communityId,
+            entityType: Constants.MembershipEntityType.COMMUNITY,
             ctx,
         }),
         defaultPaymentPlan: community.defaultPaymentPlan,
@@ -297,7 +307,8 @@ export async function updateCommunity({
     }
 
     const plans = await getPlans({
-        planIds: community.paymentPlans,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
         ctx,
     });
     if (enabled !== undefined) {
@@ -427,12 +438,20 @@ export async function joinCommunity({
         throw new Error(responses.item_not_found);
     }
 
-    if (community.paymentPlans.length === 0) {
+    const communityPaymentPlans = await getPlans({
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+        ctx,
+    });
+
+    if (communityPaymentPlans.length === 0) {
         throw new Error(responses.community_has_no_payment_plans);
     }
 
     const freePaymentPlanOfCommunity = await PaymentPlanModel.findOne({
-        planId: { $in: community.paymentPlans },
+        domain: ctx.subdomain._id,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
         type: Constants.PaymentPlanType.FREE,
         archived: false,
     });
@@ -895,10 +914,6 @@ async function formatCommunity(
         pageId: community.pageId,
         products: community.products,
         joiningReasonText: community.joiningReasonText,
-        paymentPlans: await getPlans({
-            planIds: community.paymentPlans,
-            ctx,
-        }),
         defaultPaymentPlan: community.defaultPaymentPlan,
         featuredImage: community.featuredImage,
         membersCount: await getMembersCount({
@@ -945,10 +960,6 @@ export async function updateMemberStatus({
     rejectionReason?: string;
 }): Promise<Membership> {
     checkIfAuthenticated(ctx);
-
-    // if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-    //     throw new Error(responses.action_not_allowed);
-    // }
 
     if (ctx.user.userId === userId) {
         throw new Error(responses.action_not_allowed);
@@ -1005,12 +1016,33 @@ export async function updateMemberStatus({
             );
         }
         targetMember.rejectionReason = rejectionReason;
+
+        if (targetMember.paymentPlanId) {
+            await deleteMembershipsActivatedViaPaymentPlan({
+                domain: ctx.subdomain._id,
+                userId: targetMember.userId,
+                paymentPlanId: targetMember.paymentPlanId,
+            });
+        }
     }
 
     targetMember.status = nextStatus;
 
     if (targetMember.status === Constants.MembershipStatus.ACTIVE) {
         targetMember.rejectionReason = undefined;
+        const paymentPlan = (await PaymentPlanModel.findOne({
+            domain: ctx.subdomain._id,
+            planId: targetMember.paymentPlanId,
+        })) as PaymentPlan;
+
+        if (targetMember.paymentPlanId) {
+            await addIncludedProductsMemberships({
+                domain: ctx.subdomain._id,
+                userId: targetMember.userId,
+                paymentPlan,
+                sessionId: targetMember.sessionId,
+            });
+        }
 
         await addNotification({
             domain: ctx.subdomain._id.toString(),
@@ -1711,6 +1743,14 @@ export async function leaveCommunity({
         await paymentMethod?.cancel(member.subscriptionId);
     }
 
+    if (member.paymentPlanId) {
+        await deleteMembershipsActivatedViaPaymentPlan({
+            domain: ctx.subdomain._id,
+            userId: member.userId,
+            paymentPlanId: member.paymentPlanId,
+        });
+    }
+
     await member.deleteOne();
 
     return true;
@@ -1737,28 +1777,54 @@ export async function deleteCommunity({
         throw new Error(responses.item_not_found);
     }
 
-    await PageModel.updateOne(
-        {
-            domain: ctx.subdomain._id,
-            pageId: community.pageId,
-            entityId: community.communityId,
-        },
-        {
-            deleted: true,
-        },
-    );
-
-    await CommunityModel.updateOne(
-        {
-            domain: ctx.subdomain._id,
-            communityId: id,
-        },
-        {
-            deleted: true,
-        },
-    );
+    await deleteMemberships(community, ctx);
+    await PageModel.deleteOne({
+        domain: ctx.subdomain._id,
+        pageId: community.pageId,
+        entityId: community.communityId,
+    });
+    await CommunityModel.deleteOne({
+        domain: ctx.subdomain._id,
+        communityId: id,
+    });
 
     return await formatCommunity(community, ctx);
+}
+
+async function deleteMemberships(
+    community: InternalCommunity,
+    ctx: GQLContext,
+) {
+    const paymentPlans = await PaymentPlanModel.find({
+        domain: ctx.subdomain._id,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+    });
+
+    for (const paymentPlan of paymentPlans) {
+        if (
+            paymentPlan.includedProducts &&
+            paymentPlan.includedProducts.length > 0
+        ) {
+            await ActivityModel.deleteMany({
+                domain: ctx.subdomain._id,
+                type: constants.activityTypes[0],
+                "metadata.isIncludedInPlan": true,
+                "metadata.paymentPlanId": paymentPlan.planId,
+            });
+            await MembershipModel.deleteMany({
+                domain: ctx.subdomain._id,
+                paymentPlanId: paymentPlan.planId,
+                entityType: Constants.MembershipEntityType.COURSE,
+                isIncludedInPlan: true,
+            });
+        }
+        await MembershipModel.deleteMany({
+            domain: ctx.subdomain._id,
+            paymentPlanId: paymentPlan.planId,
+        });
+        await paymentPlan.deleteOne();
+    }
 }
 
 export async function reportCommunityContent({

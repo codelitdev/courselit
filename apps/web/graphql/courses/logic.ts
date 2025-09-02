@@ -1,23 +1,25 @@
 /**
  * Business logic for managing courses.
  */
-import CourseModel, { InternalCourse } from "../../models/Course";
-import UserModel, { User } from "../../models/User";
-import { responses } from "../../config/strings";
+import CourseModel from "@/models/Course";
+import { InternalCourse } from "@courselit/common-logic";
+import UserModel from "@/models/User";
+import { User } from "@courselit/common-models";
+import { responses } from "@/config/strings";
 import {
     checkIfAuthenticated,
     validateOffset,
     checkOwnershipWithoutModel,
-} from "../../lib/graphql";
-import constants from "../../config/constants";
+} from "@/lib/graphql";
+import constants from "@/config/constants";
 import {
     getPaginatedCoursesForAdmin,
     setupBlog,
     setupCourse,
     validateCourse,
 } from "./helpers";
-import Lesson from "../../models/Lesson";
-import GQLContext from "../../models/GQLContext";
+import Lesson from "@/models/Lesson";
+import GQLContext from "@/models/GQLContext";
 import Filter from "./models/filter";
 import mongoose from "mongoose";
 import {
@@ -28,17 +30,21 @@ import {
     Progress,
 } from "@courselit/common-models";
 import { deleteAllLessons } from "../lessons/logic";
-import { deleteMedia } from "../../services/medialit";
-import PageModel from "../../models/Page";
+import { deleteMedia } from "@/services/medialit";
+import PageModel from "@/models/Page";
 import { getPrevNextCursor } from "../lessons/helpers";
 import { checkPermission } from "@courselit/utils";
-import { error } from "../../services/logger";
-import { getPlans } from "../paymentplans/logic";
+import { error } from "@/services/logger";
+import {
+    deleteProductsFromPaymentPlans,
+    getPlans,
+} from "../paymentplans/logic";
 import MembershipModel from "@models/Membership";
 import { getActivities } from "../activities/logic";
 import { ActivityType } from "@courselit/common-models/dist/constants";
 import { verifyMandatoryTags } from "../mails/helpers";
 import { Email } from "@courselit/email-editor";
+import PaymentPlanModel from "@models/PaymentPlan";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -84,13 +90,14 @@ export const getCourseOrThrow = async (
 };
 
 async function formatCourse(courseId: string, ctx: GQLContext) {
-    const course: InternalCourse | null = await CourseModel.findOne({
+    const course: InternalCourse | null = (await CourseModel.findOne({
         courseId,
         domain: ctx.subdomain._id,
-    }).lean();
+    }).lean()) as unknown as InternalCourse;
 
     const paymentPlans = await getPlans({
-        planIds: course!.paymentPlans,
+        entityId: course!.courseId,
+        entityType: Constants.MembershipEntityType.COURSE,
         ctx,
     });
 
@@ -222,6 +229,20 @@ export const updateCourse = async (
 
 export const deleteCourse = async (id: string, ctx: GQLContext) => {
     const course = await getCourseOrThrow(undefined, ctx, id);
+    await MembershipModel.deleteMany({
+        domain: ctx.subdomain._id,
+        entityId: course.courseId,
+        entityType: Constants.MembershipEntityType.COURSE,
+    });
+    await PaymentPlanModel.deleteMany({
+        domain: ctx.subdomain._id,
+        entityId: course.courseId,
+        entityType: Constants.MembershipEntityType.COURSE,
+    });
+    await deleteProductsFromPaymentPlans({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+    });
     await deleteAllLessons(course.courseId, ctx);
     if (course.featuredImage) {
         try {
@@ -502,7 +523,8 @@ export const getProducts = async ({
         const paymentPlans =
             course.type !== constants.blog
                 ? await getPlans({
-                      planIds: course.paymentPlans,
+                      entityId: course.courseId,
+                      entityType: Constants.MembershipEntityType.COURSE,
                       ctx,
                   })
                 : undefined;

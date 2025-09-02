@@ -60,8 +60,15 @@ export const validateCourse = async (
         courseData.type === Constants.CourseType.COURSE ||
         courseData.type === Constants.CourseType.DOWNLOAD
     ) {
-        if (courseData.published && courseData.paymentPlans.length === 0) {
-            throw new Error(responses.payment_plan_required);
+        if (courseData.published) {
+            const existingPaymentPlans = await getPlans({
+                entityId: courseData.courseId,
+                entityType: Constants.MembershipEntityType.COURSE,
+                ctx,
+            });
+            if (existingPaymentPlans.length === 0) {
+                throw new Error(responses.payment_plan_required);
+            }
         }
 
         if (
@@ -69,7 +76,8 @@ export const validateCourse = async (
             courseData.leadMagnet
         ) {
             const paymentPlans = await getPlans({
-                planIds: courseData.paymentPlans,
+                entityId: courseData.courseId,
+                entityType: Constants.MembershipEntityType.COURSE,
                 ctx,
             });
             if (

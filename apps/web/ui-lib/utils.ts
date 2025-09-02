@@ -6,7 +6,6 @@ import type {
     Membership,
     MembershipRole,
     Page,
-    PaymentPlan,
     Profile,
     SiteInfo,
     TextEditorContent,
@@ -18,6 +17,7 @@ import { createHash, randomInt } from "crypto";
 import { getProtocol } from "../lib/utils";
 import { headers as headersType } from "next/headers";
 import { Theme } from "@courselit/page-models";
+export { getPlanPrice } from "@courselit/utils";
 const { permissions } = UIConstants;
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -399,38 +399,38 @@ export function getNextRoleForCommunityMember(role: MembershipRole) {
     return roleCycle[(index + 1) % roleCycle.length];
 }
 
-export function getPlanPrice(plan: PaymentPlan): {
-    amount: number;
-    period: string;
-} {
-    if (!plan) {
-        return { amount: 0, period: "" };
-    }
-    switch (plan.type) {
-        case Constants.PaymentPlanType.FREE:
-            return { amount: 0, period: "" };
-        case Constants.PaymentPlanType.ONE_TIME:
-            return { amount: plan.oneTimeAmount || 0, period: "" };
-        case Constants.PaymentPlanType.SUBSCRIPTION:
-            if (plan.subscriptionYearlyAmount) {
-                return {
-                    amount: plan.subscriptionYearlyAmount,
-                    period: "/yr",
-                };
-            }
-            return {
-                amount: plan.subscriptionMonthlyAmount || 0,
-                period: "/mo",
-            };
-        case Constants.PaymentPlanType.EMI:
-            return {
-                amount: plan.emiAmount || 0,
-                period: "/mo",
-            };
-        default:
-            return { amount: 0, period: "" };
-    }
-}
+// export function getPlanPrice(plan: PaymentPlan): {
+//     amount: number;
+//     period: string;
+// } {
+//     if (!plan) {
+//         return { amount: 0, period: "" };
+//     }
+//     switch (plan.type) {
+//         case Constants.PaymentPlanType.FREE:
+//             return { amount: 0, period: "" };
+//         case Constants.PaymentPlanType.ONE_TIME:
+//             return { amount: plan.oneTimeAmount || 0, period: "" };
+//         case Constants.PaymentPlanType.SUBSCRIPTION:
+//             if (plan.subscriptionYearlyAmount) {
+//                 return {
+//                     amount: plan.subscriptionYearlyAmount,
+//                     period: "/yr",
+//                 };
+//             }
+//             return {
+//                 amount: plan.subscriptionMonthlyAmount || 0,
+//                 period: "/mo",
+//             };
+//         case Constants.PaymentPlanType.EMI:
+//             return {
+//                 amount: plan.emiAmount || 0,
+//                 period: "/mo",
+//             };
+//         default:
+//             return { amount: 0, period: "" };
+//     }
+// }
 
 export function hasCommunityPermission(
     member: Pick<Membership, "role">,
