@@ -237,6 +237,8 @@ export function VideoWithPreview({
                             <video
                                 src={videoUrl}
                                 controls
+                                controlsList="nodownload" // eslint-disable-line react/no-unknown-property
+                                onContextMenu={(e) => e.preventDefault()}
                                 autoPlay
                                 className="w-full h-full"
                             >
@@ -301,6 +303,8 @@ export function VideoWithPreview({
                             <video
                                 src={videoUrl}
                                 controls
+                                controlsList="nodownload" // eslint-disable-line react/no-unknown-property
+                                onContextMenu={(e) => e.preventDefault()}
                                 autoPlay
                                 className="w-full h-full"
                             >

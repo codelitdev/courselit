@@ -225,6 +225,7 @@ const LessonViewer = ({
                                 <video
                                     controls
                                     controlsList="nodownload" // eslint-disable-line react/no-unknown-property
+                                    onContextMenu={(e) => e.preventDefault()}
                                     key={lesson.lessonId}
                                     className="w-full rounded mb-2"
                                 >
@@ -254,6 +255,7 @@ const LessonViewer = ({
                                 <audio
                                     controls
                                     controlsList="nodownload" // eslint-disable-line react/no-unknown-property
+                                    onContextMenu={(e) => e.preventDefault()}
                                 >
                                     <source
                                         src={
