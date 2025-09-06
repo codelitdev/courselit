@@ -30,6 +30,7 @@ export default function CommentSection({
     const [post, setPost] = useState<CommunityPost>();
     const { profile } = useContext(ProfileContext);
     const { toast } = useToast();
+    const [isPosting, setIsPosting] = useState(false);
 
     const scrollToBottom = () => {
         commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -221,6 +222,7 @@ export default function CommentSection({
             .setIsGraphQLEndpoint(true)
             .build();
 
+        setIsPosting(true);
         try {
             const response = await fetch.exec();
             if (response.comment) {
@@ -244,6 +246,8 @@ export default function CommentSection({
                 title: "Error",
                 description: err.message,
             });
+        } finally {
+            setIsPosting(false);
         }
     };
 
@@ -607,6 +611,7 @@ export default function CommentSection({
                             )
                         }
                         onDelete={handleDeleteComment}
+                        isPosting={isPosting}
                     />
                 ))}
                 <div ref={commentsEndRef} />
@@ -627,7 +632,9 @@ export default function CommentSection({
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
                     />
-                    <Button onClick={handlePostComment}>Post Comment</Button>
+                    <Button onClick={handlePostComment} disabled={isPosting}>
+                        {isPosting ? "Posting..." : "Post Comment"}
+                    </Button>
                 </div>
             )}
         </div>

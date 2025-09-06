@@ -19,7 +19,7 @@ export const MembershipSchema = new mongoose.Schema<InternalMembership>(
             default: generateUniqueId,
         },
         userId: { type: String, required: true },
-        paymentPlanId: String,
+        paymentPlanId: { type: String, required: true },
         entityId: { type: String, required: true },
         entityType: {
             type: String,
@@ -27,6 +27,7 @@ export const MembershipSchema = new mongoose.Schema<InternalMembership>(
             required: true,
         },
         sessionId: { type: String, required: true, default: generateUniqueId },
+        isIncludedInPlan: { type: Boolean, default: false },
         status: {
             type: String,
             enum: Object.values(MembershipStatus),

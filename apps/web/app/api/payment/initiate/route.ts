@@ -67,7 +67,16 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        if (!(entity.paymentPlans as unknown as string[]).includes(planId)) {
+        // Verify the payment plan belongs to this entity
+        const planExists = await PaymentPlanModel.exists({
+            domain: domain._id,
+            planId: planId,
+            entityId: id,
+            entityType: type,
+            archived: false,
+        });
+
+        if (!planExists) {
             return Response.json(
                 { message: "Invalid payment plan" },
                 { status: 404 },

@@ -5,6 +5,7 @@ import { Page } from "../../models/Page";
 import { getCommunity } from "../communities/logic";
 import { getCourse } from "../courses/logic";
 import { generateUniqueId } from "@courselit/utils";
+import { getPlans } from "../paymentplans/logic";
 
 export async function getPageResponse(
     page: Page,
@@ -35,7 +36,13 @@ export async function getPageResponse(
                     courseId: course.courseId,
                     leadMagnet: course.leadMagnet,
                     defaultPaymentPlan: course.defaultPaymentPlan,
-                    paymentPlans: course.paymentPlans.map((p) => ({
+                    paymentPlans: (
+                        await getPlans({
+                            entityId: course.courseId,
+                            entityType: Constants.MembershipEntityType.COURSE,
+                            ctx,
+                        })
+                    ).map((p) => ({
                         emiAmount: p.emiAmount,
                         emiTotalInstallments: p.emiTotalInstallments,
                         subscriptionMonthlyAmount: p.subscriptionMonthlyAmount,
@@ -60,7 +67,16 @@ export async function getPageResponse(
                     description: community.description,
                     communityId: community.communityId,
                     defaultPaymentPlan: community.defaultPaymentPlan,
-                    paymentPlans: community.paymentPlans.map((p) => ({
+                    membersCount: community.membersCount,
+                    featuredImage: community.featuredImage,
+                    paymentPlans: (
+                        await getPlans({
+                            entityId: community.communityId,
+                            entityType:
+                                Constants.MembershipEntityType.COMMUNITY,
+                            ctx,
+                        })
+                    ).map((p) => ({
                         emiAmount: p.emiAmount,
                         emiTotalInstallments: p.emiTotalInstallments,
                         subscriptionMonthlyAmount: p.subscriptionMonthlyAmount,
@@ -70,19 +86,10 @@ export async function getPageResponse(
                         name: p.name,
                         planId: p.planId,
                     })),
-                    membersCount: community.membersCount,
-                    featuredImage: community.featuredImage,
                 };
             }
             break;
     }
-    // const pageData =
-    //     page.type.toLowerCase() === constants.product
-    //         ? await getCourse(
-    //               page.entityId!,
-    //               ctx.subdomain._id as unknown as string,
-    //           )
-    //         : {};
 
     const sharedWidgetsToDraftSharedWidgets = (widget) =>
         widget.shared

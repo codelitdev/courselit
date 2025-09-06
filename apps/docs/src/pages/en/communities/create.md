@@ -6,52 +6,68 @@ layout: ../../../layouts/MainLayout.astro
 
 Before you can start building your community, you need to set up a school. [Follow this guide](/en/schools/create) to get yourself a free account and create a school, if you haven't already.
 
-Once you are signed in using an admin account, go to the dashboard by clicking on the `Dashboard` option from the drop down menu located on the top right corner of your school.
+Once you are signed in with an admin account, go to the dashboard by clicking on the `Dashboard` option from the dropdown menu located in the top right corner of your school.
 
 > The feature is currently in beta, which means you may encounter bugs. Please report them in our <a href="https://discord.com/invite/GR4bQsN" target="_blank">Discord</a> group if you run into any.
 
-### Step 1: Navigate to the Communities Section
+## Steps to create a community
 
-1. Log in to your account on **My Awesome School**.
-2. Click on the **Communities** tab in the main navigation menu.
+1. Log in to your account and go to the dashboard.
+2. Click on the **Communities** option in the left-side navigation area.
+3. In the **Communities** section, click on the **New community** button. You will be directed to a form where you can set up your new community.
 
-### Step 2: Start Creating a New Community
+    ![Communities Hub](/assets/communities/communities-hub.png)
 
-1. In the **Communities** section, click on the **New community** button.
-2. You will be directed to a form where you can set up your new community.
+4. Enter the community's name and click `Create`.
 
-### Step 3: Enter Community Details
+    ![New community screen](/assets/communities/new-community-screen.png)
 
-1. **Community Name**: Enter a name for your community. Choose a name that reflects the purpose or theme of your community.
-2. **Description**: Optionally, add a brief description to give potential members an idea of what your community is about.
-3. **Categories**: Select or create categories that will help organize content within your community.
+5. After successful creation, you will be taken back to the **Communities** screen. Click on the newly-created community's card to go to the community.
 
-### Step 4: Configure Community Settings
+    ![Community creation successful](/assets/communities/after-community-creation.png)
 
-1. **Community Enabled**: Toggle this option to allow users to join your community.
-2. **Auto Accept Members**: Choose whether new members should be automatically accepted or require approval.
-3. **Joining Reason Text**: For free communities, you can add text that users will see when they request to join.
+6. Click on the `Manage` button to navigate to the community's management area. From here, you can configure all the settings related to the community.
 
-### Step 5: Set Pricing Plans (Optional)
+    ![Newly-created Community Screen](/assets/communities/fresh-community-screen.png)
 
-If you are creating a paid community, you can set up various pricing plans:
+    > The community isn’t live yet—you’ll see a red ribbon at the top as a reminder.
 
-- **Yearly**: Set a yearly subscription fee.
-- **Monthly**: Set a monthly subscription fee.
-- **One Time**: Offer a one-time payment option.
+7. To make the community live, you must first add a payment plan. Without a payment plan, a community cannot be made live.
 
-### Step 6: Save and Create
+    ![Community Manage Screen](/assets/communities/community-manage-screen.jpeg)
 
-1. Review all the details you have entered.
-2. Click on the **Create** button to finalize the setup of your new community.
+8. Scroll down to the **Pricing** section and click on the `New Plan` button.
 
-### Step 7: Manage Your Community
+    ![New payment plan](/assets/communities/new-payment-plan-new.png)
 
-Once your community is created, you can:
+9. In the **New Payment Plan** screen, fill in the details of the plan and choose a pricing scheme. The four available options are:
 
-- **Add Members**: Invite or accept new members.
-- **Share Content**: Post updates, announcements, and multimedia content.
-- **Monitor Activity**: Keep track of member interactions and reported content.
+    - **Free**: Offer a free option.
+    - **One-time**: Offer a one-time payment option.
+    - **Subscription**: Offer a monthly (or yearly) subscription plan.
+    - **EMI**: Offer a plan with multiple installments
+
+    ![Add a new payment plan](/assets/payment-plans/payment-plans-list-empty.jpg)
+
+10. After setting the pricing, click `Save`. This will open the payment plan in edit mode. Navigate back to the community's `Manage` screen by clicking on the breadcrumb at the top.
+11. Toggle the `Community Enabled` switch and click `Save changes`. This will make the community live.
+
+    ![Enable community](/assets/communities/enable-community.png)
+
+12. Return to the community's home screen using the breadcrumb at the top, then click on the share icon to copy the community's URL to the clipboard.
+
+    ![Back to community home](/assets/communities/back-to-community-navigation.png)
+
+13. Start sharing the community's URL with your network.
+
+    ![Community share button](/assets/communities/community-share-button.png)
+
+## Next Steps
+
+Now that you are the proud owner of your community, learn how to perform other administrative actions.
+
+- [Manage members](/en/communities/manage-members)
+- [Moderate content](/en/communities/manage-reported-content)
 
 ## Stuck somewhere?
 

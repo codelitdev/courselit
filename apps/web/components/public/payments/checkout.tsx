@@ -1,11 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { useContext, useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { RadioGroup } from "@/components/ui/radio-group";
 import {
     FormControl,
     FormField,
@@ -13,12 +12,7 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Check, ChevronUp, ShoppingCart, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { LoginForm } from "./login-form";
 import {
     PaymentPlan,
@@ -26,6 +20,7 @@ import {
     MembershipEntityType,
     UIConstants,
     MembershipStatus,
+    Course,
 } from "@courselit/common-models";
 import {
     AddressContext,
@@ -37,23 +32,17 @@ import { FetchBuilder } from "@courselit/utils";
 import { useRouter } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
 import { getSymbolFromCurrency, useToast } from "@courselit/components-library";
-import { getPlanPrice } from "@ui-lib/utils";
 import Script from "next/script";
-import {
-    Button,
-    Header3,
-    Header4,
-    PageCard,
-    PageCardContent,
-    Text1,
-} from "@courselit/page-primitives";
-import { CHECKOUT_PAGE_ORDER_SUMMARY } from "@ui-config/strings";
+import { Button, Header3, Text1 } from "@courselit/page-primitives";
+import { PaymentPlanCard } from "./payment-plan-card";
+import { MobileOrderSummary, DesktopOrderSummary } from "./order-summary";
 const { PaymentPlanType: paymentPlanType } = Constants;
 
 export interface Product {
     id: string;
     name: string;
     type: MembershipEntityType;
+    defaultPaymentPlanId: string;
     slug?: string;
     featuredImage?: string;
     description?: string;
@@ -64,6 +53,7 @@ export interface Product {
 export interface CheckoutScreenProps {
     product: Product;
     paymentPlans: PaymentPlan[];
+    includedProducts: Course[];
 }
 
 const formSchema = z.object({
@@ -71,31 +61,10 @@ const formSchema = z.object({
     joiningReason: z.string().optional(),
 });
 
-function getPlanDescription(plan: PaymentPlan, currencySymbol: string): string {
-    if (!plan) {
-        return "N/A";
-    }
-
-    switch (plan.type) {
-        case paymentPlanType.FREE:
-            return "Free plan";
-        case paymentPlanType.ONE_TIME:
-            return `One-time payment of ${currencySymbol}${plan.oneTimeAmount?.toFixed(2)}`;
-        case paymentPlanType.SUBSCRIPTION:
-            if (plan.subscriptionYearlyAmount) {
-                return `Billed annually at ${currencySymbol}${plan.subscriptionYearlyAmount.toFixed(2)}`;
-            }
-            return `${currencySymbol}${plan.subscriptionMonthlyAmount?.toFixed(2)} per month`;
-        case paymentPlanType.EMI:
-            return `${currencySymbol}${plan.emiAmount?.toFixed(2)} per month for ${plan.emiTotalInstallments} months`;
-        default:
-            return "N/A";
-    }
-}
-
 export default function Checkout({
     product,
     paymentPlans,
+    includedProducts,
 }: CheckoutScreenProps) {
     const siteinfo = useContext(SiteInfoContext);
     const { profile } = useContext(ProfileContext);
@@ -153,15 +122,27 @@ export default function Checkout({
             }
         };
 
-        if (profile.userId) {
+        if (profile?.userId) {
             fetchMembership();
         }
     }, [profile]);
 
+    // Initialize selectedPlan with the default payment plan
+    useEffect(() => {
+        if (paymentPlans.length > 0 && product.defaultPaymentPlanId) {
+            const defaultPlan = paymentPlans.find(
+                (plan) => plan.planId === product.defaultPaymentPlanId,
+            );
+            if (defaultPlan) {
+                setSelectedPlan(defaultPlan);
+            }
+        }
+    }, [paymentPlans, product.defaultPaymentPlanId]);
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            selectedPlan: "",
+            selectedPlan: product.defaultPaymentPlanId || "",
             joiningReason: "",
         },
     });
@@ -201,7 +182,7 @@ export default function Checkout({
                         name: product.name,
                         image: product.featuredImage || siteinfo.logo?.file,
                         prefill: {
-                            email: profile.email,
+                            email: profile?.email || "",
                         },
                         handler: function (response) {
                             verifySignature(response);
@@ -310,179 +291,6 @@ export default function Checkout({
         setUserName(name);
     };
 
-    const MobileOrderSummary = () => (
-        <div className="md:hidden w-full sticky top-20 z-11 mb-8">
-            <PageCard theme={theme.theme}>
-                <PageCardContent theme={theme.theme} className="p-0">
-                    <div className="w-full">
-                        <div
-                            className="flex items-center justify-between p-4 border-b w-full"
-                            style={{
-                                borderBottomColor: theme.theme.colors.border,
-                            }}
-                        >
-                            <div className="flex items-center gap-1">
-                                <ShoppingCart className="h-5 w-5" />
-                                <Text1
-                                    className="p-0 !m-0 h-auto font-normal hover:bg-transparent flex items-center"
-                                    onClick={() =>
-                                        setIsOrderSummaryOpen(
-                                            !isOrderSummaryOpen,
-                                        )
-                                    }
-                                    theme={theme.theme}
-                                >
-                                    {isOrderSummaryOpen ? "Hide" : "Show"} order
-                                    summary
-                                    <ChevronUp
-                                        className={`h-4 w-4 ml-1 transition-transform duration-200 ${isOrderSummaryOpen ? "" : "rotate-180"}`}
-                                    />
-                                </Text1>
-                            </div>
-                            <div className="font-medium flex items-center">
-                                {currencySymbol}
-                                {getPlanPrice(
-                                    selectedPlan || paymentPlans[0],
-                                ).amount.toFixed(2)}
-                                <span className="text-sm text-muted-foreground ml-1">
-                                    {
-                                        getPlanPrice(
-                                            selectedPlan || paymentPlans[0],
-                                        ).period
-                                    }
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <Collapsible
-                        open={isOrderSummaryOpen}
-                        onOpenChange={setIsOrderSummaryOpen}
-                    >
-                        <CollapsibleTrigger className="sr-only">
-                            Toggle order summary
-                        </CollapsibleTrigger>
-                        <CollapsibleContent
-                            style={{
-                                borderBottomColor: theme.theme.colors.border,
-                            }}
-                        >
-                            <div className="p-4 space-y-4">
-                                <div className="flex gap-4">
-                                    <div className="h-16 w-16 relative rounded-lg overflow-hidden">
-                                        <Image
-                                            src={
-                                                product.featuredImage ||
-                                                "/courselit_backdrop_square.webp"
-                                            }
-                                            alt={product.name}
-                                            fill
-                                            className="object-cover"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Header3 theme={theme.theme}>
-                                            {product.name}
-                                        </Header3>
-                                        {product.description && (
-                                            <Text1 theme={theme.theme}>
-                                                {product.description}
-                                            </Text1>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {selectedPlan && (
-                                    <div className="space-y-4">
-                                        <div
-                                            className="flex justify-between pt-4 border-t"
-                                            style={{
-                                                borderTopColor:
-                                                    theme.theme.colors.border,
-                                            }}
-                                        >
-                                            <Header3 theme={theme.theme}>
-                                                Total
-                                            </Header3>
-                                            <div className="text-right flex items-center">
-                                                <Header4 className="font-medium">
-                                                    {currencySymbol}
-                                                    {getPlanPrice(
-                                                        selectedPlan,
-                                                    ).amount.toFixed(2)}
-                                                </Header4>
-                                                <Text1 theme={theme.theme}>
-                                                    {
-                                                        getPlanPrice(
-                                                            selectedPlan,
-                                                        ).period
-                                                    }
-                                                </Text1>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </CollapsibleContent>
-                    </Collapsible>
-                </PageCardContent>
-            </PageCard>
-        </div>
-    );
-
-    const DesktopOrderSummary = () => (
-        <PageCard theme={theme.theme}>
-            <PageCardContent theme={theme.theme} className="space-y-4">
-                <Header3 theme={theme.theme}>
-                    {CHECKOUT_PAGE_ORDER_SUMMARY}
-                </Header3>
-                <div className="flex items-start gap-4 pb-4">
-                    <div className="h-16 w-16 relative rounded-lg overflow-hidden bg-gray-100">
-                        <Image
-                            src={
-                                product.featuredImage ||
-                                "/courselit_backdrop_square.webp"
-                            }
-                            alt={product.name}
-                            fill
-                            className="object-cover"
-                        />
-                    </div>
-                    <div>
-                        <Header4 theme={theme.theme}>{product.name}</Header4>
-                        {product.description && (
-                            <Text1 theme={theme.theme}>
-                                {product.description}
-                            </Text1>
-                        )}
-                    </div>
-                </div>
-                {selectedPlan && (
-                    <div
-                        className="mt-4 pt-4 border-t"
-                        style={{
-                            borderTopColor: theme.theme.colors.border,
-                        }}
-                    >
-                        <div className="flex justify-between items-center">
-                            <Header4 theme={theme.theme}>Total</Header4>
-                            <Header4 theme={theme.theme}>
-                                {currencySymbol}
-                                {getPlanPrice(selectedPlan).amount.toFixed(2)}
-                                <span className="text-sm text-muted-foreground ml-1">
-                                    {getPlanPrice(selectedPlan).period}
-                                </span>
-                            </Header4>
-                        </div>
-                        <Text1 theme={theme.theme}>
-                            {getPlanDescription(selectedPlan, currencySymbol)}
-                        </Text1>
-                    </div>
-                )}
-            </PageCardContent>
-        </PageCard>
-    );
-
     useEffect(() => {
         function setupLemonSqueezy() {
             if (typeof (window as any).createLemonSqueezy !== "undefined") {
@@ -500,8 +308,16 @@ export default function Checkout({
     return (
         <div className="min-h-screen w-full">
             <div className="w-full">
-                <MobileOrderSummary />
-                <div className="w-full grid md:grid-cols-[1fr,400px] gap-8 items-start">
+                <MobileOrderSummary
+                    product={product}
+                    selectedPlan={selectedPlan}
+                    paymentPlans={paymentPlans}
+                    currencySymbol={currencySymbol}
+                    theme={theme}
+                    isOrderSummaryOpen={isOrderSummaryOpen}
+                    setIsOrderSummaryOpen={setIsOrderSummaryOpen}
+                />
+                <div className="w-full grid md:grid-cols-[1fr,400px] gap-8">
                     <div className="space-y-8">
                         {membershipStatus ===
                             Constants.MembershipStatus.ACTIVE ||
@@ -548,7 +364,6 @@ export default function Checkout({
                                                 );
                                             }
                                         }}
-                                        className="bg-black text-white hover:bg-black/90"
                                         theme={theme.theme}
                                     >
                                         Go to the resource
@@ -591,13 +406,13 @@ export default function Checkout({
                                     >
                                         <div className="mb-6 space-y-4">
                                             <Header3 theme={theme.theme}>
-                                                Select Payment Plan
+                                                Select Your Plan
                                             </Header3>
                                             <FormField
                                                 control={form.control}
                                                 name="selectedPlan"
                                                 render={({ field }) => (
-                                                    <FormItem className="space-y-3">
+                                                    <FormItem className="space-y-4">
                                                         <FormControl>
                                                             <RadioGroup
                                                                 onValueChange={(
@@ -610,48 +425,49 @@ export default function Checkout({
                                                                         value,
                                                                     );
                                                                 }}
-                                                                defaultValue={
+                                                                value={
                                                                     field.value
                                                                 }
-                                                                className="space-y-3"
+                                                                className="space-y-4"
                                                             >
                                                                 {paymentPlans.map(
-                                                                    (plan) => (
-                                                                        <FormItem
-                                                                            key={
-                                                                                plan.planId
-                                                                            }
-                                                                            className="flex items-start space-x-3 space-y-0"
-                                                                        >
-                                                                            <FormControl>
-                                                                                <RadioGroupItem
-                                                                                    value={
-                                                                                        plan.planId
-                                                                                    }
-                                                                                    disabled={
-                                                                                        !isLoggedIn
-                                                                                    }
-                                                                                />
-                                                                            </FormControl>
-                                                                            <div className="space-y-0.5">
-                                                                                <FormLabel className="text-base font-normal">
-                                                                                    {
-                                                                                        plan.name
-                                                                                    }
-                                                                                </FormLabel>
-                                                                                <Text1
-                                                                                    theme={
-                                                                                        theme.theme
-                                                                                    }
-                                                                                >
-                                                                                    {getPlanDescription(
-                                                                                        plan,
-                                                                                        currencySymbol,
-                                                                                    )}
-                                                                                </Text1>
-                                                                            </div>
-                                                                        </FormItem>
-                                                                    ),
+                                                                    (plan) => {
+                                                                        const isRecommended =
+                                                                            paymentPlans.length >
+                                                                                1 &&
+                                                                            plan.planId ===
+                                                                                product.defaultPaymentPlanId;
+
+                                                                        return (
+                                                                            <PaymentPlanCard
+                                                                                key={
+                                                                                    plan.planId
+                                                                                }
+                                                                                plan={
+                                                                                    plan
+                                                                                }
+                                                                                isSelected={
+                                                                                    field.value ===
+                                                                                    plan.planId
+                                                                                }
+                                                                                isRecommended={
+                                                                                    isRecommended
+                                                                                }
+                                                                                isLoggedIn={
+                                                                                    isLoggedIn
+                                                                                }
+                                                                                currencySymbol={
+                                                                                    currencySymbol
+                                                                                }
+                                                                                includedProducts={
+                                                                                    includedProducts
+                                                                                }
+                                                                                theme={
+                                                                                    theme
+                                                                                }
+                                                                            />
+                                                                        );
+                                                                    },
                                                                 )}
                                                             </RadioGroup>
                                                         </FormControl>
@@ -713,9 +529,12 @@ export default function Checkout({
                             </>
                         )}
                     </div>
-                    <div className="hidden md:block">
-                        <DesktopOrderSummary />
-                    </div>
+                    <DesktopOrderSummary
+                        product={product}
+                        selectedPlan={selectedPlan}
+                        currencySymbol={currencySymbol}
+                        theme={theme}
+                    />
                 </div>
             </div>
             <Script src="https://checkout.razorpay.com/v1/checkout.js" />

@@ -15,6 +15,7 @@ import userTypes from "../users/types";
 import { getUser } from "../users/logic";
 import GQLContext from "@models/GQLContext";
 import paymentPlansTypes from "../paymentplans/types";
+import { getPlans } from "../paymentplans/logic";
 
 const communityReportContentType = new GraphQLEnumType({
     name: "CommunityReportContentType",
@@ -50,6 +51,12 @@ const community = new GraphQLObjectType({
         pageId: { type: new GraphQLNonNull(GraphQLString) },
         paymentPlans: {
             type: new GraphQLList(paymentPlansTypes.paymentPlan),
+            resolve: (community, _, ctx: GQLContext, __) =>
+                getPlans({
+                    entityId: community.communityId,
+                    entityType: Constants.MembershipEntityType.COMMUNITY,
+                    ctx,
+                }),
         },
         defaultPaymentPlan: { type: GraphQLString },
         featuredImage: { type: mediaTypes.mediaType },

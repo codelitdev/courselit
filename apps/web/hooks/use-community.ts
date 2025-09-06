@@ -37,11 +37,14 @@ export const useCommunity = (id?: string | null) => {
                         planId
                         name
                         type
+                        entityId
+                        entityType
                         oneTimeAmount
                         emiAmount
                         emiTotalInstallments
                         subscriptionMonthlyAmount
                         subscriptionYearlyAmount
+                        includedProducts
                     }
                     defaultPaymentPlan
                     featuredImage {
@@ -73,6 +76,11 @@ export const useCommunity = (id?: string | null) => {
                 }
             } catch (err: any) {
                 setError(err.message);
+                // toast({
+                //     title: TOAST_TITLE_ERROR,
+                //     description: err.message,
+                //     variant: "destructive",
+                // });
             } finally {
                 setLoaded(true);
             }

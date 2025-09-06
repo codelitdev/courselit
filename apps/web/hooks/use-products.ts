@@ -1,7 +1,6 @@
-import { AddressContext } from "@components/contexts";
 import { Course } from "@courselit/common-models";
-import { FetchBuilder } from "@courselit/utils";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
+import { useGraphQLFetch } from "./use-graphql-fetch";
 
 export function useProducts(
     page: number,
@@ -12,11 +11,7 @@ export function useProducts(
     const [products, setProducts] = useState<Course[]>([]);
     const [loading, setLoading] = useState(true);
     const [totalPages, setTotalPages] = useState(1);
-    const address = useContext(AddressContext);
-
-    const fetch = new FetchBuilder()
-        .setUrl(`${address.backend}/api/graph`)
-        .setIsGraphQLEndpoint(true);
+    const fetch = useGraphQLFetch();
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -81,7 +76,7 @@ export function useProducts(
         };
 
         fetchProducts();
-    }, [page, itemsPerPage, filter, address.backend, publicView]);
+    }, [page, itemsPerPage, filter, publicView, fetch]);
 
     return { products, loading, totalPages };
 }

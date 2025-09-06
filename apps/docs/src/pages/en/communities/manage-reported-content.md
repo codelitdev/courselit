@@ -15,6 +15,8 @@ Managing reported content is crucial for maintaining a safe and respectful envir
     - Log into your CourseLit school.
     - Navigate to the `Dashboard`.
     - Go to the `Communities` section.
+    - Click on the community's card to open its home page.
+    - Click `Manage` to go to community's settings.
     - Click on `Reported Content` to view the list of reported items.
 
     ![Community reported content dashboard](/assets/communities/reported-content-dashboard.png)
