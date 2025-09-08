@@ -150,22 +150,20 @@ export default function Widget({
         <Section theme={overiddenTheme} id={cssId}>
             <div className={`flex flex-col gap-4`}>
                 <div
-                    className={`flex flex-col mb-4 ${
-                        headerAlignment === "center"
+                    className={`flex flex-col mb-4 ${headerAlignment === "center"
                             ? "items-center"
                             : "items-start"
-                    }`}
+                        }`}
                 >
                     <Header1 theme={overiddenTheme} className="mb-4">
                         {title}
                     </Header1>
                     {description && (
                         <div
-                            className={`${
-                                headerAlignment === "center"
+                            className={`${headerAlignment === "center"
                                     ? "text-center"
                                     : "text-left"
-                            }`}
+                                }`}
                         >
                             <Subheader1 theme={overiddenTheme} component="span">
                                 <TextRenderer json={description} />
@@ -182,7 +180,7 @@ export default function Widget({
                                     <Skeleton className="h-6 w-[100px] rounded-[300px]" />
                                     <Skeleton className="h-6 w-6" />
                                 </div>
-                                <hr className="w-full" />
+                                <hr className="w-full border-border" />
                             </div>
                         ))}
                     </div>
@@ -192,41 +190,44 @@ export default function Widget({
                         <AccordionItem
                             value={group}
                             key={index}
-                            // className="border-b-0"
+                        // className="border-b-0"
                         >
                             <AccordionTrigger>
                                 <div className="flex grow justify-between mr-2">
                                     <Text1 theme={overiddenTheme}>
                                         {group}
                                     </Text1>
-                                    <Badge>
-                                        <Caption
-                                            theme={overiddenTheme}
-                                            className="leading-none"
-                                        >
-                                            {`${formattedCourse[group].length} lessons`}
-                                        </Caption>
+                                    <Badge variant="outline">
+                                        {`${formattedCourse[group].length} lessons`}
                                     </Badge>
                                 </div>
                             </AccordionTrigger>
                             <AccordionContent>
                                 {formattedCourse[group].map(
                                     (lesson: Lesson) => (
-                                        <div
+                                        <Link
                                             key={lesson.lessonId}
-                                            className="flex items-center gap-2 py-2 px-2 hover:bg-gray-100 rounded"
+                                            href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
                                         >
-                                            <LessonIcon
-                                                type={lesson.type as LessonType}
-                                            />
-                                            <Link
-                                                href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
+                                            <div
+                                                className="flex justify-between items-center gap-2 py-2 px-2 hover:bg-muted rounded transition-colors"
                                             >
-                                                <Text1 theme={overiddenTheme}>
-                                                    {lesson.title}
-                                                </Text1>
-                                            </Link>
-                                        </div>
+                                                <span className="flex items-center gap-2">
+                                                    <LessonIcon
+                                                        type={lesson.type as LessonType}
+                                                    />
+
+                                                    <Text1 theme={overiddenTheme}>
+                                                        {lesson.title}
+                                                    </Text1>
+                                                </span>
+
+                                                {!lesson.requiresEnrollment && (
+
+                                                    <Badge variant="outline">Preview</Badge>
+                                                )}
+                                            </div>
+                                        </Link>
                                     ),
                                 )}
                             </AccordionContent>

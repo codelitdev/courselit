@@ -116,12 +116,6 @@ export const BaseLayoutAdmin = ({
     const router = useRouter();
 
     useEffect(() => {
-        if (profile.fetched && !canAccessDashboard(profile)) {
-            router.push("/");
-        }
-    }, [profile.fetched]);
-
-    useEffect(() => {
         if (status === "authenticated") {
             dispatch && dispatch(actionCreators.signedIn());
             dispatch && dispatch(actionCreators.authChecked());
@@ -134,7 +128,7 @@ export const BaseLayoutAdmin = ({
 
     const items = getSidebarMenuItems(profile);
 
-    return profile.fetched && canAccessDashboard(profile) ? (
+    return canAccessDashboard(profile) ? (
         <>
             <Head>
                 <title>

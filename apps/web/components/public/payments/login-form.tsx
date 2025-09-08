@@ -122,6 +122,7 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
         }
     };
 
+    // TODO: refactor this to use the getUserProfile function from helpers.ts
     const getProfile = async () => {
         const query = `
             { profile: getUser {

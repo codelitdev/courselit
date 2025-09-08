@@ -8,7 +8,7 @@ interface BrandingProps {
     siteinfo: SiteInfo;
 }
 
-const Branding = ({ siteinfo }: BrandingProps) => {
+export const Branding = ({ siteinfo }: BrandingProps) => {
     return (
         <Link href="/">
             <div className="flex items-center">

@@ -53,12 +53,12 @@ export function SortableItem({
             ref={setNodeRef}
             style={style}
             className={clsx(
-                "flex flex-col text-black",
+                "flex flex-col text-foreground",
                 isDragging && "opacity-50",
             )}
         >
             <div className="flex items-center gap-5">
-                <button className="border" {...listeners}>
+                <button className="border border-border text-muted-foreground hover:text-foreground hover:bg-muted p-1 rounded transition-colors" {...listeners}>
                     <DragHandle />
                 </button>
                 <Renderer {...rendererProps} />

@@ -84,6 +84,7 @@ const Lesson = (props: LessonProps) => {
                     <LessonViewer
                         lessonId={lesson as string}
                         slug={course.slug}
+                        productId={course.courseId}
                     />
                 )}
             </RouteBasedComponentScaffold>

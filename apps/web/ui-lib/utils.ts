@@ -291,7 +291,6 @@ export const getProfile = async (
 };
 
 export const isEnrolled = (courseId: string, profile: Profile) =>
-    profile.fetched &&
     profile.purchases.some((purchase: any) => purchase.courseId === courseId);
 
 export const isLessonCompleted = ({
