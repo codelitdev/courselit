@@ -58,7 +58,10 @@ export function SortableItem({
             )}
         >
             <div className="flex items-center gap-5">
-                <button className="border border-border text-muted-foreground hover:text-foreground hover:bg-muted p-1 rounded transition-colors" {...listeners}>
+                <button
+                    className="border border-border text-muted-foreground hover:text-foreground hover:bg-muted p-1 rounded transition-colors"
+                    {...listeners}
+                >
                     <DragHandle />
                 </button>
                 <Renderer {...rendererProps} />

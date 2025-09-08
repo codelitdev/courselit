@@ -28,12 +28,12 @@ export async function generateMetadata(
                     title
                 }
             }
-        `
+        `;
         const fetch = new FetchBuilder()
             .setUrl(`${address}/api/graph`)
             .setPayload({
                 query,
-                variables: { id: params.id }
+                variables: { id: params.id },
             })
             .setIsGraphQLEndpoint(true)
             .build();
@@ -62,10 +62,7 @@ export default async function Layout({
 
     return (
         <SessionProvider session={session}>
-            <LayoutWithSidebar product={product}>
-                {children}
-            </LayoutWithSidebar>
+            <LayoutWithSidebar product={product}>{children}</LayoutWithSidebar>
         </SessionProvider>
     );
 }
-

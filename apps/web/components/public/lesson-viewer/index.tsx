@@ -39,7 +39,6 @@ import LessonEmbedViewer from "./embed-viewer";
 import QuizViewer from "./quiz-viewer";
 import { getUserProfile } from "@/app/(with-contexts)/helpers";
 
-
 interface CaptionProps {
     text: string;
 }
@@ -206,7 +205,9 @@ export const LessonViewer = ({
                         </h1>
                         <p className="mb-4">{error}.</p>
                         {error === "You are not enrolled in the course" && (
-                            <Link href={`/checkout?type=${Constants.MembershipEntityType.COURSE}&id=${productId}`}>
+                            <Link
+                                href={`/checkout?type=${Constants.MembershipEntityType.COURSE}&id=${productId}`}
+                            >
                                 <Button2>{ENROLL_BUTTON_TEXT}</Button2>
                             </Link>
                         )}

@@ -1,18 +1,10 @@
 "use client";
 
 import { useContext } from "react";
-import {
-    isEnrolled,
-    isLessonCompleted,
-} from "@ui-lib/utils";
+import { isEnrolled, isLessonCompleted } from "@ui-lib/utils";
 import { CheckCircled, Circle, Lock } from "@courselit/icons";
-import {
-    SIDEBAR_TEXT_COURSE_ABOUT,
-} from "@ui-config/strings";
-import {
-    Profile,
-    Constants,
-} from "@courselit/common-models";
+import { SIDEBAR_TEXT_COURSE_ABOUT } from "@ui-config/strings";
+import { Profile, Constants } from "@courselit/common-models";
 import {
     ComponentScaffoldMenuItem,
     ComponentScaffold,
@@ -21,9 +13,12 @@ import {
 import { ProfileContext, SiteInfoContext } from "@components/contexts";
 import { CourseFrontend, GroupWithLessons } from "./helpers";
 
-export default function ProductPage({ product, children }: {
-    product: CourseFrontend,
-    children: React.ReactNode
+export default function ProductPage({
+    product,
+    children,
+}: {
+    product: CourseFrontend;
+    children: React.ReactNode;
 }) {
     const { profile } = useContext(ProfileContext);
     const siteInfo = useContext(SiteInfoContext);
@@ -33,15 +28,15 @@ export default function ProductPage({ product, children }: {
     }
 
     return (
-            <ComponentScaffold
-                items={generateSideBarItems(product, profile as Profile)}
-                drawerWidth={360}
-                showCourseLitBranding={true}
-                siteinfo={siteInfo}
-            >
-                {children}
-            </ComponentScaffold>
-    )
+        <ComponentScaffold
+            items={generateSideBarItems(product, profile as Profile)}
+            drawerWidth={360}
+            showCourseLitBranding={true}
+            siteinfo={siteInfo}
+        >
+            {children}
+        </ComponentScaffold>
+    );
 }
 
 export function generateSideBarItems(

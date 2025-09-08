@@ -7,13 +7,13 @@ import { ProfileContext, AddressContext } from "@components/contexts";
 import { Profile } from "@courselit/common-models";
 
 export default function LessonPage({
-    params
+    params,
 }: {
     params: {
         slug: string;
         id: string;
         lesson: string;
-    }
+    };
 }) {
     const { slug, id, lesson } = params;
     const { profile, setProfile } = useContext(ProfileContext);
@@ -32,5 +32,5 @@ export default function LessonPage({
             address={address}
             productId={id}
         />
-    )
+    );
 }

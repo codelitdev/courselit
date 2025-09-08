@@ -24,7 +24,10 @@ type CourseWithoutGroups = Pick<
     | "defaultPaymentPlan"
 >;
 
-export const getProduct = async (id: string, address: string): Promise<CourseFrontend> => {
+export const getProduct = async (
+    id: string,
+    address: string,
+): Promise<CourseFrontend> => {
     const fetch = new FetchBuilder()
         .setUrl(`${address}/api/graph`)
         .setIsGraphQLEndpoint(true)
@@ -80,13 +83,13 @@ export const getProduct = async (id: string, address: string): Promise<CourseFro
                     }
                 }
             `,
-            variables: { id }
+            variables: { id },
         })
         .setIsGraphQLEndpoint(true)
         .build();
-    const response= await fetch.exec(); 
+    const response = await fetch.exec();
     return formatCourse(response.product);
-}
+};
 
 export function formatCourse(
     post: Course & { lessons: Lesson[]; firstLesson: string; groups: Group[] },

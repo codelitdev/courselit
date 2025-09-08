@@ -2,7 +2,6 @@
 
 import { ReactNode, useEffect, useState, Suspense } from "react";
 import { SiteInfo, ServerConfig } from "@courselit/common-models";
-import { FetchBuilder } from "@courselit/utils";
 import {
     AddressContext,
     ProfileContext,
@@ -85,7 +84,7 @@ function LayoutContent({
         // };
 
         if (address && session) {
-            updateUserProfile()
+            updateUserProfile();
         }
     }, [address, session]);
 

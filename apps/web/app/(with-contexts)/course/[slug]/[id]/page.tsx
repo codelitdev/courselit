@@ -1,31 +1,30 @@
 "use client";
 
 import { useContext, useEffect, useState } from "react";
-import {
-    isEnrolled,
-} from "@ui-lib/utils";
+import { isEnrolled } from "@ui-lib/utils";
 import { ArrowRight } from "@courselit/icons";
-import {
-    COURSE_PROGRESS_START,
-    ENROLL_BUTTON_TEXT,
-} from "@ui-config/strings";
+import { COURSE_PROGRESS_START, ENROLL_BUTTON_TEXT } from "@ui-config/strings";
 import { checkPermission } from "@courselit/utils";
-import {
-    Course,
-    Profile,
-    UIConstants,
-} from "@courselit/common-models";
+import { Course, Profile, UIConstants } from "@courselit/common-models";
 import { Article } from "@components/public/article";
 import {
     Link,
     Button2,
     getSymbolFromCurrency,
 } from "@courselit/components-library";
-import { AddressContext, ProfileContext, SiteInfoContext } from "@components/contexts";
+import {
+    AddressContext,
+    ProfileContext,
+    SiteInfoContext,
+} from "@components/contexts";
 import { getProduct } from "./helpers";
 const { permissions } = UIConstants;
 
-export default function ProductPage({ params }: { params: { slug: string, id: string } }) {
+export default function ProductPage({
+    params,
+}: {
+    params: { slug: string; id: string };
+}) {
     const { id } = params;
     const [product, setProduct] = useState<any>(null);
     const { profile } = useContext(ProfileContext);
@@ -34,12 +33,11 @@ export default function ProductPage({ params }: { params: { slug: string, id: st
 
     useEffect(() => {
         if (id) {
-            getProduct(id, address.backend)
-                .then((product) => {
-                    setProduct(product);
-                });
+            getProduct(id, address.backend).then((product) => {
+                setProduct(product);
+            });
         }
-    }, [id])
+    }, [id]);
 
     if (!profile) {
         return null;
@@ -51,14 +49,12 @@ export default function ProductPage({ params }: { params: { slug: string, id: st
 
     return (
         <div className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
-            <h1 className="text-4xl font-semibold mb-8">
-                {product.title}
-            </h1>
+            <h1 className="text-4xl font-semibold mb-8">{product.title}</h1>
             {JSON.stringify(profile)}
-            {(!isEnrolled(product.courseId, profile as Profile) &&
+            {!isEnrolled(product.courseId, profile as Profile) &&
                 checkPermission(profile.permissions ?? [], [
                     permissions.enrollInCourse,
-                ])) && (
+                ]) && (
                     <div>
                         <div className="flex justify-between items-center">
                             <div className="font-medium flex items-center">
@@ -97,5 +93,5 @@ export default function ProductPage({ params }: { params: { slug: string, id: st
                 </div>
             )}
         </div>
-    )
+    );
 }

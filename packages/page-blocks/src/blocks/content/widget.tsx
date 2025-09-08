@@ -25,7 +25,6 @@ import {
 import {
     Header1,
     Text1,
-    Caption,
     Subheader1,
     Section,
 } from "@courselit/page-primitives";
@@ -150,20 +149,22 @@ export default function Widget({
         <Section theme={overiddenTheme} id={cssId}>
             <div className={`flex flex-col gap-4`}>
                 <div
-                    className={`flex flex-col mb-4 ${headerAlignment === "center"
+                    className={`flex flex-col mb-4 ${
+                        headerAlignment === "center"
                             ? "items-center"
                             : "items-start"
-                        }`}
+                    }`}
                 >
                     <Header1 theme={overiddenTheme} className="mb-4">
                         {title}
                     </Header1>
                     {description && (
                         <div
-                            className={`${headerAlignment === "center"
+                            className={`${
+                                headerAlignment === "center"
                                     ? "text-center"
                                     : "text-left"
-                                }`}
+                            }`}
                         >
                             <Subheader1 theme={overiddenTheme} component="span">
                                 <TextRenderer json={description} />
@@ -190,7 +191,7 @@ export default function Widget({
                         <AccordionItem
                             value={group}
                             key={index}
-                        // className="border-b-0"
+                            // className="border-b-0"
                         >
                             <AccordionTrigger>
                                 <div className="flex grow justify-between mr-2">
@@ -209,22 +210,25 @@ export default function Widget({
                                             key={lesson.lessonId}
                                             href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
                                         >
-                                            <div
-                                                className="flex justify-between items-center gap-2 py-2 px-2 hover:bg-muted rounded transition-colors"
-                                            >
+                                            <div className="flex justify-between items-center gap-2 py-2 px-2 hover:bg-muted rounded transition-colors">
                                                 <span className="flex items-center gap-2">
                                                     <LessonIcon
-                                                        type={lesson.type as LessonType}
+                                                        type={
+                                                            lesson.type as LessonType
+                                                        }
                                                     />
 
-                                                    <Text1 theme={overiddenTheme}>
+                                                    <Text1
+                                                        theme={overiddenTheme}
+                                                    >
                                                         {lesson.title}
                                                     </Text1>
                                                 </span>
 
                                                 {!lesson.requiresEnrollment && (
-
-                                                    <Badge variant="outline">Preview</Badge>
+                                                    <Badge variant="outline">
+                                                        Preview
+                                                    </Badge>
                                                 )}
                                             </div>
                                         </Link>

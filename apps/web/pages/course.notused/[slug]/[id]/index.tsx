@@ -151,7 +151,6 @@ export function generateSideBarItems(
     course: CourseFrontend,
     profile: Profile,
 ): (ComponentScaffoldMenuItem | Divider)[] {
-    console.log(course)
     if (!course) return [];
 
     const items: (ComponentScaffoldMenuItem | Divider)[] = [

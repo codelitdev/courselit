@@ -2,7 +2,7 @@ import React, { ReactNode, useState } from "react";
 import Header from "./base-layout/header";
 import { connect } from "react-redux";
 import { usePathname, useRouter } from "next/navigation";
-import { AppDispatch, AppState } from "@courselit/state-management";
+import { AppState } from "@courselit/state-management";
 import { Chip, Link, Modal, Toaster } from "@courselit/components-library";
 import { Message, SiteInfo } from "@courselit/common-models";
 
@@ -101,9 +101,7 @@ export const ComponentScaffold = ({
     return (
         <div className="flex">
             <div className="z-20 fixed flex w-full p-4 h-[64px] items-center border-0 border-b border-border bg-background/80 backdrop-blur-md">
-                <Header 
-                    onMenuClick={() => setOpen(true)} 
-                    siteinfo={siteinfo} />
+                <Header onMenuClick={() => setOpen(true)} siteinfo={siteinfo} />
             </div>
             <div className="flex h-screen pt-[64px] w-full">
                 <div
