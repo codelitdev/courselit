@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useContext } from "react";
+import ReactPlayer from "react-player";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -289,12 +290,12 @@ export default function LessonPage() {
                                     UIConstants.YOUTUBE_REGEX,
                                 ) && (
                                     <div className="aspect-video">
-                                        <iframe
-                                            className="w-full h-full rounded-lg"
-                                            src={`https://www.youtube.com/embed/${content.value.match(UIConstants.YOUTUBE_REGEX)[1]}`}
-                                            title="YouTube video player"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                            allowFullScreen
+                                        <ReactPlayer
+                                            src={content.value}
+                                            controls
+                                            width="100%"
+                                            height="100%"
+                                            style={{ position: "absolute", top: 0, left: 0 }}
                                         />
                                     </div>
                                 )}

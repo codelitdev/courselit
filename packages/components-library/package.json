@@ -82,6 +82,7 @@
         "lodash.debounce": "^4.0.8",
         "lucide-react": "^0.309.0",
         "react-dom": "^18.2.0",
+        "react-player": "^3.3.2",
         "tailwind-merge": "^2.2.0",
         "tailwindcss-animate": "^1.0.7"
     }

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import ReactPlayer from "react-player";
 import { FetchBuilder } from "@courselit/utils";
 import {
     LESSON_TYPE_VIDEO,
@@ -222,22 +223,20 @@ const LessonViewer = ({
                             LESSON_TYPE_VIDEO,
                         ) === lesson.type && (
                             <div>
-                                <video
-                                    controls
-                                    autoPlay
-                                    controlsList="nodownload" // eslint-disable-line react/no-unknown-property
-                                    key={lesson.lessonId}
-                                    className="w-full rounded mb-2"
-                                >
-                                    <source
+                                <div className="w-full rounded mb-2" style={{ aspectRatio: "16/9" }}>
+                                    <ReactPlayer
                                         src={
                                             lesson.media &&
                                             (lesson.media.file as string)
                                         }
-                                        type="video/mp4"
+                                        controls
+                                        playing
+                                        key={lesson.lessonId}
+                                        width="100%"
+                                        height="100%"
+                                        style={{ position: "absolute", top: 0, left: 0 }}
                                     />
-                                    Your browser does not support the video tag.
-                                </video>
+                                </div>
                                 <Caption
                                     text={
                                         lesson.media &&
