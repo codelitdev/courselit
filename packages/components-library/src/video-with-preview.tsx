@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Play, X } from "lucide-react";
-import ReactPlayer from "react-player";
 
 type VideoType = "youtube" | "vimeo" | "self-hosted";
 
@@ -165,6 +164,36 @@ export function VideoWithPreview({
         };
     }, [isModalOpen]);
 
+    // Get embed URL based on video type
+    const getEmbedUrl = () => {
+        const videoId = getVideoId();
+        // Add autoplay parameter for in-place videos
+        const shouldAutoplay = isPlaying;
+
+        if (videoType === "youtube") {
+            if (videoId) {
+                return `https://www.youtube.com/embed/${videoId}${shouldAutoplay ? "?autoplay=1" : ""}`;
+            }
+
+            // If we couldn't extract the ID but it's a YouTube URL, try to use it directly
+            const hasParams = videoUrl.includes("?");
+            return (
+                videoUrl +
+                (shouldAutoplay && !hasParams
+                    ? "?autoplay=1"
+                    : shouldAutoplay && hasParams
+                      ? "&autoplay=1"
+                      : "")
+            );
+        }
+
+        if (videoType === "vimeo" && videoId) {
+            return `https://player.vimeo.com/video/${videoId}${shouldAutoplay ? "?autoplay=1" : ""}`;
+        }
+
+        // For self-hosted videos, return the URL as is
+        return videoUrl;
+    };
 
     // Calculate aspect ratio style
     const aspectRatioStyle = () => {
@@ -197,14 +226,23 @@ export function VideoWithPreview({
                 {!modal && isPlaying ? (
                     // In-place video player
                     <div className="w-full h-full">
-                        <ReactPlayer
-                            src={videoUrl}
-                            playing
-                            controls
-                            width="100%"
-                            height="100%"
-                            style={{ position: "absolute", top: 0, left: 0 }}
-                        />
+                        {videoType !== "self-hosted" ? (
+                            <iframe
+                                src={getEmbedUrl()}
+                                className="w-full h-full"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            ></iframe>
+                        ) : (
+                            <video
+                                src={videoUrl}
+                                controls
+                                autoPlay
+                                className="w-full h-full"
+                            >
+                                Your browser does not support the video tag.
+                            </video>
+                        )}
                     </div>
                 ) : (
                     // Thumbnail with play button
@@ -250,14 +288,25 @@ export function VideoWithPreview({
                         className="w-full max-w-xl sm:max-w-2xl md:max-w-3xl"
                         style={aspectRatioStyle()}
                     >
-                        <ReactPlayer
-                            src={videoUrl}
-                            playing
-                            controls
-                            width="100%"
-                            height="100%"
-                            style={{ position: "absolute", top: 0, left: 0 }}
-                        />
+                        {videoType !== "self-hosted" ? (
+                            // YouTube or Vimeo video
+                            <iframe
+                                src={getEmbedUrl()}
+                                className="w-full h-full"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            ></iframe>
+                        ) : (
+                            // Self-hosted video
+                            <video
+                                src={videoUrl}
+                                controls
+                                autoPlay
+                                className="w-full h-full"
+                            >
+                                Your browser does not support the video tag.
+                            </video>
+                        )}
                     </div>
                 </div>
             )}
