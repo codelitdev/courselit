@@ -7,6 +7,7 @@ import {
     GraphQLNonNull,
     GraphQLBoolean,
     GraphQLInt,
+    GraphQLFloat,
 } from "graphql";
 import constants from "../../config/constants";
 import mediaTypes from "../media/types";
@@ -121,7 +122,7 @@ const evaluationResult = new GraphQLObjectType({
     name: "EvaluationResult",
     fields: {
         pass: { type: new GraphQLNonNull(GraphQLBoolean) },
-        score: { type: GraphQLInt },
+        score: { type: GraphQLFloat },
         requiresPassingGrade: { type: new GraphQLNonNull(GraphQLBoolean) },
         passingGrade: { type: GraphQLInt },
     },

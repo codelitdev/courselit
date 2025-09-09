@@ -201,8 +201,13 @@ export async function isPartOfDripGroup(
 }
 
 export function removeCorrectAnswersProp(lesson: Lesson) {
-    if (lesson.content && lesson.content.questions) {
-        for (let question of lesson.content.questions as any[]) {
+    if (lesson.content && (lesson.content as Quiz).questions) {
+        for (let question of (lesson.content as Quiz).questions as any[]) {
+            question.type =
+                question.options.filter((option: any) => option.correctAnswer)
+                    .length > 1
+                    ? "multiple"
+                    : "single";
             question.options = question.options.map((option: any) => ({
                 text: option.text,
             }));

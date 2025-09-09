@@ -310,6 +310,7 @@ export const LessonViewer = ({
                                 <QuizViewer
                                     lessonId={lesson.lessonId}
                                     content={lesson.content as Quiz}
+                                    address={address}
                                 />
                             )}
                         {String.prototype.toUpperCase.call(LESSON_TYPE_FILE) ===
