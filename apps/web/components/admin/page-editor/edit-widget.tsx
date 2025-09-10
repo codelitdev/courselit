@@ -1,8 +1,8 @@
 import { useState } from "react";
-import widgets from "../../../ui-config/widgets";
-import { AppDispatch, AppState } from "@courselit/state-management";
+import widgets from "@/ui-config/widgets";
 import { Button } from "@courselit/components-library";
 import AdminWidget from "./admin-widget";
+import { State } from "@courselit/common-models";
 
 interface EditWidgetProps {
     onChange: (widgetId: string, settings: Record<string, unknown>) => void;
@@ -15,8 +15,7 @@ interface EditWidgetProps {
         deleteable: boolean;
     };
     pageData: Record<string, unknown>;
-    state: AppState;
-    dispatch: AppDispatch;
+    state: State;
 }
 
 export default function EditWidget({
@@ -26,7 +25,6 @@ export default function EditWidget({
     widget,
     pageData,
     state,
-    dispatch,
 }: EditWidgetProps) {
     const [deleteConfirmation, setDeleteConfirmation] = useState(false);
     const [hideActionButtons, setHideActionButtons] = useState(false);
@@ -70,7 +68,6 @@ export default function EditWidget({
                         }
                         pageData={pageData}
                         state={state}
-                        dispatch={dispatch}
                     />
                     {!hideActionButtons && (
                         <div

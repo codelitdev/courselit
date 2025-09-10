@@ -9,7 +9,6 @@ import {
 } from "@courselit/common-models";
 import Settings from "./settings";
 import { FetchBuilder } from "@courselit/utils";
-import { actionCreators } from "@courselit/state-management";
 import {
     Link,
     LessonIcon,
@@ -45,7 +44,6 @@ export default function Widget({
         verticalPadding,
     },
     state,
-    dispatch,
     pageData: product,
 }: WidgetProps<Settings>): JSX.Element {
     const { theme } = state;
@@ -113,7 +111,6 @@ export default function Widget({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
             if (response.course) {
                 setCourse(response.course);
@@ -124,8 +121,6 @@ export default function Widget({
                 description: err.message,
                 variant: "destructive",
             });
-        } finally {
-            dispatch(actionCreators.networkAction(false));
         }
     };
 

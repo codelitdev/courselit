@@ -1,5 +1,8 @@
-import { AppDispatch, AppState } from "@courselit/state-management";
-import { WidgetDefaultSettings, WidgetProps } from "@courselit/common-models";
+import {
+    State,
+    WidgetDefaultSettings,
+    WidgetProps,
+} from "@courselit/common-models";
 import WidgetByName from "./widget-by-name";
 import { Tooltip } from "@courselit/components-library";
 import { Button } from "@/components/ui/button";
@@ -17,7 +20,6 @@ const EditableWidget = ({
     onAddWidgetBelow,
     onMoveWidgetUp,
     onMoveWidgetDown,
-    dispatch,
     state,
 }: {
     item: Record<string, any>;
@@ -31,8 +33,7 @@ const EditableWidget = ({
     onAddWidgetBelow?: (index: number) => void;
     onMoveWidgetUp?: (index: number) => void;
     onMoveWidgetDown?: (index: number) => void;
-    state: Partial<AppState>;
-    dispatch?: AppDispatch;
+    state: State;
 }) => {
     if (editing) {
         return (
@@ -51,8 +52,7 @@ const EditableWidget = ({
                     pageData={pageData}
                     id={item.widgetId}
                     editing={true}
-                    dispatch={dispatch}
-                    state={state as AppState}
+                    state={state}
                 />
                 <div className="w-full justify-evenly hidden group-hover:flex absolute bottom-[-16px] z-30">
                     {allowsUpwardMovement && (
@@ -108,8 +108,7 @@ const EditableWidget = ({
             settings={item.settings || {}}
             pageData={pageData}
             id={item.widgetId}
-            dispatch={dispatch}
-            state={state as AppState}
+            state={state}
             editing={false}
         />
     );

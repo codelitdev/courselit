@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
     SITE_SETTINGS_TITLE,
     SITE_SETTINGS_SUBTITLE,
@@ -53,8 +53,7 @@ import {
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
 import { Profile, UIConstants } from "@courselit/common-models";
-import type { SiteInfo, Address, Media } from "@courselit/common-models";
-import { actionCreators } from "@courselit/state-management";
+import type { SiteInfo, Media } from "@courselit/common-models";
 import currencies from "@/data/currencies.json";
 import {
     Select,
@@ -85,6 +84,7 @@ import { Copy, Info } from "lucide-react";
 import { Label } from "@components/ui/label";
 import { Input } from "@components/ui/input";
 import Resources from "@components/resources";
+import { AddressContext } from "@components/contexts";
 
 const {
     PAYMENT_METHOD_PAYPAL,
@@ -96,14 +96,9 @@ const {
     MIMETYPE_IMAGE,
 } = UIConstants;
 
-const { networkAction, newSiteInfoAvailable } = actionCreators;
-
 interface SettingsProps {
     siteinfo: SiteInfo;
     profile: Profile;
-    dispatch: (...args: any[]) => void;
-    address: Address;
-    networkAction: boolean;
     loading: boolean;
     selectedTab:
         | typeof SITE_SETTINGS_SECTION_GENERAL
@@ -118,6 +113,7 @@ const Settings = (props: SettingsProps) => {
     const [newSettings, setNewSettings] = useState<Partial<SiteInfo>>({});
     const [apikeyPage, setApikeyPage] = useState(1);
     const [apikeys, setApikeys] = useState([]);
+    const [loading, setLoading] = useState(false);
     const selectedTab = [
         SITE_SETTINGS_SECTION_GENERAL,
         SITE_SETTINGS_SECTION_PAYMENT,
@@ -128,44 +124,45 @@ const Settings = (props: SettingsProps) => {
         ? props.selectedTab
         : SITE_SETTINGS_SECTION_GENERAL;
     const router = useRouter();
+    const address = useContext(AddressContext);
     const { toast } = useToast();
 
     const fetch = new FetchBuilder()
-        .setUrl(`${props.address.backend}/api/graph`)
+        .setUrl(`${address.backend}/api/graph`)
         .setIsGraphQLEndpoint(true);
 
     useEffect(() => {
         loadAdminSettings();
     }, []);
 
-    useEffect(() => {
-        props.dispatch(
-            newSiteInfoAvailable({
-                title: settings.title || "",
-                subtitle: settings.subtitle || "",
-                logo: settings.logo,
-                currencyISOCode: settings.currencyISOCode,
-                paymentMethod: settings.paymentMethod,
-                stripeKey: settings.stripeKey,
-                codeInjectionHead: settings.codeInjectionHead
-                    ? encode(settings.codeInjectionHead)
-                    : "",
-                codeInjectionBody: settings.codeInjectionBody
-                    ? encode(settings.codeInjectionBody)
-                    : "",
-                mailingAddress: settings.mailingAddress || "",
-                hideCourseLitBranding: settings.hideCourseLitBranding ?? false,
-                razorpayKey: settings.razorpayKey,
-                lemonsqueezyStoreId: settings.lemonsqueezyStoreId,
-                lemonsqueezyOneTimeVariantId:
-                    settings.lemonsqueezyOneTimeVariantId,
-                lemonsqueezySubscriptionMonthlyVariantId:
-                    settings.lemonsqueezySubscriptionMonthlyVariantId,
-                lemonsqueezySubscriptionYearlyVariantId:
-                    settings.lemonsqueezySubscriptionYearlyVariantId,
-            }),
-        );
-    }, [settings]);
+    // useEffect(() => {
+    //     props.dispatch(
+    //         newSiteInfoAvailable({
+    //             title: settings.title || "",
+    //             subtitle: settings.subtitle || "",
+    //             logo: settings.logo,
+    //             currencyISOCode: settings.currencyISOCode,
+    //             paymentMethod: settings.paymentMethod,
+    //             stripeKey: settings.stripeKey,
+    //             codeInjectionHead: settings.codeInjectionHead
+    //                 ? encode(settings.codeInjectionHead)
+    //                 : "",
+    //             codeInjectionBody: settings.codeInjectionBody
+    //                 ? encode(settings.codeInjectionBody)
+    //                 : "",
+    //             mailingAddress: settings.mailingAddress || "",
+    //             hideCourseLitBranding: settings.hideCourseLitBranding ?? false,
+    //             razorpayKey: settings.razorpayKey,
+    //             lemonsqueezyStoreId: settings.lemonsqueezyStoreId,
+    //             lemonsqueezyOneTimeVariantId:
+    //                 settings.lemonsqueezyOneTimeVariantId,
+    //             lemonsqueezySubscriptionMonthlyVariantId:
+    //                 settings.lemonsqueezySubscriptionMonthlyVariantId,
+    //             lemonsqueezySubscriptionYearlyVariantId:
+    //                 settings.lemonsqueezySubscriptionYearlyVariantId,
+    //         }),
+    //     );
+    // }, [settings]);
 
     const loadAdminSettings = async () => {
         const query = `
@@ -297,6 +294,7 @@ const Settings = (props: SettingsProps) => {
             }`;
 
         try {
+            setLoading(true);
             const fetchRequest = fetch
                 .setPayload({
                     query,
@@ -308,7 +306,6 @@ const Settings = (props: SettingsProps) => {
                     },
                 })
                 .build();
-            props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
@@ -324,7 +321,7 @@ const Settings = (props: SettingsProps) => {
                 variant: "destructive",
             });
         } finally {
-            props.dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -364,6 +361,7 @@ const Settings = (props: SettingsProps) => {
             }`;
 
         try {
+            setLoading(true);
             const fetchRequest = fetch
                 .setPayload({
                     query,
@@ -372,7 +370,6 @@ const Settings = (props: SettingsProps) => {
                     },
                 })
                 .build();
-            props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
@@ -388,7 +385,7 @@ const Settings = (props: SettingsProps) => {
                 variant: "destructive",
             });
         } finally {
-            props.dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -437,8 +434,8 @@ const Settings = (props: SettingsProps) => {
         }`;
 
         try {
+            setLoading(true);
             const fetchRequest = fetch.setPayload(query).build();
-            props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
@@ -454,7 +451,7 @@ const Settings = (props: SettingsProps) => {
                 variant: "destructive",
             });
         } finally {
-            props.dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -502,8 +499,8 @@ const Settings = (props: SettingsProps) => {
         }`;
 
         try {
+            setLoading(true);
             const fetchRequest = fetch.setPayload(query).build();
-            props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
@@ -519,7 +516,7 @@ const Settings = (props: SettingsProps) => {
                 variant: "destructive",
             });
         } finally {
-            props.dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -601,6 +598,7 @@ const Settings = (props: SettingsProps) => {
             }`;
 
         try {
+            setLoading(false);
             const fetchRequest = fetch
                 .setPayload({
                     query,
@@ -626,7 +624,6 @@ const Settings = (props: SettingsProps) => {
                     },
                 })
                 .build();
-            props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
@@ -642,7 +639,7 @@ const Settings = (props: SettingsProps) => {
                 variant: "destructive",
             });
         } finally {
-            props.dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -699,8 +696,8 @@ const Settings = (props: SettingsProps) => {
             }
         `;
         try {
+            setLoading(true);
             const fetchRequest = fetch.setPayload(query).build();
-            props.dispatch(networkAction(true));
             await fetchRequest.exec();
             setApikeys(
                 apikeys.filter(
@@ -714,7 +711,7 @@ const Settings = (props: SettingsProps) => {
                 variant: "destructive",
             });
         } finally {
-            props.dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -778,7 +775,7 @@ const Settings = (props: SettingsProps) => {
                                     }
                                 </p>
                                 <Checkbox
-                                    disabled={props.networkAction}
+                                    disabled={loading}
                                     checked={newSettings.hideCourseLitBranding}
                                     onChange={(value: boolean) => {
                                         setNewSettings(
@@ -810,7 +807,7 @@ const Settings = (props: SettingsProps) => {
                                                 newSettings.hideCourseLitBranding,
                                         }) ||
                                     !newSettings.title ||
-                                    props.networkAction
+                                    loading
                                 }
                             >
                                 {BUTTON_SAVE}
@@ -822,7 +819,7 @@ const Settings = (props: SettingsProps) => {
                         <PageBuilderPropertyHeader label={SITE_SETTINGS_LOGO} />
                         <MediaSelector
                             profile={props.profile}
-                            address={props.address}
+                            address={address}
                             title=""
                             src={newSettings.logo?.thumbnail || ""}
                             srcTitle={newSettings.logo?.originalFileName || ""}
@@ -1178,8 +1175,7 @@ const Settings = (props: SettingsProps) => {
                             variant="outlined"
                             disabled={
                                 settings.mailingAddress ===
-                                    newSettings.mailingAddress ||
-                                props.networkAction
+                                    newSettings.mailingAddress || loading
                             }
                         >
                             {BUTTON_SAVE}
@@ -1219,7 +1215,7 @@ const Settings = (props: SettingsProps) => {
                                     newSettings.codeInjectionHead &&
                                     settings.codeInjectionBody ===
                                         newSettings.codeInjectionBody) ||
-                                props.networkAction
+                                loading
                             }
                         >
                             {BUTTON_SAVE}

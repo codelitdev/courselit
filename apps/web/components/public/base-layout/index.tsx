@@ -98,7 +98,6 @@ export default function BaseLayout({
                 childrenOnTop={childrenOnTop}
                 pageData={pageData}
                 state={state}
-                dispatch={() => {}}
             >
                 {children}
             </Template>

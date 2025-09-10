@@ -1,14 +1,7 @@
 "use client";
 
-import {
-    Address,
-    Constants,
-    Sequence,
-    SequenceType,
-} from "@courselit/common-models";
+import { Constants, Sequence, SequenceType } from "@courselit/common-models";
 import { Chip, Link, useToast } from "@courselit/components-library";
-import { AppDispatch } from "@courselit/state-management";
-import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import {
     TOAST_TITLE_ERROR,
@@ -16,7 +9,7 @@ import {
     MAIL_TABLE_HEADER_SUBJECT,
     MAIL_TABLE_HEADER_ENTRANTS,
 } from "@ui-config/strings";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { isDateInFuture } from "../../../lib/utils";
 import {
     Table,
@@ -28,20 +21,13 @@ import {
 } from "@/components/ui/table";
 import { PaginationControls } from "@components/public/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AddressContext } from "@components/contexts";
 
 interface SequencesListProps {
-    address: Address;
-    loading: boolean;
     type: SequenceType;
-    dispatch?: AppDispatch;
 }
 
-const SequencesList = ({
-    address,
-    dispatch,
-    loading,
-    type,
-}: SequencesListProps) => {
+const SequencesList = ({ type }: SequencesListProps) => {
     const [page, setPage] = useState(1);
     const [count, setCount] = useState(0);
     const [sequences, setSequences] = useState<
@@ -51,6 +37,7 @@ const SequencesList = ({
         >[]
     >([]);
     const [isLoading, setIsLoading] = useState(false);
+    const address = useContext(AddressContext);
     const { toast } = useToast();
 
     const handlePageChange = (newPage: number) => {
@@ -100,7 +87,6 @@ const SequencesList = ({
             .build();
 
         try {
-            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.broadcasts) {
                 setSequences(response.broadcasts);
@@ -112,7 +98,6 @@ const SequencesList = ({
                 variant: "destructive",
             });
         } finally {
-            dispatch && dispatch(networkAction(false));
             setIsLoading(false);
         }
     };
@@ -133,7 +118,6 @@ const SequencesList = ({
             .build();
 
         try {
-            dispatch && dispatch(networkAction(true));
             const response = await fetcher.exec();
             if (response.count) {
                 setCount(response.count);
@@ -145,7 +129,6 @@ const SequencesList = ({
                 variant: "destructive",
             });
         } finally {
-            dispatch && dispatch(networkAction(false));
         }
     };
 

@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
-import { Address } from "@courselit/common-models";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import {
     Form,
     FormField,
@@ -10,7 +9,6 @@ import {
     ComboBox,
     useToast,
 } from "@courselit/components-library";
-import { AppDispatch } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import {
     BTN_GO_BACK,
@@ -20,24 +18,18 @@ import {
     USER_TAGS_SUBHEADER,
     TOAST_TITLE_SUCCESS,
 } from "@/ui-config/strings";
-import { networkAction } from "@courselit/state-management/dist/action-creators";
-import useCourse from "./editor/course-hook";
+import { AddressContext } from "@components/contexts";
 
 interface NewCustomerProps {
-    address: Address;
     courseId: string;
-    dispatch?: AppDispatch;
 }
 
-export default function NewCustomer({
-    courseId,
-    address,
-    dispatch,
-}: NewCustomerProps) {
+export default function NewCustomer({ courseId }: NewCustomerProps) {
     const [email, setEmail] = useState("");
     const [tags, setTags] = useState<string[]>([]);
     const [systemTags, setSystemTags] = useState<string[]>([]);
-    const course = useCourse(courseId, address, dispatch);
+    const address = useContext(AddressContext);
+    // const course = useCourse(courseId);
     const { toast } = useToast();
 
     const getTags = useCallback(async () => {
@@ -52,16 +44,14 @@ export default function NewCustomer({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.tags) {
                 setSystemTags(response.tags);
             }
         } catch (err) {
         } finally {
-            dispatch && dispatch(networkAction(false));
         }
-    }, [address.backend, dispatch]);
+    }, [address.backend]);
 
     useEffect(() => {
         getTags();
@@ -98,7 +88,6 @@ export default function NewCustomer({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.user) {
                 setEmail("");
@@ -116,7 +105,6 @@ export default function NewCustomer({
                 variant: "destructive",
             });
         } finally {
-            dispatch && dispatch(networkAction(false));
         }
     };
 

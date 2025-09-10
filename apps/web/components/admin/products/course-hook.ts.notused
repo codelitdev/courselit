@@ -1,14 +1,15 @@
-import { AddressContext } from "@components/contexts";
-import { Course } from "@courselit/common-models";
+import { InternalCourse } from "@courselit/common-logic";
+import { Lesson } from "@courselit/common-models";
 import { useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { useCallback, useContext, useEffect, useState } from "react";
+import { AddressContext } from "@components/contexts";
 
-type CourseWithAdminProps = Partial<
-    Course & {
-        published: boolean;
-        privacy: string;
+export type CourseWithAdminProps = Partial<
+    InternalCourse & {
+        lessons: Pick<Lesson, "title" | "groupId" | "lessonId" | "type"> &
+            { id: string }[];
     }
 >;
 
@@ -18,7 +19,7 @@ export default function useCourse(
     const [course, setCourse] = useState<
         CourseWithAdminProps | undefined | null
     >();
-    const address = useContext(AddressContext);
+    const address = useContext(AddressContext)
     const { toast } = useToast();
 
     const loadCourse = useCallback(
@@ -28,8 +29,34 @@ export default function useCourse(
                 course: getCourse(id: "${courseId}") {
                     title,
                     description,
-                    courseId,
+                    type,
                     slug,
+                    lessons {
+                        id,
+                        title,
+                        groupId,
+                        lessonId,
+                        type
+                    },
+                    groups {
+                        id,
+                        name,
+                        rank,
+                        lessonsOrder,
+                        drip {
+                            type,
+                            status,
+                            delayInMillis,
+                            dateInUTC,
+                            email {
+                                content,
+                                subject
+                            }
+                        }
+                    },
+                    courseId,
+                    cost,
+                    costType,
                     featuredImage {
                         mediaId,
                         originalFileName,
@@ -42,6 +69,7 @@ export default function useCourse(
                     },
                     published,
                     privacy,
+                    pageId
                 }
             }
         `;

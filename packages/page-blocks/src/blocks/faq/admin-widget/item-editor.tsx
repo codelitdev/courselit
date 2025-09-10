@@ -8,7 +8,6 @@ import {
     Tooltip,
 } from "@courselit/components-library";
 import { Address, Auth, Profile } from "@courselit/common-models";
-import { AppDispatch } from "@courselit/state-management";
 
 interface ItemProps {
     item: Item;
@@ -16,7 +15,6 @@ interface ItemProps {
     onChange: (newItemData: Item) => void;
     onDelete: () => void;
     address: Address;
-    dispatch: AppDispatch;
     auth: Auth;
     profile: Profile;
 }

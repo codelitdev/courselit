@@ -1,4 +1,3 @@
-import { Address } from "@courselit/common-models";
 import {
     Button,
     Form,
@@ -6,7 +5,6 @@ import {
     Select,
     useToast,
 } from "@courselit/components-library";
-import { AppDispatch } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import {
     TOAST_TITLE_ERROR,
@@ -17,26 +15,24 @@ import {
     USER_FILTER_PRODUCT_HAS,
     USER_FILTER_TAGGED_DROPDOWN_LABEL,
 } from "@ui-config/strings";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useCallback } from "react";
 import { useMemo } from "react";
 import { DropdownMenuLabel } from "@components/ui/dropdown-menu";
 import { useEffect } from "react";
+import { AddressContext } from "@components/contexts";
 
 interface TaggedFilterEditorProps {
     onApply: (...args: any[]) => any;
-    address: Address;
-    dispatch?: AppDispatch;
 }
 
 export default function TaggedFilterEditor({
     onApply,
-    address,
-    dispatch,
 }: TaggedFilterEditorProps) {
     const [condition, setCondition] = useState(USER_FILTER_PRODUCT_HAS);
     const [value, setValue] = useState("");
     const [tags, setTags] = useState([]);
+    const address = useContext(AddressContext);
     const { toast } = useToast();
 
     const getTags = useCallback(async () => {
@@ -62,7 +58,7 @@ export default function TaggedFilterEditor({
                 variant: "destructive",
             });
         }
-    }, [address.backend, dispatch]);
+    }, [address.backend]);
 
     useEffect(() => {
         getTags();

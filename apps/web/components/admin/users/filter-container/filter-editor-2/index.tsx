@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { USER_FILTER_DROPDOWN_LABEL } from "@ui-config/strings";
 import dynamic from "next/dynamic";
 import categoriesMap from "./categories-map";
@@ -10,26 +10,20 @@ const CommunitiesFilterEditor = dynamic(() => import("./community"));
 const EmailFilterEditor = dynamic(() => import("./email"));
 const SubscriptionFilterEditor = dynamic(() => import("./subscription"));
 const TaggedFilterEditor = dynamic(() => import("./tagged"));
-import {
-    Address,
-    UserFilter as Filter,
-    UserFilterType,
-} from "@courselit/common-models";
+import { UserFilter as Filter, UserFilterType } from "@courselit/common-models";
 import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuLabel,
 } from "@components/ui/dropdown-menu";
+import { AddressContext } from "@components/contexts";
 
 interface FilterEditorProps {
     dismissPopover: (filter?: Filter) => void;
-    address: Address;
 }
-export default function FilterEditor({
-    dismissPopover,
-    address,
-}: FilterEditorProps) {
+export default function FilterEditor({ dismissPopover }: FilterEditorProps) {
     const [activeCategory, setActiveCategory] = useState<Filter["name"]>();
+    const address = useContext(AddressContext);
 
     const changeFilter = (
         value: Pick<Filter, "condition" | "value" | "valueLabel"> | undefined,
@@ -70,7 +64,7 @@ export default function FilterEditor({
                 <EmailFilterEditor onApply={changeFilter} />
             )}
             {activeCategory && activeCategory === "product" && (
-                <ProductFilterEditor onApply={changeFilter} address={address} />
+                <ProductFilterEditor onApply={changeFilter} />
             )}
             {activeCategory && activeCategory === "community" && (
                 <CommunitiesFilterEditor
@@ -91,7 +85,7 @@ export default function FilterEditor({
                 <PermissionFilterEditor onApply={changeFilter} />
             )}
             {activeCategory && activeCategory === "tag" && (
-                <TaggedFilterEditor onApply={changeFilter} address={address} />
+                <TaggedFilterEditor onApply={changeFilter} />
             )}
         </DropdownMenuContent>
     );

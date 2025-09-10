@@ -1,5 +1,5 @@
-import { AppDispatch, AppState } from "@courselit/state-management";
-import widgets from "../../../ui-config/widgets";
+import widgets from "@/ui-config/widgets";
+import { State } from "@courselit/common-models";
 
 interface AdminWidgetProps {
     name: string;
@@ -11,8 +11,7 @@ interface AdminWidgetProps {
     ) => void;
     preservedStateAcrossRerender: Record<string, unknown>;
     pageData: Record<string, unknown>;
-    dispatch: AppDispatch;
-    state: AppState;
+    state: State;
 }
 
 export default function AdminWidget({
@@ -22,7 +21,6 @@ export default function AdminWidget({
     hideActionButtons,
     preservedStateAcrossRerender,
     pageData,
-    dispatch,
     state,
 }: AdminWidgetProps) {
     const AdminWidget = widgets[name].adminWidget;
@@ -35,7 +33,6 @@ export default function AdminWidget({
             hideActionButtons={hideActionButtons}
             preservedStateAcrossRerender={preservedStateAcrossRerender}
             pageData={pageData}
-            dispatch={dispatch}
             {...state}
         />
     );

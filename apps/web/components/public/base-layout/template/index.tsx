@@ -1,8 +1,7 @@
 import React, { ReactNode } from "react";
-import { WidgetInstance } from "@courselit/common-models";
+import { State, WidgetInstance } from "@courselit/common-models";
 import { Footer, Header } from "@courselit/page-blocks";
 import { Toaster } from "@courselit/components-library";
-import { AppDispatch, AppState } from "@courselit/state-management";
 import EditableWidget from "./editable-widget";
 import { generateThemeStyles } from "@/lib/theme-styles";
 import { Theme } from "@courselit/page-models";
@@ -17,12 +16,11 @@ interface TemplateProps {
     editing?: boolean;
     onEditClick?: (widgetId: string) => void;
     children?: ReactNode;
-    childrenOnTop: boolean;
+    childrenOnTop?: boolean;
     onAddWidgetBelow?: (index: number) => void;
     onMoveWidgetUp?: (index: number) => void;
     onMoveWidgetDown?: (index: number) => void;
-    dispatch?: AppDispatch;
-    state: Partial<AppState>;
+    state: State;
     id?: string;
     injectThemeStyles?: boolean;
 }
@@ -38,7 +36,6 @@ const Template = (props: TemplateProps) => {
         onAddWidgetBelow,
         onMoveWidgetUp,
         onMoveWidgetDown,
-        dispatch,
         state,
     } = props;
 
@@ -70,7 +67,6 @@ const Template = (props: TemplateProps) => {
                 onMoveWidgetDown={onMoveWidgetDown}
                 onMoveWidgetUp={onMoveWidgetUp}
                 index={index + 1}
-                dispatch={dispatch}
                 state={state}
             />
         ),
@@ -89,7 +85,6 @@ const Template = (props: TemplateProps) => {
                     onMoveWidgetDown={onMoveWidgetDown}
                     onMoveWidgetUp={onMoveWidgetUp}
                     index={0}
-                    dispatch={dispatch}
                     state={state}
                 />
             )}
@@ -112,7 +107,6 @@ const Template = (props: TemplateProps) => {
                     editing={editing}
                     onEditClick={onEditClick}
                     index={layout.length - 1}
-                    dispatch={dispatch}
                     state={state}
                 />
             )}
