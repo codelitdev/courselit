@@ -141,7 +141,7 @@ export const Index = ({ loading, address, dispatch, siteinfo }: IndexProps) => {
                     {MANAGE_COURSES_PAGE_HEADING}
                 </h1>
                 <div>
-                    <Link href={`/dashboard/products/new`}>
+                    <Link href="/dashboard/products/new">
                         <Button>{BTN_NEW_PRODUCT}</Button>
                     </Link>
                 </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import DashboardContent from "@components/admin/dashboard-content";
-import { PermissionsEditor } from "@components/admin/users/permissions-editor";
+import PermissionsEditor from "@components/admin/users/permissions-editor";
 import { AddressContext } from "@components/contexts";
 import { UserWithAdminFields } from "@courselit/common-models";
 import {

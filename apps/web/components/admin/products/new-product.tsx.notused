@@ -1,21 +1,17 @@
 import React, { FormEvent, useState } from "react";
-import { Address } from "@courselit/common-models";
-import {
-    Form,
+import {    Form,
     FormField,
     Select,
     Link,
     Button,
     useToast,
 } from "@courselit/components-library";
-import { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import { useRouter } from "next/navigation";
-import { connect } from "react-redux";
 import {
     COURSE_TYPE_COURSE,
     COURSE_TYPE_DOWNLOAD,
-} from "../../../ui-config/constants";
+} from "@/ui-config/constants";
 import {
     BTN_CONTINUE,
     BTN_NEW_PRODUCT,
@@ -25,27 +21,19 @@ import {
     FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE,
     FORM_NEW_PRODUCT_TITLE_PLC,
     FORM_NEW_PRODUCT_TYPE,
-} from "../../../ui-config/strings";
-import { capitalize } from "../../../ui-lib/utils";
-import { networkAction } from "@courselit/state-management/dist/action-creators";
-import { usePathname } from "next/navigation";
+} from "@/ui-config/strings";
+import { capitalize } from "@/ui-lib/utils";
+import { AddressContext } from "@components/contexts";
+import { useContext } from "react";
 
-interface NewProductProps {
-    address: Address;
-    dispatch?: AppDispatch;
-    networkAction: boolean;
-}
-
-export function NewProduct({
-    address,
-    dispatch,
-    networkAction: loading,
-}: NewProductProps) {
+export default function NewProduct() {
     const [title, setTitle] = useState("");
     const [type, setType] = useState(COURSE_TYPE_COURSE);
+    const [loading, setLoading] = useState(false);
+
     const router = useRouter();
-    const path = usePathname();
     const { toast } = useToast();
+    const address = useContext(AddressContext);
 
     const createCourse = async (e: FormEvent) => {
         e.preventDefault();
@@ -66,7 +54,7 @@ export function NewProduct({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
+            setLoading(true);
             const response = await fetch.exec();
             if (response.course) {
                 router.replace(
@@ -80,7 +68,7 @@ export function NewProduct({
                 variant: "destructive",
             });
         } finally {
-            dispatch && dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -138,12 +126,3 @@ export function NewProduct({
         </div>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    networkAction: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(NewProduct);

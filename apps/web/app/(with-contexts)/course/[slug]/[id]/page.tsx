@@ -5,12 +5,14 @@ import { isEnrolled } from "@ui-lib/utils";
 import { ArrowRight } from "@courselit/icons";
 import { COURSE_PROGRESS_START, ENROLL_BUTTON_TEXT } from "@ui-config/strings";
 import { checkPermission } from "@courselit/utils";
-import { Course, Profile, UIConstants } from "@courselit/common-models";
-import { Article } from "@components/public/article";
+import { Profile, UIConstants } from "@courselit/common-models";
 import {
     Link,
     Button2,
     getSymbolFromCurrency,
+    TextRenderer,
+    TextEditorEmptyDoc,
+    Image,
 } from "@courselit/components-library";
 import {
     AddressContext,
@@ -50,7 +52,6 @@ export default function ProductPage({
     return (
         <div className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
             <h1 className="text-4xl font-semibold mb-8">{product.title}</h1>
-            {JSON.stringify(profile)}
             {!isEnrolled(product.courseId, profile as Profile) &&
                 checkPermission(profile.permissions ?? [], [
                     permissions.enrollInCourse,
@@ -74,12 +75,28 @@ export default function ProductPage({
                         </div>
                     </div>
                 )}
-            <Article
-                course={product as unknown as Course}
-                options={{ hideTitle: true }}
-                profile={profile as Profile}
-                siteInfo={siteInfo}
-            />
+            {product.featuredImage && (
+                <div className="flex justify-center">
+                    <div className="mt-4 mb-8 w-full md:max-w-screen-md">
+                        <Image
+                            alt={product.featuredImage.caption}
+                            src={product.featuredImage.file!}
+                            loading="eager"
+                            sizes="50vw"
+                        />
+                    </div>
+                </div>
+            )}
+            <div className="overflow-hidden min-h-[360px]">
+                <TextRenderer
+                    json={
+                        product.description
+                            ? JSON.parse(product.description)
+                            : TextEditorEmptyDoc
+                    }
+                    showTableOfContent={true}
+                />
+            </div>
             {isEnrolled(product.courseId, profile as Profile) && (
                 <div className="self-end">
                     <Link

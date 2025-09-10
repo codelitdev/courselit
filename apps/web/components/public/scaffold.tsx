@@ -1,10 +1,8 @@
 import React, { ReactNode, useState } from "react";
 import Header from "./base-layout/header";
-import { connect } from "react-redux";
 import { usePathname, useRouter } from "next/navigation";
-import { AppState } from "@courselit/state-management";
 import { Chip, Link, Modal, Toaster } from "@courselit/components-library";
-import { Message, SiteInfo } from "@courselit/common-models";
+import { SiteInfo } from "@courselit/common-models";
 
 export interface ComponentScaffoldMenuItem {
     label: string;
@@ -22,7 +20,6 @@ interface ComponentScaffoldProps {
     drawerWidth?: number;
     siteinfo: SiteInfo;
     showCourseLitBranding?: boolean;
-    message?: Message;
 }
 
 export const ComponentScaffold = ({
@@ -31,7 +28,6 @@ export const ComponentScaffold = ({
     drawerWidth = 240,
     siteinfo,
     showCourseLitBranding,
-    message,
 }: ComponentScaffoldProps) => {
     const [open, setOpen] = useState(false);
     const router = useRouter();
@@ -125,10 +121,3 @@ export const ComponentScaffold = ({
         </div>
     );
 };
-
-const mapStateToProps = (state: AppState) => ({
-    siteinfo: state.siteinfo,
-    message: state.message,
-});
-
-export default connect(mapStateToProps)(ComponentScaffold);

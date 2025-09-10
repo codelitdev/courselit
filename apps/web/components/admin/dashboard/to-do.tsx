@@ -2,15 +2,13 @@
 
 import { SiteInfoContext } from "@components/contexts";
 import { Link } from "@courselit/components-library";
-import { AppState } from "@courselit/state-management";
 import {
     SITE_SETTINGS_SECTION_GENERAL,
     SITE_SETTINGS_SECTION_PAYMENT,
 } from "@ui-config/strings";
-import { connect } from "react-redux";
 import { useContext } from "react";
 
-export const Todo = () => {
+export default function Todo() {
     const siteinfo = useContext(SiteInfoContext);
 
     return (
@@ -53,10 +51,4 @@ export const Todo = () => {
             )}
         </div>
     );
-};
-
-const mapStateToProps = (state: AppState) => ({
-    siteinfo: state.siteinfo,
-});
-
-export default connect(mapStateToProps)(Todo);
+}

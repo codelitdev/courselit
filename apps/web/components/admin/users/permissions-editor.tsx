@@ -4,34 +4,24 @@ import {
     PERM_SECTION_HEADER,
     USER_PERMISSION_AREA_SUBTEXT,
 } from "@ui-config/strings";
-import { connect } from "react-redux";
 import { FetchBuilder } from "@courselit/utils";
-import type { AppDispatch, AppState } from "@courselit/state-management";
-import { actionCreators } from "@courselit/state-management";
-import type { User, Address, State } from "@courselit/common-models";
+import type { User, Address } from "@courselit/common-models";
 import { Checkbox, useToast } from "@courselit/components-library";
 import { Section } from "@courselit/components-library";
 import permissionToCaptionMap from "./permissions-to-caption-map";
 import DocumentationLink from "@components/public/documentation-link";
-import { ThunkDispatch } from "redux-thunk";
-import { AnyAction } from "redux";
-
-const { networkAction } = actionCreators;
 
 interface PermissionsEditorProps {
     user: User;
     address: Address;
-    dispatch?: AppDispatch;
-    networkAction: boolean;
 }
 
-export function PermissionsEditor({
+export default function PermissionsEditor({
     user,
     address,
-    dispatch,
-    networkAction: networkCallUnderway,
 }: PermissionsEditorProps) {
     const [activePermissions, setActivePermissions] = useState<string[]>([]);
+    const [loading, setLoading] = useState(false);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -66,10 +56,7 @@ export function PermissionsEditor({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch &&
-                (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                    networkAction(true),
-                );
+            setLoading(true);
             const response = await fetch.exec();
             if (response.user) {
                 setActivePermissions(response.user.permissions);
@@ -81,10 +68,7 @@ export function PermissionsEditor({
                 variant: "destructive",
             });
         } finally {
-            dispatch &&
-                (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                    networkAction(false),
-                );
+            setLoading(false);
         }
     };
 
@@ -103,7 +87,7 @@ export function PermissionsEditor({
                 <div className="flex justify-between" key={permission}>
                     <p>{permissionToCaptionMap[permission]}</p>
                     <Checkbox
-                        disabled={networkCallUnderway}
+                        disabled={loading}
                         checked={activePermissions.includes(permission)}
                         onChange={(value: boolean) =>
                             savePermissions(permission, value)
@@ -114,14 +98,3 @@ export function PermissionsEditor({
         </Section>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    networkAction: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(PermissionsEditor);

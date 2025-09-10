@@ -423,9 +423,9 @@ export const DELETE_PRODUCT_POPUP_HEADER = "Delete product";
 export const DELETE_PRODUCT_POPUP_TEXT =
     "This is an irreversible action and all the data and analytics related to this product will be deleted.";
 export const FORM_NEW_PRODUCT_MENU_COURSE_SUBTITLE =
-    "An online course consisting of images, videos, text and more.";
+    "An interactive course consisting of images, videos, text and more.";
 export const FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE =
-    "Allow users to download file(s).";
+    "A ZIP file containing images, videos, text and more.";
 export const NEW_SECTION_HEADER = "New Section";
 export const EDIT_SECTION_DRIP = "Drip";
 export const DRIP_SECTION_STATUS = "Enable Drip";

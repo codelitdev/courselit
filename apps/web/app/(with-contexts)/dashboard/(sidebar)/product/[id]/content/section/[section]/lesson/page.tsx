@@ -63,7 +63,7 @@ import {
     MIMETYPE_PDF,
 } from "@ui-config/constants";
 import { FetchBuilder } from "@courselit/utils";
-import { QuizBuilder } from "@components/admin/products/editor/content/quiz-builder";
+import { QuizBuilder } from "@components/admin/products/quiz-builder";
 import { isTextEditorNonEmpty, truncate } from "@ui-lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@components/ui/separator";

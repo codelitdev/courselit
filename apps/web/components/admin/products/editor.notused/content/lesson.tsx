@@ -62,7 +62,7 @@ import {
     Skeleton,
     useToast,
 } from "@courselit/components-library";
-import { QuizBuilder } from "./quiz-builder";
+import { QuizBuilder } from "../../quiz-builder";
 
 const { networkAction } = actionCreators;
 

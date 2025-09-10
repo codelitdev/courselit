@@ -25,7 +25,7 @@ interface ArticleOptionsProps {
     hideTitle?: boolean;
 }
 
-export const Article = (props: ArticleProps) => {
+export default function Article (props: ArticleProps) {
     const { course, options = { hideTitle: false }, profile } = props;
 
     return (
@@ -92,29 +92,6 @@ export const Article = (props: ArticleProps) => {
                     showTableOfContent={true}
                 />
             </div>
-            {/*
-            {course.tags.length > 0 && (
-                <Grid item container alignItems="center" spacing={1}>
-                    <Grid item>
-                        <Typography variant="h6">Tags </Typography>
-                    </Grid>
-                    <Grid item>
-                        {course.tags.map((tag: string) => (
-                            <Link href={`/tag/${tag}`} key={tag}>
-                                <Chip label={tag} component="a" clickable />
-                            </Link>
-                        ))}
-                    </Grid>
-                </Grid>
-            )}
-            */}
         </div>
     );
 };
-
-const mapStateToProps = (state: AppState) => ({
-    profile: state.profile,
-    siteInfo: state.siteinfo,
-});
-
-export default connect(mapStateToProps)(Article);

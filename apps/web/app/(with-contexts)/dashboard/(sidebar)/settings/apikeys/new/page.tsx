@@ -20,7 +20,10 @@ export default function Page() {
     const address = useContext(AddressContext);
     const { profile } = useContext(ProfileContext);
 
-    if (!checkPermission(profile.permissions!, [permissions.manageSettings])) {
+    if (
+        !profile ||
+        !checkPermission(profile.permissions!, [permissions.manageSettings])
+    ) {
         return <LoadingScreen />;
     }
 

@@ -5,10 +5,10 @@ import {
     LESSON_QUIZ_ADD_QUESTION,
     LESSON_QUIZ_PASSING_GRADE_LABEL,
     LESSON_QUIZ_QUESTION_PLACEHOLDER,
-} from "../../../../../../ui-config/strings";
+} from "@/ui-config/strings";
 import { QuestionBuilder } from "./question-builder";
 import { Question, Quiz } from "@courselit/common-models";
-import { DEFAULT_PASSING_GRADE } from "../../../../../../ui-config/constants";
+import { DEFAULT_PASSING_GRADE } from "@/ui-config/constants";
 import { Form, FormField } from "@courselit/components-library";
 import { FormEvent } from "react";
 import { Button } from "@components/ui/button";

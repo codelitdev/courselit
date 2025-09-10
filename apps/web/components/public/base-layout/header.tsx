@@ -2,7 +2,7 @@ import React from "react";
 import { IconButton } from "@courselit/components-library";
 import { Menu } from "@courselit/icons";
 import SessionButton from "../session-button";
-import { Branding } from "./branding";
+import Branding from "./branding";
 import ExitCourseButton from "./exit-course-button";
 import { usePathname } from "next/navigation";
 import { SiteInfo } from "@courselit/common-models";
