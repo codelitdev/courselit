@@ -275,11 +275,7 @@ export default function AdminWidget({
                             </div>
                         </div>
                     ))}
-                    <Button
-                        component="button"
-                        onClick={addNewItem}
-                        className="w-full"
-                    >
+                    <Button component="button" onClick={addNewItem}>
                         Add new item
                     </Button>
                 </div>

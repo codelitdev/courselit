@@ -13,10 +13,13 @@ import {
     Checkbox,
     VerticalPaddingSelector,
     MaxWidthSelector,
+    Button,
+    Button2,
 } from "@courselit/components-library";
 import { columns as defaultColumns } from "../defaults";
 import { PageBuilderSlider } from "@courselit/components-library";
 import { Theme, ThemeStyle } from "@courselit/page-models";
+import { PencilIcon } from "lucide-react";
 
 export interface AdminWidgetProps {
     settings: Settings;
@@ -186,7 +189,7 @@ export default function AdminWidget({
     return (
         <AdminWidgetPanelContainer
             type="multiple"
-            defaultValue={["header", "design"]}
+            defaultValue={["header", "plans", "design"]}
         >
             <AdminWidgetPanel title="Header" value="header">
                 <Form className="flex flex-col gap-4">
@@ -234,6 +237,35 @@ export default function AdminWidget({
                         </>
                     )}
                 </Form>
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Plans" value="plans">
+                <div className="flex flex-col gap-4">
+                    {items.map((item: Item, index: number) => (
+                        <div
+                            key={index}
+                            className="flex flex-col gap-2 p-2 border rounded"
+                        >
+                            <div className="flex justify-between items-center">
+                                <h3 className="font-medium">
+                                    {item.title || "Untitled"}
+                                </h3>
+                                <Button2
+                                    size="icon"
+                                    variant="outline"
+                                    onClick={() => {
+                                        setItemBeingEditedIndex(index);
+                                        hideActionButtons(true, {});
+                                    }}
+                                >
+                                    <PencilIcon className="w-4 h-4" />
+                                </Button2>
+                            </div>
+                        </div>
+                    ))}
+                    <Button component="button" onClick={addNewItem}>
+                        Add new plan
+                    </Button>
+                </div>
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Design" value="design">
                 <Select

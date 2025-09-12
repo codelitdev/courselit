@@ -3,9 +3,7 @@
 import Blogs from "@components/admin/blogs";
 import DashboardContent from "@components/admin/dashboard-content";
 import LoadingScreen from "@components/admin/loading-screen";
-import {
-    ProfileContext,
-} from "@components/contexts";
+import { ProfileContext } from "@components/contexts";
 import { UIConstants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
 import { MANAGE_BLOG_PAGE_HEADING } from "@ui-config/strings";
