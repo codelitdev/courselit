@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
 
         await addMailJob({
             to: [sanitizedEmail],
-            subject: `${responses.sign_in_mail_prefix} ${req.headers["host"]}`,
+            subject: `${responses.sign_in_mail_prefix} ${req.headers.get("host")}`,
             body: emailBody,
             from: generateEmailFrom({
                 name: domain?.settings?.title || domain.name,
