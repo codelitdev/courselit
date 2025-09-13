@@ -49,7 +49,11 @@ export default function NewCustomer({ courseId }: NewCustomerProps) {
                 setSystemTags(response.tags);
             }
         } catch (err) {
-        } finally {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         }
     }, [address.backend]);
 
@@ -92,6 +96,9 @@ export default function NewCustomer({ courseId }: NewCustomerProps) {
             if (response.user) {
                 setEmail("");
                 setTags([]);
+                if (response.user.tags) {
+                    mergeSubmittedTagsWithSystemTags(response.user.tags);
+                }
                 const message = `${response.user.email} has been invited.`;
                 toast({
                     title: TOAST_TITLE_SUCCESS,
@@ -106,6 +113,12 @@ export default function NewCustomer({ courseId }: NewCustomerProps) {
             });
         } finally {
         }
+    };
+
+    const mergeSubmittedTagsWithSystemTags = (submittedTags: string[]) => {
+        const fullSystemTags = [...systemTags, ...submittedTags];
+        const uniqueSystemTags = new Set(fullSystemTags);
+        setSystemTags(Array.from(uniqueSystemTags));
     };
 
     return (

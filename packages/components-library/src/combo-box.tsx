@@ -13,7 +13,6 @@ interface ComboBoxProps {
     selectedOptions: Set<string>;
     onChange: (options: string[]) => void;
     className?: string;
-    side?: "left" | "right" | "top" | "bottom";
     placeholder?: string;
 }
 
@@ -22,7 +21,6 @@ export default function ComboBox({
     selectedOptions,
     onChange,
     className,
-    side = "top",
     placeholder = "Select an option or create one",
 }: ComboBoxProps) {
     const [internalOptions, setInternalOptions] = useState(options);
@@ -129,6 +127,7 @@ export default function ComboBox({
     return (
         <div className="relative w-full">
             <Button
+                type="button"
                 variant="outline"
                 role="combobox"
                 aria-expanded={internalOpen}
