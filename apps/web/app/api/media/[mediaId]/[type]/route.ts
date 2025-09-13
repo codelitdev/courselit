@@ -1,12 +1,13 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextRequest } from "next/server";
 import { responses } from "@/config/strings";
 import * as medialitService from "@/services/medialit";
 import { UIConstants as constants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
-import UserModel, { User } from "@models/User";
+import UserModel from "@models/User";
+import { InternalUser, InternalCourse } from "@courselit/common-logic";
 import DomainModel, { Domain } from "@models/Domain";
 import { auth } from "@/auth";
-import CourseModel, { Course } from "@models/Course";
+import CourseModel from "@models/Course";
 import LessonModel, { Lesson } from "@models/Lesson";
 import PageModel, { Page } from "@models/Page";
 
@@ -21,22 +22,18 @@ const types = [
 
 type MediaType = (typeof types)[number];
 
-export default async function handler(
-    req: NextApiRequest,
-    res: NextApiResponse,
+export async function DELETE(
+    req: NextRequest,
+    { params }: { params: Promise<{ mediaId: string; type: string }> },
 ) {
-    if (req.method !== "DELETE") {
-        return res.status(405).json({ message: "Not allowed" });
-    }
-
     const domain = await DomainModel.findOne<Domain>({
-        name: req.headers.domain,
+        name: req.headers.get("domain"),
     });
     if (!domain) {
-        return res.status(404).json({ message: "Domain not found" });
+        return Response.json({ message: "Domain not found" }, { status: 404 });
     }
 
-    const session = await auth(req, res);
+    const session = await auth();
 
     let user;
     if (session) {
@@ -48,31 +45,37 @@ export default async function handler(
     }
 
     if (!user) {
-        return res.status(401).json({});
+        return Response.json({}, { status: 401 });
     }
 
-    const { mediaId, type } = req.query;
+    const mediaId = (await params).mediaId;
+    const type = (await params).type;
     if (!types.includes(type as MediaType)) {
-        return res.status(400).json({ message: "Bad request" });
+        return Response.json({ message: "Bad request" }, { status: 400 });
     }
 
     if (
         !(await isActionAllowed(user, type as any, mediaId as string, domain))
     ) {
-        ("");
-        return res.status(403).json({ message: responses.action_not_allowed });
+        return Response.json(
+            { message: responses.action_not_allowed },
+            { status: 403 },
+        );
     }
 
     try {
-        let response = await medialitService.deleteMedia(<string>mediaId);
-        return res.status(200).json({ message: responses.success });
+        await medialitService.deleteMedia(<string>mediaId);
+        return Response.json({ message: responses.success });
     } catch (err: any) {
-        return res.status(500).json({ error: responses.internal_error });
+        return Response.json(
+            { error: responses.internal_error },
+            { status: 500 },
+        );
     }
 }
 
 async function isActionAllowed(
-    user: User,
+    user: InternalUser,
     type: MediaType,
     mediaId: string,
     domain: Domain,
@@ -85,7 +88,7 @@ async function isActionAllowed(
 
     switch (type) {
         case "course":
-            const course = await CourseModel.findOne<Course>({
+            const course = await CourseModel.findOne<InternalCourse>({
                 domain: domain._id,
                 "featuredImage.mediaId": mediaId,
             });

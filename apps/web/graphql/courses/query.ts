@@ -10,7 +10,7 @@ import types from "./types";
 import {
     getCourse,
     getCoursesAsAdmin,
-    getCourses,
+    // getCourses,
     // getEnrolledCourses,
     getCourseOrThrow,
     getMembers,

@@ -1,6 +1,6 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { responses } from "../../../config/strings";
-import * as medialitService from "../../../services/medialit";
+import { NextRequest } from "next/server";
+import { responses } from "@/config/strings";
+import * as medialitService from "@/services/medialit";
 import { UIConstants as constants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
 import User from "@models/User";
@@ -8,22 +8,15 @@ import DomainModel, { Domain } from "@models/Domain";
 import { auth } from "@/auth";
 import { error } from "@/services/logger";
 
-export default async function handler(
-    req: NextApiRequest,
-    res: NextApiResponse,
-) {
-    if (req.method !== "POST") {
-        return res.status(405).json({ message: "Not allowed" });
-    }
-
+export async function POST(req: NextRequest) {
     const domain = await DomainModel.findOne<Domain>({
-        name: req.headers.domain,
+        name: req.headers.get("domain"),
     });
     if (!domain) {
-        return res.status(404).json({ message: "Domain not found" });
+        return Response.json({ message: "Domain not found" }, { status: 404 });
     }
 
-    const session = await auth(req, res);
+    const session = await auth();
 
     let user;
     if (session) {
@@ -35,24 +28,27 @@ export default async function handler(
     }
 
     if (!user) {
-        return res.status(401).json({});
+        return Response.json({}, { status: 401 });
     }
 
     if (
         !checkPermission(user!.permissions, [constants.permissions.manageMedia])
     ) {
-        return res.status(403).json({ message: responses.action_not_allowed });
+        return Response.json(
+            { message: responses.action_not_allowed },
+            { status: 403 },
+        );
     }
 
     try {
         let response = await medialitService.getPresignedUrlForUpload(
             domain.name,
         );
-        return res.status(200).json({ url: response });
+        return Response.json({ url: response });
     } catch (err: any) {
         error(err.message, {
             stack: err.stack,
         });
-        return res.status(500).json({ error: err.message });
+        return Response.json({ error: err.message }, { status: 500 });
     }
 }

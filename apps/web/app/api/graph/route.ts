@@ -1,18 +1,10 @@
-import type { NextApiRequest } from "next";
-import schema from "../../graphql";
+import { NextRequest } from "next/server";
+import schema from "@/graphql";
 import { graphql } from "graphql";
-import { getAddress } from "../../lib/utils";
+import { getAddress } from "@/lib/utils";
 import User from "@models/User";
 import DomainModel, { Domain } from "@models/Domain";
 import { auth } from "@/auth";
-
-export const config = {
-    api: {
-        bodyParser: {
-            sizeLimit: "3mb",
-        },
-    },
-};
 
 async function updateLastActive(user: any) {
     const dateNow = new Date();
@@ -26,22 +18,15 @@ async function updateLastActive(user: any) {
     }
 }
 
-export default async function handler(
-    req: NextApiRequest,
-    res: NextApiResponse,
-) {
-    if (req.method !== "POST") {
-        return res.status(405).json({ message: "Not allowed" });
-    }
-
+export async function POST(req: NextRequest) {
     const domain = await DomainModel.findOne<Domain>({
-        name: req.headers.domain,
+        name: req.headers.get("domain"),
     });
     if (!domain) {
-        return res.status(404).json({ message: "Domain not found" });
+        return Response.json({ message: "Domain not found" }, { status: 404 });
     }
 
-    const session = await auth(req, res);
+    const session = await auth();
 
     let user;
     if (session) {
@@ -56,13 +41,21 @@ export default async function handler(
         }
     }
 
-    if (!req.body.hasOwnProperty("query")) {
-        res.status(400).json({ error: "Query is missing" });
+    const body = await req.json();
+    if (!body.hasOwnProperty("query")) {
+        return Response.json({ error: "Query is missing" }, { status: 400 });
     }
 
-    const { query, variables } = req.body.query;
-    const hostname = req.headers["host"] || "";
-    const protocol = req.headers["x-forwarded-proto"];
+    let query, variables;
+    if (typeof body.query === "string") {
+        query = body.query;
+        variables = body.variables;
+    } else {
+        query = body.query.query;
+        variables = body.query.variables;
+    }
+    const hostname = req.headers.get("host") || "";
+    const protocol = req.headers.get("x-forwarded-proto") || "http";
     const contextValue = {
         user,
         subdomain: domain,
@@ -70,10 +63,10 @@ export default async function handler(
     };
     const response = await graphql({
         schema,
-        source: query || req.body.query,
+        source: query,
         rootValue: null,
         contextValue,
         variableValues: variables,
     });
-    return res.status(200).json(response);
+    return Response.json(response);
 }

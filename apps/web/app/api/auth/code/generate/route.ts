@@ -1,31 +1,27 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { responses } from "../../../../config/strings";
-import { generateUniquePasscode, hashCode } from "../../../../ui-lib/utils";
-import VerificationToken from "../../../../models/VerificationToken";
+import { NextRequest } from "next/server";
+import { responses } from "@/config/strings";
+import { generateUniquePasscode, hashCode } from "@/ui-lib/utils";
+import VerificationToken from "@/models/VerificationToken";
 import pug from "pug";
-import MagicCodeEmailTemplate from "../../../../templates/magic-code-email";
+import MagicCodeEmailTemplate from "@/templates/magic-code-email";
 import DomainModel, { Domain } from "@models/Domain";
 import { generateEmailFrom } from "@/lib/utils";
 import { addMailJob } from "@/services/queue";
 
-export default async function handler(
-    req: NextApiRequest,
-    res: NextApiResponse,
-) {
-    if (req.method !== "GET") {
-        return res.status(405).json({ message: "Not allowed" });
-    }
+export const dynamic = "force-dynamic";
 
+export async function GET(req: NextRequest) {
     const domain = await DomainModel.findOne<Domain>({
-        name: req.headers.domain,
+        name: req.headers.get("domain"),
     });
     if (!domain) {
-        return res.status(404).json({ message: "Domain not found" });
+        return Response.json({ message: "Domain not found" }, { status: 404 });
     }
 
-    const { email } = req.query;
+    const searchParams = req.nextUrl.searchParams;
+    const email = searchParams.get("email");
     if (!email) {
-        return;
+        return Response.json({ message: "Email is required" }, { status: 400 });
     }
     const code = generateUniquePasscode();
 
@@ -54,10 +50,13 @@ export default async function handler(
             }),
         });
     } catch (err: any) {
-        res.status(500).json({
-            error: err.message,
-        });
+        return Response.json(
+            {
+                error: err.message,
+            },
+            { status: 500 },
+        );
     }
 
-    res.status(200).json({});
+    return Response.json({});
 }
