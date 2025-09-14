@@ -10,7 +10,11 @@ import { initMandatoryPages } from "../pages/logic";
 import { Domain } from "@models/Domain";
 import { checkPermission } from "@courselit/utils";
 import UserSegmentModel from "@models/UserSegment";
-import { InternalCourse, UserSegment } from "@courselit/common-logic";
+import {
+    InternalCourse,
+    InternalUser,
+    UserSegment,
+} from "@courselit/common-logic";
 import { User } from "@courselit/common-models";
 import mongoose from "mongoose";
 import {
@@ -773,7 +777,9 @@ export async function runPostMembershipTasks({
     membership: Membership;
     paymentPlan: PaymentPlan;
 }) {
-    const user = await UserModel.findOne<User>({ userId: membership.userId });
+    const user = await UserModel.findOne<InternalUser>({
+        userId: membership.userId,
+    });
     if (!user) {
         return;
     }

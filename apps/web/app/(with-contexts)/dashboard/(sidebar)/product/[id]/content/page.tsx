@@ -96,11 +96,11 @@ export default function ContentPage() {
     const LessonTypeIcon = ({ type }) => {
         switch (type) {
             case "video":
-                return <Video className="h-4 w-4" />;
+                return <Video className="h-4 w-4 text-muted-foreground" />;
             case "text":
-                return <FileText className="h-4 w-4" />;
+                return <FileText className="h-4 w-4 text-muted-foreground" />;
             case "quiz":
-                return <HelpCircle className="h-4 w-4" />;
+                return <HelpCircle className="h-4 w-4 text-muted-foreground" />;
             default:
                 return null;
         }
@@ -328,7 +328,7 @@ export default function ContentPage() {
                                         }))}
                                     Renderer={({ lesson }) => (
                                         <div
-                                            className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer w-full"
+                                            className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-muted transition-colors duration-150 ease-in-out cursor-pointer w-full"
                                             onClick={() =>
                                                 router.push(
                                                     `/dashboard/product/${productId}/content/section/${section.id}/lesson?id=${lesson.lessonId}`,
@@ -339,11 +339,11 @@ export default function ContentPage() {
                                                 <LessonTypeIcon
                                                     type={lesson.type}
                                                 />
-                                                <span className="text-sm font-medium">
+                                                <span className="text-sm font-medium text-foreground">
                                                     {lesson.title}
                                                 </span>
                                             </div>
-                                            <ChevronRight className="h-4 w-4 text-gray-400" />
+                                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
                                         </div>
                                     )}
                                     key={JSON.stringify(product.lessons)}

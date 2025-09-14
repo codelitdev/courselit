@@ -450,14 +450,14 @@ export default function Page({
                                 }}
                                 title={COMPOSE_SEQUENCE_ENTRANCE_CONDITION}
                                 options={[
-                                    {
-                                        label: "Tag added",
-                                        value: "TAG_ADDED",
-                                    },
-                                    {
-                                        label: "Tag removed",
-                                        value: "TAG_REMOVED",
-                                    },
+                                    // {
+                                    //     label: "Tag added",
+                                    //     value: "TAG_ADDED",
+                                    // },
+                                    // {
+                                    //     label: "Tag removed",
+                                    //     value: "TAG_REMOVED",
+                                    // },
                                     {
                                         label: "Product purchased",
                                         value: "PRODUCT_PURCHASED",

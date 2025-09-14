@@ -16,7 +16,7 @@
   },
   "license": "MIT",
   "scripts": {
-    "lint": "eslint packages apps/docs apps/web/pages apps/web/components",
+    "lint": "eslint packages apps/docs apps/web",
     "prettier": "prettier --write packages apps docs *.md",
     "build": "pnpm -r --filter=!@courselit/docs run build",
     "clean": "pnpm -r run clean",
@@ -59,7 +59,7 @@
   "engineStrict": true,
   "lint-staged": {
     "*.{ts,tsx,js,css,md}": "prettier --write packages apps docs *.md",
-    "*.{ts,tsx}": "eslint --cache --fix packages apps/docs apps/web/pages apps/web/components apps/web/auth.config.ts apps/web/auth.ts"
+    "*.{ts,tsx}": "eslint --quiet --cache --fix packages apps/docs apps/web"
   },
   "pnpm": {
     "overrides": {

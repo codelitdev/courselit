@@ -38,8 +38,6 @@
         "typescript": "^4.6.0"
     },
     "dependencies": {
-        "redux": "^4.2.1",
-        "redux-thunk": "^2.4.1",
         "@courselit/page-models": "workspace:^",
         "@courselit/email-editor": "workspace:^"
     }

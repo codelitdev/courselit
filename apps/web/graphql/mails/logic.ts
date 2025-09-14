@@ -28,10 +28,10 @@ import MailRequestStatusModel, {
 import { getPlans } from "../paymentplans/logic";
 import { activateMembership } from "@/app/api/payment/helpers";
 import { AdminSequence } from "@courselit/common-logic";
-import { defaultEmail } from "@courselit/email-editor";
 import { User } from "@courselit/common-models";
 import EmailDeliveryModel from "@models/EmailDelivery";
 import EmailEventModel from "@models/EmailEvent";
+import { defaultEmail } from "./default-email";
 
 const { permissions } = constants;
 

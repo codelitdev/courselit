@@ -6,7 +6,6 @@ import {
     IconButton,
     useToast,
 } from "@courselit/components-library";
-import { AppDispatch } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import {
     APIKEY_NEW_BTN_CAPTION,
@@ -22,18 +21,15 @@ import {
 } from "@ui-config/strings";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { Clipboard } from "@courselit/icons";
 
 interface NewApikeyProps {
     address: Address;
-    dispatch?: AppDispatch;
     loading?: boolean;
 }
 
 export default function NewApikey({
     address,
-    dispatch,
     loading = false,
 }: NewApikeyProps) {
     const [name, setName] = useState("");
@@ -72,7 +68,6 @@ export default function NewApikey({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.apikey) {
                 setApikey(response.apikey.key);
@@ -83,8 +78,6 @@ export default function NewApikey({
                 description: err.message,
                 variant: "destructive",
             });
-        } finally {
-            dispatch && dispatch(networkAction(false));
         }
     };
 
@@ -141,12 +134,3 @@ export default function NewApikey({
         </div>
     );
 }
-
-// const mapStateToProps = (state: AppState) => ({
-//     address: state.address,
-//     networkAction: state.networkAction,
-// });
-
-// const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-// export default connect(mapStateToProps, mapDispatchToProps)(NewApikey);

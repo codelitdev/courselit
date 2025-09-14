@@ -1,15 +1,12 @@
-import React, { FormEvent, useState } from "react";
-import { Address } from "@courselit/common-models";
+import React, { FormEvent, useContext, useState } from "react";
 import {
     Form,
     FormField,
     Button,
     useToast,
 } from "@courselit/components-library";
-import { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import { useRouter } from "next/navigation";
-import { connect } from "react-redux";
 import {
     BTN_CONTINUE,
     BTN_NEW_BLOG,
@@ -18,21 +15,13 @@ import {
     TOAST_TITLE_ERROR,
     FORM_NEW_PRODUCT_TITLE_PLC,
 } from "@/ui-config/strings";
-import { networkAction } from "@courselit/state-management/dist/action-creators";
 import Link from "next/link";
+import { AddressContext } from "@components/contexts";
 
-interface NewBlogProps {
-    address: Address;
-    dispatch?: AppDispatch;
-    networkAction: boolean;
-}
-
-export function NewBlog({
-    address,
-    dispatch,
-    networkAction: loading,
-}: NewBlogProps) {
+export default function NewBlog() {
     const [title, setTitle] = useState("");
+    const [loading, setLoading] = useState(false);
+    const address = useContext(AddressContext);
     const router = useRouter();
     const { toast } = useToast();
 
@@ -55,7 +44,7 @@ export function NewBlog({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
+            setLoading(true);
             const response = await fetch.exec();
             if (response.course) {
                 router.replace(`/dashboard/blog/${response.course.courseId}`);
@@ -67,7 +56,7 @@ export function NewBlog({
                 variant: "destructive",
             });
         } finally {
-            dispatch && dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -88,6 +77,7 @@ export function NewBlog({
                         <Button
                             disabled={!title || (!!title && loading)}
                             onClick={createCourse}
+                            loading={loading}
                         >
                             {BTN_CONTINUE}
                         </Button>
@@ -100,12 +90,3 @@ export function NewBlog({
         </div>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    networkAction: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(NewBlog);

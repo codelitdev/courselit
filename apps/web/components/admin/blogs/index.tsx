@@ -1,9 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Address, Course, SiteInfo } from "@courselit/common-models";
-import { AppDispatch, AppState } from "@courselit/state-management";
-import { networkAction } from "@courselit/state-management/dist/action-creators";
+import React, { useCallback, useContext, useEffect, useState } from "react";
+import { Course, SiteInfo } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
-import { connect } from "react-redux";
 import {
     BLOG_TABLE_HEADER_NAME,
     BTN_NEW_BLOG,
@@ -26,17 +23,14 @@ import {
     useToast,
 } from "@courselit/components-library";
 import { usePathname } from "next/navigation";
+import { AddressContext, SiteInfoContext } from "@components/contexts";
 
 const BlogItem = dynamic(() => import("./blog-item"));
 
-interface IndexProps {
-    dispatch?: AppDispatch;
-    address: Address;
-    loading: boolean;
-    siteinfo: SiteInfo;
-}
-
-export const Index = ({ loading, dispatch, address, siteinfo }: IndexProps) => {
+export default function Blogs() {
+    const [loading, setLoading] = useState(false);
+    const address = useContext(AddressContext);
+    const siteinfo = useContext(SiteInfoContext);
     const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
     const [creatorCourses, setCreatorCourses] = useState<
         (Course & { published: boolean })[]
@@ -68,7 +62,7 @@ export const Index = ({ loading, dispatch, address, siteinfo }: IndexProps) => {
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
+            setLoading(true);
             setEndReached(false);
             const response = await fetch.exec();
             if (response.courses) {
@@ -84,9 +78,9 @@ export const Index = ({ loading, dispatch, address, siteinfo }: IndexProps) => {
                 variant: "destructive",
             });
         } finally {
-            dispatch && dispatch(networkAction(false));
+            setLoading(false);
         }
-    }, [address.backend, coursesPaginationOffset, dispatch]);
+    }, [address.backend, coursesPaginationOffset]);
 
     useEffect(() => {
         loadBlogs();
@@ -130,7 +124,7 @@ export const Index = ({ loading, dispatch, address, siteinfo }: IndexProps) => {
                     <td align="right">{PRODUCTS_TABLE_HEADER_ACTIONS}</td>
                 </TableHead>
                 <TableBody
-                    loading={loading}
+                    loading={loading || false}
                     endReached={endReached}
                     page={coursesPaginationOffset}
                     onPageChange={(value: number) => {
@@ -149,7 +143,7 @@ export const Index = ({ loading, dispatch, address, siteinfo }: IndexProps) => {
                                 details={product}
                                 position={index}
                                 onDelete={onDelete}
-                                siteinfo={siteinfo}
+                                siteinfo={siteinfo as SiteInfo}
                                 address={address}
                             />
                         ),
@@ -172,17 +166,4 @@ export const Index = ({ loading, dispatch, address, siteinfo }: IndexProps) => {
             )} */}
         </div>
     );
-};
-
-const mapStateToProps = (state: AppState) => ({
-    profile: state.profile,
-    address: state.address,
-    loading: state.networkAction,
-    siteinfo: state.siteinfo,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(Index);
+}

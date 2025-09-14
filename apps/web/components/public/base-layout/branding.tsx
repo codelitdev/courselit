@@ -1,6 +1,4 @@
 import React from "react";
-import { connect } from "react-redux";
-import type { AppState } from "@courselit/state-management";
 import { Image, Link } from "@courselit/components-library";
 import { SiteInfo } from "@courselit/common-models";
 
@@ -8,7 +6,7 @@ interface BrandingProps {
     siteinfo: SiteInfo;
 }
 
-const Branding = ({ siteinfo }: BrandingProps) => {
+export default function Branding({ siteinfo }: BrandingProps) {
     return (
         <Link href="/">
             <div className="flex items-center">
@@ -25,10 +23,4 @@ const Branding = ({ siteinfo }: BrandingProps) => {
             </div>
         </Link>
     );
-};
-
-const mapStateToProps = (state: AppState) => ({
-    siteinfo: state.siteinfo,
-});
-
-export default connect(mapStateToProps)(Branding);
+}

@@ -1,7 +1,6 @@
-import type { Address } from "@courselit/common-models";
 import { useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
     TOAST_TITLE_ERROR,
     POPUP_CANCEL_ACTION,
@@ -26,6 +25,7 @@ import {
     DialogTitle,
     DialogContent,
 } from "@components/ui/dialog";
+import { AddressContext } from "@components/contexts";
 
 interface DeleteSegmentProps {
     selectedSegment: string;
@@ -35,17 +35,16 @@ interface DeleteSegmentProps {
 interface SegmentEditorProps {
     segments: Segment[];
     selectedSegment: string;
-    address: Address;
     onDelete: (props: DeleteSegmentProps) => void;
 }
 
 export default function SegmentEditor2({
     segments,
     selectedSegment,
-    address,
     onDelete,
 }: SegmentEditorProps) {
     const [activeSegment, setActiveSegment] = useState<Segment>();
+    const address = useContext(AddressContext);
     const { toast } = useToast();
 
     const deleteSegment = async () => {

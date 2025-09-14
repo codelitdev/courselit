@@ -1,12 +1,9 @@
-import { Address } from "@courselit/common-models";
 import {
     Form,
     FormField,
     FormSubmit,
     useToast,
 } from "@courselit/components-library";
-import { AppDispatch } from "@courselit/state-management";
-import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import {
     TOAST_TITLE_ERROR,
@@ -17,18 +14,18 @@ import {
     MAIL_REQUEST_RECEIVED,
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState, useContext } from "react";
+import { AddressContext } from "@components/contexts";
 
 interface RequestFormProps {
-    address: Address;
     loading?: boolean;
-    dispatch?: AppDispatch;
 }
 
-const RequestForm = ({ address, dispatch, loading }: RequestFormProps) => {
+const RequestForm = ({ loading }: RequestFormProps) => {
     const [reason, setReason] = useState("");
     const [message, setMessage] = useState("");
     const [status, setStatus] = useState("");
+    const address = useContext(AddressContext);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -49,7 +46,6 @@ const RequestForm = ({ address, dispatch, loading }: RequestFormProps) => {
                     .setIsGraphQLEndpoint(true)
                     .setPayload(query)
                     .build();
-                dispatch && dispatch(networkAction(true));
                 const response = await fetch.exec();
                 if (response.getMailRequest) {
                     const { reason, message, status } = response.getMailRequest;
@@ -63,8 +59,6 @@ const RequestForm = ({ address, dispatch, loading }: RequestFormProps) => {
                     description: e.message,
                     variant: "destructive",
                 });
-            } finally {
-                dispatch && dispatch(networkAction(false));
             }
         };
 
@@ -101,7 +95,6 @@ const RequestForm = ({ address, dispatch, loading }: RequestFormProps) => {
                     },
                 })
                 .build();
-            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.updateMailRequest) {
                 toast({
@@ -115,8 +108,6 @@ const RequestForm = ({ address, dispatch, loading }: RequestFormProps) => {
                 description: e.message,
                 variant: "destructive",
             });
-        } finally {
-            dispatch && dispatch(networkAction(false));
         }
     };
 

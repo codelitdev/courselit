@@ -1,14 +1,12 @@
-import React, { useEffect, useCallback, useMemo } from "react";
+import React, { useEffect, useCallback, useMemo, useContext } from "react";
 import {
     Form,
     Select,
     Skeleton,
     useToast,
 } from "@courselit/components-library";
-import { AppDispatch, AppState } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import { useState } from "react";
-import { ThunkDispatch } from "redux-thunk";
 import {
     TOAST_TITLE_ERROR,
     USER_FILTER_AGGREGATOR_ALL,
@@ -19,16 +17,11 @@ import {
     USER_FILTER_LABEL_DEFAULT,
 } from "@ui-config/strings";
 import Segment from "@ui-models/segment";
-// import SegmentEditor from "./segment-editor.tsx.notused";
-import { AnyAction } from "redux";
 import {
-    Address,
-    State,
     UserFilter,
     UserFilterAggregator,
     UserFilterWithAggregator,
 } from "@courselit/common-models";
-import { actionCreators } from "@courselit/state-management";
 import dynamic from "next/dynamic";
 import { PieChart, Search } from "@courselit/icons";
 import {
@@ -40,10 +33,10 @@ import { Popover } from "@components/ui/popover";
 import SegmentEditor2 from "./segment-editor";
 import { Filter } from "lucide-react";
 import { Input } from "@components/ui/input";
+import { AddressContext } from "@components/contexts";
 const FilterChip = dynamic(() => import("./filter-chip"));
 const FilterSave = dynamic(() => import("./filter-save"));
 const FilterEditor = dynamic(() => import("./filter-editor-2"));
-const { networkAction } = actionCreators;
 
 interface FilterContainerProps {
     onChange: ({
@@ -57,22 +50,19 @@ interface FilterContainerProps {
         segmentId: string;
         count: number;
     }) => void;
-    address: Address;
-    dispatch?: AppDispatch;
     filter?: UserFilterWithAggregator;
     disabled?: boolean;
 }
 
 export default function FilterContainer({
     onChange,
-    address,
-    dispatch,
     filter,
     disabled = false,
 }: FilterContainerProps) {
     const [internalFilters, setInternalFilters] = useState<UserFilter[]>(
         filter?.filters || [],
     );
+    const address = useContext(AddressContext);
     const { toast } = useToast();
 
     const defaultSegment: Segment = useMemo(
@@ -129,10 +119,6 @@ export default function FilterContainer({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch &&
-                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                    networkAction(true),
-                );
             const response = await fetch.exec();
             if (response.segments) {
                 mapSegments(response.segments);
@@ -144,12 +130,8 @@ export default function FilterContainer({
                 variant: "destructive",
             });
         } finally {
-            dispatch &&
-                (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                    networkAction(false),
-                );
         }
-    }, [address.backend, dispatch, mapSegments]);
+    }, [address.backend, mapSegments]);
 
     useEffect(() => {
         loadSegments();
@@ -204,7 +186,6 @@ export default function FilterContainer({
         }
     }, [
         address.backend,
-        dispatch,
         internalFilters,
         internalAggregator,
         activeSegment,
@@ -243,7 +224,6 @@ export default function FilterContainer({
                             variant="outline"
                             size="sm"
                             className="flex items-center gap-2"
-                            // onClick={() => setSegmentSelectOpen(true)}
                         >
                             <PieChart />
                             {
@@ -255,7 +235,6 @@ export default function FilterContainer({
                         </Button>
                     </DropdownMenuTrigger>
                     <SegmentEditor2
-                        address={address}
                         segments={segments}
                         selectedSegment={activeSegment}
                         onDelete={({
@@ -295,7 +274,6 @@ export default function FilterContainer({
                             variant="outline"
                             size="sm"
                             className="flex items-center gap-2"
-                            // onClick={() => setFilterOpen(true)}
                         >
                             <Filter className="w-4 h-4" />
                             {USER_FILTER_BTN_LABEL}
@@ -315,8 +293,6 @@ export default function FilterContainer({
                             }
                             setFilterOpen(false);
                         }}
-                        address={address}
-                        dispatch={dispatch}
                     />
                 </DropdownMenu>
                 <Form
@@ -430,8 +406,6 @@ export default function FilterContainer({
                                         }
                                         setSegmentSaveOpen(false);
                                     }}
-                                    address={address}
-                                    dispatch={dispatch}
                                 />
                             </Popover>
                         </>

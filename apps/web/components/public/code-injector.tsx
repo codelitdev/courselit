@@ -1,8 +1,6 @@
 "use client";
 
 import React from "react";
-import { connect } from "react-redux";
-import { AppState } from "@courselit/state-management";
 
 type InjectionSection = "head" | "body";
 
@@ -11,7 +9,7 @@ interface CodeInjectorProps {
     body?: string;
 }
 
-export class CodeInjector extends React.Component<CodeInjectorProps> {
+export default class CodeInjector extends React.Component<CodeInjectorProps> {
     componentDidMount() {
         const targetTagsForInjection: InjectionSection[] = ["head", "body"];
         for (const target of targetTagsForInjection) {
@@ -50,10 +48,3 @@ export class CodeInjector extends React.Component<CodeInjectorProps> {
         return null;
     }
 }
-
-const mapStateToProps = (state: AppState) => ({
-    head: state.siteinfo.codeInjectionHead,
-    body: state.siteinfo.codeInjectionBody,
-});
-
-export default connect(mapStateToProps)(CodeInjector);

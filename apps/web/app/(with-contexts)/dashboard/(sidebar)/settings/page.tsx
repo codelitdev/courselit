@@ -25,7 +25,10 @@ export default function Page() {
 
     const tab = searchParams?.get("tab") || "Branding";
 
-    if (!checkPermission(profile.permissions!, [permissions.manageSettings])) {
+    if (
+        !profile ||
+        !checkPermission(profile.permissions!, [permissions.manageSettings])
+    ) {
         return <LoadingScreen />;
     }
 

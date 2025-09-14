@@ -5,9 +5,7 @@ import {
     Typeface,
     WidgetInstance,
 } from "@courselit/common-models";
-import type { Address, Media, Profile } from "@courselit/common-models";
-import type { AppDispatch, AppState } from "@courselit/state-management";
-import { networkAction } from "@courselit/state-management/dist/action-creators";
+import type { Address, Media, Profile, State } from "@courselit/common-models";
 import { debounce, FetchBuilder, generateUniqueId } from "@courselit/utils";
 import {
     EDIT_PAGE_BUTTON_DONE,
@@ -18,17 +16,17 @@ import {
     EDIT_PAGE_BUTTON_VIEW,
     EDIT_PAGE_BUTTON_THEME,
     EDIT_PAGE_ADD_WIDGET_TITLE,
-} from "../../../ui-config/strings";
+} from "@/ui-config/strings";
 import { useRouter } from "next/navigation";
 import {
     generateFontString,
     moveMemberUp,
     moveMemberDown,
-} from "../../../ui-lib/utils";
+} from "@/ui-lib/utils";
 import Template from "../../public/base-layout/template";
 import dynamic from "next/dynamic";
 import Head from "next/head";
-import widgets from "../../../ui-config/widgets";
+import widgets from "@/ui-config/widgets";
 import { Sync, CheckCircled } from "@courselit/icons";
 import { Button2, Skeleton, useToast } from "@courselit/components-library";
 import SeoEditor from "./seo-editor";
@@ -58,7 +56,6 @@ import { useTheme } from "next-themes";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
-// const FontsList = dynamic(() => import("./fonts-list"));
 const ThemeEditor = dynamic(() => import("./theme-editor/index"));
 
 const DEBOUNCE_TIME = 500;
@@ -67,11 +64,10 @@ interface PageEditorProps {
     id: string;
     address: Address;
     profile: Profile;
-    dispatch?: AppDispatch;
     siteInfo: SiteInfo;
     typefaces: Typeface[];
     redirectTo?: string;
-    state: AppState;
+    state: State;
 }
 
 type LeftPaneContent =
@@ -86,7 +82,6 @@ export default function PageEditor({
     id,
     address,
     profile,
-    dispatch,
     redirectTo,
     state,
 }: PageEditorProps) {
@@ -135,7 +130,7 @@ export default function PageEditor({
         loadPage();
 
         loadPages();
-    }, [address.backend, dispatch]);
+    }, [address.backend]);
 
     async function loadPages() {
         setLoadingPages(true);
@@ -155,7 +150,7 @@ export default function PageEditor({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
+            setLoadingPages(true);
             const response = await fetch.exec();
             if (response.pages) {
                 setPages(response.pages);
@@ -168,7 +163,6 @@ export default function PageEditor({
             });
         } finally {
             setLoadingPages(false);
-            dispatch && dispatch(networkAction(false));
         }
     }
 
@@ -304,7 +298,7 @@ export default function PageEditor({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
+            setLoading(true);
             const response = await fetch.exec();
             if (response.site.draftTypefaces) {
                 setDraftTypefaces(response.site.draftTypefaces);
@@ -316,7 +310,7 @@ export default function PageEditor({
                 variant: "destructive",
             });
         } finally {
-            dispatch && dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -340,7 +334,7 @@ export default function PageEditor({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
+            setLoading(true);
             const response = await fetch.exec();
             if (response.page) {
                 const pageBeingEdited = response.page;
@@ -365,7 +359,7 @@ export default function PageEditor({
                 variant: "destructive",
             });
         } finally {
-            dispatch && dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -518,8 +512,7 @@ export default function PageEditor({
                     onChange={onWidgetSettingsChanged}
                     onClose={onClose}
                     onDelete={deleteWidget}
-                    state={state as AppState}
-                    dispatch={dispatch || (() => {})}
+                    state={state}
                     key={selectedWidget}
                 />
             ),
@@ -878,7 +871,6 @@ export default function PageEditor({
                                                     draftTheme.theme,
                                             },
                                         })}
-                                        dispatch={dispatch}
                                     />
                                 )}
                             </div>

@@ -1,11 +1,9 @@
 import React from "react";
-// import { connect } from "react-redux";
 import {
     GENERIC_SIGNOUT_TEXT,
     GENERIC_SIGNIN_TEXT,
 } from "../../ui-config/strings";
 import { Button } from "@courselit/components-library";
-// import { AppState } from "@courselit/state-management";
 import { signIn, signOut, useSession } from "next-auth/react";
 
 export default function SessionButton() {
@@ -25,10 +23,3 @@ export default function SessionButton() {
         </Button>
     );
 }
-
-// const mapStateToProps = (state: AppState) => ({
-//     auth: state.auth,
-//     profile: state.profile,
-// });
-
-// export default connect(mapStateToProps)(SessionButton);

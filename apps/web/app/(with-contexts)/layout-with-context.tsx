@@ -2,7 +2,6 @@
 
 import { ReactNode, useEffect, useState, Suspense } from "react";
 import { SiteInfo, ServerConfig } from "@courselit/common-models";
-import { FetchBuilder } from "@courselit/utils";
 import {
     AddressContext,
     ProfileContext,
@@ -16,6 +15,7 @@ import { Session } from "next-auth";
 import { Theme } from "@courselit/page-models";
 import { ThemeProvider as NextThemesProvider } from "@components/next-theme-provider";
 import { defaultState } from "@components/default-state";
+import { getUserProfile } from "./helpers";
 
 function LayoutContent({
     address,
@@ -37,56 +37,71 @@ function LayoutContent({
     const { toast } = useToast();
 
     useEffect(() => {
-        const getUserProfile = async () => {
-            const query = `
-            { profile: getUser {
-                name,
-                id,
-                email,
-                userId,
-                bio,
-                permissions,
-                purchases {
-                    courseId,
-                    completedLessons,
-                    accessibleGroups
-                }
-                avatar {
-                        mediaId,
-                        originalFileName,
-                        mimeType,
-                        size,
-                        access,
-                        file,
-                        thumbnail,
-                        caption
-                    },
-                }
-            }
-            `;
-            const fetch = new FetchBuilder()
-                .setUrl(`${address}/api/graph`)
-                .setPayload(query)
-                .setIsGraphQLEndpoint(true)
-                .build();
-            try {
-                const response = await fetch.exec();
-                if (response.profile) {
-                    setProfile(response.profile);
-                }
-            } catch (err) {
-                toast({
-                    title: TOAST_TITLE_ERROR,
-                    description: err.message,
-                    variant: "destructive",
-                });
-            }
-        };
+        // const getUserProfile = async () => {
+        //     const query = `
+        //     { profile: getUser {
+        //         name,
+        //         id,
+        //         email,
+        //         userId,
+        //         bio,
+        //         permissions,
+        //         purchases {
+        //             courseId,
+        //             completedLessons,
+        //             accessibleGroups
+        //         }
+        //         avatar {
+        //                 mediaId,
+        //                 originalFileName,
+        //                 mimeType,
+        //                 size,
+        //                 access,
+        //                 file,
+        //                 thumbnail,
+        //                 caption
+        //             },
+        //         }
+        //     }
+        //     `;
+        //     const fetch = new FetchBuilder()
+        //         .setUrl(`${address}/api/graph`)
+        //         .setPayload(query)
+        //         .setIsGraphQLEndpoint(true)
+        //         .build();
+        //     try {
+        //         const response = await fetch.exec();
+        //         if (response.profile) {
+        //             setProfile(response.profile);
+        //         }
+        //     } catch (err) {
+        //         toast({
+        //             title: TOAST_TITLE_ERROR,
+        //             description: err.message,
+        //             variant: "destructive",
+        //         });
+        //     }
+        // };
 
         if (address && session) {
-            getUserProfile();
+            updateUserProfile();
         }
     }, [address, session]);
+
+    async function updateUserProfile() {
+        try {
+            const profile = await getUserProfile(address);
+            if (profile) {
+                setProfile(profile);
+            }
+        } catch (err) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
+        }
+    }
 
     return (
         <AddressContext.Provider

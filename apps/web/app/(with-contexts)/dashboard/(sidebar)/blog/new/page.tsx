@@ -1,6 +1,6 @@
 "use client";
 
-import { NewBlog } from "@components/admin/blogs/new-blog";
+import NewBlog from "@components/admin/blogs/new-blog";
 import DashboardContent from "@components/admin/dashboard-content";
 import { AddressContext } from "@components/contexts";
 import { UIConstants } from "@courselit/common-models";
@@ -23,7 +23,7 @@ export default function Page() {
                 UIConstants.permissions.manageCourse,
             ]}
         >
-            <NewBlog address={address} networkAction={false} />
+            <NewBlog />
         </DashboardContent>
     );
 }

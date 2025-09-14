@@ -1,36 +1,31 @@
 import {
     Address,
     Question,
-    Quiz as QuizViewer,
+    Quiz as QuizContent,
 } from "@courselit/common-models";
-import {
-    actionCreators,
-    AppDispatch,
-    AppState,
-} from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import { ChangeEvent, useState } from "react";
-import { connect } from "react-redux";
 import {
     TOAST_TITLE_ERROR,
-    QUIZ_FAIL_MESSAGE,
-    QUIZ_PASS_MESSAGE,
     QUIZ_VIEWER_EVALUATE_BTN,
     QUIZ_VIEWER_EVALUATE_BTN_LOADING,
-    TOAST_TITLE_SUCCESS,
-} from "../../../ui-config/strings";
+    TOAST_QUIZ_FAIL_MESSAGE,
+    TOAST_QUIZ_PASS_MESSAGE,
+    QUIZ_SCORE_PREFIX_MESSAGE,
+} from "@/ui-config/strings";
 import { Form, FormSubmit, useToast } from "@courselit/components-library";
-
-const { networkAction } = actionCreators;
 
 interface QuizViewerProps {
     lessonId: string;
-    content: QuizViewer;
-    dispatch: AppDispatch;
+    content: QuizContent;
     address: Address;
 }
 
-function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
+export default function QuizViewer({
+    content,
+    lessonId,
+    address,
+}: QuizViewerProps) {
     const { questions } = content;
     const [answers, setAnswers] = useState<number[][]>([
         ...content.questions.map((item) => []),
@@ -43,28 +38,27 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
         questionIndex: number,
         optionIndex: number,
     ) => {
-        const addOptionToQuestion = (
-            questionIndex: number,
-            optionIndex: number,
-        ) => {
-            answers[questionIndex].push(optionIndex);
-            setAnswers([...answers]);
-        };
+        const question = questions[questionIndex];
+        const newAnswers = [...answers];
 
-        const removeOptionFromQuestion = (
-            questionIndex: number,
-            optionIndex: number,
-        ) => {
-            const index = answers[questionIndex].indexOf(optionIndex);
-            answers[questionIndex].splice(index, 1);
-            setAnswers([...answers]);
-        };
-
-        if (checked) {
-            addOptionToQuestion(questionIndex, optionIndex);
+        if (question.type === "single") {
+            // For single choice, replace the entire array with the selected option
+            newAnswers[questionIndex] = checked ? [optionIndex] : [];
         } else {
-            removeOptionFromQuestion(questionIndex, optionIndex);
+            // For multiple choice, add/remove from the array
+            if (checked) {
+                if (!newAnswers[questionIndex].includes(optionIndex)) {
+                    newAnswers[questionIndex].push(optionIndex);
+                }
+            } else {
+                const index = newAnswers[questionIndex].indexOf(optionIndex);
+                if (index > -1) {
+                    newAnswers[questionIndex].splice(index, 1);
+                }
+            }
         }
+
+        setAnswers(newAnswers);
     };
 
     const evaluate = async (e: any) => {
@@ -92,7 +86,6 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
             .build();
 
         try {
-            dispatch(networkAction(true));
             setLoading(true);
             const response = await fetch.exec();
 
@@ -100,13 +93,13 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
                 const { pass, score, passingGrade } = response.result;
                 if (pass) {
                     toast({
-                        title: TOAST_TITLE_SUCCESS,
-                        description: `${QUIZ_PASS_MESSAGE} ${score} points.`,
+                        title: TOAST_QUIZ_PASS_MESSAGE,
+                        description: `${QUIZ_SCORE_PREFIX_MESSAGE} ${score.toFixed(2)} points.`,
                     });
                 } else {
                     toast({
-                        title: TOAST_TITLE_ERROR,
-                        description: `${QUIZ_FAIL_MESSAGE} ${score} points. Requires ${passingGrade} points.`,
+                        title: TOAST_QUIZ_FAIL_MESSAGE,
+                        description: `${QUIZ_SCORE_PREFIX_MESSAGE} ${score.toFixed(2)} points. Requires ${passingGrade} points.`,
                         variant: "destructive",
                     });
                 }
@@ -118,7 +111,6 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
                 variant: "destructive",
             });
         } finally {
-            dispatch(networkAction(false));
             setLoading(false);
         }
     };
@@ -126,19 +118,25 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
     return (
         <Form onSubmit={evaluate}>
             {questions.map((question: Question, questionIndex: number) => (
-                <fieldset
-                    className="flex flex-col py-2 px-4 mb-4 border rounded border-slate-200"
-                    key={questionIndex}
-                >
-                    <h2 className="font-medium text-xl mb-2">
-                        {question.text}
+                <fieldset className="flex flex-col mb-8" key={questionIndex}>
+                    <h2 className="font-medium mb-2">
+                        {questionIndex + 1}. {question.text}
                     </h2>
                     {question.options.map((option, index: number) => (
                         <div className="flex items-center mb-2" key={index}>
                             <input
-                                type="checkbox"
+                                type={
+                                    question.type === "single"
+                                        ? "radio"
+                                        : "checkbox"
+                                }
                                 className="mr-2"
-                                checked={option.correctAnswer}
+                                name={
+                                    question.type === "single"
+                                        ? `question-${questionIndex}`
+                                        : undefined
+                                }
+                                checked={answers[questionIndex].includes(index)}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                                     setAnswerForQuestion(
                                         e.target.checked,
@@ -165,13 +163,3 @@ function QuizViewer({ content, lessonId, dispatch, address }: QuizViewerProps) {
         </Form>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch: dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(QuizViewer);

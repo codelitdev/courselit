@@ -3,7 +3,6 @@ import Settings, { Item } from "../settings";
 import ItemEditor from "./item-editor";
 import { Address, Auth, Profile, Alignment } from "@courselit/common-models";
 import { Theme, ThemeStyle } from "@courselit/page-models";
-import { AppDispatch } from "@courselit/state-management";
 import {
     AdminWidgetPanel,
     AdminWidgetPanelContainer,
@@ -21,7 +20,6 @@ export interface AdminWidgetProps {
     settings: Settings;
     onChange: (...args: any[]) => void;
     address: Address;
-    dispatch: AppDispatch;
     auth: Auth;
     profile: Profile;
     hideActionButtons: (
@@ -37,7 +35,6 @@ export default function AdminWidget({
     onChange,
     auth,
     profile,
-    dispatch,
     address,
     hideActionButtons,
     preservedStateAcrossRerender,
@@ -153,7 +150,6 @@ export default function AdminWidget({
                 onDelete={onDelete}
                 auth={auth}
                 profile={profile}
-                dispatch={dispatch}
                 address={address}
             />
         );

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import dynamic from "next/dynamic";
 import useCourse from "../course-hook";
 import {
@@ -13,13 +13,12 @@ import {
     DELETE_PRODUCT_POPUP_TEXT,
     MENU_BLOG_VISIT,
     PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
-} from "../../../../../ui-config/strings";
+} from "@/ui-config/strings";
 import { MoreVert } from "@courselit/icons";
 import { deleteProduct } from "../../helpers";
-import { AppDispatch } from "@courselit/state-management";
-import { Address } from "@courselit/common-models";
 import { useRouter } from "next/navigation";
 import { truncate } from "@ui-lib/utils";
+import { AddressContext } from "@components/contexts";
 
 const AppLoader = dynamic(() => import("../../../../app-loader"));
 
@@ -29,21 +28,15 @@ interface Breadcrumb {
 }
 
 interface BlogHeaderProps {
-    breadcrumbs?: Breadcrumb[];
     id: string;
-    address: Address;
-    dispatch?: AppDispatch;
+    breadcrumbs?: Breadcrumb[];
 }
 
-export default function BlogHeader({
-    id,
-    breadcrumbs,
-    address,
-    dispatch,
-}: BlogHeaderProps) {
-    const course = useCourse(id, address);
+export default function BlogHeader({ id, breadcrumbs }: BlogHeaderProps) {
+    const course = useCourse(id);
     const router = useRouter();
     const { toast } = useToast();
+    const address = useContext(AddressContext);
 
     if (!course) {
         return <></>;
@@ -91,7 +84,6 @@ export default function BlogHeader({
                                 deleteProduct({
                                     id: course!.id as string,
                                     backend: address.backend,
-                                    dispatch,
                                     onDeleteComplete: () => {
                                         router.replace(`/dashboard/blogs`);
                                     },

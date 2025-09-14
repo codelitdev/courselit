@@ -1,18 +1,19 @@
 "use client";
 
-import { Content, Portal, Root, Trigger } from "@radix-ui/react-popover";
-import { ChangeEvent, useState } from "react";
-import Form from "./form";
-import IconButton from "./icon-button";
-import { Cross } from "@courselit/icons";
+import { ChangeEvent, useState, useEffect, useRef } from "react";
+import { Cross, Add, ExpandMore } from "@courselit/icons";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import ScrollArea from "./scrollarea";
+import { cn } from "@/lib/utils";
 
 interface ComboBoxProps {
     options: string[];
     selectedOptions: Set<string>;
     onChange: (options: string[]) => void;
     className?: string;
-    side?: "left" | "right" | "top" | "bottom";
+    placeholder?: string;
 }
 
 export default function ComboBox({
@@ -20,16 +21,51 @@ export default function ComboBox({
     selectedOptions,
     onChange,
     className,
-    side = "top",
+    placeholder = "Select an option or create one",
 }: ComboBoxProps) {
     const [internalOptions, setInternalOptions] = useState(options);
     const [internalSelectedOptions, setInternalSelectedOptions] =
         useState<Set<string>>(selectedOptions);
     const [text, setText] = useState("");
     const [internalOpen, setInternalOpen] = useState(false);
-    const outlineClass = `flex flex-wrap min-w-[220px] min-h-[36px] gap-2 border border-slate-300 hover:border-slate-400 rounded py-1 px-2 outline-none focus:border-slate-600 disabled:pointer-events-none overflow-y-auto ${className}`;
+    const [highlightedIndex, setHighlightedIndex] = useState(-1);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const setInputRef = (node: HTMLInputElement | null) => {
+        inputRef.current = node;
+        // Focus immediately when the input is mounted and dropdown is open
+        if (node && internalOpen) {
+            setTimeout(() => node.focus(), 0);
+        }
+    };
+
+    // Sync internal state with prop changes
+    useEffect(() => {
+        setInternalSelectedOptions(selectedOptions);
+    }, [selectedOptions]);
+
+    useEffect(() => {
+        setInternalOptions(options);
+    }, [options]);
+
+    // Reset highlighted index when text changes
+    useEffect(() => {
+        setHighlightedIndex(-1);
+    }, [text]);
+
+    // Focus input when dropdown opens
+    useEffect(() => {
+        if (internalOpen && inputRef.current) {
+            // Use setTimeout to ensure the dropdown is fully rendered before focusing
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 0);
+        }
+    }, [internalOpen]);
 
     const onOptionAdd = () => {
+        if (!text.trim()) return;
+
         internalSelectedOptions.add(text);
         const selectedOptions = new Set(internalSelectedOptions);
         setInternalSelectedOptions(selectedOptions);
@@ -40,125 +76,193 @@ export default function ComboBox({
         setText("");
     };
 
+    const onOptionRemove = (option: string) => {
+        internalSelectedOptions.delete(option);
+        const selectedOptions = new Set(internalSelectedOptions);
+        setInternalSelectedOptions(selectedOptions);
+        onChange(Array.from(selectedOptions));
+    };
+
+    const onOptionSelect = (option: string) => {
+        internalSelectedOptions.add(option);
+        const selectedOptions = new Set(internalSelectedOptions);
+        setInternalSelectedOptions(selectedOptions);
+        onChange(Array.from(selectedOptions));
+    };
+
+    const filteredOptions = internalOptions.filter((option) =>
+        option.toLowerCase().includes(text.toLowerCase()),
+    );
+
+    const canCreateNew = text.trim() && !internalOptions.includes(text);
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            if (canCreateNew) {
+                onOptionAdd();
+            } else if (
+                highlightedIndex >= 0 &&
+                highlightedIndex < filteredOptions.length
+            ) {
+                onOptionSelect(filteredOptions[highlightedIndex]);
+            } else if (filteredOptions.length === 1) {
+                onOptionSelect(filteredOptions[0]);
+            }
+        } else if (e.key === "Escape") {
+            setInternalOpen(false);
+        } else if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setHighlightedIndex((prev) =>
+                prev < filteredOptions.length - 1 ? prev + 1 : 0,
+            );
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setHighlightedIndex((prev) =>
+                prev > 0 ? prev - 1 : filteredOptions.length - 1,
+            );
+        }
+    };
+
     return (
-        <Root onOpenChange={setInternalOpen}>
-            <Trigger asChild>
-                <div>
-                    {!internalOpen && (
-                        <div className={outlineClass}>
-                            {Array.from(internalSelectedOptions).map(
-                                (option) => (
-                                    <div
-                                        key={option}
-                                        className="bg-slate-300 px-2 rounded-sm"
-                                    >
-                                        {option}
-                                    </div>
-                                ),
-                            )}
-                        </div>
-                    )}
-                </div>
-            </Trigger>
-            <Portal>
-                <Content
-                    align="start"
-                    side={side}
-                    className="bg-white shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]"
-                >
-                    <div className={outlineClass}>
-                        {Array.from(internalSelectedOptions).map((option) => (
-                            <div
+        <div className="relative w-full">
+            <Button
+                type="button"
+                variant="outline"
+                role="combobox"
+                aria-expanded={internalOpen}
+                className={cn(
+                    "w-full justify-between min-h-[40px] h-auto p-2 text-left font-normal",
+                    "bg-background border-input hover:bg-accent hover:text-accent-foreground",
+                    "focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                    className,
+                )}
+                onClick={() => {
+                    setInternalOpen(!internalOpen);
+                    // Ensure focus goes to our input after opening
+                    if (!internalOpen) {
+                        setTimeout(() => {
+                            inputRef.current?.focus();
+                        }, 10);
+                    }
+                }}
+            >
+                <div className="flex flex-wrap gap-1 flex-1">
+                    {internalSelectedOptions.size > 0 ||
+                    selectedOptions.size > 0 ? (
+                        Array.from(
+                            internalSelectedOptions.size > 0
+                                ? internalSelectedOptions
+                                : selectedOptions,
+                        ).map((option) => (
+                            <Badge
                                 key={option}
-                                className="bg-slate-300 px-2 rounded-sm flex"
+                                variant="secondary"
+                                className="text-xs"
                             >
-                                <div>{option}</div>
-                                <IconButton
-                                    variant="transparent"
-                                    onClick={() => {
-                                        internalSelectedOptions.delete(option);
-                                        const selectedOptions = new Set(
-                                            internalSelectedOptions,
-                                        );
-                                        setInternalSelectedOptions(
-                                            selectedOptions,
-                                        );
-                                        onChange(
-                                            Array.from(internalSelectedOptions),
-                                        );
+                                {option}
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-4 w-4 p-0 ml-1 hover:bg-transparent"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onOptionRemove(option);
                                     }}
                                 >
-                                    <Cross />
-                                </IconButton>
-                            </div>
-                        ))}
-                        <Form
-                            onSubmit={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                onOptionAdd();
-                            }}
-                        >
-                            <input
-                                className="outline-none"
-                                type="text"
+                                    <Cross className="h-3 w-3" />
+                                </Button>
+                            </Badge>
+                        ))
+                    ) : (
+                        <span className="text-muted-foreground">
+                            {placeholder}
+                        </span>
+                    )}
+                </div>
+                <ExpandMore className="h-4 w-4 opacity-50" />
+            </Button>
+
+            {internalOpen && (
+                <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-md">
+                    <div className="p-3">
+                        <div className="flex gap-2">
+                            <Input
+                                ref={setInputRef}
+                                placeholder="Search or create..."
                                 value={text}
-                                autoFocus
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                                     setText(e.target.value)
                                 }
+                                onKeyDown={handleKeyDown}
+                                className="flex-1"
                             />
-                        </Form>
+                            {canCreateNew && (
+                                <Button
+                                    size="sm"
+                                    onClick={onOptionAdd}
+                                    className="px-3"
+                                >
+                                    <Add className="h-4 w-4" />
+                                </Button>
+                            )}
+                        </div>
                     </div>
-                    <div className="p-2">
-                        <ScrollArea>
-                            <h6 className="text-xs text-slate-400 my-2 font-medium">
-                                Select an option or create one
-                            </h6>
-                            <ul>
-                                {internalOptions
-                                    .filter((option) => option.startsWith(text))
-                                    .map((option) => (
-                                        <li
+                    <ScrollArea>
+                        <div className="p-1">
+                            {filteredOptions.length > 0 ? (
+                                <div className="space-y-1">
+                                    {filteredOptions.map((option, index) => (
+                                        <Button
                                             key={option}
-                                            onClick={() => {
-                                                internalSelectedOptions.add(
-                                                    option,
-                                                );
-                                                const selectedOptions = new Set(
-                                                    internalSelectedOptions,
-                                                );
-                                                setInternalSelectedOptions(
-                                                    selectedOptions,
-                                                );
-                                                onChange(
-                                                    Array.from(selectedOptions),
-                                                );
-                                            }}
-                                            className="cursor-pointer text-medium leading-none rounded-[3px] flex items-center h-8 select-none outline-none hover:bg-slate-200"
+                                            variant="ghost"
+                                            className={cn(
+                                                "w-full justify-start h-8 px-2 text-sm",
+                                                index === highlightedIndex &&
+                                                    "bg-accent text-accent-foreground",
+                                            )}
+                                            onClick={() =>
+                                                onOptionSelect(option)
+                                            }
+                                            disabled={internalSelectedOptions.has(
+                                                option,
+                                            )}
                                         >
                                             {option}
-                                        </li>
+                                            {internalSelectedOptions.has(
+                                                option,
+                                            ) && (
+                                                <Badge
+                                                    variant="secondary"
+                                                    className="ml-auto text-xs"
+                                                >
+                                                    Selected
+                                                </Badge>
+                                            )}
+                                        </Button>
                                     ))}
-                                {text &&
-                                    !internalOptions.some(
-                                        (option) => option === text,
-                                    ) && (
-                                        <li
-                                            onClick={onOptionAdd}
-                                            className="cursor-pointer text-medium leading-none rounded-[3px] flex items-center gap-2 h-8 select-none outline-none hover:bg-slate-200"
-                                        >
-                                            Create{" "}
-                                            <span className="bg-slate-300 px-2 py-1 rounded-sm">
-                                                {text}
-                                            </span>
-                                        </li>
-                                    )}
-                            </ul>
-                        </ScrollArea>
-                    </div>
-                </Content>
-            </Portal>
-        </Root>
+                                </div>
+                            ) : (
+                                <div className="p-3 text-center text-sm text-muted-foreground">
+                                    No options found
+                                </div>
+                            )}
+                            {canCreateNew && (
+                                <div className="border-t pt-2 mt-2">
+                                    <Button
+                                        variant="ghost"
+                                        className="w-full justify-start h-8 px-2 text-sm"
+                                        onClick={onOptionAdd}
+                                    >
+                                        <Add className="h-4 w-4 mr-2" />
+                                        Create &quot;{text}&quot;
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </ScrollArea>
+                </div>
+            )}
+        </div>
     );
 }

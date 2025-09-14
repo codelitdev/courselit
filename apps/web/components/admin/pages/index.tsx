@@ -1,4 +1,5 @@
-import { Address, Page } from "@courselit/common-models";
+import { AddressContext } from "@components/contexts";
+import { Page } from "@courselit/common-models";
 import {
     Menu2,
     MenuItem,
@@ -11,8 +12,6 @@ import { Table } from "@courselit/components-library";
 import { Button, Link } from "@courselit/components-library";
 import { View } from "@courselit/icons";
 import { Edit, MoreVert } from "@courselit/icons";
-import { AppDispatch, AppState } from "@courselit/state-management";
-import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
 import {
     APP_MESSAGE_PAGE_DELETED,
@@ -28,17 +27,12 @@ import {
     PAGE_TITLE_VIEW_PAGE,
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
-import { useEffect, useState } from "react";
-import { connect } from "react-redux";
+import { useContext, useEffect, useState } from "react";
 
-interface IndexProps {
-    dispatch: AppDispatch;
-    address: Address;
-    loading: boolean;
-}
-
-export const Pages = ({ loading, address, dispatch }: IndexProps) => {
+export default function Pages() {
     const [pages, setPages] = useState<Page[]>([]);
+    const [loading, setLoading] = useState(false);
+    const address = useContext(AddressContext);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -62,7 +56,7 @@ export const Pages = ({ loading, address, dispatch }: IndexProps) => {
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(networkAction(true));
+            setLoading(true);
             const response = await fetch.exec();
             if (response.pages) {
                 setPages(response.pages);
@@ -74,7 +68,7 @@ export const Pages = ({ loading, address, dispatch }: IndexProps) => {
                 variant: "destructive",
             });
         } finally {
-            dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -92,7 +86,7 @@ export const Pages = ({ loading, address, dispatch }: IndexProps) => {
             .build();
 
         try {
-            dispatch(networkAction(true));
+            setLoading(true);
             const response = await fetch.exec();
 
             if (response.result) {
@@ -112,7 +106,7 @@ export const Pages = ({ loading, address, dispatch }: IndexProps) => {
                 variant: "destructive",
             });
         } finally {
-            dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -123,12 +117,12 @@ export const Pages = ({ loading, address, dispatch }: IndexProps) => {
                     {MANAGE_PAGES_PAGE_HEADING}
                 </h1>
                 <div>
-                    <Link href={`/dashboard/page/new`}>
+                    <Link href="/dashboard/page/new">
                         <Button>{BTN_NEW_PAGE}</Button>
                     </Link>
                 </div>
             </div>
-            <Table aria-label="Products">
+            <Table aria-label="Pages">
                 <TableHead>
                     <td>{PAGES_TABLE_HEADER_NAME}</td>
                     <td align="right">{PAGES_TABLE_HEADER_ACTIONS}</td>
@@ -161,7 +155,10 @@ export const Pages = ({ loading, address, dispatch }: IndexProps) => {
                                                 page.pageId
                                             }?redirectTo=/dashboard/pages`}
                                         >
-                                            <Button variant="soft">
+                                            <Button
+                                                variant="soft"
+                                                disabled={loading}
+                                            >
                                                 <Edit />
                                                 {PAGE_TITLE_EDIT_PAGE}
                                             </Button>
@@ -196,15 +193,4 @@ export const Pages = ({ loading, address, dispatch }: IndexProps) => {
             </Table>
         </div>
     );
-};
-
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    loading: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(Pages);
+}

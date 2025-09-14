@@ -207,7 +207,7 @@ export default function Page() {
                     {MANAGE_COURSES_PAGE_HEADING}
                 </h1>
                 <div>
-                    <Link href={`/dashboard/products/new`}>
+                    <Link href="/dashboard/products/new">
                         <Button>{BTN_NEW_PRODUCT}</Button>
                     </Link>
                 </div>

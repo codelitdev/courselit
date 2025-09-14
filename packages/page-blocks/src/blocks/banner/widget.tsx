@@ -7,7 +7,6 @@ import {
     useToast,
     getSymbolFromCurrency,
 } from "@courselit/components-library";
-import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder, getPlanPrice } from "@courselit/utils";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "./constants";
 import Settings from "./settings";
@@ -69,7 +68,6 @@ export default function Widget({
     },
     state,
     pageData: product,
-    dispatch,
     editing,
 }: WidgetProps<Settings>): JSX.Element {
     const { theme } = state;
@@ -153,7 +151,6 @@ export default function Widget({
             .build();
 
         try {
-            dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
             if (response.response) {
                 setEmail("");
@@ -165,8 +162,6 @@ export default function Widget({
                 description: failureMessage || DEFAULT_FAILURE_MESSAGE,
                 variant: "destructive",
             });
-        } finally {
-            dispatch(actionCreators.networkAction(false));
         }
     };
 
