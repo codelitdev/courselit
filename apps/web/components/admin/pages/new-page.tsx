@@ -97,12 +97,7 @@ const NewPage = () => {
                 </p>
                 <div className="flex gap-2">
                     <Button
-                        disabled={
-                            !name ||
-                            !pageId ||
-                            (!!name && !!pageId && loading) ||
-                            loading
-                        }
+                        disabled={!name || !pageId || loading}
                         onClick={createPage}
                         sx={{ mr: 1 }}
                     >

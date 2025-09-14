@@ -35,7 +35,7 @@ export default function Details({ id }: DetailsProps) {
     const [loading, setLoading] = useState(false);
     const address = useContext(AddressContext);
     const { profile } = useContext(ProfileContext);
-    const course = useCourse(id, address);
+    const course = useCourse(id);
     const { toast } = useToast();
 
     useEffect(() => {

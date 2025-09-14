@@ -20,7 +20,7 @@ interface PublishProps {
 
 export default function Publish({ id }: PublishProps) {
     const address = useContext(AddressContext);
-    let course = useCourse(id, address);
+    let course = useCourse(id);
     const [published, setPublished] = useState(course?.published);
     const [privacy, setPrivacy] = useState(course?.privacy);
     const [loading, setLoading] = useState(false);

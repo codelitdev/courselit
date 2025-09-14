@@ -127,7 +127,7 @@ export default function Page() {
                                 disabled={
                                     !title ||
                                     !type ||
-                                    (!!title && !!type && loading) ||
+                                    loading ||
                                     actionSuccessful
                                 }
                                 onClick={createCourse}
