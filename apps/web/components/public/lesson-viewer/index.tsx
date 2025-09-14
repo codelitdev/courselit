@@ -275,11 +275,11 @@ const LessonViewer = ({
                         )}
                         {String.prototype.toUpperCase.call(LESSON_TYPE_PDF) ===
                             lesson.type && (
-                            <div>
+                            <div className="flex flex-col h-screen">
                                 <iframe
                                     frameBorder="0"
                                     width="100%"
-                                    height="500"
+                                    className="flex-1 min-h-[70vh]"
                                     src={`${
                                         lesson.media && lesson.media.file
                                     }#view=fit`}
