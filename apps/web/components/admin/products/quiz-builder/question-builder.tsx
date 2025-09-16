@@ -12,11 +12,7 @@ import {
     QUESTION_BUILDER_DELETE_TOOLTIP,
     QUESTION_BUILDER_EXPAND_TOOLTIP,
 } from "@/ui-config/strings";
-import {
-    Checkbox,
-    IconButton,
-    Tooltip,
-} from "@courselit/components-library";
+import { Checkbox, IconButton, Tooltip } from "@courselit/components-library";
 import { FormEvent } from "react";
 import { Button } from "@components/ui/button";
 import { Trash } from "lucide-react";
