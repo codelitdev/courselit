@@ -68,7 +68,7 @@ export default function ContentPage() {
     const params = useParams();
     const productId = params.id as string;
     const address = useContext(AddressContext);
-    const { product } = useProduct(productId, address);
+    const { product } = useProduct(productId);
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
         {

@@ -1,18 +1,20 @@
 import { auth } from "@/auth";
 import { SessionProvider } from "next-auth/react";
 import { Metadata, ResolvingMetadata } from "next";
-import { getAddressFromHeaders, getFullSiteSetup } from "@ui-lib/utils";
+import { getFullSiteSetup } from "@ui-lib/utils";
 import { headers } from "next/headers";
 import { FetchBuilder } from "@courselit/utils";
 import { notFound } from "next/navigation";
 import LayoutWithSidebar from "./layout-with-sidebar";
 import { getProduct } from "./helpers";
+import { getAddressFromHeaders } from "@/app/actions";
 
 export async function generateMetadata(
-    { params }: { params: { slug: string; id: string } },
+    props: { params: Promise<{ slug: string; id: string }> },
     parent: ResolvingMetadata,
 ): Promise<Metadata> {
-    const address = getAddressFromHeaders(headers);
+    const params = await props.params;
+    const address = await getAddressFromHeaders(headers);
     const siteInfo = await getFullSiteSetup(address);
 
     if (!siteInfo) {
@@ -48,16 +50,17 @@ export async function generateMetadata(
     }
 }
 
-export default async function Layout({
-    children,
-    params,
-}: {
+export default async function Layout(props: {
     children: React.ReactNode;
-    params: { slug: string; id: string };
+    params: Promise<{ slug: string; id: string }>;
 }) {
+    const params = await props.params;
+
+    const { children } = props;
+
     const { id } = params;
     const session = await auth();
-    const address = getAddressFromHeaders(headers);
+    const address = await getAddressFromHeaders(headers);
     const product = await getProduct(id, address);
 
     return (

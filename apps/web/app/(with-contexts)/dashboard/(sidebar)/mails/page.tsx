@@ -2,15 +2,13 @@ import { Metadata, ResolvingMetadata } from "next";
 import MailHub from "./mail-hub";
 
 export async function generateMetadata(
-    {
-        params,
-        searchParams,
-    }: {
-        params: any;
-        searchParams: { [key: string]: string | string[] | undefined };
+    props: {
+        params: Promise<any>;
+        searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
     },
     parent: ResolvingMetadata,
 ): Promise<Metadata> {
+    const searchParams = await props.searchParams;
     const tab = searchParams["tab"] || "Broadcasts";
 
     return {

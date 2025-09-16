@@ -102,7 +102,11 @@ export function EmailTemplate({
                         overflow: "hidden",
                     }}
                 >
-                    {email.content.map((block) => renderBlock(block))}
+                    {email.content.map((block, index) => (
+                        <React.Fragment key={block.id || index}>
+                            {renderBlock(block)}
+                        </React.Fragment>
+                    ))}
                 </Container>
             </Body>
         </Html>

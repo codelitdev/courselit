@@ -16,11 +16,11 @@ import {
     Checkbox,
     IconButton,
     Tooltip,
-    FormField,
 } from "@courselit/components-library";
 import { FormEvent } from "react";
 import { Button } from "@components/ui/button";
 import { Trash } from "lucide-react";
+import { Input } from "@components/ui/input";
 
 interface QuestionProps {
     details: Question;
@@ -100,7 +100,7 @@ export function QuestionBuilder({
                     </Tooltip>
                 </div>
             </div>
-            <FormField
+            <Input
                 value={details.text}
                 onChange={(e) => setQuestionText(e.target.value)}
                 placeholder={LESSON_QUIZ_QUESTION_PLACEHOLDER}
@@ -118,7 +118,7 @@ export function QuestionBuilder({
                             }
                         />
                     </Tooltip>
-                    <FormField
+                    <Input
                         value={option.text}
                         onChange={(e) => setOptionText(index, e.target.value)}
                         placeholder={LESSON_QUIZ_OPTION_PLACEHOLDER}
@@ -136,8 +136,7 @@ export function QuestionBuilder({
             ))}
             <div>
                 <Button
-                    component="button"
-                    onClick={(e: FormEvent<HTMLInputElement>) => {
+                    onClick={(e: FormEvent<HTMLButtonElement>) => {
                         e.preventDefault();
                         addNewOption();
                     }}

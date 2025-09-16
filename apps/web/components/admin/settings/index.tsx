@@ -1161,7 +1161,6 @@ const Settings = (props: SettingsProps) => {
                         name="mailingAddress"
                         value={newSettings.mailingAddress || ""}
                         onChange={onChangeData}
-                        multiline
                         rows={5}
                     />
                     <p className="text-xs text-slate-500">
@@ -1192,7 +1191,6 @@ const Settings = (props: SettingsProps) => {
                         name="codeInjectionHead"
                         value={newSettings.codeInjectionHead || ""}
                         onChange={onChangeData}
-                        multiline
                         rows={10}
                     />
                     <FormField
@@ -1201,7 +1199,6 @@ const Settings = (props: SettingsProps) => {
                         name="codeInjectionBody"
                         value={newSettings.codeInjectionBody || ""}
                         onChange={onChangeData}
-                        multiline
                         rows={10}
                     />
                     <div>

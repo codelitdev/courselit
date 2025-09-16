@@ -1,7 +1,7 @@
 import { Course } from "@courselit/common-models";
 import { Caption, Header1, Section, Text1 } from "@courselit/page-primitives";
 import { formattedLocaleDate, getFullSiteSetup } from "@ui-lib/utils";
-import { getAddressFromHeaders } from "@ui-lib/utils";
+import { getAddressFromHeaders } from "@/app/actions";
 import { headers } from "next/headers";
 import { ProductWithAdminProps } from "@/hooks/use-product";
 import { FetchBuilder } from "@courselit/utils";
@@ -19,13 +19,12 @@ import {
     BreadcrumbSeparator,
 } from "@components/ui/breadcrumb";
 
-export default async function ProductPage({
-    params,
-}: {
-    params: { slug: string; id: string };
+export default async function ProductPage(props: {
+    params: Promise<{ slug: string; id: string }>;
     course: Course;
 }) {
-    const address = getAddressFromHeaders(headers);
+    const params = await props.params;
+    const address = await getAddressFromHeaders(headers);
     const [product, siteInfo] = await Promise.all([
         getProduct(address, params.id),
         getFullSiteSetup(address),

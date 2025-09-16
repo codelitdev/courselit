@@ -14,8 +14,7 @@ import type {
 import { checkPermission, FetchBuilder } from "@courselit/utils";
 import { Constants, UIConstants } from "@courselit/common-models";
 import { createHash, randomInt } from "crypto";
-import { getProtocol } from "../lib/utils";
-import { headers as headersType } from "next/headers";
+// import { headers as headersType } from "next/headers";
 import { Theme } from "@courselit/page-models";
 export { getPlanPrice } from "@courselit/utils";
 const { permissions } = UIConstants;
@@ -45,14 +44,6 @@ export const getAddress = (host: string) => {
         backend: host,
         frontend: `http://${host}`,
     };
-};
-
-export const getBackendAddress = (
-    headers: Record<string, unknown>,
-): `${string}://${string}` => {
-    return `${getProtocol(
-        headers["x-forwarded-proto"] as string | string[] | undefined,
-    )}://${headers.host}`;
 };
 
 const extractDomainFromURL = (host: string) => {
@@ -446,13 +437,4 @@ export function hasCommunityPermission(
     const requiredRoleIndex = roleHierarchy.indexOf(requiredRole);
 
     return memberRoleIndex >= requiredRoleIndex;
-}
-
-export function getAddressFromHeaders(headers: typeof headersType) {
-    const headersList = headers();
-    const address = getBackendAddress({
-        "x-forwarded-proto": headersList.get("x-forwarded-proto"),
-        host: headersList.get("host"),
-    });
-    return address;
 }

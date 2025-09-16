@@ -27,14 +27,15 @@ import {
 } from "@ui-config/strings";
 import { truncate } from "@ui-lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useContext, useState } from "react";
+import { useContext, useState, use } from "react";
 
 const breadcrumbs = [
     { label: MANAGE_BLOG_PAGE_HEADING, href: "/dashboard/blogs" },
     { label: EDIT_BLOG, href: "#" },
 ];
 
-export default function Page({ params }: { params: { id: string } }) {
+export default function Page(props: { params: Promise<{ id: string }> }) {
+    const params = use(props.params);
     const { id } = params;
     const searchParams = useSearchParams();
     const [tab, setTab] = useState(searchParams?.get("tab") || "Details");

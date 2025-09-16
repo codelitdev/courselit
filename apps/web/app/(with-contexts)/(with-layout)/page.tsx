@@ -1,5 +1,5 @@
 import { getFullSiteSetup } from "@ui-lib/utils";
-import { getAddressFromHeaders } from "@/ui-lib/utils";
+import { getAddressFromHeaders } from "@/app/actions";
 import ClientSidePage from "./p/[id]/client-side-page";
 import { headers } from "next/headers";
 import type { Metadata, ResolvingMetadata } from "next";
@@ -14,7 +14,7 @@ export async function generateMetadata(
     { params }: Props,
     parent: ResolvingMetadata,
 ): Promise<Metadata> {
-    const address = getAddressFromHeaders(headers);
+    const address = await getAddressFromHeaders(headers);
     const siteInfo = await getFullSiteSetup(address, "homepage");
     if (!siteInfo) {
         return {
@@ -62,7 +62,7 @@ export async function generateMetadata(
 }
 
 export default async function Page() {
-    const address = getAddressFromHeaders(headers);
+    const address = await getAddressFromHeaders(headers);
     const siteInfo = await getFullSiteSetup(address, "homepage");
     if (!siteInfo) {
         return null;

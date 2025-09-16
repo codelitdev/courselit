@@ -66,7 +66,7 @@ export default function DashboardPage() {
     const [timeRange, setTimeRange] = useState("7d");
     // const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const address = useContext(AddressContext);
-    const { product, loaded: productLoaded } = useProduct(productId, address);
+    const { product, loaded: productLoaded } = useProduct(productId);
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
         {

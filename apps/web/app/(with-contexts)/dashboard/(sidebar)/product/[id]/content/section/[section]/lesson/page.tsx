@@ -40,7 +40,7 @@ import {
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
-import useProduct from "../../../../../../../../../../hooks/use-product";
+import useProduct from "@/hooks/use-product";
 import { AddressContext, ProfileContext } from "@components/contexts";
 import {
     Constants,
@@ -68,12 +68,6 @@ import { isTextEditorNonEmpty, truncate } from "@ui-lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@components/ui/separator";
 
-// interface Question {
-//     id: string;
-//     text: string;
-//     options: Array<{ id: string; text: string; isCorrect: boolean }>;
-// }
-
 const lessonTypes = [
     { value: Constants.LessonType.TEXT, label: "Text", icon: FileText },
     { value: Constants.LessonType.VIDEO, label: "Video", icon: Video },
@@ -84,20 +78,6 @@ const lessonTypes = [
     { value: Constants.LessonType.QUIZ, label: "Quiz", icon: HelpCircle },
 ] as const;
 
-// interface LessonState {
-//     type: Lesson;
-//     title: string;
-//     content: { value: string } | TextEditorContent | Quiz;
-//     // embedUrl: string;
-//     // isPreviewEnabled: boolean;
-//     questions: Question[];
-//     requiresPassingGrade: boolean;
-//     passingGrade: string;
-//     // mediaUrl: string | null;
-//     // mediaCaption: string;
-//     media?: Media;
-// }
-
 export default function LessonPage() {
     const router = useRouter();
     const params = useParams();
@@ -107,7 +87,6 @@ export default function LessonPage() {
     const sectionId = params.section as string;
     const isEditing = !!lessonId;
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    // const [expandedQuestion, setExpandedQuestion] = useState("q1");
     const { toast } = useToast();
     const [errors, setErrors] = useState<Partial<Record<keyof Lesson, string>>>(
         {},
@@ -116,7 +95,7 @@ export default function LessonPage() {
         useState<LessonType | null>(null);
     const address = useContext(AddressContext);
     const { profile } = useContext(ProfileContext);
-    const { product, loaded: productLoaded } = useProduct(productId, address);
+    const { product, loaded: productLoaded } = useProduct(productId);
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
         {

@@ -153,13 +153,6 @@ export default function SvgEditor({
         </div>
     ) : (
         <div>
-            {/* <FormField
-                label="SVG Code"
-                value={svgCode}
-                onChange={(e) => setTempSvgCode(e.target.value)}
-                multiline
-                rows={10}
-            /> */}
             <Textarea
                 ref={textareaRef}
                 placeholder="Enter SVG code here..."

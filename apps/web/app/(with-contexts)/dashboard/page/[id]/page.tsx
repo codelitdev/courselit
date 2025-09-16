@@ -11,9 +11,10 @@ import {
 } from "@components/contexts";
 import { Profile } from "@courselit/common-models";
 import { useSearchParams } from "next/navigation";
-import { useContext } from "react";
+import { useContext, use } from "react";
 
-export default function Page({ params }: { params: { id: string } }) {
+export default function Page(props: { params: Promise<{ id: string }> }) {
+    const params = use(props.params);
     const { id } = params;
     const searchParams = useSearchParams();
     const redirectTo = searchParams?.get("redirectTo");

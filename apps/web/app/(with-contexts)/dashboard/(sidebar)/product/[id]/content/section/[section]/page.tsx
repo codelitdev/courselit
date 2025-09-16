@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useContext, useEffect, useState } from "react";
+import { ChangeEvent, useContext, useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,11 +43,10 @@ import Resources from "@components/resources";
 import EmailViewer from "@components/admin/mails/email-viewer";
 import { defaultEmail, Email as EmailContent } from "@courselit/email-editor";
 
-export default function SectionPage({
-    params,
-}: {
-    params: { id: string; section: string };
+export default function SectionPage(props: {
+    params: Promise<{ id: string; section: string }>;
 }) {
+    const params = use(props.params);
     const { toast } = useToast();
     const router = useRouter();
     const { id: productId, section: sectionId } = params;
@@ -64,7 +63,7 @@ export default function SectionPage({
     const [emailSubject, setEmailSubject] = useState("");
     const [emailId, setEmailId] = useState("");
     const address = useContext(AddressContext);
-    const { product } = useProduct(productId, address);
+    const { product } = useProduct(productId);
     const [loading, setLoading] = useState(false);
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },

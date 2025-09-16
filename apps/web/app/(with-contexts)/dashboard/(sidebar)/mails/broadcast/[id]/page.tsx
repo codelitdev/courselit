@@ -4,7 +4,7 @@ import DashboardContent from "@components/admin/dashboard-content";
 import { isDateInFuture } from "@/lib/utils";
 import { AddressContext } from "@components/contexts";
 import { BROADCASTS } from "@ui-config/strings";
-import { useContext, useState } from "react";
+import { useContext, useState, use } from "react";
 import { PaperPlane, Clock } from "@courselit/icons";
 import {
     Form,
@@ -56,13 +56,12 @@ const breadcrumbs = [
     { label: PAGE_HEADER_EDIT_MAIL, href: "#" },
 ];
 
-export default function Page({
-    params,
-}: {
-    params: {
+export default function Page(props: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }) {
+    const params = use(props.params);
     const address = useContext(AddressContext);
     const { id } = params;
     const { sequence, loading, error, loadSequence } = useSequence();
@@ -90,7 +89,7 @@ export default function Page({
         filtersAggregator: "or" as UserFilterAggregator,
     });
     const isInitialLoad = useRef(true);
-    const saveTimeoutRef = useRef<NodeJS.Timeout>();
+    const saveTimeoutRef = useRef<NodeJS.Timeout>(undefined);
 
     const { toast } = useToast();
 

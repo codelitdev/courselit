@@ -2,19 +2,18 @@
 
 import { LessonViewer } from "@components/public/lesson-viewer";
 import { redirect } from "next/navigation";
-import { useContext } from "react";
+import { useContext, use } from "react";
 import { ProfileContext, AddressContext } from "@components/contexts";
 import { Profile } from "@courselit/common-models";
 
-export default function LessonPage({
-    params,
-}: {
-    params: {
+export default function LessonPage(props: {
+    params: Promise<{
         slug: string;
         id: string;
         lesson: string;
-    };
+    }>;
 }) {
+    const params = use(props.params);
     const { slug, id, lesson } = params;
     const { profile, setProfile } = useContext(ProfileContext);
     const address = useContext(AddressContext);

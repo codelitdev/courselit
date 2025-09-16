@@ -16,21 +16,20 @@ import {
     MAIL_SUBJECT_PLACEHOLDER,
     PAGE_HEADER_EDIT_MAIL,
 } from "@ui-config/strings";
-import { ChangeEvent, useCallback, useEffect, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useState, use } from "react";
 import { Email as EmailContent } from "@courselit/email-editor";
 import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
 import { Email } from "@courselit/common-models";
 import EmailViewer from "@components/admin/mails/email-viewer";
 import { useSequence } from "@/hooks/use-sequence";
 
-export default function Page({
-    params,
-}: {
-    params: {
+export default function Page(props: {
+    params: Promise<{
         id: string;
         mailId: string;
-    };
+    }>;
 }) {
+    const params = use(props.params);
     const { id: sequenceId, mailId } = params;
     const breadcrumbs = [
         { label: SEQUENCES, href: "/dashboard/mails?tab=Sequences" },

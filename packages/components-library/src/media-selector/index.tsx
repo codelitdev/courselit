@@ -276,7 +276,6 @@ const MediaSelector = (props: MediaSelectorProps) => {
                                     onChange={(
                                         e: ChangeEvent<HTMLInputElement>,
                                     ) => setCaption(e.target.value)}
-                                    multiline
                                     rows={5}
                                     disabled={selectedFile && uploading}
                                 />

@@ -73,7 +73,7 @@ export default function CustomersPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
     const address = useContext(AddressContext);
-    const { product } = useProduct(productId, address);
+    const { product } = useProduct(productId);
     const { toast } = useToast();
 
     const breadcrumbs = [
