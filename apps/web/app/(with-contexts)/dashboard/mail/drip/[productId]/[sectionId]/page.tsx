@@ -12,22 +12,21 @@ import { LogOut } from "lucide-react";
 import Link from "next/link";
 import useProduct from "@/hooks/use-product";
 import { AddressContext } from "@components/contexts";
-import { useContext, useMemo } from "react";
+import { useContext, useMemo, use } from "react";
 import { truncate } from "@ui-lib/utils";
 
-export default function DripEmailEditorPage({
-    params,
-}: {
-    params: {
+export default function DripEmailEditorPage(props: {
+    params: Promise<{
         productId: string;
         sectionId: string;
-    };
+    }>;
 }) {
+    const params = use(props.params);
     const { productId, sectionId } = params;
     const searchParams = useSearchParams();
     const redirectTo = searchParams?.get("redirectTo");
     const address = useContext(AddressContext);
-    const { product, loaded: productLoaded } = useProduct(productId, address);
+    const { product, loaded: productLoaded } = useProduct(productId);
 
     const group = useMemo(() => {
         return product?.groups?.find((group) => group.id === sectionId);

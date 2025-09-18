@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
-import { getBackendAddress } from "@/lib/get-backend-address";
+import { getBackendAddress } from "@/app/actions";
 
 const { auth } = NextAuth(authConfig);
 

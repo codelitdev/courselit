@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, use } from "react";
 import { isEnrolled } from "@ui-lib/utils";
 import { ArrowRight } from "@courselit/icons";
 import { COURSE_PROGRESS_START, ENROLL_BUTTON_TEXT } from "@ui-config/strings";
@@ -22,11 +22,10 @@ import {
 import { getProduct } from "./helpers";
 const { permissions } = UIConstants;
 
-export default function ProductPage({
-    params,
-}: {
-    params: { slug: string; id: string };
+export default function ProductPage(props: {
+    params: Promise<{ slug: string; id: string }>;
 }) {
+    const params = use(props.params);
     const { id } = params;
     const [product, setProduct] = useState<any>(null);
     const { profile } = useContext(ProfileContext);

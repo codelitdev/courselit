@@ -497,7 +497,6 @@ export const QUESTION_BUILDER_CORRECT_ANS_TOOLTIP = "Mark as correct answer";
 export const QUESTION_BUILDER_EXPAND_TOOLTIP = "Expand";
 export const QUESTION_BUILDER_COLLAPSE_TOOLTIP = "Collapse";
 export const LESSON_QUIZ_GRADED_TEXT = "This quiz requires a passing grade";
-export const LESSON_QUIZ_PASSING_GRADE_LABEL = "Passing grade";
 export const QUIZ_VIEWER_EVALUATE_BTN = "Submit";
 export const QUIZ_VIEWER_EVALUATE_BTN_LOADING = "Checking...";
 export const QUIZ_SCORE_PREFIX_MESSAGE = "You scored";

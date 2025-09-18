@@ -14,7 +14,7 @@ const nextConfig = {
     env: {
         version,
     },
-    reactStrictMode: true,
+    reactStrictMode: false,
     typescript: {
         ignoreBuildErrors: true,
     },
@@ -25,14 +25,8 @@ const nextConfig = {
         "@courselit/page-blocks",
         "@courselit/components-library",
     ],
-    experimental: {
-        serverComponentsExternalPackages: [
-            "pug",
-            "liquidjs",
-            "mongoose",
-            "mongodb",
-        ],
-    },
+    serverExternalPackages: ["pug", "liquidjs", "mongoose", "mongodb"],
+    experimental: {},
 };
 
 module.exports = nextConfig;

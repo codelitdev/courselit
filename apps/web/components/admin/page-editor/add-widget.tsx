@@ -5,7 +5,7 @@ import {
     PageTypeBlog,
     PageTypeCommunity,
 } from "@courselit/common-models";
-import widgets from "../../../ui-config/widgets";
+import widgets from "@/ui-config/widgets";
 
 interface WidgetsListProps {
     pageType: PageTypeProduct | PageTypeSite | PageTypeBlog | PageTypeCommunity;
@@ -28,7 +28,7 @@ function AddWidget({ pageType, onSelection, onClose }: WidgetsListProps) {
                             {widgets[item].metadata.displayName}
                         </li>
                     ) : (
-                        <></>
+                        <React.Fragment key={index}></React.Fragment>
                     ),
                 )}
         </ul>

@@ -43,7 +43,7 @@ function isEmptyDoc(description) {
             content: [
                 {
                     type: "paragraph",
-                    attrs: { dir: null, ignoreBidiAutoUpdate: null },
+                    attrs: { dir: null },
                 },
             ],
         }) === JSON.stringify(description)

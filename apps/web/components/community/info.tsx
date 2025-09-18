@@ -99,7 +99,7 @@ export function CommunityInfo({
         <Card>
             <CardHeader className="flex justify-between items-center w-full">
                 <CardTitle className="w-full">
-                    <div class="flex justify-between items-center w-full">
+                    <div className="flex justify-between items-center w-full">
                         <p>{name}</p>
                         <Button
                             variant="ghost"

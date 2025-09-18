@@ -320,8 +320,6 @@ export default function Page() {
                             value={bio}
                             onChange={(event) => setBio(event.target.value)}
                             label={PROFILE_SECTION_DETAILS_BIO}
-                            multiline={true}
-                            maxRows={5}
                         />
                         <div className="mt-2">
                             <Button2

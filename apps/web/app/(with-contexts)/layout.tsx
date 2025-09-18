@@ -2,7 +2,8 @@ import LayoutWithContext from "./layout-with-context";
 import React from "react";
 import { auth } from "@/auth";
 import { headers } from "next/headers";
-import { getAddressFromHeaders, getFullSiteSetup } from "@ui-lib/utils";
+import { getFullSiteSetup } from "@ui-lib/utils";
+import { getAddressFromHeaders } from "@/app/actions";
 import { defaultState } from "@components/default-state";
 import { decode } from "base-64";
 import { ServerConfig, SiteInfo } from "@courselit/common-models";
@@ -12,7 +13,7 @@ export default async function Layout({
 }: {
     children: React.ReactNode;
 }) {
-    const address = getAddressFromHeaders(headers);
+    const address = await getAddressFromHeaders(headers);
     const session = await auth();
 
     const siteSetup = await getFullSiteSetup(address);

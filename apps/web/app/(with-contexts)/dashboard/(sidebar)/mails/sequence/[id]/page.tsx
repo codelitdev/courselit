@@ -10,7 +10,7 @@ import {
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
-import { useContext, useState, useEffect, useCallback } from "react";
+import { useContext, useState, useEffect, useCallback, use } from "react";
 import { Tabbs, useToast } from "@courselit/components-library";
 import EmailAnalytics from "@components/admin/mails/email-analytics";
 import { useSequence } from "@/hooks/use-sequence";
@@ -49,13 +49,12 @@ interface TagWithDetails {
     tag: string;
 }
 
-export default function Page({
-    params,
-}: {
-    params: {
+export default function Page(props: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }) {
+    const params = use(props.params);
     const address = useContext(AddressContext);
     const { id } = params;
     const { sequence, loading, loadSequence } = useSequence();

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Settings, { Link } from "../settings";
 import {
     Image,
@@ -38,6 +38,11 @@ export default function Widget({
     overiddenTheme.structure.page.width =
         settings.maxWidth || theme.theme.structure.page.width;
     overiddenTheme.structure.section.padding.y = "py-4";
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     const linkClasses = "flex w-full";
     const linkAlignment = settings.linkAlignment || defaultLinkAlignment;
@@ -136,11 +141,12 @@ export default function Widget({
                         theme={overiddenTheme}
                         onClick={() => toggleTheme()}
                     >
-                        {nextTheme === "dark" ? (
-                            <Sun className="w-4 h-4" />
-                        ) : (
-                            <Moon className="w-4 h-4" />
-                        )}
+                        {isClient &&
+                            (nextTheme === "dark" ? (
+                                <Sun className="w-4 h-4" />
+                            ) : (
+                                <Moon className="w-4 h-4" />
+                            ))}
                     </Button>
                     {settings.links && (
                         <div className="lg:!block hidden">

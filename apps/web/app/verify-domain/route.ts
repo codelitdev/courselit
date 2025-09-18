@@ -36,7 +36,7 @@ const getDomain = async (hostName: string): Promise<Domain | null> => {
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-    const headerList = headers();
+    const headerList = await headers();
     let domain: Domain | null;
 
     await connectToDatabase();

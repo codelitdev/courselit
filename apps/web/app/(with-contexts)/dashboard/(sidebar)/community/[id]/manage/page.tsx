@@ -16,7 +16,7 @@ import {
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
-import { ChangeEvent, useContext, useEffect, useState } from "react";
+import { ChangeEvent, useContext, useEffect, useState, use } from "react";
 import {
     PaymentPlan,
     Constants,
@@ -74,13 +74,12 @@ import { useMembership } from "@/hooks/use-membership";
 import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
 const { PaymentPlanType: paymentPlanType, MembershipEntityType } = Constants;
 
-export default function Page({
-    params,
-}: {
-    params: {
+export default function Page(props: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }) {
+    const params = use(props.params);
     const { id } = params;
     const breadcrumbs = [
         {
@@ -187,7 +186,7 @@ export default function Page({
         }
         setCategories(community.categories);
         setAutoAcceptMembers(community.autoAcceptMembers);
-        setJoiningReasonText(community.joiningReasonText);
+        setJoiningReasonText(community.joiningReasonText || "");
         setPageId(community.pageId);
         setPaymentPlans(community.paymentPlans);
         setDefaultPaymentPlan(community.defaultPaymentPlan);

@@ -22,14 +22,15 @@ import {
     USER_NAME_SUBHEADER,
     USER_TAGS_SUBHEADER,
 } from "@ui-config/strings";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState, use } from "react";
 
 const breadcrumbs = [
     { label: PAGE_HEADER_ALL_USER, href: "/dashboard/users" },
     { label: PAGE_HEADER_EDIT_USER, href: "#" },
 ];
 
-export default function Page({ params }: { params: { id: string } }) {
+export default function Page(props: { params: Promise<{ id: string }> }) {
+    const params = use(props.params);
     const [userData, setUserData] = useState<UserWithAdminFields>();
     const [_, setEnrolledCourses] = useState([]);
     const [tags, setTags] = useState([]);

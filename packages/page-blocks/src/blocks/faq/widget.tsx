@@ -67,9 +67,8 @@ export default function Widget({
                         <Accordion type="single" collapsible className="w-full">
                             {items.map((item: Item, index: number) => (
                                 <AccordionItem
-                                    key={item.title}
+                                    key={`${item.title}-${index}`}
                                     value={`${item.title}-${index}`}
-                                    // className="border-b-0"
                                 >
                                     <AccordionTrigger>
                                         <Text1 theme={overiddenTheme}>
