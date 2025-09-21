@@ -8076,6 +8076,7 @@ packages:
 
   muri@1.3.0:
     resolution: {integrity: sha512-FiaFwKl864onHFFUV/a2szAl7X0fxVlSKNdhTf+BM8i8goEgYut8u5P9MqQqIYwvaMxjzVESsoEm/2kfkFH1rg==}
+    deprecated: This package is no longer supported. Please use https://www.npmjs.com/package/mongodb-connection-string-url
 
   mz@2.7.0:
     resolution: {integrity: sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q==}
