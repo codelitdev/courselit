@@ -47,7 +47,6 @@ export default function Widget({
         media,
         youtubeLink,
         alignment = "left",
-        style = "normal",
         mediaRadius = 2,
         verticalPadding,
         secondaryButtonAction,
@@ -60,8 +59,10 @@ export default function Widget({
         aspectRatio,
         objectFit,
         maxWidth,
+        background,
     },
     state: { theme },
+    nextTheme,
 }: WidgetProps<Settings>) {
     const overiddenTheme: ThemeStyle = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
@@ -83,14 +84,13 @@ export default function Widget({
     }
 
     return (
-        <Section theme={overiddenTheme} id={cssId}>
-            <div
-                className={clsx(
-                    "flex flex-col gap-4",
-                    direction,
-                    style === "card" ? "px-4 py-4 rounded-md" : "",
-                )}
-            >
+        <Section
+            theme={overiddenTheme}
+            id={cssId}
+            background={background}
+            nextTheme={nextTheme as "dark" | "light"}
+        >
+            <div className={clsx("flex flex-col gap-4", direction)}>
                 {hasHeroGraphic && (
                     <div
                         className={`w-full sm:mb-2 sm:pr-0 sm:pl-0 md:w-1/2 md:mb-0 flex items-center ${

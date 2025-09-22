@@ -26,38 +26,26 @@ export type BackgroundRepeat =
 
 export interface SectionBackgroundOverlay {
     color: string;
+    colorDark?: string;
     blendMode: BlendMode;
     opacity: number;
 }
 
-export interface ColorSectionBackground {
-    type: "color";
-    backgroundColor: string;
+export type SectionBackground = {
+    type: "color" | "image" | "gradient";
+    backgroundColor?: string;
     backgroundColorDark?: string;
-}
-
-export interface ImageSectionBackground {
-    type: "image";
-    overlay: SectionBackgroundOverlay;
-    image: Record<string, unknown>;
-    backgroundImage: string;
-    backgroundSize?: string;
-    backgroundPosition?: string;
-    backgroundRepeat?: BackgroundRepeat;
-    maskImage?: string;
-}
-
-export interface GradientSectionBackground {
-    type: "gradient";
-    backgroundImage: string;
+    backgroundImage?: string;
     backgroundImageDark?: string;
     backgroundSize?: string;
     backgroundPosition?: string;
     backgroundRepeat?: BackgroundRepeat;
     maskImage?: string;
-}
-
-export type SectionBackground =
-    | ColorSectionBackground
-    | ImageSectionBackground
-    | GradientSectionBackground;
+    gradientBackgroundSize?: string;
+    gradientBackgroundPosition?: string;
+    gradientBackgroundRepeat?: BackgroundRepeat;
+    gradientMaskImage?: string;
+    blur?: number;
+    overlay?: SectionBackgroundOverlay;
+    media?: Record<string, unknown>;
+};

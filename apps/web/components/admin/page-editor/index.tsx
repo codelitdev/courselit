@@ -815,31 +815,6 @@ export default function PageEditor({
                     </header>
                 </div>
                 <div className="flex w-full h-[calc(100vh-56px)] mt-14 gap-4 p-4 bg-muted/10">
-                    {leftPaneContent !== "none" && (
-                        <div className="w-[300px] rounded-xl border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm flex flex-col overflow-hidden">
-                            <PanelHeader
-                                title={
-                                    leftPaneContent === "widgets"
-                                        ? EDIT_PAGE_ADD_WIDGET_TITLE
-                                        : leftPaneContent === "editor"
-                                          ? "Edit Block"
-                                          : leftPaneContent === "fonts"
-                                            ? "Fonts"
-                                            : leftPaneContent === "theme"
-                                              ? "Theme"
-                                              : leftPaneContent === "seo"
-                                                ? "SEO"
-                                                : ""
-                                }
-                                onClose={onClose}
-                            />
-                            <ScrollArea className="h-[calc(100%-56px)]">
-                                <div className="py-2 space-y-4">
-                                    {activeSidePaneContent}
-                                </div>
-                            </ScrollArea>
-                        </div>
-                    )}
                     <div
                         className={cn(
                             "rounded-xl border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm",
@@ -876,6 +851,31 @@ export default function PageEditor({
                             </div>
                         </ScrollArea>
                     </div>
+                    {leftPaneContent !== "none" && (
+                        <div className="w-[300px] rounded-xl border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm flex flex-col overflow-hidden">
+                            <PanelHeader
+                                title={
+                                    leftPaneContent === "widgets"
+                                        ? EDIT_PAGE_ADD_WIDGET_TITLE
+                                        : leftPaneContent === "editor"
+                                          ? "Edit Block"
+                                          : leftPaneContent === "fonts"
+                                            ? "Fonts"
+                                            : leftPaneContent === "theme"
+                                              ? "Theme"
+                                              : leftPaneContent === "seo"
+                                                ? "SEO"
+                                                : ""
+                                }
+                                onClose={onClose}
+                            />
+                            <ScrollArea className="h-[calc(100%-56px)]">
+                                <div className="py-2 space-y-4">
+                                    {activeSidePaneContent}
+                                </div>
+                            </ScrollArea>
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -885,8 +885,8 @@ export default function PageEditor({
         <div className="flex flex-col gap-4 p-4">
             <Skeleton className="w-full h-16" />
             <div className="flex gap-4">
-                <Skeleton className="w-1/4 h-90" />
                 <Skeleton className="w-3/4 h-screen" />
+                <Skeleton className="w-1/4 h-90" />
             </div>
         </div>
     );
