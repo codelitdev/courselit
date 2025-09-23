@@ -19,6 +19,7 @@ import {
 } from "./components/ui/accordion";
 import MediaSelector from "./media-selector";
 import { Address, Media, Profile } from "@courselit/common-models";
+import { Lightbulb } from "lucide-react";
 
 interface SectionBackgroundPanelProps {
     value: SectionBackground;
@@ -60,8 +61,15 @@ const BACKGROUND_REPEAT_OPTIONS: { label: string; value: BackgroundRepeat }[] =
 export function SectionBackgroundPanel({
     value = {
         type: "color",
-        backgroundColor: "transparent",
+        backgroundColor: "#ff0000",
         backgroundColorDark: undefined,
+        blur: 5,
+        overlay: {
+            color: "#ff0000",
+            colorDark: undefined,
+            opacity: 3,
+            blendMode: "normal",
+        },
     },
     onChange,
     className,
@@ -107,7 +115,7 @@ export function SectionBackgroundPanel({
         <div className={className}>
             <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="background" className="border-none">
-                    <AccordionTrigger className="py-2 text-sm font-medium hover:no-underline">
+                    <AccordionTrigger className="py-2 font-medium hover:no-underline">
                         Background
                     </AccordionTrigger>
                     <AccordionContent className="space-y-6 pt-2">
@@ -125,7 +133,7 @@ export function SectionBackgroundPanel({
                                         Image
                                     </TabsTrigger>
                                     <TabsTrigger value="gradient">
-                                        Gradient
+                                        Pattern
                                     </TabsTrigger>
                                 </TabsList>
 
@@ -134,7 +142,7 @@ export function SectionBackgroundPanel({
                                     className="space-y-4 mt-6"
                                 >
                                     <ColorSelector
-                                        title="Background Color"
+                                        title="Color"
                                         value={value.backgroundColor || ""}
                                         onChange={(color) =>
                                             handleColorBackgroundChange({
@@ -152,6 +160,7 @@ export function SectionBackgroundPanel({
                                             })
                                         }
                                         allowReset={true}
+                                        description="Optional background color for dark mode"
                                     />
                                 </TabsContent>
 
@@ -251,6 +260,7 @@ export function SectionBackgroundPanel({
                                                         })
                                                     }
                                                     allowReset={true}
+                                                    description="Optional overlay color for dark mode"
                                                 />
                                                 <PageBuilderSlider
                                                     title="Opacity"
@@ -366,7 +376,15 @@ export function SectionBackgroundPanel({
                                                 {/* Mask Image */}
                                                 <div className="space-y-2">
                                                     <Label htmlFor="mask-image">
-                                                        Mask Image (Optional)
+                                                        Mask Image{" "}
+                                                        <a
+                                                            href="https://developer.mozilla.org/en-US/docs/Web/CSS/mask-image"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-muted-foreground text-xs underline"
+                                                        >
+                                                            Learn more
+                                                        </a>
                                                     </Label>
                                                     <Input
                                                         id="mask-image"
@@ -384,7 +402,7 @@ export function SectionBackgroundPanel({
                                                                 },
                                                             )
                                                         }
-                                                        placeholder="https://example.com/mask.svg"
+                                                        placeholder="linear-gradient(black, transparent)"
                                                     />
                                                 </div>
                                             </AccordionContent>
@@ -396,10 +414,32 @@ export function SectionBackgroundPanel({
                                     value="gradient"
                                     className="space-y-4 mt-6"
                                 >
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">
+                                            For advanced users who know CSS.
+                                        </p>
+                                        {/* <p className="text-xs text-muted-foreground">
+                                            You can find patterns on sites like {" "}
+                                            <a 
+                                                href="https://patterncraft.fun" 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="underline"
+                                            >
+                                            PatternCraft</a> and {" "}
+                                            <a
+                                                href="https://magicpattern.design/" 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="underline"
+                                            >
+                                            MagicPattern</a>.
+                                        </p> */}
+                                    </div>
                                     {/* Gradient CSS */}
                                     <div className="space-y-2">
                                         <Label htmlFor="gradient-css">
-                                            Gradient CSS
+                                            Background Image
                                         </Label>
                                         <Input
                                             id="gradient-css"
@@ -412,16 +452,16 @@ export function SectionBackgroundPanel({
                                             }
                                             placeholder="linear-gradient(45deg, #ff0000, #0000ff)"
                                         />
-                                        <p className="text-xs text-muted-foreground">
+                                        {/* <p className="text-xs text-muted-foreground">
                                             Enter CSS gradient syntax (e.g.,
                                             linear-gradient, radial-gradient)
-                                        </p>
+                                        </p> */}
                                     </div>
 
                                     {/* Dark Mode Gradient */}
                                     <div className="space-y-2">
                                         <Label htmlFor="gradient-css-dark">
-                                            Dark Mode Gradient (Optional)
+                                            Dark Mode Background Image
                                         </Label>
                                         <Input
                                             id="gradient-css-dark"
@@ -523,8 +563,15 @@ export function SectionBackgroundPanel({
                                                 {/* Mask Image */}
                                                 <div className="space-y-2">
                                                     <Label htmlFor="gradient-mask-image">
-                                                        Mask Image CSS
-                                                        (Optional)
+                                                        Mask Image{" "}
+                                                        <a
+                                                            href="https://developer.mozilla.org/en-US/docs/Web/CSS/mask-image"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-muted-foreground text-xs underline"
+                                                        >
+                                                            Learn more
+                                                        </a>
                                                     </Label>
                                                     <Input
                                                         id="gradient-mask-image"
@@ -543,12 +590,38 @@ export function SectionBackgroundPanel({
                                                                 } as any,
                                                             )
                                                         }
-                                                        placeholder="clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);"
+                                                        placeholder="linear-gradient(black, transparent)"
                                                     />
                                                 </div>
                                             </AccordionContent>
                                         </AccordionItem>
                                     </Accordion>
+
+                                    <div className="flex items-center gap-1">
+                                        <Lightbulb className="h-8 w-8 text-muted-foreground" />
+                                        <p className="text-xs text-muted-foreground">
+                                            You can find cool patterns on sites
+                                            like{" "}
+                                            <a
+                                                href="https://patterncraft.fun"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="underline"
+                                            >
+                                                PatternCraft
+                                            </a>{" "}
+                                            and{" "}
+                                            <a
+                                                href="https://magicpattern.design/"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="underline"
+                                            >
+                                                MagicPattern
+                                            </a>
+                                            .
+                                        </p>
+                                    </div>
                                 </TabsContent>
                             </Tabs>
                         </div>
