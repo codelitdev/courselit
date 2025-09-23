@@ -142,7 +142,6 @@ export function SectionBackgroundPanel({
                                                     color || "#ffffff",
                                             })
                                         }
-                                        tooltip="Choose the background color for this section"
                                     />
                                     <ColorSelector
                                         title="Dark Mode Color"
@@ -152,7 +151,6 @@ export function SectionBackgroundPanel({
                                                 backgroundColorDark: color,
                                             })
                                         }
-                                        tooltip="Optional background color for dark mode"
                                         allowReset={true}
                                     />
                                 </TabsContent>
@@ -212,7 +210,6 @@ export function SectionBackgroundPanel({
                                                 blur: blur || 0,
                                             })
                                         }
-                                        tooltip="Blur effect to the background image"
                                         unit=""
                                     />
 
@@ -241,7 +238,6 @@ export function SectionBackgroundPanel({
                                                             color,
                                                         })
                                                     }
-                                                    tooltip="Color of the overlay on top of the background image"
                                                 />
                                                 <ColorSelector
                                                     title="Dark Mode Overlay Color"
@@ -254,7 +250,6 @@ export function SectionBackgroundPanel({
                                                             colorDark: color,
                                                         })
                                                     }
-                                                    tooltip="Optional overlay color for dark mode"
                                                     allowReset={true}
                                                 />
                                                 <PageBuilderSlider
@@ -269,7 +264,6 @@ export function SectionBackgroundPanel({
                                                             opacity,
                                                         })
                                                     }
-                                                    tooltip="Opacity of the overlay"
                                                     unit=""
                                                 />
                                                 <CustomSelect
