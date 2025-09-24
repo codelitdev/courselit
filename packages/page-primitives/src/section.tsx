@@ -124,7 +124,7 @@ export const Section: React.FC<SectionProps> = ({
                     )}
                     <div
                         className={cn(
-                            "mx-auto z-3 relative",
+                            "mx-auto z-3 relative overflow-hidden",
                             `lg:${theme?.structure?.page?.width || "max-w-6xl"}`,
                             theme?.structure?.section?.padding?.x || "px-4",
                             theme?.structure?.section?.padding?.y || "py-4",
