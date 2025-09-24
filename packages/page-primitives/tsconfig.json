@@ -3,7 +3,7 @@
     "exclude": ["dist", "build", "node_modules"],
     "compilerOptions": {
         "outDir": "./dist",
-        "lib": ["ES2020"],
+        "lib": ["dom","ES2020"],
         "strict": false,
         "paths": {
             "@/*": ["./src/*"],
