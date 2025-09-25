@@ -41,7 +41,7 @@ const EditableWidget = ({
                 onClick={() => onEditClick && onEditClick(item.widgetId)}
                 className="relative cursor-pointer group"
             >
-                <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity z-30">
                     <div className="text-white/90 border border-white/50 px-3 py-1.5 rounded text-sm font-medium">
                         Click to update
                     </div>

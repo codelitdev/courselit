@@ -5,7 +5,7 @@ import type {
     Media,
     Profile,
 } from "@courselit/common-models";
-import { Theme, ThemeStyle } from "@courselit/page-models";
+import { Theme, ThemeStyle, SectionBackground } from "@courselit/page-models";
 import Settings from "./settings";
 import {
     AdminWidgetPanel,
@@ -27,6 +27,7 @@ import {
     Checkbox,
     VerticalPaddingSelector,
     MaxWidthSelector,
+    SectionBackgroundPanel,
 } from "@courselit/components-library";
 
 import { isVideo } from "@courselit/utils";
@@ -75,7 +76,6 @@ export default function AdminWidget({
     const [alignment, setAlignment] = useState(settings.alignment || "left");
 
     const [media, setMedia] = useState<Partial<Media>>(settings.media || {});
-    const [style, setStyle] = useState(settings.style || "normal");
     const [secondaryButtonAction, setSecondaryButtonAction] = useState(
         settings.secondaryButtonAction,
     );
@@ -107,6 +107,9 @@ export default function AdminWidget({
     const [maxWidth, setMaxWidth] = useState<
         ThemeStyle["structure"]["page"]["width"]
     >(settings.maxWidth);
+    const [background, setBackground] = useState<SectionBackground>(
+        settings.background,
+    );
 
     const onSettingsChanged = () =>
         onChange({
@@ -117,7 +120,6 @@ export default function AdminWidget({
             youtubeLink,
             media,
             alignment,
-            style,
             mediaRadius: mediaBorderRadius,
             verticalPadding,
             secondaryButtonAction,
@@ -130,6 +132,7 @@ export default function AdminWidget({
             aspectRatio,
             objectFit,
             maxWidth,
+            background,
         });
 
     useEffect(() => {
@@ -141,7 +144,6 @@ export default function AdminWidget({
         buttonCaption,
         youtubeLink,
         alignment,
-        style,
         media,
         mediaBorderRadius,
         verticalPadding,
@@ -155,6 +157,7 @@ export default function AdminWidget({
         aspectRatio,
         objectFit,
         maxWidth,
+        background,
     ]);
 
     return (
@@ -313,15 +316,6 @@ export default function AdminWidget({
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Design" value="design">
                 <Select
-                    title="Style"
-                    value={style}
-                    options={[
-                        { label: "Normal", value: "normal" },
-                        { label: "Card", value: "card" },
-                    ]}
-                    onChange={(value: "card" | "normal") => setStyle(value)}
-                />
-                <Select
                     title="Alignment"
                     value={alignment}
                     options={[
@@ -349,13 +343,13 @@ export default function AdminWidget({
                     min={3}
                     max={8}
                 />
-                <PageBuilderSlider
+                {/* <PageBuilderSlider
                     title="Description font size"
                     value={descriptionFontSize}
                     onChange={setDescriptionFontSize}
                     min={0}
                     max={6}
-                />
+                /> */}
                 <PageBuilderSlider
                     title="Media border radius"
                     value={mediaBorderRadius}
@@ -373,6 +367,12 @@ export default function AdminWidget({
                         theme.theme.structure.section.padding.y
                     }
                     onChange={setVerticalPadding}
+                />
+                <SectionBackgroundPanel
+                    value={background}
+                    onChange={setBackground}
+                    profile={profile}
+                    address={address}
                 />
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Advanced" value="advanced">

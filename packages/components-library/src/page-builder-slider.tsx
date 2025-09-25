@@ -14,6 +14,7 @@ export default function PageBuilderSlider({
     tooltip,
     className,
     allowsReset = false,
+    unit = "px",
 }: {
     title: string;
     min: number;
@@ -23,6 +24,7 @@ export default function PageBuilderSlider({
     tooltip?: string;
     className?: string;
     allowsReset?: boolean;
+    unit?: string;
 }) {
     return (
         <div className={`flex flex-col gap-2 ${className}`}>
@@ -54,10 +56,10 @@ export default function PageBuilderSlider({
                                     );
                                     onChange(clamped);
                                 }}
-                                className="h-7 w-16 rounded-md border px-2 py-1 text-xs text-center bg-gray-50"
+                                className="h-7 w-16 rounded-md border border-input bg-background px-2 py-1 text-xs text-center"
                             />
                             <span className="text-xs text-muted-foreground">
-                                px
+                                {unit}
                             </span>
                         </div>
                     </div>
