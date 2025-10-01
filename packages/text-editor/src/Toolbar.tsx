@@ -1,8 +1,8 @@
 import React, { FC } from "react";
-import { WysiwygToolbar } from "@remirror/react-ui";
+import { Toolbar as RemirrorToolbar } from "@remirror/react-ui";
 
 const Toolbar: FC = () => {
-    return <WysiwygToolbar />;
+    return <RemirrorToolbar></RemirrorToolbar>;
 };
 
 export default Toolbar;

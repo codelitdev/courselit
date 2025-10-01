@@ -73,11 +73,6 @@
             @apply list-decimal ml-6;
         }
 
-        /* Remove duplicate rule */
-        /* :is(ol) {
-            @apply list-decimal;
-        } */
-
         /* Remove margin from last paragraph in divs */
         :is(div) > p:last-of-type {
             @apply mb-0;
@@ -114,7 +109,7 @@
 
         /* Link styling */
         :is(a) {
-            @apply underline decoration-dotted decoration-2 underline-offset-2 transition-all duration-200 hover:decoration-solid;
+            @apply underline decoration-2 underline-offset-2 transition-all duration-200 hover:decoration-dotted;
         }
 
         /* Better spacing for content sections */

@@ -53,8 +53,9 @@ const markMap: MarkMap = {
     italic: "em",
     bold: "strong",
     code: "code",
-    link: createLinkHandler({ target: "_blank" }),
+    link: createLinkHandler({ target: "_blank", rel: "noopener noreferrer" }),
     underline: "u",
+    strike: "strike",
 };
 
 interface RendererProps {
