@@ -32,6 +32,7 @@ const typeMap: MarkMap = {
     text: TextHandler,
     taskList: "ul",
     taskListItem: "li",
+    // add links to headings for table of contents navigation
     heading: ({ node, children }) => {
         if (!node.content) {
             return null;
