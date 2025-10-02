@@ -2,6 +2,7 @@ import React, { FC } from "react";
 import {
     FormattingButtonGroup,
     HeadingLevelButtonGroup,
+    InsertHorizontalRuleButton,
     ListButtonGroup,
     RedoButton,
     Toolbar as RemirrorToolbar,
@@ -19,6 +20,7 @@ const Toolbar: FC = () => {
                 <ToggleBlockquoteButton />
             </FormattingButtonGroup>
             <ListButtonGroup />
+            <InsertHorizontalRuleButton />
         </RemirrorToolbar>
     );
 };

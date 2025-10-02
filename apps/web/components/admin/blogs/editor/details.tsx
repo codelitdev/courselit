@@ -18,6 +18,7 @@ import {
     TOAST_TITLE_ERROR,
     FORM_FIELD_FEATURED_IMAGE,
     TOAST_TITLE_SUCCESS,
+    TEXT_EDITOR_PLACEHOLDER,
 } from "@/ui-config/strings";
 import { MIMETYPE_IMAGE } from "@/ui-config/constants";
 import { Media, Profile } from "@courselit/common-models";
@@ -148,6 +149,7 @@ export default function Details({ id }: DetailsProps) {
                     refresh={refreshDetails}
                     onChange={(state: any) => setDescription(state)}
                     url={address.backend}
+                    placeholder={TEXT_EDITOR_PLACEHOLDER}
                 />
                 <div>
                     <Button type="submit" disabled={loading}>

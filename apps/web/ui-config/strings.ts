@@ -644,3 +644,4 @@ export const PRODUCT_EMPTY_WARNING =
 export const BLOG_UPDATED_PREFIX = "Updated";
 export const HEADER_HELP = "Help";
 export const CHECKOUT_PAGE_ORDER_SUMMARY = "Order summary";
+export const TEXT_EDITOR_PLACEHOLDER = "Type here...";

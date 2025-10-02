@@ -80,7 +80,7 @@
 
         /* Code block styling */
         :is(pre) {
-            @apply mb-6 mt-4 p-4 bg-gray-50 rounded-lg;
+            @apply mb-6 mt-4 p-4 bg-accent rounded-lg;
 
             :is(code) {
                 @apply !bg-transparent !px-0 !py-0 !rounded-none !border-none !text-base;
@@ -89,7 +89,7 @@
 
         /* Blockquote with better spacing */
         :is(blockquote) {
-            @apply italic border-l-4 border-slate-200 text-slate-500 pl-6 py-2 mb-6 mt-4;
+            @apply italic border-l-4 border-border text-muted-foreground pl-6 py-2 mb-6 mt-4;
             line-height: 1.6;
 
             :is(p) {
@@ -99,7 +99,7 @@
 
         /* Inline code styling */
         :is(code) {
-            @apply bg-gray-100 px-2 py-1 rounded border border-gray-200 text-sm;
+            @apply bg-muted px-2 py-1 rounded border border-border text-sm;
         }
 
         /* Image spacing for better visual flow */
@@ -123,12 +123,54 @@
         }
 
         :is(th, td) {
-            @apply p-3 border border-gray-200;
+            @apply p-3 border border-border;
         }
 
         /* Horizontal rule spacing */
         :is(hr) {
-            @apply my-8 border-gray-200;
+            @apply my-8 border-border;
+        }
+
+        .MuiStack-root {
+            @apply bg-background flex justify-center;
+
+            .MuiBox-root {
+                @apply bg-transparent;
+
+                :is(button) {
+                    @apply border border-border hover:cursor-pointer;
+
+                    :is(svg) {
+                        fill: hsl(var(--foreground));
+                    }
+                }
+            }
+        }
+
+        .ProseMirror {
+            @apply border border-border outline-none overflow-y-auto;
+        }
+
+        .ProseMirror-gapcursor:after {
+            border-top-color: hsl(var(--foreground));
+        }
+    }
+}
+
+.MuiPopper-root {
+    .MuiStack-root {
+        @apply bg-background;
+
+        .MuiBox-root {
+            @apply bg-transparent;
+
+            :is(button) {
+                @apply border border-border hover:cursor-pointer;
+
+                :is(svg) {
+                    fill: hsl(var(--foreground));
+                }
+            }
         }
     }
 }

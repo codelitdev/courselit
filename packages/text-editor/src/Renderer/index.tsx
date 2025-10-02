@@ -22,7 +22,6 @@ const typeMap: MarkMap = {
     codeMirror: CodeMirrorRenderer,
     doc: Doc,
     hardBreak: "br",
-    // heading: Heading,
     horizontalRule: "hr",
     iframe: createIFrameHandler(),
     image: "img",

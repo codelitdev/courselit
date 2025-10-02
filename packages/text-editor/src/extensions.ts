@@ -115,7 +115,9 @@ export const getExtensions = (placeholder, url) => () => [
         enableResizing: true,
         uploadHandler: getUploadHandler(url),
     }),
-    new DropCursorExtension(),
+    new DropCursorExtension({
+        color: "hsl(var(--foreground))",
+    }),
     new CodeMirrorExtension({
         extensions: [basicSetup, oneDark],
     }),
