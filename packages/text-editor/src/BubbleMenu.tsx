@@ -7,7 +7,7 @@ import FloatingLinkCommandGroup from "./FloatingLinkCommandGroup";
  */
 const BubbleMenu: FC = () => {
     return (
-        <FloatingToolbar>
+        <FloatingToolbar style={{ zIndex: 20 }}>
             <FormattingButtonGroup />
             <FloatingLinkCommandGroup />
         </FloatingToolbar>

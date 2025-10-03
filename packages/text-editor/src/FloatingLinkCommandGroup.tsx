@@ -214,11 +214,10 @@ const FloatingLinkToolbar = () => {
 
             <FloatingWrapper
                 positioner="always"
-                placement="bottom"
+                placement="auto"
                 enabled={isEditing}
             >
                 <DelayAutoFocusInput
-                    style={{ zIndex: 20 }}
                     autoFocus
                     placeholder="Enter link..."
                     onChange={(event: ChangeEvent<HTMLInputElement>) =>

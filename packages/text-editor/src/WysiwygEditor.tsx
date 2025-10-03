@@ -22,6 +22,7 @@ import Toolbar from "./Toolbar";
 import { ReactEditorProps } from "./types";
 import emptyDoc from "./empty-doc";
 import { getExtensions } from "./extensions";
+import { i18nFormat } from "@remirror/i18n";
 
 export interface WysiwygEditorProps {
     onChange: (json: unknown) => void;
@@ -114,13 +115,27 @@ const WysiwygEditor: WysiwygEditorType = Object.assign(
                         onChangeFunc(data);
                     }}
                     editable={editable}
+                    i18nFormat={i18nFormat}
                     {...rest}
                 >
-                    {editable && showToolbar && <Toolbar />}
-                    <EditorComponent />
-                    <BubbleMenu />
-                    <TableComponents />
-                    {children}
+                    <div style={{ position: "relative" }}>
+                        {editable && showToolbar && (
+                            <div
+                                style={{
+                                    position: "sticky",
+                                    top: 0,
+                                    left: 0,
+                                    zIndex: 10,
+                                }}
+                            >
+                                <Toolbar />
+                            </div>
+                        )}
+                        <EditorComponent />
+                        <BubbleMenu />
+                        <TableComponents />
+                        {children}
+                    </div>
                 </Remirror>
             </ThemeProvider>
         );

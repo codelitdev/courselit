@@ -38,6 +38,7 @@ import {
     MANAGE_COURSES_PAGE_HEADING,
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
+    TEXT_EDITOR_PLACEHOLDER,
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
 import useProduct from "@/hooks/use-product";
@@ -219,6 +220,7 @@ export default function LessonPage() {
                                 setTextContent(state);
                             }}
                             url={address.backend}
+                            placeholder={TEXT_EDITOR_PLACEHOLDER}
                         />
                         {errors.content && (
                             <p className="text-sm text-red-500">

@@ -9,6 +9,7 @@ export interface WysiwygEditorProps {
     editable?: boolean;
     refresh?: number;
     url: string;
+    placeholder?: string;
 }
 
 export default function Editor({
@@ -18,6 +19,7 @@ export default function Editor({
     editable,
     refresh,
     url,
+    placeholder,
 }: WysiwygEditorProps) {
     return (
         <div className="text-editor">
@@ -29,6 +31,7 @@ export default function Editor({
                 refresh={refresh}
                 fontFamily={"inherit"}
                 url={url}
+                placeholder={placeholder}
             />
         </div>
     );
