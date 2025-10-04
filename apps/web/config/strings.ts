@@ -134,6 +134,7 @@ export const responses = {
     cannot_delete_last_category: "Cannot delete the last category",
     lead_magnet_invalid_settings:
         "Product must have exactly one free payment plan to enable lead magnet",
+    certificate_invalid_settings: "Certificate can only be enabled for courses",
 
     // api responses
     digital_download_no_files:

@@ -3,7 +3,11 @@
 import { useContext, useEffect, useState, use } from "react";
 import { isEnrolled } from "@ui-lib/utils";
 import { ArrowRight } from "@courselit/icons";
-import { COURSE_PROGRESS_START, ENROLL_BUTTON_TEXT } from "@ui-config/strings";
+import {
+    COURSE_PROGRESS_START,
+    ENROLL_BUTTON_TEXT,
+    BTN_VIEW_CERTIFICATE,
+} from "@ui-config/strings";
 import { checkPermission } from "@courselit/utils";
 import { Profile, UIConstants } from "@courselit/common-models";
 import {
@@ -20,6 +24,7 @@ import {
     SiteInfoContext,
 } from "@components/contexts";
 import { getProduct } from "./helpers";
+import { getUserProfile } from "@/app/(with-contexts)/helpers";
 const { permissions } = UIConstants;
 
 export default function ProductPage(props: {
@@ -28,9 +33,10 @@ export default function ProductPage(props: {
     const params = use(props.params);
     const { id } = params;
     const [product, setProduct] = useState<any>(null);
-    const { profile } = useContext(ProfileContext);
+    const { profile, setProfile } = useContext(ProfileContext);
     const siteInfo = useContext(SiteInfoContext);
     const address = useContext(AddressContext);
+    const [progress, setProgress] = useState<any>(null);
 
     useEffect(() => {
         if (id) {
@@ -39,6 +45,19 @@ export default function ProductPage(props: {
             });
         }
     }, [id]);
+
+    useEffect(() => {
+        if (product) {
+            getUserProfile(address.backend).then((profile) => {
+                setProfile(profile);
+                setProgress(
+                    profile.purchases?.find(
+                        (purchase) => purchase.courseId === product.courseId,
+                    ),
+                );
+            });
+        }
+    }, [product]);
 
     if (!profile) {
         return null;
@@ -51,6 +70,11 @@ export default function ProductPage(props: {
     return (
         <div className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
             <h1 className="text-4xl font-semibold mb-8">{product.title}</h1>
+            {progress?.certificateId && (
+                <Link href={`/certificate/${progress.certificateId}`}>
+                    <Button2>{BTN_VIEW_CERTIFICATE}</Button2>
+                </Link>
+            )}
             {!isEnrolled(product.courseId, profile as Profile) &&
                 checkPermission(profile.permissions ?? [], [
                     permissions.enrollInCourse,

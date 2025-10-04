@@ -15,7 +15,7 @@ import {
     InternalUser,
     UserSegment,
 } from "@courselit/common-logic";
-import { User } from "@courselit/common-models";
+import { Course, User } from "@courselit/common-models";
 import mongoose from "mongoose";
 import {
     Constants,
@@ -50,6 +50,10 @@ import {
     InternalMembership,
 } from "@courselit/common-logic";
 import { getPlanPrice } from "@courselit/utils";
+import CertificateModel from "@models/Certificate";
+import CertificateTemplateModel, {
+    CertificateTemplate,
+} from "@models/CertificateTemplate";
 
 const removeAdminFieldsFromUserObject = (
     user: User & { _id: mongoose.Types.ObjectId },
@@ -859,3 +863,53 @@ async function addProductToUser({
         await (user as any).save();
     }
 }
+
+export const getCertificate = async (
+    certificateId: string,
+    ctx: GQLContext,
+) => {
+    const certificate = await CertificateModel.findOne({
+        domain: ctx.subdomain._id,
+        certificateId,
+    });
+
+    if (!certificate) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const user = (await UserModel.findOne({
+        domain: ctx.subdomain._id,
+        userId: certificate.userId,
+    }).lean()) as unknown as User;
+
+    const course = (await CourseModel.findOne({
+        domain: ctx.subdomain._id,
+        courseId: certificate.courseId,
+    }).lean()) as unknown as Course;
+
+    const creator = (await UserModel.findOne({
+        domain: ctx.subdomain._id,
+        userId: course?.creatorId,
+    }).lean()) as unknown as User;
+
+    const template = (await CertificateTemplateModel.findOne({
+        domain: ctx.subdomain._id,
+        courseId: certificate.courseId,
+    }).lean()) as unknown as CertificateTemplate;
+
+    return {
+        certificateId: certificate.certificateId,
+        title: template?.title || "Certificate of Completion",
+        subtitle: template?.subtitle || "This certificate is awarded to",
+        description: template?.description || "for completing the course.",
+        signatureImage: template?.signatureImage || null,
+        signatureName: template?.signatureName || creator?.name,
+        signatureDesignation: template?.signatureDesignation || null,
+        logo: ctx.subdomain.settings?.logo || null,
+        productTitle: course?.title,
+        userName: user?.name || user?.email,
+        createdAt: certificate.createdAt,
+        userImage: user?.avatar || null,
+        productPageId: course?.pageId || null,
+    };
+};

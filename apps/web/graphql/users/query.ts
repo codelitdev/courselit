@@ -16,6 +16,7 @@ import {
     inviteCustomer,
     getUserContent,
     getMembershipStatus,
+    getCertificate,
 } from "./logic";
 import GQLContext from "../../models/GQLContext";
 import { MembershipEntityType } from "@courselit/common-models";
@@ -114,6 +115,17 @@ const queries = {
             }: { entityId: string; entityType: MembershipEntityType },
             context: GQLContext,
         ) => getMembershipStatus({ entityId, entityType, ctx: context }),
+    },
+    getCertificate: {
+        type: types.certificateType,
+        args: {
+            certificateId: { type: GraphQLString },
+        },
+        resolve: (
+            _: any,
+            { certificateId }: { certificateId: string },
+            context: GQLContext,
+        ) => getCertificate(certificateId, context),
     },
 };
 

@@ -4,6 +4,7 @@ export interface Progress {
     downloaded?: boolean;
     accessibleGroups: string[];
     lastDripAt?: Date;
+    certificateId?: string;
     createdAt?: Date;
     updatedAt?: Date;
 }

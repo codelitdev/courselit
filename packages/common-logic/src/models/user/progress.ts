@@ -7,6 +7,8 @@ export const ProgressSchema = new mongoose.Schema<Progress>(
         completedLessons: { type: [String] },
         downloaded: { type: Boolean },
         accessibleGroups: { type: [String] },
+        lastDripAt: { type: Date },
+        certificateId: { type: String },
     },
     {
         timestamps: true,

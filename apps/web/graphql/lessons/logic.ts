@@ -24,6 +24,8 @@ import LessonEvaluation from "../../models/LessonEvaluation";
 import { checkPermission } from "@courselit/utils";
 import { recordActivity } from "../../lib/record-activity";
 import { InternalCourse } from "@courselit/common-logic";
+import CertificateModel from "../../models/Certificate";
+import { error } from "@/services/logger";
 
 const { permissions, quiz } = constants;
 
@@ -151,10 +153,10 @@ export const createLesson = async (
         });
 
         course.lessons.push(lesson.lessonId);
-        const group = course.groups.find(
+        const group = course.groups?.find(
             (group) => group._id === lessonData.groupId,
         );
-        group.lessonsOrder.push(lesson.lessonId);
+        group?.lessonsOrder.push(lesson.lessonId);
         await (course as any).save();
 
         return lesson;
@@ -290,9 +292,9 @@ export const markLessonCompleted = async (
 
     if (await isPartOfDripGroup(lesson, ctx.subdomain._id)) {
         const groupIsNotInAccessibleGroups =
-            ctx.user.purchases
-                .find((x) => x.courseId === lesson.courseId)
-                .accessibleGroups.indexOf(lesson.groupId) === -1;
+            ctx.user.purchases[enrolledItemIndex].accessibleGroups.indexOf(
+                lesson.groupId,
+            ) === -1;
         if (groupIsNotInAccessibleGroups) {
             throw new Error(responses.drip_not_released);
         }
@@ -326,12 +328,15 @@ export const markLessonCompleted = async (
         },
     });
 
-    await recordCourseCompleted(lesson.courseId, ctx);
+    await checkAndRecordCourseCompletion(lesson.courseId, ctx);
 
     return true;
 };
 
-const recordCourseCompleted = async (courseId: string, ctx: GQLContext) => {
+const checkAndRecordCourseCompletion = async (
+    courseId: string,
+    ctx: GQLContext,
+) => {
     const course = await CourseModel.findOne({ courseId });
     if (!course) {
         throw new Error(responses.item_not_found);
@@ -339,7 +344,7 @@ const recordCourseCompleted = async (courseId: string, ctx: GQLContext) => {
 
     const isCourseCompleted = course.lessons.every((lessonId) => {
         const progress = ctx.user.purchases.find(
-            (progress: Progress) => progress.courseId === courseId,
+            (progress: Progress) => progress.courseId === course.courseId,
         );
         if (!progress) {
             return false;
@@ -348,7 +353,7 @@ const recordCourseCompleted = async (courseId: string, ctx: GQLContext) => {
     });
 
     if (!isCourseCompleted) {
-        return;
+        return false;
     }
 
     await recordActivity({
@@ -356,6 +361,58 @@ const recordCourseCompleted = async (courseId: string, ctx: GQLContext) => {
         userId: ctx.user.userId,
         type: Constants.ActivityType.COURSE_COMPLETED,
         entityId: courseId,
+    });
+
+    if (course.certificate) {
+        await issueCertificate(course, ctx);
+    }
+
+    return true;
+};
+
+const issueCertificate = async (
+    course: InternalCourse,
+    ctx: GQLContext,
+): Promise<void> => {
+    const existingCertificate = await CertificateModel.findOne({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+        userId: ctx.user.userId,
+    });
+    if (existingCertificate) {
+        return;
+    }
+
+    const certificate = await CertificateModel.create({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+        userId: ctx.user.userId,
+    });
+
+    const enrolledItemIndex = ctx.user.purchases.findIndex(
+        (progress: Progress) => progress.courseId === course.courseId,
+    );
+
+    if (enrolledItemIndex === -1) {
+        error(
+            `Error in issuing certificate due to course not found in user's purchases`,
+            {
+                courseId: course.courseId,
+                userId: ctx.user.userId,
+            },
+        );
+        return;
+    }
+
+    ctx.user.purchases[enrolledItemIndex].certificateId =
+        certificate.certificateId;
+    await (ctx.user as any).save();
+
+    await recordActivity({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        type: Constants.ActivityType.CERTIFICATE_ISSUED,
+        entityId: course.courseId,
     });
 };
 

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Trash2, Loader2 } from "lucide-react";
+import Link from "next/link";
 
 import {
     AlertDialog,
@@ -24,6 +25,7 @@ import {
     APP_MESSAGE_COURSE_SAVED,
     BTN_DELETE_COURSE,
     COURSE_SETTINGS_CARD_HEADER,
+    CUSTOMIZE_CERTIFICATE_TEMPLATE,
     DANGER_ZONE_HEADER,
     MANAGE_COURSES_PAGE_HEADING,
     PRICING_EMAIL,
@@ -60,6 +62,7 @@ import {
     ProductPriceType,
     Profile,
     Constants,
+    UIConstants,
 } from "@courselit/common-models";
 import { COURSE_TYPE_DOWNLOAD, MIMETYPE_IMAGE } from "@ui-config/constants";
 import useProduct from "@/hooks/use-product";
@@ -126,6 +129,13 @@ const MUTATIONS = {
             }
         }
     `,
+    UPDATE_CERTIFICATE: `
+        mutation UpdateCertificate($courseId: String!, $certificate: Boolean!) {
+            updateCourse(courseData: { id: $courseId, certificate: $certificate }) {
+                courseId
+            }
+        }
+    `,
 };
 
 const updateCourse = async (query: string, variables: any, address: string) => {
@@ -183,6 +193,7 @@ export default function SettingsPage() {
         costType: ProductPriceType;
         cost: number;
         leadMagnet: boolean;
+        certificate: boolean;
     }>({
         name: "",
         description: TextEditorEmptyDoc,
@@ -192,6 +203,7 @@ export default function SettingsPage() {
         costType: PRICING_FREE,
         cost: 0,
         leadMagnet: false,
+        certificate: false,
     });
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
@@ -235,6 +247,7 @@ export default function SettingsPage() {
                     (PRICING_FREE.toUpperCase() as ProductPriceType),
                 cost: product?.cost || 0,
                 leadMagnet: product?.leadMagnet || false,
+                certificate: product?.certificate || false,
             });
             setRefresh(refresh + 1);
             setPaymentPlans(product?.paymentPlans || []);
@@ -266,6 +279,10 @@ export default function SettingsPage() {
             leadMagnet: {
                 mutation: MUTATIONS.UPDATE_LEAD_MAGNET,
                 variables: { leadMagnet: value },
+            },
+            certificate: {
+                mutation: MUTATIONS.UPDATE_CERTIFICATE,
+                variables: { certificate: value },
             },
         }[field];
 
@@ -333,58 +350,6 @@ export default function SettingsPage() {
             toast,
         );
     };
-
-    // const handleCostTypeChange = async (val: string) => {
-    //     setFormData((prev) => ({
-    //         ...prev,
-    //         costType: val as ProductPriceType,
-    //     }));
-
-    //     if (!product?.courseId) return;
-
-    //     await withErrorHandling(
-    //         () =>
-    //             updateCourse(
-    //                 MUTATIONS.UPDATE_COST_TYPE,
-    //                 {
-    //                     id: product.courseId,
-    //                     costType: val,
-    //                 },
-    //                 address.backend,
-    //             ),
-    //         setLoading,
-    //         toast,
-    //     );
-    // };
-
-    // const debouncedUpdateCost = useCallback(
-    //     debounce((value: number, productId: string) => {
-    //         withErrorHandling(
-    //             () =>
-    //                 updateCourse(
-    //                     MUTATIONS.UPDATE_COST,
-    //                     {
-    //                         id: productId,
-    //                         cost: value,
-    //                     },
-    //                     address.backend,
-    //                 ),
-    //             setLoading,
-    //             toast,
-    //         );
-    //     }, 1000), // 1 second delay
-    //     [address.backend, toast], // Dependencies
-    // );
-
-    // const handleCostChange = (value: number) => {
-    //     setFormData((prev) => ({
-    //         ...prev,
-    //         cost: value,
-    //     }));
-
-    //     if (!product?.courseId) return;
-    //     debouncedUpdateCost(value, product.courseId);
-    // };
 
     const options: {
         label: string;
@@ -741,6 +706,30 @@ export default function SettingsPage() {
                             disabled={!formData.isPublished}
                         />
                     </div>
+                    {product?.type?.toLowerCase() === UIConstants.COURSE_TYPE_COURSE && (
+                        <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                                <Label className="text-base font-semibold">
+                                    Certificate
+                                </Label>
+                                <p className="text-sm text-muted-foreground">
+                                    Enable certificate for this course. {product?.certificate && (
+                                        <Link href={`/dashboard/product/${productId}/manage/certificate`}>
+                                            <span className="underline text-black">
+                                                {CUSTOMIZE_CERTIFICATE_TEMPLATE}
+                                            </span>
+                                        </Link>
+                                    )}
+                                </p>
+                            </div>
+                            <Switch
+                                checked={formData.certificate}
+                                onCheckedChange={() =>
+                                    handleSwitchChange("certificate")
+                                }
+                            />
+                        </div>
+                    )}
                 </div>
 
                 <Separator />

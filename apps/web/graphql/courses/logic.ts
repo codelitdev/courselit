@@ -129,10 +129,10 @@ export const getCourse = async (
     ctx: GQLContext,
     asGuest: boolean = false,
 ) => {
-    const course: InternalCourse | null = await CourseModel.findOne({
+    const course: InternalCourse | null = (await CourseModel.findOne({
         courseId: id,
         domain: ctx.subdomain._id,
-    }).lean();
+    }).lean()) as unknown as InternalCourse | null;
 
     if (!course) {
         throw new Error(responses.item_not_found);
@@ -150,20 +150,6 @@ export const getCourse = async (
     }
 
     if (course.published) {
-        // if (
-        //     [constants.course, constants.download].includes(
-        //         course.type as
-        //             | typeof constants.course
-        //             | typeof constants.download,
-        //     )
-        // ) {
-        //     const { nextLesson } = await getPrevNextCursor(
-        //         course.courseId,
-        //         ctx.subdomain._id,
-        //     );
-        //     (course as any).firstLesson = nextLesson;
-        // }
-        // course.groups = accessibleGroups;
         return await formatCourse(course.courseId, ctx);
     } else {
         return null;

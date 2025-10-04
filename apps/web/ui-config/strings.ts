@@ -645,3 +645,5 @@ export const BLOG_UPDATED_PREFIX = "Updated";
 export const HEADER_HELP = "Help";
 export const CHECKOUT_PAGE_ORDER_SUMMARY = "Order summary";
 export const TEXT_EDITOR_PLACEHOLDER = "Type here...";
+export const CUSTOMIZE_CERTIFICATE_TEMPLATE = "Customize";
+export const BTN_VIEW_CERTIFICATE = "View certificate";

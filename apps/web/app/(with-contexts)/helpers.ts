@@ -10,20 +10,21 @@ export const getUserProfile = async (address: string) => {
             bio,
             permissions,
             purchases {
-                courseId,
-                completedLessons,
+                courseId
+                completedLessons
                 accessibleGroups
+                certificateId
             }
             avatar {
-                    mediaId,
-                    originalFileName,
-                    mimeType,
-                    size,
-                    access,
-                    file,
-                    thumbnail,
-                    caption
-                },
+                mediaId,
+                originalFileName,
+                mimeType,
+                size,
+                access,
+                file,
+                thumbnail,
+                caption
+            },
             }
         }
         `;

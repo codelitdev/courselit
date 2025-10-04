@@ -21,7 +21,7 @@ import {
 import { useToast } from "@courselit/components-library";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { signIn } from "next-auth/react";
-import { FetchBuilder } from "@courselit/utils";
+import { getUserProfile } from "@/app/(with-contexts)/helpers";
 
 const loginFormSchema = z.object({
     email: z.string().email("Invalid email address"),
@@ -115,52 +115,11 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                     description: `Can't sign you in at this time`,
                 });
             } else {
-                await getProfile();
+                await getUserProfile(address.backend);
             }
         } finally {
             setLoading(false);
         }
-    };
-
-    // TODO: refactor this to use the getUserProfile function from helpers.ts
-    const getProfile = async () => {
-        const query = `
-            { profile: getUser {
-                name,
-                id,
-                email,
-                userId,
-                bio,
-                permissions,
-                purchases {
-                    courseId,
-                    completedLessons,
-                    accessibleGroups
-                }
-                avatar {
-                        mediaId,
-                        originalFileName,
-                        mimeType,
-                        size,
-                        access,
-                        file,
-                        thumbnail,
-                        caption
-                    },
-                }
-            }
-            `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            const response = await fetch.exec();
-            if (response.profile) {
-                setProfile(response.profile);
-            }
-        } catch (e) {}
     };
 
     const handleNameSubmit = () => {
