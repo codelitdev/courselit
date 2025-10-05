@@ -668,6 +668,10 @@ async function getUserContentInternal(ctx: GQLContext, user: User) {
                                 progress.courseId === course.courseId,
                         )?.completedLessons.length,
                         featuredImage: course.featuredImage,
+                        certificateId: user.purchases.find(
+                            (progress: Progress) =>
+                                progress.courseId === course.courseId,
+                        )?.certificateId,
                     },
                 });
             }
@@ -868,15 +872,15 @@ export const getCertificate = async (
     certificateId: string,
     ctx: GQLContext,
 ) => {
-    return await getCertificateInternal(certificateId, ctx.subdomain._id);
+    return await getCertificateInternal(certificateId, ctx.subdomain);
 };
 
 export const getCertificateInternal = async (
     certificateId: string,
-    domain: mongoose.Types.ObjectId,
+    domain: Domain,
 ) => {
     const certificate = await CertificateModel.findOne({
-        domain,
+        domain: domain._id,
         certificateId,
     });
 
@@ -885,22 +889,22 @@ export const getCertificateInternal = async (
     }
 
     const user = (await UserModel.findOne({
-        domain,
+        domain: domain._id,
         userId: certificate.userId,
     }).lean()) as unknown as User;
 
     const course = (await CourseModel.findOne({
-        domain,
+        domain: domain._id,
         courseId: certificate.courseId,
     }).lean()) as unknown as Course;
 
     const creator = (await UserModel.findOne({
-        domain,
+        domain: domain._id,
         userId: course?.creatorId,
     }).lean()) as unknown as User;
 
     const template = (await CertificateTemplateModel.findOne({
-        domain,
+        domain: domain._id,
         courseId: certificate.courseId,
     }).lean()) as unknown as CertificateTemplate;
 
@@ -912,7 +916,7 @@ export const getCertificateInternal = async (
         signatureImage: template?.signatureImage || null,
         signatureName: template?.signatureName || creator?.name,
         signatureDesignation: template?.signatureDesignation || null,
-        logo: template?.logo || ctx.subdomain.settings?.logo || null,
+        logo: template?.logo || domain.settings?.logo || null,
         productTitle: course?.title,
         userName: user?.name || user?.email,
         createdAt: certificate.createdAt,

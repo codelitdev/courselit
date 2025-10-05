@@ -80,6 +80,7 @@ const entityType = new GraphQLObjectType({
                 getMedia(content.featuredImage),
         },
         type: { type: GraphQLString },
+        certificateId: { type: GraphQLString },
     },
 });
 

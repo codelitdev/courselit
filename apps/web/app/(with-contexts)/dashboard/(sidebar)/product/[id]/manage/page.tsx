@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Trash2, Loader2 } from "lucide-react";
+import { Trash2, Loader2, ChevronDown } from "lucide-react";
 
 import {
     AlertDialog,
@@ -73,6 +73,11 @@ import {
     TooltipContent,
     Tooltip,
 } from "@components/ui/tooltip";
+import {
+    Collapsible,
+    CollapsibleTrigger,
+    CollapsibleContent,
+} from "@components/ui/collapsible";
 const { PaymentPlanType: paymentPlanType, MembershipEntityType } = Constants;
 
 const MUTATIONS = {
@@ -946,283 +951,340 @@ export default function SettingsPage() {
                             </div>
                         </div>
                         <div className="space-y-6" id="certificate-template">
-                            <h2 className="text-base font-semibold">
-                                Certificate Template
-                            </h2>
-
-                            {/* Form with explicit save button for text fields */}
-                            <form
-                                onSubmit={saveCertificateTemplate}
-                                className="space-y-6"
-                            >
-                                <div className="space-y-4">
-                                    <Label
-                                        htmlFor="certificate-title"
-                                        className="text-sm font-semibold"
-                                    >
-                                        Certificate Title
-                                    </Label>
-                                    <Input
-                                        id="certificate-title"
-                                        name="title"
-                                        value={certificateTemplate.title}
-                                        onChange={
-                                            handleCertificateTemplateInputChange
-                                        }
-                                        placeholder="Certificate of Completion"
-                                        className={
-                                            certificateTemplateErrors.title
-                                                ? "border-red-500"
-                                                : ""
-                                        }
-                                    />
-                                    {certificateTemplateErrors.title && (
-                                        <p className="text-red-500 text-sm">
-                                            {certificateTemplateErrors.title}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="space-y-4">
-                                    <Label
-                                        htmlFor="certificate-subtitle"
-                                        className="text-sm font-semibold"
-                                    >
-                                        Certificate Subtitle
-                                    </Label>
-                                    <Input
-                                        id="certificate-subtitle"
-                                        name="subtitle"
-                                        value={certificateTemplate.subtitle}
-                                        onChange={
-                                            handleCertificateTemplateInputChange
-                                        }
-                                        placeholder="This certificate is awarded to"
-                                        className={
-                                            certificateTemplateErrors.subtitle
-                                                ? "border-red-500"
-                                                : ""
-                                        }
-                                    />
-                                    {certificateTemplateErrors.subtitle && (
-                                        <p className="text-red-500 text-sm">
-                                            {certificateTemplateErrors.subtitle}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="space-y-4">
-                                    <Label
-                                        htmlFor="certificate-description"
-                                        className="text-sm font-semibold"
-                                    >
-                                        Certificate Description
-                                    </Label>
-                                    <Input
-                                        id="certificate-description"
-                                        name="description"
-                                        value={certificateTemplate.description}
-                                        onChange={
-                                            handleCertificateTemplateInputChange
-                                        }
-                                        placeholder="for completing the course"
-                                        className={
-                                            certificateTemplateErrors.description
-                                                ? "border-red-500"
-                                                : ""
-                                        }
-                                    />
-                                    <div className="flex justify-between items-center">
-                                        {certificateTemplateErrors.description && (
-                                            <p className="text-red-500 text-sm">
-                                                {
-                                                    certificateTemplateErrors.description
-                                                }
-                                            </p>
-                                        )}
-                                        <p
-                                            className={`text-xs ml-auto ${certificateTemplate.description.length > 400 ? "text-red-500" : "text-muted-foreground"}`}
-                                        >
-                                            {
-                                                certificateTemplate.description
-                                                    .length
-                                            }
-                                            /400 characters
+                            <Collapsible>
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-0.5">
+                                        <h2 className="text-base font-semibold">
+                                            Certificate Template
+                                        </h2>
+                                        <p className="text-sm text-muted-foreground">
+                                            Customize the content and branding
+                                            for issued certificates
                                         </p>
                                     </div>
+                                    <CollapsibleTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="w-9 p-0 group"
+                                        >
+                                            <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
+                                            <span className="sr-only">
+                                                Toggle
+                                            </span>
+                                        </Button>
+                                    </CollapsibleTrigger>
                                 </div>
 
-                                <div className="space-y-4">
-                                    <Label
-                                        htmlFor="signature-name"
-                                        className="text-sm font-semibold"
+                                <CollapsibleContent className="space-y-6 overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:slide-in-from-top-2 data-[state=closed]:slide-out-to-top-2">
+                                    {/* Form with explicit save button for text fields */}
+                                    <form
+                                        onSubmit={saveCertificateTemplate}
+                                        className="space-y-6 mt-4"
                                     >
-                                        Signature Name
-                                    </Label>
-                                    <Input
-                                        id="signature-name"
-                                        name="signatureName"
-                                        value={
-                                            certificateTemplate.signatureName
-                                        }
-                                        onChange={
-                                            handleCertificateTemplateInputChange
-                                        }
-                                        placeholder="Instructor Name"
-                                        className={
-                                            certificateTemplateErrors.signatureName
-                                                ? "border-red-500"
-                                                : ""
-                                        }
-                                    />
-                                    {certificateTemplateErrors.signatureName && (
-                                        <p className="text-red-500 text-sm">
-                                            {
-                                                certificateTemplateErrors.signatureName
-                                            }
-                                        </p>
-                                    )}
-                                </div>
+                                        <div className="space-y-4">
+                                            <Label
+                                                htmlFor="certificate-title"
+                                                className="text-sm font-semibold"
+                                            >
+                                                Certificate Title
+                                            </Label>
+                                            <Input
+                                                id="certificate-title"
+                                                name="title"
+                                                value={
+                                                    certificateTemplate.title
+                                                }
+                                                onChange={
+                                                    handleCertificateTemplateInputChange
+                                                }
+                                                placeholder="Certificate of Completion"
+                                                className={
+                                                    certificateTemplateErrors.title
+                                                        ? "border-red-500"
+                                                        : ""
+                                                }
+                                            />
+                                            {certificateTemplateErrors.title && (
+                                                <p className="text-red-500 text-sm">
+                                                    {
+                                                        certificateTemplateErrors.title
+                                                    }
+                                                </p>
+                                            )}
+                                        </div>
 
-                                <div className="space-y-4">
-                                    <Label
-                                        htmlFor="signature-designation"
-                                        className="text-sm font-semibold"
-                                    >
-                                        Signature Designation
-                                    </Label>
-                                    <Input
-                                        id="signature-designation"
-                                        name="signatureDesignation"
-                                        value={
-                                            certificateTemplate.signatureDesignation
-                                        }
-                                        onChange={
-                                            handleCertificateTemplateInputChange
-                                        }
-                                        placeholder="Course Instructor"
-                                    />
-                                </div>
+                                        <div className="space-y-4">
+                                            <Label
+                                                htmlFor="certificate-subtitle"
+                                                className="text-sm font-semibold"
+                                            >
+                                                Certificate Subtitle
+                                            </Label>
+                                            <Input
+                                                id="certificate-subtitle"
+                                                name="subtitle"
+                                                value={
+                                                    certificateTemplate.subtitle
+                                                }
+                                                onChange={
+                                                    handleCertificateTemplateInputChange
+                                                }
+                                                placeholder="This certificate is awarded to"
+                                                className={
+                                                    certificateTemplateErrors.subtitle
+                                                        ? "border-red-500"
+                                                        : ""
+                                                }
+                                            />
+                                            {certificateTemplateErrors.subtitle && (
+                                                <p className="text-red-500 text-sm">
+                                                    {
+                                                        certificateTemplateErrors.subtitle
+                                                    }
+                                                </p>
+                                            )}
+                                        </div>
 
-                                <Button type="submit" disabled={loading}>
-                                    Save
-                                </Button>
-                            </form>
+                                        <div className="space-y-4">
+                                            <Label
+                                                htmlFor="certificate-description"
+                                                className="text-sm font-semibold"
+                                            >
+                                                Certificate Description
+                                            </Label>
+                                            <Input
+                                                id="certificate-description"
+                                                name="description"
+                                                value={
+                                                    certificateTemplate.description
+                                                }
+                                                onChange={
+                                                    handleCertificateTemplateInputChange
+                                                }
+                                                placeholder="for completing the course"
+                                                className={
+                                                    certificateTemplateErrors.description
+                                                        ? "border-red-500"
+                                                        : ""
+                                                }
+                                            />
+                                            <div className="flex justify-between items-center">
+                                                {certificateTemplateErrors.description && (
+                                                    <p className="text-red-500 text-sm">
+                                                        {
+                                                            certificateTemplateErrors.description
+                                                        }
+                                                    </p>
+                                                )}
+                                                <p
+                                                    className={`text-xs ml-auto ${certificateTemplate.description.length > 400 ? "text-red-500" : "text-muted-foreground"}`}
+                                                >
+                                                    {
+                                                        certificateTemplate
+                                                            .description.length
+                                                    }
+                                                    /400 characters
+                                                </p>
+                                            </div>
+                                        </div>
 
-                            {/* Media uploads with automatic sync - outside the form */}
-                            <div className="space-y-6">
-                                <div className="space-y-4">
-                                    <Label className="text-sm font-semibold">
-                                        Signature Image
-                                    </Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        Upload a signature image for the
-                                        certificate (saves automatically)
-                                    </p>
-                                    <MediaSelector
-                                        title=""
-                                        src={
-                                            (certificateTemplate.signatureImage &&
-                                                certificateTemplate
-                                                    .signatureImage
-                                                    .thumbnail) ||
-                                            ""
-                                        }
-                                        srcTitle={
-                                            (certificateTemplate.signatureImage &&
-                                                certificateTemplate
-                                                    .signatureImage
-                                                    .originalFileName) ||
-                                            ""
-                                        }
-                                        onSelection={(media?: Media) => {
-                                            media &&
-                                                setCertificateTemplate(
-                                                    (prev) => ({
-                                                        ...prev,
-                                                        signatureImage: media,
-                                                    }),
-                                                );
-                                            saveCertificateSignatureImage(
-                                                media,
-                                            );
-                                        }}
-                                        mimeTypesToShow={[...MIMETYPE_IMAGE]}
-                                        access="public"
-                                        strings={{}}
-                                        profile={profile as unknown as Profile}
-                                        address={address}
-                                        mediaId={
-                                            (certificateTemplate.signatureImage &&
-                                                certificateTemplate
-                                                    .signatureImage.mediaId) ||
-                                            ""
-                                        }
-                                        onRemove={() => {
-                                            setCertificateTemplate((prev) => ({
-                                                ...prev,
-                                                signatureImage: {},
-                                            }));
-                                            saveCertificateSignatureImage();
-                                        }}
-                                        type="certificate"
-                                    />
-                                </div>
+                                        <div className="space-y-4">
+                                            <Label
+                                                htmlFor="signature-name"
+                                                className="text-sm font-semibold"
+                                            >
+                                                Signature Name
+                                            </Label>
+                                            <Input
+                                                id="signature-name"
+                                                name="signatureName"
+                                                value={
+                                                    certificateTemplate.signatureName
+                                                }
+                                                onChange={
+                                                    handleCertificateTemplateInputChange
+                                                }
+                                                placeholder="Instructor Name"
+                                                className={
+                                                    certificateTemplateErrors.signatureName
+                                                        ? "border-red-500"
+                                                        : ""
+                                                }
+                                            />
+                                            {certificateTemplateErrors.signatureName && (
+                                                <p className="text-red-500 text-sm">
+                                                    {
+                                                        certificateTemplateErrors.signatureName
+                                                    }
+                                                </p>
+                                            )}
+                                        </div>
 
-                                <div className="space-y-4">
-                                    <Label className="text-sm font-semibold">
-                                        Logo
-                                    </Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        Upload a logo for the certificate (saves
-                                        automatically)
-                                    </p>
-                                    <MediaSelector
-                                        title=""
-                                        src={
-                                            (certificateTemplate.logo &&
-                                                certificateTemplate.logo
-                                                    .thumbnail) ||
-                                            ""
-                                        }
-                                        srcTitle={
-                                            (certificateTemplate.logo &&
-                                                certificateTemplate.logo
-                                                    .originalFileName) ||
-                                            ""
-                                        }
-                                        onSelection={(media?: Media) => {
-                                            media &&
-                                                setCertificateTemplate(
-                                                    (prev) => ({
-                                                        ...prev,
-                                                        logo: media,
-                                                    }),
-                                                );
-                                            saveCertificateLogo(media);
-                                        }}
-                                        mimeTypesToShow={[...MIMETYPE_IMAGE]}
-                                        access="public"
-                                        strings={{}}
-                                        profile={profile as unknown as Profile}
-                                        address={address}
-                                        mediaId={
-                                            (certificateTemplate.logo &&
-                                                certificateTemplate.logo
-                                                    .mediaId) ||
-                                            ""
-                                        }
-                                        onRemove={() => {
-                                            setCertificateTemplate((prev) => ({
-                                                ...prev,
-                                                logo: {},
-                                            }));
-                                            saveCertificateLogo();
-                                        }}
-                                        type="certificate"
-                                    />
-                                </div>
-                            </div>
+                                        <div className="space-y-4">
+                                            <Label
+                                                htmlFor="signature-designation"
+                                                className="text-sm font-semibold"
+                                            >
+                                                Signature Designation
+                                            </Label>
+                                            <Input
+                                                id="signature-designation"
+                                                name="signatureDesignation"
+                                                value={
+                                                    certificateTemplate.signatureDesignation
+                                                }
+                                                onChange={
+                                                    handleCertificateTemplateInputChange
+                                                }
+                                                placeholder="Course Instructor"
+                                            />
+                                        </div>
+
+                                        <Button
+                                            type="submit"
+                                            disabled={loading}
+                                        >
+                                            Save
+                                        </Button>
+                                    </form>
+
+                                    {/* Media uploads with automatic sync - outside the form */}
+                                    <div className="space-y-6">
+                                        <div className="space-y-4">
+                                            <Label className="text-sm font-semibold">
+                                                Signature Image
+                                            </Label>
+                                            <p className="text-sm text-muted-foreground">
+                                                Upload a signature image for the
+                                                certificate (saves
+                                                automatically)
+                                            </p>
+                                            <MediaSelector
+                                                title=""
+                                                src={
+                                                    (certificateTemplate.signatureImage &&
+                                                        certificateTemplate
+                                                            .signatureImage
+                                                            .thumbnail) ||
+                                                    ""
+                                                }
+                                                srcTitle={
+                                                    (certificateTemplate.signatureImage &&
+                                                        certificateTemplate
+                                                            .signatureImage
+                                                            .originalFileName) ||
+                                                    ""
+                                                }
+                                                onSelection={(
+                                                    media?: Media,
+                                                ) => {
+                                                    media &&
+                                                        setCertificateTemplate(
+                                                            (prev) => ({
+                                                                ...prev,
+                                                                signatureImage:
+                                                                    media,
+                                                            }),
+                                                        );
+                                                    saveCertificateSignatureImage(
+                                                        media,
+                                                    );
+                                                }}
+                                                mimeTypesToShow={[
+                                                    ...MIMETYPE_IMAGE,
+                                                ]}
+                                                access="public"
+                                                strings={{}}
+                                                profile={
+                                                    profile as unknown as Profile
+                                                }
+                                                address={address}
+                                                mediaId={
+                                                    (certificateTemplate.signatureImage &&
+                                                        certificateTemplate
+                                                            .signatureImage
+                                                            .mediaId) ||
+                                                    ""
+                                                }
+                                                onRemove={() => {
+                                                    setCertificateTemplate(
+                                                        (prev) => ({
+                                                            ...prev,
+                                                            signatureImage: {},
+                                                        }),
+                                                    );
+                                                    saveCertificateSignatureImage();
+                                                }}
+                                                type="certificate"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <Label className="text-sm font-semibold">
+                                                Logo
+                                            </Label>
+                                            <p className="text-sm text-muted-foreground">
+                                                Upload a logo for the
+                                                certificate (saves
+                                                automatically)
+                                            </p>
+                                            <MediaSelector
+                                                title=""
+                                                src={
+                                                    (certificateTemplate.logo &&
+                                                        certificateTemplate.logo
+                                                            .thumbnail) ||
+                                                    ""
+                                                }
+                                                srcTitle={
+                                                    (certificateTemplate.logo &&
+                                                        certificateTemplate.logo
+                                                            .originalFileName) ||
+                                                    ""
+                                                }
+                                                onSelection={(
+                                                    media?: Media,
+                                                ) => {
+                                                    media &&
+                                                        setCertificateTemplate(
+                                                            (prev) => ({
+                                                                ...prev,
+                                                                logo: media,
+                                                            }),
+                                                        );
+                                                    saveCertificateLogo(media);
+                                                }}
+                                                mimeTypesToShow={[
+                                                    ...MIMETYPE_IMAGE,
+                                                ]}
+                                                access="public"
+                                                strings={{}}
+                                                profile={
+                                                    profile as unknown as Profile
+                                                }
+                                                address={address}
+                                                mediaId={
+                                                    (certificateTemplate.logo &&
+                                                        certificateTemplate.logo
+                                                            .mediaId) ||
+                                                    ""
+                                                }
+                                                onRemove={() => {
+                                                    setCertificateTemplate(
+                                                        (prev) => ({
+                                                            ...prev,
+                                                            logo: {},
+                                                        }),
+                                                    );
+                                                    saveCertificateLogo();
+                                                }}
+                                                type="certificate"
+                                            />
+                                        </div>
+                                    </div>
+                                </CollapsibleContent>
+                            </Collapsible>
                         </div>
                     </>
                 )}

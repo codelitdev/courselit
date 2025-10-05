@@ -71,7 +71,7 @@ export default function ProductPage(props: {
         <div className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
             <h1 className="text-4xl font-semibold mb-8">{product.title}</h1>
             {progress?.certificateId && (
-                <Link href={`/certificate/${progress.certificateId}`}>
+                <Link href={`/accomplishment/${progress.certificateId}`}>
                     <Button2>{BTN_VIEW_CERTIFICATE}</Button2>
                 </Link>
             )}

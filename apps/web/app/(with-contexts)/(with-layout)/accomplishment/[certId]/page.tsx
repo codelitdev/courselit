@@ -114,7 +114,7 @@ export default function AccomplishmentPage() {
     return (
         <Section theme={theme.theme}>
             <div className="flex flex-col gap-8">
-                <div className="flex flex-col sm:flex-row gap-2 items-center">
+                <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
                     <Header1 theme={theme.theme}>
                         {certificate.productTitle}
                     </Header1>
@@ -141,10 +141,10 @@ export default function AccomplishmentPage() {
                             />
                         </div>
                     )}
-                    <div className="flex flex-col gap-2 text-center sm:text-left">
+                    <div className="flex flex-col gap-2">
                         <Text1
                             theme={theme.theme}
-                            className="flex items-center justify-center gap-2"
+                            className="flex items-center gap-2"
                         >
                             <BadgeCheck className="h-4 w-4 sm:h-5 sm:w-5" />
                             Completed by{" "}

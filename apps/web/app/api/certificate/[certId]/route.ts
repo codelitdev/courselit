@@ -93,10 +93,7 @@ export async function GET(
     }
 
     try {
-        const certificateData = await getCertificateInternal(
-            certId,
-            (domain as any)._id,
-        );
+        const certificateData = await getCertificateInternal(certId, domain);
 
         if (!certificateData) {
             return Response.json(
