@@ -330,8 +330,8 @@ importers:
         specifier: ^4.0.8
         version: 4.0.8
       lucide-react:
-        specifier: ^0.475.0
-        version: 0.475.0(react@18.3.1)
+        specifier: ^0.544.0
+        version: 0.544.0(react@18.3.1)
       mongodb:
         specifier: ^6.15.0
         version: 6.16.0(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4)
@@ -7844,11 +7844,6 @@ packages:
 
   lucide-react@0.309.0:
     resolution: {integrity: sha512-zNVPczuwFrCfksZH3zbd1UDE6/WYhYAdbe2k7CImVyPAkXLgIwbs6eXQ4loigqDnUFjyFYCI5jZ1y10Kqal0dg==}
-    peerDependencies:
-      react: ^18.3.1
-
-  lucide-react@0.475.0:
-    resolution: {integrity: sha512-NJzvVu1HwFVeZ+Gwq2q00KygM1aBhy/ZrhY9FsAgJtpB+E4R7uxRk9M2iKvHa6/vNxZydIB59htha4c2vvwvVg==}
     peerDependencies:
       react: ^18.3.1
 
@@ -20164,10 +20159,6 @@ snapshots:
   lru-cache@7.18.3: {}
 
   lucide-react@0.309.0(react@18.3.1):
-    dependencies:
-      react: 18.3.1
-
-  lucide-react@0.475.0(react@18.3.1):
     dependencies:
       react: 18.3.1
 
