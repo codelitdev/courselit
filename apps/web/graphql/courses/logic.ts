@@ -45,6 +45,7 @@ import { ActivityType } from "@courselit/common-models/dist/constants";
 import { verifyMandatoryTags } from "../mails/helpers";
 import { Email } from "@courselit/email-editor";
 import PaymentPlanModel from "@models/PaymentPlan";
+import CertificateTemplateModel from "@models/CertificateTemplate";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -903,4 +904,59 @@ export const getStudents = async ({
     ]);
 
     return result;
+};
+
+export const getCourseCertificateTemplate = async (
+    courseId: string,
+    ctx: GQLContext,
+) => {
+    const certificateTemplate = await CertificateTemplateModel.findOne({
+        domain: ctx.subdomain._id,
+        courseId,
+    });
+    return certificateTemplate;
+};
+
+export const updateCourseCertificateTemplate = async ({
+    courseId,
+    ctx,
+    title,
+    subtitle,
+    description,
+    signatureImage,
+    signatureName,
+    signatureDesignation,
+    logo,
+}: {
+    courseId: string;
+    ctx: GQLContext;
+    title?: string;
+    subtitle?: string;
+    description?: string;
+    signatureImage?: string;
+    signatureName?: string;
+    signatureDesignation?: string;
+    logo?: string;
+}) => {
+    const existingCertificateTemplate = await CertificateTemplateModel.findOne({
+        domain: ctx.subdomain._id,
+        courseId,
+    });
+    // update the existing certificate template or create a new one using upsert
+    await CertificateTemplateModel.findOneAndUpdate(
+        {
+            domain: ctx.subdomain._id,
+            courseId,
+        },
+        {
+            title,
+            subtitle,
+            description,
+            signatureImage,
+            signatureName,
+            signatureDesignation,
+            logo,
+        },
+        { upsert: true },
+    );
 };

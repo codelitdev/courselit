@@ -868,8 +868,15 @@ export const getCertificate = async (
     certificateId: string,
     ctx: GQLContext,
 ) => {
+    return await getCertificateInternal(certificateId, ctx.subdomain._id);
+};
+
+export const getCertificateInternal = async (
+    certificateId: string,
+    domain: mongoose.Types.ObjectId,
+) => {
     const certificate = await CertificateModel.findOne({
-        domain: ctx.subdomain._id,
+        domain,
         certificateId,
     });
 
@@ -878,22 +885,22 @@ export const getCertificate = async (
     }
 
     const user = (await UserModel.findOne({
-        domain: ctx.subdomain._id,
+        domain,
         userId: certificate.userId,
     }).lean()) as unknown as User;
 
     const course = (await CourseModel.findOne({
-        domain: ctx.subdomain._id,
+        domain,
         courseId: certificate.courseId,
     }).lean()) as unknown as Course;
 
     const creator = (await UserModel.findOne({
-        domain: ctx.subdomain._id,
+        domain,
         userId: course?.creatorId,
     }).lean()) as unknown as User;
 
     const template = (await CertificateTemplateModel.findOne({
-        domain: ctx.subdomain._id,
+        domain,
         courseId: certificate.courseId,
     }).lean()) as unknown as CertificateTemplate;
 
@@ -905,7 +912,7 @@ export const getCertificate = async (
         signatureImage: template?.signatureImage || null,
         signatureName: template?.signatureName || creator?.name,
         signatureDesignation: template?.signatureDesignation || null,
-        logo: ctx.subdomain.settings?.logo || null,
+        logo: template?.logo || ctx.subdomain.settings?.logo || null,
         productTitle: course?.title,
         userName: user?.name || user?.email,
         createdAt: certificate.createdAt,

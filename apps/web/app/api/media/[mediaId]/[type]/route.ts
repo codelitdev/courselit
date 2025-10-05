@@ -10,6 +10,9 @@ import { auth } from "@/auth";
 import CourseModel from "@models/Course";
 import LessonModel, { Lesson } from "@models/Lesson";
 import PageModel, { Page } from "@models/Page";
+import CertificateTemplateModel, {
+    CertificateTemplate,
+} from "@models/CertificateTemplate";
 
 const types = [
     "course",
@@ -18,6 +21,7 @@ const types = [
     "user",
     "domain",
     "community",
+    "certificate",
 ] as const;
 
 type MediaType = (typeof types)[number];
@@ -168,6 +172,41 @@ async function isActionAllowed(
             return checkPermission(user.permissions, [
                 constants.permissions.manageCommunity,
             ]);
+        case "certificate":
+            const certificateTemplate =
+                await CertificateTemplateModel.findOne<CertificateTemplate>({
+                    domain: domain._id,
+                    $or: [
+                        { "signatureImage.mediaId": mediaId },
+                        { "logo.mediaId": mediaId },
+                    ],
+                });
+            if (!certificateTemplate) {
+                return false;
+            }
+            const certificateCourse = await CourseModel.findOne<InternalCourse>(
+                {
+                    domain: domain._id,
+                    courseId: certificateTemplate.courseId,
+                },
+            );
+            if (!certificateCourse) {
+                return false;
+            }
+            if (
+                checkPermission(user.permissions, [
+                    constants.permissions.manageAnyCourse,
+                ])
+            ) {
+                return true;
+            } else {
+                return (
+                    certificateCourse.creatorId === user.userId &&
+                    checkPermission(user.permissions, [
+                        constants.permissions.manageCourse,
+                    ])
+                );
+            }
         default:
             return false;
     }

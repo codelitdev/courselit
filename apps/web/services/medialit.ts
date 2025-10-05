@@ -1,5 +1,5 @@
 import { Media } from "@courselit/common-models";
-import { responses } from "../config/strings.ts";
+import { responses } from "../config/strings";
 
 const medialitServer = process.env.MEDIALIT_SERVER || "https://medialit.cloud";
 

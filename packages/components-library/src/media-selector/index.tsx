@@ -54,7 +54,14 @@ interface MediaSelectorProps {
     access?: Access;
     strings: Strings;
     mediaId?: string;
-    type: "course" | "lesson" | "page" | "user" | "domain" | "community";
+    type:
+        | "course"
+        | "lesson"
+        | "page"
+        | "user"
+        | "domain"
+        | "community"
+        | "certificate";
     hidePreview?: boolean;
     tooltip?: string;
     disabled?: boolean;

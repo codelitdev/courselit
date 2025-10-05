@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Trash2, Loader2 } from "lucide-react";
-import Link from "next/link";
 
 import {
     AlertDialog,
@@ -25,7 +24,6 @@ import {
     APP_MESSAGE_COURSE_SAVED,
     BTN_DELETE_COURSE,
     COURSE_SETTINGS_CARD_HEADER,
-    CUSTOMIZE_CERTIFICATE_TEMPLATE,
     DANGER_ZONE_HEADER,
     MANAGE_COURSES_PAGE_HEADING,
     PRICING_EMAIL,
@@ -67,6 +65,7 @@ import {
 import { COURSE_TYPE_DOWNLOAD, MIMETYPE_IMAGE } from "@ui-config/constants";
 import useProduct from "@/hooks/use-product";
 import { usePaymentPlanOperations } from "@/hooks/use-payment-plan-operations";
+import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
 import PaymentPlanList from "@components/admin/payments/payment-plan-list";
 import {
     TooltipProvider,
@@ -108,20 +107,6 @@ const MUTATIONS = {
             }
         }
     `,
-    // UPDATE_COST_TYPE: `
-    //     mutation UpdateCostType($courseId: String!, $costType: CostType!) {
-    //         updateCourse(courseData: { id: $courseId, costType: $costType }) {
-    //             courseId
-    //         }
-    //     }
-    // `,
-    // UPDATE_COST: `
-    //     mutation UpdateCost($courseId: String!, $cost: Float!) {
-    //         updateCourse(courseData: { id: $courseId, cost: $cost }) {
-    //             courseId
-    //         }
-    //     }
-    // `,
     UPDATE_LEAD_MAGNET: `
         mutation UpdateLeadMagnet($courseId: String!, $leadMagnet: Boolean!) {
             updateCourse(courseData: { id: $courseId, leadMagnet: $leadMagnet }) {
@@ -133,6 +118,29 @@ const MUTATIONS = {
         mutation UpdateCertificate($courseId: String!, $certificate: Boolean!) {
             updateCourse(courseData: { id: $courseId, certificate: $certificate }) {
                 courseId
+            }
+        }
+    `,
+    UPDATE_CERTIFICATE_TEMPLATE: `
+        mutation UpdateCertificateTemplate($courseId: String!, $title: String, $subtitle: String, $description: String, $signatureName: String, $signatureDesignation: String, $signatureImage: MediaInput, $logo: MediaInput) {
+            updateCourseCertificateTemplate(courseId: $courseId, title: $title, subtitle: $subtitle, description: $description, signatureName: $signatureName, signatureDesignation: $signatureDesignation, signatureImage: $signatureImage, logo: $logo) {
+                title
+                subtitle
+                description
+                signatureName
+                signatureDesignation
+                signatureImage {
+                    mediaId
+                    originalFileName
+                    file
+                    thumbnail
+                }
+                logo {
+                    mediaId
+                    originalFileName
+                    file
+                    thumbnail
+                }
             }
         }
     `,
@@ -179,7 +187,10 @@ export default function SettingsPage() {
     const router = useRouter();
     const params = useParams();
     const productId = params?.id as string;
-    const [errors, setErrors] = useState({});
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [certificateTemplateErrors, setCertificateTemplateErrors] = useState<
+        Record<string, string>
+    >({});
     const address = useContext(AddressContext);
     const { product, loaded: productLoaded } = useProduct(productId);
     const profile = useContext(ProfileContext);
@@ -205,6 +216,23 @@ export default function SettingsPage() {
         leadMagnet: false,
         certificate: false,
     });
+    const [certificateTemplate, setCertificateTemplate] = useState<{
+        title: string;
+        subtitle: string;
+        description: string;
+        signatureName: string;
+        signatureDesignation: string;
+        signatureImage: any;
+        logo: any;
+    }>({
+        title: "",
+        subtitle: "",
+        description: "",
+        signatureName: "",
+        signatureDesignation: "",
+        signatureImage: {},
+        logo: {},
+    });
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
         {
@@ -217,6 +245,7 @@ export default function SettingsPage() {
     const [deleteConfirmation, setDeleteConfirmation] = useState("");
     const [isDeleting, setIsDeleting] = useState(false);
     const siteinfo = useContext(SiteInfoContext);
+    const fetch = useGraphQLFetch();
     const {
         paymentPlans,
         setPaymentPlans,
@@ -229,6 +258,59 @@ export default function SettingsPage() {
         id: productId,
         entityType: MembershipEntityType.COURSE,
     });
+
+    const loadCertificateTemplate = async (courseId: string) => {
+        const query = `
+            query GetCourseCertificateTemplate($courseId: String!) {
+                certificateTemplate: getCourseCertificateTemplate(courseId: $courseId) {
+                    title
+                    subtitle
+                    description
+                    signatureName
+                    signatureDesignation
+                    signatureImage {
+                        mediaId
+                        originalFileName
+                        file
+                        thumbnail
+                    }
+                    logo {
+                        mediaId
+                        originalFileName
+                        file
+                        thumbnail
+                    }
+                }
+            }
+        `;
+
+        try {
+            const fetchInstance = fetch
+                .setPayload({
+                    query,
+                    variables: { courseId },
+                })
+                .build();
+
+            const response = await fetchInstance.exec();
+            if (response.certificateTemplate) {
+                setCertificateTemplate({
+                    title: response.certificateTemplate.title || "",
+                    subtitle: response.certificateTemplate.subtitle || "",
+                    description: response.certificateTemplate.description || "",
+                    signatureName:
+                        response.certificateTemplate.signatureName || "",
+                    signatureDesignation:
+                        response.certificateTemplate.signatureDesignation || "",
+                    signatureImage:
+                        response.certificateTemplate.signatureImage || {},
+                    logo: response.certificateTemplate.logo || {},
+                });
+            }
+        } catch (err) {
+            console.error("Error loading certificate template:", err);
+        }
+    };
 
     useEffect(() => {
         if (product) {
@@ -252,6 +334,11 @@ export default function SettingsPage() {
             setRefresh(refresh + 1);
             setPaymentPlans(product?.paymentPlans || []);
             setDefaultPaymentPlan(product?.defaultPaymentPlan || "");
+
+            // Load certificate template if certificate is enabled
+            if (product?.certificate && product?.courseId) {
+                loadCertificateTemplate(product.courseId);
+            }
         }
     }, [product]);
 
@@ -307,7 +394,7 @@ export default function SettingsPage() {
     };
 
     const validateForm = () => {
-        const newErrors = {};
+        const newErrors: Record<string, string> = {};
         if (!formData.name.trim()) newErrors.name = "Name is required";
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -344,6 +431,105 @@ export default function SettingsPage() {
                         courseId: product.courseId,
                         media: media || null,
                     },
+                    address.backend,
+                ),
+            setLoading,
+            toast,
+        );
+    };
+
+    const handleCertificateTemplateInputChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+        const { name, value } = e.target;
+        setCertificateTemplate((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const validateCertificateTemplate = () => {
+        const newErrors: Record<string, string> = {};
+
+        // Check description length if provided
+        if (
+            certificateTemplate.description &&
+            certificateTemplate.description.length > 400
+        ) {
+            newErrors.description =
+                "Description must be 400 characters or less";
+        }
+
+        setCertificateTemplateErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const saveCertificateTemplate = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!validateCertificateTemplate() || !product?.courseId) return;
+
+        const variables = {
+            courseId: product.courseId,
+            title: certificateTemplate.title,
+            subtitle: certificateTemplate.subtitle,
+            description: certificateTemplate.description,
+            signatureName: certificateTemplate.signatureName,
+            signatureDesignation: certificateTemplate.signatureDesignation,
+        };
+
+        await withErrorHandling(
+            () =>
+                updateCourse(
+                    MUTATIONS.UPDATE_CERTIFICATE_TEMPLATE,
+                    variables,
+                    address.backend,
+                ),
+            setLoading,
+            toast,
+        );
+    };
+
+    const saveCertificateSignatureImage = async (media?: Media) => {
+        if (!product?.courseId) return;
+
+        // Update local state immediately
+        setCertificateTemplate((prev) => ({
+            ...prev,
+            signatureImage: media || {},
+        }));
+
+        // Prepare variables for the mutation
+        const variables = {
+            courseId: product.courseId,
+            signatureImage: media || null,
+        };
+
+        await withErrorHandling(
+            () =>
+                updateCourse(
+                    MUTATIONS.UPDATE_CERTIFICATE_TEMPLATE,
+                    variables,
+                    address.backend,
+                ),
+            setLoading,
+            toast,
+        );
+    };
+
+    const saveCertificateLogo = async (media?: Media) => {
+        if (!product?.courseId) return;
+
+        // Update local state immediately
+        setCertificateTemplate((prev) => ({ ...prev, logo: media || {} }));
+
+        // Prepare variables for the mutation
+        const variables = {
+            courseId: product.courseId,
+            logo: media || null,
+        };
+
+        await withErrorHandling(
+            () =>
+                updateCourse(
+                    MUTATIONS.UPDATE_CERTIFICATE_TEMPLATE,
+                    variables,
                     address.backend,
                 ),
             setLoading,
@@ -490,7 +676,7 @@ export default function SettingsPage() {
                 <Separator />
 
                 <div className="space-y-4">
-                    <h2 className="text-lg font-semibold">Featured image</h2>
+                    <h2 className="text-base font-semibold">Featured image</h2>
                     <p className="text-sm text-muted-foreground">
                         The hero image for your course
                     </p>
@@ -522,7 +708,7 @@ export default function SettingsPage() {
                         mimeTypesToShow={[...MIMETYPE_IMAGE]}
                         access="public"
                         strings={{}}
-                        profile={profile as Profile}
+                        profile={profile as unknown as Profile}
                         address={address}
                         mediaId={
                             (formData.featuredImage &&
@@ -544,7 +730,9 @@ export default function SettingsPage() {
 
                 <div className="space-y-4 flex flex-col md:flex-row md:items-start md:justify-between w-full">
                     <div className="space-y-2">
-                        <Label className="text-lg font-semibold">Pricing</Label>
+                        <Label className="text-base font-semibold">
+                            Pricing
+                        </Label>
                         <p className="text-sm text-muted-foreground">
                             Manage your product&apos;s pricing plans
                         </p>
@@ -706,7 +894,7 @@ export default function SettingsPage() {
                             disabled={!formData.isPublished}
                         />
                     </div>
-                    {product?.type?.toLowerCase() === UIConstants.COURSE_TYPE_COURSE && (
+                    {/* {product?.type?.toLowerCase() === UIConstants.COURSE_TYPE_COURSE && (
                         <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
                                 <Label className="text-base font-semibold">
@@ -729,8 +917,315 @@ export default function SettingsPage() {
                                 }
                             />
                         </div>
-                    )}
+                    )} */}
                 </div>
+
+                {product?.type?.toLowerCase() ===
+                    UIConstants.COURSE_TYPE_COURSE && (
+                    <>
+                        <Separator />
+                        <div className="space-y-6" id="publish">
+                            <h2 className="text-base font-semibold">
+                                Certificates
+                            </h2>
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label className="text-base font-semibold">
+                                        Issue certificates
+                                    </Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Enable certificate for this course.
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={formData.certificate}
+                                    onCheckedChange={() =>
+                                        handleSwitchChange("certificate")
+                                    }
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-6" id="certificate-template">
+                            <h2 className="text-base font-semibold">
+                                Certificate Template
+                            </h2>
+
+                            {/* Form with explicit save button for text fields */}
+                            <form
+                                onSubmit={saveCertificateTemplate}
+                                className="space-y-6"
+                            >
+                                <div className="space-y-4">
+                                    <Label
+                                        htmlFor="certificate-title"
+                                        className="text-sm font-semibold"
+                                    >
+                                        Certificate Title
+                                    </Label>
+                                    <Input
+                                        id="certificate-title"
+                                        name="title"
+                                        value={certificateTemplate.title}
+                                        onChange={
+                                            handleCertificateTemplateInputChange
+                                        }
+                                        placeholder="Certificate of Completion"
+                                        className={
+                                            certificateTemplateErrors.title
+                                                ? "border-red-500"
+                                                : ""
+                                        }
+                                    />
+                                    {certificateTemplateErrors.title && (
+                                        <p className="text-red-500 text-sm">
+                                            {certificateTemplateErrors.title}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="space-y-4">
+                                    <Label
+                                        htmlFor="certificate-subtitle"
+                                        className="text-sm font-semibold"
+                                    >
+                                        Certificate Subtitle
+                                    </Label>
+                                    <Input
+                                        id="certificate-subtitle"
+                                        name="subtitle"
+                                        value={certificateTemplate.subtitle}
+                                        onChange={
+                                            handleCertificateTemplateInputChange
+                                        }
+                                        placeholder="This certificate is awarded to"
+                                        className={
+                                            certificateTemplateErrors.subtitle
+                                                ? "border-red-500"
+                                                : ""
+                                        }
+                                    />
+                                    {certificateTemplateErrors.subtitle && (
+                                        <p className="text-red-500 text-sm">
+                                            {certificateTemplateErrors.subtitle}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="space-y-4">
+                                    <Label
+                                        htmlFor="certificate-description"
+                                        className="text-sm font-semibold"
+                                    >
+                                        Certificate Description
+                                    </Label>
+                                    <Input
+                                        id="certificate-description"
+                                        name="description"
+                                        value={certificateTemplate.description}
+                                        onChange={
+                                            handleCertificateTemplateInputChange
+                                        }
+                                        placeholder="for completing the course"
+                                        className={
+                                            certificateTemplateErrors.description
+                                                ? "border-red-500"
+                                                : ""
+                                        }
+                                    />
+                                    <div className="flex justify-between items-center">
+                                        {certificateTemplateErrors.description && (
+                                            <p className="text-red-500 text-sm">
+                                                {
+                                                    certificateTemplateErrors.description
+                                                }
+                                            </p>
+                                        )}
+                                        <p
+                                            className={`text-xs ml-auto ${certificateTemplate.description.length > 400 ? "text-red-500" : "text-muted-foreground"}`}
+                                        >
+                                            {
+                                                certificateTemplate.description
+                                                    .length
+                                            }
+                                            /400 characters
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <Label
+                                        htmlFor="signature-name"
+                                        className="text-sm font-semibold"
+                                    >
+                                        Signature Name
+                                    </Label>
+                                    <Input
+                                        id="signature-name"
+                                        name="signatureName"
+                                        value={
+                                            certificateTemplate.signatureName
+                                        }
+                                        onChange={
+                                            handleCertificateTemplateInputChange
+                                        }
+                                        placeholder="Instructor Name"
+                                        className={
+                                            certificateTemplateErrors.signatureName
+                                                ? "border-red-500"
+                                                : ""
+                                        }
+                                    />
+                                    {certificateTemplateErrors.signatureName && (
+                                        <p className="text-red-500 text-sm">
+                                            {
+                                                certificateTemplateErrors.signatureName
+                                            }
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="space-y-4">
+                                    <Label
+                                        htmlFor="signature-designation"
+                                        className="text-sm font-semibold"
+                                    >
+                                        Signature Designation
+                                    </Label>
+                                    <Input
+                                        id="signature-designation"
+                                        name="signatureDesignation"
+                                        value={
+                                            certificateTemplate.signatureDesignation
+                                        }
+                                        onChange={
+                                            handleCertificateTemplateInputChange
+                                        }
+                                        placeholder="Course Instructor"
+                                    />
+                                </div>
+
+                                <Button type="submit" disabled={loading}>
+                                    Save
+                                </Button>
+                            </form>
+
+                            {/* Media uploads with automatic sync - outside the form */}
+                            <div className="space-y-6">
+                                <div className="space-y-4">
+                                    <Label className="text-sm font-semibold">
+                                        Signature Image
+                                    </Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Upload a signature image for the
+                                        certificate (saves automatically)
+                                    </p>
+                                    <MediaSelector
+                                        title=""
+                                        src={
+                                            (certificateTemplate.signatureImage &&
+                                                certificateTemplate
+                                                    .signatureImage
+                                                    .thumbnail) ||
+                                            ""
+                                        }
+                                        srcTitle={
+                                            (certificateTemplate.signatureImage &&
+                                                certificateTemplate
+                                                    .signatureImage
+                                                    .originalFileName) ||
+                                            ""
+                                        }
+                                        onSelection={(media?: Media) => {
+                                            media &&
+                                                setCertificateTemplate(
+                                                    (prev) => ({
+                                                        ...prev,
+                                                        signatureImage: media,
+                                                    }),
+                                                );
+                                            saveCertificateSignatureImage(
+                                                media,
+                                            );
+                                        }}
+                                        mimeTypesToShow={[...MIMETYPE_IMAGE]}
+                                        access="public"
+                                        strings={{}}
+                                        profile={profile as unknown as Profile}
+                                        address={address}
+                                        mediaId={
+                                            (certificateTemplate.signatureImage &&
+                                                certificateTemplate
+                                                    .signatureImage.mediaId) ||
+                                            ""
+                                        }
+                                        onRemove={() => {
+                                            setCertificateTemplate((prev) => ({
+                                                ...prev,
+                                                signatureImage: {},
+                                            }));
+                                            saveCertificateSignatureImage();
+                                        }}
+                                        type="certificate"
+                                    />
+                                </div>
+
+                                <div className="space-y-4">
+                                    <Label className="text-sm font-semibold">
+                                        Logo
+                                    </Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Upload a logo for the certificate (saves
+                                        automatically)
+                                    </p>
+                                    <MediaSelector
+                                        title=""
+                                        src={
+                                            (certificateTemplate.logo &&
+                                                certificateTemplate.logo
+                                                    .thumbnail) ||
+                                            ""
+                                        }
+                                        srcTitle={
+                                            (certificateTemplate.logo &&
+                                                certificateTemplate.logo
+                                                    .originalFileName) ||
+                                            ""
+                                        }
+                                        onSelection={(media?: Media) => {
+                                            media &&
+                                                setCertificateTemplate(
+                                                    (prev) => ({
+                                                        ...prev,
+                                                        logo: media,
+                                                    }),
+                                                );
+                                            saveCertificateLogo(media);
+                                        }}
+                                        mimeTypesToShow={[...MIMETYPE_IMAGE]}
+                                        access="public"
+                                        strings={{}}
+                                        profile={profile as unknown as Profile}
+                                        address={address}
+                                        mediaId={
+                                            (certificateTemplate.logo &&
+                                                certificateTemplate.logo
+                                                    .mediaId) ||
+                                            ""
+                                        }
+                                        onRemove={() => {
+                                            setCertificateTemplate((prev) => ({
+                                                ...prev,
+                                                logo: {},
+                                            }));
+                                            saveCertificateLogo();
+                                        }}
+                                        type="certificate"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                )}
 
                 <Separator />
 

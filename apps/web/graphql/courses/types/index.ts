@@ -268,6 +268,19 @@ const enrolledCourses = new GraphQLObjectType({
     },
 });
 
+const certificateTemplateType = new GraphQLObjectType({
+    name: "CertificateTemplate",
+    fields: {
+        title: { type: GraphQLString },
+        subtitle: { type: GraphQLString },
+        description: { type: GraphQLString },
+        signatureImage: { type: mediaTypes.mediaType },
+        signatureName: { type: GraphQLString },
+        signatureDesignation: { type: GraphQLString },
+        logo: { type: mediaTypes.mediaType },
+    },
+});
+
 export default {
     courseType,
     courseStatusType,
@@ -280,4 +293,5 @@ export default {
     reports,
     dripType,
     dripInputType,
+    certificateTemplateType,
 };

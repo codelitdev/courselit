@@ -1,3 +1,4 @@
+import { MediaSchema } from "@courselit/common-logic";
 import { Media } from "@courselit/common-models";
 import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
@@ -12,7 +13,7 @@ export interface CertificateTemplate {
     signatureImage: Media;
     signatureName: string;
     signatureDesignation?: string;
-    logo?: string;
+    logo?: Media;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -30,13 +31,10 @@ const CertificateTemplateSchema = new mongoose.Schema(
         title: { type: String, required: true },
         subtitle: { type: String, required: true },
         description: { type: String, required: true },
-        signatureImage: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-        },
+        signatureImage: MediaSchema,
         signatureName: { type: String, required: true },
         signatureDesignation: { type: String },
-        logo: { type: mongoose.Schema.Types.ObjectId },
+        logo: MediaSchema,
     },
     {
         timestamps: true,
