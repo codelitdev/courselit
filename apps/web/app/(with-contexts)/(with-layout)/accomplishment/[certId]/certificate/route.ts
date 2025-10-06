@@ -76,24 +76,40 @@ async function updateCertificateDownloadTime(certId: string, domainId: any) {
     );
 }
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
     req: NextRequest,
     { params }: { params: Promise<{ certId: string }> },
 ) {
-    const domain = await DomainModel.findOne<Domain>({
-        name: req.headers.get("domain"),
-    });
-    if (!domain) {
-        return { error: { message: "Domain not found", status: 404 } };
-    }
-
     const certId = (await params).certId;
-    if (!certId) {
-        return Response.json({ message: "Missing certId" }, { status: 400 });
-    }
 
     try {
-        const certificateData = await getCertificateInternal(certId, domain);
+        const domain = await DomainModel.findOne<Domain>({
+            name: req.headers.get("domain"),
+        });
+        if (!domain) {
+            return { error: { message: "Domain not found", status: 404 } };
+        }
+
+        const certificateData =
+            certId !== "demo"
+                ? await getCertificateInternal(certId, domain)
+                : {
+                      certificateId: "demo",
+                      title: "Certificate of Completion",
+                      subtitle: "This certificate is awarded to",
+                      description: "for completing the course.",
+                      signatureImage: null,
+                      signatureName: "John Doe",
+                      signatureDesignation: "Instructor",
+                      logo: null,
+                      productTitle: "Course Title",
+                      userName: "John Doe",
+                      createdAt: new Date(),
+                      userImage: null,
+                      productPageId: null,
+                  };
 
         if (!certificateData) {
             return Response.json(
@@ -103,9 +119,7 @@ export async function GET(
         }
 
         const template = await createTemplate(certificateData);
-
         const pdfBuffer = await generatePdf(template);
-
         await updateCertificateDownloadTime(certId, (domain as any)._id);
 
         return new Response(pdfBuffer as any, {
@@ -116,14 +130,11 @@ export async function GET(
         });
     } catch (err: any) {
         error(err.message, {
-            route: `/api/certificate/${certId}`,
+            route: `/accomplishment/${certId}/certificate`,
             stack: err.stack,
         });
         return Response.json(
-            {
-                error: "Failed to generate certificate PDF",
-                details: err.message,
-            },
+            { error: "Failed to generate certificate PDF" },
             { status: 500 },
         );
     }

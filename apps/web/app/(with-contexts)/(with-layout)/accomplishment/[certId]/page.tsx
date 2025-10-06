@@ -168,7 +168,7 @@ export default function AccomplishmentPage() {
                         )}
                         <iframe
                             className={`w-full lg:h-[900px] h-[300px] md:h-[600px] transition-opacity duration-300 ${isIframeLoaded ? "opacity-100" : "opacity-0"}`}
-                            src={`/api/certificate/${certId}`}
+                            src={`/accomplishment/${certId}/certificate`}
                             onLoad={() => setIsIframeLoaded(true)}
                         ></iframe>
                     </div>
