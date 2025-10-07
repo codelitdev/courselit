@@ -871,41 +871,64 @@ async function addProductToUser({
 export const getCertificate = async (
     certificateId: string,
     ctx: GQLContext,
+    courseId?: string,
 ) => {
-    return await getCertificateInternal(certificateId, ctx.subdomain);
+    if (certificateId === "demo" && !courseId) {
+        throw new Error(responses.certificate_demo_course_id_required);
+    }
+
+    return await getCertificateInternal(certificateId, ctx.subdomain, courseId);
 };
 
 export const getCertificateInternal = async (
     certificateId: string,
     domain: Domain,
+    courseId?: string,
 ) => {
-    const certificate = await CertificateModel.findOne({
-        domain: domain._id,
-        certificateId,
-    });
+    const certificate =
+        certificateId !== "demo"
+            ? await CertificateModel.findOne({
+                  domain: domain._id,
+                  certificateId,
+              })
+            : {
+                  certificateId: "demo",
+                  createdAt: new Date(),
+              };
 
     if (!certificate) {
         throw new Error(responses.item_not_found);
     }
 
-    const user = (await UserModel.findOne({
-        domain: domain._id,
-        userId: certificate.userId,
-    }).lean()) as unknown as User;
+    const user =
+        certificateId !== "demo"
+            ? ((await UserModel.findOne({
+                  domain: domain._id,
+                  userId: certificate.userId,
+              }).lean()) as unknown as User)
+            : {
+                  name: "John Doe",
+                  email: "john.doe@example.com",
+                  avatar: null,
+              };
 
     const course = (await CourseModel.findOne({
         domain: domain._id,
-        courseId: certificate.courseId,
+        courseId: certificateId !== "demo" ? certificate.courseId : courseId,
     }).lean()) as unknown as Course;
+
+    if (!course) {
+        throw new Error(responses.item_not_found);
+    }
 
     const creator = (await UserModel.findOne({
         domain: domain._id,
-        userId: course?.creatorId,
+        userId: course.creatorId,
     }).lean()) as unknown as User;
 
     const template = (await CertificateTemplateModel.findOne({
         domain: domain._id,
-        courseId: certificate.courseId,
+        courseId: course.courseId,
     }).lean()) as unknown as CertificateTemplate;
 
     return {
