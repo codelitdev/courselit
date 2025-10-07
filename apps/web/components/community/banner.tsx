@@ -9,7 +9,7 @@ import {
     useToast,
 } from "@courselit/components-library";
 import { isTextEditorNonEmpty } from "@ui-lib/utils";
-import { TOAST_TITLE_SUCCESS } from "@ui-config/strings";
+import { BUTTON_SAVING, TOAST_TITLE_SUCCESS } from "@ui-config/strings";
 
 interface BannerComponentProps {
     canEdit: boolean;
@@ -121,7 +121,7 @@ export default function Banner({
                                 {isSaving ? (
                                     <>
                                         <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                                        Saving...
+                                        {BUTTON_SAVING}
                                     </>
                                 ) : (
                                     <>

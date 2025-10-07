@@ -77,9 +77,11 @@ On the course's introduction page, customers will see a `View certificate` butto
 
 ![View certificate button on product's intro in course viewer](/assets/products/view-certificate-button.png)
 
-When clicking the `View certificate` button, customers will be taken to the `Accomplishment` page where they can view all the details of their certification, including a PDF of their certificate.
+When they click the `View certificate` button, customers are taken to the `Accomplishment` page, where they can view all certification details.
 
 ![Accomplishment Page](/assets/products/accomplishment-page.png)
+
+Customers can also print their certificate by clicking the `Print` button.
 
 ## Stuck somewhere?
 

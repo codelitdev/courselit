@@ -146,6 +146,8 @@ export const responses = {
     download_course_cannot_have_groups: "Digital download cannot have sections",
     download_course_last_group_cannot_be_removed:
         "Last section cannot be removed from a digital download",
+    certificate_demo_course_id_required:
+        "CourseID is required for demo certificate",
 };
 
 export const internal = {

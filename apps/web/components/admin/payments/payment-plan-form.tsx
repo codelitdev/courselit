@@ -35,6 +35,7 @@ import {
 import { usePaymentPlanOperations } from "@/hooks/use-payment-plan-operations";
 import { useRouter } from "next/navigation";
 import { getSymbolFromCurrency, useToast } from "@courselit/components-library";
+import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
 import {
     BUTTON_SAVE,
     BUTTON_SAVING,
@@ -46,6 +47,8 @@ import {
     PAYMENT_PLAN_SUBSCRIPTION_LABEL,
     PAYMENT_PLAN_EMI_LABEL,
     SEO_FORM_DESC_LABEL,
+    TOAST_TITLE_SUCCESS,
+    TOAST_DESCRIPTION_CHANGES_SAVED,
 } from "@/ui-config/strings";
 import { SiteInfoContext } from "@components/contexts";
 import { useProducts } from "@/hooks/use-products";
@@ -151,6 +154,7 @@ export function PaymentPlanForm({
     const router = useRouter();
     const { toast } = useToast();
     const siteinfo = useContext(SiteInfoContext);
+    const fetch = useGraphQLFetch();
     const currencySymbol = getSymbolFromCurrency(
         siteinfo.currencyISOCode || "USD",
     );
@@ -173,18 +177,134 @@ export function PaymentPlanForm({
         },
     });
 
+    const onPlanUpdated = async (plan: any) => {
+        const query = `
+            mutation UpdatePlan(
+                $planId: String!
+                $name: String
+                $type: PaymentPlanType
+                $oneTimeAmount: Int
+                $emiAmount: Int
+                $emiTotalInstallments: Int
+                $subscriptionMonthlyAmount: Int
+                $subscriptionYearlyAmount: Int
+                $description: String
+                $includedProducts: [String]
+            ) {
+                plan: updatePlan(
+                    planId: $planId
+                    name: $name
+                    type: $type
+                    oneTimeAmount: $oneTimeAmount
+                    emiAmount: $emiAmount
+                    emiTotalInstallments: $emiTotalInstallments
+                    subscriptionMonthlyAmount: $subscriptionMonthlyAmount
+                    subscriptionYearlyAmount: $subscriptionYearlyAmount
+                    description: $description
+                    includedProducts: $includedProducts
+                ) {
+                    planId
+                    name
+                    type
+                    oneTimeAmount
+                    emiAmount
+                    emiTotalInstallments
+                    subscriptionMonthlyAmount
+                    subscriptionYearlyAmount
+                    description
+                    includedProducts
+                }
+            }
+        `;
+
+        const fetchRequest = fetch
+            .setPayload({
+                query,
+                variables: {
+                    planId: plan.planId,
+                    ...plan,
+                },
+            })
+            .build();
+        try {
+            const response = await fetchRequest.exec();
+            return response.plan;
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    const onPlanSubmitted = async (plan: any) => {
+        const query = `
+            mutation CreatePlan(
+                $name: String!
+                $type: PaymentPlanType!
+                $entityId: String!
+                $entityType: MembershipEntityType!
+                $oneTimeAmount: Int
+                $emiAmount: Int
+                $emiTotalInstallments: Int
+                $subscriptionMonthlyAmount: Int
+                $subscriptionYearlyAmount: Int
+                $description: String
+                $includedProducts: [String]
+            ) {
+                plan: createPlan(
+                    name: $name
+                    type: $type
+                    entityId: $entityId
+                    entityType: $entityType
+                    oneTimeAmount: $oneTimeAmount
+                    emiAmount: $emiAmount
+                    emiTotalInstallments: $emiTotalInstallments
+                    subscriptionMonthlyAmount: $subscriptionMonthlyAmount
+                    subscriptionYearlyAmount: $subscriptionYearlyAmount
+                    description: $description
+                    includedProducts: $includedProducts
+                ) {
+                    planId
+                    name
+                    type
+                    oneTimeAmount
+                    emiAmount
+                    emiTotalInstallments
+                    subscriptionMonthlyAmount
+                    subscriptionYearlyAmount
+                    description
+                    includedProducts
+                }
+            }
+        `;
+
+        const fetchRequest = fetch
+            .setPayload({
+                query,
+                variables: {
+                    ...plan,
+                    entityId: entityId,
+                    entityType: entityType.toUpperCase(),
+                },
+            })
+            .build();
+        try {
+            const response = await fetchRequest.exec();
+            return response.plan;
+        } catch (error) {
+            throw error;
+        }
+    };
+
     async function handleSubmit(values: PaymentPlanFormData) {
         setIsFormSubmitting(true);
         try {
             if (initialData?.planId) {
-                await paymentPlanOperations.onPlanUpdated(values);
+                await onPlanUpdated(values);
                 toast({
-                    title: "Payment plan updated",
-                    description: "Payment plan updated successfully",
+                    title: TOAST_TITLE_SUCCESS,
+                    description: TOAST_DESCRIPTION_CHANGES_SAVED,
                 });
             } else {
-                const { planId } =
-                    await paymentPlanOperations.onPlanSubmitted(values);
+                const { planId } = await onPlanSubmitted(values);
                 const type =
                     entityType.toLowerCase() ===
                     Constants.MembershipEntityType.COMMUNITY

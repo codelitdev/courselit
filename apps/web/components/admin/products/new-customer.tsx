@@ -29,7 +29,6 @@ export default function NewCustomer({ courseId }: NewCustomerProps) {
     const [tags, setTags] = useState<string[]>([]);
     const [systemTags, setSystemTags] = useState<string[]>([]);
     const address = useContext(AddressContext);
-    // const course = useCourse(courseId);
     const { toast } = useToast();
 
     const getTags = useCallback(async () => {

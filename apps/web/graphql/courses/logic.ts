@@ -910,10 +910,13 @@ export const getCourseCertificateTemplate = async (
     courseId: string,
     ctx: GQLContext,
 ) => {
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
+
     const certificateTemplate = await CertificateTemplateModel.findOne({
         domain: ctx.subdomain._id,
-        courseId,
+        courseId: course.courseId,
     });
+
     return certificateTemplate;
 };
 
@@ -938,15 +941,12 @@ export const updateCourseCertificateTemplate = async ({
     signatureDesignation?: string;
     logo?: string;
 }) => {
-    const existingCertificateTemplate = await CertificateTemplateModel.findOne({
-        domain: ctx.subdomain._id,
-        courseId,
-    });
-    // update the existing certificate template or create a new one using upsert
-    await CertificateTemplateModel.findOneAndUpdate(
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
+
+    const updatedTemplate = await CertificateTemplateModel.findOneAndUpdate(
         {
             domain: ctx.subdomain._id,
-            courseId,
+            courseId: course.courseId,
         },
         {
             title,
@@ -957,6 +957,15 @@ export const updateCourseCertificateTemplate = async ({
             signatureDesignation,
             logo,
         },
-        { upsert: true },
+        { upsert: true, new: true },
     );
+    return {
+        title: updatedTemplate.title,
+        subtitle: updatedTemplate.subtitle,
+        description: updatedTemplate.description,
+        signatureImage: updatedTemplate.signatureImage,
+        signatureName: updatedTemplate.signatureName,
+        signatureDesignation: updatedTemplate.signatureDesignation,
+        logo: updatedTemplate.logo,
+    };
 };

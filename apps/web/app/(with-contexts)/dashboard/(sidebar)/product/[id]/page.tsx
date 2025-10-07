@@ -53,10 +53,11 @@ import { truncate } from "@ui-lib/utils";
 import MetricCard from "./metric-card";
 import { useToast, Tooltip as TooltipCL } from "@courselit/components-library";
 import { useActivities } from "@/hooks/use-activities";
-import { Constants } from "@courselit/common-models";
+import { Constants, UIConstants } from "@courselit/common-models";
 import Resources from "@components/resources";
 import { TIME_RANGES } from "@ui-config/constants";
 import SalesCard from "../../overview/sales-card";
+const { permissions } = UIConstants;
 
 const { ActivityType } = Constants;
 
@@ -97,7 +98,13 @@ export default function DashboardPage() {
     };
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[
+                permissions.manageAnyCourse,
+                permissions.manageCourse,
+            ]}
+        >
             {!product?.published && (
                 <div className="bg-red-400 p-2 mb-4 text-sm text-white rounded-md">
                     {PRODUCT_UNPUBLISHED_WARNING}{" "}

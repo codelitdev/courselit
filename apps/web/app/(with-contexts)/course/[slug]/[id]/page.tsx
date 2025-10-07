@@ -25,6 +25,7 @@ import {
 } from "@components/contexts";
 import { getProduct } from "./helpers";
 import { getUserProfile } from "@/app/(with-contexts)/helpers";
+import { BadgeCheck } from "lucide-react";
 const { permissions } = UIConstants;
 
 export default function ProductPage(props: {
@@ -71,8 +72,14 @@ export default function ProductPage(props: {
         <div className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
             <h1 className="text-4xl font-semibold mb-8">{product.title}</h1>
             {progress?.certificateId && (
-                <Link href={`/accomplishment/${progress.certificateId}`}>
-                    <Button2>{BTN_VIEW_CERTIFICATE}</Button2>
+                <Link
+                    href={`/accomplishment/${progress.certificateId}`}
+                    className="mb-4"
+                >
+                    <Button2>
+                        <BadgeCheck className="h-4 w-4" />{" "}
+                        {BTN_VIEW_CERTIFICATE}
+                    </Button2>
                 </Link>
             )}
             {!isEnrolled(product.courseId, profile as Profile) &&

@@ -33,7 +33,7 @@ import {
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import { truncate } from "@ui-lib/utils";
-import useProduct from "../../../../../../../../../hooks/use-product";
+import useProduct from "@/hooks/use-product";
 import { AddressContext } from "@components/contexts";
 import DashboardContent from "@components/admin/dashboard-content";
 import { Constants, DripType, UIConstants } from "@courselit/common-models";
@@ -42,6 +42,8 @@ import { FetchBuilder } from "@courselit/utils";
 import Resources from "@components/resources";
 import EmailViewer from "@components/admin/mails/email-viewer";
 import { defaultEmail, Email as EmailContent } from "@courselit/email-editor";
+
+const { permissions } = UIConstants;
 
 export default function SectionPage(props: {
     params: Promise<{ id: string; section: string }>;
@@ -282,7 +284,13 @@ export default function SectionPage(props: {
     };
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[
+                permissions.manageAnyCourse,
+                permissions.manageCourse,
+            ]}
+        >
             <div className="space-y-6">
                 <div>
                     <h1 className="text-4xl font-semibold">

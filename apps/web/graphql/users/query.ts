@@ -119,13 +119,17 @@ const queries = {
     getCertificate: {
         type: types.certificateType,
         args: {
-            certificateId: { type: GraphQLString },
+            certificateId: { type: new GraphQLNonNull(GraphQLString) },
+            courseId: { type: GraphQLString },
         },
         resolve: (
             _: any,
-            { certificateId }: { certificateId: string },
+            {
+                certificateId,
+                courseId,
+            }: { certificateId: string; courseId?: string },
             context: GQLContext,
-        ) => getCertificate(certificateId, context),
+        ) => getCertificate(certificateId, context, courseId),
     },
 };
 

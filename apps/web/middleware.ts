@@ -66,12 +66,6 @@ export default auth(async (request: NextRequest) => {
 });
 
 export const config = {
-    matcher: [
-        "/",
-        "/favicon.ico",
-        "/api/:path*",
-        "/healthy",
-        "/accomplishment/:path*",
-    ],
+    matcher: ["/", "/favicon.ico", "/api/:path*", "/healthy"],
     unstable_allowDynamic: ["/node_modules/next-auth/**"],
 };

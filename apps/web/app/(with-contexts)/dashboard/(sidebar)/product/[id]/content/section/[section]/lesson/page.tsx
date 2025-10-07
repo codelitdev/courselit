@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+const { permissions } = UIConstants;
 
 import {
     Dialog,
@@ -906,7 +907,7 @@ export default function LessonPage() {
                     lessonData: {
                         title: lesson?.title,
                         downloadable: lesson?.downloadable,
-                        type: lesson?.type.toUpperCase(),
+                        type: lesson?.type?.toUpperCase(),
                         content: formatContentForSending(),
                         courseId: lesson?.courseId,
                         requiresEnrollment: lesson?.requiresEnrollment,
@@ -1021,7 +1022,13 @@ export default function LessonPage() {
     );
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[
+                permissions.manageAnyCourse,
+                permissions.manageCourse,
+            ]}
+        >
             <header>
                 <h1 className="text-4xl font-semibold">
                     {product?.type?.toLowerCase() ===

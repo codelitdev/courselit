@@ -6,7 +6,6 @@ export interface Certificate {
     certificateId: string;
     userId: string;
     courseId: string;
-    lastDownloadedAt: Date;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -22,7 +21,6 @@ const CertificateSchema = new mongoose.Schema(
         },
         userId: { type: String, required: true },
         courseId: { type: String, required: true },
-        lastDownloadedAt: { type: Date },
     },
     {
         timestamps: true,

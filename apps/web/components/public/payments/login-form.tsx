@@ -115,7 +115,10 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                     description: `Can't sign you in at this time`,
                 });
             } else {
-                await getUserProfile(address.backend);
+                const profile = await getUserProfile(address.backend);
+                if (profile) {
+                    setProfile(profile);
+                }
             }
         } finally {
             setLoading(false);
