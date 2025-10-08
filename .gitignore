@@ -14,7 +14,6 @@ coverage
 # Text editors configurations
 .vscode
 .rgignore
-.cursor
 
 # Env file
 .env*.local
@@ -40,3 +39,6 @@ report*.json
 .eslintcache
 
 .npmrc
+
+# Jest files
+globalConfig.json
