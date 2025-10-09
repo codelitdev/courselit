@@ -6,6 +6,12 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
+# check if jq is installed
+if ! command -v jq &> /dev/null; then
+    echo "jq could not be found. Please install it."
+    exit 1
+fi
+
 # # Check if the argument is valid
 # if [ "$1" != "patch" ] && [ "$1" != "minor" ]; then
 #     echo "Error: Invalid argument. Please use 'patch' or 'minor'."

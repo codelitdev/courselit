@@ -1,6 +1,6 @@
 {
     "name": "@courselit/web",
-    "version": "0.63.2",
+    "version": "0.63.3",
     "private": true,
     "scripts": {
         "dev": "next dev --turbopack",
