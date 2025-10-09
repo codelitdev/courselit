@@ -3,11 +3,9 @@
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@courselit/components-library";
-import { PaymentPlanType, Constants } from "@courselit/common-models";
+import { PaymentPlanType } from "@courselit/common-models";
 import PaymentPlanList from "@components/admin/payments/payment-plan-list";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
-
-const { MembershipEntityType } = Constants;
 
 interface PaymentPlansProps {
     productId: string;

@@ -19,8 +19,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-const { permissions } = UIConstants;
-
 import {
     Dialog,
     DialogContent,
@@ -30,7 +28,6 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-
 import {
     APP_MESSAGE_LESSON_DELETED,
     BUTTON_NEW_LESSON_TEXT,
@@ -49,6 +46,7 @@ import {
     Lesson,
     LessonType,
     Media,
+    Profile,
     Quiz,
     TextEditorContent,
     UIConstants,
@@ -69,6 +67,8 @@ import { QuizBuilder } from "@components/admin/products/quiz-builder";
 import { isTextEditorNonEmpty, truncate } from "@ui-lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@components/ui/separator";
+
+const { permissions } = UIConstants;
 
 const lessonTypes = [
     { value: Constants.LessonType.TEXT, label: "Text", icon: FileText },
@@ -273,7 +273,7 @@ export default function LessonPage() {
                                     <div className="aspect-video">
                                         <iframe
                                             className="w-full h-full rounded-lg"
-                                            src={`https://www.youtube.com/embed/${content.value.match(UIConstants.YOUTUBE_REGEX)[1]}`}
+                                            src={`https://www.youtube.com/embed/${content.value.match(UIConstants.YOUTUBE_REGEX)?.[1] ?? ""}`}
                                             title="YouTube video player"
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                             allowFullScreen
@@ -558,7 +558,7 @@ export default function LessonPage() {
                                         : undefined
                             }
                             strings={{}}
-                            profile={profile}
+                            profile={profile as Profile}
                             address={address}
                             mediaId={lesson?.media?.mediaId}
                             onRemove={() => {
@@ -979,7 +979,7 @@ export default function LessonPage() {
     };
 
     const formatContentForSending = () => {
-        switch (lesson?.type.toLowerCase()) {
+        switch (lesson?.type?.toLowerCase()) {
             case Constants.LessonType.TEXT:
                 return JSON.stringify(textContent);
             case Constants.LessonType.QUIZ:
@@ -1137,7 +1137,7 @@ export default function LessonPage() {
                                         {lesson.type ===
                                         Constants.LessonType.EMBED
                                             ? "Embed URL"
-                                            : `${lesson.type.charAt(0).toUpperCase() + lesson.type.slice(1)} Content`}
+                                            : `${lesson.type ? lesson.type.charAt(0).toUpperCase() + lesson.type.slice(1) : ""} Content`}
                                     </Label>
                                     {renderLessonContent()}
                                 </>
