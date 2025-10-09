@@ -237,50 +237,6 @@ export const getFullSiteSetup = async (
     }
 };
 
-export const getProfile = async (
-    backend: string,
-): Promise<Partial<Profile> | null> => {
-    const query = `
-        { profile: getUser {
-            name,
-            id,
-            email,
-            userId,
-            bio,
-            permissions,
-            purchases {
-                courseId,
-                completedLessons,
-                accessibleGroups
-            }
-            avatar {
-                    mediaId,
-                    originalFileName,
-                    mimeType,
-                    size,
-                    access,
-                    file,
-                    thumbnail,
-                    caption
-                },
-            }
-        }
-        `;
-    const fetch = new FetchBuilder()
-        .setUrl(`${backend}/api/graph`)
-        .setPayload(query)
-        .setIsGraphQLEndpoint(true)
-        .build();
-
-    try {
-        const response = await fetch.exec();
-        return response.profile;
-    } catch (e: any) {
-        console.log("getProfile", e.message); // eslint-disable-line no-console
-        return null;
-    }
-};
-
 export const isEnrolled = (courseId: string, profile: Profile) =>
     profile.purchases.some((purchase: any) => purchase.courseId === courseId);
 

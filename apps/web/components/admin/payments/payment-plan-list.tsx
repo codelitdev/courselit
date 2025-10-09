@@ -78,6 +78,7 @@ export default function PaymentPlanList({
     defaultPaymentPlanId,
     entityId,
     entityType,
+    disabled = false,
 }: {
     paymentPlans: PaymentPlan[];
     onPlanArchived: (planId: PaymentPlan["planId"]) => void;
@@ -85,6 +86,7 @@ export default function PaymentPlanList({
     defaultPaymentPlanId?: string;
     entityId: string;
     entityType: "community" | "product";
+    disabled?: boolean;
 }) {
     const [planToArchive, setPlanToArchive] = useState<PaymentPlan | null>(
         null,
@@ -131,8 +133,9 @@ export default function PaymentPlanList({
                                                     );
                                                 }}
                                                 disabled={
+                                                    disabled ||
                                                     defaultPaymentPlanId ===
-                                                    plan.planId
+                                                        plan.planId
                                                 }
                                             >
                                                 <Star
@@ -147,7 +150,7 @@ export default function PaymentPlanList({
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>Make default</p>
+                                            <p>Make recommended</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
@@ -172,6 +175,7 @@ export default function PaymentPlanList({
                                                                 true,
                                                             );
                                                         }}
+                                                        disabled={disabled}
                                                     >
                                                         <Archive className="h-3 w-3" />
                                                     </Button>
@@ -212,6 +216,7 @@ export default function PaymentPlanList({
                                                     planToArchive &&
                                                     handleArchive(planToArchive)
                                                 }
+                                                disabled={disabled}
                                             >
                                                 Archive
                                             </Button>

@@ -11,16 +11,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-// import {
-//     DropdownMenu,
-//     DropdownMenuContent,
-//     DropdownMenuItem,
-//     DropdownMenuLabel,
-//     DropdownMenuSeparator,
-//     DropdownMenuTrigger,
-// } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, UserPlus, Copy } from "lucide-react";
 import { useParams } from "next/navigation";
 import { capitalize, FetchBuilder } from "@courselit/utils";
@@ -51,6 +42,8 @@ import {
     User,
 } from "@courselit/common-models";
 import { Tooltip, useToast, Badge } from "@courselit/components-library";
+import { UIConstants } from "@courselit/common-models";
+const { permissions } = UIConstants;
 
 type Member = Pick<
     Membership,
@@ -179,7 +172,13 @@ export default function CustomersPage() {
     };
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[
+                permissions.manageAnyCourse,
+                permissions.manageCourse,
+            ]}
+        >
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold">Customers</h1>
                 <Link href={`/dashboard/product/${productId}/customer/new`}>

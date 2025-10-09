@@ -94,7 +94,7 @@ export default function Page() {
                 });
             }
         };
-        if (profile.userId && address.backend) {
+        if (profile?.userId && address.backend) {
             getUser(profile.userId);
         }
     }, [profile, address.backend]);
@@ -106,17 +106,6 @@ export default function Page() {
               id: $id
               avatar: $avatar
             }) {
-                id,
-                name,
-                userId,
-                email,
-                permissions,
-                purchases {
-                    courseId,
-                    completedLessons,
-                    accessibleGroups
-                },
-                bio,
                 avatar {
                     mediaId,
                     originalFileName,
@@ -135,7 +124,7 @@ export default function Page() {
             .setPayload({
                 query: mutation,
                 variables: {
-                    id: profile.id,
+                    id: profile!.id,
                     avatar: media || null,
                 },
             })
@@ -145,7 +134,10 @@ export default function Page() {
         try {
             const response = await fetch.exec();
             if (response.user) {
-                setProfile(response.user);
+                setProfile({
+                    ...profile!,
+                    avatar: response.user.avatar,
+                });
             }
         } catch (err: any) {
             toast({
@@ -172,9 +164,10 @@ export default function Page() {
                 email,
                 permissions,
                 purchases {
-                    courseId,
-                    completedLessons,
+                    courseId
+                    completedLessons
                     accessibleGroups
+                    certificateId
                 },
                 bio,
                 avatar {
@@ -195,7 +188,7 @@ export default function Page() {
             .setPayload({
                 query: mutation,
                 variables: {
-                    id: profile.id,
+                    id: profile!.id,
                     name,
                     bio,
                 },

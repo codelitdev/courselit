@@ -45,6 +45,7 @@ import { ActivityType } from "@courselit/common-models/dist/constants";
 import { verifyMandatoryTags } from "../mails/helpers";
 import { Email } from "@courselit/email-editor";
 import PaymentPlanModel from "@models/PaymentPlan";
+import CertificateTemplateModel from "@models/CertificateTemplate";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -129,10 +130,10 @@ export const getCourse = async (
     ctx: GQLContext,
     asGuest: boolean = false,
 ) => {
-    const course: InternalCourse | null = await CourseModel.findOne({
+    const course: InternalCourse | null = (await CourseModel.findOne({
         courseId: id,
         domain: ctx.subdomain._id,
-    }).lean();
+    }).lean()) as unknown as InternalCourse | null;
 
     if (!course) {
         throw new Error(responses.item_not_found);
@@ -150,20 +151,6 @@ export const getCourse = async (
     }
 
     if (course.published) {
-        // if (
-        //     [constants.course, constants.download].includes(
-        //         course.type as
-        //             | typeof constants.course
-        //             | typeof constants.download,
-        //     )
-        // ) {
-        //     const { nextLesson } = await getPrevNextCursor(
-        //         course.courseId,
-        //         ctx.subdomain._id,
-        //     );
-        //     (course as any).firstLesson = nextLesson;
-        // }
-        // course.groups = accessibleGroups;
         return await formatCourse(course.courseId, ctx);
     } else {
         return null;
@@ -917,4 +904,68 @@ export const getStudents = async ({
     ]);
 
     return result;
+};
+
+export const getCourseCertificateTemplate = async (
+    courseId: string,
+    ctx: GQLContext,
+) => {
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
+
+    const certificateTemplate = await CertificateTemplateModel.findOne({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+    });
+
+    return certificateTemplate;
+};
+
+export const updateCourseCertificateTemplate = async ({
+    courseId,
+    ctx,
+    title,
+    subtitle,
+    description,
+    signatureImage,
+    signatureName,
+    signatureDesignation,
+    logo,
+}: {
+    courseId: string;
+    ctx: GQLContext;
+    title?: string;
+    subtitle?: string;
+    description?: string;
+    signatureImage?: string;
+    signatureName?: string;
+    signatureDesignation?: string;
+    logo?: string;
+}) => {
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
+
+    const updatedTemplate = await CertificateTemplateModel.findOneAndUpdate(
+        {
+            domain: ctx.subdomain._id,
+            courseId: course.courseId,
+        },
+        {
+            title,
+            subtitle,
+            description,
+            signatureImage,
+            signatureName,
+            signatureDesignation,
+            logo,
+        },
+        { upsert: true, new: true },
+    );
+    return {
+        title: updatedTemplate.title,
+        subtitle: updatedTemplate.subtitle,
+        description: updatedTemplate.description,
+        signatureImage: updatedTemplate.signatureImage,
+        signatureName: updatedTemplate.signatureName,
+        signatureDesignation: updatedTemplate.signatureDesignation,
+        logo: updatedTemplate.logo,
+    };
 };

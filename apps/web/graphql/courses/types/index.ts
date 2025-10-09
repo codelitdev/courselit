@@ -166,6 +166,7 @@ const courseType = new GraphQLObjectType({
         defaultPaymentPlan: { type: GraphQLString },
         sales: { type: GraphQLFloat },
         customers: { type: GraphQLInt },
+        certificate: { type: GraphQLBoolean },
     },
 });
 
@@ -190,6 +191,7 @@ const courseUpdateInput = new GraphQLInputObjectType({
         description: { type: GraphQLString },
         featuredImage: { type: mediaTypes.mediaInputType },
         leadMagnet: { type: GraphQLBoolean },
+        certificate: { type: GraphQLBoolean },
     },
 });
 
@@ -266,6 +268,19 @@ const enrolledCourses = new GraphQLObjectType({
     },
 });
 
+const certificateTemplateType = new GraphQLObjectType({
+    name: "CertificateTemplate",
+    fields: {
+        title: { type: GraphQLString },
+        subtitle: { type: GraphQLString },
+        description: { type: GraphQLString },
+        signatureImage: { type: mediaTypes.mediaType },
+        signatureName: { type: GraphQLString },
+        signatureDesignation: { type: GraphQLString },
+        logo: { type: mediaTypes.mediaType },
+    },
+});
+
 export default {
     courseType,
     courseStatusType,
@@ -278,4 +293,5 @@ export default {
     reports,
     dripType,
     dripInputType,
+    certificateTemplateType,
 };

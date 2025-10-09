@@ -1,0 +1,244 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title Certificate
+    style.
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: white;
+        margin: 0;
+        padding: 0;
+      }
+      
+      .certificate-container {
+        width: 11in;
+        height: 8.5in;
+        margin: 0 auto;
+        background: white;
+        padding: 0.75in;
+        position: relative;
+        box-sizing: border-box;
+      }
+      
+      .certificate-border {
+        position: absolute;
+        top: 0.25in;
+        left: 0.25in;
+        right: 0.25in;
+        bottom: 0.25in;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      
+      .header {
+        text-align: center;
+        margin-bottom: 2rem;
+        position: relative;
+        z-index: 10;
+      }
+      
+      .logo {
+        margin-bottom: 1rem;
+      }
+      
+      .logo img {
+        max-width: 80px;
+        max-height: 80px;
+      }
+      
+      .title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #1A202C;
+        margin-bottom: 0.5rem;
+        letter-spacing: 1px;
+      }
+      
+      .divider {
+        width: 8rem;
+        height: 2px;
+        background: #000;
+        margin: 0 auto 1.5rem;
+      }
+      
+      .content {
+        text-align: center;
+        margin-bottom: 3rem;
+        position: relative;
+        z-index: 10;
+      }
+      
+      .subtitle {
+        font-size: 1.2rem;
+        color: #1A202C;
+        margin-bottom: 1rem;
+        font-weight: normal;
+      }
+      
+      .recipient-name {
+        font-size: 2.2rem;
+        font-weight: bold;
+        color: #1A202C;
+        margin-bottom: 1rem;
+        letter-spacing: 1px;
+      }
+      
+      .description {
+        font-size: 1rem;
+        color: #1A202C;
+        max-width: 24rem;
+        margin: 0 auto 1rem;
+        line-height: 1.5;
+        font-weight: normal;
+      }
+      
+      .course-title {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #1A202C;
+        margin-bottom: 0.5rem;
+      }
+      
+      .footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-top: auto;
+        position: relative;
+        z-index: 10;
+      }
+      
+      .signature-section {
+        flex: 1;
+        text-align: center;
+      }
+      
+      .signature-image {
+        margin-bottom: 0.5rem;
+      }
+      
+      .signature-image img {
+        max-width: 100px;
+        max-height: 50px;
+      }
+      
+      .signature-line {
+        width: 8rem;
+        height: 2px;
+        background: #000;
+        margin: 0 auto 0.5rem;
+      }
+      
+      .signature-name {
+        font-size: 0.9rem;
+        font-weight: normal;
+        color: #1A202C;
+      }
+      
+      .signature-designation {
+        font-size: 0.8rem;
+        color: #1A202C;
+        font-weight: normal;
+      }
+      
+      .date-section {
+        flex: 1;
+        text-align: center;
+      }
+      
+      .date-line {
+        width: 8rem;
+        height: 2px;
+        background: #000;
+        margin: 0 auto 0.5rem;
+      }
+      
+      .date-label {
+        font-size: 0.9rem;
+        font-weight: normal;
+        color: #1A202C;
+      }
+      
+      .date-value {
+        font-size: 0.8rem;
+        color: #1A202C;
+        font-weight: normal;
+      }
+      
+      .certificate-id {
+        position: absolute;
+        bottom: 0.75in;
+        left: 0.75in;
+        right: 0.75in;
+        text-align: center;
+        border-top: 1px solid #ccc;
+        padding-top: 0.5rem;
+        z-index: 10;
+      }
+      
+      .certificate-id-text {
+        font-size: 0.7rem;
+        color: #888;
+        font-weight: normal;
+      }
+      
+      @media print {
+        body {
+          margin: 0;
+          padding: 0;
+        }
+        
+        .certificate-container {
+          margin: 0;
+          box-shadow: none;
+        }
+        
+        @page {
+          size: letter landscape;
+          margin: 0;
+        }
+      }
+  body
+    .certificate-container
+      .certificate-border
+      
+      .header
+        if certificate && certificate.logo
+          .logo
+            img(src=certificate.logo.file, alt="Logo")
+        h1.title= certificate ? certificate.title : "Congratulations"
+        .divider
+      
+      .content
+        if certificate && certificate.subtitle
+          p.subtitle= certificate.subtitle
+        h2.recipient-name= certificate ? certificate.userName : "Student Name"
+        if certificate && certificate.description
+          p.description= certificate.description
+        h3.course-title= certificate ? certificate.productTitle : "Certified Course"
+      
+      .footer
+        .signature-section
+          if certificate && certificate.signatureImage
+            .signature-image
+              img(src=certificate.signatureImage.file, alt="Signature")
+          .signature-line
+          p.signature-name= certificate ? certificate.signatureName : "Instructor"
+          if certificate && certificate.signatureDesignation
+            p.signature-designation= certificate.signatureDesignation
+        
+        .date-section
+          .date-line
+          p.date-label Date of Completion
+          p.date-value= createdAt || "Date"
+      
+      .certificate-id
+        p.certificate-id-text ID: #{certificate ? certificate.certificateId : "N/A"}

@@ -69,6 +69,7 @@ export default function Page() {
                             thumbnail
                         }
                         type
+                        certificateId
                     }
                 }
             }

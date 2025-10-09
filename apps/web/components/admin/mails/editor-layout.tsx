@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { CheckCircled, Sync } from "@courselit/icons";
+import { BUTTON_SAVING } from "@ui-config/strings";
 import { Check, Copy } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -104,7 +105,7 @@ export const EmailEditorLayout = ({
                             <div className="flex items-center gap-2">
                                 <Sync className="h-4 w-4 animate-spin text-muted-foreground" />
                                 <span className="text-sm text-muted-foreground">
-                                    Saving...
+                                    {BUTTON_SAVING}
                                 </span>
                             </div>
                         )}

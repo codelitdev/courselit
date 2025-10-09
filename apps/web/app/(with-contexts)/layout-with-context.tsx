@@ -37,52 +37,6 @@ function LayoutContent({
     const { toast } = useToast();
 
     useEffect(() => {
-        // const getUserProfile = async () => {
-        //     const query = `
-        //     { profile: getUser {
-        //         name,
-        //         id,
-        //         email,
-        //         userId,
-        //         bio,
-        //         permissions,
-        //         purchases {
-        //             courseId,
-        //             completedLessons,
-        //             accessibleGroups
-        //         }
-        //         avatar {
-        //                 mediaId,
-        //                 originalFileName,
-        //                 mimeType,
-        //                 size,
-        //                 access,
-        //                 file,
-        //                 thumbnail,
-        //                 caption
-        //             },
-        //         }
-        //     }
-        //     `;
-        //     const fetch = new FetchBuilder()
-        //         .setUrl(`${address}/api/graph`)
-        //         .setPayload(query)
-        //         .setIsGraphQLEndpoint(true)
-        //         .build();
-        //     try {
-        //         const response = await fetch.exec();
-        //         if (response.profile) {
-        //             setProfile(response.profile);
-        //         }
-        //     } catch (err) {
-        //         toast({
-        //             title: TOAST_TITLE_ERROR,
-        //             description: err.message,
-        //             variant: "destructive",
-        //         });
-        //     }
-        // };
-
         if (address && session) {
             updateUserProfile();
         }

@@ -19,6 +19,9 @@ import { truncate } from "@ui-lib/utils";
 import DashboardContent from "@components/admin/dashboard-content";
 import { FetchBuilder } from "@courselit/utils";
 import { useToast } from "@courselit/components-library";
+import { UIConstants } from "@courselit/common-models";
+
+const { permissions } = UIConstants;
 
 export default function SectionPage() {
     const { toast } = useToast();
@@ -127,7 +130,13 @@ export default function SectionPage() {
     };
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[
+                permissions.manageAnyCourse,
+                permissions.manageCourse,
+            ]}
+        >
             <div className="space-y-6">
                 <div>
                     <h1 className="text-4xl font-semibold">

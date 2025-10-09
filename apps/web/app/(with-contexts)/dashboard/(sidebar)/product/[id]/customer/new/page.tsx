@@ -11,6 +11,8 @@ import { truncate } from "@ui-lib/utils";
 import { useContext } from "react";
 import useProduct from "@/hooks/use-product";
 import { useParams } from "next/navigation";
+import { UIConstants } from "@courselit/common-models";
+const { permissions } = UIConstants;
 
 export default function Page() {
     const params = useParams();
@@ -27,11 +29,14 @@ export default function Page() {
     ];
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
-            <NewCustomer
-                courseId={product?.courseId as string}
-                address={address}
-            />
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[
+                permissions.manageAnyCourse,
+                permissions.manageCourse,
+            ]}
+        >
+            <NewCustomer courseId={product?.courseId as string} />
         </DashboardContent>
     );
 }

@@ -1,0 +1,10 @@
+---
+alwaysApply: true
+---
+
+- Use `pnpm` as package manager.
+- The project is structured as a monorepo i.e. a pnpm workspace. The apps are in `apps` folder and re-usable packages are in `packages`.
+- Command for running script in a workspace: `pnpm --filter <workspace> <command>`.
+- Command for running tests: `pnpm test`.
+- The project uses shadcn for building UI so stick to its conventions and design.
+- In `apps/web` workspace, create a string first in `apps/web/config/strings.ts` and then import it in the `.tsx` files, instead of using inline strings.

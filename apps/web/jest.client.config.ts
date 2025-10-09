@@ -6,9 +6,16 @@ const createJestConfig = nextJest({
 });
 
 const config: Config = {
-    coverageProvider: "v8",
     testEnvironment: "jsdom",
-    setupFilesAfterEnv: ["<rootDir>/setupTests.ts"],
+    setupFilesAfterEnv: ["<rootDir>/setupTests.client.ts"],
+    watchPathIgnorePatterns: ["globalConfig"],
+    testPathIgnorePatterns: [
+        "/node_modules/",
+        "/.next/",
+        // Exclude MongoDB tests - they will be handled by the MongoDB config
+        ".*/graphql/.*/__tests__/.*\\.test\\.(ts|tsx)$",
+        ".*/api/.*/__tests__/.*\\.test\\.(ts|tsx)$",
+    ],
     // collectCoverage: true,
     // collectCoverageFrom: [
     //     '**/*.{js,jsx,ts,tsx}',
@@ -33,7 +40,28 @@ const config: Config = {
         "@/auth": "<rootDir>/auth.ts",
         "@/payments-new": "<rootDir>/payments-new",
         "@/graphql/(.*)": "<rootDir>/graphql/$1",
+        "@/config/(.*)": "<rootDir>/config/$1",
+        "@/lib/(.*)": "<rootDir>/lib/$1",
+        "@/services/(.*)": "<rootDir>/services/$1",
+        "@/templates/(.*)": "<rootDir>/templates/$1",
+        "@/app/(.*)": "<rootDir>/app/$1",
+        "@ui-lib/(.*)": "<rootDir>/ui-lib/$1",
+        "@config/(.*)": "<rootDir>/config/$1",
+        "@/models/(.*)": "<rootDir>/models/$1",
+        "\\.(css|less|scss|sass)$": "identity-obj-proxy",
     },
+    transform: {
+        "^.+\\.(ts|tsx)$": [
+            "ts-jest",
+            {
+                tsconfig: {
+                    jsx: "react-jsx",
+                },
+            },
+        ],
+    },
+    testMatch: ["**/__tests__/**/*.(test|spec).(ts|tsx|js)"],
+    moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
 };
 
 export default createJestConfig(config);

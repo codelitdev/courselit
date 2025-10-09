@@ -92,6 +92,13 @@ export const validateCourse = async (
         }
     }
 
+    if (
+        courseData.certificate &&
+        courseData.type !== Constants.CourseType.COURSE
+    ) {
+        throw new Error(responses.certificate_invalid_settings);
+    }
+
     return courseData;
 };
 

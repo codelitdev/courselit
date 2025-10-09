@@ -41,9 +41,9 @@ import {
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
 import { AddressContext } from "@components/contexts";
-import useProduct from "../../../../../../../hooks/use-product";
+import useProduct from "@/hooks/use-product";
 import { truncate } from "@ui-lib/utils";
-import { Constants, Lesson } from "@courselit/common-models";
+import { Constants, Lesson, UIConstants } from "@courselit/common-models";
 import { DragAndDrop, useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import {
@@ -53,6 +53,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Droplets } from "lucide-react";
+const { permissions } = UIConstants;
 
 export default function ContentPage() {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -186,7 +187,13 @@ export default function ContentPage() {
     };
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[
+                permissions.manageAnyCourse,
+                permissions.manageCourse,
+            ]}
+        >
             <h1 className="text-4xl font-semibold tracking-tight mb-8">
                 Content
             </h1>
