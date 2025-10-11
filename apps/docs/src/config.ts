@@ -47,6 +47,7 @@ export const SIDEBAR: Sidebar = {
     en: {
         "Getting started": [
             { text: "What is CourseLit", link: "en/introduction" },
+            { text: "Our vision", link: "en/vision" },
             { text: "Features", link: "en/features" },
         ],
         "Online courses": [
