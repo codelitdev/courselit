@@ -322,6 +322,7 @@ const config: Config = {
             variants: ["hover", "disabled", "dark"],
         },
         "transition",
+        "backdrop-blur-2xl",
         {
             pattern: /transition-(all|colors|opacity|shadow|transform|none)/,
         },

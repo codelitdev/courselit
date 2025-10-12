@@ -1,5 +1,7 @@
 import { WidgetDefaultSettings } from "@courselit/common-models";
 
+export type Layout = "fixed" | "floating";
+
 export interface Link {
     label: string;
     href: string;
@@ -10,15 +12,12 @@ export interface Link {
 
 export default interface Settings extends WidgetDefaultSettings {
     links: Link[];
-    // appBarBackground: string;
-    // logoColor: string;
-    // loginBtnColor: string;
-    // loginBtnBgColor: string;
-    // linkColor: string;
     linkAlignment: "left" | "right" | "center";
     showLoginControl: boolean;
     linkFontWeight: "font-normal" | "font-light" | "font-bold";
     spacingBetweenLinks: number;
     githubRepo?: string;
     showGithubStars?: boolean;
+    layout?: Layout;
+    backdropBlur?: boolean;
 }

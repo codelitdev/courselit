@@ -20,6 +20,8 @@ import {
     Section,
     Link as PrimitiveLink,
     Button,
+    PageCard,
+    PageCardContent,
 } from "@courselit/page-primitives";
 import PageLink from "./link";
 import clsx from "clsx";
@@ -59,46 +61,91 @@ export default function Widget({
         stargazers = stargazersCount;
     }
 
-    return (
-        <Section
-            theme={overiddenTheme}
-            className={clsx("sticky top-0 z-20 backdrop-blur border-b")}
-            component="header"
-        >
-            <div className={`flex justify-between items-center w-full`}>
-                <AppLink href="/" className="!no-underline">
-                    <div className="flex items-center">
-                        {state.siteinfo.logo && (
-                            <div className="mr-2">
-                                <Image
-                                    alt={state.siteinfo.logo.caption}
-                                    src={state.siteinfo.logo.file}
-                                    borderRadius={2}
-                                    width="w-[32px]"
-                                    height="h-[32px]"
-                                />
-                            </div>
-                        )}
-                        <Header4 theme={overiddenTheme}>
-                            {state.siteinfo.title}
-                        </Header4>
+    const mainContent = (
+        <div className={`flex justify-between items-center w-full`}>
+            <AppLink href="/" className="!no-underline">
+                <div className="flex items-center">
+                    {state.siteinfo.logo && (
+                        <div className="mr-2">
+                            <Image
+                                alt={state.siteinfo.logo.caption}
+                                src={state.siteinfo.logo.file}
+                                borderRadius={2}
+                                width="w-[32px]"
+                                height="h-[32px]"
+                            />
+                        </div>
+                    )}
+                    <Header4 theme={overiddenTheme}>
+                        {state.siteinfo.title}
+                    </Header4>
+                </div>
+            </AppLink>
+            <div
+                className={`hidden px-4 lg:!flex lg:!grow lg:!items-center ${
+                    linkAlignment === "right"
+                        ? "justify-end"
+                        : linkAlignment === "center"
+                          ? "justify-center"
+                          : "justify-start"
+                }`}
+                style={{
+                    gap: `${spacingBetweenLinks}px`,
+                }}
+            >
+                {settings.links &&
+                    (settings.links as Link[])
+                        .filter((x) => !x.isPrimary)
+                        .map((link: Link, index) => (
+                            <PageLink
+                                key={index}
+                                href={link.href}
+                                theme={overiddenTheme}
+                                linkFontWeight={linkFontWeight}
+                                isButton={link.isButton}
+                                label={link.label}
+                            />
+                        ))}
+            </div>
+            <div className="flex gap-4 items-center">
+                {settings.githubRepo && (
+                    <div className="lg:!block hidden">
+                        <AppLink
+                            href={`https://github.com/${settings.githubRepo}`}
+                            openInSameTab={false}
+                        >
+                            <PrimitiveLink
+                                theme={overiddenTheme}
+                                className="flex items-center gap-2"
+                            >
+                                <Github width={24} height={24} />
+                                {settings.showGithubStars && stargazers > 0 && (
+                                    <span className="text-xs">
+                                        {formatCompactNumber(stargazers)}
+                                    </span>
+                                )}
+                            </PrimitiveLink>
+                        </AppLink>
                     </div>
-                </AppLink>
-                <div
-                    className={`hidden px-4 lg:!flex lg:!grow lg:!items-center ${
-                        linkAlignment === "right"
-                            ? "justify-end"
-                            : linkAlignment === "center"
-                              ? "justify-center"
-                              : "justify-start"
-                    }`}
-                    style={{
-                        gap: `${spacingBetweenLinks}px`,
-                    }}
+                )}
+                <Button
+                    variant="ghost"
+                    className="relative h-8 w-8 rounded-full"
+                    size="icon"
+                    theme={overiddenTheme}
+                    onClick={() => toggleTheme()}
                 >
-                    {settings.links &&
-                        (settings.links as Link[])
-                            .filter((x) => !x.isPrimary)
+                    {isClient &&
+                        (nextTheme === "dark" ? (
+                            <Sun className="w-4 h-4" />
+                        ) : (
+                            <Moon className="w-4 h-4" />
+                        ))}
+                </Button>
+                {settings.links && (
+                    <div className="lg:!block hidden">
+                        {settings.links
+                            .filter((x) => x.isPrimary)
                             .map((link: Link, index) => (
                                 <PageLink
                                     key={index}
@@ -109,124 +156,98 @@ export default function Widget({
                                     label={link.label}
                                 />
                             ))}
-                </div>
-                <div className="flex gap-4 items-center">
-                    {settings.githubRepo && (
-                        <div className="lg:!block hidden">
-                            <AppLink
-                                href={`https://github.com/${settings.githubRepo}`}
-                                openInSameTab={false}
-                            >
-                                <PrimitiveLink
-                                    theme={overiddenTheme}
-                                    className="flex items-center gap-2"
+                    </div>
+                )}
+                {settings.showLoginControl && (
+                    <div className="lg:!block hidden">
+                        <Menu
+                            trigger={
+                                <Button2
+                                    variant="ghost"
+                                    className="relative h-8 w-8 rounded-full"
                                 >
-                                    <Github width={24} height={24} />
-                                    {settings.showGithubStars &&
-                                        stargazers > 0 && (
-                                            <span className="text-xs">
-                                                {formatCompactNumber(
-                                                    stargazers,
-                                                )}
-                                            </span>
-                                        )}
-                                </PrimitiveLink>
-                            </AppLink>
-                        </div>
-                    )}
-                    <Button
-                        variant="ghost"
-                        className="relative h-8 w-8 rounded-full"
-                        size="icon"
-                        theme={overiddenTheme}
-                        onClick={() => toggleTheme()}
-                    >
-                        {isClient &&
-                            (nextTheme === "dark" ? (
-                                <Sun className="w-4 h-4" />
-                            ) : (
-                                <Moon className="w-4 h-4" />
-                            ))}
-                    </Button>
-                    {settings.links && (
-                        <div className="lg:!block hidden">
-                            {settings.links
-                                .filter((x) => x.isPrimary)
-                                .map((link: Link, index) => (
-                                    <PageLink
-                                        key={index}
-                                        href={link.href}
-                                        theme={overiddenTheme}
-                                        linkFontWeight={linkFontWeight}
-                                        isButton={link.isButton}
-                                        label={link.label}
-                                    />
-                                ))}
-                        </div>
-                    )}
-                    {settings.showLoginControl && (
-                        <div className="lg:!block hidden">
-                            <Menu
-                                trigger={
-                                    <Button2
-                                        variant="ghost"
-                                        className="relative h-8 w-8 rounded-full"
-                                    >
-                                        <div>
-                                            <Person />
-                                        </div>
-                                    </Button2>
-                                }
-                            >
-                                {!state.auth.guest && (
-                                    <MenuItem2>
-                                        <AppLink
-                                            href={"/dashboard"}
-                                            className={linkClasses}
-                                        >
-                                            <PrimitiveLink
-                                                theme={overiddenTheme}
-                                                className="!no-underline"
-                                            >
-                                                Dashboard
-                                            </PrimitiveLink>
-                                        </AppLink>
-                                    </MenuItem2>
-                                )}
+                                    <div>
+                                        <Person />
+                                    </div>
+                                </Button2>
+                            }
+                        >
+                            {!state.auth.guest && (
                                 <MenuItem2>
                                     <AppLink
-                                        href={
-                                            state.auth.guest
-                                                ? "/login"
-                                                : "/logout"
-                                        }
+                                        href={"/dashboard"}
                                         className={linkClasses}
                                     >
                                         <PrimitiveLink
                                             theme={overiddenTheme}
                                             className="!no-underline"
                                         >
-                                            {state.auth.guest
-                                                ? "Login"
-                                                : "Logout"}
+                                            Dashboard
                                         </PrimitiveLink>
                                     </AppLink>
                                 </MenuItem2>
-                            </Menu>
-                        </div>
-                    )}
-                    <MobileNav
-                        title={state.siteinfo.title}
-                        logo={state.siteinfo.logo}
-                        links={settings.links}
-                        linkFontWeight={linkFontWeight}
-                        spacingBetweenLinks={spacingBetweenLinks}
-                        theme={overiddenTheme}
-                        showLoginControl={settings.showLoginControl}
-                        isGuest={state.auth.guest}
-                    />
-                </div>
+                            )}
+                            <MenuItem2>
+                                <AppLink
+                                    href={
+                                        state.auth.guest ? "/login" : "/logout"
+                                    }
+                                    className={linkClasses}
+                                >
+                                    <PrimitiveLink
+                                        theme={overiddenTheme}
+                                        className="!no-underline"
+                                    >
+                                        {state.auth.guest ? "Login" : "Logout"}
+                                    </PrimitiveLink>
+                                </AppLink>
+                            </MenuItem2>
+                        </Menu>
+                    </div>
+                )}
+                <MobileNav
+                    title={state.siteinfo.title}
+                    logo={state.siteinfo.logo}
+                    links={settings.links}
+                    linkFontWeight={linkFontWeight}
+                    spacingBetweenLinks={spacingBetweenLinks}
+                    theme={overiddenTheme}
+                    showLoginControl={settings.showLoginControl}
+                    isGuest={state.auth.guest}
+                />
             </div>
+        </div>
+    );
+
+    return (
+        <Section
+            theme={overiddenTheme}
+            className={clsx(
+                "sticky top-0 z-20",
+                settings.layout === "fixed"
+                    ? settings.backdropBlur
+                        ? "border-b backdrop-blur-2xl bg-transparent"
+                        : "border-b"
+                    : "bg-transparent",
+            )}
+            component="header"
+        >
+            {settings.layout === "floating" ? (
+                <PageCard
+                    theme={overiddenTheme}
+                    className={
+                        settings.backdropBlur
+                            ? "backdrop-blur-2xl bg-transparent"
+                            : ""
+                    }
+                >
+                    <PageCardContent theme={overiddenTheme} className="!p-2">
+                        {mainContent}
+                    </PageCardContent>
+                </PageCard>
+            ) : (
+                mainContent
+            )}
         </Section>
     );
 }

@@ -110,6 +110,10 @@ export default function AdminWidget({
     const [background, setBackground] = useState<SectionBackground>(
         settings.background,
     );
+    const [layout, setLayout] = useState<"normal" | "card">(
+        settings.layout || "normal",
+    );
+    const hasHeroGraphic = youtubeLink || (media && media.mediaId);
 
     const onSettingsChanged = () =>
         onChange({
@@ -133,6 +137,7 @@ export default function AdminWidget({
             objectFit,
             maxWidth,
             background,
+            layout,
         });
 
     useEffect(() => {
@@ -158,6 +163,7 @@ export default function AdminWidget({
         objectFit,
         maxWidth,
         background,
+        layout,
     ]);
 
     return (
@@ -315,16 +321,27 @@ export default function AdminWidget({
                 </Accordion>
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Design" value="design">
+                {hasHeroGraphic && (
+                    <Select
+                        title="Media alignment"
+                        value={alignment}
+                        options={[
+                            { label: "Left", value: "left" },
+                            { label: "Right", value: "right" },
+                        ]}
+                        onChange={(value: Alignment | "right") =>
+                            setAlignment(value)
+                        }
+                    />
+                )}
                 <Select
-                    title="Alignment"
-                    value={alignment}
+                    title="Layout"
+                    value={layout}
                     options={[
-                        { label: "Left", value: "left" },
-                        { label: "Right", value: "right" },
+                        { label: "Normal", value: "normal" },
+                        { label: "Card", value: "center" },
                     ]}
-                    onChange={(value: Alignment | "right") =>
-                        setAlignment(value)
-                    }
+                    onChange={(value: "normal" | "card") => setLayout(value)}
                 />
                 <Select
                     title="Content alignment"
