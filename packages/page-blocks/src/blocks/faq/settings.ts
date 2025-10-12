@@ -13,4 +13,5 @@ export default interface Settings extends WidgetDefaultSettings {
     items?: Item[];
     cssId?: string;
     itemBeingEditedIndex?: number;
+    layout?: "horizontal" | "vertical";
 }

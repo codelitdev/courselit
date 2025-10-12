@@ -15,6 +15,7 @@ import {
     Text1,
 } from "@courselit/page-primitives";
 import { ThemeStyle } from "@courselit/page-models";
+import clsx from "clsx";
 
 export default function Widget({
     settings: {
@@ -26,6 +27,7 @@ export default function Widget({
         maxWidth,
         verticalPadding,
         itemBeingEditedIndex,
+        layout,
     },
     state,
     editing,
@@ -36,19 +38,23 @@ export default function Widget({
         maxWidth || theme.theme.structure.page.width;
     overiddenTheme.structure.section.padding.y =
         verticalPadding || theme.theme.structure.section.padding.y;
-    const accordionValue = editing
-        ? `${items[itemBeingEditedIndex]?.title}-${itemBeingEditedIndex}`
-        : undefined;
 
     return (
         <Section theme={overiddenTheme} id={cssId}>
-            <div className={`flex flex-col gap-4`}>
+            <div
+                className={clsx(
+                    "flex gap-4 flex-col",
+                    layout === "horizontal" ? "lg:flex-row" : "",
+                )}
+            >
                 <div
-                    className={`flex flex-col ${
+                    className={clsx(
+                        "flex w-full flex-col",
                         headerAlignment === "center"
                             ? "items-center"
-                            : "items-start"
-                    }`}
+                            : "items-start",
+                        layout === "horizontal" ? "lg:w-1/2" : "",
+                    )}
                 >
                     <Header1 className="mb-4" theme={overiddenTheme}>
                         {title}
@@ -68,12 +74,21 @@ export default function Widget({
                     )}
                 </div>
                 {items && items.length > 0 && (
-                    <div className="flex flex-wrap gap-[1%]">
+                    <div
+                        className={clsx(
+                            "flex w-full flex-wrap gap-[1%]",
+                            layout === "horizontal" ? "lg:w-1/2" : "",
+                        )}
+                    >
                         <Accordion
                             type="single"
                             collapsible
                             className="w-full"
-                            value={accordionValue}
+                            value={
+                                editing
+                                    ? `${items[itemBeingEditedIndex]?.title}-${itemBeingEditedIndex}`
+                                    : undefined
+                            }
                         >
                             {items.map((item: Item, index: number) => (
                                 <AccordionItem

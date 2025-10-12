@@ -95,6 +95,7 @@ export default function AdminWidget({
         ThemeStyle["structure"]["section"]["padding"]["y"]
     >(settings.verticalPadding);
     const [cssId, setCssId] = useState(settings.cssId);
+    const [layout, setLayout] = useState(settings.layout || "vertical");
 
     const onSettingsChanged = () =>
         onChange({
@@ -106,6 +107,7 @@ export default function AdminWidget({
             verticalPadding,
             cssId,
             itemBeingEditedIndex,
+            layout,
         });
 
     useEffect(() => {
@@ -119,6 +121,7 @@ export default function AdminWidget({
         verticalPadding,
         cssId,
         itemBeingEditedIndex,
+        layout,
     ]);
 
     const onItemChange = (newItemData: Item) => {
@@ -231,6 +234,17 @@ export default function AdminWidget({
                         { label: "Center", value: "center" },
                     ]}
                     onChange={(value: Alignment) => setHeaderAlignment(value)}
+                />
+                <Select
+                    title="Layout"
+                    value={layout}
+                    options={[
+                        { label: "Horizontal", value: "horizontal" },
+                        { label: "Vertical", value: "vertical" },
+                    ]}
+                    onChange={(value: "horizontal" | "vertical") =>
+                        setLayout(value)
+                    }
                 />
                 <MaxWidthSelector
                     value={maxWidth || theme.theme.structure.page.width}
