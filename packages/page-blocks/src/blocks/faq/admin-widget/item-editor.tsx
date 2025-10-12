@@ -6,8 +6,11 @@ import {
     Form,
     FormField,
     Tooltip,
+    AlertDescription,
+    Alert,
 } from "@courselit/components-library";
 import { Address, Auth, Profile } from "@courselit/common-models";
+import { AlertCircle } from "lucide-react";
 
 interface ItemProps {
     item: Item;
@@ -27,6 +30,7 @@ export default function ItemEditor({
 }: ItemProps): JSX.Element {
     const [title, setTitle] = useState(item.title);
     const [description, setDescription] = useState(item.description);
+    const [deleteConfirmation, setDeleteConfirmation] = useState(false);
 
     const itemChanged = () =>
         onChange({
@@ -36,6 +40,12 @@ export default function ItemEditor({
 
     return (
         <div className="flex flex-col">
+            <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="w-4 h-4" />
+                <AlertDescription>
+                    Changes will be visible upon clicking Done button
+                </AlertDescription>
+            </Alert>
             <Form onSubmit={(e) => e.preventDefault()}>
                 <FormField
                     label="Title"
@@ -55,10 +65,16 @@ export default function ItemEditor({
                     <Tooltip title="Delete">
                         <Button
                             component="button"
-                            onClick={onDelete}
+                            onClick={() => {
+                                if (deleteConfirmation) {
+                                    onDelete();
+                                } else {
+                                    setDeleteConfirmation(true);
+                                }
+                            }}
                             variant="soft"
                         >
-                            Delete
+                            {deleteConfirmation ? "Sure?" : "Delete"}
                         </Button>
                     </Tooltip>
                     <Tooltip title="Go back">

@@ -14,7 +14,11 @@ import {
     CssIdField,
     MaxWidthSelector,
     VerticalPaddingSelector,
+    DragAndDrop,
+    IconButton,
 } from "@courselit/components-library";
+import { Edit } from "@courselit/icons";
+import { generateUniqueId } from "@courselit/utils";
 
 export interface AdminWidgetProps {
     settings: Settings;
@@ -39,7 +43,7 @@ export default function AdminWidget({
     hideActionButtons,
     preservedStateAcrossRerender,
     theme,
-}: AdminWidgetProps): JSX.Element {
+}: AdminWidgetProps) {
     const dummyDescription: Record<string, unknown> = {
         type: "doc",
         content: [
@@ -82,7 +86,8 @@ export default function AdminWidget({
     const [headerAlignment, setHeaderAlignment] = useState<Alignment>(
         settings.headerAlignment || "center",
     );
-    const [itemBeingEditedIndex, setItemBeingEditedIndex] = useState(-1);
+    const [itemBeingEditedIndex, setItemBeingEditedIndex] =
+        useState<number>(-1);
     const [maxWidth, setMaxWidth] = useState<
         ThemeStyle["structure"]["page"]["width"]
     >(settings.maxWidth);
@@ -100,6 +105,7 @@ export default function AdminWidget({
             maxWidth,
             verticalPadding,
             cssId,
+            itemBeingEditedIndex,
         });
 
     useEffect(() => {
@@ -112,6 +118,7 @@ export default function AdminWidget({
         maxWidth,
         verticalPadding,
         cssId,
+        itemBeingEditedIndex,
     ]);
 
     const onItemChange = (newItemData: Item) => {
@@ -179,21 +186,36 @@ export default function AdminWidget({
                 </Form>
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Items" value="items">
-                <ul className="flex flex-col gap-2">
-                    {items.map((item: Item, index: number) => (
-                        <li
-                            key={item.title}
-                            onClick={() => {
-                                hideActionButtons(true, {
-                                    selectedItem: index,
-                                });
-                            }}
-                            className="p-1 border border-transparent hover:border-slate-300 rounded"
-                        >
-                            {item.title}
-                        </li>
-                    ))}
-                </ul>
+                <DragAndDrop
+                    items={items.map((item: Item) => ({
+                        item,
+                        id: generateUniqueId(),
+                    }))}
+                    Renderer={({ item }) => (
+                        <div className="flex justify-between items-center w-full">
+                            <p>{item.title}</p>
+                            <IconButton
+                                variant="soft"
+                                onClick={() => {
+                                    hideActionButtons(true, {
+                                        selectedItem: items.findIndex(
+                                            (i) => i.title === item.title,
+                                        ),
+                                    });
+                                }}
+                            >
+                                <Edit />
+                            </IconButton>
+                        </div>
+                    )}
+                    onChange={(newItems: { item: Item }[]) => {
+                        const itemsInNewOrder: Item[] = [];
+                        for (const item of newItems) {
+                            itemsInNewOrder.push(Object.assign({}, item.item));
+                        }
+                        setItems(itemsInNewOrder);
+                    }}
+                />
                 <div>
                     <Button component="button" onClick={addNewItem}>
                         Add new item

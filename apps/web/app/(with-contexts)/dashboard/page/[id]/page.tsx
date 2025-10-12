@@ -44,7 +44,7 @@ export default function Page(props: { params: Promise<{ id: string }> }) {
                 siteinfo: siteInfo,
                 address: address,
                 profile: profile as Profile,
-                auth: profile.email
+                auth: profile!.email
                     ? {
                           guest: false,
                           checked: true,

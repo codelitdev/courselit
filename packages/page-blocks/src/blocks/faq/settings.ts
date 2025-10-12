@@ -12,4 +12,5 @@ export default interface Settings extends WidgetDefaultSettings {
     itemsAlignment: Alignment;
     items?: Item[];
     cssId?: string;
+    itemBeingEditedIndex?: number;
 }

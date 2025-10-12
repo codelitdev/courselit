@@ -25,8 +25,10 @@ export default function Widget({
         cssId,
         maxWidth,
         verticalPadding,
+        itemBeingEditedIndex,
     },
     state,
+    editing,
 }: WidgetProps<Settings>) {
     const { theme } = state;
     const overiddenTheme: ThemeStyle = JSON.parse(JSON.stringify(theme.theme));
@@ -34,6 +36,9 @@ export default function Widget({
         maxWidth || theme.theme.structure.page.width;
     overiddenTheme.structure.section.padding.y =
         verticalPadding || theme.theme.structure.section.padding.y;
+    const accordionValue = editing
+        ? `${items[itemBeingEditedIndex]?.title}-${itemBeingEditedIndex}`
+        : undefined;
 
     return (
         <Section theme={overiddenTheme} id={cssId}>
@@ -64,7 +69,12 @@ export default function Widget({
                 </div>
                 {items && items.length > 0 && (
                     <div className="flex flex-wrap gap-[1%]">
-                        <Accordion type="single" collapsible className="w-full">
+                        <Accordion
+                            type="single"
+                            collapsible
+                            className="w-full"
+                            value={accordionValue}
+                        >
                             {items.map((item: Item, index: number) => (
                                 <AccordionItem
                                     key={`${item.title}-${index}`}
