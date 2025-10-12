@@ -135,35 +135,6 @@ const Settings = (props: SettingsProps) => {
         loadAdminSettings();
     }, []);
 
-    // useEffect(() => {
-    //     props.dispatch(
-    //         newSiteInfoAvailable({
-    //             title: settings.title || "",
-    //             subtitle: settings.subtitle || "",
-    //             logo: settings.logo,
-    //             currencyISOCode: settings.currencyISOCode,
-    //             paymentMethod: settings.paymentMethod,
-    //             stripeKey: settings.stripeKey,
-    //             codeInjectionHead: settings.codeInjectionHead
-    //                 ? encode(settings.codeInjectionHead)
-    //                 : "",
-    //             codeInjectionBody: settings.codeInjectionBody
-    //                 ? encode(settings.codeInjectionBody)
-    //                 : "",
-    //             mailingAddress: settings.mailingAddress || "",
-    //             hideCourseLitBranding: settings.hideCourseLitBranding ?? false,
-    //             razorpayKey: settings.razorpayKey,
-    //             lemonsqueezyStoreId: settings.lemonsqueezyStoreId,
-    //             lemonsqueezyOneTimeVariantId:
-    //                 settings.lemonsqueezyOneTimeVariantId,
-    //             lemonsqueezySubscriptionMonthlyVariantId:
-    //                 settings.lemonsqueezySubscriptionMonthlyVariantId,
-    //             lemonsqueezySubscriptionYearlyVariantId:
-    //                 settings.lemonsqueezySubscriptionYearlyVariantId,
-    //         }),
-    //     );
-    // }, [settings]);
-
     const loadAdminSettings = async () => {
         const query = `
             query {
