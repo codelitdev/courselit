@@ -206,7 +206,7 @@ export default function AdminWidget({
                 <div className="flex justify-between">
                     <div className="flex grow items-center gap-1">
                         <p>Backdrop blur</p>
-                        <Tooltip title="Applies a backdrop blur effect to the header background">
+                        <Tooltip title="Makes the background translucent">
                             <Help />
                         </Tooltip>
                     </div>

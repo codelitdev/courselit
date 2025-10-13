@@ -716,6 +716,7 @@ export default function PageEditor({
                                     onClick={onPublish}
                                     size="sm"
                                     className="gap-2 whitespace-nowrap"
+                                    disabled={loading}
                                 >
                                     <ArrowUpFromLine className="h-4 w-4" />
                                     {EDIT_PAGE_BUTTON_UPDATE}

@@ -20,8 +20,6 @@ import {
     Section,
     Link as PrimitiveLink,
     Button,
-    PageCard,
-    PageCardContent,
 } from "@courselit/page-primitives";
 import PageLink from "./link";
 import clsx from "clsx";
@@ -60,6 +58,8 @@ export default function Widget({
         );
         stargazers = stargazersCount;
     }
+    const cardBorderWidth =
+        overiddenTheme?.interactives?.card?.border?.width?.split("-")[1];
 
     const mainContent = (
         <div className={`flex justify-between items-center w-full`}>
@@ -225,26 +225,35 @@ export default function Widget({
             className={clsx(
                 "sticky top-0 z-20",
                 settings.layout === "fixed"
-                    ? settings.backdropBlur
-                        ? "border-b backdrop-blur-2xl bg-transparent"
+                    ? cardBorderWidth
+                        ? `border-b-${cardBorderWidth}`
                         : "border-b"
+                    : "",
+                settings.layout === "fixed" &&
+                    settings.backdropBlur &&
+                    "backdrop-blur-2xl",
+                settings.layout === "fixed"
+                    ? settings.backdropBlur
+                        ? "bg-transparent"
+                        : "bg-background"
                     : "bg-transparent",
             )}
             component="header"
         >
             {settings.layout === "floating" ? (
-                <PageCard
-                    theme={overiddenTheme}
-                    className={
+                <div
+                    className={clsx(
+                        "p-2",
+                        overiddenTheme?.interactives?.card?.border?.style,
+                        overiddenTheme?.interactives?.card?.border?.width,
+                        overiddenTheme?.interactives?.card?.border?.radius,
                         settings.backdropBlur
                             ? "backdrop-blur-2xl bg-transparent"
-                            : ""
-                    }
+                            : "bg-background",
+                    )}
                 >
-                    <PageCardContent theme={overiddenTheme} className="!p-2">
-                        {mainContent}
-                    </PageCardContent>
-                </PageCard>
+                    {mainContent}
+                </div>
             ) : (
                 mainContent
             )}
