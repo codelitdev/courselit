@@ -24,4 +24,5 @@ export default interface Settings extends WidgetDefaultSettings {
     playVideoInModal?: boolean;
     aspectRatio?: AspectRatio;
     objectFit?: ImageObjectFit;
+    layout?: "normal" | "card";
 }

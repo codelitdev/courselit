@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Settings, { Link } from "../settings";
+import Settings, { Layout, Link } from "../settings";
 import LinkEditor from "./link-editor";
 import {
     AdminWidgetPanel,
@@ -57,6 +57,10 @@ export default function AdminWidget({
     const [showGithubStars, setShowGithubStars] = useState<boolean | undefined>(
         settings.showGithubStars || false,
     );
+    const [layout, setLayout] = useState<Layout>(settings.layout || "fixed");
+    const [backdropBlur, setBackdropBlur] = useState<boolean | undefined>(
+        settings.backdropBlur || false,
+    );
 
     useEffect(() => {
         onChange({
@@ -68,6 +72,8 @@ export default function AdminWidget({
             maxWidth,
             githubRepo,
             showGithubStars,
+            layout,
+            backdropBlur,
         });
     }, [
         links,
@@ -78,6 +84,8 @@ export default function AdminWidget({
         maxWidth,
         githubRepo,
         showGithubStars,
+        layout,
+        backdropBlur,
     ]);
 
     const onLinkChanged = (index: number, link: Link) => {
@@ -152,6 +160,15 @@ export default function AdminWidget({
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Design" value="design">
                 <Select
+                    title="Layout"
+                    value={layout}
+                    options={[
+                        { label: "Fixed", value: "fixed" },
+                        { label: "Floating", value: "floating" },
+                    ]}
+                    onChange={(value: Layout) => setLayout(value)}
+                />
+                <Select
                     title="Link font weight"
                     value={linkFontWeight}
                     options={[
@@ -186,6 +203,18 @@ export default function AdminWidget({
                     value={maxWidth || theme.theme.structure.page.width}
                     onChange={setMaxWidth}
                 />
+                <div className="flex justify-between">
+                    <div className="flex grow items-center gap-1">
+                        <p>Backdrop blur</p>
+                        <Tooltip title="Makes the background translucent">
+                            <Help />
+                        </Tooltip>
+                    </div>
+                    <Checkbox
+                        checked={backdropBlur}
+                        onChange={(value: boolean) => setBackdropBlur(value)}
+                    />
+                </div>
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Other settings" value="other-settings">
                 <div className="flex justify-between">

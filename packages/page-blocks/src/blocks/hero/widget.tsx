@@ -14,6 +14,8 @@ import {
     Header1,
     Subheader1,
     Section,
+    PageCard,
+    PageCardContent,
 } from "@courselit/page-primitives";
 import { ThemeStyle } from "@courselit/page-models";
 
@@ -60,6 +62,7 @@ export default function Widget({
         objectFit,
         maxWidth,
         background,
+        layout = "normal",
     },
     state: { theme },
     nextTheme,
@@ -83,6 +86,122 @@ export default function Widget({
             direction = "md:!flex-row";
     }
 
+    const mainContent = (
+        <div className={clsx("flex flex-col gap-4", direction)}>
+            {hasHeroGraphic && (
+                <div
+                    className={`w-full sm:mb-2 sm:pr-0 sm:pl-0 md:w-1/2 md:mb-0 flex items-center ${
+                        hasHeroGraphic && alignment === "right"
+                            ? "md:pl-1"
+                            : "md:pl-0"
+                    } ${
+                        hasHeroGraphic && alignment === "right"
+                            ? "md:pl-1"
+                            : "md:pl-0"
+                    }`}
+                >
+                    <div
+                        className={`w-full text-center overflow-hidden ${twRoundedMap[mediaRadius]}`}
+                        style={{
+                            width: "100%",
+                        }}
+                    >
+                        {isVideo(youtubeLink, media) ? (
+                            <VideoWithPreview
+                                videoUrl={youtubeLink || media?.file || ""}
+                                aspectRatio={aspectRatio}
+                                title={media?.caption || ""}
+                                thumbnailUrl={media?.thumbnail || ""}
+                                modal={playVideoInModal}
+                            />
+                        ) : (
+                            <Image
+                                src={media?.file || ""}
+                                alt={media?.caption || ""}
+                                borderRadius={mediaRadius}
+                                objectFit={objectFit}
+                            />
+                        )}
+                    </div>
+                </div>
+            )}
+            <div
+                className={`w-full ${
+                    hasHeroGraphic ? "md:w-1/2" : "md:w-full"
+                } sm:pr-0 sm:pl-0 ${
+                    hasHeroGraphic && alignment === "right"
+                        ? "md:pr-1"
+                        : "md:pr-0"
+                } ${
+                    hasHeroGraphic && alignment === "left"
+                        ? "md:pl-1"
+                        : "md:pl-0"
+                }`}
+            >
+                <div
+                    className={clsx(
+                        "flex flex-col justify-center h-full gap-4",
+                        contentAlignment === "center"
+                            ? "items-center text-center"
+                            : "items-start",
+                    )}
+                >
+                    <Header1
+                        theme={overiddenTheme}
+                        className={`mb-4 ${twFontSize[titleFontSize || 0]}`}
+                    >
+                        {title}
+                    </Header1>
+                    {description && (
+                        <div
+                            className={clsx(
+                                descriptionFontSize === 0
+                                    ? "text-base"
+                                    : descriptionFontSize === 1
+                                      ? "text-lg lg:text-xl"
+                                      : `text-${
+                                            descriptionFontSize - 1 === 1
+                                                ? ""
+                                                : descriptionFontSize - 1
+                                        }xl lg:text-${descriptionFontSize}xl`,
+                                buttonAction && buttonCaption ? "mb-8" : "mb-0",
+                            )}
+                        >
+                            <Subheader1 theme={overiddenTheme} component="span">
+                                <TextRenderer json={description} />
+                            </Subheader1>
+                        </div>
+                    )}
+                    <div
+                        className={`flex flex-col md:!flex-row gap-2 w-full ${contentAlignment === "center" ? "md:!justify-center" : ""}`}
+                    >
+                        {buttonAction && buttonCaption && (
+                            <Link href={buttonAction}>
+                                <Button
+                                    theme={overiddenTheme}
+                                    className="w-full md:min-w-[150px]"
+                                >
+                                    {buttonCaption}
+                                </Button>
+                            </Link>
+                        )}
+                        {secondaryButtonAction && secondaryButtonCaption && (
+                            <Link href={secondaryButtonAction}>
+                                <Button
+                                    theme={overiddenTheme}
+                                    className="w-full md:min-w-[150px]"
+                                    variant="secondary"
+                                >
+                                    {secondaryButtonCaption}
+                                </Button>
+                            </Link>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
     return (
         <Section
             theme={overiddenTheme}
@@ -90,125 +209,15 @@ export default function Widget({
             background={background}
             nextTheme={nextTheme as "dark" | "light"}
         >
-            <div className={clsx("flex flex-col gap-4", direction)}>
-                {hasHeroGraphic && (
-                    <div
-                        className={`w-full sm:mb-2 sm:pr-0 sm:pl-0 md:w-1/2 md:mb-0 flex items-center ${
-                            hasHeroGraphic && alignment === "right"
-                                ? "md:pl-1"
-                                : "md:pl-0"
-                        } ${
-                            hasHeroGraphic && alignment === "right"
-                                ? "md:pl-1"
-                                : "md:pl-0"
-                        }`}
-                    >
-                        <div
-                            className={`w-full text-center overflow-hidden ${twRoundedMap[mediaRadius]}`}
-                            style={{
-                                width: "100%",
-                            }}
-                        >
-                            {isVideo(youtubeLink, media) ? (
-                                <VideoWithPreview
-                                    videoUrl={youtubeLink || media?.file || ""}
-                                    aspectRatio={aspectRatio}
-                                    title={media?.caption || ""}
-                                    thumbnailUrl={media?.thumbnail || ""}
-                                    modal={playVideoInModal}
-                                />
-                            ) : (
-                                <Image
-                                    src={media?.file || ""}
-                                    alt={media?.caption || ""}
-                                    borderRadius={mediaRadius}
-                                    objectFit={objectFit}
-                                />
-                            )}
-                        </div>
-                    </div>
-                )}
-                <div
-                    className={`w-full ${
-                        hasHeroGraphic ? "md:w-1/2" : "md:w-full"
-                    } sm:pr-0 sm:pl-0 ${
-                        hasHeroGraphic && alignment === "right"
-                            ? "md:pr-1"
-                            : "md:pr-0"
-                    } ${
-                        hasHeroGraphic && alignment === "left"
-                            ? "md:pl-1"
-                            : "md:pl-0"
-                    }`}
-                >
-                    <div
-                        className={clsx(
-                            "flex flex-col justify-center h-full gap-4",
-                            contentAlignment === "center"
-                                ? "items-center text-center"
-                                : "items-start",
-                        )}
-                    >
-                        <Header1
-                            theme={overiddenTheme}
-                            className={`mb-4 ${twFontSize[titleFontSize || 0]}`}
-                        >
-                            {title}
-                        </Header1>
-                        {description && (
-                            <div
-                                className={clsx(
-                                    descriptionFontSize === 0
-                                        ? "text-base"
-                                        : descriptionFontSize === 1
-                                          ? "text-lg lg:text-xl"
-                                          : `text-${
-                                                descriptionFontSize - 1 === 1
-                                                    ? ""
-                                                    : descriptionFontSize - 1
-                                            }xl lg:text-${descriptionFontSize}xl`,
-                                    buttonAction && buttonCaption
-                                        ? "mb-8"
-                                        : "mb-0",
-                                )}
-                            >
-                                <Subheader1
-                                    theme={overiddenTheme}
-                                    component="span"
-                                >
-                                    <TextRenderer json={description} />
-                                </Subheader1>
-                            </div>
-                        )}
-                        <div
-                            className={`flex flex-col md:!flex-row gap-2 w-full ${contentAlignment === "center" ? "md:!justify-center" : ""}`}
-                        >
-                            {buttonAction && buttonCaption && (
-                                <Link href={buttonAction}>
-                                    <Button
-                                        theme={overiddenTheme}
-                                        className="w-full md:min-w-[150px]"
-                                    >
-                                        {buttonCaption}
-                                    </Button>
-                                </Link>
-                            )}
-                            {secondaryButtonAction &&
-                                secondaryButtonCaption && (
-                                    <Link href={secondaryButtonAction}>
-                                        <Button
-                                            theme={overiddenTheme}
-                                            className="w-full md:min-w-[150px]"
-                                            variant="secondary"
-                                        >
-                                            {secondaryButtonCaption}
-                                        </Button>
-                                    </Link>
-                                )}
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {layout === "normal" ? (
+                mainContent
+            ) : (
+                <PageCard theme={overiddenTheme}>
+                    <PageCardContent theme={overiddenTheme}>
+                        {mainContent}
+                    </PageCardContent>
+                </PageCard>
+            )}
         </Section>
     );
 }

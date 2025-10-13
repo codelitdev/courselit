@@ -519,52 +519,6 @@ export default function PageEditor({
         [selectedWidget],
     );
 
-    // const saveDraftTypefaces = async (fontName: string) => {
-    //     const newTypefaces: Typeface[] = structuredClone(draftTypefaces);
-    //     const defaultSection = newTypefaces.filter(
-    //         (x) => x.section === "default",
-    //     )[0];
-    //     defaultSection.typeface = fontName;
-
-    //     const query = `
-    //         mutation {
-    //             site: updateDraftTypefaces(
-    //                 typefaces: ${getGraphQLQueryStringFromObject(newTypefaces)}
-    //             ) {
-    //                 draftTypefaces {
-    //                     section,
-    //                     typeface,
-    //                     fontWeights,
-    //                     fontSize,
-    //                     lineHeight,
-    //                     letterSpacing,
-    //                     case
-    //                 },
-    //             }
-    //         }
-    //     `;
-    //     const fetch = new FetchBuilder()
-    //         .setUrl(`${address.backend}/api/graph`)
-    //         .setPayload(query)
-    //         .setIsGraphQLEndpoint(true)
-    //         .build();
-    //     try {
-    //         dispatch && dispatch(networkAction(true));
-    //         const response = await fetch.exec();
-    //         if (response.site) {
-    //             setDraftTypefaces(response.site.draftTypefaces);
-    //         }
-    //     } catch (err: any) {
-    //         toast({
-    //             title: TOAST_TITLE_ERROR,
-    //             description: err.message,
-    //             variant: "destructive",
-    //         });
-    //     } finally {
-    //         dispatch && dispatch(networkAction(false));
-    //     }
-    // };
-
     const onAddWidgetBelow = (index: number) => {
         setSelectedWidgetIndex(index);
         setLeftPaneContent("widgets");
@@ -762,6 +716,7 @@ export default function PageEditor({
                                     onClick={onPublish}
                                     size="sm"
                                     className="gap-2 whitespace-nowrap"
+                                    disabled={loading}
                                 >
                                     <ArrowUpFromLine className="h-4 w-4" />
                                     {EDIT_PAGE_BUTTON_UPDATE}
