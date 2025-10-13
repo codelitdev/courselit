@@ -16,9 +16,11 @@ import {
     Select,
     MaxWidthSelector,
     VerticalPaddingSelector,
+    Tooltip,
 } from "@courselit/components-library";
 import { isVideo } from "@courselit/utils";
 import type { Theme, ThemeStyle } from "@courselit/page-models";
+import { Help } from "@courselit/icons";
 
 interface AdminWidgetProps {
     name: string;
@@ -58,6 +60,9 @@ export default function AdminWidget({
     const [objectFit, setObjectFit] = useState<ImageObjectFit>(
         settings.objectFit || "cover",
     );
+    const [hasBorder, setHasBorder] = useState<boolean>(
+        settings.hasBorder || true,
+    );
 
     const onSettingsChanged = () =>
         onChange({
@@ -70,6 +75,7 @@ export default function AdminWidget({
             playVideoInModal,
             aspectRatio,
             objectFit,
+            hasBorder,
         });
 
     useEffect(() => {
@@ -84,6 +90,7 @@ export default function AdminWidget({
         playVideoInModal,
         aspectRatio,
         objectFit,
+        hasBorder,
     ]);
 
     return (
@@ -188,6 +195,18 @@ export default function AdminWidget({
                     }
                     onChange={setVerticalPadding}
                 />
+                <div className="flex justify-between">
+                    <div className="flex grow items-center gap-1">
+                        <p>Border</p>
+                        <Tooltip title="Media will have a border">
+                            <Help />
+                        </Tooltip>
+                    </div>
+                    <Checkbox
+                        checked={hasBorder}
+                        onChange={(value: boolean) => setHasBorder(value)}
+                    />
+                </div>
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Advanced" value="advanced">
                 <CssIdField value={cssId} onChange={setCssId} />
