@@ -60,6 +60,7 @@ export default function Widget({
     }
     const cardBorderWidth =
         overiddenTheme?.interactives?.card?.border?.width?.split("-")[1];
+    const isLayoutFixed = settings.layout === "fixed" || !settings.layout;
 
     const mainContent = (
         <div className={`flex justify-between items-center w-full`}>
@@ -224,15 +225,13 @@ export default function Widget({
             theme={overiddenTheme}
             className={clsx(
                 "sticky top-0 z-20",
-                settings.layout === "fixed"
+                isLayoutFixed
                     ? cardBorderWidth
                         ? `border-b-${cardBorderWidth}`
                         : "border-b"
                     : "",
-                settings.layout === "fixed" &&
-                    settings.backdropBlur &&
-                    "backdrop-blur-2xl",
-                settings.layout === "fixed"
+                isLayoutFixed && settings.backdropBlur && "backdrop-blur-2xl",
+                isLayoutFixed
                     ? settings.backdropBlur
                         ? "bg-transparent"
                         : "bg-background"
