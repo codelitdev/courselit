@@ -211,8 +211,8 @@ export async function initSharedWidgets(ctx: GQLContext) {
                     {
                         name: "Legal",
                         links: [
-                            { label: "Terms of use", href: "/p/terms" },
-                            { label: "Privacy policy", href: "/p/privacy" },
+                            { label: "Terms of Use", href: "/p/terms" },
+                            { label: "Privacy Policy", href: "/p/privacy" },
                         ],
                     },
                 ],

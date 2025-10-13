@@ -12,7 +12,6 @@ import {
     FormItem,
     FormMessage,
 } from "@/components/ui/form";
-import Link from "next/link";
 import {
     AddressContext,
     ProfileContext,
@@ -168,19 +167,23 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                         />
                         <Text2 className="text-xs" theme={theme.theme}>
                             By signing in, you accept our{" "}
-                            <Link
-                                href="/terms"
+                            <a
+                                href="/p/terms"
                                 className="underline hover:text-primary font-medium"
+                                target="_blank"
+                                rel="noreferrer noopener"
                             >
                                 Terms
-                            </Link>{" "}
+                            </a>{" "}
                             and{" "}
-                            <Link
-                                href="/privacy"
+                            <a
+                                href="/p/privacy"
                                 className="underline hover:text-primary font-medium"
+                                target="_blank"
+                                rel="noreferrer noopener"
                             >
                                 Privacy Policy
-                            </Link>
+                            </a>
                         </Text2>
                         <Button
                             type="button"

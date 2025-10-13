@@ -36,8 +36,8 @@ export const leads = ["website", "newsletter", "download", "api"] as const;
 export const mailRequestStatus = ["pending", "approved", "rejected"] as const;
 export const pageNames = {
     home: "Home page",
-    terms: "Terms of Service",
-    privacy: "Privacy policy",
+    terms: "Terms of Use",
+    privacy: "Privacy Policy",
     blog: "Blog",
 };
 export const dripType = ["relative-date", "exact-date"] as const;
