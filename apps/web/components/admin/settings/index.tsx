@@ -99,7 +99,6 @@ const {
 interface SettingsProps {
     siteinfo: SiteInfo;
     profile: Profile;
-    loading: boolean;
     selectedTab:
         | typeof SITE_SETTINGS_SECTION_GENERAL
         | typeof SITE_SETTINGS_SECTION_PAYMENT
@@ -1073,14 +1072,14 @@ const Settings = (props: SettingsProps) => {
                                 <div className="flex gap-2">
                                     <Input
                                         readOnly
-                                        value={`${props.address.backend}/api/payment/webhook`}
+                                        value={`${address.backend}/api/payment/webhook`}
                                     />
                                     <Button
                                         variant="outline"
                                         size="icon"
                                         onClick={() =>
                                             copyToClipboard(
-                                                `${props.address.backend}/api/payment/webhook`,
+                                                `${address.backend}/api/payment/webhook`,
                                             )
                                         }
                                     >
@@ -1096,14 +1095,14 @@ const Settings = (props: SettingsProps) => {
                                 <div className="flex gap-2">
                                     <Input
                                         readOnly
-                                        value={`${props.address.backend}/api/payment/webhook-old`}
+                                        value={`${address.backend}/api/payment/webhook-old`}
                                     />
                                     <Button
                                         variant="outline"
                                         size="icon"
                                         onClick={() =>
                                             copyToClipboard(
-                                                `${props.address.backend}/api/payment/webhook-old`,
+                                                `${address.backend}/api/payment/webhook-old`,
                                             )
                                         }
                                     >
@@ -1206,7 +1205,6 @@ const Settings = (props: SettingsProps) => {
                             <td align="right"> </td>
                         </TableHead>
                         <TableBody
-                            loading={props.loading}
                             endReached={true}
                             page={apikeyPage}
                             onPageChange={(value: number) => {

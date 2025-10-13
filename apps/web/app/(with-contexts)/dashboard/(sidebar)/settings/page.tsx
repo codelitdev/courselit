@@ -34,7 +34,6 @@ export default function Page() {
                 siteinfo={siteinfo}
                 profile={profile as Profile}
                 selectedTab={tab as any}
-                loading={false}
             />
         </DashboardContent>
     );
