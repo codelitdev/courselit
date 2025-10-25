@@ -6,11 +6,15 @@ import { ADMIN_PERMISSIONS } from "@ui-config/constants";
 
 export default async function Page() {
     const profile = (await getProfile()) as Profile;
-    if (checkPermission(profile.permissions, ADMIN_PERMISSIONS)) {
+    if (!profile) {
+        redirect("/logout/server");
+    }
+
+    if (checkPermission(profile?.permissions, ADMIN_PERMISSIONS)) {
         redirect("/dashboard/overview");
     } else {
         redirect("/dashboard/my-content");
     }
 
-    return null;
+    return <></>;
 }
