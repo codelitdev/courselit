@@ -7,7 +7,7 @@ const { auth } = NextAuth(authConfig);
 
 export default auth(async (request: NextRequest) => {
     const requestHeaders = request.headers;
-    const backend = getBackendAddress(requestHeaders);
+    const backend = await getBackendAddress(requestHeaders);
 
     if (request.nextUrl.pathname === "/healthy") {
         return Response.json({ success: true });
@@ -52,6 +52,20 @@ export default auth(async (request: NextRequest) => {
             }
         }
 
+        if (request.nextUrl.pathname.startsWith("/dashboard")) {
+            const session = await auth();
+            if (!session) {
+                return NextResponse.redirect(
+                    new URL(
+                        `/login?redirect=${encodeURIComponent(
+                            request.nextUrl.pathname,
+                        )}`,
+                        request.url,
+                    ),
+                );
+            }
+        }
+
         return NextResponse.next({
             request: {
                 headers: requestHeaders,
@@ -66,6 +80,12 @@ export default auth(async (request: NextRequest) => {
 });
 
 export const config = {
-    matcher: ["/", "/favicon.ico", "/api/:path*", "/healthy"],
+    matcher: [
+        "/",
+        "/favicon.ico",
+        "/api/:path*",
+        "/healthy",
+        "/dashboard/:path*",
+    ],
     unstable_allowDynamic: ["/node_modules/next-auth/**"],
 };

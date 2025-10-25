@@ -29,7 +29,7 @@ import {
     useToast,
     Skeleton,
 } from "@courselit/components-library";
-import { checkPermission, FetchBuilder } from "@courselit/utils";
+import { FetchBuilder } from "@courselit/utils";
 import {
     TOAST_TITLE_ERROR,
     USER_TABLE_HEADER_COMMUNITIES,
@@ -141,12 +141,15 @@ export default function UsersHub() {
         setPage(1);
     }, []);
 
-    if (!checkPermission(profile.permissions!, [permissions.manageUsers])) {
+    if (!profile) {
         return <LoadingScreen />;
     }
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[permissions.manageUsers]}
+        >
             <div className="flex justify-between items-center">
                 <h1 className="text-4xl font-semibold mb-4">
                     {USERS_MANAGER_PAGE_HEADING}

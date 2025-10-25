@@ -5,7 +5,6 @@ import LoadingScreen from "@components/admin/loading-screen";
 import Settings from "@components/admin/settings";
 import { ProfileContext, SiteInfoContext } from "@components/contexts";
 import { Profile, UIConstants } from "@courselit/common-models";
-import { checkPermission } from "@courselit/utils";
 import { SITE_SETTINGS_PAGE_HEADING } from "@ui-config/strings";
 import { useSearchParams } from "next/navigation";
 import { useContext } from "react";
@@ -20,15 +19,15 @@ export default function Page() {
 
     const tab = searchParams?.get("tab") || "Branding";
 
-    if (
-        !profile ||
-        !checkPermission(profile.permissions!, [permissions.manageSettings])
-    ) {
+    if (!profile) {
         return <LoadingScreen />;
     }
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[permissions.manageSettings]}
+        >
             <Settings
                 key={tab}
                 siteinfo={siteinfo}

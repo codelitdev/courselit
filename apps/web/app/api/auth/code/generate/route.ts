@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { responses } from "@/config/strings";
-import { generateUniquePasscode, hashCode } from "@/ui-lib/utils";
+import { generateUniquePasscode, hashCode } from "@/lib/utils";
 import VerificationToken from "@/models/VerificationToken";
 import pug from "pug";
 import MagicCodeEmailTemplate from "@/templates/magic-code-email";

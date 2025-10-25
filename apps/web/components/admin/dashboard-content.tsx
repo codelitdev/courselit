@@ -32,7 +32,7 @@ export default function DashboardContent({
 }) {
     const { profile } = useContext(ProfileContext);
 
-    if (!profile.userId) {
+    if (!profile || !profile.userId) {
         return <LoadingScreen />;
     }
 

@@ -162,7 +162,12 @@ export const createCourse = async (
     ctx: GQLContext,
 ) => {
     checkIfAuthenticated(ctx);
-    if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
+    if (
+        !checkPermission(ctx.user.permissions, [
+            permissions.manageAnyCourse,
+            permissions.manageCourse,
+        ])
+    ) {
         throw new Error(responses.action_not_allowed);
     }
 

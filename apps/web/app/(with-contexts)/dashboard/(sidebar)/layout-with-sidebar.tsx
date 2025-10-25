@@ -6,7 +6,11 @@ import { ThemeContext } from "@components/contexts";
 import { themes } from "@courselit/page-primitives";
 import { Theme } from "@courselit/page-models";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function LayoutWithSidebar({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
     const classicTheme = themes.find((theme) => theme.id === "classic");
     const theme: Theme = {
         id: "classic",

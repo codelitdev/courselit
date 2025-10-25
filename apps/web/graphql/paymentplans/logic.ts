@@ -52,7 +52,10 @@ function checkEntityManagementPermission(
 ) {
     if (entityType === membershipEntityType.COURSE) {
         if (
-            !checkPermission(ctx.user.permissions, [permissions.manageCourse])
+            !checkPermission(ctx.user.permissions, [
+                permissions.manageAnyCourse,
+                permissions.manageCourse,
+            ])
         ) {
             throw new Error(responses.action_not_allowed);
         }

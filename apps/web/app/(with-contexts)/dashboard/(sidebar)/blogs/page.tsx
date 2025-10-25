@@ -5,7 +5,6 @@ import DashboardContent from "@components/admin/dashboard-content";
 import LoadingScreen from "@components/admin/loading-screen";
 import { ProfileContext } from "@components/contexts";
 import { UIConstants } from "@courselit/common-models";
-import { checkPermission } from "@courselit/utils";
 import { MANAGE_BLOG_PAGE_HEADING } from "@ui-config/strings";
 import { useContext } from "react";
 const { permissions } = UIConstants;
@@ -15,18 +14,18 @@ const breadcrumbs = [{ label: MANAGE_BLOG_PAGE_HEADING, href: "#" }];
 export default function Page() {
     const { profile } = useContext(ProfileContext);
 
-    if (
-        !profile ||
-        !checkPermission(profile?.permissions!, [
-            permissions.manageAnyCourse,
-            permissions.manageCourse,
-        ])
-    ) {
+    if (!profile) {
         return <LoadingScreen />;
     }
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[
+                permissions.manageAnyCourse,
+                permissions.manageCourse,
+            ]}
+        >
             <Blogs />
         </DashboardContent>
     );

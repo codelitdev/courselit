@@ -5,6 +5,7 @@ import { UIConstants } from "@courselit/common-models";
 const { permissions } = UIConstants;
 
 export default {
+    multitenant: process.env.MULTITENANT === "true",
     domainNameForSingleTenancy: "main",
     schoolNameForSingleTenancy: "My school",
     dbConnectionString:

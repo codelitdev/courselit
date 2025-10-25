@@ -1,27 +1,13 @@
-import { getPaymentMethod } from "../../payments";
 import { internal, responses } from "../../config/strings";
 import GQLContext from "../../models/GQLContext";
-import CourseModel, { InternalCourse } from "../../models/Course";
+import CourseModel from "../../models/Course";
 import constants from "../../config/constants";
-import { Progress } from "../../models/Progress";
-import { User } from "../../models/User";
 import Page from "../../models/Page";
 import slugify from "slugify";
 import { addGroup } from "./logic";
-import { Constants, Course } from "@courselit/common-models";
+import { Constants, Course, Progress, User } from "@courselit/common-models";
 import { getPlans } from "../paymentplans/logic";
-
-const validatePaymentMethod = async (domain: string) => {
-    try {
-        await getPaymentMethod(domain);
-    } catch (err: any) {
-        if (err.message === responses.update_payment_method) {
-            throw err;
-        } else {
-            throw new Error(responses.internal_error);
-        }
-    }
-};
+import { InternalCourse } from "@courselit/common-logic";
 
 export const validateCourse = async (
     courseData: InternalCourse,
