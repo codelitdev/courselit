@@ -245,7 +245,9 @@ export async function initSharedWidgets(ctx: GQLContext) {
     // }
     if (subdomainChanged) {
         (ctx.subdomain as any).markModified("sharedWidgets");
-        await (ctx.subdomain as any).save();
+        try {
+            await (ctx.subdomain as any).save();
+        } catch (e) {}
     }
 }
 
