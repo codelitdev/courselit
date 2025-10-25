@@ -1,27 +1,17 @@
 "use client";
 
 import { useContext, useState } from "react";
-import {
-    AddressContext,
-    ProfileContext,
-    SiteInfoContext,
-} from "@components/contexts";
-import { UIConstants, Constants } from "@courselit/common-models";
-import { checkPermission } from "@courselit/utils";
+import { ProfileContext } from "@components/contexts";
+import { Constants } from "@courselit/common-models";
 import {
     DASHBOARD_PAGE_HEADER,
     OVERVIEW_HEADER,
     UNNAMED_USER,
 } from "@ui-config/strings";
-import { TIME_RANGES } from "@ui-config/constants";
+import { ADMIN_PERMISSIONS, TIME_RANGES } from "@ui-config/constants";
 import { useActivities } from "@/hooks/use-activities";
 import dynamic from "next/dynamic";
 import DashboardContent from "@components/admin/dashboard-content";
-const Todo = dynamic(() =>
-    import("@components/admin/dashboard/to-do").then((mod) => ({
-        default: mod.default,
-    })),
-);
 const LoadingScreen = dynamic(() => import("@components/admin/loading-screen"));
 const MetricCard = dynamic(() => import("../product/[id]/metric-card"));
 const SalesCard = dynamic(() => import("./sales-card"));
@@ -67,8 +57,6 @@ const Mail = dynamic(() =>
 const breadcrumbs = [{ label: OVERVIEW_HEADER, href: "#" }];
 
 export default function Page() {
-    const siteInfo = useContext(SiteInfoContext);
-    const address = useContext(AddressContext);
     const { profile } = useContext(ProfileContext);
     const [timeRange, setTimeRange] = useState("7d");
     const { data: salesData, loading: salesLoading } = useActivities(
@@ -78,21 +66,15 @@ export default function Page() {
         true,
     );
 
-    if (
-        !checkPermission(profile.permissions!, [
-            UIConstants.permissions.manageAnyCourse,
-            UIConstants.permissions.manageCourse,
-            UIConstants.permissions.manageMedia,
-            UIConstants.permissions.manageSettings,
-            UIConstants.permissions.manageSite,
-            UIConstants.permissions.manageUsers,
-        ])
-    ) {
+    if (!profile || !profile.userId) {
         return <LoadingScreen />;
     }
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={ADMIN_PERMISSIONS}
+        >
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-4xl font-semibold mb-4">
                     {DASHBOARD_PAGE_HEADER},{" "}
@@ -116,25 +98,6 @@ export default function Page() {
                     </Select>
                 </div>
             </div>
-            {/* <h1 className="text-4xl font-semibold mb-8">
-                {DASHBOARD_PAGE_HEADER}, {profile.name ? profile.name.split(" ")[0] : ""}
-            </h1>
-                        <Select value={timeRange} onValueChange={setTimeRange}>
-                            <SelectTrigger className="w-[140px]">
-                                <SelectValue placeholder="Select time range" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {TIME_RANGES.map((range) => (
-                                    <SelectItem
-                                        key={range.value}
-                                        value={range.value}
-                                    >
-                                        {range.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select> */}
-            <Todo />
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
                 <MetricCard
                     title="Sales"
@@ -165,32 +128,6 @@ export default function Page() {
                     duration={timeRange}
                 />
             </div>
-            {/* <div className="grid xs:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Metric
-                    title="Revenue"
-                    type="purchased"
-                    duration="7d"
-                    address={address}
-                />
-                <Metric
-                    title="Enrollments"
-                    type="enrolled"
-                    duration="7d"
-                    address={address}
-                />
-                <Metric
-                    title="New accounts"
-                    type="user_created"
-                    duration="7d"
-                    address={address}
-                />
-                <Metric
-                    title="Subscribers"
-                    type="newsletter_subscribed"
-                    duration="7d"
-                    address={address}
-                />
-            </div> */}
             <SalesCard data={salesData} loading={salesLoading} />
         </DashboardContent>
     );

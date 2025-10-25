@@ -1,6 +1,7 @@
 "use client";
 
 import DashboardContent from "@components/admin/dashboard-content";
+import { UIConstants } from "@courselit/common-models";
 import {
     Button2,
     Card,
@@ -10,12 +11,23 @@ import {
     CardTitle,
 } from "@courselit/components-library";
 import { HEADER_HELP } from "@ui-config/strings";
+const { permissions } = UIConstants;
 
 const breadcrumbs = [{ label: HEADER_HELP, href: "#" }];
 
 export default function Page() {
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[
+                permissions.manageAnyCourse,
+                permissions.manageCourse,
+                permissions.manageUsers,
+                permissions.manageSite,
+                permissions.manageCommunity,
+                permissions.manageSettings,
+            ]}
+        >
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-4xl font-semibold mb-4">{HEADER_HELP}</h1>
             </div>

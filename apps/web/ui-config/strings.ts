@@ -596,7 +596,7 @@ export const APP_MESSAGE_MAIL_DELETED = "Mail deleted";
 export const NEW_PAGE_FORM_WARNING =
     "These settings cannot be changed later on, so proceed with caution.";
 export const DASHBOARD_PAGE_HEADER = "Welcome";
-export const UNNAMED_USER = "Unnamed";
+export const UNNAMED_USER = "Stranger";
 export const MAIL_REQUEST_FORM_REASON_FIELD = "Reason";
 export const MAIL_REQUEST_FORM_REASON_PLACEHOLDER =
     "Please be as detailed as possible. This will help us review your application better.";
@@ -646,3 +646,4 @@ export const HEADER_HELP = "Help";
 export const CHECKOUT_PAGE_ORDER_SUMMARY = "Order summary";
 export const TEXT_EDITOR_PLACEHOLDER = "Type here...";
 export const BTN_VIEW_CERTIFICATE = "View certificate";
+export const GET_SET_UP = "Get set up";

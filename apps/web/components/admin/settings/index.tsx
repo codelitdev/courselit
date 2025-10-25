@@ -81,7 +81,6 @@ import {
     CardTitle,
 } from "@components/ui/card";
 import { Copy, Info } from "lucide-react";
-import { Label } from "@components/ui/label";
 import { Input } from "@components/ui/input";
 import Resources from "@components/resources";
 import { AddressContext } from "@components/contexts";
@@ -1068,7 +1067,6 @@ const Settings = (props: SettingsProps) => {
                         </CardHeader>
                         <CardContent className="grid gap-4">
                             <div className="grid gap-2">
-                                <Label>New Payment Plans Webhook</Label>
                                 <div className="flex gap-2">
                                     <Input
                                         readOnly
@@ -1080,29 +1078,6 @@ const Settings = (props: SettingsProps) => {
                                         onClick={() =>
                                             copyToClipboard(
                                                 `${address.backend}/api/payment/webhook`,
-                                            )
-                                        }
-                                    >
-                                        <Copy className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>
-                                    Old Payment Webhook (Required for products
-                                    but will be phased out soon)
-                                </Label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        readOnly
-                                        value={`${address.backend}/api/payment/webhook-old`}
-                                    />
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() =>
-                                            copyToClipboard(
-                                                `${address.backend}/api/payment/webhook-old`,
                                             )
                                         }
                                     >

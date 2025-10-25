@@ -1,6 +1,7 @@
 /**
  * This file provides application wide constants.
  */
+import { UIConstants } from "@courselit/common-models";
 
 // Constants that represent types from the server
 export const LESSON_TYPE_TEXT = "text";
@@ -46,4 +47,20 @@ export const TIME_RANGES = [
     { value: "90d", label: "90 days" },
     { value: "1y", label: "1 year" },
     { value: "lifetime", label: "Lifetime" },
+];
+
+const { permissions } = UIConstants;
+export const REQUIRED_PERMISSIONS_FOR_SETUP_CHECKLIST = [
+    permissions.manageAnyCourse,
+    permissions.manageSettings,
+    permissions.manageSite,
+] as const;
+
+export const ADMIN_PERMISSIONS = [
+    UIConstants.permissions.manageAnyCourse,
+    UIConstants.permissions.manageCourse,
+    UIConstants.permissions.manageUsers,
+    UIConstants.permissions.manageSite,
+    UIConstants.permissions.manageCommunity,
+    UIConstants.permissions.manageSettings,
 ];

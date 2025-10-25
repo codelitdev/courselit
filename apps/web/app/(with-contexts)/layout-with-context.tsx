@@ -94,7 +94,6 @@ export default function Layout(props: {
     theme: Theme;
     config: ServerConfig;
     session: Session | null;
-    // profile: Partial<Profile> | null;
 }) {
     return (
         <Suspense fallback={null}>
@@ -102,7 +101,3 @@ export default function Layout(props: {
         </Suspense>
     );
 }
-
-// function formatHSL(hsl: HSL): string {
-//     return `${hsl[0]} ${hsl[1]}% ${hsl[2]}%`;
-// }
