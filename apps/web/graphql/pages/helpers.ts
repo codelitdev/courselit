@@ -163,6 +163,9 @@ export async function getPageResponse(
 //     );
 // }
 
+// TODO: Figure out a better way to update ctx.subdomain.sharedWidgets
+// currently this function is getting called multiple times as the version 0
+// of the subdomain is not getting replaces in ctx
 export async function initSharedWidgets(ctx: GQLContext) {
     let subdomainChanged = false;
     if (!ctx.subdomain.sharedWidgets.header) {
