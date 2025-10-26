@@ -23,7 +23,7 @@
         "liquidjs": "^10.11.1",
         "mongodb": "^6.15.0",
         "mongoose": "^8.13.1",
-        "nodemailer": "^6.9.2",
+        "nodemailer": "^7.0.7",
         "pino": "^8.14.1",
         "pino-mongodb": "^4.3.0",
         "zod": "^3.22.4"
