@@ -57,6 +57,7 @@
     "jsdom": "^26.1.0",
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.544.0",
+    "medialit": "^0.1.0",
     "mongodb": "^6.15.0",
     "mongoose": "^8.13.1",
     "next": "^15.5.4",
