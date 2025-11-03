@@ -15,6 +15,10 @@ You should self host CourseLit, if you:
 - want complete control of your data
 - want to host it behind a firewall for internal use
 
+## How to self host?
+
+![Self hosting options](/assets/schools/self-host.svg)
+
 ### Self host CourseLit
 
 See [the self hosting guide](/en/self-hosting/self-host).

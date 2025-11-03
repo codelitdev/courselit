@@ -1,12 +1,17 @@
 import { NextRequest } from "next/server";
 import { responses } from "@/config/strings";
-import * as medialitService from "@/services/medialit";
 import { UIConstants as constants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
 import User from "@models/User";
 import DomainModel, { Domain } from "@models/Domain";
 import { auth } from "@/auth";
 import { error } from "@/services/logger";
+import { MediaLit } from "medialit";
+
+const medialit = new MediaLit({
+    apiKey: process.env.MEDIALIT_APIKEY,
+    endpoint: process.env.MEDIALIT_SERVER,
+});
 
 export async function POST(req: NextRequest) {
     const domain = await DomainModel.findOne<Domain>({
@@ -41,10 +46,13 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        let response = await medialitService.getPresignedUrlForUpload(
-            domain.name,
-        );
-        return Response.json({ url: response });
+        let signature = await medialit.getSignature({
+            group: domain.name,
+        });
+        return Response.json({
+            signature,
+            endpoint: medialit.endpoint,
+        });
     } catch (err: any) {
         error(err.message, {
             stack: err.stack,
