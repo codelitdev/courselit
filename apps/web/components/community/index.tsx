@@ -95,11 +95,10 @@ export function CommunityForum({
         null,
     );
     const [refreshCommunityStatus, setRefreshCommunityStatus] = useState(0);
-    const { isUploading, uploadProgress, uploadFile, cancelUpload } =
-        useMediaLit({
-            signatureEndpoint: `${address.backend}/api/media/presigned`,
-            access: "public",
-        });
+    const { isUploading, uploadProgress, uploadFile } = useMediaLit({
+        signatureEndpoint: `${address.backend}/api/media/presigned`,
+        access: "public",
+    });
     const [fileBeingUploadedNumber, setFileBeingUploadedNumber] = useState(0);
 
     useEffect(() => {
