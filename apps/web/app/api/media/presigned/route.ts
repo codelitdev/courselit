@@ -8,11 +8,6 @@ import { auth } from "@/auth";
 import { error } from "@/services/logger";
 import { MediaLit } from "medialit";
 
-const medialit = new MediaLit({
-    apiKey: process.env.MEDIALIT_APIKEY,
-    endpoint: process.env.MEDIALIT_SERVER,
-});
-
 export async function POST(req: NextRequest) {
     const domain = await DomainModel.findOne<Domain>({
         name: req.headers.get("domain"),
@@ -44,6 +39,11 @@ export async function POST(req: NextRequest) {
             { status: 403 },
         );
     }
+
+    const medialit = new MediaLit({
+        apiKey: process.env.MEDIALIT_APIKEY,
+        endpoint: process.env.MEDIALIT_SERVER,
+    });
 
     try {
         let signature = await medialit.getSignature({
