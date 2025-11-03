@@ -175,15 +175,6 @@ export function FileUploadAlertDialog({
         }
     };
 
-    const getMedia = async (mediaId: string) => {
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/media/${mediaId}/${type}`)
-            .setHttpMethod("GET")
-            .setIsGraphQLEndpoint(false)
-            .build();
-        return await fetch.exec();
-    };
-
     const handleReset = () => {
         if (uploadRef.current) {
             uploadRef.current.abort();
