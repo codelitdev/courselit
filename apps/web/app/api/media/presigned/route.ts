@@ -10,8 +10,8 @@ import { MediaLit } from "medialit";
 
 const medialit = new MediaLit({
     apiKey: process.env.MEDIALIT_APIKEY,
-    endpoint: process.env.MEDIALIT_SERVER
-})
+    endpoint: process.env.MEDIALIT_SERVER,
+});
 
 export async function POST(req: NextRequest) {
     const domain = await DomainModel.findOne<Domain>({
@@ -47,11 +47,11 @@ export async function POST(req: NextRequest) {
 
     try {
         let signature = await medialit.getSignature({
-            group: domain.name
-        })
-        return Response.json({ 
+            group: domain.name,
+        });
+        return Response.json({
             signature,
-            endpoint: medialit.endpoint 
+            endpoint: medialit.endpoint,
         });
     } catch (err: any) {
         error(err.message, {

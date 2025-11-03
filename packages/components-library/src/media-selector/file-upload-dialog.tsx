@@ -1,6 +1,4 @@
-import type React from "react";
-
-import { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import {
     AlertDialog,
     AlertDialogCancel,
@@ -15,13 +13,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Upload } from "lucide-react";
-import { FetchBuilder } from "@courselit/utils";
 import { Address, Media } from "@courselit/common-models";
 import { useToast } from "@/hooks/use-toast";
 import Access from "./access";
-import { Upload as TUSUpload } from "tus-js-client";
 import MediaType from "./type";
 import { AlertDialogAction } from "@radix-ui/react-alert-dialog";
+import { useMediaLit } from "@/hooks/use-medialit";
 
 interface FileUploadAlertDialogProps {
     acceptedMimeTypes?: string[];
@@ -47,22 +44,42 @@ export function FileUploadAlertDialog({
     const [file, setFile] = useState<File | null>(null);
     const [caption, setCaption] = useState("");
     const [isDragging, setIsDragging] = useState(false);
-    const [isUploading, setIsUploading] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState(0);
     const [fileError, setFileError] = useState("");
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
-    const uploadRef = useRef<TUSUpload>(null);
+    const { isUploading, uploadProgress, uploadFile, cancelUpload } =
+        useMediaLit({
+            signatureEndpoint: `${address.backend}/api/media/presigned`,
+            access,
+            onUploadComplete: (media) => {
+                onSuccess(media as unknown as Media);
+                resetState();
+                setOpen(false);
+            },
+            onUploadError: (error) => {
+                toast({
+                    title: "Upload Failed",
+                    description: error.message,
+                    variant: "destructive",
+                });
+            },
+        });
 
-    const isValidMimeType = (mimeType: string): boolean => {
-        if (acceptedMimeTypes.length === 0) return true;
-        return acceptedMimeTypes.includes(mimeType);
+    const resetState = () => {
+        setFile(null);
+        setCaption("");
+        setFileError("");
+        setIsDragging(false);
+        setOpen(false);
     };
+
+    const isValidMimeType = (mimeType: string) =>
+        acceptedMimeTypes.length === 0 || acceptedMimeTypes.includes(mimeType);
 
     const handleFileValidation = (selectedFile: File) => {
         if (!isValidMimeType(selectedFile.type)) {
             setFileError(
-                `Invalid file type. Accepted types: ${acceptedMimeTypes.join(", ")}`,
+                `Invalid file type. Accepted: ${acceptedMimeTypes.join(", ")}`,
             );
             setFile(null);
             return;
@@ -75,125 +92,24 @@ export function FileUploadAlertDialog({
         e.preventDefault();
         setIsDragging(true);
     };
-
-    const handleDragLeave = () => {
-        setIsDragging(false);
-    };
-
+    const handleDragLeave = () => setIsDragging(false);
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
         setIsDragging(false);
         const droppedFiles = e.dataTransfer.files;
-        if (droppedFiles.length > 0) {
-            handleFileValidation(droppedFiles[0]);
-        }
+        if (droppedFiles.length > 0) handleFileValidation(droppedFiles[0]);
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files.length > 0) {
-            handleFileValidation(e.target.files[0]);
-        }
+        if (e.target.files?.length) handleFileValidation(e.target.files[0]);
     };
 
     const handleUpload = async () => {
-        if (file) {
-            setIsUploading(true);
-            setUploadProgress(0);
-
-            try {
-                const { signature, endpoint } = await getSignature();
-
-                if (!signature || !endpoint) {
-                    toast({
-                        title: "Error",
-                        description: "Failed to get signature",
-                        variant: "destructive",
-                    });
-                }
-                const uploadUrl = `${endpoint}/media/create/resumable`;
-                const metadata = {
-                    fileName: file.name,
-                    mimeType: file.type,
-                    access,
-                    caption: caption || "",
-                };
-                const upload = new TUSUpload(file, {
-                    endpoint: uploadUrl,
-                    // chunkSize: 1024000, // 10 MB
-                    removeFingerprintOnSuccess: true,
-                    retryDelays: [0, 3000, 5000],
-                    headers: {
-                        "x-medialit-signature": signature,
-                    },
-                    metadata,
-                    onProgress: (bytesUploaded, bytesTotal) => {
-                        const percentage = (bytesUploaded / bytesTotal) * 100;
-                        setUploadProgress(percentage);
-                    },
-                    onError: (error) => {
-                        toast({
-                            title: "Error",
-                            description: error.message,
-                            variant: "destructive",
-                        });
-                        setIsUploading(false);
-                    },
-                    onSuccess: async (payload) => {
-                        const mediaString =
-                            payload.lastResponse.getHeader("Media");
-                        const media: Media = mediaString
-                            ? JSON.parse(mediaString)
-                            : null;
-                        if (media) {
-                            media && onSuccess(media);
-
-                            setOpen(false);
-                            setFile(null);
-                            setCaption("");
-                            setUploadProgress(0);
-                            setIsUploading(false);
-                        }
-                    },
-                });
-                uploadRef.current = upload;
-
-                upload.findPreviousUploads().then(function (previousUploads) {
-                    if (previousUploads.length) {
-                        upload.resumeFromPreviousUpload(previousUploads[0]);
-                    }
-
-                    upload.start();
-                });
-            } catch (error) {
-                toast({
-                    title: "Error",
-                    description: error.message,
-                    variant: "destructive",
-                });
-                setIsUploading(false);
-            }
-        }
-    };
-
-    const handleReset = () => {
-        if (uploadRef.current) {
-            uploadRef.current.abort();
-            uploadRef.current = null;
-        }
-        setFile(null);
-        setCaption("");
-        setUploadProgress(0);
-        setFileError("");
-        setOpen(false);
-        setIsUploading(false);
-    };
-
-    const getSignature = async () => {
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/media/presigned`)
-            .setIsGraphQLEndpoint(false)
-            .build();
-        return await fetch.exec();
+        if (!file) return;
+        await uploadFile(file, {
+            caption: caption || "",
+            type,
+        });
     };
 
     const acceptAttribute =
@@ -211,6 +127,7 @@ export function FileUploadAlertDialog({
                     Upload file
                 </Button>
             </AlertDialogTrigger>
+
             <AlertDialogContent className="max-w-md">
                 <AlertDialogHeader>
                     <AlertDialogTitle>Upload File</AlertDialogTitle>
@@ -229,7 +146,11 @@ export function FileUploadAlertDialog({
                             isDragging
                                 ? "border-primary bg-primary/5"
                                 : "border-muted-foreground/25 hover:border-muted-foreground/50"
-                        } ${file ? "bg-primary/5" : ""} ${fileError ? "border-destructive bg-destructive/5" : ""}`}
+                        } ${file ? "bg-primary/5" : ""} ${
+                            fileError
+                                ? "border-destructive bg-destructive/5"
+                                : ""
+                        }`}
                         style={{ pointerEvents: isUploading ? "none" : "auto" }}
                     >
                         <input
@@ -237,7 +158,6 @@ export function FileUploadAlertDialog({
                             type="file"
                             onChange={handleFileChange}
                             className="hidden"
-                            aria-label="File input"
                             disabled={isUploading}
                             accept={acceptAttribute}
                         />
@@ -262,7 +182,9 @@ export function FileUploadAlertDialog({
                             {file ? file.name : "Drop file here or click"}
                         </p>
                         {file && !fileError && (
-                            <p className="mt-1 text-xs text-muted-foreground">{`Selected: ${(file.size / 1024).toFixed(2)} KB`}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Selected: {(file.size / 1024).toFixed(2)} KB
+                            </p>
                         )}
                         {fileError && (
                             <p className="mt-2 text-xs text-destructive">
@@ -303,17 +225,11 @@ export function FileUploadAlertDialog({
                         </div>
                     )}
                 </div>
+
                 <AlertDialogFooter>
                     {isUploading ? (
                         <AlertDialogCancel
-                            onClick={() => {
-                                if (uploadRef.current) {
-                                    uploadRef.current.abort();
-                                    uploadRef.current = null;
-                                }
-                                setIsUploading(false);
-                                // setUploadProgress(0);
-                            }}
+                            onClick={cancelUpload}
                             disabled={Math.round(uploadProgress) > 99}
                         >
                             {Math.round(uploadProgress) > 99
@@ -322,7 +238,7 @@ export function FileUploadAlertDialog({
                         </AlertDialogCancel>
                     ) : (
                         <>
-                            <AlertDialogCancel onClick={handleReset}>
+                            <AlertDialogCancel onClick={resetState}>
                                 Cancel
                             </AlertDialogCancel>
                             <AlertDialogAction asChild>

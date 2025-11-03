@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Image } from "../image";
 import { Address, Media, Profile } from "@courselit/common-models";
 import Access from "./access";
 import { FetchBuilder } from "@courselit/utils";
-import React from "react";
 import { Button2, PageBuilderPropertyHeader, Tooltip, useToast } from "..";
 import { X } from "lucide-react";
 import { FileUploadAlertDialog } from "./file-upload-dialog";
@@ -61,17 +60,7 @@ interface MediaSelectorProps {
 
 const MediaSelector = (props: MediaSelectorProps) => {
     const [dialogOpened, setDialogOpened] = useState(false);
-    const [error, setError] = useState("");
     const [uploading, setUploading] = useState(false);
-    const defaultUploadData = {
-        caption: "",
-        uploading: false,
-        public: props.access === "public",
-    };
-    const [uploadData, setUploadData] = useState(defaultUploadData);
-    const fileInput: React.RefObject<HTMLInputElement> = React.createRef();
-    const [selectedFile, setSelectedFile] = useState();
-    const [caption, setCaption] = useState("");
     const { toast } = useToast();
     const {
         strings,
@@ -94,73 +83,6 @@ const MediaSelector = (props: MediaSelectorProps) => {
 
     const onSelection = (media: Media) => {
         props.onSelection(media);
-    };
-
-    const getPresignedUrl = async () => {
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/media/presigned`)
-            .setIsGraphQLEndpoint(false)
-            .build();
-        const { endpoint, signature } = await fetch.exec();
-        return `${endpoint}/media/create?signature=${signature}`;
-    };
-
-    useEffect(() => {
-        if (!dialogOpened) {
-            setSelectedFile(undefined);
-            setCaption("");
-        }
-    }, [dialogOpened]);
-
-    const uploadToServer = async (presignedUrl: string): Promise<Media> => {
-        const fD = new FormData();
-        fD.append("caption", (uploadData.caption = caption));
-        fD.append("access", uploadData.public ? "public" : "private");
-        fD.append("file", selectedFile);
-
-        setUploadData(
-            Object.assign({}, uploadData, {
-                uploading: true,
-            }),
-        );
-        const res = await fetch(presignedUrl, {
-            method: "POST",
-            body: fD,
-        });
-        if (res.status === 200) {
-            const media = await res.json();
-            if (media) {
-                delete media.group;
-            }
-            return media;
-        } else {
-            const resp = await res.json();
-            throw new Error(resp.error);
-        }
-    };
-
-    const uploadFile = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const file = selectedFile;
-
-        if (!file) {
-            setError("File is required");
-            return;
-        }
-
-        try {
-            setUploading(true);
-            const presignedUrl = await getPresignedUrl();
-            const media = await uploadToServer(presignedUrl);
-            onSelection(media);
-        } catch (err: any) {
-            onError(err);
-        } finally {
-            setUploading(false);
-            setSelectedFile(undefined);
-            setCaption("");
-            setDialogOpened(false);
-        }
     };
 
     const removeFile = async () => {

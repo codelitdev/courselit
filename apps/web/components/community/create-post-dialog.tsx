@@ -3,7 +3,6 @@
 import { useState, useEffect, useContext } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -22,22 +21,41 @@ import { Paperclip, Video, Smile, Image } from "lucide-react";
 import { EmojiPicker } from "./emoji-picker";
 import { GifSelector } from "./gif-selector";
 import { MediaPreview } from "./media-preview";
-import { CommunityPost } from "@courselit/common-models";
+import { CommunityMediaTypes, CommunityPost } from "@courselit/common-models";
 import { type MediaItem } from "./media-item";
 import { ProfileContext } from "@components/contexts";
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@components/ui/alert-dialog";
+import {
+    AlertDialogAction,
+    AlertDialogCancel,
+} from "@radix-ui/react-alert-dialog";
+import { Progress } from "@/components/ui/progress";
 
 interface CreatePostDialogProps {
-    onPostCreated: (
+    createPost: (
         post: Pick<CommunityPost, "title" | "content" | "category"> & {
             media: MediaItem[];
         },
     ) => void;
     categories: string[];
+    isFileUploading: boolean;
+    fileUploadProgress: number;
+    fileBeingUploadedNumber: number;
 }
 
-export function CreatePostDialog({
-    onPostCreated,
+export default function CreatePostDialog({
+    createPost,
     categories,
+    isFileUploading,
+    fileUploadProgress,
+    fileBeingUploadedNumber = 0,
 }: CreatePostDialogProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [title, setTitle] = useState("");
@@ -53,10 +71,13 @@ export function CreatePostDialog({
     }>({});
     const [isPostButtonDisabled, setIsPostButtonDisabled] = useState(true);
     const { profile } = useContext(ProfileContext);
+    const [isPosting, setIsPosting] = useState(false);
 
     useEffect(() => {
-        setIsPostButtonDisabled(title.trim() === "" || content.trim() === "");
-    }, [title, content]);
+        setIsPostButtonDisabled(
+            title.trim() === "" || content.trim() === "" || isPosting,
+        );
+    }, [title, content, isPosting]);
 
     const handleEmojiSelect = (emoji: string) => {
         setContent((prevContent) => prevContent + emoji);
@@ -98,9 +119,9 @@ export function CreatePostDialog({
         }
     };
 
-    const handleLinkAdd = (url: string) => {
-        setContent((prevContent) => `${prevContent} ${url} `);
-    };
+    // const handleLinkAdd = (url: string) => {
+    //     setContent((prevContent) => `${prevContent} ${url} `);
+    // };
 
     const handleVideoAdd = (url: string) => {
         if (url.includes("youtube.com") || url.includes("youtu.be")) {
@@ -127,7 +148,7 @@ export function CreatePostDialog({
         setMedia((prevMedia) => prevMedia.filter((_, i) => i !== index));
     };
 
-    const handlePost = () => {
+    const handlePost = async () => {
         if (title.trim() === "" || content.trim() === "") {
             setErrors({
                 title: title.trim() === "" ? "Title is required" : undefined,
@@ -145,14 +166,20 @@ export function CreatePostDialog({
             return;
         }
 
-        onPostCreated({
+        setIsPosting(true);
+        await createPost({
             category,
             title,
             content,
             media,
         });
+        setIsPosting(false);
+
+        resetForm();
+    };
+
+    const resetForm = () => {
         setIsOpen(false);
-        // Reset form
         setTitle("");
         setContent("");
         setCategory("");
@@ -160,38 +187,59 @@ export function CreatePostDialog({
         setErrors({});
     };
 
+    const getUploadableMediaCount = () => {
+        return media.filter((x) =>
+            [
+                CommunityMediaTypes.IMAGE,
+                CommunityMediaTypes.VIDEO,
+                CommunityMediaTypes.PDF,
+            ].includes(x.type as any),
+        ).length;
+    };
+
+    if (!profile) {
+        return null;
+    }
+
     return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
+        <AlertDialog open={isOpen}>
+            <AlertDialogTrigger asChild>
                 <Button
                     variant="outline"
                     className="w-full !text-left cursor-text"
+                    onClick={() => setIsOpen(true)}
                 >
                     Write something...
                 </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[90vw] md:max-w-[600px] w-full overflow-y-auto max-h-[calc(100vh-4rem)] my-8">
-                <div className="flex items-center gap-2 mb-4">
-                    <Avatar className="h-10 w-10">
-                        <AvatarImage
-                            src={
-                                profile.avatar
-                                    ? profile.avatar.file
-                                    : "/courselit_backdrop_square.webp"
-                            }
-                            alt={`${profile.name} avatar`}
-                        />
-                        <AvatarFallback>
-                            {(profile.name
-                                ? profile.name.charAt(0)
-                                : profile.email.charAt(0)
-                            ).toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
-                    <div>
-                        <span className="font-semibold">{profile.name}</span>
-                    </div>
-                </div>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="sm:max-w-[90vw] md:max-w-[600px] w-full overflow-y-auto max-h-[calc(100vh-4rem)] my-8">
+                <AlertDialogHeader>
+                    <AlertDialogTitle>
+                        <div className="flex items-center gap-2 mb-4">
+                            <Avatar className="h-10 w-10">
+                                <AvatarImage
+                                    src={
+                                        profile.avatar
+                                            ? profile.avatar.file
+                                            : "/courselit_backdrop_square.webp"
+                                    }
+                                    alt={`${profile.name} avatar`}
+                                />
+                                <AvatarFallback>
+                                    {(profile.name
+                                        ? profile.name.charAt(0)
+                                        : profile.email!.charAt(0)
+                                    ).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <span className="font-semibold">
+                                    {profile.name}
+                                </span>
+                            </div>
+                        </div>
+                    </AlertDialogTitle>
+                </AlertDialogHeader>
 
                 <div className="space-y-4">
                     <div>
@@ -199,7 +247,6 @@ export function CreatePostDialog({
                             placeholder="Title"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="text-lg border-none px-0 font-semibold"
                         />
                         {errors.title && (
                             <p className="text-red-500 text-sm mt-1">
@@ -409,7 +456,7 @@ export function CreatePostDialog({
                             )}
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    {/* <div className="flex items-center gap-2">
                         <Button
                             variant="ghost"
                             onClick={() => setIsOpen(false)}
@@ -423,9 +470,38 @@ export function CreatePostDialog({
                         >
                             Post
                         </Button>
-                    </div>
+                    </div> */}
                 </div>
-            </DialogContent>
-        </Dialog>
+                {isPosting && getUploadableMediaCount() > 0 && (
+                    <>
+                        <p className="text-xs text-muted-foreground">
+                            Uploading {fileBeingUploadedNumber} of{" "}
+                            {getUploadableMediaCount()} files -{" "}
+                            {Math.round(fileUploadProgress)}%
+                        </p>
+                        <Progress value={fileUploadProgress} className="h-2" />
+                    </>
+                )}
+                <AlertDialogFooter>
+                    <AlertDialogCancel asChild>
+                        <Button
+                            onClick={resetForm}
+                            variant="outline"
+                            disabled={isPosting}
+                        >
+                            Cancel
+                        </Button>
+                    </AlertDialogCancel>
+                    <AlertDialogAction asChild>
+                        <Button
+                            onClick={handlePost}
+                            disabled={isPostButtonDisabled}
+                        >
+                            {isPosting ? "Posting..." : "Post"}
+                        </Button>
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     );
 }

@@ -62,11 +62,11 @@ export * from "./vertical-padding-selector";
 export * from "./max-width-selector";
 export * from "./lib/utils";
 export * from "./section-background-panel";
+export * from "./hooks/use-medialit";
 
 export {
     PriceTag,
     Section,
-    // WidgetHelpers,
     CourseItem,
     Select,
     Link,
