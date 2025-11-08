@@ -1,7 +1,7 @@
-import "remirror/styles/all.css";
 import "@courselit/page-blocks/styles.css";
 import "@courselit/components-library/styles.css";
 import "@courselit/page-primitives/styles.css";
+import "@courselit/text-editor/styles.css";
 import "../styles/globals.css";
 import type { Metadata } from "next";
 import { headers } from "next/headers";

@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { Renderer, extractHeadings } from "@courselit/text-editor";
 

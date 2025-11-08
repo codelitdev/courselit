@@ -1,46 +1,39 @@
 "use client";
 
-/* eslint-disable react-hooks/rules-of-hooks */
-import React, { useEffect, FC, PropsWithChildren, useCallback } from "react";
-import {
-    EditorComponent,
-    Remirror,
-    ThemeProvider,
-    useRemirror,
-} from "@remirror/react";
-import { TableComponents } from "@remirror/extension-react-tables";
-import { RemirrorContentType } from "@remirror/core-types";
-import {
-    getTextContentFromSlice,
-    AnyExtension,
-    RemirrorEventListenerProps,
-    Slice,
-} from "@remirror/core";
-import { InvalidContentHandler } from "remirror";
-import BubbleMenu from "./BubbleMenu";
-import Toolbar from "./Toolbar";
-import { ReactEditorProps } from "./types";
+import React, {
+    FC,
+    PropsWithChildren,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
+import type { JSONContent } from "@tiptap/core";
+import { generateText } from "@tiptap/core";
+import { EditorContent, useEditor } from "@tiptap/react";
 import emptyDoc from "./empty-doc";
-import { getExtensions } from "./extensions";
-import { i18nFormat } from "@remirror/i18n";
+import { createExtensions } from "./extensions";
+import Toolbar from "./Toolbar";
+import BubbleMenu from "./BubbleMenu";
+import type { ReactEditorProps } from "./types";
+import { uploadImageToMediaLit } from "./file-upload-extention";
 
 export interface WysiwygEditorProps {
-    onChange: (json: unknown) => void;
+    onChange: (json: JSONContent) => void;
     showToolbar?: boolean;
     editable?: boolean;
     refresh?: number;
     fontFamily?: string;
     url: string;
     initialContent?: ReactEditorProps["initialContent"];
-    stringHandler?: ReactEditorProps["stringHandler"];
     placeholder?: string;
     autoFocus?: boolean;
-    hooks?: ReactEditorProps["hooks"];
 }
 
 interface WysiwygEditorType extends FC<PropsWithChildren<WysiwygEditorProps>> {
-    getPlainText: (doc: RemirrorContentType) => string;
-    emptyDoc: RemirrorContentType;
+    getPlainText: (doc: JSONContent) => string;
+    emptyDoc: JSONContent;
 }
 
 const WysiwygEditor: WysiwygEditorType = Object.assign(
@@ -48,101 +41,192 @@ const WysiwygEditor: WysiwygEditorType = Object.assign(
         initialContent,
         onChange,
         placeholder,
-        stringHandler,
         children,
         showToolbar = true,
         editable = true,
         refresh,
         fontFamily,
         url,
-        ...rest
+        autoFocus,
     }) => {
-        const theme = {
-            fontFamily: {
-                default: fontFamily,
+        const [isUploading, setIsUploading] = useState(false);
+        const fileInputRef = useRef<HTMLInputElement | null>(null);
+        const hasInteractedRef = useRef(false);
+        const lastSerializedContentRef = useRef(
+            JSON.stringify(initialContent ?? emptyDoc),
+        );
+        const refreshRef = useRef<WysiwygEditorProps["refresh"]>(refresh);
+
+        const extensions = useMemo(
+            () => createExtensions({ placeholder }),
+            [placeholder],
+        );
+
+        const changeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+        const editor = useEditor(
+            {
+                immediatelyRender: false,
+                extensions,
+                content: initialContent ?? emptyDoc,
+                autofocus: autoFocus ? "end" : false,
+                editable,
+                editorProps: {
+                    attributes: {
+                        class: "tiptap-content",
+                        "data-placeholder": placeholder ?? "",
+                    },
+                },
+                onUpdate: ({ editor: instance }) => {
+                    if (changeTimeoutRef.current) {
+                        clearTimeout(changeTimeoutRef.current);
+                    }
+
+                    changeTimeoutRef.current = setTimeout(() => {
+                        hasInteractedRef.current = true;
+                        onChange(instance.getJSON());
+                        changeTimeoutRef.current = null;
+                    }, 300);
+                },
+                onSelectionUpdate: ({ editor: instance }) => {
+                    hasInteractedRef.current = true;
+                },
             },
-        };
+            [extensions],
+        );
+        useEffect(() => {
+            return () => {
+                if (changeTimeoutRef.current) {
+                    clearTimeout(changeTimeoutRef.current);
+                }
+            };
+        }, []);
+
+        useEffect(() => {
+            if (!editor) {
+                return;
+            }
+
+            editor.setEditable(editable);
+        }, [editor, editable]);
+
+        useEffect(() => {
+            if (!editor) {
+                return;
+            }
+
+            const nextContent = initialContent ?? emptyDoc;
+            const nextSerialized = JSON.stringify(nextContent);
+            const refreshChanged = refreshRef.current !== refresh;
+
+            if (refreshChanged) {
+                refreshRef.current = refresh;
+                hasInteractedRef.current = false;
+                lastSerializedContentRef.current = nextSerialized;
+                editor.commands.setContent(nextContent, false);
+                return;
+            }
+
+            if (!hasInteractedRef.current) {
+                if (lastSerializedContentRef.current !== nextSerialized) {
+                    lastSerializedContentRef.current = nextSerialized;
+                    editor.commands.setContent(nextContent, false);
+                }
+                return;
+            }
+
+            lastSerializedContentRef.current = nextSerialized;
+        }, [editor, initialContent, refresh]);
+
+        const handleImageUpload = useCallback(
+            async (file: File) => {
+                try {
+                    setIsUploading(true);
+                    const result = await uploadImageToMediaLit(url, file);
+                    editor
+                        ?.chain()
+                        .focus()
+                        .setImage({
+                            src: result.src,
+                            alt: result.fileName,
+                            title: result.fileName,
+                        })
+                        .run();
+                } catch (error) {
+                    console.error("Image upload failed", error);
+                } finally {
+                    setIsUploading(false);
+                }
+            },
+            [editor, url],
+        );
+
+        const handleSelectFile = useCallback(
+            (event: React.ChangeEvent<HTMLInputElement>) => {
+                const files = event.target.files;
+                if (!files || files.length === 0) {
+                    return;
+                }
+
+                const file = files[0];
+                void handleImageUpload(file);
+                event.target.value = "";
+            },
+            [handleImageUpload],
+        );
+
+        const openFileDialog = useCallback(() => {
+            fileInputRef.current?.click();
+        }, []);
 
         if (typeof window === "undefined") {
             return <></>;
         }
 
-        useEffect(() => {
-            manager.view.updateState(
-                manager.createState({
-                    content: initialContent as RemirrorContentType,
-                }),
-            );
-        }, [refresh]);
-
-        const extensions = useCallback(() => {
-            const exts = getExtensions(placeholder, url)();
-            return exts as unknown as AnyExtension[];
-        }, [placeholder, url]);
-
-        const onError: InvalidContentHandler = useCallback(
-            ({ json, invalidContent, transformers }) => {
-                // Automatically remove all invalid nodes and marks.
-                return transformers.remove(json, invalidContent);
-            },
-            [],
-        );
-
-        const {
-            manager,
-            state,
-            onChange: onChangeRemirror,
-        } = useRemirror({
-            extensions,
-            stringHandler,
-            content: (initialContent as RemirrorContentType) || emptyDoc,
-            onError,
-        });
-
-        const onChangeFunc = (
-            data: RemirrorEventListenerProps<AnyExtension>,
-        ) => {
-            setTimeout(() => onChange(data.helpers.getJSON()), 0);
-        };
-
         return (
-            <ThemeProvider theme={theme}>
-                <Remirror
-                    manager={manager}
-                    state={state}
-                    onChange={(data) => {
-                        onChangeRemirror(data);
-                        onChangeFunc(data);
-                    }}
-                    editable={editable}
-                    i18nFormat={i18nFormat}
-                    {...rest}
-                >
-                    <div style={{ position: "relative" }}>
-                        {editable && showToolbar && (
-                            <div
-                                style={{
-                                    position: "sticky",
-                                    top: 0,
-                                    left: 0,
-                                    zIndex: 10,
-                                }}
-                            >
-                                <Toolbar />
-                            </div>
-                        )}
-                        <EditorComponent />
-                        <BubbleMenu />
-                        <TableComponents />
-                        {children}
+            <div
+                className="tiptap-editor flex flex-col gap-2"
+                style={{
+                    fontFamily,
+                }}
+            >
+                {editable && showToolbar && (
+                    <div
+                        className="sticky top-0 z-10 bg-background"
+                        style={{
+                            position: "sticky",
+                            top: 0,
+                            zIndex: 10,
+                        }}
+                    >
+                        <Toolbar
+                            editor={editor}
+                            onRequestImageUpload={openFileDialog}
+                            isUploadingImage={isUploading}
+                        />
                     </div>
-                </Remirror>
-            </ThemeProvider>
+                )}
+                <div className="rounded-md border border-border">
+                    {editor && <BubbleMenu editor={editor} />}
+                    <EditorContent
+                        editor={editor}
+                        className="min-h-[200px] px-4 py-3"
+                    />
+                </div>
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleSelectFile}
+                />
+                {children}
+            </div>
         );
     },
     {
-        getPlainText: (doc: RemirrorContentType) =>
-            getTextContentFromSlice(doc as unknown as Slice),
+        getPlainText: (doc: JSONContent) =>
+            generateText(doc || emptyDoc, createExtensions()),
         emptyDoc,
     },
 ) as WysiwygEditorType;
