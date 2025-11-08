@@ -1,6 +1,12 @@
 import { GraphQLBoolean, GraphQLNonNull, GraphQLString } from "graphql";
 import GQLContext from "../../models/GQLContext";
-import { updatePage, createPage, deletePage, publish } from "./logic";
+import {
+    updatePage,
+    createPage,
+    deletePage,
+    publish,
+    deleteBlock,
+} from "./logic";
 import types from "./types";
 import constants from "../../config/constants";
 const { defaultPages } = constants;
@@ -88,6 +94,18 @@ const mutations = {
             { id }: { id: (typeof defaultPages)[number] },
             context: GQLContext,
         ) => deletePage(context, id),
+    },
+    deleteBlock: {
+        type: types.page,
+        args: {
+            pageId: { type: new GraphQLNonNull(GraphQLString) },
+            blockId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (
+            _: any,
+            { pageId, blockId }: { pageId: string; blockId: string },
+            context: GQLContext,
+        ) => deleteBlock({ context, pageId, blockId }),
     },
 };
 

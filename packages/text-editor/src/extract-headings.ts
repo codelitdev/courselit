@@ -1,8 +1,5 @@
-import { Node, Schema } from "prosemirror-model";
-import { RemirrorManager } from "remirror";
-import { AnyExtension } from "@remirror/core";
-import { getExtensions } from "./extensions";
 import { createId } from "./create-id";
+import type { JSONContent } from "@tiptap/core";
 
 interface Heading {
     level: number;
@@ -10,28 +7,53 @@ interface Heading {
     id: string;
 }
 
-interface JSONDoc {
-    type: string;
-    content?: JSONDoc[];
-    attrs?: Record<string, unknown>;
-    text?: string;
-}
-
-export function extractHeadings(json: JSONDoc): Heading[] {
+export function extractHeadings(
+    json: JSONContent | null | undefined,
+): Heading[] {
     const headings: Heading[] = [];
-    const exts = getExtensions("", "")() as unknown as AnyExtension[];
-    const manager = RemirrorManager.create(exts);
 
-    const doc = Node.fromJSON(manager.schema as Schema, json);
-    doc.descendants((node) => {
-        if (node.type.name === "heading") {
+    const collectHeadings = (node?: JSONContent) => {
+        if (!node) {
+            return;
+        }
+
+        if (node.type === "heading") {
+            const level =
+                typeof node.attrs?.level === "number" ? node.attrs.level : 1;
+
+            const collectText = (current?: JSONContent): string => {
+                if (!current) {
+                    return "";
+                }
+
+                if (typeof current.text === "string") {
+                    return current.text;
+                }
+
+                if (!current.content) {
+                    return "";
+                }
+
+                return current.content.map(collectText).join("");
+            };
+
+            const textContent = collectText(node);
+
             headings.push({
-                level: node.attrs.level as number,
-                text: node.textContent,
-                id: createId(node.textContent),
+                level,
+                text: textContent,
+                id: createId(textContent),
             });
         }
-    });
+
+        if (Array.isArray(node.content)) {
+            node.content.forEach((child) => {
+                collectHeadings(child as JSONContent);
+            });
+        }
+    };
+
+    collectHeadings(json || undefined);
 
     return headings;
 }

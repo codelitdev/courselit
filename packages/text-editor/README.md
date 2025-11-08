@@ -1,6 +1,6 @@
 # CourseLit's Text Editor
 
-This is a rich text editor, based on [Remirror](https://remirror.io).
+This is a rich text editor built on top of [TipTap v3](https://tiptap.dev/).
 
 ## Installation
 
@@ -10,7 +10,13 @@ To install this package, use the following command.
 npm install @courselit/text-editor
 ```
 
-> You need to install [remirror](https://www.npmjs.com/package/remirror) package in your application and import Remirror's CSS file in your application using the following command `import 'remirror/styles/all.css'`.
+After installing, import the bundled styles once in your app (for example, in your root layout).
+
+```ts
+import "@courselit/text-editor/styles.css";
+```
+
+> TipTap relies on ProseMirror. The editor ships with all required extensions, so no additional peer dependencies are needed.
 
 ## Shortcut keys
 
@@ -34,8 +40,8 @@ npm install @courselit/text-editor
 
 `Ctrl + Shift + 9`: Ordered list
 
-`Ctrl + Shift + 7`: Tasked list
+`Ctrl + Shift + 7`: Task list
 
 ## Images
 
-Simply drag and drop images in the editor window to put it as a `data:` embed in your content.
+Use the _Image_ button in the toolbar to upload assets to CourseLit. Uploads are limited to 2MB per file.

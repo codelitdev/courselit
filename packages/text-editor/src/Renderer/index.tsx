@@ -1,84 +1,70 @@
-import React from "react";
-import {
-    Callout,
-    CodeBlock,
-    createIFrameHandler,
-    createLinkHandler,
-    Doc,
-    MarkMap,
-    RemirrorRenderer,
-    TextHandler,
-    ThemeProvider,
-} from "@remirror/react";
-import { RemirrorJSON } from "@remirror/core-types";
-import { CodeMirrorRenderer } from "./code-mirror-renderer";
-import { createId } from "../create-id";
+"use client";
 
-const typeMap: MarkMap = {
-    blockquote: "blockquote",
-    bulletList: "ul",
-    callout: Callout,
-    codeBlock: CodeBlock,
-    codeMirror: CodeMirrorRenderer,
-    doc: Doc,
-    hardBreak: "br",
-    horizontalRule: "hr",
-    iframe: createIFrameHandler(),
-    image: "img",
-    listItem: "li",
-    paragraph: "p",
-    orderedList: "ol",
-    text: TextHandler,
-    taskList: "ul",
-    taskListItem: "li",
-    // add links to headings for table of contents navigation
-    heading: ({ node, children }) => {
-        if (!node.content) {
-            return null;
-        }
-
-        let textContent = "";
-        for (const child of node.content) {
-            textContent += child.text;
-        }
-        const id = createId(textContent);
-        const HeadingTag =
-            `h${node.attrs.level}` as keyof JSX.IntrinsicElements;
-
-        return <HeadingTag id={id}>{children}</HeadingTag>;
-    },
-};
-
-const markMap: MarkMap = {
-    italic: "em",
-    bold: "strong",
-    code: "code",
-    link: createLinkHandler({ target: "_blank", rel: "noopener noreferrer" }),
-    underline: "u",
-    strike: "strike",
-};
+import React, { useEffect, useMemo, useRef } from "react";
+import type { JSONContent } from "@tiptap/core";
+import { EditorContent, useEditor } from "@tiptap/react";
+import emptyDoc from "../empty-doc";
+import { createExtensions } from "../extensions";
 
 interface RendererProps {
-    json: RemirrorJSON;
+    json?: JSONContent | null;
     fontFamily?: string;
+    className?: string;
 }
 
-const Renderer = ({ json, fontFamily }: RendererProps): JSX.Element => {
-    const theme = {
-        fontFamily: {
-            default: fontFamily,
+const Renderer = ({ json, fontFamily, className }: RendererProps) => {
+    const serializedContentRef = useRef(JSON.stringify(json ?? emptyDoc));
+
+    const extensions = useMemo(() => createExtensions(), []);
+
+    const editor = useEditor(
+        {
+            immediatelyRender: false,
+            extensions,
+            content: json ?? emptyDoc,
+            editable: false,
         },
-    };
+        [extensions],
+    );
+
+    useEffect(() => {
+        if (!editor) {
+            return;
+        }
+
+        editor.setEditable(false);
+    }, [editor]);
+
+    useEffect(() => {
+        if (!editor) {
+            return;
+        }
+
+        const nextSerialized = JSON.stringify(json ?? emptyDoc);
+
+        if (serializedContentRef.current !== nextSerialized) {
+            serializedContentRef.current = nextSerialized;
+            editor.commands.setContent(json ?? emptyDoc, false);
+        }
+    }, [editor, json]);
+
+    const combinedClassName = ["tiptap-renderer", className]
+        .filter(Boolean)
+        .join(" ");
+
+    if (!editor) {
+        return null;
+    }
 
     return (
-        <ThemeProvider theme={theme}>
-            <RemirrorRenderer
-                json={json}
-                typeMap={typeMap}
-                markMap={markMap}
-                skipUnknownTypes
-            />
-        </ThemeProvider>
+        <div
+            className={combinedClassName}
+            style={{
+                fontFamily,
+            }}
+        >
+            <EditorContent editor={editor} />
+        </div>
     );
 };
 
