@@ -14,7 +14,17 @@ async function getPresignedUrl(url: string) {
 export interface UploadedImage {
     src: string;
     fileName?: string;
+    mediaId?: string;
 }
+
+export type MediaDeleteType =
+    | "course"
+    | "lesson"
+    | "page"
+    | "user"
+    | "domain"
+    | "community"
+    | "certificate";
 
 export async function uploadImageToMediaLit(
     url: string,
@@ -49,5 +59,28 @@ export async function uploadImageToMediaLit(
     return {
         src: data.file,
         fileName: data.originalFileName,
+        mediaId: data.mediaId,
     };
+}
+
+export async function deleteMediaFromServer(
+    url: string,
+    mediaId: string,
+    type: MediaDeleteType,
+) {
+    const fetch = new FetchBuilder()
+        .setUrl(
+            `${url}/api/media/${encodeURIComponent(mediaId)}/${encodeURIComponent(
+                type,
+            )}`,
+        )
+        .setHttpMethod("DELETE")
+        .setIsGraphQLEndpoint(false)
+        .build();
+
+    const response = await fetch.exec();
+
+    if (response?.message && response.message !== "success") {
+        throw new Error(response.message);
+    }
 }

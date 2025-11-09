@@ -143,6 +143,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                         }}
                         url={address.backend}
                         refresh={refresh}
+                        mediaType="course"
                     />
                 </div>
 

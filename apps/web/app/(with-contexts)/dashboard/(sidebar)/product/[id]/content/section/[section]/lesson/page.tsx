@@ -222,6 +222,7 @@ export default function LessonPage() {
                             }}
                             url={address.backend}
                             placeholder={TEXT_EDITOR_PLACEHOLDER}
+                            mediaType="lesson"
                         />
                         {errors.content && (
                             <p className="text-sm text-red-500">

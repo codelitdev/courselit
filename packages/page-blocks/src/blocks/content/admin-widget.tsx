@@ -71,6 +71,7 @@ export default function AdminWidget({
                         onChange={(state: any) => setDescription(state)}
                         showToolbar={false}
                         url={address.backend}
+                        mediaType="page"
                     />
                 </div>
                 <Select

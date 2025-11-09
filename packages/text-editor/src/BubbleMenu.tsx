@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import type { Editor } from "@tiptap/core";
-import { BubbleMenu as TipTapBubbleMenu } from "@tiptap/react";
+import { BubbleMenu as TipTapBubbleMenu } from "@tiptap/react/menus";
 import {
     Bold,
     Code,

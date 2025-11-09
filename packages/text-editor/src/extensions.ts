@@ -1,10 +1,12 @@
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
-import Table from "@tiptap/extension-table";
-import TableRow from "@tiptap/extension-table-row";
-import TableCell from "@tiptap/extension-table-cell";
-import TableHeader from "@tiptap/extension-table-header";
+import {
+    Table,
+    TableRow,
+    TableCell,
+    TableHeader,
+} from "@tiptap/extension-table";
 import Image from "@tiptap/extension-image";
 import Dropcursor from "@tiptap/extension-dropcursor";
 import Gapcursor from "@tiptap/extension-gapcursor";
@@ -49,7 +51,37 @@ export const createExtensions = ({
     TableRow,
     TableHeader,
     TableCell,
-    Image.configure({
+    Image.extend({
+        addAttributes() {
+            const parentAttributes =
+                typeof this.parent === "function" ? this.parent() : {};
+
+            return {
+                ...parentAttributes,
+                mediaId: {
+                    default: null,
+                    parseHTML: (element) =>
+                        element.getAttribute("data-media-id"),
+                    renderHTML: (attributes) =>
+                        attributes.mediaId
+                            ? { "data-media-id": attributes.mediaId }
+                            : {},
+                },
+                originalFileName: {
+                    default: null,
+                    parseHTML: (element) =>
+                        element.getAttribute("data-original-file-name"),
+                    renderHTML: (attributes) =>
+                        attributes.originalFileName
+                            ? {
+                                  "data-original-file-name":
+                                      attributes.originalFileName,
+                              }
+                            : {},
+                },
+            };
+        },
+    }).configure({
         allowBase64: false,
         HTMLAttributes: {
             class: "max-w-full h-auto rounded-md",

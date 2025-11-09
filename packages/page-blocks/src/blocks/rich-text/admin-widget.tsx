@@ -80,6 +80,7 @@ const AdminWidget = ({
                         onChange={(state: any) => setContent(state)}
                         showToolbar={false}
                         url={address.backend}
+                        mediaType="page"
                     />
                 </div>
             </AdminWidgetPanel>

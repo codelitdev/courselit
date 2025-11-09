@@ -571,6 +571,7 @@ export default function Page(props: {
                             showToolbar={false}
                             url={address.backend}
                             refresh={refresh}
+                            mediaType="community"
                         />
                     </div>
                     <div className="flex items-center justify-between">

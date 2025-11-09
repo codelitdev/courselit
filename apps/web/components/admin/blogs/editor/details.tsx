@@ -150,6 +150,7 @@ export default function Details({ id }: DetailsProps) {
                     onChange={(state: any) => setDescription(state)}
                     url={address.backend}
                     placeholder={TEXT_EDITOR_PLACEHOLDER}
+                    mediaType="course"
                 />
                 <div>
                     <Button type="submit" disabled={loading}>

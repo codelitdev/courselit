@@ -59,6 +59,7 @@ export default function ItemEditor({
                         onChange={(state: any) => setDescription(state)}
                         showToolbar={false}
                         url={address.backend}
+                        mediaType="page"
                     />
                 </div>
                 <div className="flex justify-between">

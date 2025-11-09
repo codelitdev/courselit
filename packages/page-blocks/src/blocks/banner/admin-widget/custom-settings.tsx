@@ -138,6 +138,7 @@ export default function CustomSettings({
                             onChange={(state: any) => setDescription(state)}
                             showToolbar={false}
                             url={address.backend}
+                            mediaType="page"
                         />
                     </div>
                 </Form>
@@ -169,6 +170,7 @@ export default function CustomSettings({
                                     }
                                     showToolbar={false}
                                     url={address.backend}
+                                    mediaType="page"
                                 />
                             </div>
                             <FormField

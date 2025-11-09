@@ -1,5 +1,6 @@
 import React from "react";
 import { WysiwygEditor as TextEditor } from "@courselit/text-editor";
+import type { MediaDeleteType } from "@courselit/text-editor";
 export { emptyDoc } from "@courselit/text-editor";
 
 export interface WysiwygEditorProps {
@@ -10,6 +11,7 @@ export interface WysiwygEditorProps {
     refresh?: number;
     url: string;
     placeholder?: string;
+    mediaType?: MediaDeleteType;
 }
 
 export default function Editor({
@@ -20,6 +22,7 @@ export default function Editor({
     refresh,
     url,
     placeholder,
+    mediaType,
 }: WysiwygEditorProps) {
     return (
         <div className="text-editor">
@@ -32,6 +35,7 @@ export default function Editor({
                 fontFamily={"inherit"}
                 url={url}
                 placeholder={placeholder}
+                mediaType={mediaType}
             />
         </div>
     );

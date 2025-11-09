@@ -91,10 +91,21 @@ async function isActionAllowed(
     }
 
     switch (type) {
-        case "course":
+        case "course": {
+            const escapedMediaId = mediaId.replace(
+                /[.*+?^${}()|[\]\\]/g, // AI generated
+                "\\$&",
+            );
             const course = await CourseModel.findOne<InternalCourse>({
                 domain: domain._id,
-                "featuredImage.mediaId": mediaId,
+                $or: [
+                    { "featuredImage.mediaId": mediaId },
+                    {
+                        description: new RegExp(
+                            `"mediaId":"${escapedMediaId}"`,
+                        ),
+                    },
+                ],
             });
             if (!course) {
                 return false;
@@ -113,6 +124,7 @@ async function isActionAllowed(
                     ])
                 );
             }
+        }
         case "lesson":
             const lesson = await LessonModel.findOne<Lesson>({
                 domain: domain._id,
