@@ -48,6 +48,8 @@ import PaymentPlanModel from "@models/PaymentPlan";
 import CertificateTemplateModel, {
     CertificateTemplate,
 } from "@models/CertificateTemplate";
+import CertificateModel from "@models/Certificate";
+import ActivityModel from "@models/Activity";
 import getDeletedMediaIds, {
     extractMediaIDs,
 } from "@/lib/get-deleted-media-ids";
@@ -252,6 +254,10 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
         domain: ctx.subdomain._id,
         courseId: course.courseId,
     });
+    await CertificateModel.deleteMany({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+    });
     await MembershipModel.deleteMany({
         domain: ctx.subdomain._id,
         entityId: course.courseId,
@@ -265,6 +271,13 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
     await deleteProductsFromPaymentPlans({
         domain: ctx.subdomain._id,
         courseId: course.courseId,
+    });
+    await ActivityModel.deleteMany({
+        domain: ctx.subdomain._id,
+        $or: [
+            { entityId: course.courseId },
+            { "metadata.courseId": course.courseId },
+        ],
     });
     await deleteAllLessons(course.courseId, ctx);
     if (course.featuredImage) {
@@ -282,6 +295,18 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
             await deleteMedia(mediaId);
         }
     }
+    await UserModel.updateMany(
+        {
+            domain: ctx.subdomain._id,
+        },
+        {
+            $pull: {
+                purchases: {
+                    courseId: course.courseId,
+                },
+            },
+        },
+    );
     await PageModel.deleteOne({
         entityId: course.courseId,
         domain: ctx.subdomain._id,

@@ -29,6 +29,7 @@ import { error } from "@/services/logger";
 import getDeletedMediaIds, {
     extractMediaIDs,
 } from "@/lib/get-deleted-media-ids";
+import ActivityModel from "@/models/Activity";
 
 const { permissions, quiz } = constants;
 
@@ -241,8 +242,17 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
             }
         }
 
+        await LessonEvaluation.deleteMany({
+            domain: ctx.subdomain._id,
+            lessonId: lesson.lessonId,
+        });
+        await ActivityModel.deleteMany({
+            domain: ctx.subdomain._id,
+            entityId: lesson.lessonId,
+        });
+
         await LessonModel.deleteOne({
-            _id: lesson._id,
+            _id: lesson.id,
             domain: ctx.subdomain._id,
         });
         return true;
