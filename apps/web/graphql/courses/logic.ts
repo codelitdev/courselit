@@ -45,7 +45,12 @@ import { ActivityType } from "@courselit/common-models/dist/constants";
 import { verifyMandatoryTags } from "../mails/helpers";
 import { Email } from "@courselit/email-editor";
 import PaymentPlanModel from "@models/PaymentPlan";
-import CertificateTemplateModel from "@models/CertificateTemplate";
+import CertificateTemplateModel, {
+    CertificateTemplate,
+} from "@models/CertificateTemplate";
+import getDeletedMediaIds, {
+    extractMediaIDs,
+} from "@/lib/get-deleted-media-ids";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -190,6 +195,14 @@ export const updateCourse = async (
     ctx: GQLContext,
 ) => {
     let course = await getCourseOrThrow(undefined, ctx, courseData.id);
+    const mediaIdsMarkedForDeletion: string[] = [];
+
+    if (Object.prototype.hasOwnProperty.call(courseData, "description")) {
+        const nextDescription = (courseData.description ?? "") as string;
+        mediaIdsMarkedForDeletion.push(
+            ...getDeletedMediaIds(course.description || "", nextDescription),
+        );
+    }
 
     for (const key of Object.keys(courseData)) {
         if (key === "id") {
@@ -211,6 +224,9 @@ export const updateCourse = async (
     }
 
     course = await validateCourse(course, ctx);
+    for (const mediaId of mediaIdsMarkedForDeletion) {
+        await deleteMedia(mediaId);
+    }
     course = await (course as any).save();
     await PageModel.updateOne(
         { entityId: course.courseId, domain: ctx.subdomain._id },
@@ -221,6 +237,21 @@ export const updateCourse = async (
 
 export const deleteCourse = async (id: string, ctx: GQLContext) => {
     const course = await getCourseOrThrow(undefined, ctx, id);
+    const certificateTemplate =
+        await CertificateTemplateModel.findOne<CertificateTemplate | null>({
+            domain: ctx.subdomain._id,
+            courseId: course.courseId,
+        });
+    if (certificateTemplate?.signatureImage?.mediaId) {
+        await deleteMedia(certificateTemplate.signatureImage.mediaId);
+    }
+    if (certificateTemplate?.logo?.mediaId) {
+        await deleteMedia(certificateTemplate.logo.mediaId);
+    }
+    await CertificateTemplateModel.deleteOne({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+    });
     await MembershipModel.deleteMany({
         domain: ctx.subdomain._id,
         entityId: course.courseId,
@@ -243,6 +274,12 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
             error(err.message, {
                 stack: err.stack,
             });
+        }
+    }
+    if (course.description) {
+        const extractedMediaIds = extractMediaIDs(course.description || "");
+        for (const mediaId of Array.from(extractedMediaIds)) {
+            await deleteMedia(mediaId);
         }
     }
     await PageModel.deleteOne({

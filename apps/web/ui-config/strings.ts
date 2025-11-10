@@ -647,3 +647,4 @@ export const CHECKOUT_PAGE_ORDER_SUMMARY = "Order summary";
 export const TEXT_EDITOR_PLACEHOLDER = "Type here...";
 export const BTN_VIEW_CERTIFICATE = "View certificate";
 export const GET_SET_UP = "Get set up";
+export const MANAGE_LINK_TEXT = "Manage";

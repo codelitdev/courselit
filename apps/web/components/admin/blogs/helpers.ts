@@ -1,9 +1,5 @@
 import { FetchBuilder } from "@courselit/utils";
-import {
-    APP_MESSAGE_COURSE_DELETED,
-    TOAST_TITLE_ERROR,
-    TOAST_TITLE_SUCCESS,
-} from "@/ui-config/strings";
+import { TOAST_TITLE_ERROR } from "@/ui-config/strings";
 import { useToast } from "@courselit/components-library";
 
 interface DeleteProductProps {
@@ -22,14 +18,19 @@ export const deleteProduct = async ({
     if (!id) return;
 
     const query = `
-    mutation {
-      result: deleteCourse(id: "${id}")
-    }
+        mutation ($id: String!) {
+            result: deleteCourse(id: $id)
+        }
     `;
 
     const fetch = new FetchBuilder()
         .setUrl(`${backend}/api/graph`)
-        .setPayload(query)
+        .setPayload({
+            query,
+            variables: {
+                id,
+            },
+        })
         .setIsGraphQLEndpoint(true)
         .build();
 
@@ -38,18 +39,12 @@ export const deleteProduct = async ({
 
         if (response.result) {
             onDeleteComplete && onDeleteComplete();
-            // onDelete(position);
         }
     } catch (err: any) {
         toast({
             title: TOAST_TITLE_ERROR,
             description: err.message,
             variant: "destructive",
-        });
-    } finally {
-        toast({
-            title: TOAST_TITLE_SUCCESS,
-            description: APP_MESSAGE_COURSE_DELETED,
         });
     }
 };

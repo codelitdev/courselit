@@ -17,6 +17,7 @@ import {
     CommunityReportStatus,
     MembershipRole,
     PaymentPlan,
+    CommunityMediaTypes,
 } from "@courselit/common-models";
 import CommunityPostModel from "@models/CommunityPost";
 import {
@@ -56,6 +57,11 @@ import { hasActiveSubscription } from "../users/logic";
 import { internal } from "@config/strings";
 import { hasCommunityPermission as hasPermission } from "@ui-lib/utils";
 import ActivityModel from "@models/Activity";
+import getDeletedMediaIds, {
+    extractMediaIDs,
+} from "@/lib/get-deleted-media-ids";
+import { deleteMedia } from "@/services/medialit";
+import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
 
 const { permissions, communityPage } = constants;
 
@@ -286,12 +292,35 @@ export async function updateCommunity({
         community.name = name;
     }
 
-    if (description) {
-        community.description = JSON.parse(description);
+    const descriptionMediaIdsMarkedForDeletion: string[] = [];
+    const bannerMediaIdsMarkedForDeletion: string[] = [];
+
+    if (typeof description !== "undefined") {
+        const nextDescription = (description ?? "") as string;
+        descriptionMediaIdsMarkedForDeletion.push(
+            ...getDeletedMediaIds(
+                JSON.stringify(community.description || ""),
+                nextDescription,
+            ),
+        );
+
+        if (nextDescription) {
+            community.description = JSON.parse(nextDescription);
+        }
     }
 
-    if (banner) {
-        community.banner = JSON.parse(banner);
+    if (typeof banner !== "undefined") {
+        const nextBanner = (banner ?? "") as string;
+        bannerMediaIdsMarkedForDeletion.push(
+            ...getDeletedMediaIds(
+                JSON.stringify(community.banner || ""),
+                nextBanner,
+            ),
+        );
+
+        if (nextBanner) {
+            community.banner = JSON.parse(nextBanner);
+        }
     }
 
     if (autoAcceptMembers !== undefined) {
@@ -322,6 +351,12 @@ export async function updateCommunity({
                 throw new Error(responses.default_payment_plan_required);
             }
         }
+    }
+
+    for (const mediaId of descriptionMediaIdsMarkedForDeletion.concat(
+        bannerMediaIdsMarkedForDeletion,
+    )) {
+        await deleteMedia(mediaId);
     }
 
     await (community as any).save();
@@ -900,7 +935,7 @@ export async function getMembers({
 }
 
 async function formatCommunity(
-    community: InternalCommunity,
+    community: Community,
     ctx: GQLContext,
 ): Promise<Community & Pick<InternalCommunity, "autoAcceptMembers">> {
     return {
@@ -1769,20 +1804,32 @@ export async function deleteCommunity({
         throw new Error(responses.action_not_allowed);
     }
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = (await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, id),
-    );
+    ).lean()) as unknown as Community;
 
     if (!community) {
         throw new Error(responses.item_not_found);
     }
 
+    await CommunityReportModel.deleteMany({
+        domain: ctx.subdomain._id,
+        communityId: community.communityId,
+    });
+    await deleteCommunityPostsSubscriptions(community, ctx);
+    await deleteCommunityPosts(community, ctx);
     await deleteMemberships(community, ctx);
+
     await PageModel.deleteOne({
         domain: ctx.subdomain._id,
         pageId: community.pageId,
         entityId: community.communityId,
     });
+
+    const mediaToBeDeleted = extractMediaIDs(JSON.stringify(community));
+    for (const mediaId of Array.from(mediaToBeDeleted)) {
+        await deleteMedia(mediaId);
+    }
     await CommunityModel.deleteOne({
         domain: ctx.subdomain._id,
         communityId: id,
@@ -1791,10 +1838,102 @@ export async function deleteCommunity({
     return await formatCommunity(community, ctx);
 }
 
-async function deleteMemberships(
-    community: InternalCommunity,
+async function deleteCommunityPosts(community: Community, ctx: GQLContext) {
+    await CommunityCommentModel.deleteMany({
+        domain: ctx.subdomain._id,
+        communityId: community.communityId,
+    });
+    const mediaTypesToDelete = [
+        CommunityMediaTypes.IMAGE,
+        CommunityMediaTypes.VIDEO,
+        CommunityMediaTypes.GIF,
+        CommunityMediaTypes.PDF,
+    ];
+    const postsWithMedia = await CommunityPostModel.aggregate<{
+        media: CommunityMedia[];
+    }>([
+        {
+            $match: {
+                domain: ctx.subdomain._id,
+                communityId: community.communityId,
+                "media.type": { $in: mediaTypesToDelete },
+            },
+        },
+        {
+            $project: {
+                media: {
+                    $filter: {
+                        input: "$media",
+                        as: "media",
+                        cond: {
+                            $and: [
+                                {
+                                    $in: ["$$media.type", mediaTypesToDelete],
+                                },
+                                { $ifNull: ["$$media.media.mediaId", false] },
+                            ],
+                        },
+                    },
+                },
+            },
+        },
+    ]);
+    for (const post of postsWithMedia) {
+        for (const media of post.media) {
+            const mediaId = media.media?.mediaId;
+            if (mediaId) {
+                await deleteMedia(mediaId);
+            }
+        }
+    }
+    await CommunityPostModel.deleteMany({
+        domain: ctx.subdomain._id,
+        communityId: community.communityId,
+    });
+}
+
+async function deleteCommunityPostsSubscriptions(
+    community: Community,
     ctx: GQLContext,
 ) {
+    const subscriberAggregation = await CommunityPostModel.aggregate([
+        {
+            $match: {
+                domain: ctx.subdomain._id,
+                communityId: community.communityId,
+            },
+        },
+        {
+            $lookup: {
+                from: CommunityPostSubscriberModel.collection.name,
+                localField: "postId",
+                foreignField: "postId",
+                as: "subscribers",
+            },
+        },
+        { $unwind: "$subscribers" },
+        {
+            $group: {
+                _id: null,
+                subscriberIds: { $addToSet: "$subscribers._id" },
+            },
+        },
+        {
+            $project: {
+                _id: 0,
+                subscriberIds: 1,
+            },
+        },
+    ]);
+    const subscriberIds = subscriberAggregation[0]?.subscriberIds ?? [];
+    if (subscriberIds.length > 0) {
+        await CommunityPostSubscriberModel.deleteMany({
+            _id: { $in: subscriberIds },
+        });
+    }
+}
+
+async function deleteMemberships(community: Community, ctx: GQLContext) {
     const paymentPlans = await PaymentPlanModel.find({
         domain: ctx.subdomain._id,
         entityId: community.communityId,
@@ -1825,6 +1964,15 @@ async function deleteMemberships(
         });
         await paymentPlan.deleteOne();
     }
+
+    // delete memberships joined via internal payment plan
+    const paymentPlan = await getInternalPaymentPlan(ctx);
+    await MembershipModel.deleteMany({
+        domain: ctx.subdomain._id,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+        paymentPlanId: paymentPlan.planId,
+    });
 }
 
 export async function reportCommunityContent({
