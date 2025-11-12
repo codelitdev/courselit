@@ -72,7 +72,6 @@ export default function useProduct(id?: string | null): {
                     courseId,
                     cost,
                     costType,
-                    creatorName,
                     featuredImage {
                         mediaId,
                         originalFileName,

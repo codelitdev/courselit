@@ -129,7 +129,7 @@ async function isActionAllowed(
                 return true;
             } else {
                 return (
-                    lesson?.creatorId.toString() === user._id.toString() &&
+                    lesson?.creatorId === user.userId &&
                     checkPermission(user.permissions, [
                         constants.permissions.manageCourse,
                     ])

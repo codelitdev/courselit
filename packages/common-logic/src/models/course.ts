@@ -45,7 +45,6 @@ export const CourseSchema = new mongoose.Schema<InternalCourse>(
             enum: Object.values(Constants.CourseType),
         },
         creatorId: { type: String, required: true },
-        creatorName: { type: String },
         published: { type: Boolean, required: true, default: false },
         tags: [{ type: String }],
         lessons: [String],

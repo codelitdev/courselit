@@ -18,6 +18,7 @@ import getDeletedMediaIds, {
     extractMediaIDs,
 } from "@/lib/get-deleted-media-ids";
 import { deleteMedia } from "@/services/medialit";
+import CommunityModel from "@models/Community";
 const { product, site, blogPage, communityPage, permissions, defaultPages } =
     constants;
 const { pageNames } = Constants;
@@ -84,8 +85,23 @@ export async function getPage({ id, ctx }: { id?: string; ctx: GQLContext }) {
         if (!page) return;
 
         if (page.type === product) {
-            const course = await Course.findOne({ courseId: page.entityId });
-            if (!course.published) {
+            const course = await Course.findOne({
+                courseId: page.entityId,
+                domain: ctx.subdomain._id,
+                published: true,
+            });
+            if (!course) {
+                return;
+            }
+        }
+
+        if (page.type === communityPage) {
+            const community = await CommunityModel.findOne({
+                domain: ctx.subdomain._id,
+                communityId: page.entityId,
+                enabled: true,
+            });
+            if (!community) {
                 return;
             }
         }
@@ -422,6 +438,12 @@ export const deletePage = async (
         throw new Error(responses.action_not_allowed);
     }
 
+    await deletePageInternal(ctx, id);
+
+    return true;
+};
+
+export const deletePageInternal = async (ctx: GQLContext, id: string) => {
     const page = (await PageModel.findOne({
         domain: ctx.subdomain._id,
         pageId: id,
@@ -441,6 +463,4 @@ export const deletePage = async (
         deleteable: true,
         pageId: id,
     });
-
-    return true;
 };

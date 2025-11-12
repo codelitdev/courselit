@@ -1,24 +1,21 @@
 import React, { useEffect, useState } from "react";
-import {
-    TOAST_TITLE_ERROR,
-    PERM_SECTION_HEADER,
-    USER_PERMISSION_AREA_SUBTEXT,
-} from "@ui-config/strings";
+import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
-import type { User, Address } from "@courselit/common-models";
-import { Checkbox, useToast } from "@courselit/components-library";
-import { Section } from "@courselit/components-library";
+import type { Address, UserWithAdminFields } from "@courselit/common-models";
+import { useToast } from "@courselit/components-library";
+import { Checkbox } from "@components/ui/checkbox";
 import permissionToCaptionMap from "./permissions-to-caption-map";
-import DocumentationLink from "@components/public/documentation-link";
 
 interface PermissionsEditorProps {
-    user: User;
+    user: UserWithAdminFields & { id: string };
     address: Address;
+    disabled?: boolean;
 }
 
 export default function PermissionsEditor({
     user,
     address,
+    disabled: disabledProp = false,
 }: PermissionsEditorProps) {
     const [activePermissions, setActivePermissions] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
@@ -28,7 +25,13 @@ export default function PermissionsEditor({
         setActivePermissions(user.permissions);
     }, [user]);
 
+    const disabled = disabledProp;
+
     const savePermissions = async (permission: string, value: boolean) => {
+        if (disabled) {
+            return;
+        }
+
         let newPermissions: string[];
         if (value) {
             newPermissions = [...activePermissions, permission];
@@ -39,12 +42,10 @@ export default function PermissionsEditor({
         }
 
         const mutation = `
-        mutation {
+        mutation UpdateUserPermissions($id: ID!, $permissions: [String!]!) {
             user: updateUser(userData: {
-                id: "${user.id}"
-                permissions: [${newPermissions
-                    .map((item) => `"${item}"`)
-                    .join()}]
+                id: $id
+                permissions: $permissions
             }) { 
                 permissions
             }
@@ -52,7 +53,13 @@ export default function PermissionsEditor({
         `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload(mutation)
+            .setPayload({
+                query: mutation,
+                variables: {
+                    id: user.userId,
+                    permissions: newPermissions,
+                },
+            })
             .setIsGraphQLEndpoint(true)
             .build();
         try {
@@ -73,28 +80,22 @@ export default function PermissionsEditor({
     };
 
     return (
-        <Section
-            className="md:w-1/2"
-            header={PERM_SECTION_HEADER}
-            subtext={
-                <span>
-                    {USER_PERMISSION_AREA_SUBTEXT}{" "}
-                    <DocumentationLink path="/en/users/permissions/" />.
-                </span>
-            }
-        >
+        <div className="space-y-3">
             {Object.keys(permissionToCaptionMap).map((permission) => (
-                <div className="flex justify-between" key={permission}>
+                <div
+                    className="flex items-center justify-between gap-2"
+                    key={permission}
+                >
                     <p>{permissionToCaptionMap[permission]}</p>
                     <Checkbox
-                        disabled={loading}
-                        checked={activePermissions.includes(permission)}
-                        onChange={(value: boolean) =>
+                        disabled={loading || disabled}
+                        checked={activePermissions?.includes(permission)}
+                        onCheckedChange={(value: boolean) =>
                             savePermissions(permission, value)
                         }
                     />
                 </div>
             ))}
-        </Section>
+        </div>
     );
 }

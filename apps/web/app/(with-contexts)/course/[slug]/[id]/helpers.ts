@@ -14,7 +14,6 @@ type CourseWithoutGroups = Pick<
     | "description"
     | "featuredImage"
     | "updatedAt"
-    | "creatorName"
     | "creatorId"
     | "slug"
     | "cost"
@@ -42,7 +41,6 @@ export const getProduct = async (
                             caption
                         },
                         updatedAt,
-                        creatorName,
                         creatorId,
                         slug,
                         cost,
@@ -109,7 +107,6 @@ export function formatCourse(
         description: post.description,
         featuredImage: post.featuredImage,
         updatedAt: post.updatedAt,
-        creatorName: post.creatorName,
         creatorId: post.creatorId,
         slug: post.slug,
         cost: post.cost,

@@ -62,6 +62,8 @@ import getDeletedMediaIds, {
 } from "@/lib/get-deleted-media-ids";
 import { deleteMedia } from "@/services/medialit";
 import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
+import InvoiceModel from "@models/Invoice";
+import { InternalMembership } from "@courselit/common-logic";
 
 const { permissions, communityPage } = constants;
 
@@ -1312,12 +1314,6 @@ export async function postComment({
 }): Promise<PublicComment> {
     checkIfAuthenticated(ctx);
 
-    // if (
-    //     !checkPermission(ctx.user.permissions, [permissions.commentInCommunity])
-    // ) {
-    //     throw new Error(responses.action_not_allowed);
-    // }
-
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
@@ -1326,12 +1322,12 @@ export async function postComment({
         throw new Error(responses.item_not_found);
     }
 
-    const post = await CommunityPostModel.findOne({
+    const post = (await CommunityPostModel.findOne({
         domain: ctx.subdomain._id,
         communityId,
         postId,
         deleted: false,
-    });
+    }).lean()) as unknown as CommunityPost;
 
     if (!post) {
         throw new Error(responses.item_not_found);
@@ -1408,9 +1404,6 @@ export async function postComment({
             userId: ctx.user.userId,
         });
     }
-
-    post.commentsCount = post.commentsCount + 1;
-    await post.save();
 
     await addPostSubscription({
         domain: ctx.subdomain._id,
@@ -1678,17 +1671,11 @@ export async function deleteComment({
             );
             if (!comment.replies[replyIndex].deleted) {
                 comment.replies[replyIndex].deleted = true;
-                if (post.commentsCount > 0) {
-                    post.commentsCount = post.commentsCount - 1;
-                }
             }
         } else {
             comment.replies = comment.replies.filter(
                 (r) => r.replyId !== replyId,
             );
-            if (post.commentsCount > 0) {
-                post.commentsCount = post.commentsCount - 1;
-            }
         }
         await comment.save();
     } else {
@@ -1696,9 +1683,6 @@ export async function deleteComment({
             if (!comment.deleted) {
                 comment.deleted = true;
                 await comment.save();
-                if (post.commentsCount > 0) {
-                    post.commentsCount = post.commentsCount - 1;
-                }
             }
         } else {
             await comment.deleteOne({
@@ -1707,14 +1691,11 @@ export async function deleteComment({
                 postId,
                 commentId,
             });
-            if (post.commentsCount > 0) {
-                post.commentsCount = post.commentsCount - 1;
-            }
             comment = null;
         }
     }
 
-    await post.save();
+    // await post.save();
 
     return comment ? formatComment(comment, ctx.user) : null;
 }
@@ -1817,7 +1798,7 @@ export async function deleteCommunity({
         communityId: community.communityId,
     });
     await deleteCommunityPostsSubscriptions(community, ctx);
-    await deleteCommunityPosts(community, ctx);
+    await deleteCommunityPosts(ctx, "community", community.communityId);
     await deleteMemberships(community, ctx);
 
     await PageModel.deleteOne({
@@ -1838,11 +1819,22 @@ export async function deleteCommunity({
     return await formatCommunity(community, ctx);
 }
 
-async function deleteCommunityPosts(community: Community, ctx: GQLContext) {
-    await CommunityCommentModel.deleteMany({
-        domain: ctx.subdomain._id,
-        communityId: community.communityId,
-    });
+export async function deleteCommunityPosts(
+    ctx: GQLContext,
+    by: "community" | "user",
+    id: string,
+) {
+    const query =
+        by === "community"
+            ? {
+                  domain: ctx.subdomain._id,
+                  communityId: id,
+              }
+            : {
+                  domain: ctx.subdomain._id,
+                  userId: id,
+              };
+    await CommunityCommentModel.deleteMany(query);
     const mediaTypesToDelete = [
         CommunityMediaTypes.IMAGE,
         CommunityMediaTypes.VIDEO,
@@ -1854,8 +1846,7 @@ async function deleteCommunityPosts(community: Community, ctx: GQLContext) {
     }>([
         {
             $match: {
-                domain: ctx.subdomain._id,
-                communityId: community.communityId,
+                ...query,
                 "media.type": { $in: mediaTypesToDelete },
             },
         },
@@ -1886,10 +1877,7 @@ async function deleteCommunityPosts(community: Community, ctx: GQLContext) {
             }
         }
     }
-    await CommunityPostModel.deleteMany({
-        domain: ctx.subdomain._id,
-        communityId: community.communityId,
-    });
+    await CommunityPostModel.deleteMany(query);
 }
 
 async function deleteCommunityPostsSubscriptions(
@@ -1941,6 +1929,7 @@ async function deleteMemberships(community: Community, ctx: GQLContext) {
     });
 
     for (const paymentPlan of paymentPlans) {
+        // Delete included products memberships
         if (
             paymentPlan.includedProducts &&
             paymentPlan.includedProducts.length > 0
@@ -1958,10 +1947,11 @@ async function deleteMemberships(community: Community, ctx: GQLContext) {
                 isIncludedInPlan: true,
             });
         }
-        await MembershipModel.deleteMany({
+        const memberships = await MembershipModel.find({
             domain: ctx.subdomain._id,
             paymentPlanId: paymentPlan.planId,
         });
+        await cancelAndDeleteMemberships(memberships, ctx);
         await paymentPlan.deleteOne();
     }
 
@@ -1973,6 +1963,31 @@ async function deleteMemberships(community: Community, ctx: GQLContext) {
         entityType: Constants.MembershipEntityType.COMMUNITY,
         paymentPlanId: paymentPlan.planId,
     });
+}
+
+export async function cancelAndDeleteMemberships(
+    memberships: InternalMembership[],
+    ctx: GQLContext,
+) {
+    for (const membership of memberships) {
+        // Cancel active subscriptions
+        if (membership.subscriptionId) {
+            const paymentMethod = await getPaymentMethodFromSettings(
+                ctx.subdomain.settings,
+                membership.subscriptionMethod,
+            );
+            await paymentMethod?.cancel(membership.subscriptionId);
+        }
+
+        // Delete associated invoices
+        await InvoiceModel.deleteMany({
+            domain: ctx.subdomain._id,
+            membershipId: membership.membershipId,
+        });
+
+        // Delete membership
+        await membership.deleteOne();
+    }
 }
 
 export async function reportCommunityContent({
@@ -2224,4 +2239,28 @@ export async function updateCommunityReportStatus({
     }
 
     return formatCommunityReport(report, ctx);
+}
+
+export async function getCommentsCount(
+    post: CommunityPost,
+    ctx: GQLContext,
+): Promise<number> {
+    let commentsCount = 0;
+
+    const comments = (await CommunityCommentModel.find({
+        domain: ctx.subdomain._id,
+        postId: post.postId,
+    }).lean()) as unknown as CommunityComment[];
+    for (const comment of comments) {
+        if (!comment.deleted) {
+            commentsCount += 1;
+        }
+        for (const reply of comment.replies) {
+            if (!reply.deleted) {
+                commentsCount += 1;
+            }
+        }
+    }
+
+    return commentsCount;
 }

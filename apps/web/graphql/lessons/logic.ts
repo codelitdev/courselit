@@ -150,7 +150,7 @@ export const createLesson = async (
             content: JSON.parse(lessonData.content),
             media: lessonData.media,
             downloadable: lessonData.downloadable,
-            creatorId: ctx.user._id, // TODO: refactor this
+            creatorId: ctx.user.userId,
             courseId: course.courseId,
             groupId: lessonData.groupId,
             requiresEnrollment: lessonData.requiresEnrollment,

@@ -8,3 +8,4 @@ alwaysApply: true
 - Command for running tests: `pnpm test`.
 - The project uses shadcn for building UI so stick to its conventions and design.
 - In `apps/web` workspace, create a string first in `apps/web/config/strings.ts` and then import it in the `.tsx` files, instead of using inline strings.
+- When working with forms, always use refs to keep the current state of the form's data and use it to enable/disable the form submit button.

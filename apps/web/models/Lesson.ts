@@ -21,7 +21,7 @@ export interface Lesson {
     content?: Quiz | TextEditorContent | { value: string };
     media?: Media;
     downloadable: boolean;
-    creatorId: mongoose.Types.ObjectId;
+    creatorId: string;
     courseId: string;
     requiresEnrollment: boolean;
     published: boolean;
@@ -40,7 +40,7 @@ const LessonSchema = new mongoose.Schema<Lesson>({
     content: { type: mongoose.Schema.Types.Mixed, default: {} },
     media: MediaSchema,
     downloadable: { type: Boolean, default: false },
-    creatorId: { type: mongoose.Schema.Types.ObjectId, required: true },
+    creatorId: { type: String, required: true },
     courseId: { type: String, required: true },
     requiresEnrollment: { type: Boolean, default: true },
     published: { type: Boolean, required: true, default: false },

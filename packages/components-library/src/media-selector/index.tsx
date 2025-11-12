@@ -113,7 +113,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
     return (
         <div className="">
             <PageBuilderPropertyHeader label={title} tooltip={tooltip} />
-            <div className="flex items-center gap-4 rounded-lg border-2 border-dashed p-4 relative">
+            <div className="flex items-center gap-4 rounded-lg p-4 relative">
                 {!props.hidePreview && (
                     <div className="flex flex-col gap-2 items-center">
                         <Image

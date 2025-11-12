@@ -53,6 +53,7 @@ import ActivityModel from "@models/Activity";
 import getDeletedMediaIds, {
     extractMediaIDs,
 } from "@/lib/get-deleted-media-ids";
+import { deletePageInternal } from "../pages/logic";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -307,10 +308,7 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
             },
         },
     );
-    await PageModel.deleteOne({
-        entityId: course.courseId,
-        domain: ctx.subdomain._id,
-    });
+    await deletePageInternal(ctx, course.pageId!);
     await CourseModel.deleteOne({
         domain: ctx.subdomain._id,
         courseId: course.courseId,
@@ -413,7 +411,6 @@ export const getCourses = async ({
             cost: 1,
             description: 1,
             type: 1,
-            creatorName: 1,
             updatedAt: 1,
             slug: 1,
             featuredImage: 1,
@@ -436,7 +433,6 @@ export const getCourses = async ({
             cost: 1,
             description: 1,
             type: 1,
-            creatorName: 1,
             updatedAt: 1,
             slug: 1,
             featuredImage: 1,
@@ -450,13 +446,12 @@ export const getCourses = async ({
             .limit(itemsPerPage);
     }
 
-    return courses.map((x) => ({
+    return courses.map(async (x) => ({
         id: x.id,
         title: x.title,
         cost: x.cost,
         description: x.description,
         type: x.type,
-        creatorName: x.creatorName,
         updatedAt: x.updatedAt,
         slug: x.slug,
         featuredImage: x.featuredImage,
@@ -588,7 +583,6 @@ export const getProducts = async ({
             description: course.description,
             type: course.type,
             creatorId: course.creatorId,
-            creatorName: course.creatorName,
             updatedAt: course.updatedAt,
             featuredImage: course.featuredImage,
             courseId: course.courseId,

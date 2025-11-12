@@ -9,8 +9,9 @@ import CourseModel from "@models/Course";
 import CertificateTemplateModel from "@models/CertificateTemplate";
 import { responses } from "@/config/strings";
 import Domain from "@models/Domain";
-
-// Using real MongoDB with @shelf/jest-mongodb - no mocking needed
+import PageModel from "@models/Page";
+import MembershipModel from "@models/Membership";
+import CommunityModel from "@models/Community";
 
 describe("Certificate generation", () => {
     let mockCtx: any;
@@ -55,6 +56,9 @@ describe("Certificate generation", () => {
         await CertificateModel.deleteMany({});
         await UserModel.deleteMany({});
         await CourseModel.deleteMany({});
+        await PageModel.deleteMany({});
+        await MembershipModel.deleteMany({});
+        await CommunityModel.deleteMany({});
         await CertificateTemplateModel.deleteMany({});
     });
 

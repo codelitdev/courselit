@@ -166,7 +166,6 @@ export const setupCourse = async ({
         costType: constants.costFree,
         privacy: constants.unlisted,
         creatorId: ctx.user.userId,
-        creatorName: ctx.user.name,
         slug: slugify(title.toLowerCase()),
         type: type,
         pageId: page.pageId,
@@ -198,7 +197,6 @@ export const setupBlog = async ({
         costType: constants.costFree,
         privacy: constants.unlisted,
         creatorId: ctx.user.userId,
-        creatorName: ctx.user.name,
         slug: slugify(title.toLowerCase()),
         type: constants.blog,
     });

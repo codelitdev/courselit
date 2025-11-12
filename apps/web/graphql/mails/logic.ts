@@ -3,13 +3,11 @@ import GQLContext from "@models/GQLContext";
 import UserModel from "@models/User";
 import { error } from "../../services/logger";
 import { createUser, getMembership } from "../users/logic";
-import MailModel, { Mail } from "@models/Mail";
 import {
     checkIfAuthenticated,
     makeModelTextSearchable,
 } from "../../lib/graphql";
 import { responses, internal } from "../../config/strings";
-import SearchData from "./models/search-data";
 import { checkPermission, generateUniqueId } from "@courselit/utils";
 import { Constants, Email, Sequence } from "@courselit/common-models";
 import CourseModel from "@models/Course";
@@ -17,7 +15,6 @@ import SequenceModel from "@models/Sequence";
 import {
     addRule,
     areAllEmailIdsValid,
-    buildQueryFromSearchData,
     createTemplateAndSendMail,
     removeRule,
     verifyMandatoryTags,
@@ -140,24 +137,6 @@ export async function createSequence(
         });
         throw e;
     }
-}
-
-export async function getMail(
-    mailId: string,
-    ctx: GQLContext,
-): Promise<Mail | null> {
-    checkIfAuthenticated(ctx);
-
-    const mail: Mail | null = await MailModel.findOne({
-        mailId,
-        domain: ctx.subdomain._id,
-    });
-
-    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
-        throw new Error(responses.action_not_allowed);
-    }
-
-    return mail;
 }
 
 type SequenceWithEntrantsCount = Omit<AdminSequence, "entrants"> & {
@@ -546,48 +525,6 @@ export async function pauseSequence({
     await (sequence as any).save();
 
     return sequence;
-}
-
-export async function getMails(
-    searchData: SearchData = {},
-    ctx: GQLContext,
-): Promise<Mail | null> {
-    checkIfAuthenticated(ctx);
-
-    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
-        throw new Error(responses.action_not_allowed);
-    }
-
-    const searchMails = makeModelTextSearchable(MailModel);
-    const query = buildQueryFromSearchData(ctx.subdomain._id, searchData);
-    const mails = await searchMails(
-        {
-            query,
-            offset: searchData.offset || 1,
-            graphQLContext: ctx,
-        },
-        {
-            itemsPerPage: searchData.rowsPerPage || constants.itemsPerPage,
-            sortByColumn: "updatedAt",
-            sortOrder: -1,
-        },
-    );
-
-    return mails;
-}
-
-export async function getMailsCount(
-    searchData: SearchData = {},
-    ctx: GQLContext,
-): Promise<number> {
-    checkIfAuthenticated(ctx);
-
-    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
-        throw new Error(responses.action_not_allowed);
-    }
-
-    const query = buildQueryFromSearchData(ctx.subdomain._id, searchData);
-    return await MailModel.countDocuments(query);
 }
 
 export async function sendCourseOverMail(

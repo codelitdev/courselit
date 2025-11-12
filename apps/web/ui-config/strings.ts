@@ -582,6 +582,39 @@ export const APIKEY_REMOVE_DIALOG_HEADER = "Remove API Key";
 export const APIKYE_REMOVE_DIALOG_DESC =
     "If you are using this key in your application, removing it will break the integration. There is no going back if you remove it.";
 export const USER_TAGS_SUBHEADER = "Tags";
+export const BTN_DELETE_USER = "Delete user";
+export const USER_DELETE_DIALOG_TITLE = "Delete user?";
+export const USER_DELETE_DIALOG_DESCRIPTION =
+    "This action is irreversible. Products and communities owned by this user will be transferred to you and other data will be deleted.";
+export const USER_DELETE_DIALOG_MIGRATION_HEADING =
+    "What will move to your account";
+export const USER_DELETE_DIALOG_MIGRATION_ITEM_PRODUCTS =
+    "Products, lessons, and pages created by this user will be reassigned to you.";
+export const USER_DELETE_DIALOG_MIGRATION_ITEM_EMAIL =
+    "Email templates, sequences, and deliveries created by this user will be reassigned to you.";
+export const USER_DELETE_DIALOG_MIGRATION_ITEM_AUDIENCE =
+    "Audience assets such as segments, themes, payment plans, and ongoing sequences will be reassigned to you.";
+export const USER_DELETE_DIALOG_MIGRATION_ITEM_COMMUNITY =
+    "Community moderator roles and community pages managed by this user will be reassigned to you.";
+export const USER_DELETE_DIALOG_DELETION_HEADING = "What will be deleted";
+export const USER_DELETE_DIALOG_DELETION_ITEM_COMMUNICATION =
+    "Notifications, mail statuses, lesson evaluations, download links, certificates, and activity logs.";
+export const USER_DELETE_DIALOG_DELETION_ITEM_COMMUNITY =
+    "Community posts, comments, replies, subscriptions, reports, and related likes.";
+export const USER_DELETE_DIALOG_DELETION_ITEM_COMMERCE =
+    "Memberships, invoices, course enrollments, and marketing sequence entries.";
+export const USER_DELETE_DIALOG_DELETION_ITEM_ACCOUNT =
+    "The user's avatar media and account.";
+export const USER_DELETE_CONFIRMATION_LABEL = 'Type "delete" to confirm';
+export const USER_DELETE_CONFIRMATION_PLACEHOLDER = "Type 'delete' to confirm";
+export const USER_DELETE_CONFIRMATION_TOKEN = "delete";
+export const USER_DELETE_ACTION_LOADING = "Deleting...";
+export const APP_MESSAGE_USER_DELETED = "User deleted";
+export const APP_MESSAGE_USER_UPDATED = "User details saved";
+export const USER_DETAILS_SAVE_BUTTON = "Save changes";
+export const USER_DETAILS_SAVE_BUTTON_LOADING = "Saving...";
+export const USER_NAME_PLACEHOLDER = "Enter full name";
+export const USER_EMAIL_PLACEHOLDER = "Enter email address";
 export const PAGES_TABLE_HEADER_NAME = "Name";
 export const PAGES_TABLE_HEADER_ACTIONS = "Actions";
 export const NEW_PAGE_NAME_PLC = "My awesome page";

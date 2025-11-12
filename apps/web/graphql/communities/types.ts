@@ -16,6 +16,7 @@ import { getUser } from "../users/logic";
 import GQLContext from "@models/GQLContext";
 import paymentPlansTypes from "../paymentplans/types";
 import { getPlans } from "../paymentplans/logic";
+import { getCommentsCount } from "./logic";
 
 const communityReportContentType = new GraphQLEnumType({
     name: "CommunityReportContentType",
@@ -95,7 +96,11 @@ const communityPost = new GraphQLObjectType({
         pinned: { type: new GraphQLNonNull(GraphQLBoolean) },
         media: { type: new GraphQLList(communityPostMedia) },
         likesCount: { type: new GraphQLNonNull(GraphQLInt) },
-        commentsCount: { type: new GraphQLNonNull(GraphQLInt) },
+        commentsCount: {
+            type: new GraphQLNonNull(GraphQLInt),
+            resolve: (post, _, ctx: GQLContext, __) =>
+                getCommentsCount(post, ctx),
+        },
         user: {
             type: userTypes.userType,
             resolve: (post, _, ctx: GQLContext, __) =>
