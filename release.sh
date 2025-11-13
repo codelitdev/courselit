@@ -18,7 +18,7 @@ fi
 #     exit 1
 # fi
 
-# git checkout main
+git checkout main
 
 # # Update versions in apps
 # for dir in apps/*/; do
