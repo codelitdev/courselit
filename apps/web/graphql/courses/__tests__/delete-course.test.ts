@@ -226,7 +226,6 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 name: "Test Page",
                 creatorId: adminUser.userId,
                 deleteable: true,
-                deleteable: true,
             });
 
             const course = await CourseModel.create({
@@ -304,8 +303,6 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
         });
 
         it("should delete course with description media", async () => {
-            const { deleteMedia } = require("@/services/medialit");
-
             const page = await PageModel.create({
                 domain: testDomain._id,
                 pageId: "test-page-desc-media",
