@@ -8,10 +8,7 @@ import {
 import types from "./types";
 import {
     getBroadcasts,
-    getMail,
     getMailRequestStatus,
-    getMails,
-    getMailsCount,
     getSequence,
     getSequenceCount,
     getSequences,
@@ -21,44 +18,11 @@ import {
     getSubscribers,
     getSubscribersCount,
 } from "./logic";
-import SearchData from "./models/search-data";
 import GQLContext from "../../models/GQLContext";
 import { SequenceType } from "@courselit/common-models";
 import userTypes from "../users/types";
 
 const queries = {
-    getMail: {
-        type: types.mail,
-        args: {
-            mailId: {
-                type: new GraphQLNonNull(GraphQLString),
-            },
-        },
-        resolve: (
-            _: any,
-            { mailId }: { mailId: string },
-            context: GQLContext,
-        ) => getMail(mailId, context),
-    },
-    getMails: {
-        type: new GraphQLList(types.mail),
-        args: {
-            searchData: { type: types.mailSearchInput },
-        },
-        resolve: (
-            _: any,
-            { searchData }: { searchData: SearchData },
-            context: GQLContext,
-        ) => getMails(searchData, context),
-    },
-    getMailsCount: {
-        type: new GraphQLNonNull(GraphQLInt),
-        args: {
-            searchData: { type: types.mailSearchInput },
-        },
-        resolve: (_: any, { searchData }: any, context: GQLContext) =>
-            getMailsCount(searchData, context),
-    },
     getBroadcasts: {
         type: new GraphQLList(types.sequenceList),
         args: {

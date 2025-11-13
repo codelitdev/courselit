@@ -45,7 +45,15 @@ import { ActivityType } from "@courselit/common-models/dist/constants";
 import { verifyMandatoryTags } from "../mails/helpers";
 import { Email } from "@courselit/email-editor";
 import PaymentPlanModel from "@models/PaymentPlan";
-import CertificateTemplateModel from "@models/CertificateTemplate";
+import CertificateTemplateModel, {
+    CertificateTemplate,
+} from "@models/CertificateTemplate";
+import CertificateModel from "@models/Certificate";
+import ActivityModel from "@models/Activity";
+import getDeletedMediaIds, {
+    extractMediaIDs,
+} from "@/lib/get-deleted-media-ids";
+import { deletePageInternal } from "../pages/logic";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -190,6 +198,14 @@ export const updateCourse = async (
     ctx: GQLContext,
 ) => {
     let course = await getCourseOrThrow(undefined, ctx, courseData.id);
+    const mediaIdsMarkedForDeletion: string[] = [];
+
+    if (Object.prototype.hasOwnProperty.call(courseData, "description")) {
+        const nextDescription = (courseData.description ?? "") as string;
+        mediaIdsMarkedForDeletion.push(
+            ...getDeletedMediaIds(course.description || "", nextDescription),
+        );
+    }
 
     for (const key of Object.keys(courseData)) {
         if (key === "id") {
@@ -211,6 +227,9 @@ export const updateCourse = async (
     }
 
     course = await validateCourse(course, ctx);
+    for (const mediaId of mediaIdsMarkedForDeletion) {
+        await deleteMedia(mediaId);
+    }
     course = await (course as any).save();
     await PageModel.updateOne(
         { entityId: course.courseId, domain: ctx.subdomain._id },
@@ -221,6 +240,25 @@ export const updateCourse = async (
 
 export const deleteCourse = async (id: string, ctx: GQLContext) => {
     const course = await getCourseOrThrow(undefined, ctx, id);
+    const certificateTemplate =
+        await CertificateTemplateModel.findOne<CertificateTemplate | null>({
+            domain: ctx.subdomain._id,
+            courseId: course.courseId,
+        });
+    if (certificateTemplate?.signatureImage?.mediaId) {
+        await deleteMedia(certificateTemplate.signatureImage.mediaId);
+    }
+    if (certificateTemplate?.logo?.mediaId) {
+        await deleteMedia(certificateTemplate.logo.mediaId);
+    }
+    await CertificateTemplateModel.deleteOne({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+    });
+    await CertificateModel.deleteMany({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+    });
     await MembershipModel.deleteMany({
         domain: ctx.subdomain._id,
         entityId: course.courseId,
@@ -235,6 +273,13 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
         domain: ctx.subdomain._id,
         courseId: course.courseId,
     });
+    await ActivityModel.deleteMany({
+        domain: ctx.subdomain._id,
+        $or: [
+            { entityId: course.courseId },
+            { "metadata.courseId": course.courseId },
+        ],
+    });
     await deleteAllLessons(course.courseId, ctx);
     if (course.featuredImage) {
         try {
@@ -245,10 +290,25 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
             });
         }
     }
-    await PageModel.deleteOne({
-        entityId: course.courseId,
-        domain: ctx.subdomain._id,
-    });
+    if (course.description) {
+        const extractedMediaIds = extractMediaIDs(course.description || "");
+        for (const mediaId of Array.from(extractedMediaIds)) {
+            await deleteMedia(mediaId);
+        }
+    }
+    await UserModel.updateMany(
+        {
+            domain: ctx.subdomain._id,
+        },
+        {
+            $pull: {
+                purchases: {
+                    courseId: course.courseId,
+                },
+            },
+        },
+    );
+    await deletePageInternal(ctx, course.pageId!);
     await CourseModel.deleteOne({
         domain: ctx.subdomain._id,
         courseId: course.courseId,
@@ -351,7 +411,6 @@ export const getCourses = async ({
             cost: 1,
             description: 1,
             type: 1,
-            creatorName: 1,
             updatedAt: 1,
             slug: 1,
             featuredImage: 1,
@@ -374,7 +433,6 @@ export const getCourses = async ({
             cost: 1,
             description: 1,
             type: 1,
-            creatorName: 1,
             updatedAt: 1,
             slug: 1,
             featuredImage: 1,
@@ -388,13 +446,12 @@ export const getCourses = async ({
             .limit(itemsPerPage);
     }
 
-    return courses.map((x) => ({
+    return courses.map(async (x) => ({
         id: x.id,
         title: x.title,
         cost: x.cost,
         description: x.description,
         type: x.type,
-        creatorName: x.creatorName,
         updatedAt: x.updatedAt,
         slug: x.slug,
         featuredImage: x.featuredImage,
@@ -526,7 +583,6 @@ export const getProducts = async ({
             description: course.description,
             type: course.type,
             creatorId: course.creatorId,
-            creatorName: course.creatorName,
             updatedAt: course.updatedAt,
             featuredImage: course.featuredImage,
             courseId: course.courseId,

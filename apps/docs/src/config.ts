@@ -79,6 +79,7 @@ export const SIDEBAR: Sidebar = {
                 text: "Unlock additional products",
                 link: "en/communities/grant-access-to-additional-products",
             },
+            { text: "Delete a community", link: "en/communities/delete" },
         ],
         "Email marketing and automation": [
             { text: "Introduction", link: "en/email-marketing/introduction" },
@@ -122,6 +123,7 @@ export const SIDEBAR: Sidebar = {
             { text: "User permissions", link: "en/users/permissions" },
             { text: "Filter users", link: "en/users/filters" },
             { text: "Segment users", link: "en/users/segments" },
+            { text: "Delete a user", link: "en/users/delete" },
         ],
         Developers: [
             { text: "Introduction", link: "en/developers/introduction" },

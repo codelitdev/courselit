@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Pencil, Check, X, Loader2 } from "lucide-react";
@@ -10,6 +10,7 @@ import {
 } from "@courselit/components-library";
 import { isTextEditorNonEmpty } from "@ui-lib/utils";
 import { BUTTON_SAVING, TOAST_TITLE_SUCCESS } from "@ui-config/strings";
+import { AddressContext } from "@components/contexts";
 
 interface BannerComponentProps {
     canEdit: boolean;
@@ -29,6 +30,7 @@ export default function Banner({
     const [editedBannerText, setEditedBannerText] = useState(bannerText);
     const [isSaving, setIsSaving] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const address = useContext(AddressContext);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -102,6 +104,7 @@ export default function Banner({
                             showToolbar={false}
                             initialContent={editedBannerText}
                             onChange={(value) => setEditedBannerText(value)}
+                            url={address.backend}
                         />
                         <div className="flex justify-end space-x-2">
                             <Button

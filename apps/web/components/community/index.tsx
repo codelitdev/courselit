@@ -45,7 +45,11 @@ import { formattedLocaleDate, hasCommunityPermission } from "@ui-lib/utils";
 import { MediaItem } from "./media-item";
 import Image from "next/image";
 import MembershipStatus from "./membership-status";
-import { TOAST_TITLE_ERROR, TOAST_TITLE_SUCCESS } from "@ui-config/strings";
+import {
+    MANAGE_LINK_TEXT,
+    TOAST_TITLE_ERROR,
+    TOAST_TITLE_SUCCESS,
+} from "@ui-config/strings";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -60,6 +64,7 @@ import NotFound from "@components/admin/not-found";
 import { CommunityInfo } from "./info";
 import Banner from "./banner";
 import { Textarea } from "@/components/ui/textarea";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 
 const CreatePostDialog = dynamic(() => import("./create-post-dialog"));
@@ -919,7 +924,13 @@ export function CommunityForum({
             {!community?.enabled && (
                 <div className="bg-red-400 p-2 mb-4 text-sm text-white rounded-md">
                     This community is not enabled. It is not visible to your
-                    audience (including moderators).
+                    audience (including moderators). {""}
+                    <Link
+                        href={`/dashboard/community/${id}/manage`}
+                        className="underline"
+                    >
+                        {MANAGE_LINK_TEXT}
+                    </Link>
                 </div>
             )}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

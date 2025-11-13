@@ -14,31 +14,34 @@ export async function getProfile(): Promise<Profile | null> {
 
     const userId = (session?.user as any)?.userId;
     const domainId = (session?.user as any)?.domain;
-    const user = await getUser(userId, {
-        user: {
-            userId,
-        },
-        subdomain: {
-            _id: domainId,
-        },
-    } as GQLContext);
+    try {
+        const user = await getUser(userId, {
+            user: {
+                userId,
+            },
+            subdomain: {
+                _id: domainId,
+            },
+        } as GQLContext);
 
-    if (!isSelf(user)) {
+        if (!isSelf(user)) {
+            return null;
+        }
+
+        return {
+            name: user.name || "",
+            fetched: true,
+            purchases: user.purchases,
+            email: user.email,
+            bio: user.bio,
+            permissions: user.permissions,
+            userId: user.userId,
+            subscribedToUpdates: user.subscribedToUpdates,
+            avatar: user.avatar,
+        };
+    } catch (error) {
         return null;
     }
-
-    return {
-        name: user.name || "",
-        id: user._id.toString(),
-        fetched: true,
-        purchases: user.purchases,
-        email: user.email,
-        bio: user.bio,
-        permissions: user.permissions,
-        userId: user.userId,
-        subscribedToUpdates: user.subscribedToUpdates,
-        avatar: user.avatar,
-    };
 }
 
 function isSelf(user: any): user is User & { _id: Types.ObjectId } {

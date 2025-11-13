@@ -41,6 +41,7 @@ import {
     PRODUCT_EMPTY_WARNING,
     PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER,
     PRODUCT_UNPUBLISHED_WARNING,
+    MANAGE_LINK_TEXT,
     TOAST_TITLE_SUCCESS,
     VIEW_PAGE_MENU_ITEM,
 } from "@ui-config/strings";
@@ -112,7 +113,7 @@ export default function DashboardPage() {
                         href={`/dashboard/product/${productId}/manage#publish`}
                         className="underline"
                     >
-                        Manage
+                        {MANAGE_LINK_TEXT}
                     </Link>
                 </div>
             )}

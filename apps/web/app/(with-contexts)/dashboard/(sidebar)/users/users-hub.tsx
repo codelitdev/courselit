@@ -29,7 +29,7 @@ import {
     useToast,
     Skeleton,
 } from "@courselit/components-library";
-import { FetchBuilder } from "@courselit/utils";
+import { checkPermission, FetchBuilder } from "@courselit/utils";
 import {
     TOAST_TITLE_ERROR,
     USER_TABLE_HEADER_COMMUNITIES,
@@ -132,7 +132,9 @@ export default function UsersHub() {
     }, [address.backend, page, rowsPerPage, filters, filtersAggregator]);
 
     useEffect(() => {
-        loadUsers();
+        if (checkPermission(profile?.permissions!, [permissions.manageUsers])) {
+            loadUsers();
+        }
     }, [loadUsers]);
 
     const onFilterChange = useCallback(({ filters, aggregator, segmentId }) => {

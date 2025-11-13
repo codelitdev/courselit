@@ -64,7 +64,6 @@ async function getProduct(id: string, address: string): Promise<Course | null> {
                         thumbnail
                         file
                     }
-                    creatorName
                     updatedAt
                 }
             }

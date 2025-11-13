@@ -87,7 +87,7 @@ export default function FilterSave({
 
     return (
         <>
-            <PopoverTrigger>
+            <PopoverTrigger asChild>
                 <Button
                     variant="ghost"
                     size="sm"

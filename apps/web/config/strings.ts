@@ -127,6 +127,8 @@ export const responses = {
         "Cannot reject a member with an active subscription",
     cannot_leave_community_last_moderator:
         "Last manager cannot leave the community",
+    cannot_delete_last_permission_user:
+        "Cannot delete the last user with required permissions:",
     cannot_change_role_inactive_member:
         "Cannot change role of a member who is not active",
     cannot_change_role_last_moderator:

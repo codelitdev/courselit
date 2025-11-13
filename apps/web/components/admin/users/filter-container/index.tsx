@@ -330,10 +330,10 @@ export default function FilterContainer({
                         </Button>
                     </div>
                 </Form>
-                <p className="text-sm text-muted-foreground mr-2">
+                <div className="text-sm text-muted-foreground mr-2">
                     {!countLoading && `${count} Users`}
                     {countLoading && <Skeleton className="h-4 w-16" />}
-                </p>
+                </div>
             </div>
             {internalFilters.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-2">
