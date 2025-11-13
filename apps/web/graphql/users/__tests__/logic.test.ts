@@ -52,14 +52,19 @@ describe("Certificate generation", () => {
     });
 
     afterEach(async () => {
-        // Clean up collections after each test
-        await CertificateModel.deleteMany({});
-        await UserModel.deleteMany({});
-        await CourseModel.deleteMany({});
-        await PageModel.deleteMany({});
-        await MembershipModel.deleteMany({});
-        await CommunityModel.deleteMany({});
-        await CertificateTemplateModel.deleteMany({});
+        // Clean up collections after each test - only this test's data
+        await CertificateModel.deleteMany({ domain: testDomain._id });
+        await UserModel.deleteMany({ domain: testDomain._id });
+        await CourseModel.deleteMany({ domain: testDomain._id });
+        await PageModel.deleteMany({ domain: testDomain._id });
+        await MembershipModel.deleteMany({ domain: testDomain._id });
+        await CommunityModel.deleteMany({ domain: testDomain._id });
+        await CertificateTemplateModel.deleteMany({ domain: testDomain._id });
+    });
+
+    afterAll(async () => {
+        // Clean up the test domain
+        await Domain.deleteMany({ _id: testDomain._id });
     });
 
     it("should throw error when certificateId is 'demo' but courseId is not provided", async () => {
@@ -584,10 +589,14 @@ describe("Certificate generation", () => {
         const result = await getCertificate("cert-123", mockCtxWithoutLogo);
 
         expect(result.logo).toBe(null);
+
+        // Clean up the extra domain created in this test
+        await Domain.deleteMany({ _id: testDomainWithoutLogo._id });
     });
 
     it("should handle missing creator gracefully", async () => {
         // Create test data with missing creator
+        const uniqueId = Date.now();
         const testUser = await UserModel.create({
             userId: "user-123",
             name: "John Doe",
@@ -611,20 +620,24 @@ describe("Certificate generation", () => {
         });
 
         const testCertificate = await CertificateModel.create({
-            certificateId: "cert-123",
+            certificateId: `cert-missing-creator-${uniqueId}`,
             userId: "user-123",
             courseId: "course-123",
             createdAt: new Date("2024-01-01"),
             domain: testDomain._id,
         });
 
-        const result = await getCertificate("cert-123", mockCtx);
+        const result = await getCertificate(
+            `cert-missing-creator-${uniqueId}`,
+            mockCtx,
+        );
 
         expect(result.signatureName).toBe(undefined);
     });
 
     it("should handle missing course pageId gracefully", async () => {
         // Create test data with course missing pageId
+        const uniqueId = Date.now();
         const testUser = await UserModel.create({
             userId: "user-123",
             name: "John Doe",
@@ -656,14 +669,17 @@ describe("Certificate generation", () => {
         });
 
         const testCertificate = await CertificateModel.create({
-            certificateId: "cert-123",
+            certificateId: `cert-missing-pageid-${uniqueId}`,
             userId: "user-123",
             courseId: "course-123",
             createdAt: new Date("2024-01-01"),
             domain: testDomain._id,
         });
 
-        const result = await getCertificate("cert-123", mockCtx);
+        const result = await getCertificate(
+            `cert-missing-pageid-${uniqueId}`,
+            mockCtx,
+        );
 
         expect(result.productPageId).toBe(null);
     });

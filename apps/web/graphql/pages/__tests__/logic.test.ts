@@ -75,12 +75,12 @@ describe("updatePage media handling", () => {
             { $set: { sharedWidgets: {}, draftSharedWidgets: {} } },
         );
 
-        await PageModel.deleteMany({});
+        await PageModel.deleteMany({ domain: domain._id });
     });
 
     afterAll(async () => {
-        await PageModel.deleteMany({});
-        await DomainModel.deleteMany({});
+        await PageModel.deleteMany({ domain: domain._id });
+        await DomainModel.deleteMany({ _id: domain._id });
     });
 
     it("skips deleting media that still exists in the published layout", async () => {
@@ -253,16 +253,16 @@ describe("getPage entity validation", () => {
             { $set: { sharedWidgets: {}, draftSharedWidgets: {} } },
         );
 
-        await PageModel.deleteMany({});
-        await Course.deleteMany({});
-        await CommunityModel.deleteMany({});
+        await PageModel.deleteMany({ domain: domain._id });
+        await Course.deleteMany({ domain: domain._id });
+        await CommunityModel.deleteMany({ domain: domain._id });
     });
 
     afterAll(async () => {
-        await PageModel.deleteMany({});
-        await Course.deleteMany({});
-        await CommunityModel.deleteMany({});
-        await DomainModel.deleteMany({});
+        await PageModel.deleteMany({ domain: domain._id });
+        await Course.deleteMany({ domain: domain._id });
+        await CommunityModel.deleteMany({ domain: domain._id });
+        await DomainModel.deleteMany({ _id: domain._id });
     });
 
     describe("product page validation", () => {
@@ -382,6 +382,8 @@ describe("getPage entity validation", () => {
 
             expect(result).toBeUndefined();
 
+            // Clean up the extra domain created in this test
+            await Course.deleteMany({ domain: otherDomain._id });
             await DomainModel.deleteOne({ _id: otherDomain._id });
         });
     });
@@ -488,6 +490,8 @@ describe("getPage entity validation", () => {
 
             expect(result).toBeUndefined();
 
+            // Clean up the extra domain created in this test
+            await CommunityModel.deleteMany({ domain: otherDomain._id });
             await DomainModel.deleteOne({ _id: otherDomain._id });
         });
     });

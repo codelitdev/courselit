@@ -117,40 +117,40 @@ describe("deleteUser - Comprehensive Test Suite", () => {
     });
 
     afterEach(async () => {
-        // Clean up all collections
+        // Clean up all collections - only this test's data
         await Promise.all([
-            UserModel.deleteMany({}),
-            CourseModel.deleteMany({}),
-            PageModel.deleteMany({}),
-            EmailTemplateModel.deleteMany({}),
-            SequenceModel.deleteMany({}),
-            UserSegmentModel.deleteMany({}),
-            EmailDeliveryModel.deleteMany({}),
-            UserThemeModel.deleteMany({}),
-            PaymentPlanModel.deleteMany({}),
-            OngoingSequenceModel.deleteMany({}),
-            NotificationModel.deleteMany({}),
-            MailRequestStatusModel.deleteMany({}),
-            LessonEvaluationModel.deleteMany({}),
-            DownloadLinkModel.deleteMany({}),
-            CommunityReportModel.deleteMany({}),
-            CertificateModel.deleteMany({}),
-            ActivityModel.deleteMany({}),
-            EmailEventModel.deleteMany({}),
-            CommunityPostSubscriberModel.deleteMany({}),
-            CommunityPostModel.deleteMany({}),
-            CommunityCommentModel.deleteMany({}),
-            InvoiceModel.deleteMany({}),
-            MembershipModel.deleteMany({}),
-            CommunityModel.deleteMany({}),
-            LessonModel.deleteMany({}),
+            UserModel.deleteMany({ domain: testDomain._id }),
+            CourseModel.deleteMany({ domain: testDomain._id }),
+            PageModel.deleteMany({ domain: testDomain._id }),
+            EmailTemplateModel.deleteMany({ domain: testDomain._id }),
+            SequenceModel.deleteMany({ domain: testDomain._id }),
+            UserSegmentModel.deleteMany({ domain: testDomain._id }),
+            EmailDeliveryModel.deleteMany({ domain: testDomain._id }),
+            UserThemeModel.deleteMany({ domain: testDomain._id }),
+            PaymentPlanModel.deleteMany({ domain: testDomain._id }),
+            OngoingSequenceModel.deleteMany({ domain: testDomain._id }),
+            NotificationModel.deleteMany({ domain: testDomain._id }),
+            MailRequestStatusModel.deleteMany({ domain: testDomain._id }),
+            LessonEvaluationModel.deleteMany({ domain: testDomain._id }),
+            DownloadLinkModel.deleteMany({ domain: testDomain._id }),
+            CommunityReportModel.deleteMany({ domain: testDomain._id }),
+            CertificateModel.deleteMany({ domain: testDomain._id }),
+            ActivityModel.deleteMany({ domain: testDomain._id }),
+            EmailEventModel.deleteMany({ domain: testDomain._id }),
+            CommunityPostSubscriberModel.deleteMany({ domain: testDomain._id }),
+            CommunityPostModel.deleteMany({ domain: testDomain._id }),
+            CommunityCommentModel.deleteMany({ domain: testDomain._id }),
+            InvoiceModel.deleteMany({ domain: testDomain._id }),
+            MembershipModel.deleteMany({ domain: testDomain._id }),
+            CommunityModel.deleteMany({ domain: testDomain._id }),
+            LessonModel.deleteMany({ domain: testDomain._id }),
         ]);
 
         jest.clearAllMocks();
     });
 
     afterAll(async () => {
-        await DomainModel.deleteMany({});
+        await DomainModel.deleteMany({ _id: testDomain._id });
     });
 
     // ============================================
@@ -624,9 +624,10 @@ describe("deleteUser - Comprehensive Test Suite", () => {
         });
 
         it("should delete certificates", async () => {
+            const uniqueId = Date.now();
             await CertificateModel.create({
                 domain: testDomain._id,
-                certificateId: "cert-123",
+                certificateId: `cert-${uniqueId}`,
                 userId: targetUser.userId,
                 courseId: "du-course-123",
             });

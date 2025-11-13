@@ -24,7 +24,7 @@
     "dev": "pnpm --filter @courselit/web dev",
     "prepare": "husky",
     "release": "./release.sh",
-    "test": "NODE_OPTIONS='--experimental-vm-modules' SUPPRESS_JEST_WARNINGS=1 jest --runInBand",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' SUPPRESS_JEST_WARNINGS=1 jest",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' SUPPRESS_JEST_WARNINGS=1 jest --watch",
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' SUPPRESS_JEST_WARNINGS=1 jest --coverage"
   },
