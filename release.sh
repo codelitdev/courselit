@@ -19,6 +19,7 @@ fi
 # fi
 
 git checkout main
+git pull
 
 # # Update versions in apps
 # for dir in apps/*/; do
