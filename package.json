@@ -28,7 +28,7 @@
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' SUPPRESS_JEST_WARNINGS=1 jest --watch",
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' SUPPRESS_JEST_WARNINGS=1 jest --coverage"
   },
-  "packageManager": "pnpm@10.17.0+sha512.fce8a3dd29a4ed2ec566fb53efbb04d8c44a0f05bc6f24a73046910fb9c3ce7afa35a0980500668fa3573345bd644644fa98338fa168235c80f4aa17aa17fbef",
+  "packageManager": "pnpm@10.22.0+sha512.bf049efe995b28f527fd2b41ae0474ce29186f7edcb3bf545087bd61fbbebb2bf75362d1307fda09c2d288e1e499787ac12d4fcb617a974718a6051f2eee741c",
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",

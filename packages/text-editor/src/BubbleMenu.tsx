@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { Editor } from "@tiptap/core";
-import { BubbleMenu as TipTapBubbleMenu } from "@tiptap/react";
+import type { BubbleMenuPluginProps } from "@tiptap/extension-bubble-menu";
+import { BubbleMenuPlugin } from "@tiptap/extension-bubble-menu";
 import {
     Bold,
     Code,
@@ -17,6 +18,73 @@ interface BubbleMenuProps {
 
 const buttonBase =
     "inline-flex h-8 w-8 items-center justify-center rounded text-foreground transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+
+type TipTapBubbleMenuProps = {
+    editor: Editor | null;
+    className?: string;
+    children: React.ReactNode;
+    pluginKey?: string;
+} & Partial<Omit<BubbleMenuPluginProps, "editor" | "element" | "pluginKey">>;
+
+const TipTapBubbleMenu = ({
+    editor,
+    className,
+    children,
+    pluginKey = "inlineBubbleMenu",
+    updateDelay,
+    resizeDelay,
+    shouldShow,
+    appendTo,
+    getReferencedVirtualElement,
+    options,
+}: TipTapBubbleMenuProps): JSX.Element => {
+    const menuRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        const element = menuRef.current;
+
+        if (!editor || editor.isDestroyed || !element) {
+            return;
+        }
+
+        const plugin = BubbleMenuPlugin({
+            editor,
+            element,
+            pluginKey,
+            updateDelay,
+            resizeDelay,
+            shouldShow: shouldShow ?? null,
+            appendTo,
+            getReferencedVirtualElement,
+            options,
+        });
+
+        editor.registerPlugin(plugin);
+
+        return () => {
+            editor.unregisterPlugin(pluginKey);
+        };
+    }, [
+        editor,
+        pluginKey,
+        updateDelay,
+        resizeDelay,
+        shouldShow,
+        appendTo,
+        getReferencedVirtualElement,
+        options,
+    ]);
+
+    return (
+        <div
+            ref={menuRef}
+            className={className}
+            style={{ visibility: "hidden" }}
+        >
+            {children}
+        </div>
+    );
+};
 
 function InlineButton({
     icon: Icon,

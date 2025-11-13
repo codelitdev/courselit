@@ -44,7 +44,9 @@ const Renderer = ({ json, fontFamily, className }: RendererProps) => {
 
         if (serializedContentRef.current !== nextSerialized) {
             serializedContentRef.current = nextSerialized;
-            editor.commands.setContent(json ?? emptyDoc, false);
+            editor.commands.setContent(json ?? emptyDoc, {
+                emitUpdate: false,
+            });
         }
     }, [editor, json]);
 

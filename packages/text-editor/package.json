@@ -61,7 +61,7 @@
         "@tiptap/extension-image": "^3.0.0",
         "@tiptap/extension-link": "^3.0.0",
         "@tiptap/extension-placeholder": "^3.0.0",
-        "@tiptap/extension-table": "^3.0.0",
+        "@tiptap/extension-table": "^3.10.7",
         "@tiptap/react": "^3.0.0",
         "@tiptap/starter-kit": "^3.0.0",
         "highlight.js": "^11.10.0",

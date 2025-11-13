@@ -123,14 +123,18 @@ const WysiwygEditor: WysiwygEditorType = Object.assign(
                 refreshRef.current = refresh;
                 hasInteractedRef.current = false;
                 lastSerializedContentRef.current = nextSerialized;
-                editor.commands.setContent(nextContent, false);
+                editor.commands.setContent(nextContent, {
+                    emitUpdate: false,
+                });
                 return;
             }
 
             if (!hasInteractedRef.current) {
                 if (lastSerializedContentRef.current !== nextSerialized) {
                     lastSerializedContentRef.current = nextSerialized;
-                    editor.commands.setContent(nextContent, false);
+                    editor.commands.setContent(nextContent, {
+                        emitUpdate: false,
+                    });
                 }
                 return;
             }
