@@ -399,7 +399,7 @@ export default function Page(props: { params: Promise<{ id: string }> }) {
     const formActive = basicDetails.active;
     const formTags = basicDetails.tags || [];
     const userTags = userData.tags || [];
-    const hasTagsChanged = haveStringArraysChanged(formTags, userTags);
+    // const hasTagsChanged = haveStringArraysChanged(formTags, userTags);
     const hasBasicDetailsChanged =
         trimmedFormName !== initialBasicDetailsRef.current.name ||
         formActive !== initialBasicDetailsRef.current.active ||

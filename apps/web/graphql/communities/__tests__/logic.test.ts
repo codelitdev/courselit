@@ -211,7 +211,7 @@ describe("Community Logic - Comment Count Tests", () => {
 
         it("should include replies in the comment count", async () => {
             // Create a comment with replies
-            const comment = await CommunityCommentModel.create({
+            await CommunityCommentModel.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: post.postId,

@@ -423,7 +423,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 pageId: "du-page-comm-123",
             });
 
-            const moderatorMembership = await MembershipModel.create({
+            await MembershipModel.create({
                 domain: testDomain._id,
                 membershipId: "mem-123",
                 userId: targetUser.userId,
@@ -1028,7 +1028,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
         });
 
         it("should handle user with subscription cancellation", async () => {
-            const membership = await MembershipModel.create({
+            await MembershipModel.create({
                 domain: testDomain._id,
                 membershipId: "mem-123",
                 userId: targetUser.userId,
