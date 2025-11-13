@@ -17,7 +17,7 @@ app.use("/job", verifyJWTMiddleware, jobRoutes);
 app.use("/sse", sseRoutes);
 
 app.get("/healthy", (req, res) => {
-    res.status(200).json({ success: true });
+    res.status(200).json({ status: "ok", uptime: process.uptime() });
 });
 
 startEmailAutomation();

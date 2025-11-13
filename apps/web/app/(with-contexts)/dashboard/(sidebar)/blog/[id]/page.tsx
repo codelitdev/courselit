@@ -17,6 +17,7 @@ import {
 } from "@courselit/components-library";
 import { MoreVert } from "@courselit/icons";
 import {
+    APP_MESSAGE_COURSE_DELETED,
     DELETE_PRODUCT_POPUP_HEADER,
     DELETE_PRODUCT_POPUP_TEXT,
     EDIT_BLOG,
@@ -24,6 +25,7 @@ import {
     MENU_BLOG_VISIT,
     PAGE_TITLE_404,
     PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
+    TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import { truncate } from "@ui-lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -40,7 +42,7 @@ export default function Page(props: { params: Promise<{ id: string }> }) {
     const searchParams = useSearchParams();
     const [tab, setTab] = useState(searchParams?.get("tab") || "Details");
     const address = useContext(AddressContext);
-    const course = useCourse(id, address);
+    const course = useCourse(id);
     const router = useRouter();
     const { toast } = useToast();
 
@@ -90,6 +92,11 @@ export default function Page(props: { params: Promise<{ id: string }> }) {
                                                 router.replace(
                                                     `/dashboard/blogs`,
                                                 );
+                                                toast({
+                                                    title: TOAST_TITLE_SUCCESS,
+                                                    description:
+                                                        APP_MESSAGE_COURSE_DELETED,
+                                                });
                                             },
                                             toast,
                                         })

@@ -29,6 +29,7 @@ import {
 import RequestForm from "./request-form";
 import SequencesList from "./sequences-list";
 import { Button } from "@components/ui/button";
+import Link from "next/link";
 
 interface MailsProps {
     address: Address;
@@ -157,12 +158,9 @@ export default function Mails({ address, selectedTab }: MailsProps) {
                         </CardHeader>
                         <CardFooter>
                             <div className="w-[120px]">
-                                <Button
-                                    component="link"
-                                    href={`/dashboard/settings?tab=Mails`}
-                                >
-                                    Go to settings
-                                </Button>
+                                <Link href={`/dashboard/settings?tab=Mails`}>
+                                    <Button>Go to settings</Button>
+                                </Link>
                             </div>
                         </CardFooter>
                     </Card>

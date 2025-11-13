@@ -26,6 +26,10 @@ import { recordActivity } from "../../lib/record-activity";
 import { InternalCourse } from "@courselit/common-logic";
 import CertificateModel from "../../models/Certificate";
 import { error } from "@/services/logger";
+import getDeletedMediaIds, {
+    extractMediaIDs,
+} from "@/lib/get-deleted-media-ids";
+import ActivityModel from "@/models/Activity";
 
 const { permissions, quiz } = constants;
 
@@ -146,7 +150,7 @@ export const createLesson = async (
             content: JSON.parse(lessonData.content),
             media: lessonData.media,
             downloadable: lessonData.downloadable,
-            creatorId: ctx.user._id, // TODO: refactor this
+            creatorId: ctx.user.userId,
             courseId: course.courseId,
             groupId: lessonData.groupId,
             requiresEnrollment: lessonData.requiresEnrollment,
@@ -179,9 +183,20 @@ export const updateLesson = async (
 ) => {
     let lesson = await getLessonOrThrow(lessonData.id, ctx);
     lessonData.lessonId = lessonData.id;
-    delete lessonData.id;
+    delete (lessonData as any).id;
 
     lessonData.type = lesson.type;
+    const contentMediaIdsMarkedForDeletion: string[] = [];
+    if (Object.prototype.hasOwnProperty.call(lessonData, "content")) {
+        const nextContent = (lessonData.content ?? "") as string;
+        contentMediaIdsMarkedForDeletion.push(
+            ...getDeletedMediaIds(
+                JSON.stringify(lesson.content || ""),
+                nextContent,
+            ),
+        );
+    }
+
     lessonValidator(lessonData);
 
     for (const key of Object.keys(lessonData)) {
@@ -190,6 +205,9 @@ export const updateLesson = async (
         } else {
             lesson[key] = lessonData[key];
         }
+    }
+    for (const mediaId of contentMediaIdsMarkedForDeletion) {
+        await deleteMedia(mediaId);
     }
 
     lesson = await (lesson as any).save();
@@ -215,8 +233,26 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
             await deleteMedia(lesson.media.mediaId);
         }
 
+        if (lesson.content) {
+            const extractedMediaIds = extractMediaIDs(
+                JSON.stringify(lesson.content),
+            );
+            for (const mediaId of Array.from(extractedMediaIds)) {
+                await deleteMedia(mediaId);
+            }
+        }
+
+        await LessonEvaluation.deleteMany({
+            domain: ctx.subdomain._id,
+            lessonId: lesson.lessonId,
+        });
+        await ActivityModel.deleteMany({
+            domain: ctx.subdomain._id,
+            entityId: lesson.lessonId,
+        });
+
         await LessonModel.deleteOne({
-            _id: lesson._id,
+            _id: lesson.id,
             domain: ctx.subdomain._id,
         });
         return true;
@@ -250,25 +286,14 @@ export const getAllLessons = async (
     return lessons;
 };
 
-// TODO: refactor this as it might not be deleting the media
 export const deleteAllLessons = async (courseId: string, ctx: GQLContext) => {
-    const allLessonsWithMedia = await LessonModel.find(
-        {
-            courseId,
-            domain: ctx.subdomain._id,
-            mediaId: { $ne: null },
-        },
-        {
-            mediaId: 1,
-        },
-    );
-    for (let media of allLessonsWithMedia) {
-        await deleteMedia(media.mediaId);
-    }
-    await LessonModel.deleteMany({
-        courseId,
+    const allLessons = await LessonModel.find<Lesson>({
         domain: ctx.subdomain._id,
+        courseId,
     });
+    for (const lesson of allLessons) {
+        await deleteLesson(lesson.lessonId, ctx);
+    }
 };
 
 export const markLessonCompleted = async (

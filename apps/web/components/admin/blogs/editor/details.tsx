@@ -56,11 +56,11 @@ export default function Details({ id }: DetailsProps) {
         e.preventDefault();
 
         const mutation = `
-            mutation {
+            mutation ($courseId: String!, $title: String!, $description: String) {
                 updateCourse(courseData: {
-                    id: "${course!.courseId}"
-                    title: "${title}",
-                    description: ${JSON.stringify(JSON.stringify(description))}
+                    id: $courseId
+                    title: $title
+                    description: $description
                 }) {
                     courseId 
                 }
@@ -68,18 +68,19 @@ export default function Details({ id }: DetailsProps) {
         `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload(mutation)
+            .setPayload({
+                query: mutation,
+                variables: {
+                    courseId: course!.courseId,
+                    title: title,
+                    description: JSON.stringify(description),
+                },
+            })
             .setIsGraphQLEndpoint(true)
             .build();
         try {
             setLoading(true);
-            const response = await fetch.exec();
-            if (response.updateCourse) {
-                toast({
-                    title: TOAST_TITLE_SUCCESS,
-                    description: APP_MESSAGE_COURSE_SAVED,
-                });
-            }
+            await fetch.exec();
         } catch (err: any) {
             toast({
                 title: TOAST_TITLE_ERROR,

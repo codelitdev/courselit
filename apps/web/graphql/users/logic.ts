@@ -5,7 +5,6 @@ import { responses } from "@/config/strings";
 import { makeModelTextSearchable, checkIfAuthenticated } from "@/lib/graphql";
 import constants from "@/config/constants";
 import GQLContext from "@/models/GQLContext";
-const { permissions } = constants;
 import { initMandatoryPages } from "../pages/logic";
 import { Domain } from "@models/Domain";
 import { checkPermission } from "@courselit/utils";
@@ -15,7 +14,7 @@ import {
     InternalUser,
     UserSegment,
 } from "@courselit/common-logic";
-import { Course, User } from "@courselit/common-models";
+import { Course, UIConstants, User } from "@courselit/common-models";
 import mongoose from "mongoose";
 import {
     Constants,
@@ -54,6 +53,12 @@ import CertificateModel from "@models/Certificate";
 import CertificateTemplateModel, {
     CertificateTemplate,
 } from "@models/CertificateTemplate";
+import {
+    validateUserDeletion,
+    migrateBusinessEntities,
+    cleanupPersonalData,
+} from "./helpers";
+const { permissions } = UIConstants;
 
 const removeAdminFieldsFromUserObject = (
     user: User & { _id: mongoose.Types.ObjectId },
@@ -112,7 +117,7 @@ export const updateUser = async (userData: UserData, ctx: GQLContext) => {
     const hasPermissionToManageUser = checkPermission(ctx.user.permissions, [
         permissions.manageUsers,
     ]);
-    const isModifyingSelf = id === ctx.user._id.toString();
+    const isModifyingSelf = id === ctx.user.userId;
     const restrictedKeys = ["permissions", "active"];
 
     if (
@@ -122,7 +127,10 @@ export const updateUser = async (userData: UserData, ctx: GQLContext) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    let user = await UserModel.findOne({ _id: id, domain: ctx.subdomain._id });
+    let user = await UserModel.findOne({
+        userId: id,
+        domain: ctx.subdomain._id,
+    });
     if (!user) throw new Error(responses.item_not_found);
 
     for (const key of keys.filter((key) => key !== "id")) {
@@ -136,10 +144,6 @@ export const updateUser = async (userData: UserData, ctx: GQLContext) => {
     validateUserProperties(user);
 
     user = await user.save();
-
-    if (userData.name) {
-        await updateCoursesForCreatorName(user.userId || user.id, user.name);
-    }
 
     return user;
 };
@@ -176,7 +180,7 @@ export const inviteCustomer = async (
 
     if (tags.length) {
         user = await updateUser(
-            { id: user._id, tags: [...user.tags, ...tags] },
+            { id: user.userId, tags: [...user.tags, ...tags] },
             ctx,
         );
     }
@@ -221,15 +225,42 @@ export const inviteCustomer = async (
     return user;
 };
 
-const updateCoursesForCreatorName = async (creatorId, creatorName) => {
-    await CourseModel.updateMany(
-        {
-            creatorId,
-        },
-        {
-            creatorName,
-        },
-    );
+export const deleteUser = async (
+    userId: string,
+    ctx: GQLContext,
+): Promise<boolean> => {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const userToDelete = await UserModel.findOne<InternalUser>({
+        domain: ctx.subdomain._id,
+        userId,
+    });
+
+    if (!userToDelete) {
+        throw new Error(responses.user_not_found);
+    }
+
+    if (userToDelete.userId === ctx.user.userId) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const deleterUser =
+        (await UserModel.findOne<InternalUser>({
+            domain: ctx.subdomain._id,
+            userId: ctx.user.userId,
+        })) || (ctx.user as InternalUser);
+
+    await validateUserDeletion(userToDelete, ctx);
+
+    await migrateBusinessEntities(userToDelete, deleterUser, ctx);
+
+    await cleanupPersonalData(userToDelete, ctx);
+
+    return true;
 };
 
 interface GetUsersParams {

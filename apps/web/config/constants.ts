@@ -6,7 +6,8 @@ const { permissions } = UIConstants;
 
 export default {
     multitenant: process.env.MULTITENANT === "true",
-    domainNameForSingleTenancy: "main",
+    domainNameForSingleTenancy:
+        process.env.DOMAIN_NAME_FOR_SINGLE_TENANCY || "main",
     schoolNameForSingleTenancy: "My school",
     dbConnectionString:
         process.env.DB_CONNECTION_STRING ||

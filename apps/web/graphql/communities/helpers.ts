@@ -26,7 +26,7 @@ import { hasCommunityPermission } from "@ui-lib/utils";
 
 export type PublicPost = Omit<
     CommunityPost,
-    "createdAt" | "user" | "deleted"
+    "createdAt" | "user" | "deleted" | "commentsCount"
 > & {
     userId: string;
 };
@@ -68,7 +68,6 @@ export const formatPost = (
     category: post.category,
     media: post.media,
     pinned: post.pinned,
-    commentsCount: post.commentsCount,
     likesCount: post.likes.length,
     updatedAt: post.updatedAt,
     hasLiked: post.likes.includes(user.userId),
