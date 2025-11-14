@@ -20,18 +20,19 @@ import {
 } from "@/components/ui/sidebar";
 import { useContext } from "react";
 import { ProfileContext } from "@components/contexts";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export function NavUser() {
     const { isMobile } = useSidebar();
     const { profile: user } = useContext(ProfileContext);
+    if (!user) {
+        return null;
+    }
     const alias = user.name
         ?.split(" ")
         .slice(0, 2)
         .map((x) => x[0]?.toUpperCase())
         .join("");
-    const router = useRouter();
 
     return (
         <SidebarMenu>

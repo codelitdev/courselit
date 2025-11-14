@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export type OngoingSequence = OS &
     Document & {
-        domain: mongoose.Schema.Types.ObjectId;
+        domain: mongoose.Types.ObjectId;
     };
 
 const OngoingSequenceSchema: Schema = new Schema<OngoingSequence>(
@@ -22,5 +22,8 @@ const OngoingSequenceSchema: Schema = new Schema<OngoingSequence>(
 
 OngoingSequenceSchema.index({ sequenceId: 1, userId: 1 }, { unique: true });
 
-export default mongoose.models.OngoingSequence ||
-    mongoose.model("OngoingSequence", OngoingSequenceSchema);
+const OngoingSequenceModel =
+    (mongoose.models.OngoingSequence as mongoose.Model<OngoingSequence>) ||
+    mongoose.model<OngoingSequence>("OngoingSequence", OngoingSequenceSchema);
+
+export default OngoingSequenceModel;

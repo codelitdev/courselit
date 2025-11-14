@@ -16,7 +16,14 @@ import {
     MAIL_SUBJECT_PLACEHOLDER,
     PAGE_HEADER_EDIT_MAIL,
 } from "@ui-config/strings";
-import { ChangeEvent, useCallback, useEffect, useState, use } from "react";
+import {
+    ChangeEvent,
+    useCallback,
+    useEffect,
+    useState,
+    use,
+    startTransition,
+} from "react";
 import { Email as EmailContent } from "@courselit/email-editor";
 import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
 import { Email } from "@courselit/common-models";
@@ -59,14 +66,20 @@ export default function Page(props: {
 
     useEffect(() => {
         if (sequence) {
-            const email = sequence.emails.find((e) => e.emailId === mailId);
-            if (email) {
-                setEmail(email);
-                setDelay(email.delayInMillis / 86400000);
-                setSubject(email.subject);
-                // setPreviewText(email.content?.meta?.previewText || "");
-                setContent(email.content || null);
-                setPublished(email.published ? "published" : "unpublished");
+            const nextEmail = sequence.emails.find(
+                (sequenceEmail) => sequenceEmail.emailId === mailId,
+            );
+            if (nextEmail) {
+                startTransition(() => {
+                    setEmail(nextEmail);
+                    setDelay(nextEmail.delayInMillis / 86400000);
+                    setSubject(nextEmail.subject);
+                    // setPreviewText(nextEmail.content?.meta?.previewText || "");
+                    setContent(nextEmail.content || null);
+                    setPublished(
+                        nextEmail.published ? "published" : "unpublished",
+                    );
+                });
             }
         }
     }, [sequence, mailId]);
@@ -124,12 +137,14 @@ export default function Page(props: {
                 }
             }`;
 
+        const emailIdForUpdate = email?.emailId ?? mailId;
+
         const fetcher = fetch
             .setPayload({
                 query,
                 variables: {
                     sequenceId,
-                    emailId: email?.emailId,
+                    emailId: emailIdForUpdate,
                     subject,
                     content: JSON.stringify(content),
                     delayInMillis: delay * 86400000,
@@ -143,31 +158,43 @@ export default function Page(props: {
             const response = await fetcher.exec();
             if (response.sequence) {
                 const { sequence } = response;
-                const email = sequence.emails.find((e) => e.emailId === mailId);
-                if (email) {
-                    setEmail(email);
-                    setDelay(email.delayInMillis / 86400000);
-                    setSubject(email.subject);
-                    // setPreviewText(email.previewText || "");
-                    setContent(email.content);
-                    setPublished(email.published ? "published" : "unpublished");
+                const updatedEmail = sequence.emails.find(
+                    (sequenceEmail) => sequenceEmail.emailId === mailId,
+                );
+                if (updatedEmail) {
+                    startTransition(() => {
+                        setEmail(updatedEmail);
+                        setDelay(updatedEmail.delayInMillis / 86400000);
+                        setSubject(updatedEmail.subject);
+                        // setPreviewText(updatedEmail.previewText || "");
+                        setContent(updatedEmail.content);
+                        setPublished(
+                            updatedEmail.published
+                                ? "published"
+                                : "unpublished",
+                        );
+                    });
                 }
             }
-        } catch (e: any) {
+        } catch (e: unknown) {
+            const errorMessage =
+                e instanceof Error ? e.message : "Unknown error occurred";
             toast({
                 title: TOAST_TITLE_ERROR,
-                description: e.message,
+                description: errorMessage,
                 variant: "destructive",
             });
         }
     }, [
         fetch,
         sequenceId,
-        email,
+        email?.emailId,
+        mailId,
         subject,
         content,
         delay,
         published,
+        toast,
         // previewText,
     ]);
 

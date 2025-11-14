@@ -1,10 +1,10 @@
 import {
+    CommunityMedia,
     CommunityPost,
     CommunityReport,
     CommunityReportType,
     Constants,
     Membership,
-    User,
 } from "@courselit/common-models";
 import CommunityCommentModel, {
     InternalCommunityComment,
@@ -31,13 +31,13 @@ export type PublicPost = Omit<
     userId: string;
 };
 
-export const formatComment = (comment: any, user: User) => ({
+export const formatComment = (comment: any, userId: string) => ({
     communityId: comment.communityId,
     postId: comment.postId,
     userId: comment.userId,
     commentId: comment.commentId,
     content: comment.content,
-    hasLiked: comment.likes.includes(user.userId),
+    hasLiked: comment.likes.includes(userId),
     createdAt: comment.createdAt,
     updatedAt: comment.updatedAt,
     media: comment.media,
@@ -51,7 +51,7 @@ export const formatComment = (comment: any, user: User) => ({
         createdAt: reply.createdAt,
         updatedAt: reply.updatedAt,
         likesCount: reply.likes.length,
-        hasLiked: reply.likes.includes(user.userId),
+        hasLiked: reply.likes.includes(userId),
         deleted: reply.deleted,
     })),
     deleted: comment.deleted,
@@ -59,7 +59,7 @@ export const formatComment = (comment: any, user: User) => ({
 
 export const formatPost = (
     post: InternalCommunityPost,
-    user: User,
+    userId: string,
 ): PublicPost => ({
     communityId: post.communityId,
     postId: post.postId,
@@ -70,7 +70,7 @@ export const formatPost = (
     pinned: post.pinned,
     likesCount: post.likes.length,
     updatedAt: post.updatedAt,
-    hasLiked: post.likes.includes(user.userId),
+    hasLiked: post.likes.includes(userId),
     userId: post.userId,
 });
 

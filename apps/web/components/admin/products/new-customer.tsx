@@ -145,7 +145,6 @@ export default function NewCustomer({ courseId }: NewCustomerProps) {
                                     JSON.stringify(systemTags) +
                                     JSON.stringify(tags)
                                 }
-                                side="bottom"
                                 options={systemTags}
                                 selectedOptions={new Set(tags)}
                                 onChange={(values: string[]) => setTags(values)}

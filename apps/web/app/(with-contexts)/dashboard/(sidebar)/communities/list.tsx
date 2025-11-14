@@ -3,7 +3,14 @@
 import { AddressContext } from "@components/contexts";
 import { Community } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
-import { useContext, useEffect, useState } from "react";
+import {
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+    startTransition,
+} from "react";
 import {
     Button,
     Link,
@@ -28,19 +35,15 @@ export default function List() {
     const [page, setPage] = useState(1);
     const address = useContext(AddressContext);
 
-    useEffect(() => {
-        loadCommunities();
-    }, []);
+    const fetch = useMemo(
+        () =>
+            new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setIsGraphQLEndpoint(true),
+        [address.backend],
+    );
 
-    useEffect(() => {
-        loadCommunities();
-    }, [page]);
-
-    const fetch = new FetchBuilder()
-        .setUrl(`${address.backend}/api/graph`)
-        .setIsGraphQLEndpoint(true);
-
-    const loadCommunities = async () => {
+    const loadCommunities = useCallback(async () => {
         const query = `
             query ($page: Int, $limit: Int) {
                 communities: getCommunities(page: $page, limit: $limit) {
@@ -67,7 +70,13 @@ export default function List() {
                 setTotal(response.totalCommunities);
             }
         } catch (e) {}
-    };
+    }, [fetch, page]);
+
+    useEffect(() => {
+        startTransition(() => {
+            void loadCommunities();
+        });
+    }, [loadCommunities]);
 
     return (
         <div className="flex flex-col">

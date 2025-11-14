@@ -31,7 +31,7 @@ export default function BaseLayout({
     state,
     theme,
 }: BaseLayoutProps) {
-    state.theme = theme;
+    const stateWithTheme = { ...state, theme };
 
     const siteTitle = title || siteInfo.title;
     const siteDescription = description || siteInfo.subtitle;
@@ -97,7 +97,7 @@ export default function BaseLayout({
                 layout={layout}
                 childrenOnTop={childrenOnTop}
                 pageData={pageData}
-                state={state}
+                state={stateWithTheme}
             >
                 {children}
             </Template>

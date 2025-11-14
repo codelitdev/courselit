@@ -60,9 +60,7 @@ import {
 } from "./helpers";
 const { permissions } = UIConstants;
 
-const removeAdminFieldsFromUserObject = (
-    user: User & { _id: mongoose.Types.ObjectId },
-) => ({
+const removeAdminFieldsFromUserObject = (user: any) => ({
     id: user._id,
     name: user.name,
     userId: user.userId,
@@ -72,8 +70,7 @@ const removeAdminFieldsFromUserObject = (
 });
 
 export const getUser = async (userId = null, ctx: GQLContext) => {
-    let user: (User & { _id: mongoose.Types.ObjectId }) | undefined | null;
-    user = ctx.user;
+    let user: any = ctx.user;
 
     if (userId) {
         user = await UserModel.findOne({ userId, domain: ctx.subdomain._id });
@@ -882,7 +879,7 @@ async function addProductToUser({
     user,
     product,
 }: {
-    user: User;
+    user: User | InternalUser;
     product: InternalCourse;
 }) {
     if (

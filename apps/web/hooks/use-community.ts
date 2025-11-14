@@ -1,13 +1,15 @@
 import { useContext, useEffect, useState } from "react";
 import { AddressContext } from "@components/contexts";
 import { FetchBuilder } from "@courselit/utils";
-import { Community } from "@courselit/common-models";
+import { Community, PaymentPlan } from "@courselit/common-models";
 
 export const useCommunity = (id?: string | null) => {
     const [community, setCommunity] = useState<
         | (Community & {
               banner: any;
               joiningReasonText: string;
+              paymentPlans?: PaymentPlan[];
+              defaultPaymentPlan?: string;
           })
         | null
     >(null);

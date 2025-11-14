@@ -15,9 +15,7 @@ const nextConfig = {
         version,
     },
     reactStrictMode: false,
-    typescript: {
-        ignoreBuildErrors: true,
-    },
+    typescript: {},
     images: {
         remotePatterns,
     },

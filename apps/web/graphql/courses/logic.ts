@@ -28,6 +28,8 @@ import {
     Membership,
     MembershipStatus,
     Progress,
+    PaymentPlan,
+    Course,
 } from "@courselit/common-models";
 import { deleteAllLessons } from "../lessons/logic";
 import { deleteMedia } from "@/services/medialit";
@@ -111,9 +113,8 @@ async function formatCourse(courseId: string, ctx: GQLContext) {
     });
 
     if (
-        [Constants.CourseType.COURSE, Constants.CourseType.DOWNLOAD].includes(
-            course.type,
-        )
+        course.type === Constants.CourseType.COURSE ||
+        course.type === Constants.CourseType.DOWNLOAD
     ) {
         const { nextLesson } = await getPrevNextCursor(
             course.courseId,
@@ -347,7 +348,7 @@ export const getCoursesAsAdmin = async ({
         domain: context.subdomain._id,
     };
     if (!checkPermission(user.permissions, [permissions.manageAnyCourse])) {
-        query.creatorId = `${user.userId || user.id}`;
+        query.creatorId = user.userId;
     }
 
     if (filterBy) {
@@ -469,7 +470,7 @@ const getProductsQuery = (
     ids?: string[],
     publicView: boolean = false,
 ) => {
-    const query: Partial<InternalCourse> = {
+    const query: Record<string, unknown> = {
         domain: ctx.subdomain._id,
     };
 
@@ -577,26 +578,20 @@ export const getProducts = async ({
                       ctx,
                   })
                 : undefined;
-        products.push({
-            title: course.title,
-            slug: course.slug,
-            description: course.description,
-            type: course.type,
-            creatorId: course.creatorId,
-            updatedAt: course.updatedAt,
-            featuredImage: course.featuredImage,
-            courseId: course.courseId,
-            tags: course.tags,
-            privacy: course.privacy,
-            published: course.published,
-            isFeatured: course.isFeatured,
+        const extendedCourse: InternalCourse & {
+            customers?: number;
+            sales: number;
+            paymentPlans?: PaymentPlan[];
+        } = {
+            ...course,
             groups: course.type !== constants.blog ? course.groups : null,
             pageId: course.type !== constants.blog ? course.pageId : undefined,
             customers,
-            sales,
-            paymentPlans,
-            defaultPaymentPlan: course.defaultPaymentPlan,
-        });
+            sales: sales ?? 0,
+            ...(paymentPlans ? { paymentPlans } : {}),
+        };
+
+        products.push(extendedCourse);
     }
 
     // const products = courses.map(async (course) => ({
@@ -670,11 +665,12 @@ export const addGroup = async ({
         throw new Error(responses.existing_group);
     }
 
-    const maximumRank = course.groups?.reduce(
-        (acc: number, value: { rank: number }) =>
-            value.rank > acc ? value.rank : acc,
-        0,
-    );
+    const maximumRank =
+        course.groups?.reduce(
+            (acc: number, value: { rank: number }) =>
+                value.rank > acc ? value.rank : acc,
+            0,
+        ) ?? 0;
 
     await (course.groups as any).push({
         rank: maximumRank + 1000,
@@ -902,7 +898,7 @@ export const getStudents = async ({
     ctx,
     text,
 }: {
-    course: InternalCourse;
+    course: Pick<Course, "courseId">;
     ctx: GQLContext;
     text?: string;
 }) => {

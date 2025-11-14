@@ -10,6 +10,7 @@ import {
 import { responses, internal } from "../../config/strings";
 import { checkPermission, generateUniqueId } from "@courselit/utils";
 import { Constants, Email, Sequence } from "@courselit/common-models";
+import type { Event as SequenceEvent } from "@courselit/common-models";
 import CourseModel from "@models/Course";
 import SequenceModel from "@models/Sequence";
 import {
@@ -24,13 +25,16 @@ import MailRequestStatusModel, {
 } from "@models/MailRequestStatus";
 import { getPlans } from "../paymentplans/logic";
 import { activateMembership } from "@/app/api/payment/helpers";
-import { AdminSequence } from "@courselit/common-logic";
+import { AdminSequence, InternalCourse } from "@courselit/common-logic";
 import { User } from "@courselit/common-models";
 import EmailDeliveryModel from "@models/EmailDelivery";
 import EmailEventModel from "@models/EmailEvent";
 import { defaultEmail } from "./default-email";
 
 const { permissions } = constants;
+
+const isDateInFuture = (timestamp?: number) =>
+    typeof timestamp === "number" && timestamp > Date.now();
 
 export async function createSubscription(
     name: string,
@@ -207,11 +211,12 @@ export async function updateMail({
         sequence.title = title;
         sequence.emails[0].subject = title;
     }
+    const firstEmail = sequence.emails[0] as Email & { templateId?: string };
     if (templateId) {
-        sequence.emails[0].templateId = templateId;
+        firstEmail.templateId = templateId;
     }
     if (content) {
-        sequence.emails[0].content = content;
+        firstEmail.content = JSON.parse(content);
     }
     if (typeof delayInMillis !== "undefined") {
         sequence.emails[0].delayInMillis = delayInMillis;
@@ -239,7 +244,7 @@ export async function updateSequence({
     title?: string;
     fromEmail?: string;
     fromName?: string;
-    triggerType?: Event;
+    triggerType?: SequenceEvent;
     triggerData?: string;
     emailsOrder?: string[];
 }): Promise<AdminSequence | null> {
@@ -303,9 +308,10 @@ export async function updateSequence({
         if (!sequence.trigger) {
             sequence.trigger = {
                 type: triggerType,
-            };
+            } as unknown as Sequence["trigger"];
         }
-        sequence.trigger.type = triggerType;
+        sequence.trigger.type =
+            triggerType as unknown as Sequence["trigger"]["type"];
     }
     if (triggerData) {
         if (!sequence.trigger) {
@@ -342,7 +348,7 @@ export async function getBroadcasts({
             {
                 query: {
                     domain: ctx.subdomain._id,
-                    type: <SequenceType>Constants.mailTypes[0],
+                    type: Constants.mailTypes[0] as Sequence["type"],
                 },
                 offset: offset || 1,
                 graphQLContext: ctx,
@@ -389,10 +395,12 @@ export async function getMailRequestStatus(
         throw new Error(responses.action_not_allowed);
     }
 
-    return await MailRequestStatusModel.findOne({
+    const status = await MailRequestStatusModel.findOne({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
     });
+
+    return status ?? undefined;
 }
 
 export async function updateMailRequest(ctx: GQLContext, reason: string) {
@@ -603,10 +611,14 @@ export async function deleteMailFromSequence({
         throw new Error(responses.action_not_allowed);
     }
 
-    const sequence: AdminSequence = await SequenceModel.findOne({
+    const sequence = (await SequenceModel.findOne({
         sequenceId,
         domain: ctx.subdomain._id,
-    });
+    })) as AdminSequence | null;
+
+    if (!sequence) {
+        throw new Error(responses.item_not_found);
+    }
 
     if (sequence.type === "broadcast") {
         throw new Error(responses.action_not_allowed);
@@ -620,7 +632,7 @@ export async function deleteMailFromSequence({
         (email) => email.emailId !== emailId,
     );
     sequence.emailsOrder = sequence.emailsOrder.filter(
-        (emailId) => emailId !== emailId,
+        (existingEmailId) => existingEmailId !== emailId,
     );
 
     await (sequence as any).save();
@@ -638,10 +650,14 @@ export async function addMailToSequence(
         throw new Error(responses.action_not_allowed);
     }
 
-    const sequence: AdminSequence = await SequenceModel.findOne({
+    const sequence = (await SequenceModel.findOne({
         sequenceId,
         domain: ctx.subdomain._id,
-    });
+    })) as AdminSequence | null;
+
+    if (!sequence) {
+        throw new Error(responses.item_not_found);
+    }
 
     if (sequence.type === "broadcast") {
         throw new Error(responses.action_not_allowed);

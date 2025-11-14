@@ -268,7 +268,7 @@ export async function updateCommunity({
     banner?: string;
     autoAcceptMembers?: boolean;
     joiningReasonText?: string;
-    featuredImage: Media;
+    featuredImage?: Media;
 }): Promise<Community> {
     checkIfAuthenticated(ctx);
 
@@ -645,7 +645,7 @@ export async function createCommunityPost({
         );
     }
 
-    return formatPost(post, ctx.user);
+    return formatPost(post, ctx.user.userId);
 }
 
 export async function deleteCommunityPost({
@@ -725,7 +725,7 @@ export async function getPost({
         return null;
     }
 
-    return formatPost(post, ctx.user);
+    return formatPost(post, ctx.user.userId);
 }
 
 function getCommunityQuery(ctx: GQLContext, communityId: string) {
@@ -793,7 +793,7 @@ export async function getPosts({
         posts.unshift(...pinnedPosts);
     }
 
-    return posts.map(async (post) => formatPost(post, ctx.user));
+    return posts.map(async (post) => formatPost(post, ctx.user.userId));
 }
 
 export async function getPostsCount({
@@ -1241,7 +1241,7 @@ export async function togglePostLike({
         }
     }
 
-    return formatPost(post, ctx.user);
+    return formatPost(post, ctx.user.userId);
 }
 
 export async function togglePinned({
@@ -1288,7 +1288,7 @@ export async function togglePinned({
 
     await post.save();
 
-    return formatPost(post, ctx.user);
+    return formatPost(post, ctx.user.userId);
 }
 
 type PublicComment = Omit<CommunityComment, "user" | "likes"> & {
@@ -1411,7 +1411,7 @@ export async function postComment({
         postId: post.postId,
     });
 
-    return formatComment(comment, ctx.user);
+    return formatComment(comment, ctx.user.userId);
 }
 
 export async function getComments({
@@ -1455,7 +1455,7 @@ export async function getComments({
         },
     );
 
-    return comments.map((comment) => formatComment(comment, ctx.user));
+    return comments.map((comment) => formatComment(comment, ctx.user.userId));
 }
 
 export async function toggleCommentLike({
@@ -1528,7 +1528,7 @@ export async function toggleCommentLike({
         }
     }
 
-    return formatComment(comment, ctx.user);
+    return formatComment(comment, ctx.user.userId);
 }
 
 export async function toggleCommentReplyLike({
@@ -1610,7 +1610,7 @@ export async function toggleCommentReplyLike({
         }
     }
 
-    return formatComment(comment, ctx.user);
+    return formatComment(comment, ctx.user.userId);
 }
 
 export async function deleteComment({
@@ -1697,7 +1697,7 @@ export async function deleteComment({
 
     // await post.save();
 
-    return comment ? formatComment(comment, ctx.user) : null;
+    return comment ? formatComment(comment, ctx.user.userId) : null;
 }
 
 export async function leaveCommunity({

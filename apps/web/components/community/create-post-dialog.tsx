@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useContext } from "react";
+import { useState, useContext, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,15 +69,13 @@ export default function CreatePostDialog({
         content?: string;
         category?: string;
     }>({});
-    const [isPostButtonDisabled, setIsPostButtonDisabled] = useState(true);
     const { profile } = useContext(ProfileContext);
     const [isPosting, setIsPosting] = useState(false);
 
-    useEffect(() => {
-        setIsPostButtonDisabled(
-            title.trim() === "" || content.trim() === "" || isPosting,
-        );
-    }, [title, content, isPosting]);
+    const isPostButtonDisabled = useMemo(
+        () => title.trim() === "" || content.trim() === "" || isPosting,
+        [title, content, isPosting],
+    );
 
     const handleEmojiSelect = (emoji: string) => {
         setContent((prevContent) => prevContent + emoji);

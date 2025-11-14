@@ -20,7 +20,9 @@ export const lessonValidator = (lessonData: LessonValidatorProps) => {
 export function validateTextContent(lessonData: LessonValidatorProps) {
     const content = lessonData.content ? JSON.parse(lessonData.content) : null;
 
-    if ([text, embed].includes(lessonData.type)) {
+    const isTextOrEmbed = lessonData.type === text || lessonData.type === embed;
+
+    if (isTextOrEmbed) {
         if (
             lessonData.type === text &&
             content &&
@@ -92,7 +94,7 @@ export const getGroupedLessons = async (
             groupId: 1,
         },
     );
-    const lessonsInSequentialOrder = [];
+    const lessonsInSequentialOrder: GroupLessonItem[] = [];
     for (let group of course.groups.sort(
         (a: Group, b: Group) => a.rank - b.rank,
     )) {

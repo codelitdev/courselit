@@ -1,11 +1,10 @@
-import type { Config } from "jest";
 import nextJest from "next/jest";
 
 const createJestConfig = nextJest({
     dir: "./apps/web",
 });
 
-const config: Config = {
+const config = {
     testEnvironment: "jsdom",
     setupFilesAfterEnv: ["<rootDir>/setupTests.client.ts"],
     watchPathIgnorePatterns: ["globalConfig"],
@@ -64,4 +63,6 @@ const config: Config = {
     moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
 };
 
-export default createJestConfig(config);
+const jestConfig = createJestConfig(config as any) as any;
+
+export default jestConfig;

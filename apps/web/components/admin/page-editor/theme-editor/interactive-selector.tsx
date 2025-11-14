@@ -37,6 +37,7 @@ interface InteractiveSelectorProps {
     type: "button" | "link" | "card" | "input";
     theme: ThemeStyle;
     onChange: (theme: ThemeStyle) => void;
+    title?: string;
 }
 
 const interactiveDisplayNames: Record<string, string> = {
@@ -50,6 +51,7 @@ function InteractiveSelector({
     type,
     theme,
     onChange,
+    title,
 }: InteractiveSelectorProps) {
     const value = theme.interactives[type];
 
@@ -331,49 +333,64 @@ function InteractiveSelector({
             </AccordionItem>
         );
 
-        const renderBoxShadowConfig = () => (
-            <AccordionItem value="shadow" className="border rounded-md mb-4">
-                <AccordionTrigger className="px-2 py-3 text-xs font-semibold rounded-t-md hover:bg-muted transition-colors hover:no-underline data-[state=open]:border-b">
-                    Shadow
-                </AccordionTrigger>
-                <AccordionContent className="px-2 pb-4 pt-2">
-                    <div className="space-y-2">
+        const renderBoxShadowConfig = () => {
+            if (type === "link") {
+                return null;
+            }
+
+            const interactiveValue =
+                (value as ThemeStyle["interactives"][
+                    | "button"
+                    | "card"
+                    | "input"]) || {};
+
+            return (
+                <AccordionItem
+                    value="shadow"
+                    className="border rounded-md mb-4"
+                >
+                    <AccordionTrigger className="px-2 py-3 text-xs font-semibold rounded-t-md hover:bg-muted transition-colors hover:no-underline data-[state=open]:border-b">
+                        Shadow
+                    </AccordionTrigger>
+                    <AccordionContent className="px-2 pb-4 pt-2">
                         <div className="space-y-2">
-                            <Label>Shadow</Label>
-                            <Select
-                                value={value?.shadow || ""}
-                                onValueChange={(newValue) => {
-                                    onChange({
-                                        ...theme,
-                                        interactives: {
-                                            ...theme.interactives,
-                                            [type]: {
-                                                ...value,
-                                                shadow: newValue,
+                            <div className="space-y-2">
+                                <Label>Shadow</Label>
+                                <Select
+                                    value={interactiveValue.shadow || ""}
+                                    onValueChange={(newValue) => {
+                                        onChange({
+                                            ...theme,
+                                            interactives: {
+                                                ...theme.interactives,
+                                                [type]: {
+                                                    ...interactiveValue,
+                                                    shadow: newValue,
+                                                },
                                             },
-                                        },
-                                    });
-                                }}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select shadow" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {shadowOptions.map((option) => (
-                                        <SelectItem
-                                            key={option.value}
-                                            value={option.value}
-                                        >
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                        });
+                                    }}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select shadow" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {shadowOptions.map((option) => (
+                                            <SelectItem
+                                                key={option.value}
+                                                value={option.value}
+                                            >
+                                                {option.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
-                    </div>
-                </AccordionContent>
-            </AccordionItem>
-        );
+                    </AccordionContent>
+                </AccordionItem>
+            );
+        };
 
         const renderHoverInput = () => (
             <AccordionItem value="advanced" className="border rounded-md mb-4">
@@ -428,6 +445,7 @@ function InteractiveSelector({
                     </div>
                 );
             case "link":
+                const linkValue = value as ThemeStyle["interactives"]["link"];
                 return (
                     <div className="space-y-6">
                         <Accordion type="single" collapsible className="px-2">
@@ -443,7 +461,7 @@ function InteractiveSelector({
                                     <div className="space-y-2">
                                         <Label>Text Shadow</Label>
                                         <Input
-                                            value={value?.textShadow || ""}
+                                            value={linkValue?.textShadow || ""}
                                             placeholder="0px 0px 0px 0px rgba(0, 0, 0, 0.1)"
                                             onChange={(e) =>
                                                 onChange({
@@ -451,7 +469,7 @@ function InteractiveSelector({
                                                     interactives: {
                                                         ...theme.interactives,
                                                         [type]: {
-                                                            ...value,
+                                                            ...linkValue,
                                                             textShadow:
                                                                 e.target.value,
                                                         },
@@ -508,6 +526,13 @@ function InteractiveSelector({
 
     return (
         <div className="space-y-6 p-2">
+            {title && (
+                <div>
+                    <p className="text-sm font-semibold text-foreground">
+                        {title}
+                    </p>
+                </div>
+            )}
             <div className="border rounded-lg p-2 h-[100px] overflow-auto">
                 {renderDemo()}
             </div>

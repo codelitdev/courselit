@@ -85,7 +85,13 @@ export default function Page() {
         }
     };
 
-    if (!checkPermission(profile.permissions!, [permissions.manageUsers])) {
+    if (!profile) {
+        return <LoadingScreen />;
+    }
+
+    if (
+        !checkPermission(profile.permissions ?? [], [permissions.manageUsers])
+    ) {
         return <LoadingScreen />;
     }
 

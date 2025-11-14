@@ -15,7 +15,7 @@ import {
     USER_FILTER_PRODUCT_HAS,
     USER_FILTER_TAGGED_DROPDOWN_LABEL,
 } from "@ui-config/strings";
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, startTransition } from "react";
 import { useCallback } from "react";
 import { useMemo } from "react";
 import { DropdownMenuLabel } from "@components/ui/dropdown-menu";
@@ -49,16 +49,20 @@ export default function TaggedFilterEditor({
         try {
             const response = await fetch.exec();
             if (response.tags) {
-                setTags(response.tags);
+                startTransition(() => {
+                    setTags(response.tags);
+                });
             }
         } catch (err) {
+            const message =
+                err instanceof Error ? err.message : "Unknown error occurred";
             toast({
                 title: TOAST_TITLE_ERROR,
-                description: err.message,
+                description: message,
                 variant: "destructive",
             });
         }
-    }, [address.backend]);
+    }, [address.backend, toast]);
 
     useEffect(() => {
         getTags();
