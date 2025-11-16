@@ -30,7 +30,8 @@ import { generateEmailFrom } from "@/lib/utils";
 import MembershipModel from "@models/Membership";
 import CommunityModel from "@models/Community";
 import CourseModel from "@models/Course";
-import { addMailJob } from "@/services/queue";
+import LessonModel from "@models/Lesson";
+import { addMailJob, addZapierJob } from "@/services/queue";
 import { getPaymentMethodFromSettings } from "@/payments-new";
 import { checkForInvalidPermissions } from "@/lib/check-invalid-permissions";
 import { activateMembership } from "@/app/api/payment/helpers";
@@ -183,6 +184,15 @@ export const inviteCustomer = async (
 
     await activateMembership(ctx.subdomain!, membership, paymentPlan);
 
+    await addZapierJob({
+        domainId: ctx.subdomain._id.toString(),
+        action: "course_enrolled",
+        payload: {
+            user,
+            course,
+        },
+    });
+
     try {
         const emailBody = pug.render(courseEnrollTemplate, {
             courseName: course.title,
@@ -289,10 +299,12 @@ export const recordProgress = async ({
     lessonId,
     courseId,
     user,
+    domainId,
 }: {
     lessonId: string;
-    courseId: string;
+    courseId:string;
     user: User;
+    domainId: string;
 }) => {
     const enrolledItemIndex = user.purchases.findIndex(
         (progress: Progress) => progress.courseId === courseId,
@@ -308,6 +320,19 @@ export const recordProgress = async ({
     ) {
         user.purchases[enrolledItemIndex].completedLessons.push(lessonId);
         await (user as any).save();
+
+        const course = await CourseModel.findOne({ courseId, domain: domainId });
+        const lesson = await LessonModel.findOne({ lessonId, courseId });
+
+        await addZapierJob({
+            domainId,
+            action: "lesson_completed",
+            payload: {
+                user,
+                course,
+                lesson,
+            },
+        });
     }
 };
 
@@ -398,6 +423,12 @@ export async function createUser({
                 type: "newsletter_subscribed",
             });
         }
+
+        await addZapierJob({
+            domainId: domain._id.toString(),
+            action: "new_user",
+            payload: createdUser,
+        });
     }
 
     return createdUser;

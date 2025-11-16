@@ -1,7 +1,8 @@
 import express from "express";
-import { addMailJob, addNotificationJob } from "../domain/handler";
+import { addMailJob, addNotificationJob, addZapierJob } from "../domain/handler";
 import { logger } from "../logger";
 import { MailJob } from "../domain/model/mail-job";
+import { ZapierJob } from "../domain/model/zapier-job";
 import NotificationModel from "../domain/model/notification";
 import { ObjectId } from "mongodb";
 import { User } from "@courselit/common-models";
@@ -55,5 +56,19 @@ router.post(
         }
     },
 );
+
+router.post("/zapier", async (req: express.Request, res: express.Response) => {
+    try {
+        const { domainId, action, payload } = req.body;
+        ZapierJob.parse({ domainId, action, payload });
+
+        await addZapierJob({ domainId, action, payload });
+
+        res.status(200).json({ message: "Success" });
+    } catch (err: any) {
+        logger.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 export default router;

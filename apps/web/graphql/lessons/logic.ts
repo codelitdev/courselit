@@ -24,6 +24,7 @@ import LessonEvaluation from "../../models/LessonEvaluation";
 import { checkPermission } from "@courselit/utils";
 import { recordActivity } from "../../lib/record-activity";
 import { InternalCourse } from "@courselit/common-logic";
+import { addZapierJob } from "@/services/queue";
 
 const { permissions, quiz } = constants;
 
@@ -314,6 +315,7 @@ export const markLessonCompleted = async (
         lessonId,
         courseId: lesson.courseId,
         user: ctx.user,
+        domainId: ctx.subdomain._id.toString(),
     });
 
     await recordActivity({
@@ -356,6 +358,15 @@ const recordCourseCompleted = async (courseId: string, ctx: GQLContext) => {
         userId: ctx.user.userId,
         type: Constants.ActivityType.COURSE_COMPLETED,
         entityId: courseId,
+    });
+
+    await addZapierJob({
+        domainId: ctx.subdomain._id.toString(),
+        action: "course_completed",
+        payload: {
+            user: ctx.user,
+            course,
+        },
     });
 };
 

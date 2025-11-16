@@ -45,7 +45,7 @@ import {
 } from "./helpers";
 import { error } from "@/services/logger";
 import NotificationModel from "@models/Notification";
-import { addNotification } from "@/services/queue";
+import { addNotification, addZapierJob } from "@/services/queue";
 import { hasActiveSubscription } from "../users/logic";
 import { internal } from "@config/strings";
 import { hasCommunityPermission as hasPermission } from "@ui-lib/utils";
@@ -492,6 +492,17 @@ export async function joinCommunity({
             forUserIds: communityManagers.map((m) => m.userId),
             userId: ctx.user.userId,
         });
+
+        if (member.status === Constants.MembershipStatus.ACTIVE) {
+            await addZapierJob({
+                domainId: ctx.subdomain._id.toString(),
+                action: "community_joined",
+                payload: {
+                    user: ctx.user,
+                    community,
+                },
+            });
+        }
     }
 
     return member;

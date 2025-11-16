@@ -5,6 +5,7 @@ import sseRoutes from "./sse/routes";
 // start workers
 import "./domain/worker";
 import "./workers/notifications";
+import "./workers/zapier";
 
 // start loops
 import { startEmailAutomation } from "./start-email-automation";

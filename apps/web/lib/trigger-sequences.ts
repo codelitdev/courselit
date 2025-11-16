@@ -10,6 +10,7 @@ import RuleModel from "@models/Rule";
 import SequenceModel from "@models/Sequence";
 import mongoose from "mongoose";
 import { error } from "../services/logger";
+import { addZapierJob } from "@/services/queue";
 
 export async function triggerSequences({
     user,
@@ -73,6 +74,15 @@ export async function triggerSequences({
                 { _id: sequence._id },
                 { $addToSet: { entrants: user.userId } },
             );
+
+            await addZapierJob({
+                domainId: user.domain.toString(),
+                action: "sequence_subscribed",
+                payload: {
+                    user,
+                    sequence,
+                },
+            });
         }
     } catch (err: any) {
         error(err.message, {

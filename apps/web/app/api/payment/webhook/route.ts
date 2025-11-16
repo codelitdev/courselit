@@ -14,6 +14,9 @@ import { error } from "@/services/logger";
 import mongoose from "mongoose";
 import Payment from "@/payments-new/payment";
 import { activateMembership } from "../helpers";
+import UserModel from "@models/User";
+import CourseModel from "@models/Course";
+import { addZapierJob } from "@/services/queue";
 
 export async function POST(req: NextRequest) {
     try {
@@ -56,7 +59,7 @@ export async function POST(req: NextRequest) {
             membership,
         );
 
-        await handleInvoice(
+        const invoice = await handleInvoice(
             domain,
             invoiceId,
             membership,
@@ -80,6 +83,19 @@ export async function POST(req: NextRequest) {
         }
 
         await activateMembership(domain, membership, paymentPlan);
+
+        const user = await UserModel.findOne({ userId: membership.userId, domain: domain._id });
+        const course = await CourseModel.findOne({ courseId: membership.entityId, domain: domain._id });
+
+        await addZapierJob({
+            domainId: domain._id.toString(),
+            action: "product_purchased",
+            payload: {
+                user,
+                course,
+                invoice,
+            },
+        });
 
         return Response.json({ message: "success" });
     } catch (e) {
@@ -145,8 +161,8 @@ async function handleInvoice(
     paymentMethod: any,
     currencyISOCode: string,
     body: any,
-) {
-    const invoice = await InvoiceModel.findOne<Invoice>({
+): Promise<Invoice> {
+    let invoice = await InvoiceModel.findOne<Invoice>({
         domain: domain._id,
         invoiceId,
         status: Constants.InvoiceStatus.PENDING,
@@ -155,9 +171,9 @@ async function handleInvoice(
         invoice.paymentProcessorTransactionId =
             paymentMethod.getPaymentIdentifier(body);
         invoice.status = Constants.InvoiceStatus.PAID;
-        await (invoice as any).save();
+        invoice = await (invoice as any).save();
     } else {
-        await InvoiceModel.create({
+        invoice = await InvoiceModel.create({
             domain: domain._id,
             membershipId: membership.membershipId,
             membershipSessionId: membership.sessionId,
@@ -174,6 +190,8 @@ async function handleInvoice(
             currencyISOCode,
         });
     }
+
+    return invoice!;
 }
 
 async function handleEMICancellation(

@@ -103,6 +103,30 @@ export async function addMailJob({ to, from, subject, body }: MailProps) {
     }
 }
 
+export async function addZapierJob(payload: any) {
+    try {
+        const jwtSecret = getJwtSecret();
+        const token = jwtUtils.generateToken({ service: "app" }, jwtSecret);
+        const response = await fetch(`${queueServer}/job/zapier`, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(payload),
+        });
+        const jsonResponse = await response.json();
+
+        if (response.status !== 200) {
+            throw new Error(jsonResponse.error);
+        }
+    } catch (err) {
+        error(`Error adding zapier job: ${err.message}`, {
+            payload
+        });
+    }
+}
+
 export async function addNotification({
     domain,
     entityId,
