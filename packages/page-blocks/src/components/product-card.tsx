@@ -27,7 +27,7 @@ export function ProductCard({
         <Link href={href} className="flex">
             <PageCard
                 isLink={true}
-                className="flex flex-col overflow-hidden"
+                className="flex flex-col overflow-hidden w-full"
                 theme={theme}
             >
                 <PageCardImage

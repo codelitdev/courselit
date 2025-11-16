@@ -681,3 +681,13 @@ export const TEXT_EDITOR_PLACEHOLDER = "Type here...";
 export const BTN_VIEW_CERTIFICATE = "View certificate";
 export const GET_SET_UP = "Get set up";
 export const MANAGE_LINK_TEXT = "Manage";
+export const BLOG_LIST_EMPTY_TITLE = "No Posts Found";
+export const BLOG_LIST_EMPTY_DESCRIPTION_PUBLIC =
+    "The team has not published any posts yet.";
+export const BLOG_LIST_EMPTY_DESCRIPTION_PRIVATE =
+    "You have not published any posts yet.";
+export const PRODUCTS_LIST_EMPTY_TITLE = "No Products Found";
+export const PRODUCTS_LIST_EMPTY_DESCRIPTION_PUBLIC =
+    "The team has not added any products yet.";
+export const PRODUCTS_LIST_EMPTY_DESCRIPTION_PRIVATE =
+    "You have not added any products yet.";

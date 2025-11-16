@@ -42,13 +42,13 @@ export const defaultState: {
     networkAction: false,
     profile: {
         name: "",
-        id: "",
         fetched: false,
         purchases: [],
         email: "",
         bio: "",
         permissions: [],
         userId: "",
+        subscribedToUpdates: false,
         avatar: {
             file: "",
             thumbnail: "",

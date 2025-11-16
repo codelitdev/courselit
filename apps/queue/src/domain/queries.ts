@@ -7,7 +7,7 @@ import MembershipModel from "./model/membership";
 import UserModel from "./model/user";
 import RuleModel from "./model/rule";
 import mongoose from "mongoose";
-import DomainModel from "./model/domain";
+import DomainModel, { DomainDocument } from "./model/domain";
 import { Constants, EmailTemplate } from "@courselit/common-models";
 import emailTemplate from "./model/email-template";
 import {
@@ -62,8 +62,9 @@ export async function updateSequenceSentAt(sequenceId: string): Promise<any> {
     );
 }
 
-export async function getDomain(id: mongoose.Types.ObjectId) {
-    // @ts-ignore - Mongoose type compatibility issue
+export async function getDomain(
+    id: mongoose.Types.ObjectId,
+): Promise<DomainDocument | null> {
     return await DomainModel.findById(id);
 }
 

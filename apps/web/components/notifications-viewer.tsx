@@ -1,6 +1,13 @@
 "use client";
 
-import { useContext, useEffect, useState } from "react";
+import {
+    useContext,
+    useEffect,
+    useState,
+    useCallback,
+    startTransition,
+    useMemo,
+} from "react";
 import {
     Bell,
     ChevronLeft,
@@ -55,12 +62,53 @@ export function NotificationsViewer() {
         setCurrentPage((prev) => Math.min(prev + 1, totalPages));
     const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
 
-    const fetch = new FetchBuilder()
-        .setUrl(`${address.backend}/api/graph`)
-        .setIsGraphQLEndpoint(true);
+    const fetchBuilder = useMemo(
+        () =>
+            new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setIsGraphQLEndpoint(true),
+        [address.backend],
+    );
+
+    const getNotification = useCallback(
+        async (notificationId: string) => {
+            const query = `
+                query ($notificationId: String!) {
+                    notification: getNotification(notificationId: $notificationId) {
+                        notificationId
+                        message
+                        href
+                        read
+                        createdAt
+                    }
+                }
+            `;
+
+            const fetcher = fetchBuilder
+                .setPayload({
+                    query,
+                    variables: {
+                        notificationId,
+                    },
+                })
+                .build();
+            try {
+                const response = await fetcher.exec();
+                startTransition(() => {
+                    setNotifications((prev) => [
+                        response.notification,
+                        ...prev,
+                    ]);
+                });
+            } catch (error) {
+                console.error(error);
+            }
+        },
+        [fetchBuilder],
+    );
 
     useEffect(() => {
-        if (!profile.userId || !config.queueServer) {
+        if (!profile?.userId || !config.queueServer) {
             return;
         }
 
@@ -76,36 +124,7 @@ export function NotificationsViewer() {
         return () => {
             eventSource.close();
         };
-    }, [profile, config]);
-
-    const getNotification = async (notificationId: string) => {
-        const query = `
-            query ($notificationId: String!) {
-                notification: getNotification(notificationId: $notificationId) {
-                    notificationId
-                    message
-                    href
-                    read
-                    createdAt
-                }
-            }
-        `;
-
-        const fetcher = fetch
-            .setPayload({
-                query,
-                variables: {
-                    notificationId,
-                },
-            })
-            .build();
-        try {
-            const response = await fetcher.exec();
-            setNotifications((prev) => [response.notification, ...prev]);
-        } catch (error) {
-            console.error(error);
-        }
-    };
+    }, [profile?.userId, config.queueServer, getNotification]);
 
     const markAllAsRead = () => {
         const mutation = `
@@ -114,10 +133,14 @@ export function NotificationsViewer() {
             }
         `;
 
-        const fetcher = fetch.setPayload({ query: mutation }).build();
+        const fetcher = fetchBuilder.setPayload({ query: mutation }).build();
         try {
             fetcher.exec();
-            setNotifications(notifications.map((n) => ({ ...n, read: true })));
+            startTransition(() => {
+                setNotifications((prev) =>
+                    prev.map((n) => ({ ...n, read: true })),
+                );
+            });
         } catch (error) {
             toast({
                 title: "Error",
@@ -144,7 +167,7 @@ export function NotificationsViewer() {
                 }
             `;
 
-            const fetcher = await fetch
+            const fetcher = await fetchBuilder
                 .setPayload({
                     query,
                     variables: {
@@ -156,14 +179,14 @@ export function NotificationsViewer() {
             try {
                 const response = await fetcher.exec();
                 if (response.notifications) {
-                    setNotifications(
-                        (prev) => response.notifications.notifications,
-                    );
-                    setTotalPages(
-                        Math.ceil(
-                            response.notifications.total / ITEMS_PER_PAGE,
-                        ),
-                    );
+                    startTransition(() => {
+                        setNotifications(response.notifications.notifications);
+                        setTotalPages(
+                            Math.ceil(
+                                response.notifications.total / ITEMS_PER_PAGE,
+                            ),
+                        );
+                    });
                 }
             } catch (error) {
                 console.error(error);
@@ -171,7 +194,7 @@ export function NotificationsViewer() {
         };
 
         fetchNotifications();
-    }, [currentPage]);
+    }, [currentPage, fetchBuilder]);
 
     const markReadAndNavigate = async (
         notificationId: string,
@@ -183,7 +206,7 @@ export function NotificationsViewer() {
             }
         `;
 
-        const fetcher = await fetch
+        const fetcher = await fetchBuilder
             .setPayload({
                 query,
                 variables: {

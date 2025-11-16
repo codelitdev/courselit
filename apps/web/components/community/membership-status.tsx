@@ -31,7 +31,7 @@ export default function MembershipStatus({
     id: string;
     membership?: Pick<Membership, "status" | "rejectionReason" | "role">;
     joiningReasonText?: string;
-    paymentPlan: PaymentPlan;
+    paymentPlan?: PaymentPlan;
 }) {
     const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
     const [joiningReason, setJoiningReason] = useState("");
@@ -41,7 +41,9 @@ export default function MembershipStatus({
     const siteinfo = useContext(SiteInfoContext);
     const { toast } = useToast();
     const { profile } = useContext(ProfileContext);
-    const { amount, period } = getPlanPrice(paymentPlan);
+    const { amount, period } = paymentPlan
+        ? getPlanPrice(paymentPlan)
+        : { amount: 0, period: "" };
     const currencySymbol =
         getSymbolFromCurrency(siteinfo.currencyISOCode || "USD") || "$";
 
@@ -119,7 +121,7 @@ export default function MembershipStatus({
                     </AlertDescription>
                 </Alert>
             )}
-            {!profile.name && (
+            {!profile?.name && (
                 <Alert>
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle className="font-semibold">
@@ -134,7 +136,7 @@ export default function MembershipStatus({
                     </AlertDescription>
                 </Alert>
             )}
-            {!innerStatus && profile.name && (
+            {!innerStatus && profile?.name && paymentPlan && (
                 <>
                     {amount > 0 && (
                         <Link

@@ -41,7 +41,7 @@ interface CommunityInfoProps {
     description: Record<string, unknown>;
     image: string;
     memberCount: number;
-    paymentPlan: PaymentPlan;
+    paymentPlan?: PaymentPlan;
     joiningReasonText?: string;
     pageId: string;
     onJoin: (joiningReason?: string) => void;
@@ -65,7 +65,9 @@ export function CommunityInfo({
     const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
     const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
     const [joiningReason, setJoiningReason] = useState("");
-    const { amount, period } = getPlanPrice(paymentPlan);
+    const { amount, period } = paymentPlan
+        ? getPlanPrice(paymentPlan)
+        : { amount: 0, period: "" };
     const address = useContext(AddressContext);
     const siteinfo = useContext(SiteInfoContext);
     const { profile } = useContext(ProfileContext);

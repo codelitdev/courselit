@@ -11,7 +11,9 @@ import { error } from "./services/logger";
 import { User } from "next-auth";
 import { User as AppUser } from "@courselit/common-models";
 
-export const { auth, signIn, signOut, handlers } = NextAuth({
+type AuthReturn = ReturnType<typeof NextAuth>;
+
+const authHandlers: AuthReturn = NextAuth({
     ...authConfig,
     providers: [
         CredentialsProvider({
@@ -93,3 +95,8 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
         },
     },
 });
+
+export const auth: AuthReturn["auth"] = authHandlers.auth;
+export const signIn: AuthReturn["signIn"] = authHandlers.signIn;
+export const signOut: AuthReturn["signOut"] = authHandlers.signOut;
+export const handlers: AuthReturn["handlers"] = authHandlers.handlers;

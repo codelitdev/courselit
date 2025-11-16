@@ -29,6 +29,8 @@ interface QuestionProps {
     deleteQuestion: (index: number) => void;
 }
 
+type QuestionOption = Question["options"][number];
+
 export function QuestionBuilder({
     details,
     index,
@@ -104,11 +106,11 @@ export function QuestionBuilder({
             {/* <h4 className="font-medium text-slate-500">
                 {LESSON_QUIZ_OPTIONS_HEADER}
             </h4> */}
-            {details.options.map((option: Option, index: number) => (
+            {details.options.map((option: QuestionOption, index: number) => (
                 <div className="flex items-center gap-2" key={index}>
                     <Tooltip title={QUESTION_BUILDER_CORRECT_ANS_TOOLTIP}>
                         <Checkbox
-                            checked={option.correctAnswer}
+                            checked={Boolean(option.correctAnswer)}
                             onChange={(value: boolean) =>
                                 setCorrectOption(index, value)
                             }

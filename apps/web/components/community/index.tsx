@@ -39,6 +39,7 @@ import {
     CommunityPost,
     Constants,
     Media,
+    TextEditorContent,
 } from "@courselit/common-models";
 import LoadingSkeleton from "./loading-skeleton";
 import { formattedLocaleDate, hasCommunityPermission } from "@ui-lib/utils";
@@ -105,6 +106,9 @@ export function CommunityForum({
         access: "public",
     });
     const [fileBeingUploadedNumber, setFileBeingUploadedNumber] = useState(0);
+
+    const formatTimestamp = (value?: string) =>
+        formattedLocaleDate(value ? new Date(value).getTime() : undefined);
 
     useEffect(() => {
         if (membership) {
@@ -546,7 +550,7 @@ export function CommunityForum({
                             poster={media.media.thumbnail}
                             className="h-48 aspect-video object-cover rounded-md"
                             controls
-                            controlsList="nodownload" // eslint-disable-line react/no-unknown-property
+                            controlsList="nodownload"
                             onContextMenu={(e) => e.preventDefault()}
                         >
                             Your browser does not support the video tag.
@@ -568,6 +572,9 @@ export function CommunityForum({
                             allowFullScreen
                         ></iframe>
                     );
+                }
+                if (!media.url) {
+                    return null;
                 }
                 return (
                     <div className="relative w-full aspect-video">
@@ -675,7 +682,7 @@ export function CommunityForum({
         }
     };
 
-    const updateBanner = async (json: Record<string, unknown>) => {
+    const updateBanner = async (json: TextEditorContent) => {
         const query = `
             mutation UpdateCommunity(
                 $id: String!
@@ -726,7 +733,9 @@ export function CommunityForum({
                     query,
                     variables: {
                         id,
-                        banner: JSON.stringify(json),
+                        banner: JSON.stringify(
+                            json as unknown as Record<string, unknown>,
+                        ),
                     },
                 })
                 .setIsGraphQLEndpoint(true)
@@ -960,7 +969,7 @@ export function CommunityForum({
                             membership={membership}
                             joiningReasonText={community?.joiningReasonText}
                             key={refreshCommunityStatus}
-                            paymentPlan={community?.paymentPlans.find(
+                            paymentPlan={community?.paymentPlans?.find(
                                 (plan) =>
                                     plan.planId ===
                                     community?.defaultPaymentPlan,
@@ -974,7 +983,7 @@ export function CommunityForum({
                                 key={category}
                                 variant={
                                     category === activeCategory
-                                        ? "primary"
+                                        ? "default"
                                         : "outline"
                                 }
                                 size="sm"
@@ -1003,7 +1012,9 @@ export function CommunityForum({
                                   )
                                 : false
                         }
-                        initialBannerText={community?.banner}
+                        initialBannerText={
+                            community?.banner as TextEditorContent | undefined
+                        }
                         onSaveBanner={updateBanner}
                     />
 
@@ -1059,7 +1070,7 @@ export function CommunityForum({
                                                                             .email}
                                                                 </div>
                                                                 <div className="text-xs text-muted-foreground">
-                                                                    {formattedLocaleDate(
+                                                                    {formatTimestamp(
                                                                         post.updatedAt,
                                                                     )}{" "}
                                                                     •{" "}
@@ -1200,7 +1211,7 @@ export function CommunityForum({
                                                                         .email}
                                                             </div>
                                                             <div className="text-sm text-muted-foreground">
-                                                                {formattedLocaleDate(
+                                                                {formatTimestamp(
                                                                     post.updatedAt,
                                                                 )}{" "}
                                                                 •{" "}
@@ -1335,29 +1346,32 @@ export function CommunityForum({
                                                         {post.commentsCount}
                                                     </Button>
                                                 </div>
-                                                <CommentSection
-                                                    membership={membership}
-                                                    postId={post.postId}
-                                                    communityId={id!}
-                                                    onPostUpdated={(
-                                                        postId: string,
-                                                        count: number,
-                                                    ) => {
-                                                        setPosts((prevPosts) =>
-                                                            prevPosts.map(
-                                                                (p) =>
-                                                                    p.postId ===
-                                                                    postId
-                                                                        ? {
-                                                                              ...p,
-                                                                              commentsCount:
-                                                                                  count,
-                                                                          }
-                                                                        : p,
-                                                            ),
-                                                        );
-                                                    }}
-                                                />
+                                                {membership && (
+                                                    <CommentSection
+                                                        membership={membership}
+                                                        postId={post.postId}
+                                                        communityId={id!}
+                                                        onPostUpdated={(
+                                                            postId: string,
+                                                            count: number,
+                                                        ) => {
+                                                            setPosts(
+                                                                (prevPosts) =>
+                                                                    prevPosts.map(
+                                                                        (p) =>
+                                                                            p.postId ===
+                                                                            postId
+                                                                                ? {
+                                                                                      ...p,
+                                                                                      commentsCount:
+                                                                                          count,
+                                                                                  }
+                                                                                : p,
+                                                                    ),
+                                                            );
+                                                        }}
+                                                    />
+                                                )}
                                             </div>
                                         </DialogContent>
                                     </Dialog>
@@ -1445,13 +1459,11 @@ export function CommunityForum({
                             }
                             memberCount={community?.membersCount}
                             membership={membership}
-                            paymentPlan={
-                                community?.paymentPlans.find(
-                                    (plan) =>
-                                        plan.planId ===
-                                        community?.defaultPaymentPlan,
-                                )!
-                            }
+                            paymentPlan={community?.paymentPlans?.find(
+                                (plan) =>
+                                    plan.planId ===
+                                    community?.defaultPaymentPlan,
+                            )}
                             joiningReasonText={community?.joiningReasonText}
                             pageId={community?.pageId}
                             onJoin={handleJoin}

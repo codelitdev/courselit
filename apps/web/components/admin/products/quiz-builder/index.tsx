@@ -1,6 +1,5 @@
-import React from "react";
+import React, { startTransition, useEffect, useState } from "react";
 import { Section } from "@courselit/components-library";
-import { useEffect, useState } from "react";
 import {
     LESSON_QUIZ_ADD_QUESTION,
     LESSON_QUIZ_QUESTION_PLACEHOLDER,
@@ -36,10 +35,17 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
     );
 
     useEffect(() => {
-        content.questions && setQuestions(content.questions);
-        content.passingGrade && setPassingGradePercentage(content.passingGrade);
-        content.requiresPassingGrade &&
-            setPassingGradeRequired(content.requiresPassingGrade);
+        startTransition(() => {
+            if (content.questions) {
+                setQuestions(content.questions);
+            }
+            if (content.passingGrade) {
+                setPassingGradePercentage(content.passingGrade);
+            }
+            if (content.requiresPassingGrade) {
+                setPassingGradeRequired(content.requiresPassingGrade);
+            }
+        });
     }, [content]);
 
     useEffect(() => {
@@ -48,50 +54,95 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
             requiresPassingGrade: passingGradeRequired,
             passingGrade: passingGradePercentage,
         });
-    }, [questions, passingGradeRequired, passingGradePercentage]);
+    }, [questions, passingGradeRequired, passingGradePercentage, onChange]);
 
-    const addNewOption = (index: number) => {
-        const question = questions[index];
-        question.options = [
-            ...question.options,
-            { text: "", correctAnswer: false },
-        ];
-        setQuestions([...questions]);
+    const addNewOption = (questionIndex: number) => {
+        setQuestions((prevQuestions) =>
+            prevQuestions.map((question, index) =>
+                index === questionIndex
+                    ? {
+                          ...question,
+                          options: [
+                              ...question.options,
+                              { text: "", correctAnswer: false },
+                          ],
+                      }
+                    : question,
+            ),
+        );
     };
 
     const setCorrectAnswer =
         (questionIndex: number) => (index: number, checked: boolean) => {
-            questions[questionIndex].options[index].correctAnswer = checked;
-            setQuestions([...questions]);
+            setQuestions((prevQuestions) =>
+                prevQuestions.map((question, qIdx) =>
+                    qIdx === questionIndex
+                        ? {
+                              ...question,
+                              options: question.options.map((option, optIdx) =>
+                                  optIdx === index
+                                      ? { ...option, correctAnswer: checked }
+                                      : option,
+                              ),
+                          }
+                        : question,
+                ),
+            );
         };
 
     const setOptionText =
         (questionIndex: number) => (index: number, text: string) => {
-            questions[questionIndex].options[index].text = text;
-            setQuestions([...questions]);
+            setQuestions((prevQuestions) =>
+                prevQuestions.map((question, qIdx) =>
+                    qIdx === questionIndex
+                        ? {
+                              ...question,
+                              options: question.options.map((option, optIdx) =>
+                                  optIdx === index
+                                      ? { ...option, text }
+                                      : option,
+                              ),
+                          }
+                        : question,
+                ),
+            );
         };
 
     const setQuestionText = (index: number) => (text: string) => {
-        questions[index].text = text;
-        setQuestions([...questions]);
+        setQuestions((prevQuestions) =>
+            prevQuestions.map((question, qIdx) =>
+                qIdx === index ? { ...question, text } : question,
+            ),
+        );
     };
 
     const removeOption = (questionIndex: number) => (index: number) => {
-        questions[questionIndex].options.splice(index, 1);
-        setQuestions([...questions]);
+        setQuestions((prevQuestions) =>
+            prevQuestions.map((question, qIdx) =>
+                qIdx === questionIndex
+                    ? {
+                          ...question,
+                          options: question.options.filter(
+                              (_, optIdx) => optIdx !== index,
+                          ),
+                      }
+                    : question,
+            ),
+        );
     };
 
     const deleteQuestion = (questionIndex: number) => {
-        questions.splice(questionIndex, 1);
-        setQuestions([...questions]);
+        setQuestions((prevQuestions) =>
+            prevQuestions.filter((_, idx) => idx !== questionIndex),
+        );
     };
 
     const addNewQuestion = () =>
-        setQuestions([
-            ...questions,
+        setQuestions((prevQuestions) => [
+            ...prevQuestions,
             {
                 text: `${LESSON_QUIZ_QUESTION_PLACEHOLDER} #${
-                    questions.length + 1
+                    prevQuestions.length + 1
                 }`,
                 options: [{ text: "", correctAnswer: false }],
             },

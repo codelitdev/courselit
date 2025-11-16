@@ -1,6 +1,13 @@
 "use client";
 
-import { ReactNode, useEffect, useState, Suspense } from "react";
+import {
+    ReactNode,
+    useEffect,
+    useState,
+    Suspense,
+    useCallback,
+    startTransition,
+} from "react";
 import { SiteInfo, ServerConfig } from "@courselit/common-models";
 import {
     AddressContext,
@@ -36,26 +43,30 @@ function LayoutContent({
     const [theme, setTheme] = useState(initialTheme);
     const { toast } = useToast();
 
-    useEffect(() => {
-        if (address && session) {
-            updateUserProfile();
-        }
-    }, [address, session]);
-
-    async function updateUserProfile() {
+    const updateUserProfile = useCallback(async () => {
         try {
-            const profile = await getUserProfile(address);
-            if (profile) {
-                setProfile(profile);
+            const fetchedProfile = await getUserProfile(address);
+            if (fetchedProfile) {
+                setProfile(fetchedProfile);
             }
         } catch (err) {
+            const message =
+                err instanceof Error ? err.message : "Unknown error occurred";
             toast({
                 title: TOAST_TITLE_ERROR,
-                description: err.message,
+                description: message,
                 variant: "destructive",
             });
         }
-    }
+    }, [address, toast]);
+
+    useEffect(() => {
+        if (address && session) {
+            startTransition(() => {
+                void updateUserProfile();
+            });
+        }
+    }, [address, session, updateUserProfile]);
 
     return (
         <AddressContext.Provider

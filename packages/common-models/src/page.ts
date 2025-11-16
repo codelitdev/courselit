@@ -1,12 +1,13 @@
 import { Media } from "./media";
-import type { Community, Product, Site } from "./page-type";
+import type { Blog, Community, Product, Site } from "./page-type";
 import WidgetInstance from "./widget-instance";
 
 export default interface Page {
     name: string;
     pageId: string;
-    type: Product | Site | Community;
+    type: Product | Site | Community | Blog;
     layout: WidgetInstance[];
+    draftLayout?: WidgetInstance[];
     deleteable: boolean;
     deleted: boolean;
     entityId?: string;
@@ -15,4 +16,8 @@ export default interface Page {
     description?: string;
     socialImage?: Media;
     robotsAllowed?: boolean;
+    draftTitle?: string;
+    draftDescription?: string;
+    draftSocialImage?: Media;
+    draftRobotsAllowed?: boolean;
 }

@@ -35,7 +35,7 @@ function StructureSelector({
 
     const renderConfig = () => {
         if (type === "page") {
-            const pageValue = value as Theme["structure"]["page"];
+            const pageValue = value as ThemeStyle["structure"]["page"];
             return (
                 <div className="space-y-2">
                     <Label>Page Width</Label>
@@ -74,7 +74,7 @@ function StructureSelector({
         }
 
         if (type === "section") {
-            const sectionValue = value as Theme["structure"]["section"];
+            const sectionValue = value as ThemeStyle["structure"]["section"];
             return (
                 <div className="space-y-4">
                     <div className="space-y-2">
@@ -90,7 +90,7 @@ function StructureSelector({
                                             ...sectionValue,
                                             padding: {
                                                 ...sectionValue?.padding,
-                                                x: newValue as Theme["structure"]["section"]["padding"]["x"],
+                                                x: newValue as ThemeStyle["structure"]["section"]["padding"]["x"],
                                             },
                                         },
                                     },
@@ -126,7 +126,7 @@ function StructureSelector({
                                             ...sectionValue,
                                             padding: {
                                                 ...sectionValue?.padding,
-                                                y: newValue as Theme["structure"]["section"]["padding"]["y"],
+                                                y: newValue as ThemeStyle["structure"]["section"]["padding"]["y"],
                                             },
                                         },
                                     },

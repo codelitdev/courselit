@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Model } from "mongoose";
 import { EmailTemplate as PublicEmailTemplate } from "@courselit/common-models";
 import { EmailContentSchema } from "@courselit/common-logic";
 
@@ -23,5 +23,8 @@ EmailTemplateSchema.index(
     { unique: true },
 );
 
-export default mongoose.models.EmailTemplate ||
-    mongoose.model("EmailTemplate", EmailTemplateSchema);
+const EmailTemplateModel =
+    (mongoose.models.EmailTemplate as Model<EmailTemplate>) ||
+    mongoose.model<EmailTemplate>("EmailTemplate", EmailTemplateSchema);
+
+export default EmailTemplateModel;

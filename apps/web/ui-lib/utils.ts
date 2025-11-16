@@ -59,7 +59,7 @@ export const canAccessDashboard = (profile: Profile) => {
 };
 
 export const constructThumbnailUrlFromFileUrl = (url: string) =>
-    url ? url.replace(url.split("/").pop(), "thumb.webp") : null;
+    url ? url.replace(/[^/]+$/, "thumb.webp") : null;
 
 type FrontEndPage = Pick<
     Page,
@@ -257,7 +257,7 @@ export const isLessonCompleted = ({
 };
 
 export const generateFontString = (typefaces: Typeface[]): string => {
-    const fontStringPieces = [];
+    const fontStringPieces: string[] = [];
 
     for (const typeface of typefaces) {
         if (typeface.typeface !== "Roboto") {
@@ -293,7 +293,11 @@ export const moveMemberDown = (arr: any[], index: number) =>
     swapMembers(arr, index, index + 1);
 
 export const sortCourseGroups = (course: Course) => {
-    return course.groups.sort((a: Group, b: Group) => a.rank - b.rank);
+    if (!Array.isArray(course.groups)) {
+        return [];
+    }
+
+    return [...course.groups].sort((a: Group, b: Group) => a.rank - b.rank);
 };
 
 export function truncate(str?: string, length?: number) {

@@ -82,7 +82,7 @@ export default function BlogHeader({ id, breadcrumbs }: BlogHeaderProps) {
                             description={DELETE_PRODUCT_POPUP_TEXT}
                             onClick={() =>
                                 deleteProduct({
-                                    id: course!.id as string,
+                                    id: course.courseId as string,
                                     backend: address.backend,
                                     onDeleteComplete: () => {
                                         router.replace(`/dashboard/blogs`);

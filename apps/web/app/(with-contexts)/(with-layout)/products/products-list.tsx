@@ -89,9 +89,21 @@ export function ProductsList({
 }
 
 function getBadgeText(course: Course, siteinfo: SiteInfo) {
-    const defaultPlan = course.paymentPlans?.filter(
-        (plan) => plan.planId === course.defaultPaymentPlan,
-    )[0];
+    const defaultPlan =
+        course.paymentPlans?.find(
+            (plan) => plan.planId === course.defaultPaymentPlan,
+        ) ?? course.paymentPlans?.[0];
+
+    if (!defaultPlan) {
+        const amount = course.cost ?? 0;
+        return (
+            <>
+                {getSymbolFromCurrency(siteinfo.currencyISOCode || "USD")}
+                <span>{amount.toFixed(2)}</span>
+            </>
+        );
+    }
+
     const { amount, period } = getPlanPrice(defaultPlan);
 
     return (

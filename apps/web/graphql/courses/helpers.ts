@@ -138,9 +138,12 @@ export const calculatePercentageCompletion = (user: User, course: Course) => {
         (item: Progress) => item.courseId === course.courseId,
     )[0];
 
-    if (!purchasedCourse.completedLessons.length) return 0;
+    const totalLessons = course.lessons?.length ?? 0;
+    if (!purchasedCourse.completedLessons.length || !totalLessons) {
+        return 0;
+    }
 
-    return purchasedCourse.completedLessons.length / course.lessons.length;
+    return purchasedCourse.completedLessons.length / totalLessons;
 };
 
 export const setupCourse = async ({

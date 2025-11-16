@@ -159,10 +159,7 @@ export default function UsersHub() {
             </div>
             <div className="w-full mt-4 space-y-8">
                 <div className="mb-4">
-                    <FilterContainer
-                        address={address}
-                        onChange={onFilterChange}
-                    />
+                    <FilterContainer onChange={onFilterChange} />
                 </div>
                 <Table>
                     <TableHeader>
@@ -276,7 +273,7 @@ export default function UsersHub() {
                                       </TableCell>
                                       <TableCell>
                                           {
-                                              user.content.filter(
+                                              (user.content ?? []).filter(
                                                   (content) =>
                                                       content.entityType.toLowerCase() ===
                                                       MembershipEntityType.COURSE,
@@ -285,7 +282,7 @@ export default function UsersHub() {
                                       </TableCell>
                                       <TableCell>
                                           {
-                                              user.content.filter(
+                                              (user.content ?? []).filter(
                                                   (content) =>
                                                       content.entityType.toLowerCase() ===
                                                       MembershipEntityType.COMMUNITY,

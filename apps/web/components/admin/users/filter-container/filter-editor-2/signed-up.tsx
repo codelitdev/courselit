@@ -69,7 +69,9 @@ export default function SignedUpFilterEditor({
                 type="date"
                 label={USER_FILTER_DATE_RANGE_DROPDOWN_LABEL}
                 value={value}
-                onChange={(e: FormEvent) => setValue(e.target.value)}
+                onChange={(e: FormEvent<HTMLInputElement>) =>
+                    setValue((e.target as HTMLInputElement).value)
+                }
             />
             <div className="flex justify-between">
                 <FormSubmit

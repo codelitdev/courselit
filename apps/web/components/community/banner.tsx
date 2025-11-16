@@ -11,11 +11,12 @@ import {
 import { isTextEditorNonEmpty } from "@ui-lib/utils";
 import { BUTTON_SAVING, TOAST_TITLE_SUCCESS } from "@ui-config/strings";
 import { AddressContext } from "@components/contexts";
+import type { TextEditorContent } from "@courselit/common-models";
 
 interface BannerComponentProps {
     canEdit: boolean;
-    initialBannerText: Record<string, unknown>;
-    onSaveBanner: (text: Record<string, unknown>) => Promise<void>;
+    initialBannerText?: TextEditorContent;
+    onSaveBanner: (text: TextEditorContent) => Promise<void>;
 }
 
 export default function Banner({
@@ -23,11 +24,14 @@ export default function Banner({
     initialBannerText,
     onSaveBanner,
 }: BannerComponentProps) {
-    const [bannerText, setBannerText] = useState(
-        initialBannerText || TextEditorEmptyDoc,
-    );
+    const initialContent: TextEditorContent =
+        initialBannerText ||
+        (TextEditorEmptyDoc as unknown as TextEditorContent);
+    const [bannerText, setBannerText] =
+        useState<TextEditorContent>(initialContent);
     const [isEditing, setIsEditing] = useState(false);
-    const [editedBannerText, setEditedBannerText] = useState(bannerText);
+    const [editedBannerText, setEditedBannerText] =
+        useState<TextEditorContent>(initialContent);
     const [isSaving, setIsSaving] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const address = useContext(AddressContext);
@@ -61,7 +65,12 @@ export default function Banner({
         setIsEditing(false);
     };
 
-    if (!canEdit && !isTextEditorNonEmpty(initialBannerText)) {
+    const hasExistingBanner = isTextEditorNonEmpty(
+        initialBannerText ||
+            (TextEditorEmptyDoc as unknown as TextEditorContent),
+    );
+
+    if (!canEdit && !hasExistingBanner) {
         return null;
     }
 
@@ -72,7 +81,14 @@ export default function Banner({
                     <>
                         <AlertDescription>
                             {isTextEditorNonEmpty(bannerText) ? (
-                                <TextRenderer json={bannerText} />
+                                <TextRenderer
+                                    json={
+                                        bannerText as unknown as Record<
+                                            string,
+                                            unknown
+                                        >
+                                    }
+                                />
                             ) : (
                                 canEdit && (
                                     <div className="flex items-center space-x-2 text-muted-foreground">
