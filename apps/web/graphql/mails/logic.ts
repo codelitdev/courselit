@@ -32,6 +32,7 @@ import { defaultEmail } from "@courselit/email-editor";
 import { User } from "@courselit/common-models";
 import EmailDeliveryModel from "@models/EmailDelivery";
 import EmailEventModel from "@models/EmailEvent";
+import EmailTemplate from "@models/EmailTemplate";
 
 const { permissions } = constants;
 
@@ -93,6 +94,8 @@ const defaultEmailContent = {
 export async function createSequence(
     ctx: GQLContext,
     type: (typeof Constants.mailTypes)[number],
+    title?: string,
+    content?: string,
 ): Promise<(Sequence & { creatorId: string }) | null> {
     checkIfAuthenticated(ctx);
 
@@ -106,16 +109,19 @@ export async function createSequence(
             domain: ctx.subdomain._id,
             type,
             status: Constants.sequenceStatus[0],
-            title: internal.default_email_sequence_name,
+            title: title || internal.default_email_sequence_name,
             creatorId: ctx.user.userId,
             emails: [
                 {
                     emailId,
-                    content: defaultEmailContent,
+                    content: content
+                        ? JSON.parse(content)
+                        : defaultEmailContent,
                     subject:
-                        type === "broadcast"
+                        title ||
+                        (type === "broadcast"
                             ? internal.default_email_broadcast_subject
-                            : internal.default_email_sequence_subject,
+                            : internal.default_email_sequence_subject),
                     delayInMillis: 0,
                     published: false,
                 },
@@ -1060,4 +1066,124 @@ export async function getSubscribersCount({
     });
 
     return count;
+}
+
+export async function createEmailTemplate({
+    title,
+    context,
+}: {
+    title: string;
+    context: GQLContext;
+}) {
+    checkIfAuthenticated(context);
+
+    if (!checkPermission(context.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const template = new EmailTemplate({
+        domain: context.subdomain._id,
+        title,
+        creatorId: context.user.userId,
+        content: defaultEmailContent,
+    });
+
+    await template.save();
+
+    return template;
+}
+
+export async function updateEmailTemplate({
+    templateId,
+    title,
+    content,
+    context,
+}: {
+    templateId: string;
+    title?: string;
+    content?: string;
+    context: GQLContext;
+}) {
+    checkIfAuthenticated(context);
+
+    if (!checkPermission(context.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const template = await EmailTemplate.findOne({
+        templateId,
+        domain: context.subdomain._id,
+    });
+
+    if (!template) {
+        throw new Error(responses.item_not_found);
+    }
+
+    if (title) {
+        template.title = title;
+    }
+
+    if (content) {
+        template.content = JSON.parse(content);
+    }
+
+    await template.save();
+
+    return template;
+}
+
+export async function deleteEmailTemplate({
+    templateId,
+    context,
+}: {
+    templateId: string;
+    context: GQLContext;
+}) {
+    checkIfAuthenticated(context);
+
+    if (!checkPermission(context.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    await EmailTemplate.deleteOne({
+        templateId,
+        domain: context.subdomain._id,
+    });
+
+    return true;
+}
+
+export async function getEmailTemplate({
+    templateId,
+    context,
+}: {
+    templateId: string;
+    context: GQLContext;
+}) {
+    checkIfAuthenticated(context);
+
+    if (!checkPermission(context.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const template = await EmailTemplate.findOne({
+        templateId,
+        domain: context.subdomain._id,
+    });
+
+    return template;
+}
+
+export async function getEmailTemplates({ context }: { context: GQLContext }) {
+    checkIfAuthenticated(context);
+
+    if (!checkPermission(context.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const templates = await EmailTemplate.find({
+        domain: context.subdomain._id,
+    });
+
+    return templates;
 }

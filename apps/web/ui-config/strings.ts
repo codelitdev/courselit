@@ -215,6 +215,7 @@ export const SITE_APIKEYS_SETTING_HEADER = "API Keys";
 export const SITE_MAILS_HEADER = "Mails";
 export const BROADCASTS = "Broadcasts";
 export const SEQUENCES = "Sequences";
+export const TEMPLATES = "Templates";
 export const SITE_MAILING_ADDRESS_SETTING_HEADER = "Mailing Address";
 export const SITE_MAILING_ADDRESS_SETTING_EXPLANATION =
     "This is required in order to comply with the CAN-SPAM Act.";
@@ -537,7 +538,9 @@ export const TOAST_MAIL_SENT = "Mail scheduled to be sent";
 export const PAGE_PLACEHOLDER_MAIL = "Your mails will show up here";
 export const BTN_NEW_MAIL = "New broadcast";
 export const BTN_NEW_SEQUENCE = "New sequence";
+export const BTN_NEW_TEMPLATE = "New template";
 export const MAIL_TABLE_HEADER_SUBJECT = "Subject";
+export const MAIL_TABLE_HEADER_TITLE = "Title";
 export const MAIL_TABLE_HEADER_RECEPIENTS = "No. of recipients";
 export const MAIL_SENDER_YOU = "You";
 export const MAIL_TABLE_HEADER_SENDER = "Sender";

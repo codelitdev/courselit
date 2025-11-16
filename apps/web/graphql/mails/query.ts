@@ -20,6 +20,8 @@ import {
     getEmailSentCount,
     getSubscribers,
     getSubscribersCount,
+    getEmailTemplate,
+    getEmailTemplates,
 } from "./logic";
 import SearchData from "./models/search-data";
 import GQLContext from "../../models/GQLContext";
@@ -184,6 +186,21 @@ const queries = {
             { sequenceId }: { sequenceId: string },
             context: GQLContext,
         ) => getSubscribersCount({ ctx: context, sequenceId }),
+    },
+
+    getEmailTemplate: {
+        type: types.emailTemplate,
+        args: {
+            templateId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: (_: any, { templateId }: { templateId: string }, context: GQLContext) =>
+            getEmailTemplate({ templateId, context }),
+    },
+
+    getEmailTemplates: {
+        type: new GraphQLList(types.emailTemplate),
+        resolve: (_: any, {}: {}, context: GQLContext) =>
+            getEmailTemplates({ context }),
     },
 };
 

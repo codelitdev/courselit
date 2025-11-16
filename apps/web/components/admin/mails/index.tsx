@@ -15,7 +15,9 @@ import {
     PAGE_HEADER_ALL_MAILS,
     BROADCASTS,
     SEQUENCES,
+    TEMPLATES,
     BTN_NEW_SEQUENCE,
+    BTN_NEW_TEMPLATE,
     TOAST_TITLE_ERROR,
 } from "../../../ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
@@ -35,17 +37,18 @@ import {
 import { AnyAction } from "redux";
 import RequestForm from "./request-form";
 import SequencesList from "./sequences-list";
+import TemplatesList from "./templates-list";
 const { networkAction } = actionCreators;
 import { Button } from "@components/ui/button";
 
 interface MailsProps {
     address: Address;
-    selectedTab: typeof BROADCASTS | typeof SEQUENCES;
+    selectedTab: typeof BROADCASTS | typeof SEQUENCES | typeof TEMPLATES;
     dispatch?: AppDispatch;
     loading: boolean;
 }
 
-type MailsTab = typeof BROADCASTS | typeof SEQUENCES;
+type MailsTab = typeof BROADCASTS | typeof SEQUENCES | typeof TEMPLATES;
 
 export default function Mails({
     address,
@@ -147,12 +150,56 @@ export default function Mails({
         }
     };
 
+    const createEmailTemplate = async (): Promise<void> => {
+        const mutation = `
+        mutation createEmailTemplate($title: String!) {
+            template: createEmailTemplate(title: $title) {
+                templateId
+            }
+        }
+    `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload({
+                query: mutation,
+                variables: {
+                    title: "New template",
+                },
+            })
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            dispatch &&
+                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
+                    networkAction(true),
+                );
+            const response = await fetch.exec();
+            if (response.template && response.template.templateId) {
+                router.push(
+                    `/dashboard/mails/template/${response.template.templateId}`,
+                );
+            }
+        } catch (err) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
+        } finally {
+            dispatch &&
+                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
+                    networkAction(false),
+                );
+        }
+    };
+
     const onPrimaryButtonClick = (): void => {
         if (selectedTab === BROADCASTS) {
-            createSequence("broadcast");
+            router.push(`/dashboard/mails/new?type=broadcast`);
         } else if (selectedTab === SEQUENCES) {
-            createSequence("sequence");
+            router.push(`/dashboard/mails/new?type=sequence`);
         } else {
+            createEmailTemplate();
         }
     };
 
@@ -222,12 +269,14 @@ export default function Mails({
                     <Button onClick={onPrimaryButtonClick}>
                         {selectedTab === BROADCASTS
                             ? BTN_NEW_MAIL
-                            : BTN_NEW_SEQUENCE}
+                            : selectedTab === SEQUENCES
+                            ? BTN_NEW_SEQUENCE
+                            : BTN_NEW_TEMPLATE}
                     </Button>
                 </div>
             </div>
             <Tabbs
-                items={[BROADCASTS, SEQUENCES]}
+                items={[BROADCASTS, SEQUENCES, TEMPLATES]}
                 value={selectedTab}
                 onChange={(tab: MailsTab) => {
                     router.replace(`/dashboard/mails?tab=${tab}`);
@@ -241,6 +290,11 @@ export default function Mails({
                 />
                 <SequencesList
                     type={Constants.mailTypes[1] as SequenceType}
+                    address={address}
+                    loading={loading}
+                    dispatch={dispatch}
+                />
+                <TemplatesList
                     address={address}
                     loading={loading}
                     dispatch={dispatch}

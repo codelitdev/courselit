@@ -214,6 +214,15 @@ const mailRequestStatus = new GraphQLObjectType({
     },
 });
 
+const emailTemplate = new GraphQLObjectType({
+    name: "EmailTemplate",
+    fields: {
+        templateId: { type: new GraphQLNonNull(GraphQLString) },
+        title: { type: new GraphQLNonNull(GraphQLString) },
+        content: { type: new GraphQLNonNull(sequenceEmailContent) },
+    },
+});
+
 const types = {
     mail,
     mailUpdate,
@@ -227,5 +236,6 @@ const types = {
     sequenceEmailActionType,
     sequenceEmailContent,
     mailRequestStatus,
+    emailTemplate,
 };
 export default types;

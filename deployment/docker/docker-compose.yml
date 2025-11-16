@@ -57,7 +57,11 @@ services:
             # checking the logs for the API key.
             # - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
             # - MEDIALIT_SERVER=http://medialit
-
+            #
+            # Google reCAPTCHA v3 is used to prevent abuse of the login functionality.
+            # Uncomment the following lines to use reCAPTCHA.
+            # - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
+            # - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
         expose:
             - "${PORT:-80}"
 
