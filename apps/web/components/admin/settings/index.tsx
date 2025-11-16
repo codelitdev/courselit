@@ -622,6 +622,27 @@ const Settings = (props: SettingsProps) => {
         }
     };
 
+    const handleResetPaymentSettings = () => {
+        setNewSettings({
+            ...newSettings,
+            currencyISOCode: "",
+            paymentMethod: PAYMENT_METHOD_NONE,
+            stripeKey: "",
+            stripeSecret: "",
+            paypalSecret: "",
+            paytmSecret: "",
+            razorpayKey: "",
+            razorpaySecret: "",
+            razorpayWebhookSecret: "",
+            lemonsqueezyKey: "",
+            lemonsqueezyStoreId: "",
+            lemonsqueezyWebhookSecret: "",
+            lemonsqueezyOneTimeVariantId: "",
+            lemonsqueezySubscriptionMonthlyVariantId: "",
+            lemonsqueezySubscriptionYearlyVariantId: "",
+        });
+    };
+
     const getPaymentSettings = (getNewSettings = false) => ({
         currencyISOCode: getNewSettings
             ? newSettings.currencyISOCode
@@ -765,7 +786,7 @@ const Settings = (props: SettingsProps) => {
                             </div>
                         </div>
 
-                        <div>
+                        <div className="flex gap-2">
                             <Button
                                 type="submit"
                                 value={BUTTON_SAVE}
@@ -789,6 +810,20 @@ const Settings = (props: SettingsProps) => {
                             >
                                 {BUTTON_SAVE}
                             </Button>
+                            <Dialog2
+                                title="Reset Payment Settings"
+                                trigger={<Button variant="soft">Reset</Button>}
+                                okButton={
+                                    <Button
+                                        onClick={handleResetPaymentSettings}
+                                    >
+                                        Reset
+                                    </Button>
+                                }
+                            >
+                                Are you sure you want to reset your payment
+                                settings?
+                            </Dialog2>
                         </div>
                     </Form>
 
