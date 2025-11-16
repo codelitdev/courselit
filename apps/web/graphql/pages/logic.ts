@@ -23,7 +23,15 @@ const { product, site, blogPage, communityPage, permissions, defaultPages } =
     constants;
 const { pageNames } = Constants;
 
-export async function getPage({ id, ctx }: { id?: string; ctx: GQLContext }) {
+export async function getPage({
+    id,
+    ctx,
+    justWidgets = false,
+}: {
+    id?: string;
+    ctx: GQLContext;
+    justWidgets?: boolean;
+}) {
     await initSharedWidgets(ctx);
     if (!id) {
         return {

@@ -616,7 +616,7 @@ export default function CommentSection({
                 ))}
                 <div ref={commentsEndRef} />
             </div>
-            {!profile.name && (
+            {!profile?.name && (
                 <div className="text-center text-gray-500">
                     Complete your{" "}
                     <span className="underline">
@@ -625,7 +625,7 @@ export default function CommentSection({
                     to join this community or post here
                 </div>
             )}
-            {profile.name && (
+            {profile?.name && (
                 <div className="flex flex-col gap-2">
                     <Textarea
                         placeholder="Add a comment..."

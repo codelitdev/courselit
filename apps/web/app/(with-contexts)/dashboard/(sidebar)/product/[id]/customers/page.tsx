@@ -372,7 +372,7 @@ export default function CustomersPage() {
                                               variant={
                                                   member.status.toLowerCase() ===
                                                   "pending"
-                                                      ? "success"
+                                                      ? "secondary"
                                                       : member.status.toLowerCase() ===
                                                           "active"
                                                         ? "default"

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, startTransition } from "react";
 import { Email, renderEmailToHtml } from "@courselit/email-editor";
 import { Edit } from "lucide-react";
 import Link from "next/link";
@@ -16,24 +16,32 @@ export default function EmailViewer({
 
     useEffect(() => {
         if (content) {
-            setIsLoading(true);
-            setError(null);
+            startTransition(() => {
+                setIsLoading(true);
+                setError(null);
+            });
 
             renderEmailToHtml({
                 email: content,
             })
                 .then((html) => {
-                    setRenderedHTML(html);
-                    setIsLoading(false);
+                    startTransition(() => {
+                        setRenderedHTML(html);
+                        setIsLoading(false);
+                    });
                 })
                 .catch((err) => {
-                    setError(err.message || "Failed to render email");
-                    setIsLoading(false);
+                    startTransition(() => {
+                        setError(err.message || "Failed to render email");
+                        setIsLoading(false);
+                    });
                 });
         } else {
-            setRenderedHTML(null);
-            setIsLoading(false);
-            setError(null);
+            startTransition(() => {
+                setRenderedHTML(null);
+                setIsLoading(false);
+                setError(null);
+            });
         }
     }, [content]);
 

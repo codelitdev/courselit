@@ -70,7 +70,7 @@ export default {
                 offset,
                 searchText,
                 filterBy,
-            }: { offset: number; searchText?: string; filterBy?: Filter },
+            }: { offset: number; searchText?: string; filterBy?: Filter[] },
             context: GQLContext,
         ) => getCoursesAsAdmin({ offset, context, searchText, filterBy }),
     },

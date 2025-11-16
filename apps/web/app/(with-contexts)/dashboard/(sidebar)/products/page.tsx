@@ -60,13 +60,23 @@ const { permissions } = UIConstants;
 
 const breadcrumbs = [{ label: MANAGE_COURSES_PAGE_HEADING, href: "#" }];
 
-function ProductCard({ product }: { product: Course }) {
+type DashboardCourse = Course & {
+    privacy?: string;
+    published?: boolean;
+    sales?: number;
+    customers?: number;
+};
+
+function ProductCard({ product }: { product: DashboardCourse }) {
     const siteinfo = useContext(SiteInfoContext);
 
     return (
         <ContentCard href={`/dashboard/product/${product.courseId}`}>
             <ContentCardImage
-                src={product.featuredImage?.file}
+                src={
+                    product.featuredImage?.file ||
+                    "/courselit_backdrop_square.webp"
+                }
                 alt={product.title}
             />
             <ContentCardContent>
@@ -124,13 +134,14 @@ function ProductCard({ product }: { product: Course }) {
                                     siteinfo.currencyISOCode || "USD",
                                 )}{" "}
                             </span>
-                            {product.sales.toLocaleString()} sales
+                            {(product.sales ?? 0).toLocaleString()} sales
                         </span>
                     </div>
                     <div className="flex items-center text-muted-foreground">
                         <Users className="h-4 w-4 mr-2" />
                         <span>
-                            {product.customers.toLocaleString()} customers
+                            {(product.customers ?? 0).toLocaleString()}{" "}
+                            customers
                         </span>
                     </div>
                 </div>
@@ -169,11 +180,14 @@ export default function Page() {
         filterArray,
     );
 
-    const handleFilterChange = useCallback((value: "all" | CourseType) => {
-        router.push(
-            `/dashboard/products?${value !== "all" ? `filter=${value}` : ""}`,
-        );
-    }, []);
+    const handleFilterChange = useCallback(
+        (value: "all" | CourseType) => {
+            router.push(
+                `/dashboard/products?${value !== "all" ? `filter=${value}` : ""}`,
+            );
+        },
+        [router],
+    );
 
     const handlePageChange = useCallback(
         (value: number) => {
@@ -181,17 +195,8 @@ export default function Page() {
                 `/dashboard/products?page=${value}${filter !== "all" ? `&filter=${filter}` : ""}`,
             );
         },
-        [filter],
+        [filter, router],
     );
-
-    // if (
-    //     !checkPermission(profile.permissions!, [
-    //         permissions.manageAnyCourse,
-    //         permissions.manageCourse,
-    //     ])
-    // ) {
-    //     return <LoadingScreen />;
-    // }
 
     return (
         <DashboardContent
@@ -238,7 +243,7 @@ export default function Page() {
                 <>
                     {totalPages > 0 && (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {products.map((product: Course) => (
+                            {products.map((product: DashboardCourse) => (
                                 <ProductCard
                                     key={product.courseId}
                                     product={product}

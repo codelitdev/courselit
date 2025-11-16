@@ -109,8 +109,15 @@ interface SettingsProps {
 const Settings = (props: SettingsProps) => {
     const [settings, setSettings] = useState<Partial<SiteInfo>>({});
     const [newSettings, setNewSettings] = useState<Partial<SiteInfo>>({});
+
+    type ApiKeyListItem = {
+        name: string;
+        keyId: string;
+        createdAt?: string | number | Date;
+    };
+
     const [apikeyPage, setApikeyPage] = useState(1);
-    const [apikeys, setApikeys] = useState([]);
+    const [apikeys, setApikeys] = useState<ApiKeyListItem[]>([]);
     const [loading, setLoading] = useState(false);
     const selectedTab = [
         SITE_SETTINGS_SECTION_GENERAL,
@@ -177,7 +184,7 @@ const Settings = (props: SettingsProps) => {
                 setSettingsState(response.settings.settings);
             }
             if (response.apikeys) {
-                setApikeys(response.apikeys);
+                setApikeys(response.apikeys as ApiKeyListItem[]);
             }
         } catch (e) {}
     };
@@ -367,11 +374,14 @@ const Settings = (props: SettingsProps) => {
             return;
         }
 
+        const headSnippet = encode(newSettings.codeInjectionHead ?? "");
+        const bodySnippet = encode(newSettings.codeInjectionBody ?? "");
+
         const query = `
         mutation {
             settings: updateSiteInfo(siteData: {
-                codeInjectionHead: "${encode(newSettings.codeInjectionHead)}",
-                codeInjectionBody: "${encode(newSettings.codeInjectionBody)}"
+                codeInjectionHead: "${headSnippet}",
+                codeInjectionBody: "${bodySnippet}"
             }) {
                 settings {
                     title,
@@ -668,11 +678,7 @@ const Settings = (props: SettingsProps) => {
             setLoading(true);
             const fetchRequest = fetch.setPayload(query).build();
             await fetchRequest.exec();
-            setApikeys(
-                apikeys.filter(
-                    (item: Record<string, unknown>) => item.keyId !== keyId,
-                ),
-            );
+            setApikeys(apikeys.filter((item) => item.keyId !== keyId));
         } catch (e: any) {
             toast({
                 title: TOAST_TITLE_ERROR,
@@ -745,7 +751,9 @@ const Settings = (props: SettingsProps) => {
                                 </p>
                                 <Checkbox
                                     disabled={loading}
-                                    checked={newSettings.hideCourseLitBranding}
+                                    checked={Boolean(
+                                        newSettings.hideCourseLitBranding,
+                                    )}
                                     onChange={(value: boolean) => {
                                         setNewSettings(
                                             Object.assign({}, newSettings, {
@@ -1187,15 +1195,12 @@ const Settings = (props: SettingsProps) => {
                             }}
                         >
                             {apikeys.map(
-                                (
-                                    item: Record<string, unknown>,
-                                    index: number,
-                                ) => (
-                                    <TableRow key={item.name as string}>
+                                (item: ApiKeyListItem, index: number) => (
+                                    <TableRow key={item.name}>
                                         <td className="py-4">{item.name}</td>
                                         <td>
                                             {new Date(
-                                                item.createdAt as number,
+                                                item.createdAt ?? 0,
                                             ).toLocaleDateString()}
                                         </td>
                                         <td align="right">

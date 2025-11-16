@@ -4,6 +4,7 @@ import React, {
     useCallback,
     useMemo,
     useContext,
+    startTransition,
 } from "react";
 import { FetchBuilder } from "@courselit/utils";
 import {
@@ -59,16 +60,20 @@ export default function ProductFilterEditor({
         try {
             const response = await fetch.exec();
             if (response.courses) {
-                setProducts([...response.courses]);
+                startTransition(() => {
+                    setProducts([...response.courses]);
+                });
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const message =
+                err instanceof Error ? err.message : "Unknown error occurred";
             toast({
                 title: TOAST_TITLE_ERROR,
-                description: err.message,
+                description: message,
                 variant: "destructive",
             });
         }
-    }, [address.backend]);
+    }, [address.backend, toast]);
 
     useEffect(() => {
         loadCreatorCourses();

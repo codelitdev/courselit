@@ -128,7 +128,7 @@ export default function Publish({ id }: PublishProps) {
                     variant="soft"
                     disabled={loading}
                 >
-                    {capitalize(privacy)}
+                    {capitalize(privacy ?? "")}
                 </Button>
             </div>
         </Form>

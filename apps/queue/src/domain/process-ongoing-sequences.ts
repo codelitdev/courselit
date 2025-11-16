@@ -1,4 +1,4 @@
-import { Domain, Email } from "@courselit/common-models";
+import { Email } from "@courselit/common-models";
 import OngoingSequenceModel, {
     OngoingSequence,
 } from "./model/ongoing-sequence";
@@ -26,6 +26,7 @@ import { getUnsubLink } from "../utils/get-unsub-link";
 import { getSiteUrl } from "../utils/get-site-url";
 import { jwtUtils } from "@courselit/utils";
 import { JSDOM } from "jsdom";
+import { DomainDocument } from "./model/domain";
 const liquidEngine = new Liquid();
 
 new Worker(
@@ -182,7 +183,7 @@ async function attemptMailSending({
     sequence: AdminSequence;
     ongoingSequence: OngoingSequence;
     email: Email;
-    domain: Domain;
+    domain: DomainDocument;
 }) {
     const from = sequence.from
         ? `${sequence.from.name} <${creator.email}>`
@@ -281,7 +282,7 @@ function transformLinksForClickTracking(
     userId: string,
     sequenceId: string,
     emailId: string,
-    domain: Domain,
+    domain: DomainDocument,
 ): string {
     try {
         const dom = new JSDOM(htmlContent);

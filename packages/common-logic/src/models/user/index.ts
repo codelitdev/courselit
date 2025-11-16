@@ -4,7 +4,7 @@ import { ProgressSchema } from "./progress";
 import { Constants, User } from "@courselit/common-models";
 import { MediaSchema } from "../media";
 
-export interface InternalUser extends User {
+export interface InternalUser extends Omit<User, "domain"> {
     _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
     unsubscribeToken: string;

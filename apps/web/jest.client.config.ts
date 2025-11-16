@@ -1,11 +1,10 @@
-import type { Config } from "jest";
 import nextJest from "next/jest";
 
 const createJestConfig = nextJest({
     dir: "./apps/web",
 });
 
-const config: Config = {
+const config = {
     testEnvironment: "jsdom",
     setupFilesAfterEnv: ["<rootDir>/setupTests.client.ts"],
     watchPathIgnorePatterns: ["globalConfig"],
@@ -29,6 +28,11 @@ const config: Config = {
     globalSetup: "<rootDir>/jest.setup.ts",
     globalTeardown: "<rootDir>/jest.teardown.ts",
     moduleNameMapper: {
+        // Ensure a single React instance is used in tests to avoid
+        // "A React Element from an older version of React was rendered" errors
+        "^react$": "<rootDir>/node_modules/react",
+        "^react-dom$": "<rootDir>/node_modules/react-dom",
+        "^react/jsx-runtime$": "<rootDir>/node_modules/react/jsx-runtime.js",
         "next-auth": "<rootDir>/__mocks__/next-auth.ts",
         "@courselit/utils": "<rootDir>/../../packages/utils/src",
         "@courselit/common-logic": "<rootDir>/../../packages/common-logic/src",
@@ -64,4 +68,6 @@ const config: Config = {
     moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
 };
 
-export default createJestConfig(config);
+const jestConfig = createJestConfig(config as any) as any;
+
+export default jestConfig;

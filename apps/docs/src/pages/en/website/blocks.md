@@ -36,7 +36,7 @@ You will also see the newly added link on the header itself.
 3. Click on the pencil icon against the newly added link to edit it as shown above.
 4. Change the label (displayed as text on the header block) and the URL (where the user should be taken upon clicking the label on the header) and click `Done` to save.
    ![Header edit link](/assets/pages/header-edit-link.png)
-      </details>
+   </details>
 
 ### [Rich Text](#rich-text)
 
@@ -61,7 +61,7 @@ You can also use the floating controls to do the same as shown below.
 2. Click on the floating `link` button to reveal a popup text input.
 3. In the popup text input, enter the URL as shown below.
    ![Create a hyperlink in rich text block](/assets/pages/rich-text-create-hyperlink.gif)
-      </details>
+   </details>
 
 ### [Hero](#hero)
 
@@ -87,7 +87,7 @@ Following is how it looks on a page.
 4. In the button action, enter the URL the user should be taken to upon clicking.
    a. If the URL is from your own school, use its relative form, i.e., `/courses`.
    b. If the URL is from some external website, use the absolute (complete) URL, i.e., `https://website.com/courses`.
-      </details>
+   </details>
 
 ### [Grid](#grid)
 
@@ -132,7 +132,7 @@ A grid block comes in handy when you want to show some sort of list, for example
 4. In the button action, enter the URL the user should be taken to upon clicking.
    a. If the URL is from your own school, use its relative form, i.e., `/courses`.
    b. If the URL is from some external website, use the absolute (complete) URL, i.e., `https://website.com/courses`.
-      </details>
+   </details>
 
 ### [Featured](#featured)
 
@@ -268,7 +268,7 @@ In the `Design` panel, you can customize:
 - Maximum width
 - Vertical padding
 - Social media links (Facebook, Twitter, Instagram, LinkedIn, YouTube, Discord, GitHub)
-    </details>
+  </details>
 
 ## [Shared blocks](#shared-blocks)
 

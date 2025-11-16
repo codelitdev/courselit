@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import WidgetSchema from "./Widget";
+import { WidgetSchema } from "./Widget";
 import constants from "../config/constants";
 import {
     WidgetInstance,

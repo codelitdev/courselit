@@ -27,7 +27,11 @@ import {
     updateMemberRole,
 } from "./logic";
 import types from "./types";
-import { CommunityMedia, CommunityReportType } from "@courselit/common-models";
+import {
+    CommunityMedia,
+    CommunityReportType,
+    Media,
+} from "@courselit/common-models";
 import mediaTypes from "../media/types";
 
 const mutations = {

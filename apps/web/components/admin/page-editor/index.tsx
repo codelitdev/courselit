@@ -98,7 +98,7 @@ export default function PageEditor({
     const [layout, setLayout] = useState<Partial<WidgetInstance>[]>([]);
     const [selectedWidget, setSelectedWidget] = useState<string>();
     const [selectedWidgetIndex, setSelectedWidgetIndex] = useState<number>(-1);
-    const [draftTypefaces, setDraftTypefaces] = useState([]);
+    const [draftTypefaces, setDraftTypefaces] = useState<Typeface[]>([]);
     const [leftPaneContent, setLeftPaneContent] =
         useState<LeftPaneContent>("none");
     const [primaryFontFamily, setPrimaryFontFamily] =
@@ -167,10 +167,17 @@ export default function PageEditor({
     }
 
     useEffect(() => {
-        if (JSON.stringify(layout) !== JSON.stringify(page.draftLayout)) {
+        if (!page.pageId) {
+            return;
+        }
+        const referenceLayout = page.draftLayout ?? page.layout;
+        if (!referenceLayout) {
+            return;
+        }
+        if (JSON.stringify(layout) !== JSON.stringify(referenceLayout)) {
             debouncedSave(page.pageId, layout);
         }
-    }, [layout]);
+    }, [layout, page.pageId, page.draftLayout, page.layout, debouncedSave]);
 
     useEffect(() => {
         if (draftTypefaces.length) {
@@ -502,22 +509,39 @@ export default function PageEditor({
         setLeftPaneContent("none");
     };
 
-    const editWidget = useMemo(
-        () =>
-            page &&
-            layout?.find((x) => x.widgetId === selectedWidget) && (
-                <EditWidget
-                    widget={layout.find((x) => x.widgetId === selectedWidget)}
-                    pageData={page.pageData || {}}
-                    onChange={onWidgetSettingsChanged}
-                    onClose={onClose}
-                    onDelete={deleteWidget}
-                    state={state}
-                    key={selectedWidget}
-                />
-            ),
-        [selectedWidget],
+    const selectedWidgetInstance = useMemo(
+        () => layout.find((x) => x.widgetId === selectedWidget),
+        [layout, selectedWidget],
     );
+
+    const hasEditableSelectedWidget = isEditableWidget(selectedWidgetInstance);
+
+    const editWidget = useMemo(() => {
+        if (!page || !selectedWidget || !hasEditableSelectedWidget) {
+            return null;
+        }
+
+        return (
+            <EditWidget
+                widget={selectedWidgetInstance}
+                pageData={page.pageData || {}}
+                onChange={onWidgetSettingsChanged}
+                onClose={onClose}
+                onDelete={deleteWidget}
+                state={state}
+                key={selectedWidget}
+            />
+        );
+    }, [
+        page,
+        selectedWidget,
+        hasEditableSelectedWidget,
+        selectedWidgetInstance,
+        onWidgetSettingsChanged,
+        onClose,
+        deleteWidget,
+        state,
+    ]);
 
     const onAddWidgetBelow = (index: number) => {
         setSelectedWidgetIndex(index);
@@ -532,9 +556,9 @@ export default function PageEditor({
 
     const activeSidePaneContent = (
         <>
-            {leftPaneContent === "widgets" && (
+            {leftPaneContent === "widgets" && page.type && (
                 <AddWidget
-                    pageType={page.type?.toLowerCase()}
+                    pageType={page.type}
                     onSelection={addWidget}
                     onClose={(e) => setLeftPaneContent("none")}
                 />
@@ -570,7 +594,9 @@ export default function PageEditor({
                               ? page.robotsAllowed
                               : true
                     }
-                    socialImage={page.draftSocialImage || {}}
+                    socialImage={
+                        page.draftSocialImage ?? page.socialImage ?? null
+                    }
                     onClose={(e) => setLeftPaneContent("none")}
                     onSave={({
                         title,
@@ -580,7 +606,7 @@ export default function PageEditor({
                     }: {
                         title: string;
                         description: string;
-                        socialImage: Media | {};
+                        socialImage: Media | null;
                         robotsAllowed: boolean;
                     }) =>
                         savePage({
@@ -844,5 +870,16 @@ export default function PageEditor({
                 <Skeleton className="w-1/4 h-90" />
             </div>
         </div>
+    );
+}
+
+function isEditableWidget(
+    widget: Partial<WidgetInstance> | undefined,
+): widget is WidgetInstance {
+    return (
+        !!widget &&
+        typeof widget.name === "string" &&
+        typeof widget.widgetId === "string" &&
+        typeof widget.deleteable === "boolean"
     );
 }

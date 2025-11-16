@@ -2,16 +2,18 @@ import { Button } from "@/components/ui/button";
 import { CheckCircled, Sync } from "@courselit/icons";
 import { BUTTON_SAVING } from "@ui-config/strings";
 import { Check, Copy } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, startTransition } from "react";
 
 export const EmailEditorLayout = ({
     children,
     isSaving,
     type = "sequence",
+    title,
 }: {
     children: React.ReactNode;
     isSaving?: boolean;
     type?: "sequence" | "product";
+    title?: string;
 }) => {
     const [showSavedToast, setShowSavedToast] = useState(false);
     const [prevIsSaving, setPrevIsSaving] = useState(isSaving);
@@ -20,7 +22,9 @@ export const EmailEditorLayout = ({
     useEffect(() => {
         // Hide toast when starting a new save operation
         if (!prevIsSaving && isSaving) {
-            setShowSavedToast(false);
+            startTransition(() => {
+                setShowSavedToast(false);
+            });
             // Clear any existing timer
             if (timerRef.current) {
                 clearTimeout(timerRef.current);
@@ -30,17 +34,23 @@ export const EmailEditorLayout = ({
 
         // Show toast when saving changes from true to false (save completed)
         if (prevIsSaving && !isSaving) {
-            setShowSavedToast(true);
+            startTransition(() => {
+                setShowSavedToast(true);
+            });
             // Clear any existing timer before setting a new one
             if (timerRef.current) {
                 clearTimeout(timerRef.current);
             }
             timerRef.current = setTimeout(() => {
-                setShowSavedToast(false);
+                startTransition(() => {
+                    setShowSavedToast(false);
+                });
                 timerRef.current = null;
             }, 5000);
         }
-        setPrevIsSaving(isSaving);
+        startTransition(() => {
+            setPrevIsSaving(isSaving);
+        });
     }, [isSaving, prevIsSaving]);
 
     // Cleanup timer on unmount
@@ -119,8 +129,15 @@ export const EmailEditorLayout = ({
                         )}
                     </div>
                 </div>
-                <div className="w-full rounded-xl overflow-hidden border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm">
-                    {children}
+                <div className="w-full rounded-xl overflow-hidden border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm flex flex-col">
+                    {title ? (
+                        <div className="border-b px-6 py-4">
+                            <h1 className="text-lg font-semibold text-foreground">
+                                {title}
+                            </h1>
+                        </div>
+                    ) : null}
+                    <div className="flex-1 overflow-auto">{children}</div>
                 </div>
             </div>
         </div>

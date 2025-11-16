@@ -16,6 +16,7 @@ import {
     updateGroup,
     updateCourseCertificateTemplate,
 } from "./logic";
+import Filter from "./models/filter";
 import GQLContext from "../../models/GQLContext";
 import mediaTypes from "../media/types";
 
@@ -29,7 +30,7 @@ export default {
         },
         resolve: async (
             _: unknown,
-            { courseData }: { courseData: Record<string, unknown> },
+            { courseData }: { courseData: { title: string; type: Filter } },
             context: GQLContext,
         ) => createCourse(courseData, context),
     },

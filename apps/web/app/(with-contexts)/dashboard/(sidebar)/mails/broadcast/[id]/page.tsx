@@ -89,7 +89,7 @@ export default function Page(props: {
         filtersAggregator: "or" as UserFilterAggregator,
     });
     const isInitialLoad = useRef(true);
-    const saveTimeoutRef = useRef<NodeJS.Timeout>(undefined);
+    const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const { toast } = useToast();
 
@@ -525,7 +525,6 @@ export default function Page(props: {
                                     }}
                                     onChange={onFilterChange}
                                     disabled={!isEditable}
-                                    address={address}
                                 />
                             )}
                         </fieldset>

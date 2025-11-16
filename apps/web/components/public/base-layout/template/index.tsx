@@ -39,6 +39,11 @@ const Template = (props: TemplateProps) => {
         state,
     } = props;
 
+    const normalizedPageData = {
+        ...pageData,
+        pageType: pageData.pageType ?? "site",
+    } as PageData & { pageType: "product" | "site" | "blog" | "community" };
+
     if (!layout) return <></>;
     const footer = layout.filter(
         (widget) => widget.name === Footer.metadata.name,
@@ -46,9 +51,9 @@ const Template = (props: TemplateProps) => {
     const header = layout.filter(
         (widget) => widget.name === Header.metadata.name,
     )[0];
+    const headerFooterNames = [Header.metadata.name, Footer.metadata.name];
     const widgetsWithoutHeaderAndFooter = layout.filter(
-        (widget) =>
-            ![Header.metadata.name, Footer.metadata.name].includes(widget.name),
+        (widget) => !headerFooterNames.includes(widget.name ?? ""),
     );
     const pageWidgets = widgetsWithoutHeaderAndFooter.map(
         (item: any, index: number) => (
@@ -57,7 +62,7 @@ const Template = (props: TemplateProps) => {
                 key={item.widgetId}
                 editing={editing}
                 onEditClick={onEditClick}
-                pageData={pageData}
+                pageData={normalizedPageData}
                 allowsWidgetAddition={true}
                 allowsUpwardMovement={index !== 0}
                 allowsDownwardMovement={
@@ -78,7 +83,7 @@ const Template = (props: TemplateProps) => {
                 <EditableWidget
                     item={header}
                     editing={editing}
-                    pageData={pageData}
+                    pageData={normalizedPageData}
                     onEditClick={onEditClick}
                     allowsWidgetAddition={true}
                     onAddWidgetBelow={onAddWidgetBelow}
@@ -103,7 +108,7 @@ const Template = (props: TemplateProps) => {
             {footer && (
                 <EditableWidget
                     item={footer}
-                    pageData={pageData}
+                    pageData={normalizedPageData}
                     editing={editing}
                     onEditClick={onEditClick}
                     index={layout.length - 1}

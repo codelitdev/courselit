@@ -144,7 +144,6 @@ export default function Blogs() {
                                 position={index}
                                 onDelete={onDelete}
                                 siteinfo={siteinfo as SiteInfo}
-                                address={address}
                             />
                         ),
                     )}

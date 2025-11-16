@@ -1,4 +1,4 @@
-import { Course } from "../models/Course";
+import type { Course } from "@courselit/common-models";
 
 export interface InitiateProps {
     course: Course;

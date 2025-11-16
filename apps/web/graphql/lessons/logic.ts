@@ -19,7 +19,7 @@ import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
 import { deleteMedia } from "../../services/medialit";
 import { recordProgress } from "../users/logic";
-import { Constants, Progress, Quiz } from "@courselit/common-models";
+import { Constants, Progress, Quiz, User } from "@courselit/common-models";
 import LessonEvaluation from "../../models/LessonEvaluation";
 import { checkPermission } from "@courselit/utils";
 import { recordActivity } from "../../lib/record-activity";
@@ -158,7 +158,8 @@ export const createLesson = async (
 
         course.lessons.push(lesson.lessonId);
         const group = course.groups?.find(
-            (group) => group._id === lessonData.groupId,
+            (group) =>
+                ((group as any)._id?.toString() ?? "") === lessonData.groupId,
         );
         group?.lessonsOrder.push(lesson.lessonId);
         await (course as any).save();
@@ -340,7 +341,7 @@ export const markLessonCompleted = async (
     await recordProgress({
         lessonId,
         courseId: lesson.courseId,
-        user: ctx.user,
+        user: ctx.user as unknown as User,
     });
 
     await recordActivity({

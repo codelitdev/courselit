@@ -388,7 +388,7 @@ export default function FilterContainer({
                                         count,
                                     });
                                 }}
-                                variant="soft"
+                                variant="secondary"
                                 className="mx-2"
                             >
                                 {USER_FILTER_CLEAR}

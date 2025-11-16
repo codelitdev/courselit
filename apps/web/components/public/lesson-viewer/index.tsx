@@ -226,7 +226,7 @@ export const LessonViewer = ({
                             <div>
                                 <video
                                     controls
-                                    controlsList="nodownload" // eslint-disable-line react/no-unknown-property
+                                    controlsList="nodownload"
                                     onContextMenu={(e) => e.preventDefault()}
                                     key={lesson.lessonId}
                                     className="w-full rounded mb-2"
@@ -242,10 +242,9 @@ export const LessonViewer = ({
                                 </video>
                                 <Caption
                                     text={
-                                        lesson.media &&
-                                        (lesson.media.caption ||
-                                            (lesson.media
-                                                .originalFileName as string))
+                                        lesson.media?.caption ??
+                                        lesson.media?.originalFileName ??
+                                        ""
                                     }
                                 />
                             </div>
@@ -256,7 +255,7 @@ export const LessonViewer = ({
                             <div>
                                 <audio
                                     controls
-                                    controlsList="nodownload" // eslint-disable-line react/no-unknown-property
+                                    controlsList="nodownload"
                                     onContextMenu={(e) => e.preventDefault()}
                                 >
                                     <source
@@ -270,8 +269,9 @@ export const LessonViewer = ({
                                 </audio>
                                 <Caption
                                     text={
-                                        lesson.media &&
-                                        (lesson.media.caption as string)
+                                        lesson.media?.caption ??
+                                        lesson.media?.originalFileName ??
+                                        ""
                                     }
                                 />
                             </div>
@@ -289,8 +289,9 @@ export const LessonViewer = ({
                                 ></iframe>
                                 <Caption
                                     text={
-                                        lesson.media &&
-                                        (lesson.media.caption as string)
+                                        lesson.media?.caption ??
+                                        lesson.media?.originalFileName ??
+                                        ""
                                     }
                                 />
                             </div>
@@ -298,13 +299,24 @@ export const LessonViewer = ({
                         {String.prototype.toUpperCase.call(LESSON_TYPE_TEXT) ===
                             lesson.type &&
                             lesson.content && (
-                                <TextRenderer json={lesson.content} />
+                                <TextRenderer
+                                    json={
+                                        lesson.content as unknown as Record<
+                                            string,
+                                            unknown
+                                        >
+                                    }
+                                />
                             )}
                         {String.prototype.toUpperCase.call(
                             LESSON_TYPE_EMBED,
                         ) === lesson.type &&
                             lesson.content && (
-                                <LessonEmbedViewer content={lesson.content} />
+                                <LessonEmbedViewer
+                                    content={
+                                        lesson.content as { value: string }
+                                    }
+                                />
                             )}
                         {String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ) ===
                             lesson.type &&
@@ -316,16 +328,17 @@ export const LessonViewer = ({
                                 />
                             )}
                         {String.prototype.toUpperCase.call(LESSON_TYPE_FILE) ===
-                            lesson.type && (
-                            <div>
-                                <Link href={lesson.media?.file}>
-                                    <Button2 className="flex gap-1 items-center">
-                                        <ArrowDownward />
-                                        {lesson.media?.originalFileName}
-                                    </Button2>
-                                </Link>
-                            </div>
-                        )}
+                            lesson.type &&
+                            lesson.media?.file && (
+                                <div>
+                                    <Link href={lesson.media.file}>
+                                        <Button2 className="flex gap-1 items-center">
+                                            <ArrowDownward />
+                                            {lesson.media?.originalFileName}
+                                        </Button2>
+                                    </Link>
+                                </div>
+                            )}
                     </>
                 )}
             </article>

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import { USER_FILTER_DROPDOWN_LABEL } from "@ui-config/strings";
 import dynamic from "next/dynamic";
 import categoriesMap from "./categories-map";
@@ -16,14 +16,12 @@ import {
     DropdownMenuItem,
     DropdownMenuLabel,
 } from "@components/ui/dropdown-menu";
-import { AddressContext } from "@components/contexts";
 
 interface FilterEditorProps {
     dismissPopover: (filter?: Filter) => void;
 }
 export default function FilterEditor({ dismissPopover }: FilterEditorProps) {
     const [activeCategory, setActiveCategory] = useState<Filter["name"]>();
-    const address = useContext(AddressContext);
 
     const changeFilter = (
         value: Pick<Filter, "condition" | "value" | "valueLabel"> | undefined,
@@ -67,10 +65,7 @@ export default function FilterEditor({ dismissPopover }: FilterEditorProps) {
                 <ProductFilterEditor onApply={changeFilter} />
             )}
             {activeCategory && activeCategory === "community" && (
-                <CommunitiesFilterEditor
-                    onApply={changeFilter}
-                    address={address}
-                />
+                <CommunitiesFilterEditor onApply={changeFilter} />
             )}
             {activeCategory && activeCategory === "lastActive" && (
                 <LastActiveFilterEditor onApply={changeFilter} />
