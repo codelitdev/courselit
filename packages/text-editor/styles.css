@@ -161,4 +161,5 @@
     box-shadow:
         0 10px 15px -3px rgba(15, 23, 42, 0.12),
         0 4px 6px -4px rgba(15, 23, 42, 0.04);
+    z-index: 2;
 }
