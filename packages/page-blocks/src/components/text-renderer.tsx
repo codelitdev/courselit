@@ -72,6 +72,13 @@ export function TextRenderer({ json, className, theme }: TextRendererProps) {
                         </Header3>
                     );
                 },
+                codeMirror: ({ children }) => {
+                    return (
+                        <pre>
+                            <code>{children}</code>
+                        </pre>
+                    );
+                },
             },
             markMapping: {
                 link: ({ mark, children, node }) => {
