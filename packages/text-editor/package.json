@@ -64,6 +64,7 @@
         "@tiptap/extension-table": "^3.10.7",
         "@tiptap/react": "^3.0.0",
         "@tiptap/starter-kit": "^3.0.0",
+        "@tiptap/static-renderer": "^3.10.7",
         "highlight.js": "^11.10.0",
         "lowlight": "^2.9.0",
         "lucide-react": "^0.544.0"

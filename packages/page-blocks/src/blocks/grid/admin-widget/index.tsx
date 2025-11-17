@@ -6,7 +6,6 @@ import {
     AdminWidgetPanel,
     AdminWidgetPanelContainer,
     Select,
-    TextEditor,
     Button,
     Form,
     FormField,
@@ -22,6 +21,7 @@ import { columns as defaultColumns } from "../defaults";
 import { Theme, ThemeStyle } from "@courselit/page-models";
 import { PencilIcon, WandSparkles, HelpCircle } from "lucide-react";
 import SvgStyleEditor from "./svg-style-editor";
+import { Editor } from "@courselit/text-editor";
 
 export interface AdminWidgetProps {
     settings: Settings;
@@ -220,7 +220,7 @@ export default function AdminWidget({
                 </Form>
                 <div>
                     <p className="mb-1 font-medium">Description</p>
-                    <TextEditor
+                    <Editor
                         initialContent={description}
                         onChange={(state: any) => setDescription(state)}
                         showToolbar={false}

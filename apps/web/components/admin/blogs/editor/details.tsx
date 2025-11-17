@@ -1,8 +1,6 @@
 import React, { FormEvent, useContext, useEffect, useState } from "react";
 import {
     MediaSelector,
-    TextEditor,
-    TextEditorEmptyDoc,
     Form,
     FormField,
     Button,
@@ -23,6 +21,7 @@ import {
 import { MIMETYPE_IMAGE } from "@/ui-config/constants";
 import { Media, Profile } from "@courselit/common-models";
 import { AddressContext, ProfileContext } from "@components/contexts";
+import { Editor, emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
 
 interface DetailsProps {
     id: string;
@@ -145,7 +144,7 @@ export default function Details({ id }: DetailsProps) {
                     onChange={(e) => setTitle(e.target.value)}
                 />
                 <PageBuilderPropertyHeader label={COURSE_CONTENT_HEADER} />
-                <TextEditor
+                <Editor
                     initialContent={description}
                     refresh={refreshDetails}
                     onChange={(state: any) => setDescription(state)}

@@ -13,6 +13,7 @@
     "@courselit/common-models": "workspace:^",
     "@courselit/components-library": "workspace:^",
     "@courselit/email-editor": "workspace:^",
+    "@courselit/text-editor": "workspace:^",
     "@courselit/icons": "workspace:^",
     "@courselit/page-blocks": "workspace:^",
     "@courselit/page-models": "workspace:^",

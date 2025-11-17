@@ -421,7 +421,7 @@ function InteractiveSelector({
                             <Info className="h-4 w-4" />
                             <span>
                                 Use any supported Tailwind class here.{" "}
-                                <DocumentationLink path="/en/theme/customization" />
+                                <DocumentationLink path="/en/website/themes#supported-tailwind-classes" />
                             </span>
                         </div>
                     </div>

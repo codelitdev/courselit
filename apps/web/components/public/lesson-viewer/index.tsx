@@ -19,12 +19,12 @@ import {
     NOT_ENROLLED_HEADER,
 } from "@/ui-config/strings";
 import {
-    TextRenderer,
     Link,
     Button2,
     Skeleton,
     useToast,
 } from "@courselit/components-library";
+import { TextRenderer } from "@courselit/page-blocks";
 import {
     Constants,
     type Address,

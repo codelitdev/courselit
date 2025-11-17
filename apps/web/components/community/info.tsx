@@ -14,13 +14,14 @@ import {
     FormField,
     getSymbolFromCurrency,
     Link,
-    TextRenderer,
     useToast,
 } from "@courselit/components-library";
+import { TextRenderer } from "@courselit/page-blocks";
 import {
     AddressContext,
     ProfileContext,
     SiteInfoContext,
+    ThemeContext,
 } from "@components/contexts";
 import {
     Dialog,
@@ -74,6 +75,7 @@ export function CommunityInfo({
     const currencySymbol =
         getSymbolFromCurrency(siteinfo.currencyISOCode || "USD") || "$";
     const { toast } = useToast();
+    const { theme } = useContext(ThemeContext);
 
     const handleJoinSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -121,7 +123,12 @@ export function CommunityInfo({
                 />
                 <div className="space-y-2">
                     <div className="text-sm text-muted-foreground">
-                        {description && <TextRenderer json={description} />}
+                        {description && (
+                            <TextRenderer
+                                json={description}
+                                theme={theme.theme}
+                            />
+                        )}
                     </div>
                     <p className="text-sm">
                         <strong>{memberCount.toLocaleString()}</strong> members

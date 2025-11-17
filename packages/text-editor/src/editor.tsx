@@ -14,29 +14,28 @@ import { generateText } from "@tiptap/core";
 import { EditorContent, useEditor } from "@tiptap/react";
 import emptyDoc from "./empty-doc";
 import { createExtensions } from "./extensions";
-import Toolbar from "./Toolbar";
-import BubbleMenu from "./BubbleMenu";
+import Toolbar from "./toolbar";
+import BubbleMenu from "./bubble-menu";
 import type { ReactEditorProps } from "./types";
 import { uploadImageToMediaLit } from "./file-upload-extention";
 
-export interface WysiwygEditorProps {
+export interface EditorProps {
     onChange: (json: JSONContent) => void;
     showToolbar?: boolean;
     editable?: boolean;
     refresh?: number;
-    fontFamily?: string;
     url: string;
     initialContent?: ReactEditorProps["initialContent"];
     placeholder?: string;
     autoFocus?: boolean;
 }
 
-interface WysiwygEditorType extends FC<PropsWithChildren<WysiwygEditorProps>> {
+interface EditorType extends FC<PropsWithChildren<EditorProps>> {
     getPlainText: (doc: JSONContent) => string;
     emptyDoc: JSONContent;
 }
 
-const WysiwygEditor: WysiwygEditorType = Object.assign(
+const Editor: EditorType = Object.assign(
     ({
         initialContent,
         onChange,
@@ -45,7 +44,6 @@ const WysiwygEditor: WysiwygEditorType = Object.assign(
         showToolbar = true,
         editable = true,
         refresh,
-        fontFamily,
         url,
         autoFocus,
     }) => {
@@ -55,7 +53,7 @@ const WysiwygEditor: WysiwygEditorType = Object.assign(
         const lastSerializedContentRef = useRef(
             JSON.stringify(initialContent ?? emptyDoc),
         );
-        const refreshRef = useRef<WysiwygEditorProps["refresh"]>(refresh);
+        const refreshRef = useRef<EditorProps["refresh"]>(refresh);
 
         const extensions = useMemo(
             () => createExtensions({ placeholder }),
@@ -86,7 +84,7 @@ const WysiwygEditor: WysiwygEditorType = Object.assign(
                         hasInteractedRef.current = true;
                         onChange(instance.getJSON());
                         changeTimeoutRef.current = null;
-                    }, 300);
+                    }, 1000);
                 },
                 onSelectionUpdate: ({ editor: instance }) => {
                     hasInteractedRef.current = true;
@@ -188,19 +186,12 @@ const WysiwygEditor: WysiwygEditorType = Object.assign(
         }
 
         return (
-            <div
-                className="tiptap-editor flex flex-col gap-2"
-                style={{
-                    fontFamily,
-                }}
-            >
+            <div className="tiptap-editor flex flex-col gap-4 border">
                 {editable && showToolbar && (
                     <div
-                        className="sticky top-0 z-10 bg-background"
+                        className="sticky top-0 bg-background"
                         style={{
-                            position: "sticky",
-                            top: 0,
-                            zIndex: 10,
+                            zIndex: 1,
                         }}
                     >
                         <Toolbar
@@ -210,21 +201,23 @@ const WysiwygEditor: WysiwygEditorType = Object.assign(
                         />
                     </div>
                 )}
-                <div className="rounded-md border border-border">
-                    {editor && <BubbleMenu editor={editor} />}
-                    <EditorContent
-                        editor={editor}
-                        className="min-h-[200px] px-4 py-3"
-                    />
+                <div className="flex w-full justify-center">
+                    <div className="flex w-full max-w-3xl flex-col gap-4">
+                        <EditorContent
+                            editor={editor}
+                            className="min-h-[200px]"
+                        />
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleSelectFile}
+                        />
+                        {children}
+                        {editor && <BubbleMenu editor={editor} />}
+                    </div>
                 </div>
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleSelectFile}
-                />
-                {children}
             </div>
         );
     },
@@ -233,6 +226,6 @@ const WysiwygEditor: WysiwygEditorType = Object.assign(
             generateText(doc || emptyDoc, createExtensions()),
         emptyDoc,
     },
-) as WysiwygEditorType;
+) as EditorType;
 
-export default WysiwygEditor;
+export default Editor;

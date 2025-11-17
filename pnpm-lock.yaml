@@ -210,6 +210,9 @@ importers:
       '@courselit/page-primitives':
         specifier: workspace:^
         version: link:../../packages/page-primitives
+      '@courselit/text-editor':
+        specifier: workspace:^
+        version: link:../../packages/text-editor
       '@courselit/utils':
         specifier: workspace:^
         version: link:../../packages/utils
@@ -807,9 +810,15 @@ importers:
       '@courselit/page-primitives':
         specifier: workspace:^
         version: link:../page-primitives
+      '@courselit/text-editor':
+        specifier: workspace:^
+        version: link:../text-editor
       '@courselit/utils':
         specifier: workspace:^
         version: link:../utils
+      '@tiptap/static-renderer':
+        specifier: ^3.10.7
+        version: 3.10.7(@tiptap/core@3.10.7(@tiptap/pm@3.10.7))(@tiptap/pm@3.10.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -1014,6 +1023,9 @@ importers:
       '@tiptap/starter-kit':
         specifier: ^3.0.0
         version: 3.10.7
+      '@tiptap/static-renderer':
+        specifier: ^3.10.7
+        version: 3.10.7(@tiptap/core@3.10.7(@tiptap/pm@3.10.7))(@tiptap/pm@3.10.7)(react-dom@19.2.0(react@17.0.2))(react@17.0.2)
       highlight.js:
         specifier: ^11.10.0
         version: 11.11.1
@@ -4756,6 +4768,14 @@ packages:
 
   '@tiptap/starter-kit@3.10.7':
     resolution: {integrity: sha512-5oGeTzD8tvyeVICHNHJC/wsymacvXlyUQChlrweWYM8eMvNgzP/f14myiF0PyNlXJrGXkYtsAfq5004KeyLW/w==}
+
+  '@tiptap/static-renderer@3.10.7':
+    resolution: {integrity: sha512-YfSU+sl5xls+wctpAoia1uTrrDlElpei3bL9jE48EJpR+o36+trKp6XE+vzUCbhf/gLkEkY5Pj2baQ3dhbEHog==}
+    peerDependencies:
+      '@tiptap/core': ^3.10.7
+      '@tiptap/pm': ^3.10.7
+      react: ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^17.0.0 || ^18.0.0 || ^19.0.0
 
   '@tootallnate/once@2.0.0':
     resolution: {integrity: sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==}
@@ -16373,6 +16393,20 @@ snapshots:
       '@tiptap/extension-underline': 3.10.7(@tiptap/core@3.10.7(@tiptap/pm@3.10.7))
       '@tiptap/extensions': 3.10.7(@tiptap/core@3.10.7(@tiptap/pm@3.10.7))(@tiptap/pm@3.10.7)
       '@tiptap/pm': 3.10.7
+
+  '@tiptap/static-renderer@3.10.7(@tiptap/core@3.10.7(@tiptap/pm@3.10.7))(@tiptap/pm@3.10.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@tiptap/core': 3.10.7(@tiptap/pm@3.10.7)
+      '@tiptap/pm': 3.10.7
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
+  '@tiptap/static-renderer@3.10.7(@tiptap/core@3.10.7(@tiptap/pm@3.10.7))(@tiptap/pm@3.10.7)(react-dom@19.2.0(react@17.0.2))(react@17.0.2)':
+    dependencies:
+      '@tiptap/core': 3.10.7(@tiptap/pm@3.10.7)
+      '@tiptap/pm': 3.10.7
+      react: 17.0.2
+      react-dom: 19.2.0(react@17.0.2)
 
   '@tootallnate/once@2.0.0': {}
 

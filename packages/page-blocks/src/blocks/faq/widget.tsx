@@ -2,12 +2,12 @@ import React from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings, { Item } from "./settings";
 import {
-    TextRenderer,
     Accordion,
     AccordionItem,
     AccordionTrigger,
     AccordionContent,
 } from "@courselit/components-library";
+import { TextRenderer } from "../../components";
 import {
     Header1,
     Section,
@@ -68,7 +68,10 @@ export default function Widget({
                             }`}
                         >
                             <Subheader1 theme={overiddenTheme} component="span">
-                                <TextRenderer json={description} />
+                                <TextRenderer
+                                    json={description}
+                                    theme={overiddenTheme}
+                                />
                             </Subheader1>
                         </div>
                     )}
@@ -101,7 +104,10 @@ export default function Widget({
                                         </Text1>
                                     </AccordionTrigger>
                                     <AccordionContent>
-                                        <TextRenderer json={item.description} />
+                                        <TextRenderer
+                                            json={item.description}
+                                            theme={overiddenTheme}
+                                        />
                                     </AccordionContent>
                                 </AccordionItem>
                             ))}

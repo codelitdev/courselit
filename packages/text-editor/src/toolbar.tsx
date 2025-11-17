@@ -23,7 +23,7 @@ import {
     Underline,
     Undo2,
 } from "lucide-react";
-import LinkEditorPopover from "./components/LinkEditorPopover.js";
+import LinkEditorPopover from "./components/link-editor-popover.js";
 
 interface ToolbarProps {
     editor: Editor | null;
@@ -183,152 +183,158 @@ const Toolbar = ({
     const canDeleteTable = editor.can().chain().focus().deleteTable().run();
 
     return (
-        <div className="relative">
-            <div className="flex flex-wrap items-center gap-2 border-b border-border bg-background p-2">
-                <div className="flex items-center gap-1">
-                    <IconButton
-                        icon={Undo2}
-                        label="Undo"
-                        disabled={!editor.can().undo()}
-                        onClick={() => editor.chain().focus().undo().run()}
-                    />
-                    <IconButton
-                        icon={Redo2}
-                        label="Redo"
-                        disabled={!editor.can().redo()}
-                        onClick={() => editor.chain().focus().redo().run()}
-                    />
-                </div>
-                <div className="flex items-center gap-1">
-                    {headingButtons.map((button) => (
+        <div className="relative w-full">
+            <div className="overflow-x-auto">
+                <div className="flex w-full flex-wrap justify-center items-center gap-2 border-b border-border bg-background px-4 py-2">
+                    <div className="flex items-center gap-1">
                         <IconButton
-                            key={button.value}
-                            icon={button.icon}
-                            label={button.label}
-                            active={
-                                button.value === "paragraph"
-                                    ? editor.isActive("paragraph")
-                                    : editor.isActive("heading", {
-                                          level: button.level,
-                                      })
-                            }
-                            onClick={() => {
-                                const chain = editor.chain().focus();
-                                if (button.level) {
-                                    chain
-                                        .toggleHeading({
-                                            level: button.level,
-                                        })
-                                        .run();
-                                } else {
-                                    chain.setParagraph().run();
-                                }
-                            }}
+                            icon={Undo2}
+                            label="Undo"
+                            disabled={!editor.can().undo()}
+                            onClick={() => editor.chain().focus().undo().run()}
                         />
-                    ))}
-                </div>
-                <div className="flex items-center gap-1">
-                    <IconButton
-                        icon={Bold}
-                        label="Bold"
-                        active={editor.isActive("bold")}
-                        onClick={() =>
-                            editor.chain().focus().toggleBold().run()
-                        }
-                    />
-                    <IconButton
-                        icon={Italic}
-                        label="Italic"
-                        active={editor.isActive("italic")}
-                        onClick={() =>
-                            editor.chain().focus().toggleItalic().run()
-                        }
-                    />
-                    <IconButton
-                        icon={Underline}
-                        label="Underline"
-                        active={editor.isActive("underline")}
-                        onClick={() =>
-                            editor.chain().focus().toggleMark("underline").run()
-                        }
-                    />
-                    <IconButton
-                        icon={Strikethrough}
-                        label="Strikethrough"
-                        active={editor.isActive("strike")}
-                        onClick={() =>
-                            editor.chain().focus().toggleStrike().run()
-                        }
-                    />
-                    <IconButton
-                        icon={Code}
-                        label="Inline code"
-                        active={editor.isActive("code")}
-                        onClick={() =>
-                            editor.chain().focus().toggleCode().run()
-                        }
-                    />
-                    <IconButton
-                        icon={LinkIcon}
-                        label="Insert link"
-                        active={editor.isActive("link")}
-                        onClick={() => togglePopover("link")}
-                    />
-                </div>
-                <div className="flex items-center gap-1">
-                    <IconButton
-                        icon={ListIcon}
-                        label="Bullet list"
-                        active={editor.isActive("bulletList")}
-                        onClick={() =>
-                            editor.chain().focus().toggleBulletList().run()
-                        }
-                    />
-                    <IconButton
-                        icon={ListOrdered}
-                        label="Numbered list"
-                        active={editor.isActive("orderedList")}
-                        onClick={() =>
-                            editor.chain().focus().toggleOrderedList().run()
-                        }
-                    />
-                    <IconButton
-                        icon={Quote}
-                        label="Blockquote"
-                        active={editor.isActive("blockquote")}
-                        onClick={() =>
-                            editor.chain().focus().toggleBlockquote().run()
-                        }
-                    />
-                    <IconButton
-                        icon={Minus}
-                        label="Horizontal rule"
-                        onClick={() =>
-                            editor.chain().focus().setHorizontalRule().run()
-                        }
-                    />
-                    <IconButton
-                        icon={CodeSquare}
-                        label="Code block"
-                        active={editor.isActive("codeBlock")}
-                        onClick={() =>
-                            editor.chain().focus().toggleCodeBlock().run()
-                        }
-                    />
-                </div>
-                <div className="flex items-center gap-1">
-                    <IconButton
-                        icon={TableIcon}
-                        label="Table options"
-                        active={editor.isActive("table")}
-                        onClick={toggleTablePopover}
-                    />
-                    <IconButton
-                        icon={ImageIcon}
-                        label="Insert image"
-                        disabled={isUploadingImage}
-                        onClick={onRequestImageUpload}
-                    />
+                        <IconButton
+                            icon={Redo2}
+                            label="Redo"
+                            disabled={!editor.can().redo()}
+                            onClick={() => editor.chain().focus().redo().run()}
+                        />
+                    </div>
+                    <div className="flex items-center gap-1">
+                        {headingButtons.map((button) => (
+                            <IconButton
+                                key={button.value}
+                                icon={button.icon}
+                                label={button.label}
+                                active={
+                                    button.value === "paragraph"
+                                        ? editor.isActive("paragraph")
+                                        : editor.isActive("heading", {
+                                              level: button.level,
+                                          })
+                                }
+                                onClick={() => {
+                                    const chain = editor.chain().focus();
+                                    if (button.level) {
+                                        chain
+                                            .toggleHeading({
+                                                level: button.level,
+                                            })
+                                            .run();
+                                    } else {
+                                        chain.setParagraph().run();
+                                    }
+                                }}
+                            />
+                        ))}
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <IconButton
+                            icon={Bold}
+                            label="Bold"
+                            active={editor.isActive("bold")}
+                            onClick={() =>
+                                editor.chain().focus().toggleBold().run()
+                            }
+                        />
+                        <IconButton
+                            icon={Italic}
+                            label="Italic"
+                            active={editor.isActive("italic")}
+                            onClick={() =>
+                                editor.chain().focus().toggleItalic().run()
+                            }
+                        />
+                        <IconButton
+                            icon={Underline}
+                            label="Underline"
+                            active={editor.isActive("underline")}
+                            onClick={() =>
+                                editor
+                                    .chain()
+                                    .focus()
+                                    .toggleMark("underline")
+                                    .run()
+                            }
+                        />
+                        <IconButton
+                            icon={Strikethrough}
+                            label="Strikethrough"
+                            active={editor.isActive("strike")}
+                            onClick={() =>
+                                editor.chain().focus().toggleStrike().run()
+                            }
+                        />
+                        <IconButton
+                            icon={Code}
+                            label="Inline code"
+                            active={editor.isActive("code")}
+                            onClick={() =>
+                                editor.chain().focus().toggleCode().run()
+                            }
+                        />
+                        <IconButton
+                            icon={LinkIcon}
+                            label="Insert link"
+                            active={editor.isActive("link")}
+                            onClick={() => togglePopover("link")}
+                        />
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <IconButton
+                            icon={ListIcon}
+                            label="Bullet list"
+                            active={editor.isActive("bulletList")}
+                            onClick={() =>
+                                editor.chain().focus().toggleBulletList().run()
+                            }
+                        />
+                        <IconButton
+                            icon={ListOrdered}
+                            label="Numbered list"
+                            active={editor.isActive("orderedList")}
+                            onClick={() =>
+                                editor.chain().focus().toggleOrderedList().run()
+                            }
+                        />
+                        <IconButton
+                            icon={Quote}
+                            label="Blockquote"
+                            active={editor.isActive("blockquote")}
+                            onClick={() =>
+                                editor.chain().focus().toggleBlockquote().run()
+                            }
+                        />
+                        <IconButton
+                            icon={Minus}
+                            label="Horizontal rule"
+                            onClick={() =>
+                                editor.chain().focus().setHorizontalRule().run()
+                            }
+                        />
+                        <IconButton
+                            icon={CodeSquare}
+                            label="Code block"
+                            active={editor.isActive("codeBlock")}
+                            onClick={() =>
+                                editor.chain().focus().toggleCodeBlock().run()
+                            }
+                        />
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <IconButton
+                            icon={TableIcon}
+                            label="Table options"
+                            active={editor.isActive("table")}
+                            onClick={toggleTablePopover}
+                        />
+                        <IconButton
+                            icon={ImageIcon}
+                            label="Insert image"
+                            disabled={isUploadingImage}
+                            onClick={onRequestImageUpload}
+                        />
+                    </div>
                 </div>
             </div>
 

@@ -2,16 +2,13 @@ import { useState, useEffect, useRef, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Pencil, Check, X, Loader2 } from "lucide-react";
-import {
-    TextEditor,
-    TextEditorEmptyDoc,
-    TextRenderer,
-    useToast,
-} from "@courselit/components-library";
+import { useToast } from "@courselit/components-library";
+import { TextRenderer } from "@courselit/page-blocks";
 import { isTextEditorNonEmpty } from "@ui-lib/utils";
 import { BUTTON_SAVING, TOAST_TITLE_SUCCESS } from "@ui-config/strings";
 import { AddressContext } from "@components/contexts";
 import type { TextEditorContent } from "@courselit/common-models";
+import { Editor, emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
 
 interface BannerComponentProps {
     canEdit: boolean;
@@ -116,10 +113,12 @@ export default function Banner({
                     </>
                 ) : (
                     <div className="space-y-2">
-                        <TextEditor
+                        <Editor
                             showToolbar={false}
                             initialContent={editedBannerText}
-                            onChange={(value) => setEditedBannerText(value)}
+                            onChange={(value) =>
+                                setEditedBannerText(value as TextEditorContent)
+                            }
                             url={address.backend}
                         />
                         <div className="flex justify-end space-x-2">

@@ -2,11 +2,11 @@ import { FormEvent, useState } from "react";
 import { Constants, Media, WidgetProps } from "@courselit/common-models";
 import {
     Image,
-    TextRenderer,
     Link,
     useToast,
     getSymbolFromCurrency,
 } from "@courselit/components-library";
+import { TextRenderer } from "../../components";
 import { FetchBuilder, getPlanPrice } from "@courselit/utils";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "./constants";
 import Settings from "./settings";
@@ -244,7 +244,10 @@ export default function Widget({
                                     theme={overiddenTheme}
                                     component="span"
                                 >
-                                    <TextRenderer json={finalDescription} />
+                                    <TextRenderer
+                                        json={finalDescription}
+                                        theme={overiddenTheme}
+                                    />
                                 </Subheader1>
                             </div>
                         )}
@@ -259,6 +262,7 @@ export default function Widget({
                                                     successMessage ||
                                                     defaultSuccessMessage
                                                 }
+                                                theme={overiddenTheme}
                                             />
                                         </Subheader1>
                                     )}

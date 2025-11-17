@@ -1,5 +1,5 @@
-import { createId } from "./create-id";
 import type { JSONContent } from "@tiptap/core";
+import { createId } from "./create-id";
 
 interface Heading {
     level: number;

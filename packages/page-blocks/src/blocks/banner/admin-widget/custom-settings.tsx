@@ -2,7 +2,6 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import Settings from "../settings";
 import {
-    TextEditor,
     Select,
     AdminWidgetPanel,
     AdminWidgetPanelContainer,
@@ -20,6 +19,8 @@ import {
 } from "@courselit/common-models";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "../constants";
 import { ThemeStyle } from "@courselit/page-models";
+import { Editor } from "@courselit/text-editor";
+import { TextEditorContent } from "@courselit/common-models";
 
 interface CustomSettingsProps {
     name: string;
@@ -133,7 +134,7 @@ export default function CustomSettings({
                     />
                     <div>
                         <p className="mb-1 font-medium">Custom description</p>
-                        <TextEditor
+                        <Editor
                             initialContent={description}
                             onChange={(state: any) => setDescription(state)}
                             showToolbar={false}
@@ -162,8 +163,10 @@ export default function CustomSettings({
                                 <p className="mb-1 font-medium">
                                     Success message
                                 </p>
-                                <TextEditor
-                                    initialContent={successMessage}
+                                <Editor
+                                    initialContent={
+                                        successMessage as unknown as TextEditorContent
+                                    }
                                     onChange={(state: any) =>
                                         setSuccessMessage(state)
                                     }

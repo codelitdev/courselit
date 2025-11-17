@@ -1,5 +1,5 @@
 import { Course } from "@courselit/common-models";
-import { Caption, Header1, Section, Text1 } from "@courselit/page-primitives";
+import { Caption, Header1, Section } from "@courselit/page-primitives";
 import { formattedLocaleDate, getFullSiteSetup } from "@ui-lib/utils";
 import { getAddressFromHeaders } from "@/app/actions";
 import { headers } from "next/headers";
@@ -96,11 +96,10 @@ export default async function ProductPage(props: {
                     </div>
                 )}
                 {product?.description && (
-                    <Text1 theme={theme.theme} component="span">
-                        <ClientSideTextRenderer
-                            json={JSON.parse(product.description)}
-                        />
-                    </Text1>
+                    <ClientSideTextRenderer
+                        json={JSON.parse(product.description)}
+                        theme={theme.theme}
+                    />
                 )}
             </div>
         </Section>

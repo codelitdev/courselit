@@ -56,6 +56,10 @@ export const createExtensions = ({
         HTMLAttributes: {
             class: "max-w-full h-auto rounded-md",
         },
+        resize: {
+            enabled: true,
+            alwaysPreserveAspectRatio: true,
+        },
     }),
     Dropcursor.configure({
         color: "hsl(var(--foreground))",

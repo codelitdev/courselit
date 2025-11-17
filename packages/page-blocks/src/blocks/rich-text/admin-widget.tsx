@@ -3,8 +3,6 @@ import {
     AdminWidgetPanel,
     AdminWidgetPanelContainer,
     Select,
-    TextEditor,
-    // PageBuilderSlider,
     VerticalPaddingSelector,
     MaxWidthSelector,
 } from "@courselit/components-library";
@@ -13,6 +11,7 @@ import { Address, HorizontalAlignment } from "@courselit/common-models";
 import { fontSize as defaultFontSize } from "./defaults";
 import { CssIdField } from "@courselit/components-library";
 import type { Theme, ThemeStyle } from "@courselit/page-models";
+import { Editor } from "@courselit/text-editor";
 
 export interface AboutWidgetProps {
     onChange: (...args: any[]) => void;
@@ -75,7 +74,7 @@ const AdminWidget = ({
             <AdminWidgetPanel title="Basic" value="basic">
                 <div>
                     <p className="mb-1 font-medium">Text</p>
-                    <TextEditor
+                    <Editor
                         initialContent={content}
                         onChange={(state: any) => setContent(state)}
                         showToolbar={false}

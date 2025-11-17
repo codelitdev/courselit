@@ -10,7 +10,7 @@ import {
     Strikethrough,
     Underline,
 } from "lucide-react";
-import LinkEditorPopover from "./components/LinkEditorPopover";
+import LinkEditorPopover from "./components/link-editor-popover";
 
 interface BubbleMenuProps {
     editor: Editor;
@@ -140,7 +140,7 @@ const InlineBubbleMenu = ({ editor }: BubbleMenuProps): JSX.Element | null => {
     return (
         <TipTapBubbleMenu
             editor={editor}
-            className="bubble-menu rounded-md border border-border bg-background p-2 shadow-xl"
+            className="bubble-menu rounded-md border border-border bg-background p-2 shadow-xl flex flex-col gap-1"
         >
             <div className="flex items-center gap-1">
                 <InlineButton

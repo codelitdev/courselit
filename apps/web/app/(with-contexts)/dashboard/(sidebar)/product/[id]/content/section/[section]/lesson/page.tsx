@@ -51,12 +51,7 @@ import {
     TextEditorContent,
     UIConstants,
 } from "@courselit/common-models";
-import {
-    MediaSelector,
-    TextEditor,
-    TextEditorEmptyDoc,
-    useToast,
-} from "@courselit/components-library";
+import { MediaSelector, useToast } from "@courselit/components-library";
 import {
     MIMETYPE_VIDEO,
     MIMETYPE_AUDIO,
@@ -67,6 +62,7 @@ import { QuizBuilder } from "@components/admin/products/quiz-builder";
 import { isTextEditorNonEmpty, truncate } from "@ui-lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@components/ui/separator";
+import { Editor, emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
 
 const { permissions } = UIConstants;
 
@@ -214,7 +210,7 @@ export default function LessonPage() {
             case Constants.LessonType.TEXT:
                 return (
                     <div className="space-y-2">
-                        <TextEditor
+                        <Editor
                             initialContent={textContent}
                             refresh={refresh}
                             onChange={(state: any) => {

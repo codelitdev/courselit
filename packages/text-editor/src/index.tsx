@@ -1,4 +1,7 @@
-export { default as WysiwygEditor } from "./WysiwygEditor";
-export { default as Renderer } from "./Renderer/index";
+export { default as Editor } from "./editor";
+export type { EditorProps } from "./editor";
 export { default as emptyDoc } from "./empty-doc";
-export { extractHeadings } from "./extract-headings";
+export * from "./extract-headings";
+export * from "./extensions";
+export * from "./create-id";
+export * from "./extract-text-from-node";
