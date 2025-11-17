@@ -1,10 +1,7 @@
 "use client";
 
 import DashboardContent from "@components/admin/dashboard-content";
-import {
-    AddressContext,
-    ProfileContext,
-} from "@components/contexts";
+import { AddressContext, ProfileContext } from "@components/contexts";
 import {
     COMMUNITY_HEADER,
     COMMUNITY_SETTINGS,
