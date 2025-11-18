@@ -4,7 +4,10 @@
     "compilerOptions": {
         "outDir": "./dist",
         "lib": ["dom"],
-        "strict": false
+        "strict": false,
+        "paths": {
+            "@/*": ["./src/*"]
+        }
     },
     "include": ["src/**/*", "additional.d.ts"]
 }
