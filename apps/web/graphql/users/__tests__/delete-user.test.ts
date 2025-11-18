@@ -51,6 +51,12 @@ jest.mock("../../communities/logic", () => ({
     deleteCommunityPosts: jest.fn().mockResolvedValue(true),
 }));
 
+const DELETE_USER_SUITE_PREFIX = `delete-user-${Date.now()}`;
+const duId = (suffix: string) => `${DELETE_USER_SUITE_PREFIX}-${suffix}`;
+const duEmail = (suffix: string) =>
+    `${suffix}-${DELETE_USER_SUITE_PREFIX}@example.com`;
+const DU_OTHER_USER_ID = duId("other-user");
+
 const { permissions } = constants;
 
 describe("deleteUser - Comprehensive Test Suite", () => {
@@ -62,8 +68,8 @@ describe("deleteUser - Comprehensive Test Suite", () => {
     beforeAll(async () => {
         // Create test domain with unique name to avoid conflicts with other tests
         testDomain = await DomainModel.create({
-            name: `Test Domain Delete User ${Date.now()}`,
-            email: `delete-user-test-${Date.now()}@example.com`,
+            name: duId("domain"),
+            email: duEmail("domain"),
             tags: ["tag1", "tag2"],
         });
     });
@@ -72,9 +78,9 @@ describe("deleteUser - Comprehensive Test Suite", () => {
         // Create admin user (deleter)
         adminUser = await UserModel.create({
             domain: testDomain._id,
-            userId: "admin-user",
+            userId: duId("admin-user"),
             name: "Admin User",
-            email: "admin@test.com",
+            email: duEmail("admin"),
             active: true,
             permissions: [
                 permissions.manageUsers,
@@ -82,21 +88,21 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 permissions.manageSite,
             ],
             purchases: [],
-            unsubscribeToken: "unsubscribe-token-admin",
+            unsubscribeToken: duId("unsubscribe-admin"),
         });
 
         // Create target user (to be deleted)
         targetUser = await UserModel.create({
             domain: testDomain._id,
-            userId: "target-user",
+            userId: duId("target-user"),
             name: "Target User",
-            email: "target@test.com",
+            email: duEmail("target"),
             active: true,
             permissions: [permissions.enrollInCourse],
             purchases: [],
-            unsubscribeToken: "unsubscribe-token-target",
+            unsubscribeToken: duId("unsubscribe-target"),
             avatar: {
-                mediaId: "avatar-123",
+                mediaId: duId("avatar"),
                 file: "avatar.png",
                 originalFileName: "avatar.png",
                 mimeType: "image/png",
@@ -168,11 +174,11 @@ describe("deleteUser - Comprehensive Test Suite", () => {
         it("should require manageUsers permission", async () => {
             const unauthorizedUser = await UserModel.create({
                 domain: testDomain._id,
-                userId: "unauth-user",
-                email: "unauth@test.com",
+                userId: duId("unauth-user"),
+                email: duEmail("unauth"),
                 permissions: [permissions.enrollInCourse],
                 purchases: [],
-                unsubscribeToken: "unsubscribe-token-unauth",
+                unsubscribeToken: duId("unsubscribe-unauth"),
             });
 
             const unauthorizedCtx = {
@@ -196,7 +202,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
         it("should throw error for non-existent user", async () => {
             await expect(
-                deleteUser("non-existent-user", mockCtx),
+                deleteUser(duId("non-existent-user"), mockCtx),
             ).rejects.toThrow(responses.user_not_found);
         });
 
@@ -311,7 +317,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 creatorId: targetUser.userId,
                 type: "broadcast",
                 emails: [],
-                entrants: [targetUser.userId, "other-user"],
+                entrants: [targetUser.userId, DU_OTHER_USER_ID],
                 from: { name: "Test", email: "test@test.com" },
             });
 
@@ -322,7 +328,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             });
             expect(updatedSequence?.creatorId).toBe(adminUser.userId);
             expect(updatedSequence?.entrants).not.toContain(targetUser.userId);
-            expect(updatedSequence?.entrants).toContain("other-user");
+            expect(updatedSequence?.entrants).toContain(DU_OTHER_USER_ID);
         });
 
         it("should migrate user segments to deleter", async () => {
@@ -518,7 +524,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             await NotificationModel.create({
                 domain: testDomain._id,
                 notificationId: "notif-1",
-                userId: "other-user",
+                userId: DU_OTHER_USER_ID,
                 forUserId: targetUser.userId,
                 entityAction:
                     Constants.NotificationEntityAction.COMMUNITY_POSTED,
@@ -538,7 +544,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 domain: testDomain._id,
                 notificationId: "notif-2",
                 userId: targetUser.userId,
-                forUserId: "other-user",
+                forUserId: DU_OTHER_USER_ID,
                 entityAction:
                     Constants.NotificationEntityAction.COMMUNITY_POSTED,
                 entityId: "post-123",
@@ -702,11 +708,11 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             await CommunityPostModel.create({
                 domain: testDomain._id,
                 postId: "post-123",
-                userId: "other-user",
+                userId: DU_OTHER_USER_ID,
                 communityId: "comm-123",
                 title: "Test Post",
                 content: "Content",
-                likes: [targetUser.userId, "other-user"],
+                likes: [targetUser.userId, DU_OTHER_USER_ID],
             });
 
             await deleteUser(targetUser.userId, mockCtx);
@@ -715,7 +721,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 postId: "post-123",
             });
             expect(post?.likes).not.toContain(targetUser.userId);
-            expect(post?.likes).toContain("other-user");
+            expect(post?.likes).toContain(DU_OTHER_USER_ID);
         });
 
         it("should remove user from comment likes arrays", async () => {
@@ -724,9 +730,9 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 commentId: "comment-123",
                 postId: "post-123",
                 communityId: "comm-123",
-                userId: "other-user",
+                userId: DU_OTHER_USER_ID,
                 content: "Test Comment",
-                likes: [targetUser.userId, "other-user"],
+                likes: [targetUser.userId, DU_OTHER_USER_ID],
                 replies: [],
             });
 
@@ -736,7 +742,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 commentId: "comment-123",
             });
             expect(comment?.likes).not.toContain(targetUser.userId);
-            expect(comment?.likes).toContain("other-user");
+            expect(comment?.likes).toContain(DU_OTHER_USER_ID);
         });
 
         it("should remove user from reply likes arrays", async () => {
@@ -745,15 +751,15 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 commentId: "comment-123",
                 postId: "post-123",
                 communityId: "comm-123",
-                userId: "other-user",
+                userId: DU_OTHER_USER_ID,
                 content: "Test Comment",
                 likes: [],
                 replies: [
                     {
                         replyId: "reply-123",
-                        userId: "other-user",
+                        userId: DU_OTHER_USER_ID,
                         content: "Reply content",
-                        likes: [targetUser.userId, "other-user"],
+                        likes: [targetUser.userId, DU_OTHER_USER_ID],
                         deleted: false,
                     },
                 ],
@@ -766,7 +772,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             });
             const reply = comment?.replies[0];
             expect(reply?.likes).not.toContain(targetUser.userId);
-            expect(reply?.likes).toContain("other-user");
+            expect(reply?.likes).toContain(DU_OTHER_USER_ID);
         });
 
         it("should delete memberships and associated invoices", async () => {
@@ -858,7 +864,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
         it("should delete user avatar media", async () => {
             await deleteUser(targetUser.userId, mockCtx);
 
-            expect(deleteMedia).toHaveBeenCalledWith("avatar-123");
+            expect(deleteMedia).toHaveBeenCalledWith(duId("avatar"));
         });
 
         it("should delete the user document", async () => {
@@ -882,7 +888,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 creatorId: adminUser.userId,
                 type: "broadcast",
                 emails: [],
-                entrants: [targetUser.userId, "other-user"],
+                entrants: [targetUser.userId, DU_OTHER_USER_ID],
                 from: { name: "Test", email: "test@test.com" },
             });
 
@@ -892,7 +898,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 sequenceId: "du-seq-123",
             });
             expect(sequence?.entrants).not.toContain(targetUser.userId);
-            expect(sequence?.entrants).toContain("other-user");
+            expect(sequence?.entrants).toContain(DU_OTHER_USER_ID);
         });
 
         it("should remove user from course customers", async () => {
@@ -907,7 +913,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 costType: "free",
                 cost: 0,
                 published: true,
-                customers: [targetUser.userId, "other-user"],
+                customers: [targetUser.userId, DU_OTHER_USER_ID],
             });
 
             await deleteUser(targetUser.userId, mockCtx);
@@ -916,7 +922,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 courseId: "du-course-123",
             });
             expect(course?.customers).not.toContain(targetUser.userId);
-            expect(course?.customers).toContain("other-user");
+            expect(course?.customers).toContain(DU_OTHER_USER_ID);
         });
     });
 
@@ -976,7 +982,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 domain: testDomain._id,
                 notificationId: "notif-1",
                 userId: targetUser.userId,
-                forUserId: "other-user",
+                forUserId: DU_OTHER_USER_ID,
                 entityAction:
                     Constants.NotificationEntityAction.COMMUNITY_POSTED,
                 entityId: "post-123",
@@ -1016,7 +1022,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             expect(user).toBeNull();
 
             // Verify avatar deleted
-            expect(deleteMedia).toHaveBeenCalledWith("avatar-123");
+            expect(deleteMedia).toHaveBeenCalledWith(duId("avatar"));
         });
 
         it("should successfully delete user with no owned entities", async () => {

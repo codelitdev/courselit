@@ -23,6 +23,11 @@ jest.mock("@/payments-new", () => ({
     }),
 }));
 
+const DELETE_COURSE_SUITE_PREFIX = `delete-course-${Date.now()}`;
+const dcId = (suffix: string) => `${DELETE_COURSE_SUITE_PREFIX}-${suffix}`;
+const dcEmail = (suffix: string) =>
+    `${suffix}-${DELETE_COURSE_SUITE_PREFIX}@example.com`;
+
 describe("deleteCourse - Comprehensive Test Suite", () => {
     let testDomain: any;
     let adminUser: any;
@@ -32,31 +37,31 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
     beforeAll(async () => {
         // Create unique test domain
         testDomain = await DomainModel.create({
-            name: `test-domain-dc-${Date.now()}`,
-            email: "test@example.com",
+            name: dcId("domain"),
+            email: dcEmail("domain"),
         });
 
         // Create admin user with course management permissions
         adminUser = await UserModel.create({
             domain: testDomain._id,
-            userId: "admin-user",
-            email: "admin@example.com",
+            userId: dcId("admin-user"),
+            email: dcEmail("admin"),
             name: "Admin User",
             permissions: [constants.permissions.manageAnyCourse],
             active: true,
-            unsubscribeToken: "unsubscribe-admin",
+            unsubscribeToken: dcId("unsubscribe-admin"),
             purchases: [],
         });
 
         // Create regular user (student)
         regularUser = await UserModel.create({
             domain: testDomain._id,
-            userId: "regular-user",
-            email: "regular@example.com",
+            userId: dcId("regular-user"),
+            email: dcEmail("regular"),
             name: "Regular User",
             permissions: [],
             active: true,
-            unsubscribeToken: "unsubscribe-regular",
+            unsubscribeToken: dcId("unsubscribe-regular"),
             purchases: [],
         });
 
@@ -64,7 +69,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
         // Use unique planId to avoid conflicts when running tests in parallel
         await PaymentPlanModel.create({
             domain: testDomain._id,
-            planId: `internal-plan-dc-${Date.now()}`,
+            planId: dcId("internal-plan"),
             userId: adminUser.userId,
             entityId: "internal",
             entityType: Constants.MembershipEntityType.COURSE,
@@ -168,12 +173,12 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
         it("should allow owner with manageCourse permission to delete their own course", async () => {
             const ownerUser = await UserModel.create({
                 domain: testDomain._id,
-                userId: "owner-user",
-                email: "owner@example.com",
+                userId: dcId("owner-user"),
+                email: dcEmail("owner"),
                 name: "Owner User",
                 permissions: [constants.permissions.manageCourse],
                 active: true,
-                unsubscribeToken: "unsubscribe-owner",
+                unsubscribeToken: dcId("unsubscribe-owner"),
                 purchases: [],
             });
 
@@ -1193,11 +1198,11 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
             const updatedUser = await UserModel.findOne({
                 userId: regularUser.userId,
             });
-            expect(
-                updatedUser?.purchases.some(
+            const hasCoursePurchase =
+                updatedUser?.purchases?.some(
                     (p: any) => p.courseId === course.courseId,
-                ),
-            ).toBe(false);
+                ) ?? false;
+            expect(hasCoursePurchase).toBe(false);
 
             // Verify media deletion
             expect(deleteMedia).toHaveBeenCalledWith("featured-media");
