@@ -167,17 +167,10 @@ export default function PageEditor({
     }
 
     useEffect(() => {
-        if (!page.pageId) {
-            return;
-        }
-        const referenceLayout = page.draftLayout ?? page.layout;
-        if (!referenceLayout) {
-            return;
-        }
-        if (JSON.stringify(layout) !== JSON.stringify(referenceLayout)) {
+        if (JSON.stringify(layout) !== JSON.stringify(page.draftLayout)) {
             debouncedSave(page.pageId, layout);
         }
-    }, [layout, page.pageId, page.draftLayout, page.layout, debouncedSave]);
+    }, [layout]);
 
     useEffect(() => {
         if (draftTypefaces.length) {
