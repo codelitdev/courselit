@@ -1,4 +1,4 @@
-import Sitemap from '../../../models/Sitemap';
+import Sitemap from '../../models/Sitemap';
 
 export const getSitemap = async (domain: string) => {
   let sitemap = await Sitemap.findOne({ domain });
