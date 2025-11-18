@@ -15,7 +15,6 @@ import EmailDelivery from "../model/email-delivery";
 import * as queries from "../queries";
 import * as mail from "../../mail";
 import { AdminSequence, InternalUser } from "@courselit/common-logic";
-import { renderEmailToHtml } from "@courselit/email-editor";
 import { jwtUtils } from "@courselit/utils";
 import { getUnsubLink } from "../../utils/get-unsub-link";
 import { getSiteUrl } from "../../utils/get-site-url";
@@ -839,7 +838,7 @@ describe("processOngoingSequence", () => {
 
         it("should rewrite links for click tracking", async () => {
             // Create a sequence with links in the content
-            const sequenceWithLinks = (await (SequenceModel.create as any)({
+            await (SequenceModel.create as any)({
                 domain: testDomain._id,
                 sequenceId: "sequence-links",
                 creatorId: TEST_CREATOR_ID,
@@ -921,7 +920,7 @@ describe("processOngoingSequence", () => {
                         failed: [],
                     },
                 },
-            })) as any;
+            });
 
             const ongoingSeq = await OngoingSequenceModel.create({
                 domain: testDomain._id,
@@ -993,9 +992,7 @@ describe("processOngoingSequence", () => {
 
         it("should not rewrite mailto, tel, anchor, and API links", async () => {
             // Create a sequence with various link types that should NOT be rewritten
-            const sequenceWithSpecialLinks = (await (
-                SequenceModel.create as any
-            )({
+            await (SequenceModel.create as any)({
                 domain: testDomain._id,
                 sequenceId: "sequence-special-links",
                 creatorId: TEST_CREATOR_ID,
@@ -1094,7 +1091,7 @@ describe("processOngoingSequence", () => {
                         failed: [],
                     },
                 },
-            })) as any;
+            });
 
             const ongoingSeq = await OngoingSequenceModel.create({
                 domain: testDomain._id,
