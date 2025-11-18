@@ -8,6 +8,7 @@
 - In `apps/web` workspace, create a string first in `apps/web/config/strings.ts` and then import it in the `.tsx` files, instead of using inline strings.
 - When working with forms, always use refs to keep the current state of the form's data and use it to enable/disable the form submit button.
 - Check the name field inside each package's package.json to confirm the right name—skip the top-level one.
+- After finishing your change, always run `pnpm lint` and `pnpm prettier` to check if there are any code quality issues. If yes, fix those before assuming your work is complete.
 
 ## Testing instructions
 
