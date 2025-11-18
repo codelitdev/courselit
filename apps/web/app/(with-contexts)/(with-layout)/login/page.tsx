@@ -8,15 +8,11 @@ export default async function LoginPage({
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
     const session = await auth();
-    const redirectTo = (await searchParams).redirect;
+    const redirectTo = (await searchParams).redirect as string | undefined;
 
     if (session) {
-        redirect(
-            typeof redirectTo === "string"
-                ? redirectTo
-                : "/dashboard/my-content",
-        );
+        redirect(redirectTo || "/dashboard");
     }
 
-    return <LoginForm />;
+    return <LoginForm redirectTo={redirectTo} />;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
     SITE_SETTINGS_TITLE,
     SITE_SETTINGS_SUBTITLE,
@@ -53,8 +53,7 @@ import {
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
 import { Profile, UIConstants } from "@courselit/common-models";
-import type { SiteInfo, Address, Media } from "@courselit/common-models";
-import { actionCreators } from "@courselit/state-management";
+import type { SiteInfo, Media } from "@courselit/common-models";
 import currencies from "@/data/currencies.json";
 import {
     Select,
@@ -82,9 +81,9 @@ import {
     CardTitle,
 } from "@components/ui/card";
 import { Copy, Info } from "lucide-react";
-import { Label } from "@components/ui/label";
 import { Input } from "@components/ui/input";
 import Resources from "@components/resources";
+import { AddressContext } from "@components/contexts";
 
 const {
     PAYMENT_METHOD_PAYPAL,
@@ -96,15 +95,9 @@ const {
     MIMETYPE_IMAGE,
 } = UIConstants;
 
-const { networkAction, newSiteInfoAvailable } = actionCreators;
-
 interface SettingsProps {
     siteinfo: SiteInfo;
     profile: Profile;
-    dispatch: (...args: any[]) => void;
-    address: Address;
-    networkAction: boolean;
-    loading: boolean;
     selectedTab:
         | typeof SITE_SETTINGS_SECTION_GENERAL
         | typeof SITE_SETTINGS_SECTION_PAYMENT
@@ -116,8 +109,16 @@ interface SettingsProps {
 const Settings = (props: SettingsProps) => {
     const [settings, setSettings] = useState<Partial<SiteInfo>>({});
     const [newSettings, setNewSettings] = useState<Partial<SiteInfo>>({});
+
+    type ApiKeyListItem = {
+        name: string;
+        keyId: string;
+        createdAt?: string | number | Date;
+    };
+
     const [apikeyPage, setApikeyPage] = useState(1);
-    const [apikeys, setApikeys] = useState([]);
+    const [apikeys, setApikeys] = useState<ApiKeyListItem[]>([]);
+    const [loading, setLoading] = useState(false);
     const selectedTab = [
         SITE_SETTINGS_SECTION_GENERAL,
         SITE_SETTINGS_SECTION_PAYMENT,
@@ -128,44 +129,16 @@ const Settings = (props: SettingsProps) => {
         ? props.selectedTab
         : SITE_SETTINGS_SECTION_GENERAL;
     const router = useRouter();
+    const address = useContext(AddressContext);
     const { toast } = useToast();
 
     const fetch = new FetchBuilder()
-        .setUrl(`${props.address.backend}/api/graph`)
+        .setUrl(`${address.backend}/api/graph`)
         .setIsGraphQLEndpoint(true);
 
     useEffect(() => {
         loadAdminSettings();
     }, []);
-
-    useEffect(() => {
-        props.dispatch(
-            newSiteInfoAvailable({
-                title: settings.title || "",
-                subtitle: settings.subtitle || "",
-                logo: settings.logo,
-                currencyISOCode: settings.currencyISOCode,
-                paymentMethod: settings.paymentMethod,
-                stripeKey: settings.stripeKey,
-                codeInjectionHead: settings.codeInjectionHead
-                    ? encode(settings.codeInjectionHead)
-                    : "",
-                codeInjectionBody: settings.codeInjectionBody
-                    ? encode(settings.codeInjectionBody)
-                    : "",
-                mailingAddress: settings.mailingAddress || "",
-                hideCourseLitBranding: settings.hideCourseLitBranding ?? false,
-                razorpayKey: settings.razorpayKey,
-                lemonsqueezyStoreId: settings.lemonsqueezyStoreId,
-                lemonsqueezyOneTimeVariantId:
-                    settings.lemonsqueezyOneTimeVariantId,
-                lemonsqueezySubscriptionMonthlyVariantId:
-                    settings.lemonsqueezySubscriptionMonthlyVariantId,
-                lemonsqueezySubscriptionYearlyVariantId:
-                    settings.lemonsqueezySubscriptionYearlyVariantId,
-            }),
-        );
-    }, [settings]);
 
     const loadAdminSettings = async () => {
         const query = `
@@ -211,7 +184,7 @@ const Settings = (props: SettingsProps) => {
                 setSettingsState(response.settings.settings);
             }
             if (response.apikeys) {
-                setApikeys(response.apikeys);
+                setApikeys(response.apikeys as ApiKeyListItem[]);
             }
         } catch (e) {}
     };
@@ -297,6 +270,7 @@ const Settings = (props: SettingsProps) => {
             }`;
 
         try {
+            setLoading(true);
             const fetchRequest = fetch
                 .setPayload({
                     query,
@@ -308,7 +282,6 @@ const Settings = (props: SettingsProps) => {
                     },
                 })
                 .build();
-            props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
@@ -324,7 +297,7 @@ const Settings = (props: SettingsProps) => {
                 variant: "destructive",
             });
         } finally {
-            props.dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -364,6 +337,7 @@ const Settings = (props: SettingsProps) => {
             }`;
 
         try {
+            setLoading(true);
             const fetchRequest = fetch
                 .setPayload({
                     query,
@@ -372,7 +346,6 @@ const Settings = (props: SettingsProps) => {
                     },
                 })
                 .build();
-            props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
@@ -388,7 +361,7 @@ const Settings = (props: SettingsProps) => {
                 variant: "destructive",
             });
         } finally {
-            props.dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -401,11 +374,14 @@ const Settings = (props: SettingsProps) => {
             return;
         }
 
+        const headSnippet = encode(newSettings.codeInjectionHead ?? "");
+        const bodySnippet = encode(newSettings.codeInjectionBody ?? "");
+
         const query = `
         mutation {
             settings: updateSiteInfo(siteData: {
-                codeInjectionHead: "${encode(newSettings.codeInjectionHead)}",
-                codeInjectionBody: "${encode(newSettings.codeInjectionBody)}"
+                codeInjectionHead: "${headSnippet}",
+                codeInjectionBody: "${bodySnippet}"
             }) {
                 settings {
                     title,
@@ -437,8 +413,8 @@ const Settings = (props: SettingsProps) => {
         }`;
 
         try {
+            setLoading(true);
             const fetchRequest = fetch.setPayload(query).build();
-            props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
@@ -454,7 +430,7 @@ const Settings = (props: SettingsProps) => {
                 variant: "destructive",
             });
         } finally {
-            props.dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -502,8 +478,8 @@ const Settings = (props: SettingsProps) => {
         }`;
 
         try {
+            setLoading(true);
             const fetchRequest = fetch.setPayload(query).build();
-            props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
@@ -519,7 +495,7 @@ const Settings = (props: SettingsProps) => {
                 variant: "destructive",
             });
         } finally {
-            props.dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -601,6 +577,7 @@ const Settings = (props: SettingsProps) => {
             }`;
 
         try {
+            setLoading(false);
             const fetchRequest = fetch
                 .setPayload({
                     query,
@@ -626,7 +603,6 @@ const Settings = (props: SettingsProps) => {
                     },
                 })
                 .build();
-            props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
@@ -642,7 +618,7 @@ const Settings = (props: SettingsProps) => {
                 variant: "destructive",
             });
         } finally {
-            props.dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -699,14 +675,10 @@ const Settings = (props: SettingsProps) => {
             }
         `;
         try {
+            setLoading(true);
             const fetchRequest = fetch.setPayload(query).build();
-            props.dispatch(networkAction(true));
             await fetchRequest.exec();
-            setApikeys(
-                apikeys.filter(
-                    (item: Record<string, unknown>) => item.keyId !== keyId,
-                ),
-            );
+            setApikeys(apikeys.filter((item) => item.keyId !== keyId));
         } catch (e: any) {
             toast({
                 title: TOAST_TITLE_ERROR,
@@ -714,7 +686,7 @@ const Settings = (props: SettingsProps) => {
                 variant: "destructive",
             });
         } finally {
-            props.dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -778,8 +750,10 @@ const Settings = (props: SettingsProps) => {
                                     }
                                 </p>
                                 <Checkbox
-                                    disabled={props.networkAction}
-                                    checked={newSettings.hideCourseLitBranding}
+                                    disabled={loading}
+                                    checked={Boolean(
+                                        newSettings.hideCourseLitBranding,
+                                    )}
                                     onChange={(value: boolean) => {
                                         setNewSettings(
                                             Object.assign({}, newSettings, {
@@ -810,7 +784,7 @@ const Settings = (props: SettingsProps) => {
                                                 newSettings.hideCourseLitBranding,
                                         }) ||
                                     !newSettings.title ||
-                                    props.networkAction
+                                    loading
                                 }
                             >
                                 {BUTTON_SAVE}
@@ -822,7 +796,7 @@ const Settings = (props: SettingsProps) => {
                         <PageBuilderPropertyHeader label={SITE_SETTINGS_LOGO} />
                         <MediaSelector
                             profile={props.profile}
-                            address={props.address}
+                            address={address}
                             title=""
                             src={newSettings.logo?.thumbnail || ""}
                             srcTitle={newSettings.logo?.originalFileName || ""}
@@ -1101,41 +1075,17 @@ const Settings = (props: SettingsProps) => {
                         </CardHeader>
                         <CardContent className="grid gap-4">
                             <div className="grid gap-2">
-                                <Label>New Payment Plans Webhook</Label>
                                 <div className="flex gap-2">
                                     <Input
                                         readOnly
-                                        value={`${props.address.backend}/api/payment/webhook`}
+                                        value={`${address.backend}/api/payment/webhook`}
                                     />
                                     <Button
                                         variant="outline"
                                         size="icon"
                                         onClick={() =>
                                             copyToClipboard(
-                                                `${props.address.backend}/api/payment/webhook`,
-                                            )
-                                        }
-                                    >
-                                        <Copy className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>
-                                    Old Payment Webhook (Required for products
-                                    but will be phased out soon)
-                                </Label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        readOnly
-                                        value={`${props.address.backend}/api/payment/webhook-old`}
-                                    />
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() =>
-                                            copyToClipboard(
-                                                `${props.address.backend}/api/payment/webhook-old`,
+                                                `${address.backend}/api/payment/webhook`,
                                             )
                                         }
                                     >
@@ -1164,7 +1114,6 @@ const Settings = (props: SettingsProps) => {
                         name="mailingAddress"
                         value={newSettings.mailingAddress || ""}
                         onChange={onChangeData}
-                        multiline
                         rows={5}
                     />
                     <p className="text-xs text-slate-500">
@@ -1178,8 +1127,7 @@ const Settings = (props: SettingsProps) => {
                             variant="outlined"
                             disabled={
                                 settings.mailingAddress ===
-                                    newSettings.mailingAddress ||
-                                props.networkAction
+                                    newSettings.mailingAddress || loading
                             }
                         >
                             {BUTTON_SAVE}
@@ -1196,7 +1144,6 @@ const Settings = (props: SettingsProps) => {
                         name="codeInjectionHead"
                         value={newSettings.codeInjectionHead || ""}
                         onChange={onChangeData}
-                        multiline
                         rows={10}
                     />
                     <FormField
@@ -1205,7 +1152,6 @@ const Settings = (props: SettingsProps) => {
                         name="codeInjectionBody"
                         value={newSettings.codeInjectionBody || ""}
                         onChange={onChangeData}
-                        multiline
                         rows={10}
                     />
                     <div>
@@ -1219,7 +1165,7 @@ const Settings = (props: SettingsProps) => {
                                     newSettings.codeInjectionHead &&
                                     settings.codeInjectionBody ===
                                         newSettings.codeInjectionBody) ||
-                                props.networkAction
+                                loading
                             }
                         >
                             {BUTTON_SAVE}
@@ -1242,7 +1188,6 @@ const Settings = (props: SettingsProps) => {
                             <td align="right"> </td>
                         </TableHead>
                         <TableBody
-                            loading={props.loading}
                             endReached={true}
                             page={apikeyPage}
                             onPageChange={(value: number) => {
@@ -1250,15 +1195,12 @@ const Settings = (props: SettingsProps) => {
                             }}
                         >
                             {apikeys.map(
-                                (
-                                    item: Record<string, unknown>,
-                                    index: number,
-                                ) => (
-                                    <TableRow key={item.name as string}>
+                                (item: ApiKeyListItem, index: number) => (
+                                    <TableRow key={item.name}>
                                         <td className="py-4">{item.name}</td>
                                         <td>
                                             {new Date(
-                                                item.createdAt as number,
+                                                item.createdAt ?? 0,
                                             ).toLocaleDateString()}
                                         </td>
                                         <td align="right">

@@ -5,13 +5,16 @@ import { responses } from "@/config/strings";
 import { makeModelTextSearchable, checkIfAuthenticated } from "@/lib/graphql";
 import constants from "@/config/constants";
 import GQLContext from "@/models/GQLContext";
-const { permissions } = constants;
 import { initMandatoryPages } from "../pages/logic";
 import { Domain } from "@models/Domain";
 import { checkPermission } from "@courselit/utils";
 import UserSegmentModel from "@models/UserSegment";
-import { InternalCourse, UserSegment } from "@courselit/common-logic";
-import { User } from "@courselit/common-models";
+import {
+    InternalCourse,
+    InternalUser,
+    UserSegment,
+} from "@courselit/common-logic";
+import { Course, UIConstants, User } from "@courselit/common-models";
 import mongoose from "mongoose";
 import {
     Constants,
@@ -46,10 +49,18 @@ import {
     InternalMembership,
 } from "@courselit/common-logic";
 import { getPlanPrice } from "@courselit/utils";
+import CertificateModel from "@models/Certificate";
+import CertificateTemplateModel, {
+    CertificateTemplate,
+} from "@models/CertificateTemplate";
+import {
+    validateUserDeletion,
+    migrateBusinessEntities,
+    cleanupPersonalData,
+} from "./helpers";
+const { permissions } = UIConstants;
 
-const removeAdminFieldsFromUserObject = (
-    user: User & { _id: mongoose.Types.ObjectId },
-) => ({
+const removeAdminFieldsFromUserObject = (user: any) => ({
     id: user._id,
     name: user.name,
     userId: user.userId,
@@ -59,8 +70,7 @@ const removeAdminFieldsFromUserObject = (
 });
 
 export const getUser = async (userId = null, ctx: GQLContext) => {
-    let user: (User & { _id: mongoose.Types.ObjectId }) | undefined | null;
-    user = ctx.user;
+    let user: any = ctx.user;
 
     if (userId) {
         user = await UserModel.findOne({ userId, domain: ctx.subdomain._id });
@@ -104,7 +114,7 @@ export const updateUser = async (userData: UserData, ctx: GQLContext) => {
     const hasPermissionToManageUser = checkPermission(ctx.user.permissions, [
         permissions.manageUsers,
     ]);
-    const isModifyingSelf = id === ctx.user._id.toString();
+    const isModifyingSelf = id === ctx.user.userId;
     const restrictedKeys = ["permissions", "active"];
 
     if (
@@ -114,7 +124,10 @@ export const updateUser = async (userData: UserData, ctx: GQLContext) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    let user = await UserModel.findOne({ _id: id, domain: ctx.subdomain._id });
+    let user = await UserModel.findOne({
+        userId: id,
+        domain: ctx.subdomain._id,
+    });
     if (!user) throw new Error(responses.item_not_found);
 
     for (const key of keys.filter((key) => key !== "id")) {
@@ -128,10 +141,6 @@ export const updateUser = async (userData: UserData, ctx: GQLContext) => {
     validateUserProperties(user);
 
     user = await user.save();
-
-    if (userData.name) {
-        await updateCoursesForCreatorName(user.userId || user.id, user.name);
-    }
 
     return user;
 };
@@ -168,7 +177,7 @@ export const inviteCustomer = async (
 
     if (tags.length) {
         user = await updateUser(
-            { id: user._id, tags: [...user.tags, ...tags] },
+            { id: user.userId, tags: [...user.tags, ...tags] },
             ctx,
         );
     }
@@ -213,15 +222,42 @@ export const inviteCustomer = async (
     return user;
 };
 
-const updateCoursesForCreatorName = async (creatorId, creatorName) => {
-    await CourseModel.updateMany(
-        {
-            creatorId,
-        },
-        {
-            creatorName,
-        },
-    );
+export const deleteUser = async (
+    userId: string,
+    ctx: GQLContext,
+): Promise<boolean> => {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const userToDelete = await UserModel.findOne<InternalUser>({
+        domain: ctx.subdomain._id,
+        userId,
+    });
+
+    if (!userToDelete) {
+        throw new Error(responses.user_not_found);
+    }
+
+    if (userToDelete.userId === ctx.user.userId) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const deleterUser =
+        (await UserModel.findOne<InternalUser>({
+            domain: ctx.subdomain._id,
+            userId: ctx.user.userId,
+        })) || (ctx.user as InternalUser);
+
+    await validateUserDeletion(userToDelete, ctx);
+
+    await migrateBusinessEntities(userToDelete, deleterUser, ctx);
+
+    await cleanupPersonalData(userToDelete, ctx);
+
+    return true;
 };
 
 interface GetUsersParams {
@@ -660,6 +696,10 @@ async function getUserContentInternal(ctx: GQLContext, user: User) {
                                 progress.courseId === course.courseId,
                         )?.completedLessons.length,
                         featuredImage: course.featuredImage,
+                        certificateId: user.purchases.find(
+                            (progress: Progress) =>
+                                progress.courseId === course.courseId,
+                        )?.certificateId,
                     },
                 });
             }
@@ -773,7 +813,9 @@ export async function runPostMembershipTasks({
     membership: Membership;
     paymentPlan: PaymentPlan;
 }) {
-    const user = await UserModel.findOne<User>({ userId: membership.userId });
+    const user = await UserModel.findOne<InternalUser>({
+        userId: membership.userId,
+    });
     if (!user) {
         return;
     }
@@ -837,7 +879,7 @@ async function addProductToUser({
     user,
     product,
 }: {
-    user: User;
+    user: User | InternalUser;
     product: InternalCourse;
 }) {
     if (
@@ -853,3 +895,83 @@ async function addProductToUser({
         await (user as any).save();
     }
 }
+
+export const getCertificate = async (
+    certificateId: string,
+    ctx: GQLContext,
+    courseId?: string,
+) => {
+    if (certificateId === "demo" && !courseId) {
+        throw new Error(responses.certificate_demo_course_id_required);
+    }
+
+    return await getCertificateInternal(certificateId, ctx.subdomain, courseId);
+};
+
+export const getCertificateInternal = async (
+    certificateId: string,
+    domain: Domain,
+    courseId?: string,
+) => {
+    const certificate =
+        certificateId !== "demo"
+            ? await CertificateModel.findOne({
+                  domain: domain._id,
+                  certificateId,
+              })
+            : {
+                  certificateId: "demo",
+                  createdAt: new Date(),
+              };
+
+    if (!certificate) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const user =
+        certificateId !== "demo"
+            ? ((await UserModel.findOne({
+                  domain: domain._id,
+                  userId: certificate.userId,
+              }).lean()) as unknown as User)
+            : {
+                  name: "John Doe",
+                  email: "john.doe@example.com",
+                  avatar: null,
+              };
+
+    const course = (await CourseModel.findOne({
+        domain: domain._id,
+        courseId: certificateId !== "demo" ? certificate.courseId : courseId,
+    }).lean()) as unknown as Course;
+
+    if (!course) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const creator = (await UserModel.findOne({
+        domain: domain._id,
+        userId: course.creatorId,
+    }).lean()) as unknown as User;
+
+    const template = (await CertificateTemplateModel.findOne({
+        domain: domain._id,
+        courseId: course.courseId,
+    }).lean()) as unknown as CertificateTemplate;
+
+    return {
+        certificateId: certificate.certificateId,
+        title: template?.title || "Certificate of Completion",
+        subtitle: template?.subtitle || "This certificate is awarded to",
+        description: template?.description || "for completing the course.",
+        signatureImage: template?.signatureImage || null,
+        signatureName: template?.signatureName || creator?.name,
+        signatureDesignation: template?.signatureDesignation || null,
+        logo: template?.logo || domain.settings?.logo || null,
+        productTitle: course?.title,
+        userName: user?.name || user?.email,
+        createdAt: certificate.createdAt,
+        userImage: user?.avatar || null,
+        productPageId: course?.pageId || null,
+    };
+};

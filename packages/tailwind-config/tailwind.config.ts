@@ -358,6 +358,11 @@ const config: Config = {
             pattern: /border-(solid|dashed|dotted|double|none)/,
             variants: ["hover"],
         },
+        "backdrop-blur-2xl",
+        "border-b",
+        {
+            pattern: /border-b-(0|2|4|8)/,
+        },
         {
             pattern: /shadow-(sm|md|lg|xl|2xl|inner|none)/,
             variants: ["hover", "dark"],

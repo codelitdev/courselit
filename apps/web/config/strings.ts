@@ -127,6 +127,8 @@ export const responses = {
         "Cannot reject a member with an active subscription",
     cannot_leave_community_last_moderator:
         "Last manager cannot leave the community",
+    cannot_delete_last_permission_user:
+        "Cannot delete the last user with required permissions:",
     cannot_change_role_inactive_member:
         "Cannot change role of a member who is not active",
     cannot_change_role_last_moderator:
@@ -134,6 +136,7 @@ export const responses = {
     cannot_delete_last_category: "Cannot delete the last category",
     lead_magnet_invalid_settings:
         "Product must have exactly one free payment plan to enable lead magnet",
+    certificate_invalid_settings: "Certificate can only be enabled for courses",
 
     // api responses
     digital_download_no_files:
@@ -145,6 +148,8 @@ export const responses = {
     download_course_cannot_have_groups: "Digital download cannot have sections",
     download_course_last_group_cannot_be_removed:
         "Last section cannot be removed from a digital download",
+    certificate_demo_course_id_required:
+        "CourseID is required for demo certificate",
 };
 
 export const internal = {

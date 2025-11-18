@@ -206,7 +206,7 @@ export function DesktopOrderSummary({
                         {CHECKOUT_PAGE_ORDER_SUMMARY}
                     </Header3>
                     <div className="flex items-start gap-4 pb-4">
-                        <div className="h-16 w-16 relative rounded-lg overflow-hidden bg-gray-100">
+                        <div className="h-16 w-16 relative rounded-lg overflow-hidden bg-muted">
                             <Image
                                 src={
                                     product.featuredImage ||

@@ -1,8 +1,9 @@
 import { getFullSiteSetup } from "@ui-lib/utils";
-import { getAddressFromHeaders } from "@/ui-lib/utils";
+import { getAddressFromHeaders } from "@/app/actions";
 import ClientSidePage from "./p/[id]/client-side-page";
 import { headers } from "next/headers";
 import type { Metadata, ResolvingMetadata } from "next";
+import FirstRunPopup from "./first-run-popup";
 
 type Props = {
     params: {
@@ -14,7 +15,7 @@ export async function generateMetadata(
     { params }: Props,
     parent: ResolvingMetadata,
 ): Promise<Metadata> {
-    const address = getAddressFromHeaders(headers);
+    const address = await getAddressFromHeaders(headers);
     const siteInfo = await getFullSiteSetup(address, "homepage");
     if (!siteInfo) {
         return {
@@ -61,18 +62,26 @@ export async function generateMetadata(
     };
 }
 
-export default async function Page() {
-    const address = getAddressFromHeaders(headers);
+export default async function Page({
+    searchParams,
+}: {
+    searchParams: Promise<{ firstrun?: string }>;
+}) {
+    const address = await getAddressFromHeaders(headers);
     const siteInfo = await getFullSiteSetup(address, "homepage");
     if (!siteInfo) {
         return null;
     }
+    const firstRun = (await searchParams).firstrun === "1";
 
     return (
-        <ClientSidePage
-            page={siteInfo.page}
-            siteinfo={siteInfo.settings}
-            theme={siteInfo.theme}
-        />
+        <>
+            <ClientSidePage
+                page={siteInfo.page}
+                siteinfo={siteInfo.settings}
+                theme={siteInfo.theme}
+            />
+            {firstRun && <FirstRunPopup />}
+        </>
     );
 }

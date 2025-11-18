@@ -3,7 +3,7 @@
 import { EmailEditor } from "@courselit/email-editor";
 import "@courselit/email-editor/styles.css";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, use } from "react";
 import type { Email as EmailContent } from "@courselit/email-editor";
 import { useSequence } from "@/hooks/use-sequence";
 import { useToast } from "@courselit/components-library";
@@ -11,14 +11,13 @@ import { debounce } from "@courselit/utils";
 import { EmailEditorLayout } from "@components/admin/mails/editor-layout";
 import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
 
-export default function EmailEditorPage({
-    params,
-}: {
-    params: {
+export default function EmailEditorPage(props: {
+    params: Promise<{
         sequenceId: string;
         mailId: string;
-    };
+    }>;
 }) {
+    const params = use(props.params);
     const [email, setEmail] = useState<EmailContent | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const { toast } = useToast();

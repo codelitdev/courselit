@@ -57,7 +57,7 @@ export type { ServerConfig } from "./server-config";
 export type { Community } from "./community";
 export type { CommunityPost } from "./community-post";
 export type { CommunityMemberStatus } from "./community-member-status";
-export type { CommunityMedia } from "./community-media";
+export * from "./community-media";
 export type { CommunityComment } from "./community-comment";
 export type { CommunityCommentReply } from "./community-comment-reply";
 export type { PaymentPlanType, PaymentPlan } from "./payment-plan";

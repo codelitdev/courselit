@@ -163,6 +163,9 @@ export async function getPageResponse(
 //     );
 // }
 
+// TODO: Figure out a better way to update ctx.subdomain.sharedWidgets
+// currently this function is getting called multiple times as the version 0
+// of the subdomain is not getting replaces in ctx
 export async function initSharedWidgets(ctx: GQLContext) {
     let subdomainChanged = false;
     if (!ctx.subdomain.sharedWidgets.header) {
@@ -211,8 +214,8 @@ export async function initSharedWidgets(ctx: GQLContext) {
                     {
                         name: "Legal",
                         links: [
-                            { label: "Terms of use", href: "/p/terms" },
-                            { label: "Privacy policy", href: "/p/privacy" },
+                            { label: "Terms of Use", href: "/p/terms" },
+                            { label: "Privacy Policy", href: "/p/privacy" },
                         ],
                     },
                 ],
@@ -245,7 +248,9 @@ export async function initSharedWidgets(ctx: GQLContext) {
     // }
     if (subdomainChanged) {
         (ctx.subdomain as any).markModified("sharedWidgets");
-        await (ctx.subdomain as any).save();
+        try {
+            await (ctx.subdomain as any).save();
+        } catch (e) {}
     }
 }
 

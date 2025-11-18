@@ -19,11 +19,17 @@ import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
 import { deleteMedia } from "../../services/medialit";
 import { recordProgress } from "../users/logic";
-import { Constants, Progress, Quiz } from "@courselit/common-models";
+import { Constants, Progress, Quiz, User } from "@courselit/common-models";
 import LessonEvaluation from "../../models/LessonEvaluation";
 import { checkPermission } from "@courselit/utils";
 import { recordActivity } from "../../lib/record-activity";
 import { InternalCourse } from "@courselit/common-logic";
+import CertificateModel from "../../models/Certificate";
+import { error } from "@/services/logger";
+import getDeletedMediaIds, {
+    extractMediaIDs,
+} from "@/lib/get-deleted-media-ids";
+import ActivityModel from "@/models/Activity";
 
 const { permissions, quiz } = constants;
 
@@ -144,17 +150,18 @@ export const createLesson = async (
             content: JSON.parse(lessonData.content),
             media: lessonData.media,
             downloadable: lessonData.downloadable,
-            creatorId: ctx.user._id, // TODO: refactor this
+            creatorId: ctx.user.userId,
             courseId: course.courseId,
             groupId: lessonData.groupId,
             requiresEnrollment: lessonData.requiresEnrollment,
         });
 
         course.lessons.push(lesson.lessonId);
-        const group = course.groups.find(
-            (group) => group._id === lessonData.groupId,
+        const group = course.groups?.find(
+            (group) =>
+                ((group as any)._id?.toString() ?? "") === lessonData.groupId,
         );
-        group.lessonsOrder.push(lesson.lessonId);
+        group?.lessonsOrder.push(lesson.lessonId);
         await (course as any).save();
 
         return lesson;
@@ -177,9 +184,20 @@ export const updateLesson = async (
 ) => {
     let lesson = await getLessonOrThrow(lessonData.id, ctx);
     lessonData.lessonId = lessonData.id;
-    delete lessonData.id;
+    delete (lessonData as any).id;
 
     lessonData.type = lesson.type;
+    const contentMediaIdsMarkedForDeletion: string[] = [];
+    if (Object.prototype.hasOwnProperty.call(lessonData, "content")) {
+        const nextContent = (lessonData.content ?? "") as string;
+        contentMediaIdsMarkedForDeletion.push(
+            ...getDeletedMediaIds(
+                JSON.stringify(lesson.content || ""),
+                nextContent,
+            ),
+        );
+    }
+
     lessonValidator(lessonData);
 
     for (const key of Object.keys(lessonData)) {
@@ -188,6 +206,9 @@ export const updateLesson = async (
         } else {
             lesson[key] = lessonData[key];
         }
+    }
+    for (const mediaId of contentMediaIdsMarkedForDeletion) {
+        await deleteMedia(mediaId);
     }
 
     lesson = await (lesson as any).save();
@@ -213,8 +234,26 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
             await deleteMedia(lesson.media.mediaId);
         }
 
+        if (lesson.content) {
+            const extractedMediaIds = extractMediaIDs(
+                JSON.stringify(lesson.content),
+            );
+            for (const mediaId of Array.from(extractedMediaIds)) {
+                await deleteMedia(mediaId);
+            }
+        }
+
+        await LessonEvaluation.deleteMany({
+            domain: ctx.subdomain._id,
+            lessonId: lesson.lessonId,
+        });
+        await ActivityModel.deleteMany({
+            domain: ctx.subdomain._id,
+            entityId: lesson.lessonId,
+        });
+
         await LessonModel.deleteOne({
-            _id: lesson._id,
+            _id: lesson.id,
             domain: ctx.subdomain._id,
         });
         return true;
@@ -248,25 +287,14 @@ export const getAllLessons = async (
     return lessons;
 };
 
-// TODO: refactor this as it might not be deleting the media
 export const deleteAllLessons = async (courseId: string, ctx: GQLContext) => {
-    const allLessonsWithMedia = await LessonModel.find(
-        {
-            courseId,
-            domain: ctx.subdomain._id,
-            mediaId: { $ne: null },
-        },
-        {
-            mediaId: 1,
-        },
-    );
-    for (let media of allLessonsWithMedia) {
-        await deleteMedia(media.mediaId);
-    }
-    await LessonModel.deleteMany({
-        courseId,
+    const allLessons = await LessonModel.find<Lesson>({
         domain: ctx.subdomain._id,
+        courseId,
     });
+    for (const lesson of allLessons) {
+        await deleteLesson(lesson.lessonId, ctx);
+    }
 };
 
 export const markLessonCompleted = async (
@@ -290,9 +318,9 @@ export const markLessonCompleted = async (
 
     if (await isPartOfDripGroup(lesson, ctx.subdomain._id)) {
         const groupIsNotInAccessibleGroups =
-            ctx.user.purchases
-                .find((x) => x.courseId === lesson.courseId)
-                .accessibleGroups.indexOf(lesson.groupId) === -1;
+            ctx.user.purchases[enrolledItemIndex].accessibleGroups.indexOf(
+                lesson.groupId,
+            ) === -1;
         if (groupIsNotInAccessibleGroups) {
             throw new Error(responses.drip_not_released);
         }
@@ -313,7 +341,7 @@ export const markLessonCompleted = async (
     await recordProgress({
         lessonId,
         courseId: lesson.courseId,
-        user: ctx.user,
+        user: ctx.user as unknown as User,
     });
 
     await recordActivity({
@@ -326,12 +354,15 @@ export const markLessonCompleted = async (
         },
     });
 
-    await recordCourseCompleted(lesson.courseId, ctx);
+    await checkAndRecordCourseCompletion(lesson.courseId, ctx);
 
     return true;
 };
 
-const recordCourseCompleted = async (courseId: string, ctx: GQLContext) => {
+const checkAndRecordCourseCompletion = async (
+    courseId: string,
+    ctx: GQLContext,
+) => {
     const course = await CourseModel.findOne({ courseId });
     if (!course) {
         throw new Error(responses.item_not_found);
@@ -339,7 +370,7 @@ const recordCourseCompleted = async (courseId: string, ctx: GQLContext) => {
 
     const isCourseCompleted = course.lessons.every((lessonId) => {
         const progress = ctx.user.purchases.find(
-            (progress: Progress) => progress.courseId === courseId,
+            (progress: Progress) => progress.courseId === course.courseId,
         );
         if (!progress) {
             return false;
@@ -348,7 +379,7 @@ const recordCourseCompleted = async (courseId: string, ctx: GQLContext) => {
     });
 
     if (!isCourseCompleted) {
-        return;
+        return false;
     }
 
     await recordActivity({
@@ -356,6 +387,58 @@ const recordCourseCompleted = async (courseId: string, ctx: GQLContext) => {
         userId: ctx.user.userId,
         type: Constants.ActivityType.COURSE_COMPLETED,
         entityId: courseId,
+    });
+
+    if (course.certificate) {
+        await issueCertificate(course, ctx);
+    }
+
+    return true;
+};
+
+const issueCertificate = async (
+    course: InternalCourse,
+    ctx: GQLContext,
+): Promise<void> => {
+    const existingCertificate = await CertificateModel.findOne({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+        userId: ctx.user.userId,
+    });
+    if (existingCertificate) {
+        return;
+    }
+
+    const certificate = await CertificateModel.create({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+        userId: ctx.user.userId,
+    });
+
+    const enrolledItemIndex = ctx.user.purchases.findIndex(
+        (progress: Progress) => progress.courseId === course.courseId,
+    );
+
+    if (enrolledItemIndex === -1) {
+        error(
+            `Error in issuing certificate due to course not found in user's purchases`,
+            {
+                courseId: course.courseId,
+                userId: ctx.user.userId,
+            },
+        );
+        return;
+    }
+
+    ctx.user.purchases[enrolledItemIndex].certificateId =
+        certificate.certificateId;
+    await (ctx.user as any).save();
+
+    await recordActivity({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        type: Constants.ActivityType.CERTIFICATE_ISSUED,
+        entityId: course.courseId,
     });
 };
 

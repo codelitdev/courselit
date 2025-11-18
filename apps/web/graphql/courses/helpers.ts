@@ -1,27 +1,13 @@
-import { getPaymentMethod } from "../../payments";
 import { internal, responses } from "../../config/strings";
 import GQLContext from "../../models/GQLContext";
-import CourseModel, { InternalCourse } from "../../models/Course";
+import CourseModel from "../../models/Course";
 import constants from "../../config/constants";
-import { Progress } from "../../models/Progress";
-import { User } from "../../models/User";
 import Page from "../../models/Page";
 import slugify from "slugify";
 import { addGroup } from "./logic";
-import { Constants, Course } from "@courselit/common-models";
+import { Constants, Course, Progress, User } from "@courselit/common-models";
 import { getPlans } from "../paymentplans/logic";
-
-const validatePaymentMethod = async (domain: string) => {
-    try {
-        await getPaymentMethod(domain);
-    } catch (err: any) {
-        if (err.message === responses.update_payment_method) {
-            throw err;
-        } else {
-            throw new Error(responses.internal_error);
-        }
-    }
-};
+import { InternalCourse } from "@courselit/common-logic";
 
 export const validateCourse = async (
     courseData: InternalCourse,
@@ -92,6 +78,13 @@ export const validateCourse = async (
         }
     }
 
+    if (
+        courseData.certificate &&
+        courseData.type !== Constants.CourseType.COURSE
+    ) {
+        throw new Error(responses.certificate_invalid_settings);
+    }
+
     return courseData;
 };
 
@@ -145,9 +138,12 @@ export const calculatePercentageCompletion = (user: User, course: Course) => {
         (item: Progress) => item.courseId === course.courseId,
     )[0];
 
-    if (!purchasedCourse.completedLessons.length) return 0;
+    const totalLessons = course.lessons?.length ?? 0;
+    if (!purchasedCourse.completedLessons.length || !totalLessons) {
+        return 0;
+    }
 
-    return purchasedCourse.completedLessons.length / course.lessons.length;
+    return purchasedCourse.completedLessons.length / totalLessons;
 };
 
 export const setupCourse = async ({
@@ -173,7 +169,6 @@ export const setupCourse = async ({
         costType: constants.costFree,
         privacy: constants.unlisted,
         creatorId: ctx.user.userId,
-        creatorName: ctx.user.name,
         slug: slugify(title.toLowerCase()),
         type: type,
         pageId: page.pageId,
@@ -205,7 +200,6 @@ export const setupBlog = async ({
         costType: constants.costFree,
         privacy: constants.unlisted,
         creatorId: ctx.user.userId,
-        creatorName: ctx.user.name,
         slug: slugify(title.toLowerCase()),
         type: constants.blog,
     });

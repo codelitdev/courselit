@@ -1,3 +1,7 @@
-import mongoose from "mongoose";
+import mongoose, { Model } from "mongoose";
 import { RuleSchema } from "@courselit/common-logic";
-export default mongoose.models.Rule || mongoose.model("Rule", RuleSchema);
+
+const RuleModel =
+    (mongoose.models.Rule as Model<any>) || mongoose.model("Rule", RuleSchema);
+
+export default RuleModel;

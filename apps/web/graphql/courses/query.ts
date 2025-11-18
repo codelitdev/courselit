@@ -10,12 +10,11 @@ import types from "./types";
 import {
     getCourse,
     getCoursesAsAdmin,
-    getCourses,
-    // getEnrolledCourses,
     getCourseOrThrow,
     getMembers,
     getProducts,
     getProductsCount,
+    getCourseCertificateTemplate,
 } from "./logic";
 import GQLContext from "../../models/GQLContext";
 import Filter from "./models/filter";
@@ -71,7 +70,7 @@ export default {
                 offset,
                 searchText,
                 filterBy,
-            }: { offset: number; searchText?: string; filterBy?: Filter },
+            }: { offset: number; searchText?: string; filterBy?: Filter[] },
             context: GQLContext,
         ) => getCoursesAsAdmin({ offset, context, searchText, filterBy }),
     },
@@ -206,5 +205,18 @@ export default {
                 limit,
                 status,
             }),
+    },
+    getCourseCertificateTemplate: {
+        type: types.certificateTemplateType,
+        args: {
+            courseId: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+        },
+        resolve: (
+            _: any,
+            { courseId }: { courseId: string },
+            context: GQLContext,
+        ) => getCourseCertificateTemplate(courseId, context),
     },
 };

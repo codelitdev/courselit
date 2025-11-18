@@ -4,9 +4,10 @@ import { useToast } from "@courselit/components-library";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useGraphQLFetch } from "./use-graphql-fetch";
 import { AddressContext } from "@components/contexts";
+import { InternalCourse } from "@courselit/common-logic";
 
 export type ProductWithAdminProps = Partial<
-    Omit<Course, "paymentPlans"> &
+    Omit<InternalCourse, "paymentPlans"> &
         Pick<Course, "paymentPlans"> & {
             lessons: Pick<Lesson, "title" | "groupId" | "lessonId" | "type"> &
                 { id: string }[];
@@ -71,7 +72,6 @@ export default function useProduct(id?: string | null): {
                     courseId,
                     cost,
                     costType,
-                    creatorName,
                     featuredImage {
                         mediaId,
                         originalFileName,
@@ -101,6 +101,7 @@ export default function useProduct(id?: string | null): {
                     }
                     leadMagnet
                     defaultPaymentPlan
+                    certificate
                 }
             }
         `;
@@ -115,11 +116,6 @@ export default function useProduct(id?: string | null): {
             } catch (err: any) {
                 setHasError(true);
                 setProduct(null);
-                // toast({
-                //     title: TOAST_TITLE_ERROR,
-                //     description: err.message,
-                //     variant: "destructive",
-                // });
             } finally {
                 setLoaded(true);
             }

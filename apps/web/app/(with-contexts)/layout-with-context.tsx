@@ -1,8 +1,14 @@
 "use client";
 
-import { ReactNode, useEffect, useState, Suspense } from "react";
+import {
+    ReactNode,
+    useEffect,
+    useState,
+    Suspense,
+    useCallback,
+    startTransition,
+} from "react";
 import { SiteInfo, ServerConfig } from "@courselit/common-models";
-import { FetchBuilder } from "@courselit/utils";
 import {
     AddressContext,
     ProfileContext,
@@ -16,6 +22,7 @@ import { Session } from "next-auth";
 import { Theme } from "@courselit/page-models";
 import { ThemeProvider as NextThemesProvider } from "@components/next-theme-provider";
 import { defaultState } from "@components/default-state";
+import { getUserProfile } from "./helpers";
 
 function LayoutContent({
     address,
@@ -36,57 +43,30 @@ function LayoutContent({
     const [theme, setTheme] = useState(initialTheme);
     const { toast } = useToast();
 
-    useEffect(() => {
-        const getUserProfile = async () => {
-            const query = `
-            { profile: getUser {
-                name,
-                id,
-                email,
-                userId,
-                bio,
-                permissions,
-                purchases {
-                    courseId,
-                    completedLessons,
-                    accessibleGroups
-                }
-                avatar {
-                        mediaId,
-                        originalFileName,
-                        mimeType,
-                        size,
-                        access,
-                        file,
-                        thumbnail,
-                        caption
-                    },
-                }
+    const updateUserProfile = useCallback(async () => {
+        try {
+            const fetchedProfile = await getUserProfile(address);
+            if (fetchedProfile) {
+                setProfile(fetchedProfile);
             }
-            `;
-            const fetch = new FetchBuilder()
-                .setUrl(`${address}/api/graph`)
-                .setPayload(query)
-                .setIsGraphQLEndpoint(true)
-                .build();
-            try {
-                const response = await fetch.exec();
-                if (response.profile) {
-                    setProfile(response.profile);
-                }
-            } catch (err) {
-                toast({
-                    title: TOAST_TITLE_ERROR,
-                    description: err.message,
-                    variant: "destructive",
-                });
-            }
-        };
-
-        if (address && session) {
-            getUserProfile();
+        } catch (err) {
+            const message =
+                err instanceof Error ? err.message : "Unknown error occurred";
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: message,
+                variant: "destructive",
+            });
         }
-    }, [address, session]);
+    }, [address, toast]);
+
+    useEffect(() => {
+        if (address && session) {
+            startTransition(() => {
+                void updateUserProfile();
+            });
+        }
+    }, [address, session, updateUserProfile]);
 
     return (
         <AddressContext.Provider
@@ -125,7 +105,6 @@ export default function Layout(props: {
     theme: Theme;
     config: ServerConfig;
     session: Session | null;
-    // profile: Partial<Profile> | null;
 }) {
     return (
         <Suspense fallback={null}>
@@ -133,7 +112,3 @@ export default function Layout(props: {
         </Suspense>
     );
 }
-
-// function formatHSL(hsl: HSL): string {
-//     return `${hsl[0]} ${hsl[1]}% ${hsl[2]}%`;
-// }

@@ -9,7 +9,6 @@ import {
 } from "@courselit/common-models";
 import Settings from "./settings";
 import { FetchBuilder } from "@courselit/utils";
-import { actionCreators } from "@courselit/state-management";
 import {
     Link,
     LessonIcon,
@@ -25,7 +24,6 @@ import {
 import {
     Header1,
     Text1,
-    Caption,
     Subheader1,
     Section,
 } from "@courselit/page-primitives";
@@ -46,7 +44,6 @@ export default function Widget({
         verticalPadding,
     },
     state,
-    dispatch,
     pageData: product,
 }: WidgetProps<Settings>): JSX.Element {
     const { theme } = state;
@@ -114,7 +111,6 @@ export default function Widget({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
             if (response.course) {
                 setCourse(response.course);
@@ -125,8 +121,6 @@ export default function Widget({
                 description: err.message,
                 variant: "destructive",
             });
-        } finally {
-            dispatch(actionCreators.networkAction(false));
         }
     };
 
@@ -182,7 +176,7 @@ export default function Widget({
                                     <Skeleton className="h-6 w-[100px] rounded-[300px]" />
                                     <Skeleton className="h-6 w-6" />
                                 </div>
-                                <hr className="w-full" />
+                                <hr className="w-full border-border" />
                             </div>
                         ))}
                     </div>
@@ -199,34 +193,40 @@ export default function Widget({
                                     <Text1 theme={overiddenTheme}>
                                         {group}
                                     </Text1>
-                                    <Badge>
-                                        <Caption
-                                            theme={overiddenTheme}
-                                            className="leading-none"
-                                        >
-                                            {`${formattedCourse[group].length} lessons`}
-                                        </Caption>
+                                    <Badge variant="outline">
+                                        {`${formattedCourse[group].length} lessons`}
                                     </Badge>
                                 </div>
                             </AccordionTrigger>
                             <AccordionContent>
                                 {formattedCourse[group].map(
                                     (lesson: Lesson) => (
-                                        <div
+                                        <Link
                                             key={lesson.lessonId}
-                                            className="flex items-center gap-2 py-2 px-2 hover:bg-gray-100 rounded"
+                                            href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
                                         >
-                                            <LessonIcon
-                                                type={lesson.type as LessonType}
-                                            />
-                                            <Link
-                                                href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
-                                            >
-                                                <Text1 theme={overiddenTheme}>
-                                                    {lesson.title}
-                                                </Text1>
-                                            </Link>
-                                        </div>
+                                            <div className="flex justify-between items-center gap-2 py-2 px-2 hover:bg-muted rounded transition-colors">
+                                                <span className="flex items-center gap-2">
+                                                    <LessonIcon
+                                                        type={
+                                                            lesson.type as LessonType
+                                                        }
+                                                    />
+
+                                                    <Text1
+                                                        theme={overiddenTheme}
+                                                    >
+                                                        {lesson.title}
+                                                    </Text1>
+                                                </span>
+
+                                                {!lesson.requiresEnrollment && (
+                                                    <Badge variant="outline">
+                                                        Preview
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                        </Link>
                                     ),
                                 )}
                             </AccordionContent>

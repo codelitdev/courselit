@@ -5,9 +5,7 @@ import {
     Typeface,
     WidgetInstance,
 } from "@courselit/common-models";
-import type { Address, Media, Profile } from "@courselit/common-models";
-import type { AppDispatch, AppState } from "@courselit/state-management";
-import { networkAction } from "@courselit/state-management/dist/action-creators";
+import type { Address, Media, Profile, State } from "@courselit/common-models";
 import { debounce, FetchBuilder, generateUniqueId } from "@courselit/utils";
 import {
     EDIT_PAGE_BUTTON_DONE,
@@ -18,17 +16,17 @@ import {
     EDIT_PAGE_BUTTON_VIEW,
     EDIT_PAGE_BUTTON_THEME,
     EDIT_PAGE_ADD_WIDGET_TITLE,
-} from "../../../ui-config/strings";
+} from "@/ui-config/strings";
 import { useRouter } from "next/navigation";
 import {
     generateFontString,
     moveMemberUp,
     moveMemberDown,
-} from "../../../ui-lib/utils";
+} from "@/ui-lib/utils";
 import Template from "../../public/base-layout/template";
 import dynamic from "next/dynamic";
 import Head from "next/head";
-import widgets from "../../../ui-config/widgets";
+import widgets from "@/ui-config/widgets";
 import { Sync, CheckCircled } from "@courselit/icons";
 import { Button2, Skeleton, useToast } from "@courselit/components-library";
 import SeoEditor from "./seo-editor";
@@ -58,7 +56,6 @@ import { useTheme } from "next-themes";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
-// const FontsList = dynamic(() => import("./fonts-list"));
 const ThemeEditor = dynamic(() => import("./theme-editor/index"));
 
 const DEBOUNCE_TIME = 500;
@@ -67,11 +64,10 @@ interface PageEditorProps {
     id: string;
     address: Address;
     profile: Profile;
-    dispatch?: AppDispatch;
     siteInfo: SiteInfo;
     typefaces: Typeface[];
     redirectTo?: string;
-    state: AppState;
+    state: State;
 }
 
 type LeftPaneContent =
@@ -86,7 +82,6 @@ export default function PageEditor({
     id,
     address,
     profile,
-    dispatch,
     redirectTo,
     state,
 }: PageEditorProps) {
@@ -103,7 +98,7 @@ export default function PageEditor({
     const [layout, setLayout] = useState<Partial<WidgetInstance>[]>([]);
     const [selectedWidget, setSelectedWidget] = useState<string>();
     const [selectedWidgetIndex, setSelectedWidgetIndex] = useState<number>(-1);
-    const [draftTypefaces, setDraftTypefaces] = useState([]);
+    const [draftTypefaces, setDraftTypefaces] = useState<Typeface[]>([]);
     const [leftPaneContent, setLeftPaneContent] =
         useState<LeftPaneContent>("none");
     const [primaryFontFamily, setPrimaryFontFamily] =
@@ -135,7 +130,7 @@ export default function PageEditor({
         loadPage();
 
         loadPages();
-    }, [address.backend, dispatch]);
+    }, [address.backend]);
 
     async function loadPages() {
         setLoadingPages(true);
@@ -155,7 +150,7 @@ export default function PageEditor({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
+            setLoadingPages(true);
             const response = await fetch.exec();
             if (response.pages) {
                 setPages(response.pages);
@@ -168,7 +163,6 @@ export default function PageEditor({
             });
         } finally {
             setLoadingPages(false);
-            dispatch && dispatch(networkAction(false));
         }
     }
 
@@ -304,7 +298,7 @@ export default function PageEditor({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
+            setLoading(true);
             const response = await fetch.exec();
             if (response.site.draftTypefaces) {
                 setDraftTypefaces(response.site.draftTypefaces);
@@ -316,7 +310,7 @@ export default function PageEditor({
                 variant: "destructive",
             });
         } finally {
-            dispatch && dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -340,7 +334,7 @@ export default function PageEditor({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
+            setLoading(true);
             const response = await fetch.exec();
             if (response.page) {
                 const pageBeingEdited = response.page;
@@ -365,7 +359,7 @@ export default function PageEditor({
                 variant: "destructive",
             });
         } finally {
-            dispatch && dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -508,69 +502,39 @@ export default function PageEditor({
         setLeftPaneContent("none");
     };
 
-    const editWidget = useMemo(
-        () =>
-            page &&
-            layout?.find((x) => x.widgetId === selectedWidget) && (
-                <EditWidget
-                    widget={layout.find((x) => x.widgetId === selectedWidget)}
-                    pageData={page.pageData || {}}
-                    onChange={onWidgetSettingsChanged}
-                    onClose={onClose}
-                    onDelete={deleteWidget}
-                    state={state as AppState}
-                    dispatch={dispatch || (() => {})}
-                    key={selectedWidget}
-                />
-            ),
-        [selectedWidget],
+    const selectedWidgetInstance = useMemo(
+        () => layout.find((x) => x.widgetId === selectedWidget),
+        [layout, selectedWidget],
     );
 
-    // const saveDraftTypefaces = async (fontName: string) => {
-    //     const newTypefaces: Typeface[] = structuredClone(draftTypefaces);
-    //     const defaultSection = newTypefaces.filter(
-    //         (x) => x.section === "default",
-    //     )[0];
-    //     defaultSection.typeface = fontName;
+    const hasEditableSelectedWidget = isEditableWidget(selectedWidgetInstance);
 
-    //     const query = `
-    //         mutation {
-    //             site: updateDraftTypefaces(
-    //                 typefaces: ${getGraphQLQueryStringFromObject(newTypefaces)}
-    //             ) {
-    //                 draftTypefaces {
-    //                     section,
-    //                     typeface,
-    //                     fontWeights,
-    //                     fontSize,
-    //                     lineHeight,
-    //                     letterSpacing,
-    //                     case
-    //                 },
-    //             }
-    //         }
-    //     `;
-    //     const fetch = new FetchBuilder()
-    //         .setUrl(`${address.backend}/api/graph`)
-    //         .setPayload(query)
-    //         .setIsGraphQLEndpoint(true)
-    //         .build();
-    //     try {
-    //         dispatch && dispatch(networkAction(true));
-    //         const response = await fetch.exec();
-    //         if (response.site) {
-    //             setDraftTypefaces(response.site.draftTypefaces);
-    //         }
-    //     } catch (err: any) {
-    //         toast({
-    //             title: TOAST_TITLE_ERROR,
-    //             description: err.message,
-    //             variant: "destructive",
-    //         });
-    //     } finally {
-    //         dispatch && dispatch(networkAction(false));
-    //     }
-    // };
+    const editWidget = useMemo(() => {
+        if (!page || !selectedWidget || !hasEditableSelectedWidget) {
+            return null;
+        }
+
+        return (
+            <EditWidget
+                widget={selectedWidgetInstance}
+                pageData={page.pageData || {}}
+                onChange={onWidgetSettingsChanged}
+                onClose={onClose}
+                onDelete={deleteWidget}
+                state={state}
+                key={selectedWidget}
+            />
+        );
+    }, [
+        page,
+        selectedWidget,
+        hasEditableSelectedWidget,
+        selectedWidgetInstance,
+        onWidgetSettingsChanged,
+        onClose,
+        deleteWidget,
+        state,
+    ]);
 
     const onAddWidgetBelow = (index: number) => {
         setSelectedWidgetIndex(index);
@@ -585,9 +549,9 @@ export default function PageEditor({
 
     const activeSidePaneContent = (
         <>
-            {leftPaneContent === "widgets" && (
+            {leftPaneContent === "widgets" && page.type && (
                 <AddWidget
-                    pageType={page.type?.toLowerCase()}
+                    pageType={page.type}
                     onSelection={addWidget}
                     onClose={(e) => setLeftPaneContent("none")}
                 />
@@ -623,7 +587,9 @@ export default function PageEditor({
                               ? page.robotsAllowed
                               : true
                     }
-                    socialImage={page.draftSocialImage || {}}
+                    socialImage={
+                        page.draftSocialImage ?? page.socialImage ?? null
+                    }
                     onClose={(e) => setLeftPaneContent("none")}
                     onSave={({
                         title,
@@ -633,7 +599,7 @@ export default function PageEditor({
                     }: {
                         title: string;
                         description: string;
-                        socialImage: Media | {};
+                        socialImage: Media | null;
                         robotsAllowed: boolean;
                     }) =>
                         savePage({
@@ -769,6 +735,7 @@ export default function PageEditor({
                                     onClick={onPublish}
                                     size="sm"
                                     className="gap-2 whitespace-nowrap"
+                                    disabled={loading}
                                 >
                                     <ArrowUpFromLine className="h-4 w-4" />
                                     {EDIT_PAGE_BUTTON_UPDATE}
@@ -822,31 +789,6 @@ export default function PageEditor({
                     </header>
                 </div>
                 <div className="flex w-full h-[calc(100vh-56px)] mt-14 gap-4 p-4 bg-muted/10">
-                    {leftPaneContent !== "none" && (
-                        <div className="w-[300px] rounded-xl border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm flex flex-col overflow-hidden">
-                            <PanelHeader
-                                title={
-                                    leftPaneContent === "widgets"
-                                        ? EDIT_PAGE_ADD_WIDGET_TITLE
-                                        : leftPaneContent === "editor"
-                                          ? "Edit Block"
-                                          : leftPaneContent === "fonts"
-                                            ? "Fonts"
-                                            : leftPaneContent === "theme"
-                                              ? "Theme"
-                                              : leftPaneContent === "seo"
-                                                ? "SEO"
-                                                : ""
-                                }
-                                onClose={onClose}
-                            />
-                            <ScrollArea className="h-[calc(100%-56px)]">
-                                <div className="py-2 space-y-4">
-                                    {activeSidePaneContent}
-                                </div>
-                            </ScrollArea>
-                        </div>
-                    )}
                     <div
                         className={cn(
                             "rounded-xl border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm",
@@ -878,12 +820,36 @@ export default function PageEditor({
                                                     draftTheme.theme,
                                             },
                                         })}
-                                        dispatch={dispatch}
                                     />
                                 )}
                             </div>
                         </ScrollArea>
                     </div>
+                    {leftPaneContent !== "none" && (
+                        <div className="w-[300px] rounded-xl border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm flex flex-col overflow-hidden">
+                            <PanelHeader
+                                title={
+                                    leftPaneContent === "widgets"
+                                        ? EDIT_PAGE_ADD_WIDGET_TITLE
+                                        : leftPaneContent === "editor"
+                                          ? "Edit Block"
+                                          : leftPaneContent === "fonts"
+                                            ? "Fonts"
+                                            : leftPaneContent === "theme"
+                                              ? "Theme"
+                                              : leftPaneContent === "seo"
+                                                ? "SEO"
+                                                : ""
+                                }
+                                onClose={onClose}
+                            />
+                            <ScrollArea className="h-[calc(100%-56px)]">
+                                <div className="py-2 space-y-4">
+                                    {activeSidePaneContent}
+                                </div>
+                            </ScrollArea>
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -893,9 +859,20 @@ export default function PageEditor({
         <div className="flex flex-col gap-4 p-4">
             <Skeleton className="w-full h-16" />
             <div className="flex gap-4">
-                <Skeleton className="w-1/4 h-90" />
                 <Skeleton className="w-3/4 h-screen" />
+                <Skeleton className="w-1/4 h-90" />
             </div>
         </div>
+    );
+}
+
+function isEditableWidget(
+    widget: Partial<WidgetInstance> | undefined,
+): widget is WidgetInstance {
+    return (
+        !!widget &&
+        typeof widget.name === "string" &&
+        typeof widget.widgetId === "string" &&
+        typeof widget.deleteable === "boolean"
     );
 }

@@ -9,7 +9,6 @@
   "updateInternalDependencies": "patch",
   "ignore": [
     "@courselit/web",
-    "@courselit/state-management",
     "@courselit/utils",
     "@courselit/queue",
     "@courselit/icons",

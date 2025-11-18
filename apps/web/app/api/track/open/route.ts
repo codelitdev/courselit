@@ -23,7 +23,12 @@ const pixelBuffer = Buffer.from(
     "base64",
 );
 
-const pixelResponse = new NextResponse(pixelBuffer, {
+const pixelArrayBuffer = pixelBuffer.buffer.slice(
+    pixelBuffer.byteOffset,
+    pixelBuffer.byteOffset + pixelBuffer.byteLength,
+) as ArrayBuffer;
+
+const pixelResponse = new NextResponse(pixelArrayBuffer, {
     status: 200,
     headers: {
         "Content-Type": "image/png",

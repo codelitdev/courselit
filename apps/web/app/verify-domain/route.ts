@@ -1,11 +1,12 @@
 import DomainModel, { Domain } from "../../models/Domain";
 import { responses } from "../../config/strings";
-import constants from "../../config/constants";
+import constants from "@/config/constants";
 import { isDateInFuture } from "../../lib/utils";
 import { createUser } from "../../graphql/users/logic";
 import { headers } from "next/headers";
 import connectToDatabase from "../../services/db";
 import { warn } from "@/services/logger";
+import SubscriberModel, { Subscriber } from "@models/Subscriber";
 
 const { domainNameForSingleTenancy, schoolNameForSingleTenancy } = constants;
 
@@ -36,12 +37,12 @@ const getDomain = async (hostName: string): Promise<Domain | null> => {
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-    const headerList = headers();
+    const headerList = await headers();
     let domain: Domain | null;
 
     await connectToDatabase();
 
-    if (process.env.MULTITENANT === "true") {
+    if (constants.multitenant) {
         const host = headerList.get("host");
 
         if (!host) {
@@ -160,6 +161,9 @@ export async function GET(req: Request) {
                 domain: domain!,
                 email: domain!.email,
                 superAdmin: true,
+                name: constants.multitenant
+                    ? await getSubscriberName(domain!.email)
+                    : "",
             });
             await DomainModel.findOneAndUpdate(
                 { _id: domain!._id },
@@ -180,4 +184,13 @@ export async function GET(req: Request) {
         domain: domain!.name,
         logo: domain!.settings?.logo?.file,
     });
+}
+
+async function getSubscriberName(email: string): Promise<string | undefined> {
+    const subscriber = (await SubscriberModel.findOne(
+        { email },
+        { name: 1, _id: 0 },
+    ).lean()) as unknown as Subscriber;
+
+    return subscriber ? subscriber.name : "";
 }

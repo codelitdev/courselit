@@ -4,7 +4,7 @@ import {
     AdminWidgetPanelContainer,
     Select,
     TextEditor,
-    PageBuilderSlider,
+    // PageBuilderSlider,
     VerticalPaddingSelector,
     MaxWidthSelector,
 } from "@courselit/components-library";
@@ -96,13 +96,13 @@ const AdminWidget = ({
                         setAlignment(value)
                     }
                 />
-                <PageBuilderSlider
+                {/* <PageBuilderSlider
                     title="Font size"
                     min={1}
                     max={12}
                     value={fontSize}
                     onChange={setFontSize}
-                />
+                /> */}
                 <MaxWidthSelector
                     value={maxWidth || theme.theme.structure.page.width}
                     onChange={setMaxWidth}

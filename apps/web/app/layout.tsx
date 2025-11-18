@@ -5,17 +5,14 @@ import "@courselit/page-primitives/styles.css";
 import "../styles/globals.css";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import {
-    getAddressFromHeaders,
-    getSiteInfo,
-    getFullSiteSetup,
-} from "@ui-lib/utils";
+import { getSiteInfo, getFullSiteSetup } from "@ui-lib/utils";
+import { getAddressFromHeaders } from "@/app/actions";
 import * as fonts from "@/lib/fonts";
 import { generateThemeStyles } from "@/lib/theme-styles";
 import { SITE_SETTINGS_DEFAULT_TITLE } from "@ui-config/strings";
 
 export async function generateMetadata(): Promise<Metadata> {
-    const address = getAddressFromHeaders(headers);
+    const address = await getAddressFromHeaders(headers);
     const siteInfo = await getSiteInfo(address);
 
     return {
@@ -51,14 +48,14 @@ interface RootLayoutProps {
 }
 
 export default async function RootLayout({ children }: RootLayoutProps) {
-    const address = getAddressFromHeaders(headers);
+    const address = await getAddressFromHeaders(headers);
     const siteSetup = await getFullSiteSetup(address);
     const themeStyles = siteSetup?.theme
         ? generateThemeStyles(siteSetup.theme)
         : "";
 
     return (
-        <html lang="en">
+        <html suppressHydrationWarning>
             <head>
                 <style>{themeStyles}</style>
             </head>

@@ -2,14 +2,16 @@ import type { Metadata, ResolvingMetadata } from "next";
 import { ReactNode } from "react";
 import { FetchBuilder } from "@courselit/utils";
 import { headers } from "next/headers";
-import { getAddressFromHeaders, getSiteInfo } from "@ui-lib/utils";
+import { getSiteInfo } from "@ui-lib/utils";
 import { Course } from "@courselit/common-models";
+import { getAddressFromHeaders } from "@/app/actions";
 
 export async function generateMetadata(
-    { params }: { params: { id: string } },
+    props: { params: Promise<{ id: string }> },
     parent: ResolvingMetadata,
 ): Promise<Metadata> {
-    const address = getAddressFromHeaders(headers);
+    const params = await props.params;
+    const address = await getAddressFromHeaders(headers);
     const [product, siteInfo] = await Promise.all([
         getProduct(params.id, address),
         getSiteInfo(address),
@@ -62,7 +64,6 @@ async function getProduct(id: string, address: string): Promise<Course | null> {
                         thumbnail
                         file
                     }
-                    creatorName
                     updatedAt
                 }
             }

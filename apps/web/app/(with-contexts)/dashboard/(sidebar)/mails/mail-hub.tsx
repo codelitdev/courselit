@@ -2,7 +2,6 @@
 
 import Mails from "@components/admin/mails";
 import { AddressContext, ProfileContext } from "@components/contexts";
-import { checkPermission } from "@courselit/utils";
 import { useSearchParams } from "next/navigation";
 import { useContext } from "react";
 import { UIConstants } from "@courselit/common-models";
@@ -20,12 +19,15 @@ export default function MailHub() {
 
     const breadcrumbs = [{ label: tab, href: "#" }];
 
-    if (!checkPermission(profile?.permissions!, [permissions.manageSite])) {
+    if (!profile) {
         return <LoadingScreen />;
     }
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[permissions.manageUsers]}
+        >
             <Mails selectedTab={tab as any} address={address} loading={false} />
         </DashboardContent>
     );

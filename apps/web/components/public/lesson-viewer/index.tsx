@@ -8,9 +8,7 @@ import {
     LESSON_TYPE_TEXT,
     LESSON_TYPE_EMBED,
     LESSON_TYPE_QUIZ,
-} from "../../../ui-config/constants";
-import { connect } from "react-redux";
-import { actionCreators } from "@courselit/state-management";
+} from "@/ui-config/constants";
 import {
     COURSE_PROGRESS_FINISH,
     COURSE_PROGRESS_INTRO,
@@ -19,7 +17,7 @@ import {
     ENROLL_BUTTON_TEXT,
     TOAST_TITLE_ERROR,
     NOT_ENROLLED_HEADER,
-} from "../../../ui-config/strings";
+} from "@/ui-config/strings";
 import {
     TextRenderer,
     Link,
@@ -27,23 +25,19 @@ import {
     Skeleton,
     useToast,
 } from "@courselit/components-library";
-import type {
-    Address,
-    Lesson,
-    Profile,
-    Quiz,
-    SiteInfo,
+import {
+    Constants,
+    type Address,
+    type Lesson,
+    type Profile,
+    type Quiz,
 } from "@courselit/common-models";
-import type { AppDispatch, AppState } from "@courselit/state-management";
-import { useRouter } from "next/router";
-import { refreshUserProfile } from "@courselit/state-management/dist/action-creators";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, ArrowDownward } from "@courselit/icons";
 import { isEnrolled } from "../../../ui-lib/utils";
 import LessonEmbedViewer from "./embed-viewer";
 import QuizViewer from "./quiz-viewer";
-import { useSession } from "next-auth/react";
-
-const { networkAction } = actionCreators;
+import { getUserProfile } from "@/app/(with-contexts)/helpers";
 
 interface CaptionProps {
     text: string;
@@ -56,7 +50,7 @@ const Caption = (props: CaptionProps) => {
 
     return (
         <div className="flex justify-center">
-            <p className="text-sm text-slate-500">{props.text}</p>
+            <p className="text-sm text-muted-foreground">{props.text}</p>
         </div>
     );
 };
@@ -64,37 +58,25 @@ const Caption = (props: CaptionProps) => {
 interface LessonViewerProps {
     slug: string;
     lessonId: string;
-    dispatch: AppDispatch;
+    productId: string;
     profile: Profile;
+    setProfile: (profile: Profile) => void;
     address: Address;
-    networkAction: boolean;
-    siteinfo: SiteInfo;
 }
 
-const LessonViewer = ({
+export const LessonViewer = ({
     slug,
     lessonId,
-    dispatch,
     profile,
+    setProfile,
     address,
-    siteinfo,
-    networkAction: loading,
+    productId,
 }: LessonViewerProps) => {
-    const { status } = useSession();
     const [lesson, setLesson] = useState<Lesson>();
     const [error, setError] = useState();
     const router = useRouter();
+    const [loading, setLoading] = useState(false);
     const { toast } = useToast();
-
-    useEffect(() => {
-        if (status === "authenticated") {
-            dispatch(actionCreators.signedIn());
-            dispatch(actionCreators.authChecked());
-        }
-        if (status === "unauthenticated") {
-            dispatch(actionCreators.authChecked());
-        }
-    }, [status]);
 
     useEffect(() => {
         setError(undefined);
@@ -106,25 +88,25 @@ const LessonViewer = ({
 
     const loadLesson = async (id: string) => {
         const query = `
-    query {
-      lesson: getLessonDetails(id: "${id}") {
-        lessonId,
-        title,
-        downloadable,
-        type,
-        content,
-        media {
-          file,
-          caption,
-          originalFileName
-        },
-        requiresEnrollment,
-        courseId,
-        prevLesson,
-        nextLesson
-      }
-    }
-    `;
+            query {
+                lesson: getLessonDetails(id: "${id}") {
+                    lessonId,
+                    title,
+                    downloadable,
+                    type,
+                    content,
+                    media {
+                    file,
+                    caption,
+                    originalFileName
+                    },
+                    requiresEnrollment,
+                    courseId,
+                    prevLesson,
+                    nextLesson
+                }
+            }
+        `;
 
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
@@ -133,7 +115,7 @@ const LessonViewer = ({
             .build();
 
         try {
-            dispatch(networkAction(true));
+            setLoading(true);
             const response = await fetch.exec();
 
             if (response.lesson) {
@@ -142,7 +124,7 @@ const LessonViewer = ({
         } catch (err: any) {
             setError(err.message);
         } finally {
-            dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -159,12 +141,12 @@ const LessonViewer = ({
             .build();
 
         try {
-            dispatch(networkAction(true));
+            setLoading(true);
             const response = await fetch.exec();
 
             if (response.result) {
                 if (lesson!.nextLesson) {
-                    dispatch(refreshUserProfile());
+                    await updateUserProfile();
                     router.push(
                         `/course/${slug}/${lesson!.courseId}/${
                             lesson!.nextLesson
@@ -181,9 +163,27 @@ const LessonViewer = ({
                 variant: "destructive",
             });
         } finally {
-            dispatch(networkAction(false));
+            setLoading(false);
         }
     };
+
+    async function updateUserProfile() {
+        try {
+            setLoading(true);
+            const profile = await getUserProfile(address.backend);
+            if (profile) {
+                setProfile(profile);
+            }
+        } catch (err) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
+    }
 
     return (
         <div className="h-full">
@@ -205,7 +205,9 @@ const LessonViewer = ({
                         </h1>
                         <p className="mb-4">{error}.</p>
                         {error === "You are not enrolled in the course" && (
-                            <Link href={`/checkout/${router.query.id}`}>
+                            <Link
+                                href={`/checkout?type=${Constants.MembershipEntityType.COURSE}&id=${productId}`}
+                            >
                                 <Button2>{ENROLL_BUTTON_TEXT}</Button2>
                             </Link>
                         )}
@@ -224,7 +226,8 @@ const LessonViewer = ({
                             <div>
                                 <video
                                     controls
-                                    controlsList="nodownload" // eslint-disable-line react/no-unknown-property
+                                    controlsList="nodownload"
+                                    onContextMenu={(e) => e.preventDefault()}
                                     key={lesson.lessonId}
                                     className="w-full rounded mb-2"
                                 >
@@ -239,10 +242,9 @@ const LessonViewer = ({
                                 </video>
                                 <Caption
                                     text={
-                                        lesson.media &&
-                                        (lesson.media.caption ||
-                                            (lesson.media
-                                                .originalFileName as string))
+                                        lesson.media?.caption ??
+                                        lesson.media?.originalFileName ??
+                                        ""
                                     }
                                 />
                             </div>
@@ -253,7 +255,8 @@ const LessonViewer = ({
                             <div>
                                 <audio
                                     controls
-                                    controlsList="nodownload" // eslint-disable-line react/no-unknown-property
+                                    controlsList="nodownload"
+                                    onContextMenu={(e) => e.preventDefault()}
                                 >
                                     <source
                                         src={
@@ -266,8 +269,9 @@ const LessonViewer = ({
                                 </audio>
                                 <Caption
                                     text={
-                                        lesson.media &&
-                                        (lesson.media.caption as string)
+                                        lesson.media?.caption ??
+                                        lesson.media?.originalFileName ??
+                                        ""
                                     }
                                 />
                             </div>
@@ -285,8 +289,9 @@ const LessonViewer = ({
                                 ></iframe>
                                 <Caption
                                     text={
-                                        lesson.media &&
-                                        (lesson.media.caption as string)
+                                        lesson.media?.caption ??
+                                        lesson.media?.originalFileName ??
+                                        ""
                                     }
                                 />
                             </div>
@@ -294,13 +299,24 @@ const LessonViewer = ({
                         {String.prototype.toUpperCase.call(LESSON_TYPE_TEXT) ===
                             lesson.type &&
                             lesson.content && (
-                                <TextRenderer json={lesson.content} />
+                                <TextRenderer
+                                    json={
+                                        lesson.content as unknown as Record<
+                                            string,
+                                            unknown
+                                        >
+                                    }
+                                />
                             )}
                         {String.prototype.toUpperCase.call(
                             LESSON_TYPE_EMBED,
                         ) === lesson.type &&
                             lesson.content && (
-                                <LessonEmbedViewer content={lesson.content} />
+                                <LessonEmbedViewer
+                                    content={
+                                        lesson.content as { value: string }
+                                    }
+                                />
                             )}
                         {String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ) ===
                             lesson.type &&
@@ -308,30 +324,33 @@ const LessonViewer = ({
                                 <QuizViewer
                                     lessonId={lesson.lessonId}
                                     content={lesson.content as Quiz}
+                                    address={address}
                                 />
                             )}
                         {String.prototype.toUpperCase.call(LESSON_TYPE_FILE) ===
-                            lesson.type && (
-                            <div>
-                                <Link href={lesson.media?.file}>
-                                    <Button2 className="flex gap-1 items-center">
-                                        <ArrowDownward />
-                                        {lesson.media?.originalFileName}
-                                    </Button2>
-                                </Link>
-                            </div>
-                        )}
+                            lesson.type &&
+                            lesson.media?.file && (
+                                <div>
+                                    <Link href={lesson.media.file}>
+                                        <Button2 className="flex gap-1 items-center">
+                                            <ArrowDownward />
+                                            {lesson.media?.originalFileName}
+                                        </Button2>
+                                    </Link>
+                                </div>
+                            )}
                     </>
                 )}
             </article>
             {lesson && isEnrolled(lesson.courseId, profile) && (
-                <div className="bg-white fixed bottom-0 left-0 w-full p-4 flex justify-end">
+                <div className="bg-background fixed bottom-0 left-0 w-full p-4 flex justify-end">
                     <div className="mr-2">
                         {!lesson.prevLesson && (
                             <Link href={`/course/${slug}/${lesson.courseId}`}>
                                 <Button2
                                     variant="secondary"
                                     className="flex gap-1 items-center"
+                                    disabled={loading}
                                 >
                                     <ArrowLeft />
                                     {COURSE_PROGRESS_INTRO}
@@ -345,6 +364,7 @@ const LessonViewer = ({
                                 <Button2
                                     variant="secondary"
                                     className="flex gap-1 items-center"
+                                    disabled={loading}
                                 >
                                     <ArrowLeft /> {COURSE_PROGRESS_PREV}
                                 </Button2>
@@ -365,16 +385,3 @@ const LessonViewer = ({
         </div>
     );
 };
-
-const mapStateToProps = (state: AppState) => ({
-    profile: state.profile,
-    address: state.address,
-    networkAction: state.networkAction,
-    siteinfo: state.siteinfo,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch: dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(LessonViewer);

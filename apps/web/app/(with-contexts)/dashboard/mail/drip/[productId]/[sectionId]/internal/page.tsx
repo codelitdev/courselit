@@ -10,6 +10,7 @@ import {
     useRef,
     useMemo,
     useContext,
+    use,
 } from "react";
 import type { Email as EmailContent } from "@courselit/email-editor";
 import { useToast } from "@courselit/components-library";
@@ -48,21 +49,20 @@ const defaultEmailContent = {
     ],
 } as EmailContent;
 
-export default function EmailEditorPage({
-    params,
-}: {
-    params: {
+export default function EmailEditorPage(props: {
+    params: Promise<{
         productId: string;
         sectionId: string;
-    };
+    }>;
 }) {
+    const params = use(props.params);
     const { productId, sectionId } = params;
     const [email, setEmail] = useState<EmailContent | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const { toast } = useToast();
 
     const address = useContext(AddressContext);
-    const { product, loaded: productLoaded } = useProduct(productId, address);
+    const { product, loaded: productLoaded } = useProduct(productId);
     const [section, setSection] = useState<Group | null>(null);
 
     // Refs to track initial values and prevent saving during load

@@ -2,12 +2,13 @@
 
 import { useContext, useMemo } from "react";
 import { BlogContentCard } from "./content-card";
+import { EmptyState } from "./empty-state";
 import { PaginationControls } from "@components/public/pagination";
 import { Constants, Course } from "@courselit/common-models";
 import { useProducts } from "@/hooks/use-products";
 import { ProductCardSkeleton } from "@courselit/page-blocks";
 import { ThemeContext } from "@components/contexts";
-import { BookOpen } from "lucide-react";
+import { FileText } from "lucide-react";
 import { Button, Subheader1 } from "@courselit/page-primitives";
 
 const ITEMS_PER_PAGE = 9;
@@ -35,10 +36,14 @@ export function BlogsList({
         true,
     );
 
+    if (!loading && totalPages === 0) {
+        return <EmptyState />;
+    }
+
     if (!loading && totalPages && products.length === 0) {
         return (
             <div className="flex flex-col gap-4 items-center justify-center py-12 text-center">
-                <BookOpen className="w-12 h-12 text-muted-foreground" />
+                <FileText className="w-12 h-12 text-muted-foreground" />
                 <Subheader1 theme={theme}>This page is empty.</Subheader1>
                 <Button size="sm" theme={theme} onClick={() => onPageChange(1)}>
                     Go to first page

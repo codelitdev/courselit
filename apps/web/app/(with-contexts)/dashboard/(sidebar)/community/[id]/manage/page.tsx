@@ -16,7 +16,7 @@ import {
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
-import { ChangeEvent, useContext, useEffect, useState } from "react";
+import { ChangeEvent, useContext, useEffect, useState, use } from "react";
 import {
     PaymentPlan,
     Constants,
@@ -74,13 +74,12 @@ import { useMembership } from "@/hooks/use-membership";
 import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
 const { PaymentPlanType: paymentPlanType, MembershipEntityType } = Constants;
 
-export default function Page({
-    params,
-}: {
-    params: {
+export default function Page(props: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }) {
+    const params = use(props.params);
     const { id } = params;
     const breadcrumbs = [
         {
@@ -187,7 +186,7 @@ export default function Page({
         }
         setCategories(community.categories);
         setAutoAcceptMembers(community.autoAcceptMembers);
-        setJoiningReasonText(community.joiningReasonText);
+        setJoiningReasonText(community.joiningReasonText || "");
         setPageId(community.pageId);
         setPaymentPlans(community.paymentPlans);
         setDefaultPaymentPlan(community.defaultPaymentPlan);
@@ -442,74 +441,6 @@ export default function Page({
             }
         }
     };
-
-    // const onPlanSubmitted = async (plan: PaymentPlan) => {
-    //     const query = `
-    //         mutation CreatePlan(
-    //             $name: String!,
-    //             $type: PaymentPlanType!,
-    //             $entityId: String!,
-    //             $entityType: MembershipEntityType!
-    //             $oneTimeAmount: Int,
-    //             $emiAmount: Int,
-    //             $emiTotalInstallments: Int,
-    //             $subscriptionMonthlyAmount: Int,
-    //             $subscriptionYearlyAmount: Int,
-    //         ) {
-    //             plan: createPlan(
-    //                 name: $name,
-    //                 type: $type,
-    //                 entityId: $entityId,
-    //                 entityType: $entityType,
-    //                 oneTimeAmount: $oneTimeAmount,
-    //                 emiAmount: $emiAmount,
-    //                 emiTotalInstallments: $emiTotalInstallments,
-    //                 subscriptionMonthlyAmount: $subscriptionMonthlyAmount,
-    //                 subscriptionYearlyAmount: $subscriptionYearlyAmount,
-    //             ) {
-    //                 planId
-    //                 name
-    //                 type
-    //                 oneTimeAmount
-    //                 emiAmount
-    //                 emiTotalInstallments
-    //                 subscriptionMonthlyAmount
-    //                 subscriptionYearlyAmount
-    //             }
-    //         }
-    //     `;
-    //     try {
-    //         const fetchRequest = fetch
-    //             .setPayload({
-    //                 query,
-    //                 variables: {
-    //                     name: plan.name,
-    //                     type: plan.type,
-    //                     entityId: id,
-    //                     entityType:
-    //                         MembershipEntityType.COMMUNITY.toUpperCase(),
-    //                     oneTimeAmount: plan.oneTimeAmount,
-    //                     emiAmount: plan.emiAmount,
-    //                     emiTotalInstallments: plan.emiTotalInstallments,
-    //                     subscriptionMonthlyAmount:
-    //                         plan.subscriptionMonthlyAmount,
-    //                     subscriptionYearlyAmount: plan.subscriptionYearlyAmount,
-    //                 },
-    //             })
-    //             .setIsGraphQLEndpoint(true)
-    //             .build();
-    //         const response = await fetchRequest.exec();
-    //         if (response.plan) {
-    //             setPaymentPlans([...paymentPlans, response.plan]);
-    //         }
-    //     } catch (error: any) {
-    //         toast({
-    //             title: TOAST_TITLE_ERROR,
-    //             description: error.message,
-    //             variant: "destructive",
-    //         });
-    //     }
-    // };
 
     const onPlanArchived = async (planId: string) => {
         const query = `

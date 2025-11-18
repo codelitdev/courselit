@@ -2,14 +2,13 @@ import { Media } from "./media";
 import { Progress } from "./progress";
 
 export default interface Profile {
-    name: string;
-    id: string;
+    userId: string;
+    name?: string;
     fetched: boolean;
     purchases: Progress[];
     email: string;
-    bio: string;
+    bio?: string;
     permissions: string[];
-    userId: string;
-    subscribedToUpdates: string;
+    subscribedToUpdates: boolean;
     avatar: Partial<Media>;
 }

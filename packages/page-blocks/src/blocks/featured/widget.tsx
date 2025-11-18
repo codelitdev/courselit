@@ -5,7 +5,6 @@ import {
     SkeletonCard,
     getSymbolFromCurrency,
 } from "@courselit/components-library";
-import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder, getPlanPrice } from "@courselit/utils";
 import Settings from "./settings";
 import { Header1, Subheader1, Section } from "@courselit/page-primitives";
@@ -23,7 +22,6 @@ export default function Widget({
         cssId,
     },
     state,
-    dispatch,
 }: WidgetProps<Settings>) {
     const { theme } = state;
     const overiddenTheme: ThemeStyle = JSON.parse(JSON.stringify(theme.theme));
@@ -86,15 +84,12 @@ export default function Widget({
             .build();
 
         try {
-            dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
             if (response.products) {
                 setProductItems(response.products);
             }
         } catch (err) {
             console.log("Error", err.message); // eslint-disable-line no-console
-        } finally {
-            dispatch(actionCreators.networkAction(false));
         }
     };
 

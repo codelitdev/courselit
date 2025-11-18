@@ -22,7 +22,6 @@ const typeMap: MarkMap = {
     codeMirror: CodeMirrorRenderer,
     doc: Doc,
     hardBreak: "br",
-    // heading: Heading,
     horizontalRule: "hr",
     iframe: createIFrameHandler(),
     image: "img",
@@ -32,6 +31,7 @@ const typeMap: MarkMap = {
     text: TextHandler,
     taskList: "ul",
     taskListItem: "li",
+    // add links to headings for table of contents navigation
     heading: ({ node, children }) => {
         if (!node.content) {
             return null;
@@ -53,8 +53,9 @@ const markMap: MarkMap = {
     italic: "em",
     bold: "strong",
     code: "code",
-    link: createLinkHandler({ target: "_blank" }),
+    link: createLinkHandler({ target: "_blank", rel: "noopener noreferrer" }),
     underline: "u",
+    strike: "strike",
 };
 
 interface RendererProps {

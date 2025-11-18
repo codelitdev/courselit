@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, ChangeEvent, useContext } from "react";
 import { Form, FormField, useToast } from "@courselit/components-library";
 import Segment from "@ui-models/segment";
 import {
@@ -10,38 +10,27 @@ import {
 } from "@ui-config/strings";
 import { FormEvent } from "react";
 import { FetchBuilder } from "@courselit/utils";
-import type { AppDispatch, AppState } from "@courselit/state-management";
-import {
-    Address,
-    UserFilter,
-    UserFilterAggregator,
-} from "@courselit/common-models";
-import type { ThunkDispatch } from "redux-thunk";
-import { actionCreators } from "@courselit/state-management";
-import type { AnyAction } from "redux";
+import { UserFilter, UserFilterAggregator } from "@courselit/common-models";
 import PopoverDescription from "./popover-description";
 import { PopoverContent, PopoverTrigger } from "@components/ui/popover";
 import { Save } from "lucide-react";
 import { Button } from "@components/ui/button";
-
-const { networkAction } = actionCreators;
+import { AddressContext } from "@components/contexts";
 
 interface FilterSaveProps {
     filters: UserFilter[];
     aggregator: UserFilterAggregator;
-    address: Address;
     dismissPopover: (segments?: Segment[]) => void;
-    dispatch?: AppDispatch;
 }
 
 export default function FilterSave({
     filters,
     aggregator,
-    address,
-    dispatch,
     dismissPopover,
 }: FilterSaveProps) {
     const [name, setName] = useState("");
+    const address = useContext(AddressContext);
+    const [loading, setLoading] = useState(false);
     const { toast } = useToast();
 
     const onSubmit = async (e: FormEvent) => {
@@ -78,10 +67,7 @@ export default function FilterSave({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch &&
-                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                    networkAction(true),
-                );
+            setLoading(true);
             const response = await fetch.exec();
             if (response.segments) {
                 dismissPopover(response.segments);
@@ -95,16 +81,13 @@ export default function FilterSave({
                 variant: "destructive",
             });
         } finally {
-            dispatch &&
-                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                    networkAction(false),
-                );
+            setLoading(false);
         }
     };
 
     return (
         <>
-            <PopoverTrigger>
+            <PopoverTrigger asChild>
                 <Button
                     variant="ghost"
                     size="sm"
@@ -129,7 +112,9 @@ export default function FilterSave({
                         onSubmit={onSubmit}
                     />
                     <div className="flex">
-                        <Button type="submit">{BUTTON_SAVE}</Button>
+                        <Button type="submit" disabled={loading}>
+                            {BUTTON_SAVE}
+                        </Button>
                     </div>
                 </Form>
             </PopoverContent>

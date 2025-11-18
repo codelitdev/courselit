@@ -6,11 +6,9 @@ import {
     PRODUCT_STATUS_DRAFT,
     PRODUCT_STATUS_PUBLISHED,
     PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
-} from "../../../ui-config/strings";
+} from "@/ui-config/strings";
 import { MoreVert } from "@courselit/icons";
-import type { AppDispatch } from "@courselit/state-management";
-import type { SiteInfo, Address } from "@courselit/common-models";
-// import { connect } from "react-redux";
+import type { SiteInfo } from "@courselit/common-models";
 import {
     Chip,
     Menu2,
@@ -20,11 +18,11 @@ import {
 } from "@courselit/components-library";
 import { deleteProduct } from "./helpers";
 import { TableRow } from "@courselit/components-library";
+import { AddressContext } from "@components/contexts";
+import { useContext } from "react";
 
 export default function BlogItem({
     details,
-    address,
-    dispatch,
     position,
     onDelete,
 }: {
@@ -32,12 +30,11 @@ export default function BlogItem({
         published: boolean;
     };
     siteinfo: SiteInfo;
-    address: Address;
-    dispatch?: AppDispatch;
     position: number;
     onDelete: (position: number) => void;
 }) {
     const product = details;
+    const address = useContext(AddressContext);
     const { toast } = useToast();
 
     return (
@@ -73,7 +70,6 @@ export default function BlogItem({
                             deleteProduct({
                                 id: product.courseId,
                                 backend: address.backend,
-                                dispatch,
                                 onDeleteComplete: () => {
                                     onDelete(position);
                                 },
@@ -86,12 +82,3 @@ export default function BlogItem({
         </TableRow>
     );
 }
-
-// const mapStateToProps = (state: AppState) => ({
-//     siteinfo: state.siteinfo,
-//     address: state.address,
-// });
-
-// const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-// export default connect(mapStateToProps, mapDispatchToProps)(BlogItem);

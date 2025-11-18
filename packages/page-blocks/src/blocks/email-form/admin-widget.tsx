@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import type { Address } from "@courselit/common-models";
-import { AppDispatch } from "@courselit/state-management";
 import type Settings from "./settings";
 import {
     AdminWidgetPanel,
@@ -25,15 +24,12 @@ interface AdminWidgetProps {
     settings: Settings;
     onChange: (...args: any[]) => void;
     address: Address;
-    networkAction: boolean;
-    dispatch: AppDispatch;
     theme: Theme;
 }
 
 export default function AdminWidget({
     settings,
     onChange,
-    theme,
 }: AdminWidgetProps): JSX.Element {
     const [title, setTitle] = useState(settings.title);
     const [subtitle, setSubtitle] = useState(settings.subtitle);

@@ -25,7 +25,8 @@ import {
     deleteMailFromSequence,
 } from "./logic";
 import types from "./types";
-import { Constants, Event } from "@courselit/common-models";
+import { Constants } from "@courselit/common-models";
+import type { Event as SequenceEvent } from "@courselit/common-models";
 
 const mutations = {
     createSubscription: {
@@ -147,7 +148,7 @@ const mutations = {
                 title?: string;
                 fromName?: string;
                 fromEmail?: string;
-                triggerType?: Event;
+                triggerType?: string;
                 triggerData?: string;
                 filter?: string;
                 emailsOrder?: string[];
@@ -160,7 +161,9 @@ const mutations = {
                 title,
                 fromName,
                 fromEmail,
-                triggerType,
+                triggerType: triggerType as unknown as
+                    | SequenceEvent
+                    | undefined,
                 triggerData,
                 filter,
                 emailsOrder,

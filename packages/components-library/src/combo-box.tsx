@@ -1,164 +1,286 @@
 "use client";
 
-import { Content, Portal, Root, Trigger } from "@radix-ui/react-popover";
-import { ChangeEvent, useState } from "react";
-import Form from "./form";
-import IconButton from "./icon-button";
-import { Cross } from "@courselit/icons";
-import ScrollArea from "./scrollarea";
+import { KeyboardEvent, useEffect, useMemo, useState } from "react";
+import { Check, ChevronDown, PlusCircle, X } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface ComboBoxProps {
     options: string[];
     selectedOptions: Set<string>;
     onChange: (options: string[]) => void;
     className?: string;
-    side?: "left" | "right" | "top" | "bottom";
+    placeholder?: string;
+    createLabel?: (value: string) => string;
+    emptyLabel?: string;
 }
+
+const MAX_BADGES_TO_SHOW = 3;
 
 export default function ComboBox({
     options,
     selectedOptions,
     onChange,
     className,
-    side = "top",
+    placeholder = "Select or create...",
+    createLabel = (value) => `Create "${value}"`,
+    emptyLabel = "No results found",
 }: ComboBoxProps) {
-    const [internalOptions, setInternalOptions] = useState(options);
-    const [internalSelectedOptions, setInternalSelectedOptions] =
-        useState<Set<string>>(selectedOptions);
-    const [text, setText] = useState("");
-    const [internalOpen, setInternalOpen] = useState(false);
-    const outlineClass = `flex flex-wrap min-w-[220px] min-h-[36px] gap-2 border border-slate-300 hover:border-slate-400 rounded py-1 px-2 outline-none focus:border-slate-600 disabled:pointer-events-none overflow-y-auto ${className}`;
+    const [open, setOpen] = useState(false);
+    const [searchValue, setSearchValue] = useState("");
+    const [internalOptions, setInternalOptions] = useState<string[]>(() => {
+        return Array.from(new Set(options));
+    });
+    const [internalSelected, setInternalSelected] = useState<Set<string>>(
+        () => new Set(selectedOptions),
+    );
 
-    const onOptionAdd = () => {
-        internalSelectedOptions.add(text);
-        const selectedOptions = new Set(internalSelectedOptions);
-        setInternalSelectedOptions(selectedOptions);
-        onChange(Array.from(selectedOptions));
-        if (!internalOptions.includes(text)) {
-            setInternalOptions([...internalOptions, text]);
+    useEffect(() => {
+        setInternalSelected(new Set(selectedOptions));
+    }, [selectedOptions]);
+
+    useEffect(() => {
+        setInternalOptions((prev) => {
+            const merged = new Set(prev);
+            for (const option of options) {
+                merged.add(option);
+            }
+            return Array.from(merged);
+        });
+    }, [options]);
+
+    useEffect(() => {
+        if (!open) {
+            setSearchValue("");
         }
-        setText("");
+    }, [open]);
+
+    const normalizedSearch = searchValue.trim().toLowerCase();
+
+    const filteredOptions = useMemo(() => {
+        if (!normalizedSearch) {
+            return internalOptions;
+        }
+        return internalOptions.filter((option) =>
+            option.toLowerCase().includes(normalizedSearch),
+        );
+    }, [internalOptions, normalizedSearch]);
+
+    const existingValuesLower = useMemo(() => {
+        return new Set(internalOptions.map((option) => option.toLowerCase()));
+    }, [internalOptions]);
+
+    const canCreateNewOption =
+        normalizedSearch.length > 0 &&
+        !existingValuesLower.has(normalizedSearch);
+
+    const selectedArray = useMemo(() => {
+        return Array.from(internalSelected).sort((a, b) =>
+            a.localeCompare(b, undefined, { sensitivity: "base" }),
+        );
+    }, [internalSelected]);
+
+    const handleToggleOption = (value: string) => {
+        setInternalOptions((prev) =>
+            prev.includes(value) ? prev : [...prev, value],
+        );
+
+        setInternalSelected((prev) => {
+            const next = new Set(prev);
+            if (next.has(value)) {
+                next.delete(value);
+            } else {
+                next.add(value);
+            }
+            onChange(Array.from(next));
+            return next;
+        });
+    };
+
+    const handleCreateOption = () => {
+        const trimmed = searchValue.trim();
+        if (!trimmed) {
+            return;
+        }
+        setInternalOptions((prev) =>
+            prev.includes(trimmed) ? prev : [...prev, trimmed],
+        );
+        setInternalSelected((prev) => {
+            const next = new Set(prev).add(trimmed);
+            onChange(Array.from(next));
+            return next;
+        });
+        setSearchValue("");
+    };
+
+    const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === "Enter" && canCreateNewOption) {
+            event.preventDefault();
+            handleCreateOption();
+        }
+    };
+
+    const handleRemoveOption = (value: string) => {
+        setInternalSelected((prev) => {
+            if (!prev.has(value)) {
+                return prev;
+            }
+            const next = new Set(prev);
+            next.delete(value);
+            onChange(Array.from(next));
+            return next;
+        });
     };
 
     return (
-        <Root onOpenChange={setInternalOpen}>
-            <Trigger asChild>
-                <div>
-                    {!internalOpen && (
-                        <div className={outlineClass}>
-                            {Array.from(internalSelectedOptions).map(
-                                (option) => (
-                                    <div
-                                        key={option}
-                                        className="bg-slate-300 px-2 rounded-sm"
-                                    >
-                                        {option}
-                                    </div>
-                                ),
-                            )}
-                        </div>
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                    type="button"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className={cn(
+                        "w-full justify-between gap-2",
+                        "min-h-[42px] h-auto flex-wrap",
+                        className,
                     )}
-                </div>
-            </Trigger>
-            <Portal>
-                <Content
-                    align="start"
-                    side={side}
-                    className="bg-white shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]"
                 >
-                    <div className={outlineClass}>
-                        {Array.from(internalSelectedOptions).map((option) => (
-                            <div
-                                key={option}
-                                className="bg-slate-300 px-2 rounded-sm flex"
-                            >
-                                <div>{option}</div>
-                                <IconButton
-                                    variant="transparent"
-                                    onClick={() => {
-                                        internalSelectedOptions.delete(option);
-                                        const selectedOptions = new Set(
-                                            internalSelectedOptions,
-                                        );
-                                        setInternalSelectedOptions(
-                                            selectedOptions,
-                                        );
-                                        onChange(
-                                            Array.from(internalSelectedOptions),
-                                        );
-                                    }}
-                                >
-                                    <Cross />
-                                </IconButton>
-                            </div>
-                        ))}
-                        <Form
-                            onSubmit={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                onOptionAdd();
-                            }}
-                        >
-                            <input
-                                className="outline-none"
-                                type="text"
-                                value={text}
-                                autoFocus
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setText(e.target.value)
-                                }
-                            />
-                        </Form>
-                    </div>
-                    <div className="p-2">
-                        <ScrollArea>
-                            <h6 className="text-xs text-slate-400 my-2 font-medium">
-                                Select an option or create one
-                            </h6>
-                            <ul>
-                                {internalOptions
-                                    .filter((option) => option.startsWith(text))
+                    <div className="flex flex-1 flex-wrap items-center gap-1 text-left">
+                        {selectedArray.length === 0 ? (
+                            <span className="text-muted-foreground">
+                                {placeholder}
+                            </span>
+                        ) : (
+                            <>
+                                {selectedArray
+                                    .slice(0, MAX_BADGES_TO_SHOW)
                                     .map((option) => (
-                                        <li
+                                        <Badge
                                             key={option}
-                                            onClick={() => {
-                                                internalSelectedOptions.add(
-                                                    option,
-                                                );
-                                                const selectedOptions = new Set(
-                                                    internalSelectedOptions,
-                                                );
-                                                setInternalSelectedOptions(
-                                                    selectedOptions,
-                                                );
-                                                onChange(
-                                                    Array.from(selectedOptions),
-                                                );
-                                            }}
-                                            className="cursor-pointer text-medium leading-none rounded-[3px] flex items-center h-8 select-none outline-none hover:bg-slate-200"
+                                            variant="secondary"
+                                            className="flex items-center gap-1 text-xs"
                                         >
                                             {option}
-                                        </li>
+                                            <button
+                                                type="button"
+                                                className="rounded-sm p-0.5 transition hover:bg-muted"
+                                                onClick={(event) => {
+                                                    event.stopPropagation();
+                                                    handleRemoveOption(option);
+                                                }}
+                                                aria-label={`Remove ${option}`}
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                        </Badge>
                                     ))}
-                                {text &&
-                                    !internalOptions.some(
-                                        (option) => option === text,
-                                    ) && (
-                                        <li
-                                            onClick={onOptionAdd}
-                                            className="cursor-pointer text-medium leading-none rounded-[3px] flex items-center gap-2 h-8 select-none outline-none hover:bg-slate-200"
-                                        >
-                                            Create{" "}
-                                            <span className="bg-slate-300 px-2 py-1 rounded-sm">
-                                                {text}
-                                            </span>
-                                        </li>
-                                    )}
-                            </ul>
-                        </ScrollArea>
+                                {selectedArray.length > MAX_BADGES_TO_SHOW && (
+                                    <Badge
+                                        variant="outline"
+                                        className="text-xs"
+                                    >
+                                        +
+                                        {selectedArray.length -
+                                            MAX_BADGES_TO_SHOW}
+                                    </Badge>
+                                )}
+                            </>
+                        )}
                     </div>
-                </Content>
-            </Portal>
-        </Root>
+                    <ChevronDown
+                        className={cn(
+                            "h-4 w-4 shrink-0 opacity-50 transition-transform",
+                            open && "rotate-180",
+                        )}
+                    />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[320px] p-0">
+                <Command shouldFilter={false}>
+                    <CommandInput
+                        placeholder="Search..."
+                        value={searchValue}
+                        onValueChange={setSearchValue}
+                        onKeyDown={handleInputKeyDown}
+                    />
+                    <CommandList>
+                        <CommandEmpty>
+                            <div className="flex flex-col items-center gap-2 py-6 text-sm text-muted-foreground">
+                                <span>{emptyLabel}</span>
+                                {canCreateNewOption && (
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="secondary"
+                                        className="gap-2"
+                                        onClick={handleCreateOption}
+                                    >
+                                        <PlusCircle className="h-4 w-4" />
+                                        {createLabel(searchValue.trim())}
+                                    </Button>
+                                )}
+                            </div>
+                        </CommandEmpty>
+                        <CommandGroup heading="Options">
+                            {filteredOptions.map((option) => {
+                                const isSelected = internalSelected.has(option);
+                                return (
+                                    <CommandItem
+                                        key={option}
+                                        value={option}
+                                        onSelect={(currentValue) => {
+                                            handleToggleOption(currentValue);
+                                        }}
+                                    >
+                                        <div className="mr-2 flex h-4 w-4 items-center justify-center">
+                                            <Check
+                                                className={cn(
+                                                    "h-4 w-4",
+                                                    isSelected
+                                                        ? "opacity-100"
+                                                        : "opacity-0",
+                                                )}
+                                            />
+                                        </div>
+                                        <span className="flex-1 text-sm">
+                                            {option}
+                                        </span>
+                                    </CommandItem>
+                                );
+                            })}
+                        </CommandGroup>
+                        {canCreateNewOption && filteredOptions.length > 0 && (
+                            <div className="border-t border-border p-2">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className="w-full justify-start gap-2 px-2 text-sm"
+                                    onClick={handleCreateOption}
+                                >
+                                    <PlusCircle className="h-4 w-4" />
+                                    {createLabel(searchValue.trim())}
+                                </Button>
+                            </div>
+                        )}
+                    </CommandList>
+                </Command>
+            </PopoverContent>
+        </Popover>
     );
 }

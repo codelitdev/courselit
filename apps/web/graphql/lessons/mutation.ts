@@ -12,9 +12,9 @@ import {
     markLessonCompleted,
     updateLesson,
 } from "./logic";
-import { Lesson } from "../../models/Lesson";
 import GQLContext from "../../models/GQLContext";
 import { GraphQLJSONObject } from "graphql-type-json";
+import type { LessonWithStringContent } from "./logic";
 
 export default {
     createLesson: {
@@ -26,7 +26,7 @@ export default {
         },
         resolve: async (
             _: any,
-            { lessonData }: { lessonData: Lesson },
+            { lessonData }: { lessonData: LessonWithStringContent },
             context: GQLContext,
         ) => createLesson(lessonData, context),
     },
@@ -47,7 +47,9 @@ export default {
         },
         resolve: async (
             _: any,
-            { lessonData }: { lessonData: Lesson },
+            {
+                lessonData,
+            }: { lessonData: LessonWithStringContent & { id: string } },
             context: GQLContext,
         ) => updateLesson(lessonData, context),
     },
@@ -61,7 +63,7 @@ export default {
             _: any,
             { id, answers }: { id: string; answers: string },
             context: GQLContext,
-        ) => markLessonCompleted(id, context, answers),
+        ) => markLessonCompleted(id, context),
     },
     evaluateLesson: {
         type: types.evaluationResult,

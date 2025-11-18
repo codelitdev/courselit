@@ -5,7 +5,7 @@ import {
     PageTypeBlog,
     PageTypeCommunity,
 } from "@courselit/common-models";
-import widgets from "../../../ui-config/widgets";
+import widgets from "@/ui-config/widgets";
 
 interface WidgetsListProps {
     pageType: PageTypeProduct | PageTypeSite | PageTypeBlog | PageTypeCommunity;
@@ -21,14 +21,14 @@ function AddWidget({ pageType, onSelection, onClose }: WidgetsListProps) {
                 .map((item, index) =>
                     widgets[item].metadata.compatibleWith.includes(pageType) ? (
                         <li
-                            className="flex items-center px-2 py-3 hover:!bg-slate-100 cursor-pointer justify-between"
+                            className="flex items-center px-2 py-3 hover:!bg-accent cursor-pointer justify-between"
                             key={index}
                             onClick={(e) => onSelection(item)}
                         >
                             {widgets[item].metadata.displayName}
                         </li>
                     ) : (
-                        <></>
+                        <React.Fragment key={index}></React.Fragment>
                     ),
                 )}
         </ul>

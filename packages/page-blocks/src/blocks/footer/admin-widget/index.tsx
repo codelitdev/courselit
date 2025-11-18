@@ -44,12 +44,12 @@ export default function AdminWidget({
                 name: "Legal",
                 links: [
                     {
-                        label: "Terms of use",
+                        label: "Terms of Use",
                         href: "/p/terms",
                         id: generateUniqueId(),
                     },
                     {
-                        label: "Privacy policy",
+                        label: "Privacy Policy",
                         href: "/p/privacy",
                         id: generateUniqueId(),
                     },

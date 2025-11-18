@@ -8,11 +8,11 @@ import {
     TypefacesContext,
     ThemeContext,
 } from "@components/contexts";
-import { BaseLayout } from "@components/public/base-layout";
+import BaseLayout from "@components/public/base-layout";
 import { Profile } from "@courselit/common-models";
 import { getFullSiteSetup } from "@ui-lib/utils";
 import { useContext } from "react";
-import { CodeInjector } from "@components/public/code-injector";
+import CodeInjector from "@components/public/code-injector";
 
 export default function HomepageLayout({
     children,
@@ -32,9 +32,7 @@ export default function HomepageLayout({
         <BaseLayout
             layout={siteInfo!.page.layout}
             title={siteInfo!.page.title || ""}
-            typefaces={typefaces}
             siteInfo={siteinfo}
-            dispatch={() => {}}
             theme={theme}
             state={{
                 config: config,

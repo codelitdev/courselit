@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useContext, useCallback } from "react";
-import { CreatePostDialog } from "./create-post-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,19 +29,28 @@ import { Comment as CommentType } from "./mock-data";
 import { useRouter } from "next/navigation";
 import { capitalize, FetchBuilder, truncate } from "@courselit/utils";
 import { AddressContext, ProfileContext } from "@components/contexts";
-import { PaginatedTable, useToast } from "@courselit/components-library";
+import {
+    PaginatedTable,
+    useToast,
+    useMediaLit,
+} from "@courselit/components-library";
 import {
     CommunityMedia,
     CommunityPost,
     Constants,
     Media,
+    TextEditorContent,
 } from "@courselit/common-models";
 import LoadingSkeleton from "./loading-skeleton";
 import { formattedLocaleDate, hasCommunityPermission } from "@ui-lib/utils";
 import { MediaItem } from "./media-item";
 import Image from "next/image";
 import MembershipStatus from "./membership-status";
-import { TOAST_TITLE_ERROR, TOAST_TITLE_SUCCESS } from "@ui-config/strings";
+import {
+    MANAGE_LINK_TEXT,
+    TOAST_TITLE_ERROR,
+    TOAST_TITLE_SUCCESS,
+} from "@ui-config/strings";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -57,6 +65,10 @@ import NotFound from "@components/admin/not-found";
 import { CommunityInfo } from "./info";
 import Banner from "./banner";
 import { Textarea } from "@/components/ui/textarea";
+import Link from "next/link";
+import dynamic from "next/dynamic";
+
+const CreatePostDialog = dynamic(() => import("./create-post-dialog"));
 
 const itemsPerPage = 10;
 
@@ -70,9 +82,6 @@ export function CommunityForum({
     const router = useRouter();
     const [showAllCategories, setShowAllCategories] = useState(false);
     const [posts, setPosts] = useState<CommunityPost[]>([]);
-    const [newComments, setNewComments] = useState<{
-        [postId: string]: string;
-    }>({});
     const commentsEndRef = useRef<HTMLDivElement>(null);
     const address = useContext(AddressContext);
     const { toast } = useToast();
@@ -83,7 +92,6 @@ export function CommunityForum({
         null,
     );
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-    const [comments, setComments] = useState<CommentType[]>([]);
     const { community, loaded, setCommunity } = useCommunity(id);
     const { membership, setMembership } = useMembership(id);
     const { profile } = useContext(ProfileContext);
@@ -93,6 +101,14 @@ export function CommunityForum({
         null,
     );
     const [refreshCommunityStatus, setRefreshCommunityStatus] = useState(0);
+    const { isUploading, uploadProgress, uploadFile } = useMediaLit({
+        signatureEndpoint: `${address.backend}/api/media/presigned`,
+        access: "public",
+    });
+    const [fileBeingUploadedNumber, setFileBeingUploadedNumber] = useState(0);
+
+    const formatTimestamp = (value?: string) =>
+        formattedLocaleDate(value ? new Date(value).getTime() : undefined);
 
     useEffect(() => {
         if (membership) {
@@ -329,19 +345,6 @@ export function CommunityForum({
         }
     };
 
-    const handleCommentLike = (postId: number, commentId: number) => {
-        setPosts((prevPosts) =>
-            prevPosts.map((post) =>
-                post.postId === postId
-                    ? {
-                          ...post,
-                          comments: likeComment(post.comments, commentId),
-                      }
-                    : post,
-            ),
-        );
-    };
-
     const likeComment = (
         comments: CommentType[],
         commentId: number,
@@ -359,27 +362,6 @@ export function CommunityForum({
                       ...comment,
                       replies: likeComment(comment.replies, commentId),
                   },
-        );
-    };
-
-    const handleCommentReply = (
-        postId: number,
-        parentCommentId: number,
-        content: string,
-    ) => {
-        setPosts((prevPosts) =>
-            prevPosts.map((post) =>
-                post.postId === postId
-                    ? {
-                          ...post,
-                          comments: addReplyToComment(
-                              post.comments,
-                              parentCommentId,
-                              content,
-                          ),
-                      }
-                    : post,
-            ),
         );
     };
 
@@ -416,64 +398,6 @@ export function CommunityForum({
                   },
         );
     };
-
-    const handleNewCommentChange = (postId: string, content: string) => {
-        setNewComments((prev) => ({ ...prev, [postId]: content }));
-    };
-
-    const handlePostComment = (postId: string) => {
-        const content = newComments[postId];
-        if (content && content.trim()) {
-            setPosts((prevPosts) =>
-                prevPosts.map((post) =>
-                    post.postId === postId
-                        ? {
-                              ...post,
-                              comments: [
-                                  ...comments,
-                                  {
-                                      id: Date.now(),
-                                      author: "Current User",
-                                      avatar: "/placeholder.svg",
-                                      content: content.trim(),
-                                      likes: 0,
-                                      hasLiked: false,
-                                      time: "Just now",
-                                      replies: [],
-                                  },
-                              ],
-                          }
-                        : post,
-                ),
-            );
-            setNewComments((prev) => ({ ...prev, [postId]: "" }));
-        }
-    };
-
-    const getPresignedUrl = async () => {
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/media/presigned`)
-            .setIsGraphQLEndpoint(false)
-            .build();
-        const response = await fetch.exec();
-        return response.url;
-    };
-
-    // const removeFile = async (mediaId: string) => {
-    //     try {
-    //         const fetch = new FetchBuilder()
-    //             .setUrl(`${address.backend}/api/media/${mediaId}`)
-    //             .setHttpMethod("DELETE")
-    //             .setIsGraphQLEndpoint(false)
-    //             .build();
-    //         const response = await fetch.exec();
-    //         if (response.message !== "success") {
-    //             throw new Error(response.message);
-    //         }
-    //     } catch (err: any) {
-    //         console.error("Error in removing file", err.message);
-    //     }
-    // };
 
     const createPost = async (
         newPost: Pick<CommunityPost, "title" | "content" | "category"> & {
@@ -561,54 +485,26 @@ export function CommunityForum({
                 description: err.message,
                 variant: "destructive",
             });
+        } finally {
+            setFileBeingUploadedNumber(0);
         }
     };
 
     const uploadAttachments = async (media: MediaItem[]) => {
-        for (const m of media) {
+        for (const i in media) {
+            const m = media[i];
             if (m.file) {
-                const uploadedMedia = await uploadFile(m.file);
+                setFileBeingUploadedNumber(+i + 1);
+                // TODO: Add file size limit
+                const uploadedMedia = (await uploadFile(
+                    m.file,
+                )) as unknown as Media;
                 m.media = uploadedMedia;
                 m.file = undefined;
                 m.url = undefined;
             }
         }
         return media;
-    };
-
-    const uploadFile = async (file: File) => {
-        try {
-            const presignedUrl = await getPresignedUrl();
-            const media = await uploadToServer(presignedUrl, file);
-            return media;
-        } catch (err) {
-            throw new Error(`Media upload: ${err.message}`);
-        }
-    };
-
-    const uploadToServer = async (
-        presignedUrl: string,
-        file: File,
-    ): Promise<Media> => {
-        const fD = new FormData();
-        fD.append("caption", file.name);
-        fD.append("access", "public");
-        fD.append("file", file);
-
-        const res = await fetch(presignedUrl, {
-            method: "POST",
-            body: fD,
-        });
-        if (res.status === 200) {
-            const media = await res.json();
-            if (media) {
-                delete media.group;
-            }
-            return media;
-        } else {
-            const resp = await res.json();
-            throw new Error(resp.error);
-        }
     };
 
     const renderMediaPreview = (
@@ -654,6 +550,8 @@ export function CommunityForum({
                             poster={media.media.thumbnail}
                             className="h-48 aspect-video object-cover rounded-md"
                             controls
+                            controlsList="nodownload"
+                            onContextMenu={(e) => e.preventDefault()}
                         >
                             Your browser does not support the video tag.
                         </video>
@@ -674,6 +572,9 @@ export function CommunityForum({
                             allowFullScreen
                         ></iframe>
                     );
+                }
+                if (!media.url) {
+                    return null;
                 }
                 return (
                     <div className="relative w-full aspect-video">
@@ -781,7 +682,7 @@ export function CommunityForum({
         }
     };
 
-    const updateBanner = async (json: Record<string, unknown>) => {
+    const updateBanner = async (json: TextEditorContent) => {
         const query = `
             mutation UpdateCommunity(
                 $id: String!
@@ -832,7 +733,9 @@ export function CommunityForum({
                     query,
                     variables: {
                         id,
-                        banner: JSON.stringify(json),
+                        banner: JSON.stringify(
+                            json as unknown as Record<string, unknown>,
+                        ),
                     },
                 })
                 .setIsGraphQLEndpoint(true)
@@ -914,7 +817,7 @@ export function CommunityForum({
         }
     };
 
-    if (!loaded) {
+    if (!loaded || !profile) {
         return <LoadingSkeleton />;
     }
 
@@ -1030,7 +933,13 @@ export function CommunityForum({
             {!community?.enabled && (
                 <div className="bg-red-400 p-2 mb-4 text-sm text-white rounded-md">
                     This community is not enabled. It is not visible to your
-                    audience (including moderators).
+                    audience (including moderators). {""}
+                    <Link
+                        href={`/dashboard/community/${id}/manage`}
+                        className="underline"
+                    >
+                        {MANAGE_LINK_TEXT}
+                    </Link>
                 </div>
             )}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -1046,7 +955,12 @@ export function CommunityForum({
                                 categories={categories.filter(
                                     (x) => x !== "All",
                                 )}
-                                onPostCreated={createPost}
+                                createPost={createPost}
+                                isFileUploading={isUploading}
+                                fileUploadProgress={uploadProgress}
+                                fileBeingUploadedNumber={
+                                    fileBeingUploadedNumber
+                                }
                             />
                         ) : null
                     ) : (
@@ -1055,7 +969,7 @@ export function CommunityForum({
                             membership={membership}
                             joiningReasonText={community?.joiningReasonText}
                             key={refreshCommunityStatus}
-                            paymentPlan={community?.paymentPlans.find(
+                            paymentPlan={community?.paymentPlans?.find(
                                 (plan) =>
                                     plan.planId ===
                                     community?.defaultPaymentPlan,
@@ -1069,7 +983,7 @@ export function CommunityForum({
                                 key={category}
                                 variant={
                                     category === activeCategory
-                                        ? "primary"
+                                        ? "default"
                                         : "outline"
                                 }
                                 size="sm"
@@ -1098,7 +1012,9 @@ export function CommunityForum({
                                   )
                                 : false
                         }
-                        initialBannerText={community?.banner}
+                        initialBannerText={
+                            community?.banner as TextEditorContent | undefined
+                        }
                         onSaveBanner={updateBanner}
                     />
 
@@ -1154,7 +1070,7 @@ export function CommunityForum({
                                                                             .email}
                                                                 </div>
                                                                 <div className="text-xs text-muted-foreground">
-                                                                    {formattedLocaleDate(
+                                                                    {formatTimestamp(
                                                                         post.updatedAt,
                                                                     )}{" "}
                                                                     •{" "}
@@ -1295,7 +1211,7 @@ export function CommunityForum({
                                                                         .email}
                                                             </div>
                                                             <div className="text-sm text-muted-foreground">
-                                                                {formattedLocaleDate(
+                                                                {formatTimestamp(
                                                                     post.updatedAt,
                                                                 )}{" "}
                                                                 •{" "}
@@ -1430,29 +1346,32 @@ export function CommunityForum({
                                                         {post.commentsCount}
                                                     </Button>
                                                 </div>
-                                                <CommentSection
-                                                    membership={membership}
-                                                    postId={post.postId}
-                                                    communityId={id!}
-                                                    onPostUpdated={(
-                                                        postId: string,
-                                                        count: number,
-                                                    ) => {
-                                                        setPosts((prevPosts) =>
-                                                            prevPosts.map(
-                                                                (p) =>
-                                                                    p.postId ===
-                                                                    postId
-                                                                        ? {
-                                                                              ...p,
-                                                                              commentsCount:
-                                                                                  count,
-                                                                          }
-                                                                        : p,
-                                                            ),
-                                                        );
-                                                    }}
-                                                />
+                                                {membership && (
+                                                    <CommentSection
+                                                        membership={membership}
+                                                        postId={post.postId}
+                                                        communityId={id!}
+                                                        onPostUpdated={(
+                                                            postId: string,
+                                                            count: number,
+                                                        ) => {
+                                                            setPosts(
+                                                                (prevPosts) =>
+                                                                    prevPosts.map(
+                                                                        (p) =>
+                                                                            p.postId ===
+                                                                            postId
+                                                                                ? {
+                                                                                      ...p,
+                                                                                      commentsCount:
+                                                                                          count,
+                                                                                  }
+                                                                                : p,
+                                                                    ),
+                                                            );
+                                                        }}
+                                                    />
+                                                )}
                                             </div>
                                         </DialogContent>
                                     </Dialog>
@@ -1540,13 +1459,11 @@ export function CommunityForum({
                             }
                             memberCount={community?.membersCount}
                             membership={membership}
-                            paymentPlan={
-                                community?.paymentPlans.find(
-                                    (plan) =>
-                                        plan.planId ===
-                                        community?.defaultPaymentPlan,
-                                )!
-                            }
+                            paymentPlan={community?.paymentPlans?.find(
+                                (plan) =>
+                                    plan.planId ===
+                                    community?.defaultPaymentPlan,
+                            )}
                             joiningReasonText={community?.joiningReasonText}
                             pageId={community?.pageId}
                             onJoin={handleJoin}

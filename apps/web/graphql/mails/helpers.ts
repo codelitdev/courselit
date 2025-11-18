@@ -9,8 +9,9 @@ import digitalDownloadTemplate from "../../templates/download-link";
 import { responses } from "@config/strings";
 import { generateEmailFrom } from "@/lib/utils";
 import { addMailJob } from "@/services/queue";
-import { InternalCourse } from "@models/Course";
 import { EmailBlock } from "@courselit/email-editor";
+import UserModel from "@models/User";
+import { InternalCourse } from "@courselit/common-logic";
 
 export function areAllEmailIdsValid(
     emailsOrder: string[],
@@ -86,11 +87,15 @@ export async function createTemplateAndSendMail({
         userId: user.userId,
     });
 
+    const creator = await UserModel.findOne({
+        userId: course.creatorId,
+    }).select("name");
+
     const emailBody = pug.render(digitalDownloadTemplate, {
         downloadLink: `${ctx.address}/api/download/${downloadLink.token}`,
         loginLink: `${ctx.address}/login`,
         courseName: course.title,
-        name: course.creatorName || ctx.subdomain.settings.title || "",
+        name: creator?.name || ctx.subdomain.settings.title || "",
         hideCourseLitBranding: ctx.subdomain.settings?.hideCourseLitBranding,
     });
 

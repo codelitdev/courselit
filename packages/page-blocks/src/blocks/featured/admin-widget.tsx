@@ -2,7 +2,6 @@ import React, { ChangeEvent, useEffect, useState } from "react";
 import type { Theme, ThemeStyle } from "@courselit/page-models";
 import Settings from "./settings";
 import { capitalize, FetchBuilder } from "@courselit/utils";
-import { actionCreators, AppDispatch } from "@courselit/state-management";
 import {
     AdminWidgetPanel,
     AdminWidgetPanelContainer,
@@ -23,8 +22,6 @@ interface AdminWidgetProps {
     settings: Settings;
     onChange: (...args: any[]) => void;
     address: Address;
-    networkAction: boolean;
-    dispatch: AppDispatch;
     theme: Theme;
 }
 
@@ -32,7 +29,6 @@ export default function AdminWidget({
     settings,
     onChange,
     address,
-    dispatch,
     theme,
 }: AdminWidgetProps): JSX.Element {
     const dummyDescription: Record<string, unknown> = {
@@ -114,7 +110,6 @@ export default function AdminWidget({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
             setProductsLoaded(true);
             if (response.products) {
@@ -122,8 +117,6 @@ export default function AdminWidget({
             }
         } catch (err: any) {
             console.log(err); // eslint-disable-line no-console
-        } finally {
-            dispatch(actionCreators.networkAction(false));
         }
     };
 

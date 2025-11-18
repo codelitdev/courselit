@@ -5,20 +5,29 @@ import { responses } from "@config/strings";
 import { error } from "@/services/logger";
 import { Readable } from "node:stream";
 import archiver from "archiver";
-import UserModel, { User } from "@models/User";
-import { Progress, Constants, Media } from "@courselit/common-models";
-import CourseModel, { Course } from "@models/Course";
-import LessonModel, { Lesson } from "@models/Lesson";
+import UserModel from "@models/User";
+import {
+    Progress,
+    Constants,
+    Media,
+    type User,
+    type Course,
+    type Lesson,
+} from "@courselit/common-models";
+import CourseModel from "@models/Course";
+import LessonModel from "@models/Lesson";
 import { getMedia } from "@/graphql/media/logic";
 import {
     createReadStream,
     createWriteStream,
     existsSync,
     mkdirSync,
+    rmSync,
     unlinkSync,
 } from "fs";
 import { recordActivity } from "@/lib/record-activity";
 import path from "node:path";
+import { Types } from "mongoose";
 
 export async function GET(
     req: NextRequest,
@@ -28,10 +37,10 @@ export async function GET(
         name: req.headers.get("domain"),
     });
     if (!domain) {
-        return { error: { message: "Domain not found", status: 404 } };
+        return Response.json({ message: "Domain not found" }, { status: 404 });
     }
 
-    const token = (await params).token;
+    const { token } = await params;
     if (!token) {
         return Response.json({ message: "Missing token" }, { status: 400 });
     }
@@ -97,7 +106,7 @@ export async function GET(
         for (let lesson of allLessons) {
             try {
                 const media = await getMedia(lesson.media);
-                if (media) {
+                if (media && isDownloadableMedia(media)) {
                     await downloadFile(media, targetDirectoryForFiles);
                 }
             } catch (err: any) {
@@ -128,10 +137,11 @@ export async function GET(
             await recordProgress({
                 courseId: downloadLink.courseId,
                 userId: downloadLink.userId,
+                domainId: downloadLink.domain,
             });
             downloadLink.consumed = true;
             await (downloadLink as any).save();
-            unlinkSync(targetDirectory);
+            rmSync(targetDirectory, { recursive: true, force: true });
         });
 
         return new Response(webStream, { headers });
@@ -148,6 +158,14 @@ function createFolder(folderPath: string) {
     if (!existsSync(folderPath)) {
         mkdirSync(folderPath, { recursive: true });
     }
+}
+
+function isDownloadableMedia(media: Media | Partial<Media>): media is Media {
+    return (
+        typeof media.mediaId === "string" &&
+        typeof media.originalFileName === "string" &&
+        typeof media.file === "string"
+    );
 }
 
 async function downloadFile(media: Media, folderPath: string) {
@@ -208,9 +226,11 @@ function createArchive({
 async function recordProgress({
     courseId,
     userId,
+    domainId,
 }: {
     courseId: string;
     userId: string;
+    domainId: Types.ObjectId;
 }) {
     const user: User | null = await UserModel.findOne({ userId });
     if (!user) {
@@ -229,7 +249,7 @@ async function recordProgress({
     await (user as any).save();
 
     await recordActivity({
-        domain: user.domain,
+        domain: domainId,
         userId: user.userId,
         type: Constants.ActivityType.DOWNLOADED,
         entityId: courseId,

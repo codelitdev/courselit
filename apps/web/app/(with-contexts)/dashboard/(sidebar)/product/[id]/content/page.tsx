@@ -41,9 +41,9 @@ import {
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
 import { AddressContext } from "@components/contexts";
-import useProduct from "../../../../../../../hooks/use-product";
+import useProduct from "@/hooks/use-product";
 import { truncate } from "@ui-lib/utils";
-import { Constants, Lesson } from "@courselit/common-models";
+import { Constants, Lesson, UIConstants } from "@courselit/common-models";
 import { DragAndDrop, useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import {
@@ -53,6 +53,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Droplets } from "lucide-react";
+const { permissions } = UIConstants;
 
 export default function ContentPage() {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -68,7 +69,7 @@ export default function ContentPage() {
     const params = useParams();
     const productId = params.id as string;
     const address = useContext(AddressContext);
-    const { product } = useProduct(productId, address);
+    const { product } = useProduct(productId);
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
         {
@@ -96,11 +97,11 @@ export default function ContentPage() {
     const LessonTypeIcon = ({ type }) => {
         switch (type) {
             case "video":
-                return <Video className="h-4 w-4" />;
+                return <Video className="h-4 w-4 text-muted-foreground" />;
             case "text":
-                return <FileText className="h-4 w-4" />;
+                return <FileText className="h-4 w-4 text-muted-foreground" />;
             case "quiz":
-                return <HelpCircle className="h-4 w-4" />;
+                return <HelpCircle className="h-4 w-4 text-muted-foreground" />;
             default:
                 return null;
         }
@@ -186,7 +187,13 @@ export default function ContentPage() {
     };
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[
+                permissions.manageAnyCourse,
+                permissions.manageCourse,
+            ]}
+        >
             <h1 className="text-4xl font-semibold tracking-tight mb-8">
                 Content
             </h1>
@@ -328,7 +335,7 @@ export default function ContentPage() {
                                         }))}
                                     Renderer={({ lesson }) => (
                                         <div
-                                            className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer w-full"
+                                            className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-muted transition-colors duration-150 ease-in-out cursor-pointer w-full"
                                             onClick={() =>
                                                 router.push(
                                                     `/dashboard/product/${productId}/content/section/${section.id}/lesson?id=${lesson.lessonId}`,
@@ -339,11 +346,11 @@ export default function ContentPage() {
                                                 <LessonTypeIcon
                                                     type={lesson.type}
                                                 />
-                                                <span className="text-sm font-medium">
+                                                <span className="text-sm font-medium text-foreground">
                                                     {lesson.title}
                                                 </span>
                                             </div>
-                                            <ChevronRight className="h-4 w-4 text-gray-400" />
+                                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
                                         </div>
                                     )}
                                     key={JSON.stringify(product.lessons)}

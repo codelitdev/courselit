@@ -6,6 +6,7 @@ import { fontSize as defaultFontSize } from "./defaults";
 import { Text1, Section } from "@courselit/page-primitives";
 import { ThemeStyle } from "@courselit/page-models";
 
+// TODO: This is not working hence turned off
 const twFontSize = {
     1: "text-xs",
     2: "text-sm",

@@ -1,6 +1,10 @@
 "use client";
 
-import { ServerConfigContext, ThemeContext } from "@components/contexts";
+import {
+    AddressContext,
+    ServerConfigContext,
+    ThemeContext,
+} from "@components/contexts";
 import {
     Button,
     Caption,
@@ -13,12 +17,7 @@ import {
 import { useContext, useState } from "react";
 import { FormEvent } from "react";
 import { signIn } from "next-auth/react";
-import {
-    Form,
-    // FormField,
-    // FormSubmit,
-    useToast,
-} from "@courselit/components-library";
+import { Form, useToast } from "@courselit/components-library";
 import {
     BTN_LOGIN,
     BTN_LOGIN_GET_CODE,
@@ -34,6 +33,10 @@ import Link from "next/link";
 import { TriangleAlert } from "lucide-react";
 import { useRecaptcha } from "@/hooks/use-recaptcha";
 import RecaptchaScriptLoader from "@/components/recaptcha-script-loader";
+import { checkPermission } from "@courselit/utils";
+import { Profile } from "@courselit/common-models";
+import { getUserProfile } from "../../helpers";
+import { ADMIN_PERMISSIONS } from "@ui-config/constants";
 
 export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
     const { theme } = useContext(ThemeContext);
@@ -45,6 +48,7 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
     const { toast } = useToast();
     const serverConfig = useContext(ServerConfigContext);
     const { executeRecaptcha } = useRecaptcha();
+    const address = useContext(AddressContext);
 
     const requestCode = async function (e: FormEvent) {
         e.preventDefault();
@@ -152,10 +156,25 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
             if (response?.error) {
                 setError(`Can't sign you in at this time`);
             } else {
-                window.location.href = redirectTo || "/dashboard/my-content";
+                window.location.href =
+                    redirectTo ||
+                    getRedirectURLBasedOnProfile(
+                        await getUserProfile(address.backend),
+                    );
             }
         } finally {
             setLoading(false);
+        }
+    };
+
+    const getRedirectURLBasedOnProfile = (profile: Profile) => {
+        if (
+            profile?.userId &&
+            checkPermission(profile.permissions!, ADMIN_PERMISSIONS)
+        ) {
+            return "/dashboard/overview";
+        } else {
+            return "/dashboard/my-content";
         }
     };
 
@@ -251,10 +270,6 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
                                         theme={theme.theme}
                                     />
                                     <div className="flex justify-center">
-                                        {/* <FormSubmit
-                                            text={loading ? LOADING : BTN_LOGIN}
-                                            disabled={loading}
-                                        /> */}
                                         <Button
                                             theme={theme.theme}
                                             disabled={loading}

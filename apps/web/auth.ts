@@ -1,15 +1,19 @@
-import NextAuth from "next-auth";
+import NextAuth, { Session } from "next-auth";
 import { z } from "zod";
 import { authConfig } from "./auth.config";
 import CredentialsProvider from "next-auth/providers/credentials";
 import VerificationToken from "@models/VerificationToken";
-import User from "@models/User";
+import UserModel from "@models/User";
 import { createUser } from "./graphql/users/logic";
-import { hashCode } from "@ui-lib/utils";
+import { hashCode } from "@/lib/utils";
 import DomainModel, { Domain } from "@models/Domain";
 import { error } from "./services/logger";
+import { User } from "next-auth";
+import { User as AppUser } from "@courselit/common-models";
 
-export const { auth, signIn, signOut, handlers } = NextAuth({
+type AuthReturn = ReturnType<typeof NextAuth>;
+
+const authHandlers: AuthReturn = NextAuth({
     ...authConfig,
     providers: [
         CredentialsProvider({
@@ -49,7 +53,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
                     return null;
                 }
 
-                let user = await User.findOne({
+                let user = await UserModel.findOne({
                     domain: domain._id,
                     email: sanitizedEmail,
                 });
@@ -66,12 +70,33 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
                 if (!user.active) {
                     return null;
                 }
-                return {
-                    id: user.userId,
-                    email: sanitizedEmail,
-                    name: user.name,
-                };
+                return user;
             },
         }),
     ],
+    callbacks: {
+        jwt({ token, user }: { token: any; user?: User }) {
+            if (user) {
+                token.userId = (user as unknown as AppUser).userId;
+                token.domain = (user as any).domain.toString();
+            }
+            return token;
+        },
+        session({ session, token }: { session: Session; token: any }) {
+            if (session.user && token.userId) {
+                if (token.userId) {
+                    (session.user as any).userId = token.userId;
+                }
+                if (token.domain) {
+                    (session.user as any).domain = token.domain;
+                }
+            }
+            return session;
+        },
+    },
 });
+
+export const auth: AuthReturn["auth"] = authHandlers.auth;
+export const signIn: AuthReturn["signIn"] = authHandlers.signIn;
+export const signOut: AuthReturn["signOut"] = authHandlers.signOut;
+export const handlers: AuthReturn["handlers"] = authHandlers.handlers;

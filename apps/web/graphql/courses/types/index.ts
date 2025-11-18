@@ -131,7 +131,6 @@ const courseType = new GraphQLObjectType({
         type: { type: new GraphQLNonNull(courseTypeFilters) },
         tags: { type: new GraphQLList(GraphQLString) },
         creatorId: { type: new GraphQLNonNull(GraphQLString) },
-        creatorName: { type: GraphQLString },
         user: {
             type: userTypes.userType,
             resolve: async (course, args, context, info) => {
@@ -166,6 +165,7 @@ const courseType = new GraphQLObjectType({
         defaultPaymentPlan: { type: GraphQLString },
         sales: { type: GraphQLFloat },
         customers: { type: GraphQLInt },
+        certificate: { type: GraphQLBoolean },
     },
 });
 
@@ -190,6 +190,7 @@ const courseUpdateInput = new GraphQLInputObjectType({
         description: { type: GraphQLString },
         featuredImage: { type: mediaTypes.mediaInputType },
         leadMagnet: { type: GraphQLBoolean },
+        certificate: { type: GraphQLBoolean },
     },
 });
 
@@ -218,7 +219,6 @@ const postType = new GraphQLObjectType({
         id: { type: new GraphQLNonNull(GraphQLID) },
         title: { type: new GraphQLNonNull(GraphQLString) },
         description: { type: new GraphQLNonNull(GraphQLString) },
-        creatorName: { type: GraphQLString },
         updatedAt: { type: new GraphQLNonNull(GraphQLString) },
         slug: { type: new GraphQLNonNull(GraphQLString) },
         courseId: { type: new GraphQLNonNull(GraphQLString) },
@@ -240,7 +240,6 @@ const publicCoursesType = new GraphQLObjectType({
         cost: { type: new GraphQLNonNull(GraphQLFloat) },
         description: { type: GraphQLString },
         type: { type: new GraphQLNonNull(courseTypeFilters) },
-        creatorName: { type: GraphQLString },
         updatedAt: { type: new GraphQLNonNull(GraphQLString) },
         slug: { type: new GraphQLNonNull(GraphQLString) },
         featuredImage: {
@@ -266,6 +265,19 @@ const enrolledCourses = new GraphQLObjectType({
     },
 });
 
+const certificateTemplateType = new GraphQLObjectType({
+    name: "CertificateTemplate",
+    fields: {
+        title: { type: GraphQLString },
+        subtitle: { type: GraphQLString },
+        description: { type: GraphQLString },
+        signatureImage: { type: mediaTypes.mediaType },
+        signatureName: { type: GraphQLString },
+        signatureDesignation: { type: GraphQLString },
+        logo: { type: mediaTypes.mediaType },
+    },
+});
+
 export default {
     courseType,
     courseStatusType,
@@ -278,4 +290,5 @@ export default {
     reports,
     dripType,
     dripInputType,
+    certificateTemplateType,
 };

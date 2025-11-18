@@ -1,5 +1,3 @@
-import { Address } from "@courselit/common-models";
-import { AppDispatch } from "@courselit/state-management";
 import {
     Form,
     FormField,
@@ -18,25 +16,17 @@ import {
     NEW_PAGE_URL_PLC,
     PAGES_TABLE_HEADER_NAME,
 } from "@ui-config/strings";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useContext, useEffect, useState } from "react";
 import { FetchBuilder, slugify } from "@courselit/utils";
-import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { Info } from "@courselit/icons";
 import { useRouter } from "next/navigation";
+import { AddressContext } from "@components/contexts";
 
-interface NewPageProps {
-    address: Address;
-    dispatch?: AppDispatch;
-    networkAction?: boolean;
-}
-
-const NewPage = ({
-    address,
-    dispatch,
-    networkAction: loading = false,
-}: NewPageProps) => {
+const NewPage = () => {
     const [name, setName] = useState("");
     const [pageId, setPageId] = useState("");
+    const [loading, setLoading] = useState(false);
+    const address = useContext(AddressContext);
     const router = useRouter();
     const { toast } = useToast();
 
@@ -59,7 +49,7 @@ const NewPage = ({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
+            setLoading(true);
             const response = await fetch.exec();
             if (response.page) {
                 router.replace(
@@ -73,7 +63,7 @@ const NewPage = ({
                 variant: "destructive",
             });
         } finally {
-            dispatch && dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -107,9 +97,7 @@ const NewPage = ({
                 </p>
                 <div className="flex gap-2">
                     <Button
-                        disabled={
-                            !name || !pageId || (!!name && !!pageId && loading)
-                        }
+                        disabled={!name || !pageId || loading}
                         onClick={createPage}
                         sx={{ mr: 1 }}
                     >

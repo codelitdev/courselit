@@ -87,6 +87,14 @@ export default function Checkout({
     const { toast } = useToast();
     const { theme } = useContext(ThemeContext);
 
+    const form = useForm<z.infer<typeof formSchema>>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            selectedPlan: product.defaultPaymentPlanId || "",
+            joiningReason: "",
+        },
+    });
+
     useEffect(() => {
         const fetchMembership = async () => {
             const query = `
@@ -127,25 +135,33 @@ export default function Checkout({
         }
     }, [profile]);
 
-    // Initialize selectedPlan with the default payment plan
     useEffect(() => {
-        if (paymentPlans.length > 0 && product.defaultPaymentPlanId) {
-            const defaultPlan = paymentPlans.find(
-                (plan) => plan.planId === product.defaultPaymentPlanId,
-            );
-            if (defaultPlan) {
-                setSelectedPlan(defaultPlan);
-            }
-        }
-    }, [paymentPlans, product.defaultPaymentPlanId]);
+        const initializeSelectedPlanWithDefaultPaymentPlan = () => {
+            if (paymentPlans.length > 0) {
+                let planToSelect: PaymentPlan | null = null;
 
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            selectedPlan: product.defaultPaymentPlanId || "",
-            joiningReason: "",
-        },
-    });
+                if (product.defaultPaymentPlanId) {
+                    planToSelect =
+                        paymentPlans.find(
+                            (plan) =>
+                                plan.planId === product.defaultPaymentPlanId,
+                        ) || null;
+                }
+
+                if (!planToSelect && paymentPlans.length === 1) {
+                    planToSelect = paymentPlans[0];
+                }
+
+                if (planToSelect) {
+                    setSelectedPlan(planToSelect);
+                    form.setValue("selectedPlan", planToSelect.planId);
+                    form.trigger("selectedPlan");
+                }
+            }
+        };
+
+        initializeSelectedPlanWithDefaultPaymentPlan();
+    }, [paymentPlans, product.defaultPaymentPlanId, form]);
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsSubmitting(true);

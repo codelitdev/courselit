@@ -11,7 +11,9 @@ import {
     convertFiltersToDBConditions,
 } from "@courselit/common-logic";
 
-type RuleWithDomain = Rule & { domain: mongoose.Schema.Types.ObjectId };
+type RuleWithDomain = Omit<Rule, "domain"> & {
+    domain: mongoose.Types.ObjectId;
+};
 
 export async function processRules() {
     // eslint-disable-next-line no-constant-condition
@@ -70,7 +72,9 @@ async function processRule(rule: RuleWithDomain) {
 }
 
 async function addBroadcastToOngoingSequence(sequence: AdminSequence) {
-    const query: Partial<User & { domain: mongoose.Types.ObjectId }> = {
+    const query: Partial<Omit<User, "domain">> & {
+        domain: mongoose.Types.ObjectId;
+    } = {
         domain: sequence.domain,
         ...(await convertFiltersToDBConditions({
             domain: sequence.domain,

@@ -1,4 +1,11 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, {
+    useState,
+    useEffect,
+    useCallback,
+    useMemo,
+    useContext,
+    startTransition,
+} from "react";
 import { FetchBuilder } from "@courselit/utils";
 import {
     TOAST_TITLE_ERROR,
@@ -9,7 +16,6 @@ import {
     USER_FILTER_PRODUCT_DROPDOWN_LABEL,
     USER_FILTER_PRODUCT_HAS,
 } from "@ui-config/strings";
-import { AppDispatch } from "@courselit/state-management";
 import { DropdownMenuLabel } from "@components/ui/dropdown-menu";
 import {
     Button,
@@ -18,24 +24,22 @@ import {
     Select,
     useToast,
 } from "@courselit/components-library";
-import { Address, Course } from "@courselit/common-models";
+import { Course } from "@courselit/common-models";
+import { AddressContext } from "@components/contexts";
 
 interface ProductFilterEditorProps {
     onApply: (...args: any[]) => any;
-    address: Address;
-    dispatch?: AppDispatch;
 }
 
 export default function ProductFilterEditor({
     onApply,
-    address,
-    dispatch,
 }: ProductFilterEditorProps) {
     const [condition, setCondition] = useState(USER_FILTER_PRODUCT_HAS);
     const [value, setValue] = useState("");
     const [products, setProducts] = useState<
         Pick<Course, "title" | "courseId">[]
     >([]);
+    const address = useContext(AddressContext);
     const { toast } = useToast();
 
     const loadCreatorCourses = useCallback(async () => {
@@ -56,16 +60,20 @@ export default function ProductFilterEditor({
         try {
             const response = await fetch.exec();
             if (response.courses) {
-                setProducts([...response.courses]);
+                startTransition(() => {
+                    setProducts([...response.courses]);
+                });
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const message =
+                err instanceof Error ? err.message : "Unknown error occurred";
             toast({
                 title: TOAST_TITLE_ERROR,
-                description: err.message,
+                description: message,
                 variant: "destructive",
             });
         }
-    }, [address.backend, dispatch]);
+    }, [address.backend, toast]);
 
     useEffect(() => {
         loadCreatorCourses();
@@ -78,7 +86,7 @@ export default function ProductFilterEditor({
             onApply({
                 condition,
                 value,
-                valueLabel: products.find((x) => x.courseId === value).title,
+                valueLabel: products.find((x) => x.courseId === value)?.title,
             });
         } else {
             onApply();

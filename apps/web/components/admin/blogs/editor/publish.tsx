@@ -1,10 +1,7 @@
-import React, { FormEvent, useEffect, useState } from "react";
+import React, { FormEvent, useContext, useEffect, useState } from "react";
 import { Button, Form, useToast } from "@courselit/components-library";
 import useCourse from "./course-hook";
-import { connect } from "react-redux";
 import { capitalize, FetchBuilder } from "@courselit/utils";
-import { networkAction } from "@courselit/state-management/dist/action-creators";
-import { Address } from "@courselit/common-models";
 import {
     BTN_PUBLISH,
     BTN_UNPUBLISH,
@@ -13,20 +10,20 @@ import {
     PUBLISH_TAB_STATUS_TITLE,
     PUBLISH_TAB_VISIBILITY_SUBTITLE,
     PUBLISH_TAB_VISIBILITY_TITLE,
-} from "../../../../ui-config/strings";
-import { AppDispatch, AppState } from "@courselit/state-management";
+} from "@/ui-config/strings";
+import { AddressContext } from "@components/contexts";
+import LoadingScreen from "@components/admin/loading-screen";
 
 interface PublishProps {
     id: string;
-    address: Address;
-    dispatch?: AppDispatch;
-    loading: boolean;
 }
 
-export function Publish({ id, address, dispatch, loading }: PublishProps) {
-    let course = useCourse(id, address, dispatch);
+export default function Publish({ id }: PublishProps) {
+    const address = useContext(AddressContext);
+    let course = useCourse(id);
     const [published, setPublished] = useState(course?.published);
     const [privacy, setPrivacy] = useState(course?.privacy);
+    const [loading, setLoading] = useState(false);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -42,31 +39,31 @@ export function Publish({ id, address, dispatch, loading }: PublishProps) {
 
     const togglePublishedStatus = async () => {
         const query = `
-      mutation {
-        course: updateCourse(courseData: {
-          id: "${course!.courseId}"
-          published: ${!published}
-        }) {
-          courseId,
-          published
-        }
-      }
-    `;
+            mutation {
+                course: updateCourse(courseData: {
+                id: "${course!.courseId}"
+                published: ${!published}
+                }) {
+                courseId,
+                published
+                }
+            }
+        `;
         const response = await saveSettings(query);
         setPublished(response.published);
     };
 
     const toggleVisibility = async () => {
         const query = `
-        mutation {
-            course: updateCourse(courseData: {
-                id: "${course!.courseId}"
-                privacy: ${privacy === "UNLISTED" ? "PUBLIC" : "UNLISTED"}
-            }) {
-                courseId,
-                privacy 
+            mutation {
+                course: updateCourse(courseData: {
+                    id: "${course!.courseId}"
+                    privacy: ${privacy === "UNLISTED" ? "PUBLIC" : "UNLISTED"}
+                }) {
+                    courseId,
+                    privacy 
+                }
             }
-        }
         `;
         const response = await saveSettings(query);
         setPrivacy(response.privacy);
@@ -79,7 +76,7 @@ export function Publish({ id, address, dispatch, loading }: PublishProps) {
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
+            setLoading(true);
             const response = await fetch.exec();
             if (response.course) {
                 return response.course;
@@ -91,12 +88,12 @@ export function Publish({ id, address, dispatch, loading }: PublishProps) {
                 variant: "destructive",
             });
         } finally {
-            dispatch && dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
     if (!course) {
-        return <></>;
+        return <LoadingScreen />;
     }
 
     return (
@@ -131,18 +128,9 @@ export function Publish({ id, address, dispatch, loading }: PublishProps) {
                     variant="soft"
                     disabled={loading}
                 >
-                    {capitalize(privacy)}
+                    {capitalize(privacy ?? "")}
                 </Button>
             </div>
         </Form>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    loading: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(Publish);

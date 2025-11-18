@@ -14,11 +14,24 @@ import { Media, User, Constants } from "@courselit/common-models";
 import { Domain } from "../../models/Domain";
 import { homePageTemplate } from "./page-templates";
 import { publishTheme } from "../themes/logic";
+import getDeletedMediaIds, {
+    extractMediaIDs,
+} from "@/lib/get-deleted-media-ids";
+import { deleteMedia } from "@/services/medialit";
+import CommunityModel from "@models/Community";
 const { product, site, blogPage, communityPage, permissions, defaultPages } =
     constants;
 const { pageNames } = Constants;
 
-export async function getPage({ id, ctx }: { id?: string; ctx: GQLContext }) {
+export async function getPage({
+    id,
+    ctx,
+    justWidgets = false,
+}: {
+    id?: string;
+    ctx: GQLContext;
+    justWidgets?: boolean;
+}) {
     await initSharedWidgets(ctx);
     if (!id) {
         return {
@@ -80,8 +93,23 @@ export async function getPage({ id, ctx }: { id?: string; ctx: GQLContext }) {
         if (!page) return;
 
         if (page.type === product) {
-            const course = await Course.findOne({ courseId: page.entityId });
-            if (!course.published) {
+            const course = await Course.findOne({
+                courseId: page.entityId,
+                domain: ctx.subdomain._id,
+                published: true,
+            });
+            if (!course) {
+                return;
+            }
+        }
+
+        if (page.type === communityPage) {
+            const community = await CommunityModel.findOne({
+                domain: ctx.subdomain._id,
+                communityId: page.entityId,
+                enabled: true,
+            });
+            if (!community) {
                 return;
             }
         }
@@ -120,6 +148,13 @@ export const updatePage = async ({
         return null;
     }
 
+    const deletedMediaIds = getDeletedMediaIds(
+        JSON.stringify(page.draftLayout || ""),
+        inputLayout || "",
+    );
+    const publishedLayoutMediaIds = extractMediaIDs(
+        JSON.stringify(page.layout ?? []),
+    );
     if (inputLayout) {
         try {
             let layout;
@@ -137,19 +172,6 @@ export const updatePage = async ({
             } catch (err) {
                 throw new Error(`${responses.invalid_layout}: ${err.message}`);
             }
-            // for (let widget of layout) {
-            //     if (widget.shared && widget.widgetId) {
-            //         ctx.subdomain.draftSharedWidgets[widget.name] =
-            //             Object.assign(
-            //                 {},
-            //                 ctx.subdomain.draftSharedWidgets[widget.name],
-            //                 widget,
-            //             );
-            //         widget.settings = undefined;
-            //     }
-            // }
-            // (ctx.subdomain as any).markModified("draftSharedWidgets");
-            // await (ctx.subdomain as any).save();
             const layoutWithSharedWidgetsSettings =
                 await copySharedWidgetsToDomain(layout, ctx.subdomain);
             page.draftLayout = layoutWithSharedWidgetsSettings;
@@ -168,6 +190,14 @@ export const updatePage = async ({
     }
     if (typeof robotsAllowed === "boolean") {
         page.draftRobotsAllowed = robotsAllowed;
+    }
+
+    const deletableMediaIds = Array.from(deletedMediaIds).filter(
+        (mediaId) => !publishedLayoutMediaIds.has(mediaId),
+    );
+
+    for (const mediaId of deletableMediaIds) {
+        await deleteMedia(mediaId);
     }
 
     try {
@@ -416,11 +446,29 @@ export const deletePage = async (
         throw new Error(responses.action_not_allowed);
     }
 
+    await deletePageInternal(ctx, id);
+
+    return true;
+};
+
+export const deletePageInternal = async (ctx: GQLContext, id: string) => {
+    const page = (await PageModel.findOne({
+        domain: ctx.subdomain._id,
+        pageId: id,
+    }).lean()) as unknown as Page;
+
+    if (!page) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const mediaToBeDeleted = extractMediaIDs(JSON.stringify(page));
+    for (const mediaId of Array.from(mediaToBeDeleted)) {
+        await deleteMedia(mediaId);
+    }
+
     await PageModel.deleteOne({
         domain: ctx.subdomain._id,
         deleteable: true,
         pageId: id,
     });
-
-    return true;
 };

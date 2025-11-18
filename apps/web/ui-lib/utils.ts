@@ -13,9 +13,6 @@ import type {
 } from "@courselit/common-models";
 import { checkPermission, FetchBuilder } from "@courselit/utils";
 import { Constants, UIConstants } from "@courselit/common-models";
-import { createHash, randomInt } from "crypto";
-import { getProtocol } from "../lib/utils";
-import { headers as headersType } from "next/headers";
 import { Theme } from "@courselit/page-models";
 export { getPlanPrice } from "@courselit/utils";
 const { permissions } = UIConstants;
@@ -47,14 +44,6 @@ export const getAddress = (host: string) => {
     };
 };
 
-export const getBackendAddress = (
-    headers: Record<string, unknown>,
-): `${string}://${string}` => {
-    return `${getProtocol(
-        headers["x-forwarded-proto"] as string | string[] | undefined,
-    )}://${headers.host}`;
-};
-
 const extractDomainFromURL = (host: string) => {
     return host.split(":")[0];
 };
@@ -70,7 +59,7 @@ export const canAccessDashboard = (profile: Profile) => {
 };
 
 export const constructThumbnailUrlFromFileUrl = (url: string) =>
-    url ? url.replace(url.split("/").pop(), "thumb.webp") : null;
+    url ? url.replace(/[^/]+$/, "thumb.webp") : null;
 
 type FrontEndPage = Pick<
     Page,
@@ -246,52 +235,7 @@ export const getFullSiteSetup = async (
     }
 };
 
-export const getProfile = async (
-    backend: string,
-): Promise<Partial<Profile> | null> => {
-    const query = `
-        { profile: getUser {
-            name,
-            id,
-            email,
-            userId,
-            bio,
-            permissions,
-            purchases {
-                courseId,
-                completedLessons,
-                accessibleGroups
-            }
-            avatar {
-                    mediaId,
-                    originalFileName,
-                    mimeType,
-                    size,
-                    access,
-                    file,
-                    thumbnail,
-                    caption
-                },
-            }
-        }
-        `;
-    const fetch = new FetchBuilder()
-        .setUrl(`${backend}/api/graph`)
-        .setPayload(query)
-        .setIsGraphQLEndpoint(true)
-        .build();
-
-    try {
-        const response = await fetch.exec();
-        return response.profile;
-    } catch (e: any) {
-        console.log("getProfile", e.message); // eslint-disable-line no-console
-        return null;
-    }
-};
-
 export const isEnrolled = (courseId: string, profile: Profile) =>
-    profile.fetched &&
     profile.purchases.some((purchase: any) => purchase.courseId === courseId);
 
 export const isLessonCompleted = ({
@@ -313,7 +257,7 @@ export const isLessonCompleted = ({
 };
 
 export const generateFontString = (typefaces: Typeface[]): string => {
-    const fontStringPieces = [];
+    const fontStringPieces: string[] = [];
 
     for (const typeface of typefaces) {
         if (typeface.typeface !== "Roboto") {
@@ -348,19 +292,12 @@ export const moveMemberUp = (arr: any[], index: number) =>
 export const moveMemberDown = (arr: any[], index: number) =>
     swapMembers(arr, index, index + 1);
 
-export function generateUniquePasscode() {
-    return randomInt(100000, 999999);
-}
-
-// Inspired from: https://github.com/nextauthjs/next-auth/blob/c4ad77b86762b7fd2e6362d8bf26c5953846774a/packages/next-auth/src/core/lib/utils.ts#L16
-export function hashCode(code: number) {
-    return createHash("sha256")
-        .update(`${code}${process.env.AUTH_SECRET}`)
-        .digest("hex");
-}
-
 export const sortCourseGroups = (course: Course) => {
-    return course.groups.sort((a: Group, b: Group) => a.rank - b.rank);
+    if (!Array.isArray(course.groups)) {
+        return [];
+    }
+
+    return [...course.groups].sort((a: Group, b: Group) => a.rank - b.rank);
 };
 
 export function truncate(str?: string, length?: number) {
@@ -447,13 +384,4 @@ export function hasCommunityPermission(
     const requiredRoleIndex = roleHierarchy.indexOf(requiredRole);
 
     return memberRoleIndex >= requiredRoleIndex;
-}
-
-export function getAddressFromHeaders(headers: typeof headersType) {
-    const headersList = headers();
-    const address = getBackendAddress({
-        "x-forwarded-proto": headersList.get("x-forwarded-proto"),
-        host: headersList.get("host"),
-    });
-    return address;
 }

@@ -12,7 +12,6 @@ import {
     FormItem,
     FormMessage,
 } from "@/components/ui/form";
-import Link from "next/link";
 import {
     AddressContext,
     ProfileContext,
@@ -21,7 +20,7 @@ import {
 import { useToast } from "@courselit/components-library";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { signIn } from "next-auth/react";
-import { FetchBuilder } from "@courselit/utils";
+import { getUserProfile } from "@/app/(with-contexts)/helpers";
 
 const loginFormSchema = z.object({
     email: z.string().email("Invalid email address"),
@@ -115,51 +114,14 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                     description: `Can't sign you in at this time`,
                 });
             } else {
-                await getProfile();
+                const profile = await getUserProfile(address.backend);
+                if (profile) {
+                    setProfile(profile);
+                }
             }
         } finally {
             setLoading(false);
         }
-    };
-
-    const getProfile = async () => {
-        const query = `
-            { profile: getUser {
-                name,
-                id,
-                email,
-                userId,
-                bio,
-                permissions,
-                purchases {
-                    courseId,
-                    completedLessons,
-                    accessibleGroups
-                }
-                avatar {
-                        mediaId,
-                        originalFileName,
-                        mimeType,
-                        size,
-                        access,
-                        file,
-                        thumbnail,
-                        caption
-                    },
-                }
-            }
-            `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            const response = await fetch.exec();
-            if (response.profile) {
-                setProfile(response.profile);
-            }
-        } catch (e) {}
     };
 
     const handleNameSubmit = () => {
@@ -205,19 +167,23 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                         />
                         <Text2 className="text-xs" theme={theme.theme}>
                             By signing in, you accept our{" "}
-                            <Link
-                                href="/terms"
+                            <a
+                                href="/p/terms"
                                 className="underline hover:text-primary font-medium"
+                                target="_blank"
+                                rel="noreferrer noopener"
                             >
                                 Terms
-                            </Link>{" "}
+                            </a>{" "}
                             and{" "}
-                            <Link
-                                href="/privacy"
+                            <a
+                                href="/p/privacy"
                                 className="underline hover:text-primary font-medium"
+                                target="_blank"
+                                rel="noreferrer noopener"
                             >
                                 Privacy Policy
-                            </Link>
+                            </a>
                         </Text2>
                         <Button
                             type="button"

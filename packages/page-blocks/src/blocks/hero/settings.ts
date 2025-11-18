@@ -14,7 +14,6 @@ export default interface Settings extends WidgetDefaultSettings {
     media?: Media;
     youtubeLink?: string;
     alignment?: Alignment | "right";
-    style: "card" | "normal";
     mediaRadius?: number;
     secondaryButtonCaption?: string;
     secondaryButtonAction?: string;
@@ -25,4 +24,5 @@ export default interface Settings extends WidgetDefaultSettings {
     playVideoInModal?: boolean;
     aspectRatio?: AspectRatio;
     objectFit?: ImageObjectFit;
+    layout?: "normal" | "card";
 }

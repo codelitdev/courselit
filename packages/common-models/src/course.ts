@@ -16,7 +16,6 @@ export interface Course {
     courseId: string;
     title: string;
     description?: string;
-    creatorName: string;
     slug: string;
     isFeatured: boolean;
     cost: number;

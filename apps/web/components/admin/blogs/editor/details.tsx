@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useState } from "react";
+import React, { FormEvent, useContext, useEffect, useState } from "react";
 import {
     MediaSelector,
     TextEditor,
@@ -11,8 +11,6 @@ import {
 } from "@courselit/components-library";
 import useCourse from "./course-hook";
 import { FetchBuilder } from "@courselit/utils";
-import { networkAction } from "@courselit/state-management/dist/action-creators";
-import { Address, Profile } from "@courselit/common-models";
 import {
     APP_MESSAGE_COURSE_SAVED,
     BUTTON_SAVE,
@@ -20,25 +18,25 @@ import {
     TOAST_TITLE_ERROR,
     FORM_FIELD_FEATURED_IMAGE,
     TOAST_TITLE_SUCCESS,
-} from "../../../../ui-config/strings";
-import { connect } from "react-redux";
-import { AppDispatch, AppState } from "@courselit/state-management";
-import { MIMETYPE_IMAGE } from "../../../../ui-config/constants";
-import { Media } from "@courselit/common-models";
+    TEXT_EDITOR_PLACEHOLDER,
+} from "@/ui-config/strings";
+import { MIMETYPE_IMAGE } from "@/ui-config/constants";
+import { Media, Profile } from "@courselit/common-models";
+import { AddressContext, ProfileContext } from "@components/contexts";
 
 interface DetailsProps {
     id: string;
-    profile: Profile;
-    address: Address;
-    dispatch?: AppDispatch;
 }
 
-export function Details({ id, address, dispatch, profile }: DetailsProps) {
+export default function Details({ id }: DetailsProps) {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState(TextEditorEmptyDoc);
     const [featuredImage, setFeaturedImage] = useState<Partial<Media>>({});
     const [refreshDetails, setRefreshDetails] = useState(0);
-    const course = useCourse(id, address, dispatch);
+    const [loading, setLoading] = useState(false);
+    const address = useContext(AddressContext);
+    const { profile } = useContext(ProfileContext);
+    const course = useCourse(id);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -58,11 +56,11 @@ export function Details({ id, address, dispatch, profile }: DetailsProps) {
         e.preventDefault();
 
         const mutation = `
-            mutation {
+            mutation ($courseId: String!, $title: String!, $description: String) {
                 updateCourse(courseData: {
-                    id: "${course!.courseId}"
-                    title: "${title}",
-                    description: ${JSON.stringify(JSON.stringify(description))}
+                    id: $courseId
+                    title: $title
+                    description: $description
                 }) {
                     courseId 
                 }
@@ -70,18 +68,19 @@ export function Details({ id, address, dispatch, profile }: DetailsProps) {
         `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload(mutation)
+            .setPayload({
+                query: mutation,
+                variables: {
+                    courseId: course!.courseId,
+                    title: title,
+                    description: JSON.stringify(description),
+                },
+            })
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
-            const response = await fetch.exec();
-            if (response.updateCourse) {
-                toast({
-                    title: TOAST_TITLE_SUCCESS,
-                    description: APP_MESSAGE_COURSE_SAVED,
-                });
-            }
+            setLoading(true);
+            await fetch.exec();
         } catch (err: any) {
             toast({
                 title: TOAST_TITLE_ERROR,
@@ -89,7 +88,7 @@ export function Details({ id, address, dispatch, profile }: DetailsProps) {
                 variant: "destructive",
             });
         } finally {
-            dispatch && dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -116,7 +115,7 @@ export function Details({ id, address, dispatch, profile }: DetailsProps) {
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
+            setLoading(true);
             const response = await fetch.exec();
             if (response.updateCourse) {
                 toast({
@@ -131,7 +130,7 @@ export function Details({ id, address, dispatch, profile }: DetailsProps) {
                 variant: "destructive",
             });
         } finally {
-            dispatch && dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -151,9 +150,12 @@ export function Details({ id, address, dispatch, profile }: DetailsProps) {
                     refresh={refreshDetails}
                     onChange={(state: any) => setDescription(state)}
                     url={address.backend}
+                    placeholder={TEXT_EDITOR_PLACEHOLDER}
                 />
                 <div>
-                    <Button type="submit">{BUTTON_SAVE}</Button>
+                    <Button type="submit" disabled={loading}>
+                        {BUTTON_SAVE}
+                    </Button>
                 </div>
             </Form>
             <hr />
@@ -170,7 +172,7 @@ export function Details({ id, address, dispatch, profile }: DetailsProps) {
                 mimeTypesToShow={[...MIMETYPE_IMAGE]}
                 access="public"
                 strings={{}}
-                profile={profile}
+                profile={profile as Profile}
                 address={address}
                 mediaId={(featuredImage && featuredImage.mediaId) || ""}
                 onRemove={() => {
@@ -182,12 +184,3 @@ export function Details({ id, address, dispatch, profile }: DetailsProps) {
         </div>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    profile: state.profile,
-    address: state.address,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(Details);

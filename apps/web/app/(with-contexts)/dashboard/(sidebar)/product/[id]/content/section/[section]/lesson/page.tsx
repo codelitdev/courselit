@@ -19,7 +19,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-
 import {
     Dialog,
     DialogContent,
@@ -29,7 +28,6 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-
 import {
     APP_MESSAGE_LESSON_DELETED,
     BUTTON_NEW_LESSON_TEXT,
@@ -38,15 +36,17 @@ import {
     MANAGE_COURSES_PAGE_HEADING,
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
+    TEXT_EDITOR_PLACEHOLDER,
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
-import useProduct from "../../../../../../../../../../hooks/use-product";
+import useProduct from "@/hooks/use-product";
 import { AddressContext, ProfileContext } from "@components/contexts";
 import {
     Constants,
     Lesson,
     LessonType,
     Media,
+    Profile,
     Quiz,
     TextEditorContent,
     UIConstants,
@@ -63,16 +63,12 @@ import {
     MIMETYPE_PDF,
 } from "@ui-config/constants";
 import { FetchBuilder } from "@courselit/utils";
-import { QuizBuilder } from "@components/admin/products/editor/content/quiz-builder";
+import { QuizBuilder } from "@components/admin/products/quiz-builder";
 import { isTextEditorNonEmpty, truncate } from "@ui-lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@components/ui/separator";
 
-// interface Question {
-//     id: string;
-//     text: string;
-//     options: Array<{ id: string; text: string; isCorrect: boolean }>;
-// }
+const { permissions } = UIConstants;
 
 const lessonTypes = [
     { value: Constants.LessonType.TEXT, label: "Text", icon: FileText },
@@ -84,20 +80,6 @@ const lessonTypes = [
     { value: Constants.LessonType.QUIZ, label: "Quiz", icon: HelpCircle },
 ] as const;
 
-// interface LessonState {
-//     type: Lesson;
-//     title: string;
-//     content: { value: string } | TextEditorContent | Quiz;
-//     // embedUrl: string;
-//     // isPreviewEnabled: boolean;
-//     questions: Question[];
-//     requiresPassingGrade: boolean;
-//     passingGrade: string;
-//     // mediaUrl: string | null;
-//     // mediaCaption: string;
-//     media?: Media;
-// }
-
 export default function LessonPage() {
     const router = useRouter();
     const params = useParams();
@@ -107,7 +89,6 @@ export default function LessonPage() {
     const sectionId = params.section as string;
     const isEditing = !!lessonId;
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    // const [expandedQuestion, setExpandedQuestion] = useState("q1");
     const { toast } = useToast();
     const [errors, setErrors] = useState<Partial<Record<keyof Lesson, string>>>(
         {},
@@ -116,7 +97,7 @@ export default function LessonPage() {
         useState<LessonType | null>(null);
     const address = useContext(AddressContext);
     const { profile } = useContext(ProfileContext);
-    const { product, loaded: productLoaded } = useProduct(productId, address);
+    const { product, loaded: productLoaded } = useProduct(productId);
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
         {
@@ -240,6 +221,7 @@ export default function LessonPage() {
                                 setTextContent(state);
                             }}
                             url={address.backend}
+                            placeholder={TEXT_EDITOR_PLACEHOLDER}
                         />
                         {errors.content && (
                             <p className="text-sm text-red-500">
@@ -291,7 +273,7 @@ export default function LessonPage() {
                                     <div className="aspect-video">
                                         <iframe
                                             className="w-full h-full rounded-lg"
-                                            src={`https://www.youtube.com/embed/${content.value.match(UIConstants.YOUTUBE_REGEX)[1]}`}
+                                            src={`https://www.youtube.com/embed/${content.value.match(UIConstants.YOUTUBE_REGEX)?.[1] ?? ""}`}
                                             title="YouTube video player"
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                             allowFullScreen
@@ -576,7 +558,7 @@ export default function LessonPage() {
                                         : undefined
                             }
                             strings={{}}
-                            profile={profile}
+                            profile={profile as Profile}
                             address={address}
                             mediaId={lesson?.media?.mediaId}
                             onRemove={() => {
@@ -925,7 +907,7 @@ export default function LessonPage() {
                     lessonData: {
                         title: lesson?.title,
                         downloadable: lesson?.downloadable,
-                        type: lesson?.type.toUpperCase(),
+                        type: lesson?.type?.toUpperCase(),
                         content: formatContentForSending(),
                         courseId: lesson?.courseId,
                         requiresEnrollment: lesson?.requiresEnrollment,
@@ -997,7 +979,7 @@ export default function LessonPage() {
     };
 
     const formatContentForSending = () => {
-        switch (lesson?.type.toLowerCase()) {
+        switch (lesson?.type?.toLowerCase()) {
             case Constants.LessonType.TEXT:
                 return JSON.stringify(textContent);
             case Constants.LessonType.QUIZ:
@@ -1040,7 +1022,13 @@ export default function LessonPage() {
     );
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[
+                permissions.manageAnyCourse,
+                permissions.manageCourse,
+            ]}
+        >
             <header>
                 <h1 className="text-4xl font-semibold">
                     {product?.type?.toLowerCase() ===
@@ -1149,7 +1137,7 @@ export default function LessonPage() {
                                         {lesson.type ===
                                         Constants.LessonType.EMBED
                                             ? "Embed URL"
-                                            : `${lesson.type.charAt(0).toUpperCase() + lesson.type.slice(1)} Content`}
+                                            : `${lesson.type ? lesson.type.charAt(0).toUpperCase() + lesson.type.slice(1) : ""} Content`}
                                     </Label>
                                     {renderLessonContent()}
                                 </>

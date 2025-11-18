@@ -52,6 +52,9 @@ export default function Page() {
     const { theme } = useContext(ThemeContext);
 
     useEffect(() => {
+        if (!profile) {
+            return;
+        }
         const getUserContent = async () => {
             const query = `
             query {
@@ -69,6 +72,7 @@ export default function Page() {
                             thumbnail
                         }
                         type
+                        certificateId
                     }
                 }
             }
@@ -91,7 +95,7 @@ export default function Page() {
         };
 
         getUserContent();
-    }, [address.backend, profile.userId]);
+    }, [address.backend, profile?.userId]);
 
     const courses = data.filter(
         (item) => item.entityType.toLowerCase() === "course",

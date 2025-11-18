@@ -1,44 +1,37 @@
 import React, { useEffect, useState } from "react";
-import {
-    TOAST_TITLE_ERROR,
-    PERM_SECTION_HEADER,
-    USER_PERMISSION_AREA_SUBTEXT,
-} from "@ui-config/strings";
-import { connect } from "react-redux";
+import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
-import type { AppDispatch, AppState } from "@courselit/state-management";
-import { actionCreators } from "@courselit/state-management";
-import type { User, Address, State } from "@courselit/common-models";
-import { Checkbox, useToast } from "@courselit/components-library";
-import { Section } from "@courselit/components-library";
+import type { Address, UserWithAdminFields } from "@courselit/common-models";
+import { useToast } from "@courselit/components-library";
+import { Checkbox } from "@components/ui/checkbox";
 import permissionToCaptionMap from "./permissions-to-caption-map";
-import DocumentationLink from "@components/public/documentation-link";
-import { ThunkDispatch } from "redux-thunk";
-import { AnyAction } from "redux";
-
-const { networkAction } = actionCreators;
 
 interface PermissionsEditorProps {
-    user: User;
+    user: UserWithAdminFields & { id: string };
     address: Address;
-    dispatch?: AppDispatch;
-    networkAction: boolean;
+    disabled?: boolean;
 }
 
-export function PermissionsEditor({
+export default function PermissionsEditor({
     user,
     address,
-    dispatch,
-    networkAction: networkCallUnderway,
+    disabled: disabledProp = false,
 }: PermissionsEditorProps) {
     const [activePermissions, setActivePermissions] = useState<string[]>([]);
+    const [loading, setLoading] = useState(false);
     const { toast } = useToast();
 
     useEffect(() => {
         setActivePermissions(user.permissions);
     }, [user]);
 
+    const disabled = disabledProp;
+
     const savePermissions = async (permission: string, value: boolean) => {
+        if (disabled) {
+            return;
+        }
+
         let newPermissions: string[];
         if (value) {
             newPermissions = [...activePermissions, permission];
@@ -49,12 +42,10 @@ export function PermissionsEditor({
         }
 
         const mutation = `
-        mutation {
+        mutation UpdateUserPermissions($id: ID!, $permissions: [String!]!) {
             user: updateUser(userData: {
-                id: "${user.id}"
-                permissions: [${newPermissions
-                    .map((item) => `"${item}"`)
-                    .join()}]
+                id: $id
+                permissions: $permissions
             }) { 
                 permissions
             }
@@ -62,14 +53,17 @@ export function PermissionsEditor({
         `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload(mutation)
+            .setPayload({
+                query: mutation,
+                variables: {
+                    id: user.userId,
+                    permissions: newPermissions,
+                },
+            })
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch &&
-                (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                    networkAction(true),
-                );
+            setLoading(true);
             const response = await fetch.exec();
             if (response.user) {
                 setActivePermissions(response.user.permissions);
@@ -81,47 +75,27 @@ export function PermissionsEditor({
                 variant: "destructive",
             });
         } finally {
-            dispatch &&
-                (dispatch as ThunkDispatch<State, null, AnyAction>)(
-                    networkAction(false),
-                );
+            setLoading(false);
         }
     };
 
     return (
-        <Section
-            className="md:w-1/2"
-            header={PERM_SECTION_HEADER}
-            subtext={
-                <span>
-                    {USER_PERMISSION_AREA_SUBTEXT}{" "}
-                    <DocumentationLink path="/en/users/permissions/" />.
-                </span>
-            }
-        >
+        <div className="space-y-3">
             {Object.keys(permissionToCaptionMap).map((permission) => (
-                <div className="flex justify-between" key={permission}>
+                <div
+                    className="flex items-center justify-between gap-2"
+                    key={permission}
+                >
                     <p>{permissionToCaptionMap[permission]}</p>
                     <Checkbox
-                        disabled={networkCallUnderway}
-                        checked={activePermissions.includes(permission)}
-                        onChange={(value: boolean) =>
+                        disabled={loading || disabled}
+                        checked={activePermissions?.includes(permission)}
+                        onCheckedChange={(value: boolean) =>
                             savePermissions(permission, value)
                         }
                     />
                 </div>
             ))}
-        </Section>
+        </div>
     );
 }
-
-const mapStateToProps = (state: AppState) => ({
-    address: state.address,
-    networkAction: state.networkAction,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({
-    dispatch,
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(PermissionsEditor);

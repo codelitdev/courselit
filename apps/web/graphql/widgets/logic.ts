@@ -3,6 +3,7 @@ import type GQLContext from "../../models/GQLContext";
 import { checkIfAuthenticated } from "../../lib/graphql";
 import { responses } from "../../config/strings";
 import constants from "../../config/constants";
+import { checkPermission } from "@courselit/utils";
 const { permissions } = constants;
 
 export const getWidgetSettings = async (name: string, ctx: GQLContext) => {

@@ -385,6 +385,9 @@ export const MEDIA_DIRECT_URL = "Direct URL";
 export const MEDIA_URL_COPIED = "Copied to clipboard";
 export const MEDIA_FILE_TYPE = "File type";
 export const UNABLE_TO_LOGOUT = "Logout failed. Try again.";
+export const LOGOUT = "Logout";
+export const LOGGING_OUT = "Logging out...";
+export const LOGOUT_MESSAGE = "Are you sure you want to logout?";
 export const USER_TABLE_HEADER_NAME = "Details";
 export const USER_TABLE_HEADER_STATUS = "Status";
 export const USER_TABLE_HEADER_PRODUCTS = "Products";
@@ -423,9 +426,9 @@ export const DELETE_PRODUCT_POPUP_HEADER = "Delete product";
 export const DELETE_PRODUCT_POPUP_TEXT =
     "This is an irreversible action and all the data and analytics related to this product will be deleted.";
 export const FORM_NEW_PRODUCT_MENU_COURSE_SUBTITLE =
-    "An online course consisting of images, videos, text and more.";
+    "An interactive course consisting of images, videos, text and more.";
 export const FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE =
-    "Allow users to download file(s).";
+    "A ZIP file containing images, videos, text and more.";
 export const NEW_SECTION_HEADER = "New Section";
 export const EDIT_SECTION_DRIP = "Drip";
 export const DRIP_SECTION_STATUS = "Enable Drip";
@@ -494,11 +497,9 @@ export const QUESTION_BUILDER_CORRECT_ANS_TOOLTIP = "Mark as correct answer";
 export const QUESTION_BUILDER_EXPAND_TOOLTIP = "Expand";
 export const QUESTION_BUILDER_COLLAPSE_TOOLTIP = "Collapse";
 export const LESSON_QUIZ_GRADED_TEXT = "This quiz requires a passing grade";
-export const LESSON_QUIZ_PASSING_GRADE_LABEL = "Passing grade";
-export const QUIZ_VIEWER_EVALUATE_BTN = "Check score";
+export const QUIZ_VIEWER_EVALUATE_BTN = "Submit";
 export const QUIZ_VIEWER_EVALUATE_BTN_LOADING = "Checking...";
-export const QUIZ_PASS_MESSAGE = "Pass! You scored";
-export const QUIZ_FAIL_MESSAGE = "Fail! You scored";
+export const QUIZ_SCORE_PREFIX_MESSAGE = "You scored";
 export const COURSE_STUDENT_REPORT_HEADER = "Students";
 export const COURSE_STUDENT_TABLE_HEADER_PROGRESS = "Progress";
 export const COURSE_STUDENT_TABLE_HEADER_DOWNLOAD = "Downloaded";
@@ -581,6 +582,39 @@ export const APIKEY_REMOVE_DIALOG_HEADER = "Remove API Key";
 export const APIKYE_REMOVE_DIALOG_DESC =
     "If you are using this key in your application, removing it will break the integration. There is no going back if you remove it.";
 export const USER_TAGS_SUBHEADER = "Tags";
+export const BTN_DELETE_USER = "Delete user";
+export const USER_DELETE_DIALOG_TITLE = "Delete user?";
+export const USER_DELETE_DIALOG_DESCRIPTION =
+    "This action is irreversible. Products and communities owned by this user will be transferred to you and other data will be deleted.";
+export const USER_DELETE_DIALOG_MIGRATION_HEADING =
+    "What will move to your account";
+export const USER_DELETE_DIALOG_MIGRATION_ITEM_PRODUCTS =
+    "Products, lessons, and pages created by this user will be reassigned to you.";
+export const USER_DELETE_DIALOG_MIGRATION_ITEM_EMAIL =
+    "Email templates, sequences, and deliveries created by this user will be reassigned to you.";
+export const USER_DELETE_DIALOG_MIGRATION_ITEM_AUDIENCE =
+    "Audience assets such as segments, themes, payment plans, and ongoing sequences will be reassigned to you.";
+export const USER_DELETE_DIALOG_MIGRATION_ITEM_COMMUNITY =
+    "Community moderator roles and community pages managed by this user will be reassigned to you.";
+export const USER_DELETE_DIALOG_DELETION_HEADING = "What will be deleted";
+export const USER_DELETE_DIALOG_DELETION_ITEM_COMMUNICATION =
+    "Notifications, mail statuses, lesson evaluations, download links, certificates, and activity logs.";
+export const USER_DELETE_DIALOG_DELETION_ITEM_COMMUNITY =
+    "Community posts, comments, replies, subscriptions, reports, and related likes.";
+export const USER_DELETE_DIALOG_DELETION_ITEM_COMMERCE =
+    "Memberships, invoices, course enrollments, and marketing sequence entries.";
+export const USER_DELETE_DIALOG_DELETION_ITEM_ACCOUNT =
+    "The user's avatar media and account.";
+export const USER_DELETE_CONFIRMATION_LABEL = 'Type "delete" to confirm';
+export const USER_DELETE_CONFIRMATION_PLACEHOLDER = "Type 'delete' to confirm";
+export const USER_DELETE_CONFIRMATION_TOKEN = "delete";
+export const USER_DELETE_ACTION_LOADING = "Deleting...";
+export const APP_MESSAGE_USER_DELETED = "User deleted";
+export const APP_MESSAGE_USER_UPDATED = "User details saved";
+export const USER_DETAILS_SAVE_BUTTON = "Save changes";
+export const USER_DETAILS_SAVE_BUTTON_LOADING = "Saving...";
+export const USER_NAME_PLACEHOLDER = "Enter full name";
+export const USER_EMAIL_PLACEHOLDER = "Enter email address";
 export const PAGES_TABLE_HEADER_NAME = "Name";
 export const PAGES_TABLE_HEADER_ACTIONS = "Actions";
 export const NEW_PAGE_NAME_PLC = "My awesome page";
@@ -595,7 +629,7 @@ export const APP_MESSAGE_MAIL_DELETED = "Mail deleted";
 export const NEW_PAGE_FORM_WARNING =
     "These settings cannot be changed later on, so proceed with caution.";
 export const DASHBOARD_PAGE_HEADER = "Welcome";
-export const UNNAMED_USER = "Unnamed";
+export const UNNAMED_USER = "Stranger";
 export const MAIL_REQUEST_FORM_REASON_FIELD = "Reason";
 export const MAIL_REQUEST_FORM_REASON_PLACEHOLDER =
     "Please be as detailed as possible. This will help us review your application better.";
@@ -626,6 +660,8 @@ export const NEW_PAYMENT_PLAN_DESCRIPTION =
 export const EDIT_PAYMENT_PLAN_DESCRIPTION = "Update the configuration for";
 export const TOAST_TITLE_SUCCESS = "Success";
 export const TOAST_SEQUENCE_SAVED = "Sequence changes saved successfully";
+export const TOAST_QUIZ_PASS_MESSAGE = "Pass 🎉";
+export const TOAST_QUIZ_FAIL_MESSAGE = "Fail ☠️";
 export const TOAST_TITLE_ERROR = "Error";
 export const TOAST_DESCRIPTION_CHANGES_SAVED = "Changes saved";
 export const DELETED_COMMENT_PLACEHOLDER = "Deleted";
@@ -641,3 +677,17 @@ export const PRODUCT_EMPTY_WARNING =
 export const BLOG_UPDATED_PREFIX = "Updated";
 export const HEADER_HELP = "Help";
 export const CHECKOUT_PAGE_ORDER_SUMMARY = "Order summary";
+export const TEXT_EDITOR_PLACEHOLDER = "Type here...";
+export const BTN_VIEW_CERTIFICATE = "View certificate";
+export const GET_SET_UP = "Get set up";
+export const MANAGE_LINK_TEXT = "Manage";
+export const BLOG_LIST_EMPTY_TITLE = "No Posts Found";
+export const BLOG_LIST_EMPTY_DESCRIPTION_PUBLIC =
+    "The team has not published any posts yet.";
+export const BLOG_LIST_EMPTY_DESCRIPTION_PRIVATE =
+    "You have not published any posts yet.";
+export const PRODUCTS_LIST_EMPTY_TITLE = "No Products Found";
+export const PRODUCTS_LIST_EMPTY_DESCRIPTION_PUBLIC =
+    "The team has not added any products yet.";
+export const PRODUCTS_LIST_EMPTY_DESCRIPTION_PRIVATE =
+    "You have not added any products yet.";
