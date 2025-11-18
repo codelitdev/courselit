@@ -20,6 +20,7 @@ const config: Config = {
         "@/lib/(.*)": "<rootDir>/lib/$1",
         "@/services/(.*)": "<rootDir>/services/$1",
         "@/templates/(.*)": "<rootDir>/templates/$1",
+        "@/dao/(.*)": "<rootDir>/dao/$1",
         "@/app/(.*)": "<rootDir>/app/$1",
         "@ui-lib/(.*)": "<rootDir>/ui-lib/$1",
         "@config/(.*)": "<rootDir>/config/$1",
@@ -39,6 +40,7 @@ const config: Config = {
     testMatch: [
         "**/graphql/**/__tests__/**/*.test.ts",
         "**/api/**/__tests__/**/*.test.ts",
+        "**/dao/**/*.test.ts",
     ],
     testPathIgnorePatterns: [
         "/node_modules/",

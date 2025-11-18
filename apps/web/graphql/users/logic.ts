@@ -1,9 +1,11 @@
 "use server";
 
-import UserModel from "@models/User";
 import { responses } from "@/config/strings";
-import { makeModelTextSearchable, checkIfAuthenticated } from "@/lib/graphql";
+import { checkIfAuthenticated } from "@/lib/graphql";
+import { UserDao } from "@/dao/user.dao";
 import constants from "@/config/constants";
+
+const userDao = new UserDao();
 import GQLContext from "@/models/GQLContext";
 import { initMandatoryPages } from "../pages/logic";
 import { Domain } from "@models/Domain";
@@ -73,7 +75,7 @@ export const getUser = async (userId = null, ctx: GQLContext) => {
     let user: any = ctx.user;
 
     if (userId) {
-        user = await UserModel.findOne({ userId, domain: ctx.subdomain._id });
+        user = await userDao.findOne({ userId, domain: ctx.subdomain._id });
     }
 
     if (!user) {
@@ -124,25 +126,26 @@ export const updateUser = async (userData: UserData, ctx: GQLContext) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    let user = await UserModel.findOne({
+    let user = await userDao.findOne({
         userId: id,
         domain: ctx.subdomain._id,
     });
     if (!user) throw new Error(responses.item_not_found);
 
+    const updateData: Partial<User> = {};
     for (const key of keys.filter((key) => key !== "id")) {
         if (key === "tags") {
-            addTags(userData["tags"]!, ctx);
+            await addTags(userData["tags"]!, ctx);
         }
 
-        user[key] = userData[key];
+        (updateData as any)[key] = (userData as any)[key];
     }
 
-    validateUserProperties(user);
+    validateUserProperties(updateData);
 
-    user = await user.save();
+    const updatedUser = await userDao.updateUser(id, ctx.subdomain._id as any, updateData);
 
-    return user;
+    return updatedUser;
 };
 
 export const inviteCustomer = async (
@@ -162,7 +165,7 @@ export const inviteCustomer = async (
     }
 
     const sanitizedEmail = (email as string).toLowerCase();
-    let user = await UserModel.findOne({
+    let user = await userDao.findOne({
         email: sanitizedEmail,
         domain: ctx.subdomain._id,
     });
@@ -232,7 +235,7 @@ export const deleteUser = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    const userToDelete = await UserModel.findOne<InternalUser>({
+    const userToDelete = await userDao.findOne({
         domain: ctx.subdomain._id,
         userId,
     });
@@ -246,16 +249,22 @@ export const deleteUser = async (
     }
 
     const deleterUser =
-        (await UserModel.findOne<InternalUser>({
+        (await userDao.findOne({
             domain: ctx.subdomain._id,
             userId: ctx.user.userId,
         })) || (ctx.user as InternalUser);
 
-    await validateUserDeletion(userToDelete, ctx);
+    await validateUserDeletion(userToDelete as InternalUser, ctx);
 
-    await migrateBusinessEntities(userToDelete, deleterUser, ctx);
+    await migrateBusinessEntities(
+        userToDelete as InternalUser,
+        deleterUser as InternalUser,
+        ctx,
+    );
 
-    await cleanupPersonalData(userToDelete, ctx);
+    await cleanupPersonalData(userToDelete as InternalUser, ctx);
+
+    await userDao.deleteUser(userId, ctx.subdomain._id as any);
 
     return true;
 };
@@ -278,9 +287,8 @@ export const getUsers = async ({
         throw new Error(responses.action_not_allowed);
     }
 
-    const searchUsers = makeModelTextSearchable(UserModel);
     const query = await buildQueryFromSearchData(ctx.subdomain._id, filters);
-    const users = await searchUsers(
+    const users = await userDao.search(
         {
             offset: page,
             query,
@@ -306,7 +314,7 @@ export const getUsersCount = async (ctx: GQLContext, filters?: string) => {
     }
 
     const query = await buildQueryFromSearchData(ctx.subdomain._id, filters);
-    return await UserModel.countDocuments(query);
+    return await userDao.countDocuments(query);
 };
 
 const buildQueryFromSearchData = async (
@@ -379,7 +387,7 @@ export async function createUser({
         checkForInvalidPermissions(permissions);
     }
 
-    const rawResult = await UserModel.findOneAndUpdate(
+    const rawResult = await userDao.findOneAndUpdate(
         { domain: domain._id, email },
         {
             $setOnInsert: {
@@ -529,7 +537,7 @@ export const getTagsWithDetails = async (ctx: GQLContext) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    const tagsWithUsersCount = await UserModel.aggregate([
+    const tagsWithUsersCount = await userDao.aggregate([
         { $unwind: "$tags" },
         {
             $match: {
@@ -603,7 +611,7 @@ export const deleteTag = async (tag: string, ctx: GQLContext) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    await UserModel.updateMany(
+    await userDao.updateMany(
         { domain: ctx.subdomain._id },
         { $pull: { tags: tag } },
     );
@@ -622,7 +630,7 @@ export const untagUsers = async (tag: string, ctx: GQLContext) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    await UserModel.updateMany(
+    await userDao.updateMany(
         { domain: ctx.subdomain._id },
         { $pull: { tags: tag } },
     );
@@ -644,7 +652,7 @@ export const getUserContent = async (
         id = userId;
     }
 
-    const user = await UserModel.findOne({
+    const user = await userDao.findOne({
         userId: id,
         domain: ctx.subdomain._id,
     });
@@ -813,7 +821,7 @@ export async function runPostMembershipTasks({
     membership: Membership;
     paymentPlan: PaymentPlan;
 }) {
-    const user = await UserModel.findOne<InternalUser>({
+    const user = await userDao.findOne({
         userId: membership.userId,
     });
     if (!user) {
@@ -930,10 +938,10 @@ export const getCertificateInternal = async (
 
     const user =
         certificateId !== "demo"
-            ? ((await UserModel.findOne({
+            ? ((await userDao.findOne({
                   domain: domain._id,
                   userId: certificate.userId,
-              }).lean()) as unknown as User)
+              })) as unknown as User)
             : {
                   name: "John Doe",
                   email: "john.doe@example.com",
@@ -949,10 +957,10 @@ export const getCertificateInternal = async (
         throw new Error(responses.item_not_found);
     }
 
-    const creator = (await UserModel.findOne({
+    const creator = (await userDao.findOne({
         domain: domain._id,
         userId: course.creatorId,
-    }).lean()) as unknown as User;
+    })) as unknown as User;
 
     const template = (await CertificateTemplateModel.findOne({
         domain: domain._id,
