@@ -13,11 +13,13 @@ import communities from "./communities";
 import paymentplans from "./paymentplans";
 import notifications from "./notifications";
 import themes from "./themes";
+import sitemap from "./sitemap";
 
 const schema = new graphql.GraphQLSchema({
     query: new graphql.GraphQLObjectType({
         name: "RootQuery",
         fields: {
+            ...sitemap.queries,
             ...users.queries,
             ...lessons.queries,
             ...courses.queries,
@@ -36,6 +38,7 @@ const schema = new graphql.GraphQLSchema({
     mutation: new graphql.GraphQLObjectType({
         name: "RootMutation",
         fields: {
+            ...sitemap.mutations,
             ...users.mutations,
             ...lessons.mutations,
             ...courses.mutations,

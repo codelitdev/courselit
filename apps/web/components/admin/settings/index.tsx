@@ -84,6 +84,7 @@ import { Copy, Info } from "lucide-react";
 import { Input } from "@components/ui/input";
 import Resources from "@components/resources";
 import { AddressContext } from "@components/contexts";
+import SitemapEditor from "../../../app/(with-contexts)/dashboard/(sidebar)/settings/sitemap/page";
 
 const {
     PAYMENT_METHOD_PAYPAL,
@@ -125,6 +126,7 @@ const Settings = (props: SettingsProps) => {
         SITE_MAILS_HEADER,
         SITE_CUSTOMISATIONS_SETTING_HEADER,
         SITE_APIKEYS_SETTING_HEADER,
+        "Sitemap",
     ].includes(props.selectedTab)
         ? props.selectedTab
         : SITE_SETTINGS_SECTION_GENERAL;
@@ -696,6 +698,7 @@ const Settings = (props: SettingsProps) => {
         SITE_MAILS_HEADER,
         SITE_CUSTOMISATIONS_SETTING_HEADER,
         SITE_APIKEYS_SETTING_HEADER,
+        "Sitemap",
     ];
 
     const copyToClipboard = (text: string) => {
@@ -1241,6 +1244,9 @@ const Settings = (props: SettingsProps) => {
                             },
                         ]}
                     />
+                </div>
+                <div>
+                    <SitemapEditor />
                 </div>
             </Tabbs>
         </div>
