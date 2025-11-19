@@ -1,70 +1,32 @@
 import { Email } from "@courselit/common-models";
 import OngoingSequenceModel, {
     OngoingSequence,
-} from "./model/ongoing-sequence";
-import { logger } from "../logger";
-import { sequenceBounceLimit } from "../constants";
+} from "@/domain/model/ongoing-sequence";
+import SequenceModel from "@/domain/model/sequence";
+import { sequenceBounceLimit } from "@/constants";
 import {
     deleteOngoingSequence,
-    getDueOngoingSequences,
     getSequence,
     getUser,
     removeRuleForBroadcast,
     updateSequenceSentAt,
     getDomain,
-} from "./queries";
-import { sendMail } from "../mail";
-import { Liquid } from "liquidjs";
-import { Worker } from "bullmq";
-import redis from "../redis";
+} from "@/domain/queries";
+import { sendMail } from "@/mail";
 import mongoose from "mongoose";
-import sequenceQueue from "./sequence-queue";
-import EmailDelivery from "./model/email-delivery";
+import EmailDelivery from "@/domain/model/email-delivery";
 import { AdminSequence, InternalUser } from "@courselit/common-logic";
 import { Email as EmailType, renderEmailToHtml } from "@courselit/email-editor";
-import { getUnsubLink } from "../utils/get-unsub-link";
-import { getSiteUrl } from "../utils/get-site-url";
+import { getUnsubLink } from "@/utils/get-unsub-link";
+import { getSiteUrl } from "@/utils/get-site-url";
 import { jwtUtils } from "@courselit/utils";
 import { JSDOM } from "jsdom";
-import { DomainDocument } from "./model/domain";
+import { DomainDocument } from "@/domain/model/domain";
+import { Liquid } from "liquidjs";
+import { logger } from "@/logger";
 const liquidEngine = new Liquid();
 
-new Worker(
-    "sequence",
-    async (job) => {
-        const ongoingSequenceId = job.data;
-        try {
-            await processOngoingSequence(ongoingSequenceId);
-        } catch (err: any) {
-            logger.error(err);
-        }
-    },
-    { connection: redis },
-);
-
-export async function processOngoingSequences(): Promise<void> {
-    if (!process.env.PIXEL_SIGNING_SECRET) {
-        throw new Error(
-            "PIXEL_SIGNING_SECRET environment variable is not defined",
-        );
-    }
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-        // eslint-disable-next-line no-console
-        console.log(
-            `Starting process of ongoing sequence at ${new Date().toDateString()}`,
-        );
-
-        const dueOngoingSequences = await getDueOngoingSequences();
-        for (const ongoingSequence of dueOngoingSequences) {
-            sequenceQueue.add("sequence", ongoingSequence.id);
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 60 * 1000));
-    }
-}
-
-async function processOngoingSequence(
+export async function processOngoingSequence(
     ongoingSequenceId: mongoose.Types.ObjectId,
 ) {
     const ongoingSequence =
@@ -80,7 +42,10 @@ async function processOngoingSequence(
         !domain.quota.mail ||
         !domain.settings?.mailingAddress
     ) {
-        console.log(`Invalid domain settings for "${domain.name}"`, domain); // eslint-disable-line no-console
+        console.log(
+            `Invalid domain settings for "${domain?.name || "unknown"}"`,
+            domain,
+        ); // eslint-disable-line no-console
         return;
     }
     if (
@@ -125,7 +90,7 @@ async function processOngoingSequence(
     }
 }
 
-function getNextPublishedEmail(
+export function getNextPublishedEmail(
     sequence: AdminSequence,
     ongoingSequence: OngoingSequence,
 ) {
@@ -264,11 +229,15 @@ async function attemptMailSending({
     } catch (err: any) {
         ongoingSequence.retryCount++;
         if (ongoingSequence.retryCount >= sequenceBounceLimit) {
-            sequence.report.sequence.failed = [
-                ...sequence.report.sequence.failed,
-                ongoingSequence.userId,
-            ];
-            await (sequence as any).save();
+            // Use findOneAndUpdate to atomically update and avoid version conflicts
+            await (SequenceModel.findOneAndUpdate as any)(
+                { sequenceId: sequence.sequenceId },
+                {
+                    $addToSet: {
+                        "report.sequence.failed": ongoingSequence.userId,
+                    },
+                },
+            );
             await deleteOngoingSequence(ongoingSequence.sequenceId);
         } else {
             await ongoingSequence.save();
