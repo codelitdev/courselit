@@ -12,6 +12,7 @@ import Dropcursor from "@tiptap/extension-dropcursor";
 import Gapcursor from "@tiptap/extension-gapcursor";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Heading from "@tiptap/extension-heading";
+import Highlight from "@tiptap/extension-highlight";
 import { lowlight } from "lowlight";
 import javascript from "highlight.js/lib/languages/javascript";
 import typescript from "highlight.js/lib/languages/typescript";
@@ -58,6 +59,7 @@ export const createExtensions = ({
         },
         resize: {
             enabled: true,
+            directions: ["top", "bottom", "left", "right"],
             alwaysPreserveAspectRatio: true,
         },
     }),
@@ -89,4 +91,5 @@ export const createExtensions = ({
             ];
         },
     }),
+    Highlight,
 ];

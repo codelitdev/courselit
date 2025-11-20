@@ -26,9 +26,7 @@ import "@courselit/text-editor/styles.css";
 
 `Ctrl + u`: Underline
 
-`Ctrl + d`: Strikethrough
-
-`Ctrl + k`: Create/edit a link
+`Ctrl + Shift + s`: Strikethrough
 
 `Ctrl + z`: Undo
 
@@ -36,12 +34,12 @@ import "@courselit/text-editor/styles.css";
 
 `Ctrl + v`: Paste
 
+`Ctrl + Shift + 7`: Ordered list
+
 `Ctrl + Shift + 8`: Bulleted list
 
-`Ctrl + Shift + 9`: Ordered list
-
-`Ctrl + Shift + 7`: Task list
+`Ctrl + Shift + H`: Highlight (or type `==two equal signs==` and it will be converted to highlight)
 
 ## Images
 
-Use the _Image_ button in the toolbar to upload assets to CourseLit. Uploads are limited to 2MB per file.
+Use the _Image_ button in the toolbar to upload assets to CourseLit. Uploads are limited to `2 Mega bytes` per file.

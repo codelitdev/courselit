@@ -150,6 +150,13 @@ export default function Details({ id }: DetailsProps) {
                     onChange={(state: any) => setDescription(state)}
                     url={address.backend}
                     placeholder={TEXT_EDITOR_PLACEHOLDER}
+                    onError={(err: any) => {
+                        toast({
+                            title: TOAST_TITLE_ERROR,
+                            description: err,
+                            variant: "destructive",
+                        });
+                    }}
                 />
                 <div>
                     <Button type="submit" disabled={loading}>

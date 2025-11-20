@@ -72,13 +72,11 @@ export function TextRenderer({ json, className, theme }: TextRendererProps) {
                         </Header3>
                     );
                 },
-                codeMirror: ({ children }) => {
-                    return (
-                        <pre>
-                            <code>{children}</code>
-                        </pre>
-                    );
-                },
+                codeMirror: ({ children }) => (
+                    <pre>
+                        <code>{children}</code>
+                    </pre>
+                ),
             },
             markMapping: {
                 link: ({ mark, children, node }) => {
@@ -95,6 +93,11 @@ export function TextRenderer({ json, className, theme }: TextRendererProps) {
                         </Link>
                     );
                 },
+                highlight: ({ children }) => (
+                    <mark className="bg-accent text-accent-foreground">
+                        {children}
+                    </mark>
+                ),
             },
         },
     });

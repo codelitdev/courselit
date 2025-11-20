@@ -1,8 +1,6 @@
 import { FetchBuilder } from "@courselit/utils";
 import { Media } from "@courselit/common-models";
 
-type SetProgress = (progress: number) => void;
-
 async function getPresignedUrl(url: string) {
     const fetch = new FetchBuilder()
         .setUrl(`${url}/api/media/presigned`)
@@ -12,17 +10,29 @@ async function getPresignedUrl(url: string) {
 }
 
 export interface UploadedImage {
+    mediaId: string;
     src: string;
     fileName?: string;
 }
 
-export async function uploadImageToMediaLit(
-    url: string,
-    file: File,
-    progress?: SetProgress,
-): Promise<UploadedImage> {
-    if (file.size > 2097152) {
-        throw new Error("File is larger than 2MB");
+export async function uploadImageToMediaLit({
+    url,
+    file,
+    fileSizeLimit = 2097152, // 2 MB,
+    onError,
+}: {
+    url: string;
+    file: File;
+    fileSizeLimit?: number;
+    onError?: (args: any) => void;
+}): Promise<UploadedImage> {
+    if (file.size > fileSizeLimit) {
+        if (onError) {
+            onError("File is larger than 2MB");
+            return { src: "", mediaId: "", fileName: "" };
+        } else {
+            throw new Error("File is larger than 2MB");
+        }
     }
 
     const { signature, endpoint } = await getPresignedUrl(url);
@@ -40,14 +50,11 @@ export async function uploadImageToMediaLit(
         body: formData,
     });
 
-    if (progress) {
-        progress(1);
-    }
-
     const data: Media = await response.json();
 
     return {
         src: data.file,
         fileName: data.originalFileName,
+        mediaId: data.mediaId,
     };
 }

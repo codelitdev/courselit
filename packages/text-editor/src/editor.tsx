@@ -28,6 +28,8 @@ export interface EditorProps {
     initialContent?: ReactEditorProps["initialContent"];
     placeholder?: string;
     autoFocus?: boolean;
+    imageSizeLimit?: number;
+    onError?: (...args: any[]) => void;
 }
 
 interface EditorType extends FC<PropsWithChildren<EditorProps>> {
@@ -46,6 +48,8 @@ const Editor: EditorType = Object.assign(
         refresh,
         url,
         autoFocus,
+        imageSizeLimit,
+        onError,
     }) => {
         const [isUploading, setIsUploading] = useState(false);
         const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -144,7 +148,12 @@ const Editor: EditorType = Object.assign(
             async (file: File) => {
                 try {
                     setIsUploading(true);
-                    const result = await uploadImageToMediaLit(url, file);
+                    const result = await uploadImageToMediaLit({
+                        url,
+                        file,
+                        fileSizeLimit: imageSizeLimit,
+                        onError,
+                    });
                     editor
                         ?.chain()
                         .focus()

@@ -58,6 +58,7 @@
         "@tiptap/extension-dropcursor": "^3.0.0",
         "@tiptap/extension-gapcursor": "^3.0.0",
         "@tiptap/extension-heading": "^3.0.0",
+        "@tiptap/extension-highlight": "^3.11.0",
         "@tiptap/extension-image": "^3.0.0",
         "@tiptap/extension-link": "^3.0.0",
         "@tiptap/extension-placeholder": "^3.0.0",
