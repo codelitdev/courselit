@@ -130,14 +130,6 @@ export const Section: React.FC<SectionProps> = ({
                             theme?.structure?.section?.padding?.y || "py-4",
                         )}
                     >
-                        <div
-                            className="hidden"
-                            aria-hidden="true"
-                            role="presentation"
-                        >
-                            {nextTheme}
-                        </div>{" "}
-                        {/** This is used to force re-render the component when the theme changes */}
                         {children}
                     </div>
                 </>,
