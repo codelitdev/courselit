@@ -502,6 +502,11 @@ export const deleteBlock = async ({
         return null;
     }
 
+    const deletedMediaIds = extractMediaIDs(JSON.stringify(block));
+    for (const mediaId of Array.from(deletedMediaIds)) {
+        await deleteMedia(mediaId);
+    }
+
     page.draftLayout = page.draftLayout.filter(
         (block: any) => block.widgetId !== blockId,
     );
