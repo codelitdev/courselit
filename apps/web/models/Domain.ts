@@ -8,6 +8,18 @@ const { typeface } = constants;
 export interface Domain extends PublicDomain {
     _id: mongoose.Types.ObjectId;
     lastEditedThemeId?: string;
+    auth?: {
+        emailOtp: { enabled: boolean };
+        google: { enabled: boolean; clientId?: string; clientSecret?: string };
+        github: { enabled: boolean; clientId?: string; clientSecret?: string };
+        saml: {
+            enabled: boolean;
+            entryPoint?: string;
+            issuer?: string;
+            cert?: string;
+            emailDomain?: string;
+        };
+    };
 }
 
 export const defaultTypeface: Typeface = {
@@ -58,6 +70,28 @@ const DomainSchema = new mongoose.Schema<Domain>(
                 lastMonthlyCountUpdate: { type: Date, default: Date.now },
             }),
         }),
+        auth: {
+            emailOtp: {
+                enabled: { type: Boolean, default: true },
+            },
+            google: {
+                enabled: { type: Boolean, default: false },
+                clientId: { type: String },
+                clientSecret: { type: String },
+            },
+            github: {
+                enabled: { type: Boolean, default: false },
+                clientId: { type: String },
+                clientSecret: { type: String },
+            },
+            saml: {
+                enabled: { type: Boolean, default: false },
+                entryPoint: { type: String },
+                issuer: { type: String },
+                cert: { type: String },
+                emailDomain: { type: String },
+            },
+        },
     },
     {
         timestamps: true,

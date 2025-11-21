@@ -272,6 +272,11 @@ function getSidebarItems({
                 isActive:
                     `${path}?tab=${tab}` === "/dashboard/settings?tab=API Keys",
             },
+            {
+                title: "Authentication",
+                url: "/dashboard/settings/auth",
+                isActive: path === "/dashboard/settings/auth",
+            },
         ];
         navMainItems.push({
             title: SIDEBAR_MENU_SETTINGS,

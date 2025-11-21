@@ -1,5 +1,4 @@
-import { auth } from "@/auth";
-import { SessionProvider } from "next-auth/react";
+import { getAuth } from "@/lib/auth";
 import { Metadata, ResolvingMetadata } from "next";
 import { getFullSiteSetup } from "@ui-lib/utils";
 import { headers } from "next/headers";
@@ -59,13 +58,13 @@ export default async function Layout(props: {
     const { children } = props;
 
     const { id } = params;
-    const session = await auth();
+    const domain = (await headers()).get("domain");
+    const auth = await getAuth(domain || undefined);
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
     const address = await getAddressFromHeaders(headers);
     const product = await getProduct(id, address);
 
-    return (
-        <SessionProvider session={session}>
-            <LayoutWithSidebar product={product}>{children}</LayoutWithSidebar>
-        </SessionProvider>
-    );
+    return <LayoutWithSidebar product={product}>{children}</LayoutWithSidebar>;
 }

@@ -1,11 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
-import NextAuth from "next-auth";
-import { authConfig } from "./auth.config";
 import { getBackendAddress } from "@/app/actions";
+import { getAuth } from "@/lib/auth";
 
-const { auth } = NextAuth(authConfig);
-
-export default auth(async (request: NextRequest) => {
+export default async function middleware(request: NextRequest) {
     const requestHeaders = request.headers;
     const backend = await getBackendAddress(requestHeaders);
 
@@ -53,7 +50,11 @@ export default auth(async (request: NextRequest) => {
         }
 
         if (request.nextUrl.pathname.startsWith("/dashboard")) {
-            const session = await auth();
+            const auth = await getAuth(resp.domain);
+            const session = await auth.api.getSession({
+                headers: requestHeaders,
+            });
+
             if (!session) {
                 return NextResponse.redirect(
                     new URL(
@@ -71,13 +72,13 @@ export default auth(async (request: NextRequest) => {
                 headers: requestHeaders,
             },
         });
-    } catch (err) {
+    } catch (err: any) {
         return Response.json(
             { success: false, error: err.message },
             { status: 404 },
         );
     }
-});
+}
 
 export const config = {
     matcher: [
@@ -87,5 +88,4 @@ export const config = {
         "/healthy",
         "/dashboard/:path*",
     ],
-    unstable_allowDynamic: ["/node_modules/next-auth/**"],
 };

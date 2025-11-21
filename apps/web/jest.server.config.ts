@@ -5,15 +5,7 @@ const config: Config = {
     setupFilesAfterEnv: ["<rootDir>/setupTests.server.ts"],
     watchPathIgnorePatterns: ["globalConfig"],
     moduleNameMapper: {
-        "next-auth": "<rootDir>/__mocks__/next-auth.ts",
         "@courselit/utils": "<rootDir>/../../packages/utils/src",
-        "@courselit/common-logic": "<rootDir>/../../packages/common-logic/src",
-        "@courselit/page-primitives":
-            "<rootDir>/../../packages/page-primitives/src",
-        nanoid: "<rootDir>/__mocks__/nanoid.ts",
-        slugify: "<rootDir>/__mocks__/slugify.ts",
-        "@models/(.*)": "<rootDir>/models/$1",
-        "@/auth": "<rootDir>/auth.ts",
         "@/payments-new": "<rootDir>/payments-new",
         "@/graphql/(.*)": "<rootDir>/graphql/$1",
         "@/config/(.*)": "<rootDir>/config/$1",

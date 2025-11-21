@@ -19,7 +19,7 @@ import {
 } from "@components/contexts";
 import { useToast } from "@courselit/components-library";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
-import { signIn } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import { getUserProfile } from "@/app/(with-contexts)/helpers";
 
 const loginFormSchema = z.object({
@@ -103,15 +103,17 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
         const code = form.getValues("otp");
         try {
             setLoading(true);
-            const response = await signIn("credentials", {
+            const { error } = await authClient.signIn.emailOtp({
                 email,
-                code,
-                redirect: false,
+                otp: code,
+                type: "sign-in",
             });
-            if (response?.error) {
+
+            if (error) {
                 toast({
                     title: TOAST_TITLE_ERROR,
-                    description: `Can't sign you in at this time`,
+                    description:
+                        error.message || `Can't sign you in at this time`,
                 });
             } else {
                 const profile = await getUserProfile(address.backend);
