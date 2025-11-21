@@ -34,6 +34,7 @@ import {
 } from "@components/ui/dialog";
 import { COMMUNITY_SETTINGS, TOAST_TITLE_SUCCESS } from "@ui-config/strings";
 import { Share2 } from "lucide-react";
+import WidgetErrorBoundary from "@components/public/base-layout/template/widget-error-boundary";
 const { permissions } = UIConstants;
 
 interface CommunityInfoProps {
@@ -124,10 +125,12 @@ export function CommunityInfo({
                 <div className="space-y-2">
                     <div className="text-sm text-muted-foreground">
                         {description && (
-                            <TextRenderer
-                                json={description}
-                                theme={theme.theme}
-                            />
+                            <WidgetErrorBoundary widgetName="text-editor">
+                                <TextRenderer
+                                    json={description}
+                                    theme={theme.theme}
+                                />
+                            </WidgetErrorBoundary>
                         )}
                     </div>
                     <p className="text-sm">

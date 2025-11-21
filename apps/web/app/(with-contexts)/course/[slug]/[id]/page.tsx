@@ -28,6 +28,7 @@ import { getProduct } from "./helpers";
 import { getUserProfile } from "@/app/(with-contexts)/helpers";
 import { BadgeCheck } from "lucide-react";
 import { emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
+import WidgetErrorBoundary from "@components/public/base-layout/template/widget-error-boundary";
 const { permissions } = UIConstants;
 
 export default function ProductPage(props: {
@@ -130,7 +131,12 @@ export default function ProductPage(props: {
                         json={descriptionJson}
                         theme={theme.theme}
                     />
-                    <TextRenderer json={descriptionJson} theme={theme.theme} />
+                    <WidgetErrorBoundary widgetName="text-editor">
+                        <TextRenderer
+                            json={descriptionJson}
+                            theme={theme.theme}
+                        />
+                    </WidgetErrorBoundary>
                 </div>
             </div>
             {isEnrolled(product.courseId, profile as Profile) && (

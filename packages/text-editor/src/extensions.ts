@@ -21,6 +21,7 @@ import css from "highlight.js/lib/languages/css";
 import xml from "highlight.js/lib/languages/xml";
 import type { Extensions } from "@tiptap/core";
 import { createId } from "./create-id";
+import { CodeMirrorNode } from "./components/custom-code-mirror";
 
 lowlight.registerLanguage("javascript", javascript);
 lowlight.registerLanguage("typescript", typescript);
@@ -92,4 +93,5 @@ export const createExtensions = ({
         },
     }),
     Highlight,
+    CodeMirrorNode,
 ];

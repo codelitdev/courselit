@@ -38,6 +38,7 @@ import { isEnrolled } from "../../../ui-lib/utils";
 import LessonEmbedViewer from "./embed-viewer";
 import QuizViewer from "./quiz-viewer";
 import { getUserProfile } from "@/app/(with-contexts)/helpers";
+import WidgetErrorBoundary from "../base-layout/template/widget-error-boundary";
 
 interface CaptionProps {
     text: string;
@@ -299,14 +300,16 @@ export const LessonViewer = ({
                         {String.prototype.toUpperCase.call(LESSON_TYPE_TEXT) ===
                             lesson.type &&
                             lesson.content && (
-                                <TextRenderer
-                                    json={
-                                        lesson.content as unknown as Record<
-                                            string,
-                                            unknown
-                                        >
-                                    }
-                                />
+                                <WidgetErrorBoundary widgetName="text-editor">
+                                    <TextRenderer
+                                        json={
+                                            lesson.content as unknown as Record<
+                                                string,
+                                                unknown
+                                            >
+                                        }
+                                    />
+                                </WidgetErrorBoundary>
                             )}
                         {String.prototype.toUpperCase.call(
                             LESSON_TYPE_EMBED,
