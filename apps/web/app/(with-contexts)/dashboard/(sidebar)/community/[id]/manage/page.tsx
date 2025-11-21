@@ -1,11 +1,7 @@
 "use client";
 
 import DashboardContent from "@components/admin/dashboard-content";
-import {
-    AddressContext,
-    ProfileContext,
-    SiteInfoContext,
-} from "@components/contexts";
+import { AddressContext, ProfileContext } from "@components/contexts";
 import {
     COMMUNITY_HEADER,
     COMMUNITY_SETTINGS,
@@ -31,8 +27,6 @@ import {
     Image,
     Link,
     MediaSelector,
-    TextEditor,
-    TextEditorEmptyDoc,
     useToast,
 } from "@courselit/components-library";
 import { Separator } from "@components/ui/separator";
@@ -72,6 +66,7 @@ import { Input } from "@/components/ui/input";
 import { redirect, useRouter } from "next/navigation";
 import { useMembership } from "@/hooks/use-membership";
 import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
+import { Editor, emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
 const { PaymentPlanType: paymentPlanType, MembershipEntityType } = Constants;
 
 export default function Page(props: {
@@ -90,7 +85,6 @@ export default function Page(props: {
     ];
     const { profile } = useContext(ProfileContext);
     const address = useContext(AddressContext);
-    const siteinfo = useContext(SiteInfoContext);
 
     const [name, setName] = useState("");
     const [enabled, setEnabled] = useState(false);
@@ -565,7 +559,7 @@ export default function Page(props: {
                     />
                     <div>
                         <h2 className="font-semibold">Description</h2>
-                        <TextEditor
+                        <Editor
                             initialContent={description}
                             onChange={(state: any) => setDescription(state)}
                             showToolbar={false}

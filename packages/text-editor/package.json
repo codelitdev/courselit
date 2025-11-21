@@ -1,7 +1,7 @@
 {
     "name": "@courselit/text-editor",
     "version": "0.34.10",
-    "description": "A text editor based on Remirror",
+    "description": "A text editor based on TipTap",
     "private": true,
     "keywords": [
         "text editor",
@@ -13,12 +13,21 @@
     "license": "MIT",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.js"
+        },
+        "./styles.css": "./styles.css"
+    },
     "directories": {
         "lib": "src",
         "test": "__tests__"
     },
     "files": [
-        "dist"
+        "dist",
+        "styles.css"
     ],
     "publishConfig": {
         "access": "public"
@@ -40,23 +49,26 @@
         "react": "^17.0.2"
     },
     "dependencies": {
-        "@codemirror/language-data": "^6.5.1",
-        "@codemirror/state": "^6.5.2",
-        "@codemirror/theme-one-dark": "^6.1.2",
         "@courselit/common-models": "workspace:^",
         "@courselit/utils": "workspace:^",
-        "@remirror/core": "^3.0.2",
-        "@remirror/core-types": "^3.0.0",
-        "@remirror/extension-codemirror6": "^2.0.2",
-        "@remirror/extension-react-tables": "^3.0.3",
-        "@remirror/i18n": "^3.0.0",
-        "@remirror/pm": "^3.0.1",
-        "@remirror/react": "^3.0.3",
-        "@remirror/react-editors": "^2.0.3",
-        "@remirror/react-ui": "^1.0.3",
-        "codemirror": "^6.0.2",
-        "prosemirror-model": "^1.25.3",
-        "remirror": "^3.0.3"
+        "@floating-ui/dom": "^1.6.0",
+        "@tiptap/core": "^3.0.0",
+        "@tiptap/extension-bubble-menu": "^3.10.4",
+        "@tiptap/extension-code-block-lowlight": "^3.0.0",
+        "@tiptap/extension-dropcursor": "^3.0.0",
+        "@tiptap/extension-gapcursor": "^3.0.0",
+        "@tiptap/extension-heading": "^3.0.0",
+        "@tiptap/extension-highlight": "^3.11.0",
+        "@tiptap/extension-image": "^3.0.0",
+        "@tiptap/extension-link": "^3.0.0",
+        "@tiptap/extension-placeholder": "^3.0.0",
+        "@tiptap/extension-table": "^3.10.7",
+        "@tiptap/react": "^3.0.0",
+        "@tiptap/starter-kit": "^3.0.0",
+        "@tiptap/static-renderer": "^3.10.7",
+        "highlight.js": "^11.10.0",
+        "lowlight": "^2.9.0",
+        "lucide-react": "^0.544.0"
     },
     "devDependencies": {
         "@types/node": "^18.8.0",

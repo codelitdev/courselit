@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Item } from "../settings";
 import {
-    TextEditor,
     Button,
     Form,
     FormField,
@@ -11,6 +10,7 @@ import {
 } from "@courselit/components-library";
 import { Address, Auth, Profile } from "@courselit/common-models";
 import { AlertCircle } from "lucide-react";
+import { Editor } from "@courselit/text-editor";
 
 interface ItemProps {
     item: Item;
@@ -54,7 +54,7 @@ export default function ItemEditor({
                 />
                 <div>
                     <p className="mb-1 font-medium">Description</p>
-                    <TextEditor
+                    <Editor
                         initialContent={description}
                         onChange={(state: any) => setDescription(state)}
                         showToolbar={false}

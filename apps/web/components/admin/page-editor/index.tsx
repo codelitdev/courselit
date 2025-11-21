@@ -125,6 +125,10 @@ export default function PageEditor({
 
     const fontString = generateFontString(draftTypefaces);
 
+    const fetcher = new FetchBuilder()
+        .setUrl(`${address.backend}/api/graph`)
+        .setIsGraphQLEndpoint(true);
+
     useEffect(() => {
         loadDraftTypefaces();
         loadPage();
@@ -144,11 +148,7 @@ export default function PageEditor({
                     }
                 }
             `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
+        const fetch = fetcher.setPayload(query).build();
         try {
             setLoadingPages(true);
             const response = await fetch.exec();
@@ -292,11 +292,7 @@ export default function PageEditor({
             }
         }
         `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
+        const fetch = fetcher.setPayload(query).build();
         try {
             setLoading(true);
             const response = await fetch.exec();
@@ -328,11 +324,7 @@ export default function PageEditor({
         refreshLayout?: boolean;
         variables?: Record<string, unknown>;
     }) => {
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload({ query, variables })
-            .setIsGraphQLEndpoint(true)
-            .build();
+        const fetch = fetcher.setPayload({ query, variables }).build();
         try {
             setLoading(true);
             const response = await fetch.exec();
@@ -468,13 +460,43 @@ export default function PageEditor({
     };
 
     const deleteWidget = async (widgetId: string) => {
-        const widgetIndex = layout.findIndex(
-            (widget) => widget.widgetId === widgetId,
-        );
-        layout.splice(widgetIndex, 1);
-        setLayout(layout);
-        onClose();
-        await savePage({ pageId: page.pageId!, layout });
+        // const widgetIndex = layout.findIndex(
+        //     (widget) => widget.widgetId === widgetId,
+        // );
+        // layout.splice(widgetIndex, 1);
+        // setLayout(layout);
+        // onClose();
+        // await savePage({ pageId: page.pageId!, layout });
+        const mutation = `
+            mutation ($pageId: String!, $blockId: String!) {
+                page: deleteBlock(pageId: $pageId, blockId: $blockId) {
+                    pageId,
+                    draftLayout,
+                }
+            }
+        `;
+        try {
+            const fetch = fetcher
+                .setPayload({
+                    query: mutation,
+                    variables: { pageId: page.pageId!, blockId: widgetId },
+                })
+                .build();
+            const response = await fetch.exec();
+            if (response.page) {
+                // setPage(response.page);
+                setLayout(response.page.draftLayout);
+                onClose();
+            }
+        } catch (err: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
     const addWidget = async (name: string) => {

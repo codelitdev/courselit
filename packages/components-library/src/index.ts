@@ -7,8 +7,6 @@ import Section from "./section";
 import CourseItem from "./course-item";
 import Link from "./link";
 import MediaSelector from "./media-selector";
-import TextEditor, { emptyDoc as TextEditorEmptyDoc } from "./text-editor";
-import TextRenderer from "./text-renderer";
 import LessonIcon from "./lesson-icon";
 import ColorSelector from "./color-selector";
 import Button from "./button";
@@ -71,9 +69,6 @@ export {
     Select,
     Link,
     MediaSelector,
-    TextEditor,
-    TextEditorEmptyDoc,
-    TextRenderer,
     LessonIcon,
     ColorSelector,
     Button,

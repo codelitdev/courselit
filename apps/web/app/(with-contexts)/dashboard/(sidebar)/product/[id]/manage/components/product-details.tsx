@@ -5,11 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import {
-    TextEditor,
-    TextEditorEmptyDoc,
-    useToast,
-} from "@courselit/components-library";
+import { useToast } from "@courselit/components-library";
 import { AddressContext } from "@components/contexts";
 import {
     APP_MESSAGE_COURSE_SAVED,
@@ -20,6 +16,7 @@ import {
 } from "@ui-config/strings";
 import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
 import { Save, Loader2 } from "lucide-react";
+import { Editor, emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
 
 const MUTATION_UPDATE_BASIC_DETAILS = `
     mutation UpdateBasicDetails($courseId: String!, $title: String!, $description: String!) {
@@ -131,7 +128,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                         Description
                     </Label>
 
-                    <TextEditor
+                    <Editor
                         initialContent={formData.description}
                         onChange={(state: any) => {
                             handleInputChange({

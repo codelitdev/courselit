@@ -6,7 +6,6 @@ import {
     AdminWidgetPanel,
     AdminWidgetPanelContainer,
     Select,
-    TextEditor,
     Form,
     FormField,
     CssIdField,
@@ -14,6 +13,7 @@ import {
     VerticalPaddingSelector,
 } from "@courselit/components-library";
 import { Theme, ThemeStyle } from "@courselit/page-models";
+import { Editor } from "@courselit/text-editor";
 
 interface AdminWidgetProps {
     settings: Settings;
@@ -66,7 +66,7 @@ export default function AdminWidget({
                 </Form>
                 <div>
                     <p className="mb-1 font-medium">Description</p>
-                    <TextEditor
+                    <Editor
                         initialContent={description}
                         onChange={(state: any) => setDescription(state)}
                         showToolbar={false}

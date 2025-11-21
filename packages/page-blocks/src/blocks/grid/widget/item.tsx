@@ -1,6 +1,7 @@
 import React from "react";
 import { Item, SvgStyle } from "../settings";
-import { TextRenderer, Link } from "@courselit/components-library";
+import { Link } from "@courselit/components-library";
+import { TextRenderer } from "../../../components";
 import { Alignment } from "@courselit/common-models";
 import { ThemeStyle } from "@courselit/page-models";
 import {
@@ -101,7 +102,10 @@ export default function Itemm({
                             }`}
                         >
                             <Text1 theme={theme} component="span">
-                                <TextRenderer json={description} />
+                                <TextRenderer
+                                    json={description}
+                                    theme={theme}
+                                />
                             </Text1>
                         </div>
                     )}

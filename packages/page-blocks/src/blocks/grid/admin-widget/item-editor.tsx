@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Item, SvgStyle } from "../settings";
 import {
     MediaSelector,
-    TextEditor,
     Button,
     Form,
     FormField,
@@ -16,6 +15,8 @@ import {
     VerticalAlignment,
 } from "@courselit/common-models";
 import SvgEditor from "./svg-editor";
+import { Editor } from "@courselit/text-editor";
+
 interface ItemProps {
     item: Item;
     svgStyle: SvgStyle;
@@ -65,7 +66,7 @@ export default function ItemEditor({
                 />
                 <div>
                     <p className="mb-1 font-medium">Description</p>
-                    <TextEditor
+                    <Editor
                         initialContent={description}
                         onChange={(state: any) => setDescription(state)}
                         showToolbar={false}

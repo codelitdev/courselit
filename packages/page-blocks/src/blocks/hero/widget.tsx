@@ -1,12 +1,8 @@
 import React from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
-import {
-    Image,
-    TextRenderer,
-    VideoWithPreview,
-    Link,
-} from "@courselit/components-library";
+import { Image, VideoWithPreview, Link } from "@courselit/components-library";
+import { TextRenderer } from "../../components";
 import { isVideo } from "@courselit/utils";
 import clsx from "clsx";
 import {
@@ -168,7 +164,10 @@ export default function Widget({
                             )}
                         >
                             <Subheader1 theme={overiddenTheme} component="span">
-                                <TextRenderer json={description} />
+                                <TextRenderer
+                                    json={description}
+                                    theme={overiddenTheme}
+                                />
                             </Subheader1>
                         </div>
                     )}

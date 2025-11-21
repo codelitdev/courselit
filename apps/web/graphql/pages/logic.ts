@@ -472,3 +472,44 @@ export const deletePageInternal = async (ctx: GQLContext, id: string) => {
         pageId: id,
     });
 };
+
+export const deleteBlock = async ({
+    context: ctx,
+    pageId,
+    blockId,
+}: {
+    context: GQLContext;
+    pageId: string;
+    blockId: string;
+}) => {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
+        throw new Error(responses.action_not_allowed);
+    }
+    const page: Page | null = await PageModel.findOne({
+        pageId,
+        domain: ctx.subdomain._id,
+    });
+
+    if (!page) {
+        return null;
+    }
+
+    const block = page.draftLayout.find(
+        (block: any) => block.widgetId === blockId,
+    );
+    if (!block) {
+        return null;
+    }
+
+    const deletedMediaIds = extractMediaIDs(JSON.stringify(block));
+    for (const mediaId of Array.from(deletedMediaIds)) {
+        await deleteMedia(mediaId);
+    }
+
+    page.draftLayout = page.draftLayout.filter(
+        (block: any) => block.widgetId !== blockId,
+    );
+    await (page as any).save();
+    return getPageResponse(page!, ctx);
+};

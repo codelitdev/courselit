@@ -14,18 +14,21 @@ import {
     Link,
     Button2,
     getSymbolFromCurrency,
-    TextRenderer,
-    TextEditorEmptyDoc,
     Image,
 } from "@courselit/components-library";
+import { TextRenderer } from "@courselit/page-blocks";
+import { TableOfContent } from "@components/table-of-content";
 import {
     AddressContext,
     ProfileContext,
     SiteInfoContext,
+    ThemeContext,
 } from "@components/contexts";
 import { getProduct } from "./helpers";
 import { getUserProfile } from "@/app/(with-contexts)/helpers";
 import { BadgeCheck } from "lucide-react";
+import { emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
+import WidgetErrorBoundary from "@components/public/base-layout/template/widget-error-boundary";
 const { permissions } = UIConstants;
 
 export default function ProductPage(props: {
@@ -38,6 +41,7 @@ export default function ProductPage(props: {
     const siteInfo = useContext(SiteInfoContext);
     const address = useContext(AddressContext);
     const [progress, setProgress] = useState<any>(null);
+    const { theme } = useContext(ThemeContext);
 
     useEffect(() => {
         if (id) {
@@ -67,6 +71,10 @@ export default function ProductPage(props: {
     if (!product || !siteInfo) {
         return null;
     }
+
+    const descriptionJson = product.description
+        ? JSON.parse(product.description)
+        : TextEditorEmptyDoc;
 
     return (
         <div className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
@@ -118,14 +126,18 @@ export default function ProductPage(props: {
                 </div>
             )}
             <div className="overflow-hidden min-h-[360px]">
-                <TextRenderer
-                    json={
-                        product.description
-                            ? JSON.parse(product.description)
-                            : TextEditorEmptyDoc
-                    }
-                    showTableOfContent={true}
-                />
+                <div className="flex flex-col gap-4">
+                    <TableOfContent
+                        json={descriptionJson}
+                        theme={theme.theme}
+                    />
+                    <WidgetErrorBoundary widgetName="text-editor">
+                        <TextRenderer
+                            json={descriptionJson}
+                            theme={theme.theme}
+                        />
+                    </WidgetErrorBoundary>
+                </div>
             </div>
             {isEnrolled(product.courseId, profile as Profile) && (
                 <div className="self-end">

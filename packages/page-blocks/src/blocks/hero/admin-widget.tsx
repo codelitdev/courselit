@@ -12,7 +12,6 @@ import {
     AdminWidgetPanelContainer,
     MediaSelector,
     Select,
-    TextEditor,
     Form,
     FormField,
     Accordion,
@@ -29,8 +28,8 @@ import {
     MaxWidthSelector,
     SectionBackgroundPanel,
 } from "@courselit/components-library";
-
 import { isVideo } from "@courselit/utils";
+import { Editor } from "@courselit/text-editor";
 
 interface AdminWidgetProps {
     name: string;
@@ -181,7 +180,7 @@ export default function AdminWidget({
                 </Form>
                 <div>
                     <p className="mb-1 font-medium">Description</p>
-                    <TextEditor
+                    <Editor
                         initialContent={description}
                         onChange={(state: any) => setDescription(state)}
                         showToolbar={false}

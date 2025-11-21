@@ -1,77 +1,97 @@
+import StarterKit from "@tiptap/starter-kit";
+import Placeholder from "@tiptap/extension-placeholder";
+import Link from "@tiptap/extension-link";
 import {
-    BulletListExtension,
-    DocExtension,
-    DropCursorExtension,
-    HeadingExtension,
-    ImageExtension,
-    LinkExtension,
-    OrderedListExtension,
-    ParagraphExtension,
-    PlaceholderExtension,
-    TaskListExtension,
-    TextExtension,
-    BlockquoteExtension,
-    HardBreakExtension,
-    BoldExtension,
-    ItalicExtension,
-    GapCursorExtension,
-    HorizontalRuleExtension,
-    StrikeExtension,
-    UnderlineExtension,
-    CodeExtension,
-    BidiExtension,
-    CodeBlockExtension,
-    TrailingNodeExtension,
-    IframeExtension,
-    ShortcutsExtension,
-} from "remirror/extensions";
-import { CodeMirrorExtension } from "@remirror/extension-codemirror6";
-import { TableExtension } from "@remirror/extension-react-tables";
-import { oneDark } from "@codemirror/theme-one-dark";
-import { basicSetup } from "codemirror";
-import { getUploadHandler } from "./file-upload-extention";
+    Table,
+    TableCell,
+    TableHeader,
+    TableRow,
+} from "@tiptap/extension-table";
+import Image from "@tiptap/extension-image";
+import Dropcursor from "@tiptap/extension-dropcursor";
+import Gapcursor from "@tiptap/extension-gapcursor";
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import Heading from "@tiptap/extension-heading";
+import Highlight from "@tiptap/extension-highlight";
+import { lowlight } from "lowlight";
+import javascript from "highlight.js/lib/languages/javascript";
+import typescript from "highlight.js/lib/languages/typescript";
+import json from "highlight.js/lib/languages/json";
+import css from "highlight.js/lib/languages/css";
+import xml from "highlight.js/lib/languages/xml";
+import type { Extensions } from "@tiptap/core";
+import { createId } from "./create-id";
+import { CodeMirrorNode } from "./components/custom-code-mirror";
 
-export const getExtensions = (placeholder, url) => () => [
-    new DocExtension({}),
-    new TextExtension(),
-    new ParagraphExtension(),
-    new HeadingExtension({}),
-    new BulletListExtension({}),
-    new LinkExtension({}),
-    new OrderedListExtension(),
-    new PlaceholderExtension({ placeholder }),
-    new TableExtension(),
-    new TaskListExtension(),
-    new ImageExtension({
-        enableResizing: true,
-        uploadHandler: getUploadHandler(url),
+lowlight.registerLanguage("javascript", javascript);
+lowlight.registerLanguage("typescript", typescript);
+lowlight.registerLanguage("json", json);
+lowlight.registerLanguage("css", css);
+lowlight.registerLanguage("html", xml);
+
+interface ExtensionOptions {
+    placeholder?: string;
+}
+
+export const createExtensions = ({
+    placeholder,
+}: ExtensionOptions = {}): Extensions => [
+    StarterKit.configure({
+        codeBlock: false,
     }),
-    new DropCursorExtension({
+    Placeholder.configure({
+        placeholder: placeholder || "Write something…",
+    }),
+    Link.configure({
+        openOnClick: false,
+        autolink: true,
+        linkOnPaste: true,
+    }),
+    Table.configure({
+        resizable: true,
+    }),
+    TableRow,
+    TableHeader,
+    TableCell,
+    Image.configure({
+        allowBase64: false,
+        HTMLAttributes: {
+            class: "max-w-full h-auto rounded-md",
+        },
+        resize: {
+            enabled: true,
+            directions: ["top", "bottom", "left", "right"],
+            alwaysPreserveAspectRatio: true,
+        },
+    }),
+    Dropcursor.configure({
         color: "hsl(var(--foreground))",
+        width: 2,
     }),
-    new CodeMirrorExtension({
-        extensions: [basicSetup, oneDark],
+    Gapcursor,
+    CodeBlockLowlight.configure({
+        lowlight,
     }),
-    new BlockquoteExtension(),
-    new HardBreakExtension(),
-    new BoldExtension(null),
-    new ItalicExtension(),
-    new HardBreakExtension(),
-    new GapCursorExtension(),
-    new HardBreakExtension(),
-    new HorizontalRuleExtension(),
-    new StrikeExtension(),
-    new UnderlineExtension(),
-    new BlockquoteExtension(),
-    new CodeExtension(),
-    new BidiExtension(null),
-    new CodeBlockExtension(null),
-    new DropCursorExtension(),
-    new HeadingExtension(null),
-    new TrailingNodeExtension(),
-    new IframeExtension({ enableResizing: false }),
-    new BulletListExtension({}),
-    new OrderedListExtension(),
-    new TaskListExtension(),
-    new ShortcutsExtension(),
+    Heading.extend({
+        renderHTML({ node, HTMLAttributes }) {
+            const level = this.options.levels.includes(node.attrs.level)
+                ? node.attrs.level
+                : this.options.levels[0];
+            const id =
+                typeof node.textContent === "string"
+                    ? createId(node.textContent)
+                    : undefined;
+
+            return [
+                `h${level}`,
+                {
+                    ...HTMLAttributes,
+                    id,
+                },
+                0,
+            ];
+        },
+    }),
+    Highlight,
+    CodeMirrorNode,
 ];

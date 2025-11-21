@@ -12,7 +12,6 @@ import { FetchBuilder } from "@courselit/utils";
 import {
     Link,
     LessonIcon,
-    TextRenderer,
     Skeleton,
     useToast,
     Badge,
@@ -21,6 +20,7 @@ import {
     AccordionTrigger,
     AccordionContent,
 } from "@courselit/components-library";
+import { TextRenderer } from "../../components";
 import {
     Header1,
     Text1,
@@ -162,7 +162,10 @@ export default function Widget({
                             }`}
                         >
                             <Subheader1 theme={overiddenTheme} component="span">
-                                <TextRenderer json={description} />
+                                <TextRenderer
+                                    json={description}
+                                    theme={overiddenTheme}
+                                />
                             </Subheader1>
                         </div>
                     )}

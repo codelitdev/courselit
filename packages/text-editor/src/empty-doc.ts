@@ -1,6 +1,6 @@
-import { RemirrorContentType } from "remirror";
+import type { JSONContent } from "@tiptap/core";
 
-const emptyDoc: RemirrorContentType = {
+const emptyDoc: JSONContent = {
     type: "doc",
     content: [],
 };

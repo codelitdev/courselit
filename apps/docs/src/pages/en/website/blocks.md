@@ -6,7 +6,7 @@ layout: ../../../layouts/MainLayout.astro
 
 Every page in CourseLit is made up of various blocks, stacked in a top-to-bottom fashion. Each block serves a unique purpose and can be customized.
 
-The following screenshot shows [Header](/en/pages/header), [Rich Text](/en/pages/banner), [Hero](/en/pages/content), and [Grid](/en/pages/grid) blocks (top to bottom) in action. Different blocks are highlighted in different colors.
+The following screenshot shows [Header](/en/website/blocks#header), [Rich Text](/en/website/blocks#rich-text), [Hero](/en/website/blocks#hero), and [Grid](/en/website/blocks#grid) blocks (top to bottom) in action. Different blocks are highlighted in different colors.
 
 ![CourseLit page blocks](/assets/pages/page-builder-blocks.png)
 
@@ -36,32 +36,40 @@ You will also see the newly added link on the header itself.
 3. Click on the pencil icon against the newly added link to edit it as shown above.
 4. Change the label (displayed as text on the header block) and the URL (where the user should be taken upon clicking the label on the header) and click `Done` to save.
    ![Header edit link](/assets/pages/header-edit-link.png)
-   </details>
+    </details>
 
 ### [Rich Text](#rich-text)
 
 <details>
 <summary>Expand to see Rich Text block details</summary>
 
-The rich text block can be used to add text blocks containing elements like hyperlinks, etc.
+The rich text block uses the same text editor available elsewhere on the platform. It supports all functionality that does not require a toolbar, as the toolbar is hidden in this block.
 
-#### Making text bold/italic/underline
+#### Keyboard shortcuts
 
 1. Select the text.
-2. To make the selected text bold, press <kbd>Ctrl+B</kbd>; to make it italic, press <kbd>Ctrl+I</kbd>; and for underline, press <kbd>Ctrl+U</kbd>.
+2. Use the following shortcuts to format it:
 
-You can also use the floating controls to do the same as shown below.
+- **Bold**: <kbd>Ctrl+B</kbd>
+- **Italic**: <kbd>Ctrl+I</kbd>
+- **Underline**: <kbd>Ctrl+U</kbd>
+- **Strikethrough**: <kbd>Ctrl+Shift+S</kbd>
+- **Undo**: <kbd>Ctrl+Z</kbd>
+- **Redo**: <kbd>Ctrl+Shift+Z</kbd>
+- **Paste**: <kbd>Ctrl+V</kbd>
+- **Ordered list**: <kbd>Ctrl+Shift+7</kbd>
+- **Bulleted list**: <kbd>Ctrl+Shift+8</kbd>
+- **Highlight**: <kbd>Ctrl+Shift+H</kbd> (or type `==two equal signs==`)
 
 ![Stylised text](/assets/pages/rich-text-styling.gif)
 
 #### Creating hyperlinks
 
 1. Select the text.
-    > Double-clicking the text to select won't work due to a bug. We are working on it.
-2. Click on the floating `link` button to reveal a popup text input.
-3. In the popup text input, enter the URL as shown below.
-   ![Create a hyperlink in rich text block](/assets/pages/rich-text-create-hyperlink.gif)
-   </details>
+2. Click on the floating `link` icon to reveal a text input.
+3. In the popup text input, enter the URL as shown below and press <kbd>Enter</kbd>.
+   ![Create a hyperlink in rich text block](/assets/pages/courselit-text-editor-create-links.gif)
+    </details>
 
 ### [Hero](#hero)
 
@@ -87,7 +95,7 @@ Following is how it looks on a page.
 4. In the button action, enter the URL the user should be taken to upon clicking.
    a. If the URL is from your own school, use its relative form, i.e., `/courses`.
    b. If the URL is from some external website, use the absolute (complete) URL, i.e., `https://website.com/courses`.
-   </details>
+    </details>
 
 ### [Grid](#grid)
 
@@ -132,7 +140,7 @@ A grid block comes in handy when you want to show some sort of list, for example
 4. In the button action, enter the URL the user should be taken to upon clicking.
    a. If the URL is from your own school, use its relative form, i.e., `/courses`.
    b. If the URL is from some external website, use the absolute (complete) URL, i.e., `https://website.com/courses`.
-   </details>
+    </details>
 
 ### [Featured](#featured)
 
@@ -268,7 +276,7 @@ In the `Design` panel, you can customize:
 - Maximum width
 - Vertical padding
 - Social media links (Facebook, Twitter, Instagram, LinkedIn, YouTube, Discord, GitHub)
-  </details>
+    </details>
 
 ## [Shared blocks](#shared-blocks)
 

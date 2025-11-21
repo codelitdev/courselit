@@ -6,7 +6,6 @@ import {
     AdminWidgetPanel,
     AdminWidgetPanelContainer,
     Select,
-    TextEditor,
     IconButton,
     Form,
     FormField,
@@ -17,6 +16,7 @@ import {
 } from "@courselit/components-library";
 import { Delete } from "@courselit/icons";
 import { Alignment, Address } from "@courselit/common-models";
+import { Editor } from "@courselit/text-editor";
 
 interface AdminWidgetProps {
     settings: Settings;
@@ -145,7 +145,7 @@ export default function AdminWidget({
                 </Form>
                 <div>
                     <p className="mb-1 font-medium">Description</p>
-                    <TextEditor
+                    <Editor
                         initialContent={description}
                         onChange={(state: any) => setDescription(state)}
                         showToolbar={false}
