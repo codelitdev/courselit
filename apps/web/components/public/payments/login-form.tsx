@@ -19,7 +19,7 @@ import {
 } from "@components/contexts";
 import { useToast } from "@courselit/components-library";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
-import { signIn } from "next-auth/react";
+import { sendVerificationOtp, verifyEmailOtp } from "@/lib/auth-client";
 import { getUserProfile } from "@/app/(with-contexts)/helpers";
 
 const loginFormSchema = z.object({
@@ -75,23 +75,23 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
     };
 
     const requestCode = async function (email: string) {
-        const url = `/api/auth/code/generate?email=${encodeURIComponent(
-            email,
-        )}`;
         try {
             setLoading(true);
-            const response = await fetch(url);
-            const resp = await response.json();
-            if (!response.ok) {
+            const result = await sendVerificationOtp({
+                email,
+                type: "sign-in",
+            });
+            
+            if (result.error) {
                 toast({
                     title: TOAST_TITLE_ERROR,
-                    description: resp.error,
+                    description: result.error.message || "Failed to request code.",
                 });
             }
-        } catch (err) {
+        } catch (err: any) {
             toast({
                 title: TOAST_TITLE_ERROR,
-                description: err.message,
+                description: err.message || "An unexpected error occurred.",
             });
         } finally {
             setLoading(false);
@@ -103,12 +103,14 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
         const code = form.getValues("otp");
         try {
             setLoading(true);
-            const response = await signIn("credentials", {
+            
+            // Use better-auth's email OTP verification which also signs in the user
+            const verifyResult = await verifyEmailOtp({
                 email,
-                code,
-                redirect: false,
+                otp: code,
             });
-            if (response?.error) {
+            
+            if (verifyResult.error) {
                 toast({
                     title: TOAST_TITLE_ERROR,
                     description: `Can't sign you in at this time`,

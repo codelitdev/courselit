@@ -4,7 +4,7 @@ import { graphql } from "graphql";
 import { getAddress } from "@/lib/utils";
 import User from "@models/User";
 import DomainModel, { Domain } from "@models/Domain";
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth";
 
 async function updateLastActive(user: any) {
     const dateNow = new Date();

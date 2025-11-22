@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth";
 import { Domain, Page } from "@courselit/common-models";
 import DomainModel from "@models/Domain";
 import { ObjectId } from "mongodb";

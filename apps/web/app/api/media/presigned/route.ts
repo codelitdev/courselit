@@ -4,7 +4,7 @@ import { UIConstants as constants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
 import User from "@models/User";
 import DomainModel, { Domain } from "@models/Domain";
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth";
 import { error } from "@/services/logger";
 import { MediaLit } from "medialit";
 

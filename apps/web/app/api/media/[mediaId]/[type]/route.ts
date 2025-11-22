@@ -6,7 +6,7 @@ import { checkPermission } from "@courselit/utils";
 import UserModel from "@models/User";
 import { InternalUser, InternalCourse } from "@courselit/common-logic";
 import DomainModel, { Domain } from "@models/Domain";
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth";
 import CourseModel from "@models/Course";
 import LessonModel, { Lesson } from "@models/Lesson";
 import PageModel, { Page } from "@models/Page";

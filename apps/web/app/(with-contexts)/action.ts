@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth";
 import { getUser } from "@/graphql/users/logic";
 import { Profile, User } from "@courselit/common-models";
 import GQLContext from "@models/GQLContext";

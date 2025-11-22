@@ -16,7 +16,7 @@ import {
 } from "@courselit/page-primitives";
 import { useContext, useState } from "react";
 import { FormEvent } from "react";
-import { signIn } from "next-auth/react";
+import { sendVerificationOtp, verifyEmailOtp } from "@/lib/auth-client";
 import { Form, useToast } from "@courselit/components-library";
 import {
     BTN_LOGIN,
@@ -118,19 +118,20 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
         }
 
         try {
-            const url = `/api/auth/code/generate?email=${encodeURIComponent(
+            const result = await sendVerificationOtp({
                 email,
-            )}`;
-            const response = await fetch(url);
-            const resp = await response.json();
-            if (response.ok) {
-                setShowCode(true);
-            } else {
+                type: "sign-in",
+            });
+
+            if (result.error) {
                 toast({
                     title: TOAST_TITLE_ERROR,
-                    description: resp.error || "Failed to request code.",
+                    description:
+                        result.error.message || "Failed to request code.",
                     variant: "destructive",
                 });
+            } else {
+                setShowCode(true);
             }
         } catch (err) {
             console.error("Error during requestCode:", err);
@@ -148,12 +149,14 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
         e.preventDefault();
         try {
             setLoading(true);
-            const response = await signIn("credentials", {
+
+            // Use better-auth's email OTP verification which also signs in the user
+            const verifyResult = await verifyEmailOtp({
                 email,
-                code,
-                redirect: false,
+                otp: code,
             });
-            if (response?.error) {
+
+            if (verifyResult.error) {
                 setError(`Can't sign you in at this time`);
             } else {
                 window.location.href =

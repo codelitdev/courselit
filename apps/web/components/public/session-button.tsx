@@ -4,7 +4,7 @@ import {
     GENERIC_SIGNIN_TEXT,
 } from "../../ui-config/strings";
 import { Button } from "@courselit/components-library";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signOut, useSession } from "@/lib/auth-client";
 
 export default function SessionButton() {
     const { data: session } = useSession();
@@ -18,7 +18,10 @@ export default function SessionButton() {
     }
 
     return (
-        <Button onClick={() => signIn()} component="button">
+        <Button
+            onClick={() => (window.location.href = "/login")}
+            component="button"
+        >
             {GENERIC_SIGNIN_TEXT}
         </Button>
     );

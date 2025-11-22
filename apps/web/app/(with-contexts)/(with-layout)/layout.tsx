@@ -1,5 +1,4 @@
-import { auth } from "@/auth";
-import { SessionProvider } from "next-auth/react";
+import { auth } from "@/lib/auth";
 import HomepageLayout from "./home-page-layout";
 import { headers } from "next/headers";
 import { getFullSiteSetup } from "@ui-lib/utils";
@@ -20,9 +19,5 @@ export default async function Layout({
         return null;
     }
 
-    return (
-        <SessionProvider session={session}>
-            <HomepageLayout siteInfo={siteInfo}>{children}</HomepageLayout>
-        </SessionProvider>
-    );
+    return <HomepageLayout siteInfo={siteInfo}>{children}</HomepageLayout>;
 }

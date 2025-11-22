@@ -5,7 +5,7 @@
 import { NextRequest } from "next/server";
 import { POST } from "../route";
 import Domain from "@models/Domain";
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth";
 import mongoose from "mongoose";
 import User from "@models/User";
 import { Constants } from "@courselit/common-models";

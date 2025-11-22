@@ -1,6 +1,6 @@
 import LayoutWithContext from "./layout-with-context";
 import React from "react";
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { getFullSiteSetup } from "@ui-lib/utils";
 import { getAddressFromHeaders } from "@/app/actions";

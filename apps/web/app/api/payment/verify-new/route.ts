@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { getDomain, getUser } from "../initiate/route";
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth";
 import { error } from "@/services/logger";
 import InvoiceModel from "@models/Invoice";
 import Membership from "@models/Membership";

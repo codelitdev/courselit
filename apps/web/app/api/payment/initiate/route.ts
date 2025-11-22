@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import DomainModel, { Domain } from "@models/Domain";
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth";
 import User from "@models/User";
 import {
     Community,

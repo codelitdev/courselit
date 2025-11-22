@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth";
 import { SessionProvider } from "next-auth/react";
 import { Metadata, ResolvingMetadata } from "next";
 import { getFullSiteSetup } from "@ui-lib/utils";
