@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import { Domain, Page } from "@courselit/common-models";
 import DomainModel from "@models/Domain";
 import { ObjectId } from "mongodb";
@@ -17,7 +18,9 @@ export async function getSetupChecklist(): Promise<{
     checklist: string[];
     total: number;
 } | null> {
-    const session = await auth();
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
     if (!session) {
         return null;
     }

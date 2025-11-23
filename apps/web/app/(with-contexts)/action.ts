@@ -7,7 +7,9 @@ import GQLContext from "@models/GQLContext";
 import { Types } from "mongoose";
 
 export async function getProfile(): Promise<Profile | null> {
-    const session = await auth();
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
     if (!session) {
         return null;
     }

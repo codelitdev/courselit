@@ -22,7 +22,9 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const session = await auth();
+        const session = await auth.api.getSession({
+            headers: req.headers,
+        });
         const user = await getUser(session, domain._id);
 
         if (!user) {

@@ -50,10 +50,22 @@ export default async function middleware(request: NextRequest) {
         }
 
         if (request.nextUrl.pathname.startsWith("/dashboard")) {
-            const session = await auth.api.getSession({
-                headers: request.headers,
-            });
-            if (!session) {
+            try {
+                const session = await auth.api.getSession({
+                    headers: request.headers,
+                });
+                if (!session) {
+                    return NextResponse.redirect(
+                        new URL(
+                            `/login?redirect=${encodeURIComponent(
+                                request.nextUrl.pathname,
+                            )}`,
+                            request.url,
+                        ),
+                    );
+                }
+            } catch (error) {
+                // If session check fails, redirect to login
                 return NextResponse.redirect(
                     new URL(
                         `/login?redirect=${encodeURIComponent(

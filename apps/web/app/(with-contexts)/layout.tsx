@@ -14,7 +14,9 @@ export default async function Layout({
     children: React.ReactNode;
 }) {
     const address = await getAddressFromHeaders(headers);
-    const session = await auth();
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
 
     const siteSetup = await getFullSiteSetup(address);
     const config: ServerConfig = {

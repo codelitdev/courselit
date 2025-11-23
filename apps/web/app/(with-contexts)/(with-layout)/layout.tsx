@@ -12,7 +12,9 @@ export default async function Layout({
     const address = await getAddressFromHeaders(headers);
     const [siteInfo, session] = await Promise.all([
         getFullSiteSetup(address),
-        auth(),
+        auth.api.getSession({
+            headers: await headers(),
+        }),
     ]);
 
     if (!siteInfo) {
