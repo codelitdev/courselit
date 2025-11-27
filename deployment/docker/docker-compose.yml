@@ -16,8 +16,6 @@ services:
             # You can use the following command to generate a secure random string.
             # openssl rand -base64 32
             - AUTH_SECRET=som3_rand0m_String
-            # This prevents the "Host must be trusted" error in next-auth
-            # - AUTH_TRUST_HOST=true
 
             # In production, replace the following with the connection string of a cloud
             # hosted instance of MongoDB.
