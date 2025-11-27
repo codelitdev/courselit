@@ -93,5 +93,4 @@ export const config = {
         "/healthy",
         "/dashboard/:path*",
     ],
-    unstable_allowDynamic: ["/node_modules/next-auth/**"],
 };

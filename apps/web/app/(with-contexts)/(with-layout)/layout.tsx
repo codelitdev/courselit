@@ -1,4 +1,3 @@
-import { SessionProvider } from "next-auth/react";
 import HomepageLayout from "./home-page-layout";
 import { headers } from "next/headers";
 import { getFullSiteSetup } from "@ui-lib/utils";
@@ -10,19 +9,11 @@ export default async function Layout({
     children: React.ReactNode;
 }) {
     const address = await getAddressFromHeaders(headers);
-    const [siteInfo, session] = await Promise.all([
-        getFullSiteSetup(address),
-        // auth(),
-        null,
-    ]);
+    const siteInfo = await getFullSiteSetup(address);
 
     if (!siteInfo) {
         return null;
     }
 
-    return (
-        <SessionProvider session={session}>
-            <HomepageLayout siteInfo={siteInfo}>{children}</HomepageLayout>
-        </SessionProvider>
-    );
+    return <HomepageLayout siteInfo={siteInfo}>{children}</HomepageLayout>;
 }
