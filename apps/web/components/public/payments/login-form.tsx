@@ -90,7 +90,7 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
             if (error) {
                 toast({
                     title: TOAST_TITLE_ERROR,
-                    description: error.message as any,
+                    description: error.message,
                     variant: "destructive",
                 });
             } else {
@@ -106,14 +106,15 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
         const code = form.getValues("otp");
         try {
             setLoading(true);
-            const { data, error } = await authClient.signIn.emailOtp({
+            const { error } = await authClient.signIn.emailOtp({
                 email: email.trim().toLowerCase(),
                 otp: code!,
             });
             if (error) {
                 toast({
                     title: TOAST_TITLE_ERROR,
-                    description: `Can't sign you in at this time: ${error.message}`,
+                    description: error.message,
+                    variant: "destructive",
                 });
             } else {
                 const profile = await getUserProfile(address.backend);
