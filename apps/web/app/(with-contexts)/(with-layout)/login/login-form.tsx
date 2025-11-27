@@ -118,7 +118,7 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
         e.preventDefault();
         try {
             setLoading(true);
-            const { data, error } = await authClient.signIn.emailOtp({
+            const { error } = await authClient.signIn.emailOtp({
                 email: email.trim().toLowerCase(),
                 otp: code,
             });
@@ -163,11 +163,10 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
         }
 
         try {
-            const { data, error } =
-                await authClient.emailOtp.sendVerificationOtp({
-                    email: email.trim().toLowerCase(),
-                    type: "sign-in",
-                });
+            const { error } = await authClient.emailOtp.sendVerificationOtp({
+                email: email.trim().toLowerCase(),
+                type: "sign-in",
+            });
 
             if (error) {
                 setError(error.message as any);

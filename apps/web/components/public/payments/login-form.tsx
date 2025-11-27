@@ -85,11 +85,10 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
     const requestCode = async function (email: string) {
         try {
             setLoading(true);
-            const { data, error } =
-                await authClient.emailOtp.sendVerificationOtp({
-                    email: email.trim().toLowerCase(),
-                    type: "sign-in",
-                });
+            const { error } = await authClient.emailOtp.sendVerificationOtp({
+                email: email.trim().toLowerCase(),
+                type: "sign-in",
+            });
             if (error) {
                 toast({
                     title: TOAST_TITLE_ERROR,
