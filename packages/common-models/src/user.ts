@@ -16,7 +16,6 @@ export default interface User {
     lead: (typeof Constants.leads)[number];
     tags?: string[];
     avatar: Media;
-    invited?: boolean;
     content?: {
         entityType: (typeof Constants.MembershipEntityType)[keyof typeof Constants.MembershipEntityType];
         entity: {

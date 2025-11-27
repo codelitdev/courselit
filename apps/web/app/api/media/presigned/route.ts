@@ -16,7 +16,9 @@ export async function POST(req: NextRequest) {
         return Response.json({ message: "Domain not found" }, { status: 404 });
     }
 
-    const session = await auth();
+    const session = await auth.api.getSession({
+        headers: req.headers,
+    });
 
     let user;
     if (session) {

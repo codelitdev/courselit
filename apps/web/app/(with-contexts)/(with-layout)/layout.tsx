@@ -1,4 +1,3 @@
-import { auth } from "@/auth";
 import { SessionProvider } from "next-auth/react";
 import HomepageLayout from "./home-page-layout";
 import { headers } from "next/headers";
@@ -13,7 +12,8 @@ export default async function Layout({
     const address = await getAddressFromHeaders(headers);
     const [siteInfo, session] = await Promise.all([
         getFullSiteSetup(address),
-        auth(),
+        // auth(),
+        null,
     ]);
 
     if (!siteInfo) {

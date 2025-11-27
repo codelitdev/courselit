@@ -18,7 +18,7 @@ import {
 } from "@components/contexts";
 import { Toaster, useToast } from "@courselit/components-library";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
-import { Session } from "next-auth";
+// import { Session } from "next-auth";
 import { Theme } from "@courselit/page-models";
 import { ThemeProvider as NextThemesProvider } from "@components/next-theme-provider";
 import { defaultState } from "@components/default-state";

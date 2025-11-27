@@ -1,11 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
-import NextAuth from "next-auth";
-import { authConfig } from "./auth.config";
 import { getBackendAddress } from "@/app/actions";
+import { auth } from "./auth";
 
-const { auth } = NextAuth(authConfig);
-
-export default auth(async (request: NextRequest) => {
+export async function proxy(request: NextRequest) {
     const requestHeaders = request.headers;
     const backend = await getBackendAddress(requestHeaders);
 
@@ -23,6 +20,13 @@ export default auth(async (request: NextRequest) => {
         const resp = await response.json();
 
         requestHeaders.set("domain", resp.domain);
+        requestHeaders.set("domainId", resp.domainId);
+        requestHeaders.set("domainEmail", resp.domainEmail);
+        requestHeaders.set("domainTitle", resp.domainTitle || "");
+        requestHeaders.set(
+            "hideCourseLitBranding",
+            resp.hideCourseLitBranding || false,
+        );
 
         if (request.nextUrl.pathname === "/favicon.ico") {
             try {
@@ -53,7 +57,9 @@ export default auth(async (request: NextRequest) => {
         }
 
         if (request.nextUrl.pathname.startsWith("/dashboard")) {
-            const session = await auth();
+            const session = await auth.api.getSession({
+                headers: requestHeaders,
+            });
             if (!session) {
                 return NextResponse.redirect(
                     new URL(
@@ -77,7 +83,7 @@ export default auth(async (request: NextRequest) => {
             { status: 404 },
         );
     }
-});
+}
 
 export const config = {
     matcher: [

@@ -24,7 +24,7 @@ export interface VideoThumbnailProps {
 export function VideoWithPreview({
     title = "Video",
     thumbnailUrl,
-    videoUrl = "https://www.youtube.com/watch?v=VLVcZB2-udk",
+    videoUrl = "https://www.youtube.com/watch?v=7OP2bU9RWVE",
     aspectRatio = "16/9",
     modal = false,
 }: VideoThumbnailProps) {

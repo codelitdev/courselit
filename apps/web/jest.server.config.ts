@@ -5,7 +5,7 @@ const config: Config = {
     setupFilesAfterEnv: ["<rootDir>/setupTests.server.ts"],
     watchPathIgnorePatterns: ["globalConfig"],
     moduleNameMapper: {
-        "next-auth": "<rootDir>/__mocks__/next-auth.ts",
+        // "next-auth": "<rootDir>/__mocks__/next-auth.ts",
         "@courselit/utils": "<rootDir>/../../packages/utils/src",
         "@courselit/common-logic": "<rootDir>/../../packages/common-logic/src",
         "@courselit/page-primitives":

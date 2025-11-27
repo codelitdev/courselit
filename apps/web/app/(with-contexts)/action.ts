@@ -5,15 +5,19 @@ import { getUser } from "@/graphql/users/logic";
 import { Profile, User } from "@courselit/common-models";
 import GQLContext from "@models/GQLContext";
 import { Types } from "mongoose";
+import { headers } from "next/headers";
 
 export async function getProfile(): Promise<Profile | null> {
-    const session = await auth();
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
     if (!session) {
         return null;
     }
 
+    const domainId = (session?.session as any)?.domainId;
     const userId = (session?.user as any)?.userId;
-    const domainId = (session?.user as any)?.domain;
+
     try {
         const user = await getUser(userId, {
             user: {

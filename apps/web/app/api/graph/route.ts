@@ -5,6 +5,7 @@ import { getAddress } from "@/lib/utils";
 import User from "@models/User";
 import DomainModel, { Domain } from "@models/Domain";
 import { auth } from "@/auth";
+import { als } from "@/async-local-storage";
 
 async function updateLastActive(user: any) {
     const dateNow = new Date();
@@ -26,7 +27,18 @@ export async function POST(req: NextRequest) {
         return Response.json({ message: "Domain not found" }, { status: 404 });
     }
 
-    const session = await auth();
+    const map = new Map();
+    map.set("domain", req.headers.get("domain"));
+    map.set("domainId", req.headers.get("domainId"));
+    als.enterWith(map);
+
+    const session = await auth.api.getSession({
+        headers: req.headers,
+    });
+    const body = await req.json();
+    if (!body.hasOwnProperty("query")) {
+        return Response.json({ error: "Query is missing" }, { status: 400 });
+    }
 
     let user;
     if (session) {
@@ -41,10 +53,10 @@ export async function POST(req: NextRequest) {
         }
     }
 
-    const body = await req.json();
-    if (!body.hasOwnProperty("query")) {
-        return Response.json({ error: "Query is missing" }, { status: 400 });
-    }
+    // const body = await req.json();
+    // if (!body.hasOwnProperty("query")) {
+    //     return Response.json({ error: "Query is missing" }, { status: 400 });
+    // }
 
     let query, variables;
     if (typeof body.query === "string") {

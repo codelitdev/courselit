@@ -74,7 +74,6 @@ export default function NewCustomer({ courseId }: NewCustomerProps) {
                 permissions,
                 userId,
                 tags,
-                invited
             }
         }
     `;

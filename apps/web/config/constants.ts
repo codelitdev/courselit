@@ -9,11 +9,6 @@ export default {
     domainNameForSingleTenancy:
         process.env.DOMAIN_NAME_FOR_SINGLE_TENANCY || "main",
     schoolNameForSingleTenancy: "My school",
-    dbConnectionString:
-        process.env.DB_CONNECTION_STRING ||
-        `mongodb://localhost/${
-            process.env.NODE_ENV === "test" ? "test" : "app"
-        }`,
 
     // product types
     course: "course",
