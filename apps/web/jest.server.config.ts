@@ -13,6 +13,7 @@ const config: Config = {
         slugify: "<rootDir>/__mocks__/slugify.ts",
         "@models/(.*)": "<rootDir>/models/$1",
         "@/auth": "<rootDir>/auth.ts",
+        "@/ba-multitenant-adapter": "<rootDir>/ba-multitenant-adapter.ts",
         "@/payments-new": "<rootDir>/payments-new",
         "@/graphql/(.*)": "<rootDir>/graphql/$1",
         "@/config/(.*)": "<rootDir>/config/$1",
@@ -26,11 +27,13 @@ const config: Config = {
         "\\.(css|less|scss|sass)$": "identity-obj-proxy",
     },
     transform: {
-        "^.+\\.(ts|tsx)$": [
+        "^.+\\.(ts|tsx|mjs)$": [
             "ts-jest",
             {
+                useESM: true,
                 tsconfig: {
                     jsx: "react-jsx",
+                    allowJs: true,
                 },
             },
         ],
@@ -40,11 +43,12 @@ const config: Config = {
         "**/api/**/__tests__/**/*.test.ts",
     ],
     testPathIgnorePatterns: [
-        "/node_modules/",
+        "/node_modules/(?!better-auth)/",
         "/.next/",
         // Exclude component tests - they should run in the regular config
         ".*/components/.*/__tests__/.*\\.test\\.(tsx|ts)$",
     ],
+    transformIgnorePatterns: ["node_modules/(?!better-auth)"],
     moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
 };
 
