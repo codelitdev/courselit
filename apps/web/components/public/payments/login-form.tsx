@@ -78,8 +78,6 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
         }
 
         await requestCode(emailValue);
-
-        setLoginStep("otp");
     };
 
     const requestCode = async function (email: string) {
@@ -92,8 +90,11 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
             if (error) {
                 toast({
                     title: TOAST_TITLE_ERROR,
-                    description: error as any,
+                    description: error.message as any,
+                    variant: "destructive",
                 });
+            } else {
+                setLoginStep("otp");
             }
         } finally {
             setLoading(false);
