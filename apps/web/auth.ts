@@ -10,6 +10,7 @@ import { responses } from "@/config/strings";
 import { mongodbAdapter } from "@/ba-multitenant-adapter";
 import { updateUserAfterCreationViaAuth } from "./graphql/users/logic";
 import UserModel from "@models/User";
+import { getBackendAddress } from "./app/actions";
 
 const client = new MongoClient(process.env.DB_CONNECTION_STRING || "");
 const db = client.db();
@@ -87,6 +88,10 @@ const config: any = {
                 },
             },
         },
+    },
+    trustedOrigins: async (request: Request) => {
+        const backendAddress = await getBackendAddress(request.headers);
+        return [backendAddress];
     },
 };
 
