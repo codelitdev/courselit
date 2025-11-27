@@ -182,7 +182,11 @@ export async function GET(req: Request) {
     return Response.json({
         success: true,
         domain: domain!.name,
+        domainId: domain!._id.toString(),
         logo: domain!.settings?.logo?.file,
+        domainEmail: domain!.email,
+        domainTitle: domain!.settings?.title,
+        hideCourseLitBranding: domain!.settings?.hideCourseLitBranding,
     });
 }
 

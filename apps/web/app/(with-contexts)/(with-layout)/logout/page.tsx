@@ -1,46 +1,44 @@
 "use client";
 
 import { Section, Text1, Button } from "@courselit/page-primitives";
-import {
-    LOGGING_OUT,
-    LOGOUT,
-    LOGOUT_MESSAGE,
-    TOAST_TITLE_ERROR,
-    UNABLE_TO_LOGOUT,
-} from "@ui-config/strings";
-import { useContext, useState } from "react";
+import { LOGOUT, LOGOUT_MESSAGE } from "@ui-config/strings";
+import { useContext } from "react";
 import { ThemeContext } from "@components/contexts";
-import { toast } from "@/hooks/use-toast";
+import { authClient } from "@/lib/auth-client";
+import { useToast } from "@courselit/components-library";
 
 export default function ClientSide() {
-    const [loading, setLoading] = useState(false);
     const { theme } = useContext(ThemeContext);
+    const { toast } = useToast();
 
     const handleLogout = async () => {
-        setLoading(true);
-        const response = await fetch("/logout/server");
-        if (response.ok) {
-            window.location.href = "/";
-        } else {
+        const { error } = await authClient.signOut({
+            fetchOptions: {
+                onSuccess: () => {
+                    window.location.href = "/login";
+                },
+            },
+        });
+
+        if (error) {
             toast({
-                title: TOAST_TITLE_ERROR,
-                description: UNABLE_TO_LOGOUT,
+                title: "Error",
+                description: error?.message,
                 variant: "destructive",
             });
         }
-        setLoading(false);
     };
 
     return (
         <Section theme={theme.theme}>
-            <Text1 theme={theme.theme}>{LOGOUT_MESSAGE}</Text1>
-            <Button
-                theme={theme.theme}
-                onClick={handleLogout}
-                disabled={loading}
-            >
-                {loading ? LOGGING_OUT : LOGOUT}
-            </Button>
+            <div className="flex flex-col gap-4">
+                <Text1 theme={theme.theme}>{LOGOUT_MESSAGE}</Text1>
+                <div>
+                    <Button theme={theme.theme} onClick={handleLogout}>
+                        {LOGOUT}
+                    </Button>
+                </div>
+            </div>
         </Section>
     );
 }

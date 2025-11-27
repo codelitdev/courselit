@@ -20,7 +20,13 @@ jest.mock("@models/Course");
 jest.mock("@models/PaymentPlan");
 jest.mock("@models/Invoice");
 jest.mock("@models/Community");
-jest.mock("@/auth");
+jest.mock("@/auth", () => ({
+    auth: {
+        api: {
+            getSession: jest.fn(),
+        },
+    },
+}));
 jest.mock("../../helpers");
 jest.mock("@/graphql/users/logic");
 jest.mock("@/payments-new");
@@ -68,7 +74,7 @@ describe("Payment Initiate Route", () => {
             },
         } as unknown as NextRequest;
 
-        (auth as jest.Mock).mockResolvedValue({
+        (auth.api.getSession as jest.Mock).mockResolvedValue({
             user: {
                 email: "test@test.com",
             },
@@ -119,7 +125,7 @@ describe("Payment Initiate Route", () => {
     });
 
     it("returns 401 if user is not authenticated", async () => {
-        (auth as jest.Mock).mockResolvedValue(null);
+        (auth.api.getSession as jest.Mock).mockResolvedValue(null);
 
         const response = await POST(mockRequest);
         expect(response.status).toBe(401);

@@ -162,7 +162,8 @@ export const LOGIN_FORM_LABEL =
     "Enter your email to sign in or create an account";
 export const LOGIN_NO_CODE = "Did not get the code?";
 export const BTN_LOGIN_GET_CODE = "Get code";
-export const BTN_LOGIN_CODE_INTIMATION = "Enter the code sent to";
+export const LOGIN_CODE_INTIMATION_MESSAGE =
+    "Enter the code sent to your email";
 export const LOGIN_FORM_DISCLAIMER = "By submitting, you accept the ";
 export const SIGNUP_SECTION_HEADER = "Create an account";
 export const SIGNUP_SECTION_BUTTON = "Join";
@@ -384,9 +385,7 @@ export const MEDIA_PUBLIC = "Publicly available";
 export const MEDIA_DIRECT_URL = "Direct URL";
 export const MEDIA_URL_COPIED = "Copied to clipboard";
 export const MEDIA_FILE_TYPE = "File type";
-export const UNABLE_TO_LOGOUT = "Logout failed. Try again.";
 export const LOGOUT = "Logout";
-export const LOGGING_OUT = "Logging out...";
 export const LOGOUT_MESSAGE = "Are you sure you want to logout?";
 export const USER_TABLE_HEADER_NAME = "Details";
 export const USER_TABLE_HEADER_STATUS = "Status";
@@ -691,3 +690,5 @@ export const PRODUCTS_LIST_EMPTY_DESCRIPTION_PUBLIC =
     "The team has not added any products yet.";
 export const PRODUCTS_LIST_EMPTY_DESCRIPTION_PRIVATE =
     "You have not added any products yet.";
+export const LOGIN_CODE_SENT_MESSAGE =
+    "We have emailed you a one time password.";

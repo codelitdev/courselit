@@ -1,102 +1,116 @@
-import NextAuth, { Session } from "next-auth";
-import { z } from "zod";
-import { authConfig } from "./auth.config";
-import CredentialsProvider from "next-auth/providers/credentials";
-import VerificationToken from "@models/VerificationToken";
-import UserModel from "@models/User";
-import { createUser } from "./graphql/users/logic";
-import { hashCode } from "@/lib/utils";
+import { APIError, betterAuth } from "better-auth";
+import { customSession, emailOTP } from "better-auth/plugins";
+import { MongoClient } from "mongodb";
 import DomainModel, { Domain } from "@models/Domain";
-import { error } from "./services/logger";
-import { User } from "next-auth";
-import { User as AppUser } from "@courselit/common-models";
+import { addMailJob } from "@/services/queue";
+import pug from "pug";
+import MagicCodeEmailTemplate from "@/templates/magic-code-email";
+import { generateEmailFrom } from "@/lib/utils";
+import { responses } from "@/config/strings";
+import { mongodbAdapter } from "@/ba-multitenant-adapter";
+import { updateUserAfterCreationViaAuth } from "./graphql/users/logic";
+import UserModel from "@models/User";
+import { getBackendAddress } from "./app/actions";
 
-type AuthReturn = ReturnType<typeof NextAuth>;
+const client = new MongoClient(process.env.DB_CONNECTION_STRING || "");
+const db = client.db();
 
-const authHandlers: AuthReturn = NextAuth({
-    ...authConfig,
-    providers: [
-        CredentialsProvider({
-            name: "Email",
-            credentials: {},
-            async authorize(credentials, req) {
-                const domain = await DomainModel.findOne<Domain>({
-                    name: req.headers.get("domain"),
+const config: any = {
+    appName: "CourseLit",
+    secret: process.env.AUTH_SECRET,
+    advanced: {
+        cookiePrefix: "courselit",
+    },
+    database: mongodbAdapter(db, {
+        client,
+        usePlural: true,
+    }),
+    plugins: [
+        emailOTP({
+            overrideDefaultEmailVerification: true,
+            storeOTP: "hashed",
+            async sendVerificationOTP({ email, otp, type }, ctx) {
+                const emailBody = pug.render(MagicCodeEmailTemplate, {
+                    code: otp,
+                    hideCourseLitBranding:
+                        ctx!.headers?.get("hidecourselitbranding") || false,
                 });
-                if (!domain) {
-                    throw new Error("Domain not found");
-                }
-                const parsedCredentials = z
-                    .object({
-                        email: z.string().email(),
-                        code: z.string().min(6),
-                    })
-                    .safeParse(credentials);
-                if (!parsedCredentials.success) {
-                    return null;
-                }
 
-                const { email, code } = parsedCredentials.data;
-                const sanitizedEmail = email.toLowerCase();
-
-                const verificationToken =
-                    await VerificationToken.findOneAndDelete({
-                        email: sanitizedEmail,
-                        domain: domain.name,
-                        code: hashCode(+code),
-                        timestamp: { $gt: Date.now() },
-                    });
-                if (!verificationToken) {
-                    error(`Invalid code`, {
-                        email: sanitizedEmail,
-                    });
-                    return null;
-                }
-
-                let user = await UserModel.findOne({
-                    domain: domain._id,
-                    email: sanitizedEmail,
+                await addMailJob({
+                    to: [email],
+                    subject: `${responses.sign_in_mail_prefix} ${ctx!.headers?.get("domain")}`,
+                    body: emailBody,
+                    from: generateEmailFrom({
+                        name:
+                            ctx!.headers?.get("domainTitle") ||
+                            ctx!.headers?.get("domain") ||
+                            "",
+                        email:
+                            process.env.EMAIL_FROM ||
+                            ctx!.headers?.get("domainemail") ||
+                            "",
+                    }),
                 });
-                if (user && user.invited) {
-                    user.invited = false;
-                    await user.save();
-                }
-                if (!user) {
-                    user = await createUser({
-                        domain,
-                        email: sanitizedEmail,
-                    });
-                }
-                if (!user.active) {
-                    return null;
-                }
-                return user;
             },
         }),
+        customSession(async ({ user, session }, ctx) => {
+            return {
+                user: {
+                    ...user,
+                    userId: (
+                        (await UserModel.findOne({ _id: user.id })
+                            .select("userId")
+                            .lean()) as unknown as any
+                    ).userId,
+                },
+                session: {
+                    ...session,
+                    domainId: ctx.headers?.get("domainId"),
+                },
+            };
+        }),
     ],
-    callbacks: {
-        jwt({ token, user }: { token: any; user?: User }) {
-            if (user) {
-                token.userId = (user as unknown as AppUser).userId;
-                token.domain = (user as any).domain.toString();
-            }
-            return token;
-        },
-        session({ session, token }: { session: Session; token: any }) {
-            if (session.user && token.userId) {
-                if (token.userId) {
-                    (session.user as any).userId = token.userId;
-                }
-                if (token.domain) {
-                    (session.user as any).domain = token.domain;
-                }
-            }
-            return session;
+    databaseHooks: {
+        user: {
+            create: {
+                after: async (user, ctx) => {
+                    const domainName = ctx!.headers?.get("domain");
+                    const domain = (await DomainModel.findOne<Domain>({
+                        name: domainName,
+                    }).lean()) as unknown as Domain;
+                    if (!domain) {
+                        throw new APIError("NOT_FOUND", {
+                            message: "Domain not found",
+                        });
+                    }
+
+                    await updateUserAfterCreationViaAuth(user.id, domain);
+                },
+            },
         },
     },
-});
+    trustedOrigins: async (request: Request) => {
+        const backendAddress = await getBackendAddress(request.headers);
+        return [backendAddress];
+    },
+};
 
-export const auth: AuthReturn["auth"] = authHandlers.auth;
-export const signIn: AuthReturn["signIn"] = authHandlers.signIn;
-export const signOut: AuthReturn["signOut"] = authHandlers.signOut;
-export const handlers: AuthReturn["handlers"] = authHandlers.handlers;
+if (process.env.SESSION_COOKIE_CACHE_MAX_AGE) {
+    if (parseInt(process.env.SESSION_COOKIE_CACHE_MAX_AGE) > 0) {
+        config.session = {
+            cookieCache: {
+                enabled: true,
+                maxAge: parseInt(process.env.SESSION_COOKIE_CACHE_MAX_AGE) * 60,
+            },
+        };
+    }
+} else {
+    config.session = {
+        cookieCache: {
+            enabled: true,
+            maxAge: 5 * 60, // 5 minutes
+        },
+    };
+}
+
+export const auth = betterAuth(config);

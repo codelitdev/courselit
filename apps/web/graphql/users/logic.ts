@@ -7,7 +7,7 @@ import constants from "@/config/constants";
 import GQLContext from "@/models/GQLContext";
 import { initMandatoryPages } from "../pages/logic";
 import { Domain } from "@models/Domain";
-import { checkPermission } from "@courselit/utils";
+import { checkPermission, generateUniqueId } from "@courselit/utils";
 import UserSegmentModel from "@models/UserSegment";
 import {
     InternalCourse,
@@ -59,6 +59,7 @@ import {
     cleanupPersonalData,
 } from "./helpers";
 const { permissions } = UIConstants;
+import { ObjectId } from "mongodb";
 
 const removeAdminFieldsFromUserObject = (user: any) => ({
     id: user._id,
@@ -69,7 +70,10 @@ const removeAdminFieldsFromUserObject = (user: any) => ({
     avatar: user.avatar,
 });
 
-export const getUser = async (userId = null, ctx: GQLContext) => {
+export const getUser = async (
+    userId: string | null = null,
+    ctx: GQLContext,
+) => {
     let user: any = ctx.user;
 
     if (userId) {
@@ -171,7 +175,6 @@ export const inviteCustomer = async (
             domain: ctx.subdomain!,
             email: sanitizedEmail,
             subscribedToUpdates: true,
-            invited: true,
         });
     }
 
@@ -359,7 +362,6 @@ export async function createUser({
     lead,
     superAdmin = false,
     subscribedToUpdates = true,
-    invited,
     permissions = [],
 }: {
     domain: Domain;
@@ -372,7 +374,6 @@ export async function createUser({
         | typeof constants.leadDownload;
     superAdmin?: boolean;
     subscribedToUpdates?: boolean;
-    invited?: boolean;
     permissions?: string[];
 }): Promise<User> {
     if (permissions.length) {
@@ -406,7 +407,6 @@ export async function createUser({
                       ],
                 lead: lead || constants.leadWebsite,
                 subscribedToUpdates,
-                invited,
             },
         },
         { upsert: true, new: true, includeResultMetadata: true },
@@ -421,27 +421,65 @@ export async function createUser({
             await createInternalPaymentPlan(domain, createdUser.userId);
         }
 
-        await recordActivity({
-            domain: domain._id,
-            userId: createdUser.userId,
-            type: "user_created",
-        });
-
-        if (createdUser.subscribedToUpdates) {
-            await triggerSequences({
-                user: createdUser,
-                event: Constants.EventType.SUBSCRIBER_ADDED,
-            });
-
-            await recordActivity({
-                domain: domain!._id,
-                userId: createdUser.userId,
-                type: "newsletter_subscribed",
-            });
-        }
+        await recordActivityAndTriggerSequences(createdUser, domain);
     }
 
     return createdUser;
+}
+
+export async function updateUserAfterCreationViaAuth(
+    id: string,
+    domain: Domain,
+) {
+    const updatedUser = await UserModel.findOneAndUpdate(
+        {
+            _id: new ObjectId(id),
+            domain: domain._id,
+        },
+        {
+            $set: {
+                domain: domain._id,
+                userId: generateUniqueId(),
+                active: true,
+                purchases: [],
+                permissions: [
+                    constants.permissions.enrollInCourse,
+                    constants.permissions.manageMedia,
+                ],
+                lead: constants.leadWebsite,
+                subscribedToUpdates: true,
+                tags: [],
+                unsubscribeToken: generateUniqueId(),
+            },
+        },
+        { new: true },
+    );
+
+    await recordActivityAndTriggerSequences(updatedUser, domain);
+}
+
+async function recordActivityAndTriggerSequences(
+    user: InternalUser,
+    domain: Domain,
+) {
+    await recordActivity({
+        domain: domain._id,
+        userId: user.userId,
+        type: Constants.ActivityType.USER_CREATED,
+    });
+
+    if (user.subscribedToUpdates) {
+        await triggerSequences({
+            user: user,
+            event: Constants.EventType.SUBSCRIBER_ADDED,
+        });
+
+        await recordActivity({
+            domain: domain!._id,
+            userId: user.userId,
+            type: Constants.ActivityType.NEWSLETTER_SUBSCRIBED,
+        });
+    }
 }
 
 export async function getSegments(ctx: GQLContext): Promise<UserSegment[]> {

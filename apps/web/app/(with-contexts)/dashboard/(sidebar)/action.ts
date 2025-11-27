@@ -9,6 +9,7 @@ import { hasPermissionToAccessSetupChecklist } from "@/lib/utils";
 import CourseModel from "@models/Course";
 import PageModel from "@models/Page";
 import constants from "@config/constants";
+import { headers } from "next/headers";
 
 const DEFAULT_PAGE_CONTENT =
     "This is the default page created for you by CourseLit";
@@ -17,7 +18,9 @@ export async function getSetupChecklist(): Promise<{
     checklist: string[];
     total: number;
 } | null> {
-    const session = await auth();
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
     if (!session) {
         return null;
     }
@@ -25,7 +28,7 @@ export async function getSetupChecklist(): Promise<{
     try {
         const domain = await DomainModel.findOne<Domain>(
             {
-                _id: new ObjectId((session.user as any)?.domain!),
+                _id: new ObjectId((session.user as any)?.domainId!),
             },
             {
                 _id: 1,

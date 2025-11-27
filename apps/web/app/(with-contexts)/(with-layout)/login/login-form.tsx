@@ -11,17 +11,15 @@ import {
     Input,
     Section,
     Text1,
-    Text2,
     Link as PageLink,
 } from "@courselit/page-primitives";
-import { useContext, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { FormEvent } from "react";
-import { signIn } from "next-auth/react";
 import { Form, useToast } from "@courselit/components-library";
 import {
     BTN_LOGIN,
     BTN_LOGIN_GET_CODE,
-    BTN_LOGIN_CODE_INTIMATION,
+    LOGIN_CODE_INTIMATION_MESSAGE,
     LOGIN_NO_CODE,
     BTN_LOGIN_NO_CODE,
     LOGIN_FORM_LABEL,
@@ -37,6 +35,7 @@ import { checkPermission } from "@courselit/utils";
 import { Profile } from "@courselit/common-models";
 import { getUserProfile } from "../../helpers";
 import { ADMIN_PERMISSIONS } from "@ui-config/constants";
+import { authClient } from "@/lib/auth-client";
 
 export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
     const { theme } = useContext(ThemeContext);
@@ -49,112 +48,82 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
     const serverConfig = useContext(ServerConfigContext);
     const { executeRecaptcha } = useRecaptcha();
     const address = useContext(AddressContext);
+    const codeInputRef = useRef<HTMLInputElement>(null);
 
-    const requestCode = async function (e: FormEvent) {
-        e.preventDefault();
-        setLoading(true);
-        setError("");
-
-        if (serverConfig.recaptchaSiteKey) {
-            if (!executeRecaptcha) {
-                toast({
-                    title: TOAST_TITLE_ERROR,
-                    description:
-                        "reCAPTCHA service not available. Please try again later.",
-                    variant: "destructive",
-                });
-                setLoading(false);
-                return;
-            }
-
-            const recaptchaToken = await executeRecaptcha("login_code_request");
-            if (!recaptchaToken) {
-                toast({
-                    title: TOAST_TITLE_ERROR,
-                    description:
-                        "reCAPTCHA validation failed. Please try again.",
-                    variant: "destructive",
-                });
-                setLoading(false);
-                return;
-            }
-            try {
-                const recaptchaVerificationResponse = await fetch(
-                    "/api/recaptcha",
-                    {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ token: recaptchaToken }),
-                    },
-                );
-
-                const recaptchaData =
-                    await recaptchaVerificationResponse.json();
-
-                if (
-                    !recaptchaVerificationResponse.ok ||
-                    !recaptchaData.success ||
-                    (recaptchaData.score && recaptchaData.score < 0.5)
-                ) {
-                    toast({
-                        title: TOAST_TITLE_ERROR,
-                        description: `reCAPTCHA verification failed. ${recaptchaData.score ? `Score: ${recaptchaData.score.toFixed(2)}.` : ""} Please try again.`,
-                        variant: "destructive",
-                    });
-                    setLoading(false);
-                    return;
-                }
-            } catch (err) {
-                console.error("Error during reCAPTCHA verification:", err);
-                toast({
-                    title: TOAST_TITLE_ERROR,
-                    description:
-                        "reCAPTCHA verification failed. Please try again.",
-                    variant: "destructive",
-                });
-                setLoading(false);
-                return;
-            }
+    const validateRecaptcha = useCallback(async (): Promise<boolean> => {
+        if (!serverConfig.recaptchaSiteKey) {
+            return true;
         }
 
-        try {
-            const url = `/api/auth/code/generate?email=${encodeURIComponent(
-                email,
-            )}`;
-            const response = await fetch(url);
-            const resp = await response.json();
-            if (response.ok) {
-                setShowCode(true);
-            } else {
-                toast({
-                    title: TOAST_TITLE_ERROR,
-                    description: resp.error || "Failed to request code.",
-                    variant: "destructive",
-                });
-            }
-        } catch (err) {
-            console.error("Error during requestCode:", err);
+        if (!executeRecaptcha) {
             toast({
                 title: TOAST_TITLE_ERROR,
-                description: "An unexpected error occurred. Please try again.",
+                description:
+                    "reCAPTCHA service not available. Please try again later.",
                 variant: "destructive",
             });
-        } finally {
             setLoading(false);
+            return false;
         }
-    };
+
+        const recaptchaToken = await executeRecaptcha("login_code_request");
+        if (!recaptchaToken) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: "reCAPTCHA validation failed. Please try again.",
+                variant: "destructive",
+            });
+            setLoading(false);
+            return false;
+        }
+        try {
+            const recaptchaVerificationResponse = await fetch(
+                "/api/recaptcha",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ token: recaptchaToken }),
+                },
+            );
+
+            const recaptchaData = await recaptchaVerificationResponse.json();
+
+            if (
+                !recaptchaVerificationResponse.ok ||
+                !recaptchaData.success ||
+                (recaptchaData.score && recaptchaData.score < 0.5)
+            ) {
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: `reCAPTCHA verification failed. ${recaptchaData.score ? `Score: ${recaptchaData.score.toFixed(2)}.` : ""} Please try again.`,
+                    variant: "destructive",
+                });
+                setLoading(false);
+                return false;
+            }
+        } catch (err) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: "reCAPTCHA verification failed. Please try again.",
+                variant: "destructive",
+            });
+            setLoading(false);
+            return false;
+        }
+
+        return true;
+    }, []);
 
     const signInUser = async function (e: FormEvent) {
         e.preventDefault();
         try {
             setLoading(true);
-            const response = await signIn("credentials", {
-                email,
-                code,
-                redirect: false,
+            const { error } = await authClient.signIn.emailOtp({
+                email: email.trim().toLowerCase(),
+                otp: code,
             });
-            if (response?.error) {
-                setError(`Can't sign you in at this time`);
+            if (error) {
+                setError(`Can't sign you in at this time: ${error.message}`);
             } else {
                 window.location.href =
                     redirectTo ||
@@ -175,6 +144,37 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
             return "/dashboard/overview";
         } else {
             return "/dashboard/my-content";
+        }
+    };
+
+    useEffect(() => {
+        if (showCode) {
+            codeInputRef.current?.focus();
+        }
+    }, [showCode]);
+
+    const requestCode = async function (e: FormEvent) {
+        e.preventDefault();
+        setLoading(true);
+        setError("");
+
+        if (!validateRecaptcha()) {
+            return;
+        }
+
+        try {
+            const { error } = await authClient.emailOtp.sendVerificationOtp({
+                email: email.trim().toLowerCase(),
+                type: "sign-in",
+            });
+
+            if (error) {
+                setError(error.message as any);
+            } else {
+                setShowCode(true);
+            }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -204,7 +204,7 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
                                 </Text1>
                                 <Form
                                     onSubmit={requestCode}
-                                    className="flex flex-col gap-4"
+                                    className="flex flex-col gap-4 w-full lg:w-[360px] mx-auto"
                                 >
                                     <Input
                                         type="email"
@@ -216,7 +216,12 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
                                         }
                                         theme={theme.theme}
                                     />
-
+                                    <Button
+                                        theme={theme.theme}
+                                        disabled={loading}
+                                    >
+                                        {loading ? LOADING : BTN_LOGIN_GET_CODE}
+                                    </Button>
                                     <Caption
                                         theme={theme.theme}
                                         className="text-center"
@@ -228,35 +233,17 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
                                             </span>
                                         </Link>
                                     </Caption>
-                                    <div className="flex justify-center">
-                                        {/* <FormSubmit
-                                            text={
-                                                loading
-                                                    ? LOADING
-                                                    : BTN_LOGIN_GET_CODE
-                                            }
-                                            disabled={loading}
-                                        /> */}
-                                        <Button
-                                            theme={theme.theme}
-                                            disabled={loading}
-                                        >
-                                            {loading
-                                                ? LOADING
-                                                : BTN_LOGIN_GET_CODE}
-                                        </Button>
-                                    </div>
                                 </Form>
                             </div>
                         )}
                         {showCode && (
                             <div>
                                 <Text1 theme={theme.theme} className="mb-4">
-                                    {BTN_LOGIN_CODE_INTIMATION}{" "}
+                                    {LOGIN_CODE_INTIMATION_MESSAGE}{" "}
                                     <strong>{email}</strong>
                                 </Text1>
                                 <Form
-                                    className="flex flex-col gap-4 mb-4"
+                                    className="flex flex-col gap-4 mb-4 w-full lg:w-[360px] mx-auto"
                                     onSubmit={signInUser}
                                 >
                                     <Input
@@ -268,34 +255,37 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
                                             setCode(e.target.value)
                                         }
                                         theme={theme.theme}
+                                        ref={codeInputRef}
                                     />
-                                    <div className="flex justify-center">
-                                        <Button
-                                            theme={theme.theme}
-                                            disabled={loading}
-                                        >
-                                            {loading ? LOADING : BTN_LOGIN}
-                                        </Button>
-                                    </div>
-                                </Form>
-                                <div className="flex justify-center items-center gap-1 text-sm">
-                                    <Text2
+                                    <Button
                                         theme={theme.theme}
-                                        className="text-slate-500"
-                                    >
-                                        {LOGIN_NO_CODE}
-                                    </Text2>
-                                    <button
-                                        onClick={requestCode}
-                                        className="underline"
                                         disabled={loading}
                                     >
-                                        <PageLink theme={theme.theme}>
-                                            {loading
-                                                ? LOADING
-                                                : BTN_LOGIN_NO_CODE}
-                                        </PageLink>
-                                    </button>
+                                        {loading ? LOADING : BTN_LOGIN}
+                                    </Button>
+                                    {/* </div> */}
+                                </Form>
+                                <div className="flex justify-center items-center gap-1 text-sm">
+                                    <Caption
+                                        theme={theme.theme}
+                                        className="text-center flex items-center gap-1"
+                                    >
+                                        {LOGIN_NO_CODE}
+                                        <button
+                                            onClick={requestCode}
+                                            className="underline"
+                                            disabled={loading}
+                                        >
+                                            <PageLink
+                                                theme={theme.theme}
+                                                className="text-xs"
+                                            >
+                                                {loading
+                                                    ? LOADING
+                                                    : BTN_LOGIN_NO_CODE}
+                                            </PageLink>
+                                        </button>
+                                    </Caption>
                                 </div>
                             </div>
                         )}

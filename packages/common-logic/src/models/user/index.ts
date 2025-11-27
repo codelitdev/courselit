@@ -34,7 +34,6 @@ export const UserSchema = new mongoose.Schema<InternalUser>(
             default: generateUniqueId,
         },
         avatar: MediaSchema,
-        invited: { type: Boolean },
     },
     {
         timestamps: true,

@@ -29,11 +29,28 @@ jest.mock("@models/Community");
 jest.mock("@models/PaymentPlan");
 jest.mock("@models/Membership");
 jest.mock("@models/Invoice");
-jest.mock("@/auth");
+jest.mock("@/auth", () => ({
+    auth: {
+        api: {
+            getSession: jest.fn(),
+        },
+    },
+}));
 jest.mock("@/payments-new");
 jest.mock("../../helpers");
 jest.mock("@/graphql/users/logic");
 jest.mock("@/graphql/paymentplans/logic");
+jest.mock("better-auth", () => ({
+    betterAuth: jest.fn(),
+    APIError: class extends Error {},
+}));
+jest.mock("better-auth/plugins", () => ({
+    customSession: jest.fn(),
+    emailOTP: jest.fn(),
+}));
+jest.mock("better-auth/adapters", () => ({
+    createAdapterFactory: jest.fn(),
+}));
 
 describe("Payment Initiate Integration Tests - Included Products", () => {
     const mockDomainId = new mongoose.Types.ObjectId(
@@ -158,7 +175,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
         } as unknown as NextRequest;
 
         // Mock auth
-        (auth as jest.Mock).mockResolvedValue({
+        (auth.api.getSession as unknown as jest.Mock).mockResolvedValue({
             user: {
                 email: "test@test.com",
             },

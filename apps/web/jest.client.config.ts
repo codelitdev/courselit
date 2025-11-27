@@ -33,7 +33,6 @@ const config = {
         "^react$": "<rootDir>/node_modules/react",
         "^react-dom$": "<rootDir>/node_modules/react-dom",
         "^react/jsx-runtime$": "<rootDir>/node_modules/react/jsx-runtime.js",
-        "next-auth": "<rootDir>/__mocks__/next-auth.ts",
         "@courselit/utils": "<rootDir>/../../packages/utils/src",
         "@courselit/common-logic": "<rootDir>/../../packages/common-logic/src",
         "@courselit/page-primitives":

@@ -71,7 +71,7 @@ export const homePageTemplate = [
             },
             buttonAction: "/products",
             buttonCaption: "Ask user to take action",
-            youtubeLink: "https://www.youtube.com/watch?v=VLVcZB2-udk",
+            youtubeLink: "https://www.youtube.com/watch?v=7OP2bU9RWVE",
             alignment: "right",
             style: "normal",
             mediaRadius: 2,

@@ -4,8 +4,14 @@ import { useContext, useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-// import { Button } from "@/components/ui/button";
-import { Button, Input, Text1, Text2 } from "@courselit/page-primitives";
+import {
+    Button,
+    Caption,
+    Input,
+    Link as PageLink,
+    Text1,
+    Text2,
+} from "@courselit/page-primitives";
 import {
     FormControl,
     FormField,
@@ -18,17 +24,21 @@ import {
     ThemeContext,
 } from "@components/contexts";
 import { useToast } from "@courselit/components-library";
-import { TOAST_TITLE_ERROR } from "@ui-config/strings";
-import { signIn } from "next-auth/react";
+import {
+    LOGIN_CODE_INTIMATION_MESSAGE,
+    LOGIN_FORM_DISCLAIMER,
+    TOAST_TITLE_ERROR,
+} from "@ui-config/strings";
 import { getUserProfile } from "@/app/(with-contexts)/helpers";
+import { authClient } from "@/lib/auth-client";
+import Link from "next/link";
 
 const loginFormSchema = z.object({
     email: z.string().email("Invalid email address"),
     otp: z.string().min(6, "OTP must be at least 6 characters").optional(),
-    name: z.string().min(2, "Name must be at least 2 characters").optional(),
 });
 
-type LoginStep = "email" | "otp" | "name" | "complete";
+type LoginStep = "email" | "otp" | "complete";
 
 interface LoginFormProps {
     onLoginComplete: (email: string, name: string) => void;
@@ -54,7 +64,6 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
         defaultValues: {
             email: "",
             otp: "",
-            name: "",
         },
     });
 
@@ -69,30 +78,24 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
         }
 
         await requestCode(emailValue);
-
-        // Simulate OTP request
-        setLoginStep("otp");
     };
 
     const requestCode = async function (email: string) {
-        const url = `/api/auth/code/generate?email=${encodeURIComponent(
-            email,
-        )}`;
         try {
             setLoading(true);
-            const response = await fetch(url);
-            const resp = await response.json();
-            if (!response.ok) {
+            const { error } = await authClient.emailOtp.sendVerificationOtp({
+                email: email.trim().toLowerCase(),
+                type: "sign-in",
+            });
+            if (error) {
                 toast({
                     title: TOAST_TITLE_ERROR,
-                    description: resp.error,
+                    description: error.message,
+                    variant: "destructive",
                 });
+            } else {
+                setLoginStep("otp");
             }
-        } catch (err) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: err.message,
-            });
         } finally {
             setLoading(false);
         }
@@ -103,15 +106,15 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
         const code = form.getValues("otp");
         try {
             setLoading(true);
-            const response = await signIn("credentials", {
-                email,
-                code,
-                redirect: false,
+            const { error } = await authClient.signIn.emailOtp({
+                email: email.trim().toLowerCase(),
+                otp: code!,
             });
-            if (response?.error) {
+            if (error) {
                 toast({
                     title: TOAST_TITLE_ERROR,
-                    description: `Can't sign you in at this time`,
+                    description: error.message,
+                    variant: "destructive",
                 });
             } else {
                 const profile = await getUserProfile(address.backend);
@@ -124,12 +127,6 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
         }
     };
 
-    const handleNameSubmit = () => {
-        const { email, name } = form.getValues();
-        onLoginComplete(email, name || "");
-        setLoginStep("complete");
-    };
-
     const handleKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
         if (event.key === "Enter") {
             event.preventDefault();
@@ -137,8 +134,6 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                 handleRequestOTP();
             } else if (loginStep === "otp") {
                 handleVerifyOTP();
-            } else if (loginStep === "name") {
-                handleNameSubmit();
             }
         }
     };
@@ -166,7 +161,30 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                             )}
                         />
                         <Text2 className="text-xs" theme={theme.theme}>
-                            By signing in, you accept our{" "}
+                            <Caption
+                                theme={theme.theme}
+                                className="text-center"
+                            >
+                                {LOGIN_FORM_DISCLAIMER}
+                                <Link href="/p/terms">
+                                    <PageLink
+                                        href="/p/terms"
+                                        className="underline"
+                                    >
+                                        Terms
+                                    </PageLink>
+                                </Link>{" "}
+                                and{" "}
+                                <Link href="/p/privacy">
+                                    <PageLink
+                                        href="/p/privacy"
+                                        className="underline"
+                                    >
+                                        Privacy Policy
+                                    </PageLink>
+                                </Link>
+                            </Caption>
+                            {/* By signing in, you accept our{" "}
                             <a
                                 href="/p/terms"
                                 className="underline hover:text-primary font-medium"
@@ -183,7 +201,7 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                                 rel="noreferrer noopener"
                             >
                                 Privacy Policy
-                            </a>
+                            </a> */}
                         </Text2>
                         <Button
                             type="button"
@@ -200,7 +218,7 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                 {loginStep === "otp" && (
                     <>
                         <Text1 className="mb-2" theme={theme.theme}>
-                            We have emailed you a one time password.
+                            {LOGIN_CODE_INTIMATION_MESSAGE}
                         </Text1>
                         <FormField
                             control={form.control}
@@ -227,35 +245,6 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
                             theme={theme.theme}
                         >
                             Verify OTP
-                        </Button>
-                    </>
-                )}
-
-                {loginStep === "name" && (
-                    <>
-                        <FormField
-                            control={form.control}
-                            name="name"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormControl>
-                                        <Input
-                                            theme={theme.theme}
-                                            placeholder="Full name"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <Button
-                            type="button"
-                            onClick={handleNameSubmit}
-                            className="w-full"
-                            theme={theme.theme}
-                        >
-                            Continue
                         </Button>
                     </>
                 )}

@@ -18,11 +18,13 @@ import {
 } from "@components/contexts";
 import { Toaster, useToast } from "@courselit/components-library";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
-import { Session } from "next-auth";
 import { Theme } from "@courselit/page-models";
 import { ThemeProvider as NextThemesProvider } from "@components/next-theme-provider";
 import { defaultState } from "@components/default-state";
 import { getUserProfile } from "./helpers";
+import { auth } from "@/auth";
+
+type BetterAuthSession = Awaited<ReturnType<typeof auth.api.getSession>> | null;
 
 function LayoutContent({
     address,
@@ -37,7 +39,7 @@ function LayoutContent({
     siteinfo: SiteInfo;
     theme: Theme;
     config: ServerConfig;
-    session: Session | null;
+    session: BetterAuthSession;
 }) {
     const [profile, setProfile] = useState(defaultState.profile);
     const [theme, setTheme] = useState(initialTheme);
@@ -104,7 +106,7 @@ export default function Layout(props: {
     siteinfo: SiteInfo;
     theme: Theme;
     config: ServerConfig;
-    session: Session | null;
+    session: BetterAuthSession;
 }) {
     return (
         <Suspense fallback={null}>
