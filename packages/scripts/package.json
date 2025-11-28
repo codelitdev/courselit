@@ -1,0 +1,24 @@
+{
+  "name": "@courselit/scripts",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "domain:cleanup": "ts-node src/cleanup-domain.ts",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.22.0",
+  "dependencies": {
+    "mongoose": "^8.14.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "ts-node": "^10.9.2",
+    "tsconfig": "workspace:^",
+    "@courselit/orm-models": "workspace:^"
+  }
+}
