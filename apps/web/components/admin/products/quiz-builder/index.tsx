@@ -1,4 +1,4 @@
-import React, { startTransition, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Section } from "@courselit/components-library";
 import {
     LESSON_QUIZ_ADD_QUESTION,
@@ -34,31 +34,17 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
         (content && content.passingGrade) || DEFAULT_PASSING_GRADE,
     );
 
-    useEffect(() => {
-        startTransition(() => {
-            if (content.questions) {
-                setQuestions(content.questions);
-            }
-            if (content.passingGrade) {
-                setPassingGradePercentage(content.passingGrade);
-            }
-            if (content.requiresPassingGrade) {
-                setPassingGradeRequired(content.requiresPassingGrade);
-            }
-        });
-    }, [content]);
-
-    useEffect(() => {
+    const notifyChange = (updatedQuestions: Question[]) => {
         onChange({
-            questions,
+            questions: updatedQuestions,
             requiresPassingGrade: passingGradeRequired,
             passingGrade: passingGradePercentage,
         });
-    }, [questions, passingGradeRequired, passingGradePercentage, onChange]);
+    };
 
     const addNewOption = (questionIndex: number) => {
-        setQuestions((prevQuestions) =>
-            prevQuestions.map((question, index) =>
+        setQuestions((prevQuestions) => {
+            const updatedQuestions = prevQuestions.map((question, index) =>
                 index === questionIndex
                     ? {
                           ...question,
@@ -68,14 +54,16 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
                           ],
                       }
                     : question,
-            ),
-        );
+            );
+            notifyChange(updatedQuestions);
+            return updatedQuestions;
+        });
     };
 
     const setCorrectAnswer =
         (questionIndex: number) => (index: number, checked: boolean) => {
-            setQuestions((prevQuestions) =>
-                prevQuestions.map((question, qIdx) =>
+            setQuestions((prevQuestions) => {
+                const updatedQuestions = prevQuestions.map((question, qIdx) =>
                     qIdx === questionIndex
                         ? {
                               ...question,
@@ -86,14 +74,16 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
                               ),
                           }
                         : question,
-                ),
-            );
+                );
+                notifyChange(updatedQuestions);
+                return updatedQuestions;
+            });
         };
 
     const setOptionText =
         (questionIndex: number) => (index: number, text: string) => {
-            setQuestions((prevQuestions) =>
-                prevQuestions.map((question, qIdx) =>
+            setQuestions((prevQuestions) => {
+                const updatedQuestions = prevQuestions.map((question, qIdx) =>
                     qIdx === questionIndex
                         ? {
                               ...question,
@@ -104,21 +94,25 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
                               ),
                           }
                         : question,
-                ),
-            );
+                );
+                notifyChange(updatedQuestions);
+                return updatedQuestions;
+            });
         };
 
     const setQuestionText = (index: number) => (text: string) => {
-        setQuestions((prevQuestions) =>
-            prevQuestions.map((question, qIdx) =>
+        setQuestions((prevQuestions) => {
+            const updatedQuestions = prevQuestions.map((question, qIdx) =>
                 qIdx === index ? { ...question, text } : question,
-            ),
-        );
+            );
+            notifyChange(updatedQuestions);
+            return updatedQuestions;
+        });
     };
 
     const removeOption = (questionIndex: number) => (index: number) => {
-        setQuestions((prevQuestions) =>
-            prevQuestions.map((question, qIdx) =>
+        setQuestions((prevQuestions) => {
+            const updatedQuestions = prevQuestions.map((question, qIdx) =>
                 qIdx === questionIndex
                     ? {
                           ...question,
@@ -127,26 +121,35 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
                           ),
                       }
                     : question,
-            ),
-        );
+            );
+            notifyChange(updatedQuestions);
+            return updatedQuestions;
+        });
     };
 
     const deleteQuestion = (questionIndex: number) => {
-        setQuestions((prevQuestions) =>
-            prevQuestions.filter((_, idx) => idx !== questionIndex),
-        );
+        setQuestions((prevQuestions) => {
+            const updatedQuestions = prevQuestions.filter(
+                (_, idx) => idx !== questionIndex,
+            );
+            notifyChange(updatedQuestions);
+            return updatedQuestions;
+        });
     };
 
-    const addNewQuestion = () =>
-        setQuestions((prevQuestions) => [
-            ...prevQuestions,
-            {
-                text: `${LESSON_QUIZ_QUESTION_PLACEHOLDER} #${
-                    prevQuestions.length + 1
-                }`,
-                options: [{ text: "", correctAnswer: false }],
-            },
-        ]);
+    const addNewQuestion = () => {
+        setQuestions((prevQuestions) => {
+            const updatedQuestions = [
+                ...prevQuestions,
+                {
+                    text: `${LESSON_QUIZ_QUESTION_PLACEHOLDER} #${prevQuestions.length + 1}`,
+                    options: [{ text: "", correctAnswer: false }],
+                },
+            ];
+            notifyChange(updatedQuestions);
+            return updatedQuestions;
+        });
+    };
 
     return (
         <div className="flex flex-col gap-8 mb-8">
@@ -190,17 +193,28 @@ export function QuizBuilder({ content, onChange }: QuizBuilderProps) {
                     <Switch
                         id="preview"
                         checked={passingGradeRequired}
-                        onCheckedChange={(checked) =>
-                            setPassingGradeRequired(checked)
-                        }
+                        onCheckedChange={(checked) => {
+                            setPassingGradeRequired(checked);
+                            onChange({
+                                questions,
+                                requiresPassingGrade: checked,
+                                passingGrade: passingGradePercentage,
+                            });
+                        }}
                     />
                 </div>
                 <Input
                     type="number"
                     value={passingGradePercentage}
-                    onChange={(e) =>
-                        setPassingGradePercentage(parseInt(e.target.value))
-                    }
+                    onChange={(e) => {
+                        const newValue = parseInt(e.target.value);
+                        setPassingGradePercentage(newValue);
+                        onChange({
+                            questions,
+                            requiresPassingGrade: passingGradeRequired,
+                            passingGrade: newValue,
+                        });
+                    }}
                     disabled={!passingGradeRequired}
                     min={0}
                     max={100}
