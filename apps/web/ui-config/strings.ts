@@ -692,3 +692,4 @@ export const PRODUCTS_LIST_EMPTY_DESCRIPTION_PRIVATE =
     "You have not added any products yet.";
 export const LOGIN_CODE_SENT_MESSAGE =
     "We have emailed you a one time password.";
+export const EMBED_URL = "Embed URL or Code block";
