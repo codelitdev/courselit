@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useContext } from "react";
+import { useState, useCallback, useEffect, useContext, useRef } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -11,7 +11,6 @@ import {
     FileImage,
     HelpCircle,
     File,
-    Info,
     Tv,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,36 +32,29 @@ import {
     BUTTON_NEW_LESSON_TEXT,
     COURSE_CONTENT_HEADER,
     EDIT_LESSON_TEXT,
+    LESSON_EMBED_URL_LABEL,
+    LESSON_CONTENT_LABEL,
     MANAGE_COURSES_PAGE_HEADING,
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
-    TEXT_EDITOR_PLACEHOLDER,
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
 import useProduct from "@/hooks/use-product";
-import { AddressContext, ProfileContext } from "@components/contexts";
+import { AddressContext } from "@components/contexts";
 import {
     Constants,
     Lesson,
     LessonType,
-    Media,
-    Profile,
-    Quiz,
     TextEditorContent,
     UIConstants,
 } from "@courselit/common-models";
-import { MediaSelector, useToast } from "@courselit/components-library";
-import {
-    MIMETYPE_VIDEO,
-    MIMETYPE_AUDIO,
-    MIMETYPE_PDF,
-} from "@ui-config/constants";
+import { useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
-import { QuizBuilder } from "@components/admin/products/quiz-builder";
+import { LessonContentRenderer } from "./lesson-content-renderer";
 import { isTextEditorNonEmpty, truncate } from "@ui-lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@components/ui/separator";
-import { Editor, emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
+import { emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
+import { LessonSkeleton } from "./skeleton";
 
 const { permissions } = UIConstants;
 
@@ -76,6 +68,8 @@ const lessonTypes = [
     { value: Constants.LessonType.QUIZ, label: "Quiz", icon: HelpCircle },
 ] as const;
 
+type LessonError = Partial<Record<keyof Lesson, string>>;
+
 export default function LessonPage() {
     const router = useRouter();
     const params = useParams();
@@ -86,13 +80,8 @@ export default function LessonPage() {
     const isEditing = !!lessonId;
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const { toast } = useToast();
-    const [errors, setErrors] = useState<Partial<Record<keyof Lesson, string>>>(
-        {},
-    );
-    const [initialLessonType, setInitialLessonType] =
-        useState<LessonType | null>(null);
+    const [errors, setErrors] = useState<LessonError>({});
     const address = useContext(AddressContext);
-    const { profile } = useContext(ProfileContext);
     const { product, loaded: productLoaded } = useProduct(productId);
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
@@ -109,11 +98,10 @@ export default function LessonPage() {
             href: "#",
         },
     ];
-    const [refresh, setRefresh] = useState(0);
-    const [quizContent, setQuizContent] = useState<Partial<Quiz>>({});
-    const [textContent, setTextContent] =
-        useState<typeof TextEditorEmptyDoc>(TextEditorEmptyDoc);
-    const [content, setContent] = useState<{ value: string }>({ value: "" });
+
+    // Use ref to store the originally loaded lesson for comparison
+    const loadedLessonRef = useRef<Partial<Lesson> | null>(null);
+
     const [lesson, setLesson] = useState<Partial<Lesson>>({
         type: product
             ? product.type?.toLowerCase() === UIConstants.COURSE_TYPE_DOWNLOAD
@@ -128,9 +116,13 @@ export default function LessonPage() {
         courseId: productId,
         groupId: sectionId,
     });
-    const [originalLesson, setOriginalLesson] =
-        useState<Partial<Lesson> | null>(null);
-    const [hasChanges, setHasChanges] = useState(false);
+    const [content, setContent] = useState<any>(
+        lesson.type === Constants.LessonType.TEXT
+            ? TextEditorEmptyDoc
+            : lesson.type === Constants.LessonType.QUIZ
+              ? {}
+              : { value: "" },
+    );
     const [isLoading, setIsLoading] = useState(isEditing);
 
     useEffect(() => {
@@ -146,506 +138,8 @@ export default function LessonPage() {
         }
     }, [product]);
 
-    useEffect(() => {
-        if (isEditing) {
-            loadLesson(lessonId);
-        }
-    }, [isEditing]);
-
     const updateLesson = (updates: Partial<Lesson>) => {
-        setLesson((prev) => {
-            const newLesson = { ...prev, ...updates };
-            if (isEditing && initialLessonType) {
-                newLesson.type = initialLessonType;
-            }
-            return newLesson;
-        });
-    };
-
-    // const handleAddQuestion = (e: React.MouseEvent<HTMLButtonElement>) => {
-    //     e.preventDefault();
-    //     const newQuestion = {
-    //         id: `q${quizContent.questions?.length + 1}`,
-    //         text: "",
-    //         options: [],
-    //     };
-    //     // updateLesson({ questions: [...quizContent.questions, newQuestion] });
-    //     setQuizContent((prev) => ({
-    //         ...prev,
-    //         questions: [...(prev.questions || []), newQuestion]
-    //     }));
-    //     setExpandedQuestion(newQuestion.id);
-    // };
-
-    // const handleAddOption = (questionId: string) => {
-    //     setQuizContent((prev) => ({
-    //         ...prev,
-    //         questions: prev.questions?.map((q) =>
-    //             q.id === questionId
-    //                 ? { ...q, options: [...q.options, { id: `${questionId}-opt${q.options.length + 1}`, text: "", correctAnswer: false }] }
-    //                 : q
-    //         )
-    //     }))
-    //     // updateLesson({
-    //     //     questions: lesson.questions.map((q) =>
-    //     //         q.id === questionId
-    //     //             ? {
-    //     //                   ...q,
-    //     //                   options: [
-    //     //                       ...q.options,
-    //     //                       {
-    //     //                           id: `${questionId}-opt${q.options.length + 1}`,
-    //     //                           text: "",
-    //     //                           isCorrect: false,
-    //     //                       },
-    //     //                   ],
-    //     //               }
-    //     //             : q,
-    //     //     ),
-    //     // });
-    // };
-
-    const renderLessonContent = () => {
-        switch (lesson.type) {
-            case Constants.LessonType.TEXT:
-                return (
-                    <div className="space-y-2">
-                        <Editor
-                            initialContent={textContent}
-                            refresh={refresh}
-                            onChange={(state: any) => {
-                                setTextContent(state);
-                            }}
-                            url={address.backend}
-                            placeholder={TEXT_EDITOR_PLACEHOLDER}
-                        />
-                        {errors.content && (
-                            <p className="text-sm text-red-500">
-                                {errors.content}
-                            </p>
-                        )}
-                    </div>
-                );
-            case Constants.LessonType.EMBED:
-                return (
-                    <div className="space-y-4">
-                        <div className="flex items-center space-x-2">
-                            <Input
-                                placeholder="e.g. YouTube video URL"
-                                value={content.value}
-                                onChange={(e) =>
-                                    // updateLesson({ content: { value: e.target.value } })
-                                    setContent({ value: e.target.value })
-                                }
-                                className={
-                                    errors.content ? "border-red-500" : ""
-                                }
-                            />
-                            {/* <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                            <HelpCircle className="h-4 w-4" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>
-                                            Enter the YouTube video ID, which is
-                                            the part after &quot;v=&quot; in the
-                                            URL
-                                        </p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider> */}
-                        </div>
-                        {errors.content && (
-                            <p className="text-sm text-red-500">
-                                {errors.content}
-                            </p>
-                        )}
-                        {content.value && (
-                            <div className="">
-                                {content.value.match(
-                                    UIConstants.YOUTUBE_REGEX,
-                                ) && (
-                                    <div className="aspect-video">
-                                        <iframe
-                                            className="w-full h-full rounded-lg"
-                                            src={`https://www.youtube.com/embed/${content.value.match(UIConstants.YOUTUBE_REGEX)?.[1] ?? ""}`}
-                                            title="YouTube video player"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                            allowFullScreen
-                                        />
-                                    </div>
-                                )}
-                                <a
-                                    href={content.value}
-                                    className="text-xs lg:text-sm text-muted-foreground text-center hover:underline w-full"
-                                >
-                                    {content.value}
-                                </a>
-                            </div>
-                        )}
-                    </div>
-                );
-            case Constants.LessonType.QUIZ:
-                return (
-                    <div className="space-y-4">
-                        <QuizBuilder
-                            content={quizContent}
-                            onChange={(state: any) => {
-                                setQuizContent(state);
-                            }}
-                        />
-                        {errors.content && (
-                            <p className="text-sm text-red-500">
-                                {errors.content}
-                            </p>
-                        )}
-                    </div>
-                );
-            // return (
-            //     <div className="space-y-6">
-            //         {quizContent.questions?.map((question, index) => (
-            //             <Collapsible
-            //                 key={question.id}
-            //                 open={expandedQuestion === question.id}
-            //                 onOpenChange={() =>
-            //                     setExpandedQuestion(question.id)
-            //                 }
-            //                 className={`border rounded-lg ${errors.questions ? "border-red-500" : ""}`}
-            //             >
-            //                 <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-accent">
-            //                     <div className="flex items-center gap-2">
-            //                         <span className="font-medium">
-            //                             Question #{index + 1}
-            //                         </span>
-            //                         <span className="text-muted-foreground">
-            //                             {question.text
-            //                                 ? `${question.text.substring(0, 50)}...`
-            //                                 : "No question text"}
-            //                         </span>
-            //                     </div>
-            //                     {expandedQuestion === question.id ? (
-            //                         <ChevronUp className="h-4 w-4" />
-            //                     ) : (
-            //                         <ChevronDown className="h-4 w-4" />
-            //                     )}
-            //                 </CollapsibleTrigger>
-            //                 <CollapsibleContent className="p-4 pt-0 space-y-4">
-            //                     <Input
-            //                         placeholder="Enter your question"
-            //                         value={question.text}
-            //                         onChange={(e) => {
-            //                             updateLesson({
-            //                                 questions: quizContent.questions?.map(
-            //                                     (q) =>
-            //                                         q.id === question.id
-            //                                             ? {
-            //                                                   ...q,
-            //                                                   text: e.target
-            //                                                       .value,
-            //                                               }
-            //                                             : q,
-            //                                 ),
-            //                             });
-            //                         }}
-            //                         className={
-            //                             errors.questions
-            //                                 ? "border-red-500"
-            //                                 : ""
-            //                         }
-            //                     />
-            //                     <div className="space-y-2">
-            //                         {question.options.map((option) => (
-            //                             <div
-            //                                 key={option.id}
-            //                                 className="flex items-center gap-2"
-            //                             >
-            //                                 <TooltipProvider>
-            //                                     <Tooltip>
-            //                                         <TooltipTrigger asChild>
-            //                                             <div>
-            //                                                 <Checkbox
-            //                                                     checked={
-            //                                                         option.isCorrect
-            //                                                     }
-            //                                                     onCheckedChange={(
-            //                                                         checked,
-            //                                                     ) => {
-            //                                                         updateLesson(
-            //                                                             {
-            //                                                                 questions:
-            //                                                                     quizContent.questions?.map(
-            //                                                                         (
-            //                                                                             q,
-            //                                                                         ) =>
-            //                                                                             q.id ===
-            //                                                                             question.id
-            //                                                                                 ? {
-            //                                                                                       ...q,
-            //                                                                                       options:
-            //                                                                                           q.options.map(
-            //                                                                                               (
-            //                                                                                                   opt,
-            //                                                                                               ) =>
-            //                                                                                                   opt.id ===
-            //                                                                                                   option.id
-            //                                                                                                       ? {
-            //                                                                                                             ...opt,
-            //                                                                                                             isCorrect:
-            //                                                                                                                 !!checked,
-            //                                                                                                         }
-            //                                                                                                       : opt,
-            //                                                                                           ),
-            //                                                                                   }
-            //                                                                                 : q,
-            //                                                                     ),
-            //                                                             },
-            //                                                         );
-            //                                                     }}
-            //                                                 />
-            //                                             </div>
-            //                                         </TooltipTrigger>
-            //                                         <TooltipContent>
-            //                                             <p>
-            //                                                 Mark as correct
-            //                                                 answer
-            //                                             </p>
-            //                                         </TooltipContent>
-            //                                     </Tooltip>
-            //                                 </TooltipProvider>
-            //                                 <Input
-            //                                     placeholder="Enter option text"
-            //                                     value={option.text}
-            //                                     onChange={(e) => {
-            //                                         updateLesson({
-            //                                             questions:
-            //                                                 quizContent.questions?.map(
-            //                                                     (q) =>
-            //                                                         q.id ===
-            //                                                         question.id
-            //                                                             ? {
-            //                                                                   ...q,
-            //                                                                   options:
-            //                                                                       q.options.map(
-            //                                                                           (
-            //                                                                               opt,
-            //                                                                           ) =>
-            //                                                                               opt.id ===
-            //                                                                               option.id
-            //                                                                                   ? {
-            //                                                                                         ...opt,
-            //                                                                                         text: e
-            //                                                                                             .target
-            //                                                                                             .value,
-            //                                                                                     }
-            //                                                                                   : opt,
-            //                                                                       ),
-            //                                                               }
-            //                                                             : q,
-            //                                                 ),
-            //                                         });
-            //                                     }}
-            //                                     className="flex-1"
-            //                                 />
-            //                                 <Button
-            //                                     variant="ghost"
-            //                                     size="icon"
-            //                                     onClick={() => {
-            //                                         updateLesson({
-            //                                             questions:
-            //                                                 quizContent.questions?.map(
-            //                                                     (q) =>
-            //                                                         q.id ===
-            //                                                         question.id
-            //                                                             ? {
-            //                                                                   ...q,
-            //                                                                   options:
-            //                                                                       q.options.filter(
-            //                                                                           (
-            //                                                                               opt,
-            //                                                                           ) =>
-            //                                                                               opt.id !==
-            //                                                                               option.id,
-            //                                                                       ),
-            //                                                               }
-            //                                                             : q,
-            //                                                 ),
-            //                                         });
-            //                                     }}
-            //                                 >
-            //                                     <X className="h-4 w-4" />
-            //                                 </Button>
-            //                             </div>
-            //                         ))}
-            //                         <Button
-            //                             variant="outline"
-            //                             size="sm"
-            //                             onClick={() =>
-            //                                 handleAddOption(question.id)
-            //                             }
-            //                         >
-            //                             <Plus className="mr-2 h-4 w-4" />
-            //                             Add option
-            //                         </Button>
-            //                     </div>
-            //                 </CollapsibleContent>
-            //             </Collapsible>
-            //         ))}
-            //         <Button onClick={handleAddQuestion} variant="outline">
-            //             <Plus className="mr-2 h-4 w-4" />
-            //             Add question
-            //         </Button>
-            //         {errors.content && (
-            //             <p className="text-sm text-red-500">
-            //                 {errors.content}
-            //             </p>
-            //         )}
-            //     </div>
-            // );
-            case Constants.LessonType.VIDEO:
-            case Constants.LessonType.AUDIO:
-            case Constants.LessonType.PDF:
-            case Constants.LessonType.FILE:
-                return (
-                    // <MediaUpload
-                    //     type={lesson.type as MediaType}
-                    //     value={lesson.mediaUrl}
-                    //     caption={lesson.mediaCaption}
-                    //     onChange={(value, caption) =>
-                    //         updateLesson({
-                    //             mediaUrl: value,
-                    //             mediaCaption: caption,
-                    //         })
-                    //     }
-                    //     className={errors.content ? "border-red-500" : ""}
-                    // />
-                    <div className="space-y-2">
-                        <MediaSelector
-                            disabled={!lesson?.lessonId}
-                            title=""
-                            src={
-                                (lesson?.media && lesson?.media.thumbnail) || ""
-                            }
-                            srcTitle={
-                                (lesson?.media &&
-                                    lesson?.media.originalFileName) ||
-                                ""
-                            }
-                            onSelection={(media?: Media) => {
-                                if (media) {
-                                    setLesson(
-                                        Object.assign({}, lesson, {
-                                            title:
-                                                lesson?.title ||
-                                                media.originalFileName,
-                                            media,
-                                        }),
-                                    );
-                                    saveMediaContent(media);
-                                }
-                            }}
-                            mimeTypesToShow={
-                                lesson.type === Constants.LessonType.VIDEO
-                                    ? MIMETYPE_VIDEO
-                                    : lesson.type === Constants.LessonType.AUDIO
-                                      ? MIMETYPE_AUDIO
-                                      : lesson.type === Constants.LessonType.PDF
-                                        ? MIMETYPE_PDF
-                                        : undefined
-                            }
-                            strings={{}}
-                            profile={profile as Profile}
-                            address={address}
-                            mediaId={lesson?.media?.mediaId}
-                            onRemove={() => {
-                                setLesson(
-                                    Object.assign({}, lesson, {
-                                        media: {},
-                                    }),
-                                );
-                                saveMediaContent();
-                            }}
-                            type="lesson"
-                        />
-                        {!(lesson?.lessonId && lesson?.title) && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-2">
-                                <Info className="w-4 h-4" />
-                                Set the title of the lesson to enable media
-                                upload
-                            </p>
-                        )}
-                    </div>
-                );
-            default:
-                return null;
-        }
-    };
-
-    // const getMimeTypesToShow = () => {
-    //     if (
-    //         lesson?.type ===
-    //         String.prototype.toUpperCase.call(Constants.LessonType.VIDEO)
-    //     ) {
-    //         return MIMETYPE_VIDEO;
-    //     }
-    //     if (
-    //         lesson?.type ===
-    //         String.prototype.toUpperCase.call(Constants.LessonType.AUDIO)
-    //     ) {
-    //         return MIMETYPE_AUDIO;
-    //     }
-    //     if (
-    //         lesson?.type ===
-    //         String.prototype.toUpperCase.call(Constants.LessonType.PDF)
-    //     ) {
-    //         return MIMETYPE_PDF;
-    //     }
-
-    //     return [...MIMETYPE_AUDIO, ...MIMETYPE_VIDEO, ...MIMETYPE_PDF];
-    // };
-
-    const saveMediaContent = async (media?: Media) => {
-        const query = `
-            mutation ($id: ID!, $media: MediaInput) {
-                lesson: updateLesson(lessonData: {
-                    id: $id
-                    media: $media
-                }) {
-                    lessonId
-                }
-            }
-        `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload({
-                query,
-                variables: {
-                    id: lesson?.lessonId,
-                    media: media
-                        ? Object.assign({}, media, {
-                              file:
-                                  media.access === "public" ? media.file : null,
-                          })
-                        : null,
-                },
-            })
-            .setIsGraphQLEndpoint(true)
-            .build();
-
-        try {
-            await fetch.exec();
-            toast({
-                title: TOAST_TITLE_SUCCESS,
-                description: "Lesson updated",
-            });
-        } catch (err: any) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: err.message,
-                variant: "destructive",
-            });
-        } finally {
-        }
+        setLesson({ ...lesson, ...updates });
     };
 
     useEffect(() => {
@@ -686,36 +180,16 @@ export default function LessonPage() {
         try {
             const response = await fetch.exec();
             if (response.lesson) {
-                const loadedLesson = Object.assign({}, response.lesson, {
+                const loadedLesson = {
+                    ...response.lesson,
                     type: response.lesson.type.toLowerCase() as LessonType,
-                });
-                setLesson(JSON.parse(JSON.stringify(loadedLesson)));
-                setOriginalLesson(JSON.parse(JSON.stringify(loadedLesson)));
-                setInitialLessonType(
-                    response.lesson.type.toLowerCase() as LessonType,
-                );
-                switch (response.lesson.type.toLowerCase()) {
-                    case Constants.LessonType.TEXT:
-                        setTextContent(
-                            response.lesson.content
-                                ? response.lesson.content.type &&
-                                  response.lesson.content.type === "doc"
-                                    ? response.lesson.content
-                                    : TextEditorEmptyDoc
-                                : TextEditorEmptyDoc,
-                        );
-                        setRefresh(refresh + 1);
-                        break;
-                    case Constants.LessonType.QUIZ:
-                        setQuizContent(
-                            JSON.parse(
-                                JSON.stringify(response.lesson.content || {}),
-                            ),
-                        );
-                        break;
-                    default:
-                        setContent(response.lesson.content || { value: "" });
-                }
+                };
+
+                // Store the loaded lesson in ref for future comparison
+                loadedLessonRef.current = loadedLesson;
+
+                setLesson(loadedLesson);
+                setContent(response.lesson.content);
             }
         } catch (err: any) {
             toast({
@@ -728,47 +202,6 @@ export default function LessonPage() {
         }
     };
 
-    useEffect(() => {
-        if (!originalLesson) return;
-
-        const checkForChanges = () => {
-            // Compare current lesson state with original lesson
-            const hasLessonChanges = Object.keys(lesson).some((key) => {
-                if (key === "content") {
-                    // Handle different content types
-                    switch (lesson.type?.toLowerCase()) {
-                        case Constants.LessonType.TEXT:
-                            return (
-                                JSON.stringify(textContent) !==
-                                JSON.stringify(originalLesson.content)
-                            );
-                        case Constants.LessonType.QUIZ:
-                            return (
-                                JSON.stringify(quizContent) !==
-                                JSON.stringify(originalLesson.content)
-                            );
-                        default:
-                            return (
-                                JSON.stringify(content) !==
-                                JSON.stringify(originalLesson.content)
-                            );
-                    }
-                }
-                if (key === "media") {
-                    return false;
-                }
-                return (
-                    lesson[key as keyof Lesson] !==
-                    originalLesson[key as keyof Lesson]
-                );
-            });
-
-            setHasChanges(hasLessonChanges);
-        };
-
-        checkForChanges();
-    }, [lesson, textContent, quizContent, content, originalLesson]);
-
     const validateLesson = useCallback((): boolean => {
         const newErrors: Partial<Record<keyof Lesson, string>> = {};
 
@@ -780,23 +213,23 @@ export default function LessonPage() {
             case Constants.LessonType.TEXT:
                 if (
                     !isTextEditorNonEmpty(
-                        textContent as unknown as TextEditorContent,
+                        content as unknown as TextEditorContent,
                     )
                 ) {
                     newErrors.content = "Please enter the lesson content.";
                 }
                 break;
             case Constants.LessonType.EMBED:
-                if (!content.value.trim()) {
+                if (!content.value?.trim()) {
                     newErrors.content = "Please enter a YouTube video ID.";
                 }
                 break;
             case Constants.LessonType.QUIZ:
-                if (quizContent.questions?.length === 0) {
+                if (!content.questions || content.questions.length === 0) {
                     newErrors.content =
                         "Please add at least one question to the quiz.";
                 } else {
-                    for (const question of quizContent.questions!) {
+                    for (const question of content.questions) {
                         if (!question.text.trim()) {
                             newErrors.content = "All questions must have text.";
                             break;
@@ -818,19 +251,11 @@ export default function LessonPage() {
                     }
                 }
                 break;
-            // case Constants.LessonType.VIDEO:
-            // case Constants.LessonType.AUDIO:
-            // case Constants.LessonType.PDF:
-            // case Constants.LessonType.FILE:
-            //     if (!lesson.mediaUrl) {
-            //         newErrors.content = `Please select a ${lesson.type} file.`;
-            //     }
-            //     break;
         }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-    }, [lesson, textContent, quizContent, content]);
+    }, [lesson, content]);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -862,7 +287,7 @@ export default function LessonPage() {
                         id: lesson?.lessonId,
                         title: lesson?.title,
                         downloadable: lesson?.downloadable,
-                        content: formatContentForSending(),
+                        content: JSON.stringify(content),
                         requiresEnrollment: lesson?.requiresEnrollment,
                     },
                 },
@@ -904,7 +329,7 @@ export default function LessonPage() {
                         title: lesson?.title,
                         downloadable: lesson?.downloadable,
                         type: lesson?.type?.toUpperCase(),
-                        content: formatContentForSending(),
+                        content: JSON.stringify(content),
                         courseId: lesson?.courseId,
                         requiresEnrollment: lesson?.requiresEnrollment,
                         groupId: lesson?.groupId,
@@ -974,49 +399,6 @@ export default function LessonPage() {
         }
     };
 
-    const formatContentForSending = () => {
-        switch (lesson?.type?.toLowerCase()) {
-            case Constants.LessonType.TEXT:
-                return JSON.stringify(textContent);
-            case Constants.LessonType.QUIZ:
-                return JSON.stringify(quizContent);
-            default:
-                return JSON.stringify(content);
-        }
-    };
-
-    // Add skeleton component
-    const LessonSkeleton = () => (
-        <div className="space-y-8 animate-pulse">
-            <div className="space-y-4">
-                <Skeleton className="h-8 w-48" />
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                    {[...Array(7)].map((_, i) => (
-                        <Skeleton key={i} className="h-24 w-full rounded-md" />
-                    ))}
-                </div>
-            </div>
-
-            <div className="space-y-4">
-                <Skeleton className="h-6 w-24" />
-                <Skeleton className="h-10 w-full" />
-            </div>
-
-            <div className="space-y-4">
-                <Skeleton className="h-6 w-32" />
-                <Skeleton className="h-[200px] w-full" />
-            </div>
-
-            <div className="flex items-center justify-between pt-6">
-                <Skeleton className="h-10 w-24" />
-                <div className="space-x-2">
-                    <Skeleton className="h-10 w-24 inline-block" />
-                    <Skeleton className="h-10 w-24 inline-block" />
-                </div>
-            </div>
-        </div>
-    );
-
     return (
         <DashboardContent
             breadcrumbs={breadcrumbs}
@@ -1081,7 +463,7 @@ export default function LessonPage() {
                                                     lesson.type === value
                                                         ? "border-primary"
                                                         : ""
-                                                } ${isEditing && value !== initialLessonType ? "opacity-50 cursor-not-allowed" : ""}`}
+                                                } ${isEditing && value !== loadedLessonRef.current?.type?.toLowerCase() ? "opacity-50 cursor-not-allowed" : ""}`}
                                             >
                                                 <RadioGroupItem
                                                     value={value}
@@ -1090,7 +472,7 @@ export default function LessonPage() {
                                                     disabled={
                                                         isEditing &&
                                                         value !==
-                                                            initialLessonType
+                                                            loadedLessonRef.current?.type?.toLowerCase()
                                                     }
                                                 />
                                                 <Icon className="mb-2 h-6 w-6" />
@@ -1132,13 +514,25 @@ export default function LessonPage() {
                                     <Label className="font-semibold">
                                         {lesson.type ===
                                         Constants.LessonType.EMBED
-                                            ? "Embed URL"
-                                            : `${lesson.type ? lesson.type.charAt(0).toUpperCase() + lesson.type.slice(1) : ""} Content`}
+                                            ? LESSON_EMBED_URL_LABEL
+                                            : LESSON_CONTENT_LABEL}
                                     </Label>
-                                    {renderLessonContent()}
+                                    <LessonContentRenderer
+                                        lesson={lesson}
+                                        errors={errors}
+                                        onContentChange={setContent}
+                                        onLessonChange={(updates) => {
+                                            setLesson(
+                                                Object.assign(
+                                                    {},
+                                                    lesson,
+                                                    updates,
+                                                ),
+                                            );
+                                        }}
+                                    />
                                 </>
                             )}
-                            {/* {renderLessonContent()} */}
                             <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
                                     <Label
@@ -1217,10 +611,7 @@ export default function LessonPage() {
                                         Cancel
                                     </Link>
                                 </Button>
-                                <Button
-                                    type="submit"
-                                    disabled={isEditing && !hasChanges}
-                                >
+                                <Button type="submit">
                                     {isEditing ? "Update" : "Save"} Lesson
                                 </Button>
                             </div>
@@ -1236,7 +627,16 @@ export default function LessonPage() {
                             <Separator />
                             <div className="space-y-4">
                                 <Label className="font-semibold">Media</Label>
-                                {renderLessonContent()}
+                                <LessonContentRenderer
+                                    lesson={lesson}
+                                    errors={errors}
+                                    onContentChange={setContent}
+                                    onLessonChange={(updates) => {
+                                        setLesson(
+                                            Object.assign({}, lesson, updates),
+                                        );
+                                    }}
+                                />
                             </div>
                         </>
                     )}

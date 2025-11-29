@@ -37,6 +37,7 @@
         "url": "https://github.com/codelitdev/courselit/issues"
     },
     "devDependencies": {
+        "@types/node": "^24.10.1",
         "@types/react": "^18.3.7",
         "@types/react-dom": "^18.3.0",
         "eslint": "^8.57.0",
