@@ -88,7 +88,7 @@ export default function Checkout({
     const { theme } = useContext(ThemeContext);
 
     const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
+        resolver: zodResolver(formSchema as any),
         defaultValues: {
             selectedPlan: product.defaultPaymentPlanId || "",
             joiningReason: "",

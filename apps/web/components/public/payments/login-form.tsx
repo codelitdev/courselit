@@ -60,7 +60,7 @@ export function LoginForm({ onLoginComplete }: LoginFormProps) {
     }, [profile]);
 
     const form = useForm<z.infer<typeof loginFormSchema>>({
-        resolver: zodResolver(loginFormSchema),
+        resolver: zodResolver(loginFormSchema as any),
         defaultValues: {
             email: "",
             otp: "",

@@ -3,7 +3,8 @@
     "exclude": ["dist", "build", "node_modules"],
     "compilerOptions": {
         "outDir": "./dist",
-        "lib": ["dom"],
+        "lib": ["dom", "ES2017"],
+        "types": ["node"],
         "strict": false,
         "paths": {
             "@/*": ["./src/*"],

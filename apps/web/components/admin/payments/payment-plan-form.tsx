@@ -161,7 +161,7 @@ export function PaymentPlanForm({
     const currencyISOCode = siteinfo.currencyISOCode?.toUpperCase() || "USD";
 
     const form = useForm<PaymentPlanFormData>({
-        resolver: zodResolver(formSchema),
+        resolver: zodResolver(formSchema as any),
         defaultValues: {
             name: "",
             description: "",
