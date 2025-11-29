@@ -1,31 +1,15 @@
 {
     "extends": "tsconfig/react-library.json",
-    "exclude": [
-        "dist",
-        "build",
-        "node_modules"
-    ],
+    "exclude": ["dist", "build", "node_modules"],
     "compilerOptions": {
         "outDir": "./dist",
-        "lib": [
-            "dom",
-            "ES2017"
-        ],
-        "types": [
-            "node"
-        ],
+        "lib": ["dom", "ES2017"],
+        "types": ["node"],
         "strict": false,
         "paths": {
-            "@/*": [
-                "./src/*"
-            ],
-            "react": [
-                "./node_modules/@types/react"
-            ]
+            "@/*": ["./src/*"],
+            "react": ["./node_modules/@types/react"]
         }
     },
-    "include": [
-        "src/**/*",
-        "additional.d.ts"
-    ]
+    "include": ["src/**/*", "additional.d.ts"]
 }
