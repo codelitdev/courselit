@@ -32,7 +32,8 @@ import {
     BUTTON_NEW_LESSON_TEXT,
     COURSE_CONTENT_HEADER,
     EDIT_LESSON_TEXT,
-    EMBED_URL,
+    LESSON_EMBED_URL_LABEL,
+    LESSON_CONTENT_LABEL,
     MANAGE_COURSES_PAGE_HEADING,
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
@@ -138,15 +139,6 @@ export default function LessonPage() {
     }, [product]);
 
     const updateLesson = (updates: Partial<Lesson>) => {
-        // setLesson((prev) => {
-        //     const newLesson = { ...prev, ...updates };
-        //     if (isEditing &&
-        //         loadedLessonRef.current?.type?.toLowerCase()
-        //     ) {
-        //         newLesson.type = loadedLessonRef.current?.type?.toLowerCase() as LessonType;
-        //     }
-        //     return newLesson;
-        // });
         setLesson({ ...lesson, ...updates });
     };
 
@@ -197,6 +189,7 @@ export default function LessonPage() {
                 loadedLessonRef.current = loadedLesson;
 
                 setLesson(loadedLesson);
+                setContent(response.lesson.content);
             }
         } catch (err: any) {
             toast({
@@ -521,16 +514,12 @@ export default function LessonPage() {
                                     <Label className="font-semibold">
                                         {lesson.type ===
                                         Constants.LessonType.EMBED
-                                            ? EMBED_URL
-                                            : `${lesson.type ? lesson.type.charAt(0).toUpperCase() + lesson.type.slice(1) : ""} Content`}
+                                            ? LESSON_EMBED_URL_LABEL
+                                            : LESSON_CONTENT_LABEL}
                                     </Label>
                                     <LessonContentRenderer
                                         lesson={lesson}
-                                        // quizContent={quizContent}
-                                        // content={content}
                                         errors={errors}
-                                        // onTextContentChange={setTextContent}
-                                        // onQuizContentChange={setQuizContent}
                                         onContentChange={setContent}
                                         onLessonChange={(updates) => {
                                             setLesson(
@@ -640,11 +629,7 @@ export default function LessonPage() {
                                 <Label className="font-semibold">Media</Label>
                                 <LessonContentRenderer
                                     lesson={lesson}
-                                    // quizContent={quizContent}
-                                    // content={content}
                                     errors={errors}
-                                    // onTextContentChange={setTextContent}
-                                    // onQuizContentChange={setQuizContent}
                                     onContentChange={setContent}
                                     onLessonChange={(updates) => {
                                         setLesson(

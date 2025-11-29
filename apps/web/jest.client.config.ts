@@ -37,6 +37,12 @@ const config = {
         "@courselit/common-logic": "<rootDir>/../../packages/common-logic/src",
         "@courselit/page-primitives":
             "<rootDir>/../../packages/page-primitives/src",
+        "@courselit/components-library":
+            "<rootDir>/../../packages/components-library/src",
+        "@courselit/icons": "<rootDir>/../../packages/icons/src",
+        "@courselit/text-editor": "<rootDir>/../../packages/text-editor/src",
+        "@courselit/common-models":
+            "<rootDir>/../../packages/common-models/src",
         nanoid: "<rootDir>/__mocks__/nanoid.ts",
         slugify: "<rootDir>/__mocks__/slugify.ts",
         "@models/(.*)": "<rootDir>/models/$1",
@@ -47,10 +53,14 @@ const config = {
         "@/lib/(.*)": "<rootDir>/lib/$1",
         "@/services/(.*)": "<rootDir>/services/$1",
         "@/templates/(.*)": "<rootDir>/templates/$1",
+        "@/hooks/(.*)": "<rootDir>/hooks/$1",
         "@/app/(.*)": "<rootDir>/app/$1",
         "@ui-lib/(.*)": "<rootDir>/ui-lib/$1",
         "@config/(.*)": "<rootDir>/config/$1",
         "@/models/(.*)": "<rootDir>/models/$1",
+        "@components/(.*)": "<rootDir>/components/$1",
+        "@ui-config/(.*)": "<rootDir>/ui-config/$1",
+        "@ui-models/(.*)": "<rootDir>/ui-models/$1",
         "\\.(css|less|scss|sass)$": "identity-obj-proxy",
     },
     transform: {

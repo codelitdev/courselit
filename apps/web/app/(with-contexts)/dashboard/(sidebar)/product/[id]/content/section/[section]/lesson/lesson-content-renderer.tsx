@@ -4,7 +4,6 @@ import {
     Media,
     Profile,
     TextEditorContent,
-    UIConstants,
 } from "@courselit/common-models";
 import { MediaSelector, useToast } from "@courselit/components-library";
 import { Editor, emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
@@ -20,10 +19,14 @@ import {
     MIMETYPE_AUDIO,
     MIMETYPE_PDF,
 } from "@ui-config/constants";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { AddressContext, ProfileContext } from "@components/contexts";
 import { FetchBuilder } from "@courselit/utils";
 import { Textarea } from "@components/ui/textarea";
+import dynamic from "next/dynamic";
+const LessonEmbedViewer = dynamic(
+    () => import("@components/public/lesson-viewer/embed-viewer"),
+);
 
 interface LessonContentRendererProps {
     lesson: Partial<Lesson>;
@@ -44,15 +47,6 @@ export function LessonContentRenderer({
         (lesson.content as any)?.value ?? "",
     );
     const { toast } = useToast();
-
-    useEffect(() => {
-        if (
-            JSON.stringify(lesson.content) !==
-            JSON.stringify({ value: embedURL })
-        ) {
-            onContentChange({ value: embedURL });
-        }
-    }, [embedURL]);
 
     const saveMediaContent = async (media?: Media) => {
         const query = `
@@ -126,10 +120,16 @@ export function LessonContentRenderer({
                 <div className="space-y-4">
                     <div className="flex items-center space-x-2">
                         <Textarea
-                            placeholder="e.g. YouTube video URL or code"
+                            placeholder="e.g. YouTube video URL or iframe code"
                             value={embedURL}
                             onChange={(e) => {
                                 setEmbedURL(e.target.value);
+                                if (
+                                    JSON.stringify(lesson.content) !==
+                                    JSON.stringify({ value: e.target.value })
+                                ) {
+                                    onContentChange({ value: e.target.value });
+                                }
                             }}
                             className={errors.content ? "border-red-500" : ""}
                         />
@@ -138,26 +138,7 @@ export function LessonContentRenderer({
                         <p className="text-sm text-red-500">{errors.content}</p>
                     )}
                     {embedURL && (
-                        <div className="w-full">
-                            {embedURL.includes("youtube") ||
-                            embedURL.includes("youtu.be") ? (
-                                <div className="aspect-video">
-                                    <iframe
-                                        className="w-full h-full rounded-lg"
-                                        src={`https://www.youtube.com/embed/${embedURL.match(UIConstants.YOUTUBE_REGEX)?.[1] ?? ""}`}
-                                        title="YouTube video player"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        allowFullScreen
-                                    />
-                                </div>
-                            ) : (
-                                <div
-                                    dangerouslySetInnerHTML={{
-                                        __html: embedURL,
-                                    }}
-                                ></div>
-                            )}
-                        </div>
+                        <LessonEmbedViewer content={{ value: embedURL }} />
                     )}
                 </div>
             );

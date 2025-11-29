@@ -191,7 +191,7 @@ export const LessonViewer = ({
             <article className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
                 {!lesson && !error && (
                     <div className="flex flex-col">
-                        <Skeleton className="h-12 w-full mb-4" />
+                        <Skeleton className="h-12 w-full mb-8" />
                         <Skeleton className="h-4 w-full mb-2" />
                         <Skeleton className="h-4 w-full mb-2" />
                         <Skeleton className="h-4 w-full mb-2" />
@@ -217,7 +217,7 @@ export const LessonViewer = ({
                 {lesson && !error && (
                     <>
                         <header>
-                            <h1 className="text-4xl font-semibold mb-4">
+                            <h1 className="text-4xl font-semibold mb-8">
                                 {lesson.title}
                             </h1>
                         </header>
