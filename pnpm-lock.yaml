@@ -816,6 +816,9 @@ importers:
       '@courselit/email-editor':
         specifier: workspace:^
         version: link:../email-editor
+      '@courselit/page-models':
+        specifier: workspace:^
+        version: link:../page-models
       '@courselit/utils':
         specifier: workspace:^
         version: link:../utils
@@ -1023,13 +1026,22 @@ importers:
 
   packages/scripts:
     dependencies:
+      medialit:
+        specifier: ^0.1.0
+        version: 0.1.0
       mongoose:
         specifier: ^8.14.0
         version: 8.14.0(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4)
     devDependencies:
+      '@courselit/common-models':
+        specifier: workspace:^
+        version: link:../common-models
       '@courselit/orm-models':
         specifier: workspace:^
         version: link:../orm-models
+      '@courselit/utils':
+        specifier: workspace:^
+        version: link:../utils
       '@types/node':
         specifier: ^24.10.1
         version: 24.10.1

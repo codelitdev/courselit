@@ -9,3 +9,8 @@ export const WidgetSchema = new mongoose.Schema<WidgetInstance>({
     shared: { type: Boolean, required: true, default: false },
     settings: mongoose.Schema.Types.Mixed,
 });
+
+const WidgetModel =
+    mongoose.models.Widget || mongoose.model("Widget", WidgetSchema);
+
+export default WidgetModel;

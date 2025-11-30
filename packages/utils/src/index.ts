@@ -11,3 +11,4 @@ export { default as jwtUtils } from "./jwt-utils";
 export { getPlanPrice } from "./get-plan-price";
 export { truncate } from "./truncate";
 export { isVideo } from "./is-video";
+export { extractMediaIDs } from "./extract-media-ids";
