@@ -521,7 +521,8 @@ export function CommunityForum({
                     return (
                         <Image
                             src={
-                                options && options.renderActualFile
+                                (options && options.renderActualFile) ||
+                                media.media?.file?.endsWith(".gif")
                                     ? media.media.file!
                                     : media.media.thumbnail
                             }

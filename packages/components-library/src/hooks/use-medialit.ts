@@ -80,6 +80,7 @@ export function useMediaLit({
                                 ? JSON.parse(mediaString)
                                 : null;
                             if (media) {
+                                delete media.group;
                                 onUploadComplete?.(media);
                                 resolve(media);
                             }
