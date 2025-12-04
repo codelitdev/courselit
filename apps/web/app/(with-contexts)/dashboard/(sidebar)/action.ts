@@ -28,7 +28,7 @@ export async function getSetupChecklist(): Promise<{
     try {
         const domain = await DomainModel.findOne<Domain>(
             {
-                _id: new ObjectId((session.user as any)?.domainId!),
+                _id: new ObjectId((session.session as any)?.domainId!),
             },
             {
                 _id: 1,
