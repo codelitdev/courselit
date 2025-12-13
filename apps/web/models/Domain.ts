@@ -2,12 +2,18 @@ import mongoose from "mongoose";
 import SettingsSchema from "./SiteInfo";
 import TypefaceSchema from "./Typeface";
 import constants from "../config/constants";
-import { Domain as PublicDomain, Typeface } from "@courselit/common-models";
+import {
+    Constants,
+    Features,
+    Domain as PublicDomain,
+    Typeface,
+} from "@courselit/common-models";
 const { typeface } = constants;
 
 export interface Domain extends PublicDomain {
     _id: mongoose.Types.ObjectId;
     lastEditedThemeId?: string;
+    features?: Features[];
 }
 
 export const defaultTypeface: Typeface = {
@@ -58,6 +64,11 @@ const DomainSchema = new mongoose.Schema<Domain>(
                 lastMonthlyCountUpdate: { type: Date, default: Date.now },
             }),
         }),
+        features: {
+            type: [String],
+            enum: Object.values(Constants.Features),
+            default: [],
+        },
     },
     {
         timestamps: true,

@@ -8,13 +8,14 @@ import {
     useCallback,
     startTransition,
 } from "react";
-import { SiteInfo, ServerConfig } from "@courselit/common-models";
+import { SiteInfo, ServerConfig, Features } from "@courselit/common-models";
 import {
     AddressContext,
     ProfileContext,
     SiteInfoContext,
     ServerConfigContext,
     ThemeContext,
+    FeaturesContext,
 } from "@components/contexts";
 import { Toaster, useToast } from "@courselit/components-library";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
@@ -33,6 +34,7 @@ function LayoutContent({
     theme: initialTheme,
     config,
     session,
+    features,
 }: {
     address: string;
     children: ReactNode;
@@ -40,6 +42,7 @@ function LayoutContent({
     theme: Theme;
     config: ServerConfig;
     session: BetterAuthSession;
+    features: Features[];
 }) {
     const [profile, setProfile] = useState(defaultState.profile);
     const [theme, setTheme] = useState(initialTheme);
@@ -77,25 +80,29 @@ function LayoutContent({
                 frontend: address,
             }}
         >
-            <SiteInfoContext.Provider value={siteinfo}>
-                <ThemeContext.Provider value={{ theme, setTheme }}>
-                    <ServerConfigContext.Provider value={config}>
-                        <NextThemesProvider
-                            attribute="class"
-                            defaultTheme="system"
-                            enableSystem
-                            disableTransitionOnChange
-                        >
-                            <ProfileContext.Provider
-                                value={{ profile, setProfile }}
+            <FeaturesContext.Provider value={features}>
+                <SiteInfoContext.Provider value={siteinfo}>
+                    <ThemeContext.Provider value={{ theme, setTheme }}>
+                        <ServerConfigContext.Provider value={config}>
+                            <NextThemesProvider
+                                attribute="class"
+                                defaultTheme="system"
+                                enableSystem
+                                disableTransitionOnChange
                             >
-                                <Suspense fallback={null}>{children}</Suspense>
-                            </ProfileContext.Provider>
-                        </NextThemesProvider>
-                    </ServerConfigContext.Provider>
-                </ThemeContext.Provider>
-            </SiteInfoContext.Provider>
-            <Toaster />
+                                <ProfileContext.Provider
+                                    value={{ profile, setProfile }}
+                                >
+                                    <Suspense fallback={null}>
+                                        {children}
+                                    </Suspense>
+                                </ProfileContext.Provider>
+                            </NextThemesProvider>
+                        </ServerConfigContext.Provider>
+                    </ThemeContext.Provider>
+                </SiteInfoContext.Provider>
+                <Toaster />
+            </FeaturesContext.Provider>
         </AddressContext.Provider>
     );
 }
@@ -107,6 +114,7 @@ export default function Layout(props: {
     theme: Theme;
     config: ServerConfig;
     session: BetterAuthSession;
+    features: Features[];
 }) {
     return (
         <Suspense fallback={null}>

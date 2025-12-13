@@ -1,6 +1,12 @@
 import types from "./types";
-import { getApikeys, getSiteInfo } from "./logic";
-import { GraphQLList } from "graphql";
+import {
+    getApikeys,
+    getFeatures,
+    getLoginProviders,
+    getSiteInfo,
+    getSSOProviders,
+} from "./logic";
+import { GraphQLInt, GraphQLList, GraphQLString } from "graphql";
 import GQLContext from "@models/GQLContext";
 
 const queries = {
@@ -12,6 +18,26 @@ const queries = {
         type: new GraphQLList(types.apikeyType),
         args: {},
         resolve: (_: any, {}: any, context: GQLContext) => getApikeys(context),
+    },
+    getSSOProviders: {
+        type: new GraphQLList(types.ssoProviderType),
+        args: {
+            page: { type: GraphQLInt },
+            limit: { type: GraphQLInt },
+        },
+        resolve: (_: any, { page, limit }: any, context: GQLContext) =>
+            getSSOProviders({ ctx: context, page, limit }),
+    },
+    getFeatures: {
+        type: new GraphQLList(GraphQLString),
+        args: {},
+        resolve: (_: any, {}: any, context: GQLContext) => getFeatures(context),
+    },
+    getLoginProviders: {
+        type: new GraphQLList(GraphQLString),
+        args: {},
+        resolve: (_: any, {}: any, context: GQLContext) =>
+            getLoginProviders(context),
     },
 };
 

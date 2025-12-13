@@ -37,7 +37,16 @@ import { getUserProfile } from "../../helpers";
 import { ADMIN_PERMISSIONS } from "@ui-config/constants";
 import { authClient } from "@/lib/auth-client";
 
-export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
+export default function LoginForm({
+    redirectTo,
+    ssoProviders,
+}: {
+    redirectTo?: string;
+    ssoProviders?: {
+        providerId: string;
+        domain: string;
+    }[];
+}) {
     const { theme } = useContext(ThemeContext);
     const [showCode, setShowCode] = useState(false);
     const [email, setEmail] = useState("");
@@ -287,6 +296,26 @@ export default function LoginForm({ redirectTo }: { redirectTo?: string }) {
                                         </button>
                                     </Caption>
                                 </div>
+                            </div>
+                        )}
+                        {ssoProviders && ssoProviders.length > 0 && (
+                            <div className="flex flex-col gap-2 mt-8">
+                                {ssoProviders.map((provider) => (
+                                    <Button
+                                        key={provider.providerId}
+                                        variant="outline"
+                                        onClick={async () => {
+                                            const { error } =
+                                                await authClient.signIn.sso({
+                                                    providerId:
+                                                        provider.providerId,
+                                                    callbackURL: "/dashboard",
+                                                });
+                                        }}
+                                    >
+                                        Login with SSO ({provider.providerId})
+                                    </Button>
+                                ))}
                             </div>
                         )}
                     </div>

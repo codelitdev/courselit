@@ -8,6 +8,7 @@
 - In `apps/web` workspace, create a string first in `apps/web/config/strings.ts` and then import it in the `.tsx` files, instead of using inline strings.
 - When working with forms, always use refs to keep the current state of the form's data and use it to enable/disable the form submit button.
 - Check the name field inside each package's package.json to confirm the right name—skip the top-level one.
+- While working with forms, always use zod and react-hook-form to validate the form. Take reference implementation from `apps/web/components/admin/settings/sso/new.tsx`.
 
 ## Testing instructions
 

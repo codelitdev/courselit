@@ -181,3 +181,18 @@ export const EmailEventAction = {
     CLICK: "click",
     BOUNCE: "bounce",
 } as const;
+export const LoginProvider = {
+    GOOGLE: "google",
+    FACEBOOK: "facebook",
+    GITHUB: "github",
+    LINKEDIN: "linkedin",
+    TWITTER: "twitter",
+    APPLE: "apple",
+    EMAIL: "email",
+    SSO: "sso",
+} as const;
+export const Features = {
+    SSO: "sso",
+    API: "api",
+    LOG: "log",
+} as const;

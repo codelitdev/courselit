@@ -11,10 +11,11 @@ import {
     updateDraftTypefaces,
     removeApikey,
     addApikey,
-    // updateDraftTheme,
+    addSSOProvider,
+    removeSSOProvider,
+    toggleLoginProvider,
 } from "./logic";
-import { Typeface } from "@courselit/common-models";
-// import { GraphQLJSONObject } from "graphql-type-json";
+import { LoginProvider, Typeface } from "@courselit/common-models";
 
 const mutations = {
     updateSiteInfo: {
@@ -72,37 +73,74 @@ const mutations = {
         resolve: async (_: any, { keyId }: { keyId: string }, context: any) =>
             removeApikey(keyId, context),
     },
-    // updateDraftTheme: {
-    //     type: types.domain,
-    //     args: {
-    //         colors: { type: GraphQLJSONObject },
-    //         typography: { type: GraphQLJSONObject },
-    //         interactives: { type: GraphQLJSONObject },
-    //         structure: { type: GraphQLJSONObject },
-    //     },
-    //     resolve: async (
-    //         _: any,
-    //         {
-    //             colors,
-    //             typography,
-    //             interactives,
-    //             structure,
-    //         }: {
-    //             colors?: Theme["colors"];
-    //             typography?: Theme["typography"];
-    //             interactives?: Theme["interactives"];
-    //             structure?: Theme["structure"];
-    //         },
-    //         context: any,
-    //     ) =>
-    //         updateDraftTheme(
-    //             context,
-    //             colors,
-    //             typography,
-    //             interactives,
-    //             structure,
-    //         ),
-    // },
+    addSSOProvider: {
+        type: types.ssoProviderType,
+        args: {
+            providerId: { type: new GraphQLNonNull(GraphQLString) },
+            idpMetadata: { type: new GraphQLNonNull(GraphQLString) },
+            domain: { type: new GraphQLNonNull(GraphQLString) },
+            entryPoint: { type: new GraphQLNonNull(GraphQLString) },
+            cert: { type: new GraphQLNonNull(GraphQLString) },
+            callbackUrl: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (
+            _: any,
+            {
+                providerId,
+                idpMetadata,
+                domain,
+                entryPoint,
+                cert,
+                callbackUrl,
+            }: {
+                providerId: string;
+                idpMetadata: string;
+                domain: string;
+                entryPoint: string;
+                cert: string;
+                callbackUrl: string;
+            },
+            context: any,
+        ) =>
+            addSSOProvider({
+                providerId,
+                idpMetadata,
+                domain,
+                entryPoint,
+                cert,
+                callbackUrl,
+                context,
+            }),
+    },
+    removeSSOProvider: {
+        type: new GraphQLNonNull(GraphQLBoolean),
+        args: {
+            providerId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (
+            _: any,
+            { providerId }: { providerId: string },
+            context: any,
+        ) => removeSSOProvider(providerId, context),
+    },
+    toggleLoginProvider: {
+        type: new GraphQLNonNull(new GraphQLList(GraphQLString)),
+        args: {
+            provider: { type: new GraphQLNonNull(GraphQLString) },
+            value: { type: new GraphQLNonNull(GraphQLBoolean) },
+        },
+        resolve: async (
+            _: any,
+            {
+                provider,
+                value,
+            }: {
+                provider: LoginProvider;
+                value: boolean;
+            },
+            context: any,
+        ) => toggleLoginProvider({ provider, value, ctx: context }),
+    },
 };
 
 export default mutations;

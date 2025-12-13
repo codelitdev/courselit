@@ -137,6 +137,8 @@ export const responses = {
     lead_magnet_invalid_settings:
         "Product must have exactly one free payment plan to enable lead magnet",
     certificate_invalid_settings: "Certificate can only be enabled for courses",
+    sso_provider_already_exists:
+        "A SSO provider with the same provider ID already exists",
 
     // api responses
     digital_download_no_files:

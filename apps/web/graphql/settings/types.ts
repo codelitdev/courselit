@@ -153,6 +153,14 @@ const apikeyUpdateInput = new GraphQLInputObjectType({
     },
 });
 
+const ssoProviderType = new GraphQLObjectType({
+    name: "SSOProvider",
+    fields: {
+        providerId: { type: new GraphQLNonNull(GraphQLString) },
+        domain: { type: new GraphQLNonNull(GraphQLString) },
+    },
+});
+
 const types = {
     siteUpdateType,
     sitePaymentUpdateType,
@@ -161,6 +169,7 @@ const types = {
     apikeyType,
     apikeyUpdateInput,
     newApikeyType,
+    ssoProviderType,
 };
 
 export default types;

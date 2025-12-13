@@ -106,6 +106,7 @@ export const SITE_ADMIN_SETTINGS_PAYPAL_SECRET = "Paypal Secret Key";
 export const SITE_ADMIN_SETTINGS_PAYTM_SECRET = "Paytm Secret Key";
 export const SITE_SETTINGS_SECTION_GENERAL = "Branding";
 export const SITE_SETTINGS_SECTION_PAYMENT = "Payment";
+export const SITE_SETTINGS_SECTION_MAILS = "Mails";
 export const SITE_ADMIN_SETTINGS_PAYMENT_METHOD = "Payment Method";
 export const SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT =
     "Stripe Publishable Key";
@@ -224,6 +225,8 @@ export const MAIL_REQUEST_RECEIVED =
 export const MAIL_REQUEST_FORM_SUBMIT_INITIAL_REQUEST_TEXT = "Request access";
 export const MAIL_REQUEST_FORM_SUBMIT_UPDATE_REQUEST_TEXT = "Update reason";
 export const SITE_CUSTOMISATIONS_SETTING_HEADER = "Code Injection";
+export const SITE_MISCELLANEOUS_SETTING_HEADER = "Miscellaneous";
+export const ALPHA_LABEL = "Alpha";
 export const SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD =
     "Code Injection in <head>";
 export const SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY =
@@ -566,19 +569,40 @@ export const LESSON_GROUP_DELETED = "Section deleted";
 export const USER_PERMISSION_AREA_SUBTEXT =
     "Control what actions this user can perform in your school.";
 export const APIKEY_NEW_BUTTON = "New API key";
-export const APIKEY_EXISTING_HEADER = "Your API keys";
+export const ADD_SSO_PROVIDER_BUTTON = "New provider";
+export const APIKEY_EXISTING_HEADER = "API keys";
+export const APIKEY_CARD_DESCRIPTION =
+    "Using API keys you can interact with CourseLit API and build custom integrations";
+export const SSO_CARD_DESCRIPTION =
+    "Let your existing users sign into the your school";
+export const SINGLE_SIGN_ON_HEADER = "Single sign-on (SSO)";
+export const LOGIN_METHODS_HEADER = "Login methods";
+export const LOGIN_METHODS_CARD_DESCRIPTION =
+    "Control how your users access the school";
 export const APIKEY_EXISTING_TABLE_HEADER_CREATED = "Created";
 export const APIKEY_EXISTING_TABLE_HEADER_NAME = "Name";
 export const APIKEY_NEW_HEADER = "New API key";
+export const SSO_PROVIDER_NEW_HEADER = "New SSO Provider";
 export const APIKEY_NEW_LABEL = "Name";
+export const SSO_PROVIDER_DOMAIN_LABEL = "Domain";
+export const SSO_PROVIDER_ENTRY_POINT_LABEL = "Entry point";
+export const SSO_PROVIDER_CERT_LABEL = "Certificate";
+export const SSO_PROVIDER_CALLBACK_URL_LABEL = "Callback URL";
+export const SSO_PROVIDER_IDP_METADATA_LABEL = "IDP Metadata";
+export const SSO_PROVIDER_PROVIDER_ID_LABEL = "Provider ID";
+export const SSO_PROVIDER_SUCCESS_MESSAGE = "SSO provider added successfully";
 export const APIKEY_NEW_BTN_CAPTION = "Create";
 export const APIKEY_NEW_GENERATED_KEY_HEADER = "Your new API key";
 export const APIKEY_NEW_GENERATED_KEY_DESC =
     "Please copy it and store it securely. You won't be able to see it again.";
 export const APIKEY_NEW_GENERATED_KEY_COPIED = "Copied to clipboard";
 export const APIKEY_REMOVE_BTN = "Remove";
+export const SSO_PROVIDER_REMOVE_BTN = "Remove";
 export const APIKEY_REMOVE_DIALOG_HEADER = "Remove API Key";
-export const APIKYE_REMOVE_DIALOG_DESC =
+export const SSO_PROVIDER_REMOVE_DIALOG_HEADER = "Remove SSO Provider";
+export const SSO_PROVIDER_REMOVE_DIALOG_DESC =
+    "Are you sure you want to remove this provider?";
+export const APIKEY_REMOVE_DIALOG_DESC =
     "If you are using this key in your application, removing it will break the integration. There is no going back if you remove it.";
 export const USER_TAGS_SUBHEADER = "Tags";
 export const BTN_DELETE_USER = "Delete user";

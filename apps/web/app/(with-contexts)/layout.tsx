@@ -32,6 +32,7 @@ export default async function Layout({
             theme={siteSetup?.theme || defaultState.theme}
             config={config}
             session={session}
+            features={siteSetup?.features || defaultState.features}
         >
             {children}
         </LayoutWithContext>

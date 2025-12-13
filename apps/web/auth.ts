@@ -11,6 +11,7 @@ import { mongodbAdapter } from "@/ba-multitenant-adapter";
 import { updateUserAfterCreationViaAuth } from "./graphql/users/logic";
 import UserModel from "@models/User";
 import { getBackendAddress } from "./app/actions";
+import { sso } from "@better-auth/sso";
 
 const client = new MongoClient(
     process.env.DB_CONNECTION_STRING || "mongodb://localhost:27017",
@@ -70,6 +71,11 @@ const config: any = {
                     domainId: ctx.headers?.get("domainId"),
                 },
             };
+        }),
+        sso({
+            fields: {
+                domain: "domain_string",
+            },
         }),
     ],
     databaseHooks: {

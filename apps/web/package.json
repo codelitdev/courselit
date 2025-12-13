@@ -9,6 +9,7 @@
     "prettier": "prettier --write **/*.ts"
   },
   "dependencies": {
+    "@better-auth/sso": "^1.4.6",
     "@courselit/common-logic": "workspace:^",
     "@courselit/common-models": "workspace:^",
     "@courselit/components-library": "workspace:^",
