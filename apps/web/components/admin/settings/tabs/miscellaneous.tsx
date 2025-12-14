@@ -9,6 +9,7 @@ import {
 import { Checkbox } from "@components/ui/checkbox";
 import { Constants, LoginProvider } from "@courselit/common-models";
 import {
+    ALPHA_LABEL,
     APIKEY_CARD_DESCRIPTION,
     APIKEY_EXISTING_HEADER,
     APIKEY_EXISTING_TABLE_HEADER_CREATED,
@@ -23,7 +24,11 @@ import {
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import { useContext, useEffect, useState } from "react";
-import { AddressContext, FeaturesContext } from "@components/contexts";
+import {
+    AddressContext,
+    FeaturesContext,
+    SiteInfoContext,
+} from "@components/contexts";
 import { capitalize, FetchBuilder } from "@courselit/utils";
 import {
     Chip,
@@ -35,7 +40,7 @@ import {
     Dialog2,
 } from "@courselit/components-library";
 import { Button } from "@components/ui/button";
-import { CogIcon, Key } from "lucide-react";
+import { CogIcon, Key, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 type ApiKeyListItem = {
@@ -48,7 +53,10 @@ export default function MiscellaneousTab() {
     const [loading, setLoading] = useState(false);
     const features = useContext(FeaturesContext);
     const address = useContext(AddressContext);
-    const [logins, setLogins] = useState<LoginProvider[]>([]);
+    const siteinfo = useContext(SiteInfoContext);
+    const [logins, setLogins] = useState<LoginProvider[]>(
+        siteinfo.logins || [],
+    );
     const [apikeyPage, setApikeyPage] = useState(1);
     const [apikeys, setApikeys] = useState<ApiKeyListItem[]>([]);
     const { toast } = useToast();
@@ -58,10 +66,9 @@ export default function MiscellaneousTab() {
         .setIsGraphQLEndpoint(true);
 
     useEffect(() => {
-        const loadLoginProviders = async () => {
+        const loadApiKeys = async () => {
             const query = `
                 query {
-                    logins: getLoginProviders
                     apikeys: getApikeys {
                         name,
                         keyId,
@@ -77,9 +84,6 @@ export default function MiscellaneousTab() {
             setLoading(true);
             try {
                 const response = await fetchRequest.exec();
-                if (response.logins) {
-                    setLogins(response.logins);
-                }
                 if (response.apikeys) {
                     setApikeys(response.apikeys as ApiKeyListItem[]);
                 }
@@ -94,7 +98,7 @@ export default function MiscellaneousTab() {
             }
         };
 
-        loadLoginProviders();
+        loadApiKeys();
     }, []);
 
     const copyToClipboard = (text: string) => {
@@ -211,27 +215,36 @@ export default function MiscellaneousTab() {
                                                 : capitalize(provider)}
                                         </span>
                                         {provider ===
-                                            Constants.LoginProvider.SSO &&
-                                            !features.includes(
-                                                Constants.Features.SSO,
-                                            ) && <Chip>Upgrade</Chip>}
+                                            Constants.LoginProvider.SSO && (
+                                            <>
+                                                {!features.includes(
+                                                    Constants.Features.SSO,
+                                                ) && <Chip>Upgrade</Chip>}
+                                                {<Chip>{ALPHA_LABEL}</Chip>}
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                                 {provider !== Constants.LoginProvider.EMAIL && (
-                                    <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-8 w-8"
-                                        disabled={
-                                            provider ===
-                                                Constants.LoginProvider.SSO &&
-                                            !features.includes(
-                                                Constants.Features.SSO,
-                                            )
-                                        }
+                                    <Link
+                                        href={`/dashboard/settings/login-provider/${provider}`}
                                     >
-                                        <CogIcon className="w-4 h-4" />
-                                    </Button>
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            className="h-8 w-8"
+                                            disabled={
+                                                provider ===
+                                                    Constants.LoginProvider
+                                                        .SSO &&
+                                                !features.includes(
+                                                    Constants.Features.SSO,
+                                                )
+                                            }
+                                        >
+                                            <CogIcon className="w-4 h-4" />
+                                        </Button>
+                                    </Link>
                                 )}
                             </div>
                         ))}
@@ -246,9 +259,12 @@ export default function MiscellaneousTab() {
                         <a
                             href="https://docs.courselit.app/en/developers/introduction"
                             className="underline"
+                            target="_blank"
+                            rel="noopener noreferrer"
                         >
                             Learn more
                         </a>
+                        .
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -288,8 +304,12 @@ export default function MiscellaneousTab() {
                                                         APIKEY_REMOVE_DIALOG_HEADER
                                                     }
                                                     trigger={
-                                                        <Button variant="soft">
-                                                            {APIKEY_REMOVE_BTN}
+                                                        <Button
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            className="h-8 w-8"
+                                                        >
+                                                            <Trash2 />
                                                         </Button>
                                                     }
                                                     okButton={

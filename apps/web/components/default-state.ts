@@ -5,6 +5,7 @@ import {
     Typeface,
     ServerConfig,
     Features,
+    Constants,
 } from "@courselit/common-models";
 import { Theme } from "@courselit/page-models";
 import { themes } from "@courselit/page-primitives";
@@ -40,6 +41,7 @@ export const defaultState: {
         lemonsqueezyOneTimeVariantId: "",
         lemonsqueezySubscriptionMonthlyVariantId: "",
         lemonsqueezySubscriptionYearlyVariantId: "",
+        logins: [Constants.LoginProvider.EMAIL],
     },
     networkAction: false,
     profile: {

@@ -151,6 +151,7 @@ export const getSiteInfo = async (
                     lemonsqueezyOneTimeVariantId,
                     lemonsqueezySubscriptionMonthlyVariantId,
                     lemonsqueezySubscriptionYearlyVariantId,
+                    logins,
                 },
             }
         }

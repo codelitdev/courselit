@@ -2,11 +2,12 @@ import types from "./types";
 import {
     getApikeys,
     getFeatures,
-    getLoginProviders,
+    // getLoginProviders,
     getSiteInfo,
-    getSSOProviders,
+    getSSOProvider,
+    getSSOProviderSettings,
 } from "./logic";
-import { GraphQLInt, GraphQLList, GraphQLString } from "graphql";
+import { GraphQLList, GraphQLString } from "graphql";
 import GQLContext from "@models/GQLContext";
 
 const queries = {
@@ -19,26 +20,27 @@ const queries = {
         args: {},
         resolve: (_: any, {}: any, context: GQLContext) => getApikeys(context),
     },
-    getSSOProviders: {
-        type: new GraphQLList(types.ssoProviderType),
-        args: {
-            page: { type: GraphQLInt },
-            limit: { type: GraphQLInt },
-        },
-        resolve: (_: any, { page, limit }: any, context: GQLContext) =>
-            getSSOProviders({ ctx: context, page, limit }),
+    getSSOProvider: {
+        type: types.ssoProviderType,
+        resolve: (_: any, {}: any, context: GQLContext) =>
+            getSSOProvider(context),
+    },
+    getSSOProviderSettings: {
+        type: types.ssoProviderSettingsType,
+        resolve: (_: any, {}: any, context: GQLContext) =>
+            getSSOProviderSettings(context),
     },
     getFeatures: {
         type: new GraphQLList(GraphQLString),
         args: {},
         resolve: (_: any, {}: any, context: GQLContext) => getFeatures(context),
     },
-    getLoginProviders: {
-        type: new GraphQLList(GraphQLString),
-        args: {},
-        resolve: (_: any, {}: any, context: GQLContext) =>
-            getLoginProviders(context),
-    },
+    // getLoginProviders: {
+    //     type: new GraphQLList(GraphQLString),
+    //     args: {},
+    //     resolve: (_: any, { }: any, context: GQLContext) =>
+    //         getLoginProviders(context),
+    // },
 };
 
 export default queries;

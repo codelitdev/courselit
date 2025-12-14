@@ -3,6 +3,7 @@
 import {
     AddressContext,
     ServerConfigContext,
+    SiteInfoContext,
     ThemeContext,
 } from "@components/contexts";
 import {
@@ -32,20 +33,20 @@ import { TriangleAlert } from "lucide-react";
 import { useRecaptcha } from "@/hooks/use-recaptcha";
 import RecaptchaScriptLoader from "@/components/recaptcha-script-loader";
 import { checkPermission } from "@courselit/utils";
-import { Profile } from "@courselit/common-models";
+import { Constants, Profile } from "@courselit/common-models";
 import { getUserProfile } from "../../helpers";
 import { ADMIN_PERMISSIONS } from "@ui-config/constants";
 import { authClient } from "@/lib/auth-client";
 
 export default function LoginForm({
     redirectTo,
-    ssoProviders,
+    ssoProvider,
 }: {
     redirectTo?: string;
-    ssoProviders?: {
+    ssoProvider?: {
         providerId: string;
         domain: string;
-    }[];
+    };
 }) {
     const { theme } = useContext(ThemeContext);
     const [showCode, setShowCode] = useState(false);
@@ -58,6 +59,7 @@ export default function LoginForm({
     const { executeRecaptcha } = useRecaptcha();
     const address = useContext(AddressContext);
     const codeInputRef = useRef<HTMLInputElement>(null);
+    const siteinfo = useContext(SiteInfoContext);
 
     const validateRecaptcha = useCallback(async (): Promise<boolean> => {
         if (!serverConfig.recaptchaSiteKey) {
@@ -191,133 +193,143 @@ export default function LoginForm({
         <Section theme={theme.theme}>
             <div className="flex flex-col gap-4 min-h-[80vh]">
                 <div className="flex justify-center grow items-center px-4 mx-auto lg:max-w-[1200px] w-full">
-                    <div className="flex flex-col">
-                        {error && (
-                            <div
-                                style={{
-                                    color: theme?.theme?.colors?.light
-                                        ?.destructive,
-                                }}
-                                className="flex items-center gap-2 mb-4"
-                            >
-                                <TriangleAlert className="w-4 h-4" />
-                                <div>
-                                    <Text1 theme={theme.theme}>{error}</Text1>
-                                </div>
-                            </div>
-                        )}
-                        {!showCode && (
-                            <div>
-                                <Text1 theme={theme.theme} className="mb-4">
-                                    {LOGIN_FORM_LABEL}
-                                </Text1>
-                                <Form
-                                    onSubmit={requestCode}
-                                    className="flex flex-col gap-4 w-full lg:w-[360px] mx-auto"
-                                >
-                                    <Input
-                                        type="email"
-                                        value={email}
-                                        placeholder="Enter your email"
-                                        required={true}
-                                        onChange={(e) =>
-                                            setEmail(e.target.value)
-                                        }
-                                        theme={theme.theme}
-                                    />
-                                    <Button
-                                        theme={theme.theme}
-                                        disabled={loading}
+                    <div className="flex flex-col gap-4">
+                        {siteinfo.logins?.includes(
+                            Constants.LoginProvider.EMAIL,
+                        ) && (
+                            <>
+                                {error && (
+                                    <div
+                                        style={{
+                                            color: theme?.theme?.colors?.light
+                                                ?.destructive,
+                                        }}
+                                        className="flex items-center gap-2 mb-4"
                                     >
-                                        {loading ? LOADING : BTN_LOGIN_GET_CODE}
-                                    </Button>
-                                    <Caption
-                                        theme={theme.theme}
-                                        className="text-center"
-                                    >
-                                        {LOGIN_FORM_DISCLAIMER}
-                                        <Link href="/p/terms">
-                                            <span className="underline">
-                                                Terms
-                                            </span>
-                                        </Link>
-                                    </Caption>
-                                </Form>
-                            </div>
-                        )}
-                        {showCode && (
-                            <div>
-                                <Text1 theme={theme.theme} className="mb-4">
-                                    {LOGIN_CODE_INTIMATION_MESSAGE}{" "}
-                                    <strong>{email}</strong>
-                                </Text1>
-                                <Form
-                                    className="flex flex-col gap-4 mb-4 w-full lg:w-[360px] mx-auto"
-                                    onSubmit={signInUser}
-                                >
-                                    <Input
-                                        type="text"
-                                        value={code}
-                                        placeholder="Code"
-                                        required={true}
-                                        onChange={(e) =>
-                                            setCode(e.target.value)
-                                        }
-                                        theme={theme.theme}
-                                        ref={codeInputRef}
-                                    />
-                                    <Button
-                                        theme={theme.theme}
-                                        disabled={loading}
-                                    >
-                                        {loading ? LOADING : BTN_LOGIN}
-                                    </Button>
-                                    {/* </div> */}
-                                </Form>
-                                <div className="flex justify-center items-center gap-1 text-sm">
-                                    <Caption
-                                        theme={theme.theme}
-                                        className="text-center flex items-center gap-1"
-                                    >
-                                        {LOGIN_NO_CODE}
-                                        <button
-                                            onClick={requestCode}
-                                            className="underline"
-                                            disabled={loading}
+                                        <TriangleAlert className="w-4 h-4" />
+                                        <div>
+                                            <Text1 theme={theme.theme}>
+                                                {error}
+                                            </Text1>
+                                        </div>
+                                    </div>
+                                )}
+                                {!showCode && (
+                                    <div>
+                                        <Text1
+                                            theme={theme.theme}
+                                            className="mb-4"
                                         >
-                                            <PageLink
+                                            {LOGIN_FORM_LABEL}
+                                        </Text1>
+                                        <Form
+                                            onSubmit={requestCode}
+                                            className="flex flex-col gap-4 w-full lg:w-[360px] mx-auto"
+                                        >
+                                            <Input
+                                                type="email"
+                                                value={email}
+                                                placeholder="Enter your email"
+                                                required={true}
+                                                onChange={(e) =>
+                                                    setEmail(e.target.value)
+                                                }
                                                 theme={theme.theme}
-                                                className="text-xs"
+                                            />
+                                            <Button
+                                                theme={theme.theme}
+                                                disabled={loading}
                                             >
                                                 {loading
                                                     ? LOADING
-                                                    : BTN_LOGIN_NO_CODE}
-                                            </PageLink>
-                                        </button>
-                                    </Caption>
-                                </div>
-                            </div>
+                                                    : BTN_LOGIN_GET_CODE}
+                                            </Button>
+                                        </Form>
+                                    </div>
+                                )}
+                                {showCode && (
+                                    <div>
+                                        <Text1
+                                            theme={theme.theme}
+                                            className="mb-4"
+                                        >
+                                            {LOGIN_CODE_INTIMATION_MESSAGE}{" "}
+                                            <strong>{email}</strong>
+                                        </Text1>
+                                        <Form
+                                            className="flex flex-col gap-4 mb-4 w-full lg:w-[360px] mx-auto"
+                                            onSubmit={signInUser}
+                                        >
+                                            <Input
+                                                type="text"
+                                                value={code}
+                                                placeholder="Code"
+                                                required={true}
+                                                onChange={(e) =>
+                                                    setCode(e.target.value)
+                                                }
+                                                theme={theme.theme}
+                                                ref={codeInputRef}
+                                            />
+                                            <Button
+                                                theme={theme.theme}
+                                                disabled={loading}
+                                            >
+                                                {loading ? LOADING : BTN_LOGIN}
+                                            </Button>
+                                            {/* </div> */}
+                                        </Form>
+                                        <div className="flex justify-center items-center gap-1 text-sm">
+                                            <Caption
+                                                theme={theme.theme}
+                                                className="text-center flex items-center gap-1"
+                                            >
+                                                {LOGIN_NO_CODE}
+                                                <button
+                                                    onClick={requestCode}
+                                                    className="underline"
+                                                    disabled={loading}
+                                                >
+                                                    <PageLink
+                                                        theme={theme.theme}
+                                                        className="text-xs"
+                                                    >
+                                                        {loading
+                                                            ? LOADING
+                                                            : BTN_LOGIN_NO_CODE}
+                                                    </PageLink>
+                                                </button>
+                                            </Caption>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
                         )}
-                        {ssoProviders && ssoProviders.length > 0 && (
-                            <div className="flex flex-col gap-2 mt-8">
-                                {ssoProviders.map((provider) => (
-                                    <Button
-                                        key={provider.providerId}
-                                        variant="outline"
-                                        onClick={async () => {
-                                            const { error } =
-                                                await authClient.signIn.sso({
-                                                    providerId:
-                                                        provider.providerId,
-                                                    callbackURL: "/dashboard",
-                                                });
-                                        }}
-                                    >
-                                        Login with SSO ({provider.providerId})
-                                    </Button>
-                                ))}
-                            </div>
-                        )}
+                        {siteinfo.logins?.includes(
+                            Constants.LoginProvider.SSO,
+                        ) &&
+                            ssoProvider && (
+                                <Button
+                                    variant="outline"
+                                    onClick={async () => {
+                                        const { error } =
+                                            await authClient.signIn.sso({
+                                                providerId:
+                                                    ssoProvider.providerId,
+                                                callbackURL: "/dashboard",
+                                            });
+                                    }}
+                                    className="w-full lg:w-[360px] mx-auto"
+                                >
+                                    Login with SSO
+                                </Button>
+                            )}
+                        <Caption theme={theme.theme} className="text-center">
+                            {LOGIN_FORM_DISCLAIMER}
+                            <Link href="/p/terms">
+                                <span className="underline">Terms</span>
+                            </Link>
+                        </Caption>
                     </div>
                 </div>
             </div>

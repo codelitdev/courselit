@@ -11,9 +11,9 @@ import {
     updateDraftTypefaces,
     removeApikey,
     addApikey,
-    addSSOProvider,
     removeSSOProvider,
     toggleLoginProvider,
+    updateSSOProvider,
 } from "./logic";
 import { LoginProvider, Typeface } from "@courselit/common-models";
 
@@ -73,55 +73,49 @@ const mutations = {
         resolve: async (_: any, { keyId }: { keyId: string }, context: any) =>
             removeApikey(keyId, context),
     },
-    addSSOProvider: {
+    updateSSOProvider: {
         type: types.ssoProviderType,
         args: {
             providerId: { type: new GraphQLNonNull(GraphQLString) },
             idpMetadata: { type: new GraphQLNonNull(GraphQLString) },
-            domain: { type: new GraphQLNonNull(GraphQLString) },
+            // domain: { type: new GraphQLNonNull(GraphQLString) },
             entryPoint: { type: new GraphQLNonNull(GraphQLString) },
             cert: { type: new GraphQLNonNull(GraphQLString) },
-            callbackUrl: { type: new GraphQLNonNull(GraphQLString) },
+            backend: { type: new GraphQLNonNull(GraphQLString) },
         },
         resolve: async (
             _: any,
             {
                 providerId,
                 idpMetadata,
-                domain,
+                // domain,
                 entryPoint,
                 cert,
-                callbackUrl,
+                backend,
             }: {
                 providerId: string;
                 idpMetadata: string;
-                domain: string;
+                // domain: string;
                 entryPoint: string;
                 cert: string;
-                callbackUrl: string;
+                backend: string;
             },
             context: any,
         ) =>
-            addSSOProvider({
+            updateSSOProvider({
                 providerId,
                 idpMetadata,
-                domain,
+                // domain,
                 entryPoint,
                 cert,
-                callbackUrl,
+                backend,
                 context,
             }),
     },
     removeSSOProvider: {
         type: new GraphQLNonNull(GraphQLBoolean),
-        args: {
-            providerId: { type: new GraphQLNonNull(GraphQLString) },
-        },
-        resolve: async (
-            _: any,
-            { providerId }: { providerId: string },
-            context: any,
-        ) => removeSSOProvider(providerId, context),
+        resolve: async (_: any, __: any, context: any) =>
+            removeSSOProvider(context),
     },
     toggleLoginProvider: {
         type: new GraphQLNonNull(new GraphQLList(GraphQLString)),

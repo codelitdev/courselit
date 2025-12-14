@@ -13,7 +13,6 @@ import { checkPermission } from "@courselit/utils";
 import { Constants, LoginProvider, Typeface } from "@courselit/common-models";
 import ApikeyModel, { ApiKey } from "@models/ApiKey";
 import SSOProviderModel from "@models/SSOProvider";
-import mongoose from "mongoose";
 
 const { permissions } = constants;
 
@@ -42,21 +41,6 @@ export const getSiteInfo = async (ctx: GQLContext) => {
 
     return domain;
 };
-
-/*
-export const getSiteInfoAsAdmin = async (ctx: GQLContext) => {
-    checkIfAuthenticated(ctx);
-
-    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
-        throw new Error(responses.action_not_allowed);
-    }
-
-    const siteinfo: SiteInfo | null = await SiteInfoModel.findOne({
-        domain: ctx.subdomain._id,
-    });
-    return siteinfo;
-};
-*/
 
 export const updateSiteInfo = async (
     siteData: Record<string, unknown>,
@@ -241,21 +225,21 @@ export const removeApikey = async (keyId: string, ctx: GQLContext) => {
     return true;
 };
 
-export const addSSOProvider = async ({
+export const updateSSOProvider = async ({
     providerId,
     idpMetadata,
     entryPoint,
     cert,
-    callbackUrl,
-    domain,
+    backend,
+    // domain,
     context: ctx,
 }: {
     providerId: string;
     idpMetadata: string;
     entryPoint: string;
     cert: string;
-    callbackUrl: string;
-    domain: string;
+    backend: string;
+    // domain: string;
     context: GQLContext;
 }) => {
     checkIfAuthenticated(ctx);
@@ -277,71 +261,40 @@ export const addSSOProvider = async ({
         throw new Error(responses.sso_provider_already_exists);
     }
 
-    const ssoProvider = await SSOProviderModel.create({
-        id: new mongoose.Types.ObjectId(),
-        providerId,
-        samlConfig: JSON.stringify({
-            entryPoint,
-            cert,
-            callbackUrl,
-            idpMetadata: {
-                metadata: idpMetadata,
-            },
-            spMetadata: {
-                // metadata: `<md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" entityID="http://localhost:3000/api/auth/sso/saml2/sp/metadata">
-                //     <md:SPSSODescriptor AuthnRequestsSigned="false" WantAssertionsSigned="true" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
-                //         <md:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="http://localhost:3000/api/auth/sso/saml2/sp/slo"/>
-                //         <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</md:NameIDFormat>
-                //         <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="http://localhost:3000/api/auth/sso/saml2/sp/acs" index="1"/>
-                //     </md:SPSSODescriptor>
-                //     </md:EntityDescriptor>`,
-                // binding: "post",
-            },
-        }),
-        domain_string: domain,
-        domain: ctx.subdomain._id,
-    });
+    const backendUrl = new URL(backend);
 
-    return ssoProvider;
-};
+    try {
+        const ssoProvider = await SSOProviderModel.findOneAndUpdate(
+            {
+                domain: ctx.subdomain._id,
+            },
+            {
+                providerId,
+                samlConfig: JSON.stringify({
+                    entryPoint,
+                    cert,
+                    callbackUrl: `${backendUrl.origin}/api/auth/sso/saml2/callback/${providerId}`,
+                    idpMetadata: {
+                        metadata: idpMetadata,
+                    },
+                    spMetadata: {},
+                }),
+                domain_string: backendUrl.hostname,
+                domain: ctx.subdomain._id,
+            },
+            {
+                upsert: true,
+                new: true,
+            },
+        );
 
-export const getSSOProviders = async ({
-    ctx,
-    page = 1,
-    limit = 10,
-}: {
-    ctx: GQLContext;
-    page?: number;
-    limit?: number;
-}) => {
-    if (!ctx.subdomain.features?.includes(Constants.Features.SSO)) {
-        return [];
+        return ssoProvider;
+    } catch (error: any) {
+        throw error;
     }
-
-    const skip = (page - 1) * limit;
-
-    const ssoProviders = await SSOProviderModel.find(
-        {
-            domain: ctx.subdomain._id,
-        },
-        {
-            providerId: 1,
-            domain_string: 1,
-        },
-    )
-        .skip(skip)
-        .limit(limit);
-
-    return ssoProviders.map((ssoProvider) => ({
-        providerId: ssoProvider.providerId,
-        domain: ssoProvider.domain_string,
-    }));
 };
 
-export const removeSSOProvider = async (
-    providerId: string,
-    ctx: GQLContext,
-) => {
+export const getSSOProviderSettings = async (ctx: GQLContext) => {
     checkIfAuthenticated(ctx);
 
     if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
@@ -352,7 +305,65 @@ export const removeSSOProvider = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    await SSOProviderModel.deleteOne({ providerId, domain: ctx.subdomain._id });
+    const ssoProvider = await SSOProviderModel.findOne({
+        domain: ctx.subdomain._id,
+    });
+
+    if (!ssoProvider) {
+        return null;
+    }
+
+    const samlConfig = JSON.parse(ssoProvider?.samlConfig || "{}");
+
+    return {
+        providerId: ssoProvider?.providerId,
+        idpMetadata: samlConfig?.idpMetadata?.metadata,
+        // domain: ssoProvider?.domain_string,
+        entryPoint: samlConfig?.entryPoint,
+        cert: samlConfig?.cert,
+        // callbackUrl: samlConfig?.callbackUrl,
+    };
+};
+
+export const getSSOProvider = async (ctx: GQLContext) => {
+    if (!ctx.subdomain.features?.includes(Constants.Features.SSO)) {
+        return null;
+    }
+
+    const ssoProvider = await SSOProviderModel.findOne(
+        {
+            domain: ctx.subdomain._id,
+        },
+        {
+            providerId: 1,
+            domain_string: 1,
+        },
+    );
+
+    return {
+        providerId: ssoProvider.providerId,
+        domain: ssoProvider.domain_string,
+    };
+};
+
+export const removeSSOProvider = async (ctx: GQLContext) => {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    if (!ctx.subdomain.features?.includes(Constants.Features.SSO)) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    await SSOProviderModel.deleteMany({ domain: ctx.subdomain._id });
+
+    await toggleLoginProvider({
+        provider: Constants.LoginProvider.SSO,
+        value: false,
+        ctx,
+    });
 
     return true;
 };
@@ -365,11 +376,11 @@ export const getFeatures = async (ctx: GQLContext) => {
     return ctx.subdomain.features || [];
 };
 
-export const getLoginProviders = async (ctx: GQLContext) => {
-    return ctx.subdomain.settings.logins?.length
-        ? ctx.subdomain.settings.logins
-        : [Constants.LoginProvider.EMAIL];
-};
+// export const getLoginProviders = async (ctx: GQLContext) => {
+//     return ctx.subdomain.settings.logins?.length
+//         ? ctx.subdomain.settings.logins
+//         : [Constants.LoginProvider.EMAIL];
+// };
 
 export const toggleLoginProvider = async ({
     provider,
@@ -405,11 +416,18 @@ export const toggleLoginProvider = async ({
             });
             break;
         case Constants.LoginProvider.SSO:
-            if (
-                value &&
-                !ctx.subdomain.features?.includes(Constants.Features.SSO)
-            ) {
-                throw new Error(responses.action_not_allowed);
+            if (value) {
+                if (!ctx.subdomain.features?.includes(Constants.Features.SSO)) {
+                    throw new Error(responses.action_not_allowed);
+                }
+
+                const ssoProviders = await SSOProviderModel.find({
+                    domain: ctx.subdomain._id,
+                });
+
+                if (ssoProviders.length === 0) {
+                    throw new Error(responses.provider_not_configured);
+                }
             }
             await saveLoginProvider({
                 ctx,
@@ -419,5 +437,5 @@ export const toggleLoginProvider = async ({
             break;
     }
 
-    return getLoginProviders(ctx);
+    return ctx.subdomain.settings.logins || [Constants.LoginProvider.EMAIL];
 };

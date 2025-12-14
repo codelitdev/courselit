@@ -4,18 +4,20 @@ import { Address } from "@courselit/common-models";
 import { useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import {
-    BUTTON_DONE_TEXT,
     SITE_MISCELLANEOUS_SETTING_HEADER,
-    SSO_PROVIDER_CALLBACK_URL_LABEL,
+    // SSO_PROVIDER_CALLBACK_URL_LABEL,
     SSO_PROVIDER_CERT_LABEL,
-    SSO_PROVIDER_DOMAIN_LABEL,
+    // SSO_PROVIDER_DOMAIN_LABEL,
     SSO_PROVIDER_ENTRY_POINT_LABEL,
     SSO_PROVIDER_IDP_METADATA_LABEL,
-    SSO_PROVIDER_NEW_HEADER,
+    SSO_PROVIDER_HEADER,
     SSO_PROVIDER_PROVIDER_ID_LABEL,
     SSO_PROVIDER_SUCCESS_MESSAGE,
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
+    PROVIDER_RESET_SUCCESS_MESSAGE,
+    BTN_RESET,
+    BUTTON_SAVE,
 } from "@ui-config/strings";
 import { useRouter } from "next/navigation";
 import { useForm, FormProvider } from "react-hook-form";
@@ -32,7 +34,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@components/ui/button";
 import Resources from "@components/resources";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@components/ui/alert-dialog";
+import { Trash2, Loader2, Save } from "lucide-react";
 
 const formSchema = z.object({
     providerId: z
@@ -43,10 +57,10 @@ const formSchema = z.object({
             "Provider ID can only contain lowercase letters and hyphens",
         ),
     idpMetadata: z.string().min(1, "IDP Metadata is required"),
-    domain: z.string().min(1, "Domain is required"),
+    // domain: z.string().min(1, "Domain is required"),
     entryPoint: z.string().min(1, "Entry Point is required"),
     cert: z.string().min(1, "Certificate is required"),
-    callbackUrl: z.string().min(1, "Callback URL is required"),
+    // backend: z.string().min(1, "Callback URL is required"),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -55,40 +69,81 @@ interface NewSSOProviderProps {
     address: Address;
 }
 
-export default function NewSSOProvider({ address }: NewSSOProviderProps) {
+export default function SSOProvider({ address }: NewSSOProviderProps) {
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
     const router = useRouter();
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [providerId, setProviderId] = useState();
+
+    const fetch = new FetchBuilder()
+        .setUrl(`${address.backend}/api/graph`)
+        .setIsGraphQLEndpoint(true);
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             providerId: "",
             idpMetadata: "",
-            domain: "",
+            // domain: "",
             entryPoint: "",
             cert: "",
-            callbackUrl: "",
         },
     });
 
-    const createSSOProvider = async (values: FormData) => {
+    useEffect(() => {
+        const fetchSSOProvider = async () => {
+            const query = `
+                query {
+                    ssoProvider: getSSOProviderSettings {
+                        providerId
+                        idpMetadata
+                        entryPoint
+                        cert
+                    }
+                }
+            `;
+            const fetcher = fetch
+                .setPayload({
+                    query,
+                })
+                .build();
+            try {
+                const response = await fetcher.exec();
+                const { ssoProvider } = response;
+                if (ssoProvider) {
+                    form.setValue("providerId", ssoProvider.providerId);
+                    form.setValue("idpMetadata", ssoProvider.idpMetadata);
+                    form.setValue("entryPoint", ssoProvider.entryPoint);
+                    form.setValue("cert", ssoProvider.cert);
+                    setProviderId(ssoProvider.providerId);
+                }
+            } catch (err: any) {
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: err.message,
+                    variant: "destructive",
+                });
+            }
+        };
+        fetchSSOProvider();
+    }, []);
+
+    const updateSSOProvider = async (values: FormData) => {
         const query = `
             mutation (
-                $domain: String!, 
                 $idpMetadata: String!, 
                 $providerId: String!, 
                 $entryPoint: String!, 
                 $cert: String!, 
-                $callbackUrl: String!
+                $backend: String!
             ) {
-                ssoProvider: addSSOProvider(
+                ssoProvider: updateSSOProvider(
                     providerId: $providerId
                     idpMetadata: $idpMetadata,
-                    domain: $domain,
                     entryPoint: $entryPoint,
                     cert: $cert,
-                    callbackUrl: $callbackUrl,
+                    backend: $backend,
                 ) {
                     providerId
                 }
@@ -98,7 +153,10 @@ export default function NewSSOProvider({ address }: NewSSOProviderProps) {
             .setUrl(`${address.backend}/api/graph`)
             .setPayload({
                 query,
-                variables: values,
+                variables: {
+                    ...values,
+                    backend: address.backend,
+                },
             })
             .setIsGraphQLEndpoint(true)
             .build();
@@ -131,14 +189,49 @@ export default function NewSSOProvider({ address }: NewSSOProviderProps) {
         }
     };
 
+    const resetProvider = async () => {
+        const query = `
+            mutation {
+                removeSSOProvider
+            }
+        `;
+
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload(query)
+            .setIsGraphQLEndpoint(true)
+            .build();
+
+        try {
+            setIsDeleting(true);
+            const response = await fetch.exec();
+
+            if (response.removeSSOProvider) {
+                toast({
+                    title: TOAST_TITLE_SUCCESS,
+                    description: PROVIDER_RESET_SUCCESS_MESSAGE,
+                });
+                window.location.href = `/dashboard/settings?tab=${SITE_MISCELLANEOUS_SETTING_HEADER}`;
+            }
+        } catch (err: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     return (
         <div className="flex flex-col gap-4">
             <h1 className="text-4xl font-semibold mb-4">
-                {SSO_PROVIDER_NEW_HEADER}
+                {SSO_PROVIDER_HEADER}
             </h1>
             <FormProvider {...form}>
                 <form
-                    onSubmit={form.handleSubmit(createSSOProvider)}
+                    onSubmit={form.handleSubmit(updateSSOProvider)}
                     className="flex flex-col gap-4"
                 >
                     <FormField
@@ -171,7 +264,7 @@ export default function NewSSOProvider({ address }: NewSSOProviderProps) {
                             </FormItem>
                         )}
                     />
-                    <FormField
+                    {/* <FormField
                         control={form.control}
                         name="domain"
                         render={({ field }) => (
@@ -185,7 +278,7 @@ export default function NewSSOProvider({ address }: NewSSOProviderProps) {
                                 <FormMessage />
                             </FormItem>
                         )}
-                    />
+                    /> */}
                     <FormField
                         control={form.control}
                         name="entryPoint"
@@ -214,9 +307,9 @@ export default function NewSSOProvider({ address }: NewSSOProviderProps) {
                             </FormItem>
                         )}
                     />
-                    <FormField
+                    {/* <FormField
                         control={form.control}
-                        name="callbackUrl"
+                        name="backend"
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>
@@ -228,14 +321,60 @@ export default function NewSSOProvider({ address }: NewSSOProviderProps) {
                                 <FormMessage />
                             </FormItem>
                         )}
-                    />
+                    /> */}
                     <div>
                         <Button type="submit" disabled={loading}>
-                            {BUTTON_DONE_TEXT}
+                            <Save className="mr-2 h-4 w-4" />
+                            {BUTTON_SAVE}
                         </Button>
                     </div>
                 </form>
             </FormProvider>
+            <div>
+                {providerId && (
+                    <AlertDialog
+                        onOpenChange={(open) => !open && setIsDeleting(false)}
+                    >
+                        <AlertDialogTrigger asChild>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                disabled={isDeleting}
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                {BTN_RESET}
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                    Clear SSO config?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action is irreversible. All provider
+                                    config will be wiped off.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={resetProvider}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isDeleting ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Resetting...
+                                        </>
+                                    ) : (
+                                        "Reset"
+                                    )}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                )}
+            </div>
             <Resources
                 links={[
                     {

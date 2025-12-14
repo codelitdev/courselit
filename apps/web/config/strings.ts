@@ -152,6 +152,7 @@ export const responses = {
         "Last section cannot be removed from a digital download",
     certificate_demo_course_id_required:
         "CourseID is required for demo certificate",
+    provider_not_configured: "Configure the provider before enabling",
 };
 
 export const internal = {

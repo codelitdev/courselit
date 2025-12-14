@@ -1,9 +1,8 @@
 import { Address } from "@courselit/common-models";
 import {
-    Button,
+    // Button,
     Form,
     FormField,
-    IconButton,
     useToast,
 } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
@@ -22,6 +21,7 @@ import {
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { Clipboard } from "@courselit/icons";
+import { Button } from "@components/ui/button";
 
 interface NewApikeyProps {
     address: Address;
@@ -107,13 +107,14 @@ export default function NewApikey({
                         </p>
                         <div className="flex gap-2 mb-4">
                             <FormField name="apikey" value={apikey} disabled />
-                            <IconButton
+                            <Button
                                 className="px-3"
                                 onClick={copyApikey}
-                                variant="soft"
+                                size="icon"
+                                variant="outline"
                             >
                                 <Clipboard fontSize="small" />
-                            </IconButton>
+                            </Button>
                         </div>
                         <Link href={`/dashboard/settings?tab=API%20Keys`}>
                             <Button>{BUTTON_DONE_TEXT}</Button>

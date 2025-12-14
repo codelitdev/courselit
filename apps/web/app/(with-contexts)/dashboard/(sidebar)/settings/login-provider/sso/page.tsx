@@ -3,32 +3,42 @@
 import { useContext } from "react";
 import LoadingScreen from "@components/admin/loading-screen";
 import { checkPermission } from "@courselit/utils";
-import { AddressContext, ProfileContext } from "@components/contexts";
-import { UIConstants } from "@courselit/common-models";
+import {
+    AddressContext,
+    FeaturesContext,
+    ProfileContext,
+} from "@components/contexts";
+import { Constants, UIConstants } from "@courselit/common-models";
 import DashboardContent from "@components/admin/dashboard-content";
 import {
     SITE_MISCELLANEOUS_SETTING_HEADER,
     SITE_SETTINGS_PAGE_HEADING,
-    SSO_PROVIDER_NEW_HEADER,
+    SSO_PROVIDER_HEADER,
 } from "@ui-config/strings";
 import dynamic from "next/dynamic";
+import { redirect } from "next/navigation";
 const { permissions } = UIConstants;
 
-const SSOProviderNew = dynamic(
-    () => import("@/components/admin/settings/sso/new"),
-);
+const SSOProvider = dynamic(() => import("@/components/admin/settings/sso"));
 
 const breadcrumbs = [
     {
         label: SITE_SETTINGS_PAGE_HEADING,
         href: `/dashboard/settings?tab=${SITE_MISCELLANEOUS_SETTING_HEADER}`,
     },
-    { label: SSO_PROVIDER_NEW_HEADER, href: "#" },
+    { label: SSO_PROVIDER_HEADER, href: "#" },
 ];
 
 export default function Page() {
     const address = useContext(AddressContext);
     const { profile } = useContext(ProfileContext);
+    const features = useContext(FeaturesContext);
+
+    if (!features.includes(Constants.Features.SSO)) {
+        redirect(
+            `/dashboard/settings?tab=${SITE_MISCELLANEOUS_SETTING_HEADER}`,
+        );
+    }
 
     if (
         !profile ||
@@ -39,7 +49,7 @@ export default function Page() {
 
     return (
         <DashboardContent breadcrumbs={breadcrumbs}>
-            <SSOProviderNew address={address} />
+            <SSOProvider address={address} />
         </DashboardContent>
     );
 }

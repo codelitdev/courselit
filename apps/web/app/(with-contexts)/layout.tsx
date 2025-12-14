@@ -62,4 +62,5 @@ const formatSiteInfo = (siteinfo?: SiteInfo) => ({
     razorpayKey: siteinfo?.razorpayKey || defaultState.siteinfo.razorpayKey,
     lemonsqueezyKey:
         siteinfo?.lemonsqueezyKey || defaultState.siteinfo.lemonsqueezyKey,
+    logins: siteinfo?.logins || defaultState.siteinfo.logins,
 });

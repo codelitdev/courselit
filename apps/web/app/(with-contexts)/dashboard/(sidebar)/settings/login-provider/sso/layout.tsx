@@ -1,4 +1,4 @@
-import { APIKEY_NEW_HEADER } from "@ui-config/strings";
+import { SSO_PROVIDER_HEADER } from "@ui-config/strings";
 import type { Metadata, ResolvingMetadata } from "next";
 import { ReactNode } from "react";
 
@@ -7,7 +7,7 @@ export async function generateMetadata(
     parent: ResolvingMetadata,
 ): Promise<Metadata> {
     return {
-        title: `${APIKEY_NEW_HEADER} | ${(await parent)?.title?.absolute}`,
+        title: `${SSO_PROVIDER_HEADER} | ${(await parent)?.title?.absolute}`,
     };
 }
 

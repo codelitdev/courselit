@@ -73,6 +73,12 @@ const config: any = {
             };
         }),
         sso({
+            saml: {
+                enableInResponseToValidation: true,
+                requestTTL: 10 * 60 * 1000, // 10 minutes
+                clockSkew: 5 * 60 * 1000, // 5 minutes
+                requireTimestamps: true,
+            },
             fields: {
                 domain: "domain_string",
             },

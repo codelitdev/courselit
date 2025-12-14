@@ -4,6 +4,7 @@ import LoginForm from "./login-form";
 import { headers } from "next/headers";
 import { getAddressFromHeaders } from "@/app/actions";
 import { FetchBuilder } from "@courselit/utils";
+import { error } from "@/services/logger";
 
 export default async function LoginPage({
     searchParams,
@@ -25,23 +26,23 @@ export default async function LoginPage({
     return (
         <LoginForm
             redirectTo={redirectTo}
-            ssoProviders={await getSSOProviders(address)}
+            ssoProvider={await getSSOProvider(address)}
         />
     );
 }
 
-export const getSSOProviders = async (
+export const getSSOProvider = async (
     backend: string,
 ): Promise<
     | {
           providerId: string;
           domain: string;
-      }[]
+      }
     | undefined
 > => {
     const query = `
         query { 
-            ssoProviders: getSSOProviders {
+            ssoProvider: getSSOProvider {
                 providerId
                 domain
             }
@@ -55,9 +56,10 @@ export const getSSOProviders = async (
 
     try {
         const response = await fetch.exec();
-        return response.ssoProviders;
+        return response.ssoProvider;
     } catch (e: any) {
-        console.log("getSSOProviders", e.message); // eslint-disable-line no-console
-        return undefined;
+        error(`Error in fetching SSO provider`, {
+            stack: e.stack,
+        });
     }
 };

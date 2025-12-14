@@ -227,6 +227,7 @@ export const MAIL_REQUEST_FORM_SUBMIT_UPDATE_REQUEST_TEXT = "Update reason";
 export const SITE_CUSTOMISATIONS_SETTING_HEADER = "Code Injection";
 export const SITE_MISCELLANEOUS_SETTING_HEADER = "Miscellaneous";
 export const ALPHA_LABEL = "Alpha";
+export const BETA_LABEL = "Beta";
 export const SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD =
     "Code Injection in <head>";
 export const SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY =
@@ -576,13 +577,13 @@ export const APIKEY_CARD_DESCRIPTION =
 export const SSO_CARD_DESCRIPTION =
     "Let your existing users sign into the your school";
 export const SINGLE_SIGN_ON_HEADER = "Single sign-on (SSO)";
-export const LOGIN_METHODS_HEADER = "Login methods";
+export const LOGIN_METHODS_HEADER = "Login providers";
 export const LOGIN_METHODS_CARD_DESCRIPTION =
     "Control how your users access the school";
 export const APIKEY_EXISTING_TABLE_HEADER_CREATED = "Created";
 export const APIKEY_EXISTING_TABLE_HEADER_NAME = "Name";
 export const APIKEY_NEW_HEADER = "New API key";
-export const SSO_PROVIDER_NEW_HEADER = "New SSO Provider";
+export const SSO_PROVIDER_HEADER = "Configure SSO Provider";
 export const APIKEY_NEW_LABEL = "Name";
 export const SSO_PROVIDER_DOMAIN_LABEL = "Domain";
 export const SSO_PROVIDER_ENTRY_POINT_LABEL = "Entry point";
@@ -591,6 +592,7 @@ export const SSO_PROVIDER_CALLBACK_URL_LABEL = "Callback URL";
 export const SSO_PROVIDER_IDP_METADATA_LABEL = "IDP Metadata";
 export const SSO_PROVIDER_PROVIDER_ID_LABEL = "Provider ID";
 export const SSO_PROVIDER_SUCCESS_MESSAGE = "SSO provider added successfully";
+export const PROVIDER_RESET_SUCCESS_MESSAGE = "Provider reset successfully";
 export const APIKEY_NEW_BTN_CAPTION = "Create";
 export const APIKEY_NEW_GENERATED_KEY_HEADER = "Your new API key";
 export const APIKEY_NEW_GENERATED_KEY_DESC =

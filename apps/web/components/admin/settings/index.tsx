@@ -98,10 +98,6 @@ interface SettingsProps {
 const Settings = (props: SettingsProps) => {
     const [settings, setSettings] = useState<Partial<SiteInfo>>({});
     const [newSettings, setNewSettings] = useState<Partial<SiteInfo>>({});
-    const [ssoPage, setSSOPage] = useState(1);
-    const [ssoProviders, setSSOProviders] = useState<Record<string, string>[]>(
-        [],
-    );
     const [loading, setLoading] = useState(false);
     const selectedTab = [
         SITE_SETTINGS_SECTION_GENERAL,
@@ -161,20 +157,12 @@ const Settings = (props: SettingsProps) => {
                     keyId,
                     createdAt
                 }
-                ssoProviders: getSSOProviders {
-                    providerId
-                }
             }`;
         try {
             const fetchRequest = fetch.setPayload(query).build();
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
-            }
-            if (response.ssoProviders) {
-                setSSOProviders(
-                    response.ssoProviders as Record<string, string>[],
-                );
             }
         } catch (e) {}
     };
@@ -657,30 +645,6 @@ const Settings = (props: SettingsProps) => {
             ? newSettings.lemonsqueezySubscriptionYearlyVariantId
             : settings.lemonsqueezySubscriptionYearlyVariantId,
     });
-
-    const removeSSOProvider = async (providerId: string) => {
-        const query = `
-            mutation {
-                removed: removeSSOProvider(providerId: "${providerId}")
-            }
-        `;
-        try {
-            setLoading(true);
-            const fetchRequest = fetch.setPayload(query).build();
-            await fetchRequest.exec();
-            setSSOProviders(
-                ssoProviders.filter((item) => item.providerId !== providerId),
-            );
-        } catch (e: any) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: e.message,
-                variant: "destructive",
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const items = [
         SITE_SETTINGS_SECTION_GENERAL,
