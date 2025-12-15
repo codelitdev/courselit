@@ -18,6 +18,11 @@ import {
     PROVIDER_RESET_SUCCESS_MESSAGE,
     BTN_RESET,
     BUTTON_SAVE,
+    SSO_PROVIDER_CARD_HEADER,
+    SSO_PROVIDER_CARD_DESCRIPTION,
+    SSO_PROVIDER_SP_EMTPY,
+    SSO_PROVIDER_SP_ACS_LABEL,
+    SSO_PROVIDER_SP_ENTITY_ID_LABEL,
 } from "@ui-config/strings";
 import { useRouter } from "next/navigation";
 import { useForm, FormProvider } from "react-hook-form";
@@ -46,7 +51,16 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@components/ui/alert-dialog";
-import { Trash2, Loader2, Save } from "lucide-react";
+import { Trash2, Loader2, Save, Copy, Key } from "lucide-react";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@components/ui/card";
+import { Label } from "@components/ui/label";
 
 const formSchema = z.object({
     providerId: z
@@ -168,9 +182,6 @@ export default function SSOProvider({ address }: NewSSOProviderProps) {
                     title: TOAST_TITLE_SUCCESS,
                     description: SSO_PROVIDER_SUCCESS_MESSAGE,
                 });
-                router.push(
-                    `/dashboard/settings?tab=${SITE_MISCELLANEOUS_SETTING_HEADER}`,
-                );
             } else {
                 toast({
                     title: TOAST_TITLE_ERROR,
@@ -224,47 +235,69 @@ export default function SSOProvider({ address }: NewSSOProviderProps) {
         }
     };
 
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({
+            title: TOAST_TITLE_SUCCESS,
+            description: "URL copied to clipboard",
+        });
+    };
+
     return (
         <div className="flex flex-col gap-4">
             <h1 className="text-4xl font-semibold mb-4">
                 {SSO_PROVIDER_HEADER}
             </h1>
-            <FormProvider {...form}>
-                <form
-                    onSubmit={form.handleSubmit(updateSSOProvider)}
-                    className="flex flex-col gap-4"
-                >
-                    <FormField
-                        control={form.control}
-                        name="providerId"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>
-                                    {SSO_PROVIDER_PROVIDER_ID_LABEL}
-                                </FormLabel>
-                                <FormControl>
-                                    <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="idpMetadata"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>
-                                    {SSO_PROVIDER_IDP_METADATA_LABEL}
-                                </FormLabel>
-                                <FormControl>
-                                    <Textarea {...field} rows={10} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    {/* <FormField
+            <div className="flex flex-col lg:flex-row gap-4">
+                <Card className="w-full lg:w-1/2">
+                    <CardHeader>
+                        <CardTitle>{SSO_PROVIDER_CARD_HEADER}</CardTitle>
+                        <CardDescription>
+                            {SSO_PROVIDER_CARD_DESCRIPTION}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <FormProvider {...form}>
+                            <form
+                                onSubmit={form.handleSubmit(updateSSOProvider)}
+                                className="flex flex-col gap-4"
+                            >
+                                <FormField
+                                    control={form.control}
+                                    name="providerId"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {SSO_PROVIDER_PROVIDER_ID_LABEL}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="idpMetadata"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {
+                                                    SSO_PROVIDER_IDP_METADATA_LABEL
+                                                }
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Textarea
+                                                    {...field}
+                                                    rows={10}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                {/* <FormField
                         control={form.control}
                         name="domain"
                         render={({ field }) => (
@@ -279,35 +312,40 @@ export default function SSOProvider({ address }: NewSSOProviderProps) {
                             </FormItem>
                         )}
                     /> */}
-                    <FormField
-                        control={form.control}
-                        name="entryPoint"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>
-                                    {SSO_PROVIDER_ENTRY_POINT_LABEL}
-                                </FormLabel>
-                                <FormControl>
-                                    <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="cert"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>{SSO_PROVIDER_CERT_LABEL}</FormLabel>
-                                <FormControl>
-                                    <Textarea {...field} rows={10} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    {/* <FormField
+                                <FormField
+                                    control={form.control}
+                                    name="entryPoint"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {SSO_PROVIDER_ENTRY_POINT_LABEL}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="cert"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {SSO_PROVIDER_CERT_LABEL}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Textarea
+                                                    {...field}
+                                                    rows={10}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                {/* <FormField
                         control={form.control}
                         name="backend"
                         render={({ field }) => (
@@ -322,67 +360,139 @@ export default function SSOProvider({ address }: NewSSOProviderProps) {
                             </FormItem>
                         )}
                     /> */}
-                    <div>
-                        <Button type="submit" disabled={loading}>
-                            <Save className="mr-2 h-4 w-4" />
-                            {BUTTON_SAVE}
-                        </Button>
-                    </div>
-                </form>
-            </FormProvider>
-            <div>
-                {providerId && (
-                    <AlertDialog
-                        onOpenChange={(open) => !open && setIsDeleting(false)}
-                    >
-                        <AlertDialogTrigger asChild>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                disabled={isDeleting}
+                                <div>
+                                    <Button type="submit" disabled={loading}>
+                                        <Save className="mr-2 h-4 w-4" />
+                                        {BUTTON_SAVE}
+                                    </Button>
+                                </div>
+                            </form>
+                        </FormProvider>
+                        <div></div>
+                        <Resources
+                            links={[
+                                {
+                                    href: "https://docs.courselit.app/en/school/sso#add-sso-provider",
+                                    text: "Add SSO Provider",
+                                },
+                            ]}
+                        />
+                    </CardContent>
+                    <CardFooter>
+                        {providerId && (
+                            <AlertDialog
+                                onOpenChange={(open) =>
+                                    !open && setIsDeleting(false)
+                                }
                             >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                {BTN_RESET}
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                    Clear SSO config?
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    This action is irreversible. All provider
-                                    config will be wiped off.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                    onClick={resetProvider}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isDeleting ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Resetting...
-                                        </>
-                                    ) : (
-                                        "Reset"
-                                    )}
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                )}
+                                <AlertDialogTrigger asChild>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        disabled={isDeleting}
+                                    >
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        {BTN_RESET}
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>
+                                            Clear SSO config?
+                                        </AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action is irreversible. All
+                                            provider config will be wiped off.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>
+                                            Cancel
+                                        </AlertDialogCancel>
+                                        <AlertDialogAction
+                                            onClick={resetProvider}
+                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {isDeleting ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    Resetting...
+                                                </>
+                                            ) : (
+                                                "Reset"
+                                            )}
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        )}
+                    </CardFooter>
+                </Card>
+                <Card className="w-full lg:w-1/2">
+                    <CardHeader>
+                        <CardTitle>School Settings</CardTitle>
+                        <CardDescription>
+                            Configuration to be entered in your IDP (Okta, Azure
+                            AD, OneLogin etc.)
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {!providerId ? (
+                            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                                <Key className="h-8 w-8 mb-2 opacity-50" />
+                                <p>{SSO_PROVIDER_SP_EMTPY}</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div>
+                                    <Label>{SSO_PROVIDER_SP_ACS_LABEL}</Label>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            type="text"
+                                            disabled={true}
+                                            value={`${address.backend}/api/auth/sso/saml2/sp/acs/${providerId}`}
+                                        />
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() =>
+                                                copyToClipboard(
+                                                    `${address.backend}/api/auth/sso/saml2/sp/acs/${providerId}`,
+                                                )
+                                            }
+                                        >
+                                            <Copy className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label>
+                                        {SSO_PROVIDER_SP_ENTITY_ID_LABEL}
+                                    </Label>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            type="text"
+                                            disabled={true}
+                                            value={`${address.backend}/api/auth/sso/saml2/sp/metadata?providerId=${providerId}`}
+                                        />
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() =>
+                                                copyToClipboard(
+                                                    `${address.backend}/api/auth/sso/saml2/sp/metadata?providerId=${providerId}`,
+                                                )
+                                            }
+                                        >
+                                            <Copy className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
-            <Resources
-                links={[
-                    {
-                        href: "https://docs.courselit.app/en/school/sso#add-sso-provider",
-                        text: "Add SSO Provider",
-                    },
-                ]}
-            />
         </div>
     );
 }

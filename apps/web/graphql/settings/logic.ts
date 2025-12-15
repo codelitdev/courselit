@@ -13,6 +13,7 @@ import { checkPermission } from "@courselit/utils";
 import { Constants, LoginProvider, Typeface } from "@courselit/common-models";
 import ApikeyModel, { ApiKey } from "@models/ApiKey";
 import SSOProviderModel from "@models/SSOProvider";
+import AccountModel from "@models/Account";
 
 const { permissions } = constants;
 
@@ -231,7 +232,6 @@ export const updateSSOProvider = async ({
     entryPoint,
     cert,
     backend,
-    // domain,
     context: ctx,
 }: {
     providerId: string;
@@ -239,7 +239,6 @@ export const updateSSOProvider = async ({
     entryPoint: string;
     cert: string;
     backend: string;
-    // domain: string;
     context: GQLContext;
 }) => {
     checkIfAuthenticated(ctx);
@@ -252,14 +251,13 @@ export const updateSSOProvider = async ({
         throw new Error(responses.action_not_allowed);
     }
 
+    if (!providerId || !idpMetadata || !entryPoint || !cert || !backend) {
+        throw new Error(responses.provider_invalid_configuration);
+    }
+
     const existingSSOProvider = await SSOProviderModel.findOne({
-        providerId,
         domain: ctx.subdomain._id,
     });
-
-    if (existingSSOProvider) {
-        throw new Error(responses.sso_provider_already_exists);
-    }
 
     const backendUrl = new URL(backend);
 
@@ -285,6 +283,18 @@ export const updateSSOProvider = async ({
             {
                 upsert: true,
                 new: true,
+            },
+        );
+
+        await AccountModel.updateMany(
+            {
+                domain: ctx.subdomain._id,
+                providerId: existingSSOProvider?.providerId,
+            },
+            {
+                $set: {
+                    providerId,
+                },
             },
         );
 

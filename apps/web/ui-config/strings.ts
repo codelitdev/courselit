@@ -583,7 +583,14 @@ export const LOGIN_METHODS_CARD_DESCRIPTION =
 export const APIKEY_EXISTING_TABLE_HEADER_CREATED = "Created";
 export const APIKEY_EXISTING_TABLE_HEADER_NAME = "Name";
 export const APIKEY_NEW_HEADER = "New API key";
-export const SSO_PROVIDER_HEADER = "Configure SSO Provider";
+export const SSO_PROVIDER_HEADER = "SSO Provider";
+export const SSO_PROVIDER_CARD_HEADER = "IDP Configuration";
+export const SSO_PROVIDER_CARD_DESCRIPTION =
+    "Enter the values from your IDP (Okta, Azure AD, OneLogin, etc.)";
+export const SSO_PROVIDER_SP_EMTPY =
+    "Enter your IDP settings to see these settings";
+export const SSO_PROVIDER_SP_ACS_LABEL = "SAML ACS URL";
+export const SSO_PROVIDER_SP_ENTITY_ID_LABEL = "Audience URI (SP Entity ID)";
 export const APIKEY_NEW_LABEL = "Name";
 export const SSO_PROVIDER_DOMAIN_LABEL = "Domain";
 export const SSO_PROVIDER_ENTRY_POINT_LABEL = "Entry point";

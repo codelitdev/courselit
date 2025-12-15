@@ -153,6 +153,7 @@ export const responses = {
     certificate_demo_course_id_required:
         "CourseID is required for demo certificate",
     provider_not_configured: "Configure the provider before enabling",
+    provider_invalid_configuration: "Invalid provider configuration",
 };
 
 export const internal = {
