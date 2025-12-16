@@ -123,11 +123,13 @@ export default function NewApikey({
                 )}
                 {!apikey && (
                     <div className="flex gap-2">
-                        <Button disabled={!name || loading} sx={{ mr: 1 }}>
+                        <Button disabled={!name || loading}>
                             {APIKEY_NEW_BTN_CAPTION}
                         </Button>
                         <Link href={`/dashboard/settings?tab=API%20Keys`}>
-                            <Button variant="soft">{BUTTON_CANCEL_TEXT}</Button>
+                            <Button variant="secondary">
+                                {BUTTON_CANCEL_TEXT}
+                            </Button>
                         </Link>
                     </div>
                 )}
