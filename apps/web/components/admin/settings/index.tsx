@@ -490,6 +490,14 @@ const Settings = (props: SettingsProps) => {
         setNewSettings(Object.assign({}, newSettings, change));
     };
 
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({
+            title: TOAST_TITLE_SUCCESS,
+            description: "URL copied to clipboard",
+        });
+    };
+
     const handlePaymentSettingsSubmit = async (
         event: React.FormEvent<HTMLFormElement>,
     ) => {
