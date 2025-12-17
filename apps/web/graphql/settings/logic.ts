@@ -13,7 +13,6 @@ import { checkPermission } from "@courselit/utils";
 import { Constants, LoginProvider, Typeface } from "@courselit/common-models";
 import ApikeyModel, { ApiKey } from "@models/ApiKey";
 import SSOProviderModel from "@models/SSOProvider";
-import AccountModel from "@models/Account";
 
 const { permissions } = constants;
 
@@ -227,14 +226,12 @@ export const removeApikey = async (keyId: string, ctx: GQLContext) => {
 };
 
 export const updateSSOProvider = async ({
-    providerId,
     idpMetadata,
     entryPoint,
     cert,
     backend,
     context: ctx,
 }: {
-    providerId: string;
     idpMetadata: string;
     entryPoint: string;
     cert: string;
@@ -251,13 +248,9 @@ export const updateSSOProvider = async ({
         throw new Error(responses.action_not_allowed);
     }
 
-    if (!providerId || !idpMetadata || !entryPoint || !cert || !backend) {
+    if (!idpMetadata || !entryPoint || !cert || !backend) {
         throw new Error(responses.provider_invalid_configuration);
     }
-
-    const existingSSOProvider = await SSOProviderModel.findOne({
-        domain: ctx.subdomain._id,
-    });
 
     const backendUrl = new URL(backend);
 
@@ -267,11 +260,11 @@ export const updateSSOProvider = async ({
                 domain: ctx.subdomain._id,
             },
             {
-                providerId,
+                providerId: "sso",
                 samlConfig: JSON.stringify({
                     entryPoint,
                     cert,
-                    callbackUrl: `${backendUrl.origin}/api/auth/sso/saml2/callback/${providerId}`,
+                    callbackUrl: `${backendUrl.origin}/api/auth/sso/saml2/callback/sso`,
                     idpMetadata: {
                         metadata: idpMetadata,
                     },
@@ -283,18 +276,6 @@ export const updateSSOProvider = async ({
             {
                 upsert: true,
                 new: true,
-            },
-        );
-
-        await AccountModel.updateMany(
-            {
-                domain: ctx.subdomain._id,
-                providerId: existingSSOProvider?.providerId,
-            },
-            {
-                $set: {
-                    providerId,
-                },
             },
         );
 
@@ -326,12 +307,9 @@ export const getSSOProviderSettings = async (ctx: GQLContext) => {
     const samlConfig = JSON.parse(ssoProvider?.samlConfig || "{}");
 
     return {
-        providerId: ssoProvider?.providerId,
         idpMetadata: samlConfig?.idpMetadata?.metadata,
-        // domain: ssoProvider?.domain_string,
         entryPoint: samlConfig?.entryPoint,
         cert: samlConfig?.cert,
-        // callbackUrl: samlConfig?.callbackUrl,
     };
 };
 
@@ -349,6 +327,10 @@ export const getSSOProvider = async (ctx: GQLContext) => {
             domain_string: 1,
         },
     );
+
+    if (!ssoProvider) {
+        return null;
+    }
 
     return {
         providerId: ssoProvider.providerId,
@@ -385,12 +367,6 @@ export const getFeatures = async (ctx: GQLContext) => {
 
     return ctx.subdomain.features || [];
 };
-
-// export const getLoginProviders = async (ctx: GQLContext) => {
-//     return ctx.subdomain.settings.logins?.length
-//         ? ctx.subdomain.settings.logins
-//         : [Constants.LoginProvider.EMAIL];
-// };
 
 export const toggleLoginProvider = async ({
     provider,

@@ -64,7 +64,7 @@ const config: any = {
                         (await UserModel.findOne({ _id: user.id })
                             .select("userId")
                             .lean()) as unknown as any
-                    ).userId,
+                    )?.userId,
                 },
                 session: {
                     ...session,

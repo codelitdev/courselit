@@ -5,13 +5,10 @@ import { useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import {
     SITE_MISCELLANEOUS_SETTING_HEADER,
-    // SSO_PROVIDER_CALLBACK_URL_LABEL,
     SSO_PROVIDER_CERT_LABEL,
-    // SSO_PROVIDER_DOMAIN_LABEL,
     SSO_PROVIDER_ENTRY_POINT_LABEL,
     SSO_PROVIDER_IDP_METADATA_LABEL,
     SSO_PROVIDER_HEADER,
-    SSO_PROVIDER_PROVIDER_ID_LABEL,
     SSO_PROVIDER_SUCCESS_MESSAGE,
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
@@ -20,7 +17,6 @@ import {
     BUTTON_SAVE,
     SSO_PROVIDER_CARD_HEADER,
     SSO_PROVIDER_CARD_DESCRIPTION,
-    SSO_PROVIDER_SP_EMTPY,
     SSO_PROVIDER_SP_ACS_LABEL,
     SSO_PROVIDER_SP_ENTITY_ID_LABEL,
 } from "@ui-config/strings";
@@ -51,7 +47,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@components/ui/alert-dialog";
-import { Trash2, Loader2, Save, Copy, Key } from "lucide-react";
+import { Trash2, Loader2, Save, Copy } from "lucide-react";
 import {
     Card,
     CardContent,
@@ -63,18 +59,9 @@ import {
 import { Label } from "@components/ui/label";
 
 const formSchema = z.object({
-    providerId: z
-        .string()
-        .min(1, "Provider ID is required")
-        .regex(
-            /^[a-z-0-9]+$/,
-            "Provider ID can only contain lowercase letters and hyphens",
-        ),
     idpMetadata: z.string().min(1, "IDP Metadata is required"),
-    // domain: z.string().min(1, "Domain is required"),
     entryPoint: z.string().min(1, "Entry Point is required"),
     cert: z.string().min(1, "Certificate is required"),
-    // backend: z.string().min(1, "Callback URL is required"),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -97,9 +84,7 @@ export default function SSOProvider({ address }: NewSSOProviderProps) {
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            providerId: "",
             idpMetadata: "",
-            // domain: "",
             entryPoint: "",
             cert: "",
         },
@@ -110,7 +95,6 @@ export default function SSOProvider({ address }: NewSSOProviderProps) {
             const query = `
                 query {
                     ssoProvider: getSSOProviderSettings {
-                        providerId
                         idpMetadata
                         entryPoint
                         cert
@@ -126,7 +110,6 @@ export default function SSOProvider({ address }: NewSSOProviderProps) {
                 const response = await fetcher.exec();
                 const { ssoProvider } = response;
                 if (ssoProvider) {
-                    form.setValue("providerId", ssoProvider.providerId);
                     form.setValue("idpMetadata", ssoProvider.idpMetadata);
                     form.setValue("entryPoint", ssoProvider.entryPoint);
                     form.setValue("cert", ssoProvider.cert);
@@ -147,13 +130,11 @@ export default function SSOProvider({ address }: NewSSOProviderProps) {
         const query = `
             mutation (
                 $idpMetadata: String!, 
-                $providerId: String!, 
                 $entryPoint: String!, 
                 $cert: String!, 
                 $backend: String!
             ) {
                 ssoProvider: updateSSOProvider(
-                    providerId: $providerId
                     idpMetadata: $idpMetadata,
                     entryPoint: $entryPoint,
                     cert: $cert,
@@ -264,11 +245,11 @@ export default function SSOProvider({ address }: NewSSOProviderProps) {
                             >
                                 <FormField
                                     control={form.control}
-                                    name="providerId"
+                                    name="entryPoint"
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>
-                                                {SSO_PROVIDER_PROVIDER_ID_LABEL}
+                                                {SSO_PROVIDER_ENTRY_POINT_LABEL}
                                             </FormLabel>
                                             <FormControl>
                                                 <Input {...field} />
@@ -297,36 +278,6 @@ export default function SSOProvider({ address }: NewSSOProviderProps) {
                                         </FormItem>
                                     )}
                                 />
-                                {/* <FormField
-                        control={form.control}
-                        name="domain"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>
-                                    {SSO_PROVIDER_DOMAIN_LABEL}
-                                </FormLabel>
-                                <FormControl>
-                                    <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    /> */}
-                                <FormField
-                                    control={form.control}
-                                    name="entryPoint"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>
-                                                {SSO_PROVIDER_ENTRY_POINT_LABEL}
-                                            </FormLabel>
-                                            <FormControl>
-                                                <Input {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
                                 <FormField
                                     control={form.control}
                                     name="cert"
@@ -345,21 +296,6 @@ export default function SSOProvider({ address }: NewSSOProviderProps) {
                                         </FormItem>
                                     )}
                                 />
-                                {/* <FormField
-                        control={form.control}
-                        name="backend"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>
-                                    {SSO_PROVIDER_CALLBACK_URL_LABEL}
-                                </FormLabel>
-                                <FormControl>
-                                    <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    /> */}
                                 <div>
                                     <Button type="submit" disabled={loading}>
                                         <Save className="mr-2 h-4 w-4" />
@@ -437,59 +373,50 @@ export default function SSOProvider({ address }: NewSSOProviderProps) {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {!providerId ? (
-                            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                                <Key className="h-8 w-8 mb-2 opacity-50" />
-                                <p>{SSO_PROVIDER_SP_EMTPY}</p>
+                        <>
+                            <div>
+                                <Label>{SSO_PROVIDER_SP_ACS_LABEL}</Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        type="text"
+                                        disabled={true}
+                                        value={`${address.backend}/api/auth/sso/saml2/sp/acs/sso`}
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() =>
+                                            copyToClipboard(
+                                                `${address.backend}/api/auth/sso/saml2/sp/acs/sso`,
+                                            )
+                                        }
+                                    >
+                                        <Copy className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
-                        ) : (
-                            <>
-                                <div>
-                                    <Label>{SSO_PROVIDER_SP_ACS_LABEL}</Label>
-                                    <div className="flex gap-2">
-                                        <Input
-                                            type="text"
-                                            disabled={true}
-                                            value={`${address.backend}/api/auth/sso/saml2/sp/acs/${providerId}`}
-                                        />
-                                        <Button
-                                            variant="outline"
-                                            size="icon"
-                                            onClick={() =>
-                                                copyToClipboard(
-                                                    `${address.backend}/api/auth/sso/saml2/sp/acs/${providerId}`,
-                                                )
-                                            }
-                                        >
-                                            <Copy className="h-4 w-4" />
-                                        </Button>
-                                    </div>
+                            <div>
+                                <Label>{SSO_PROVIDER_SP_ENTITY_ID_LABEL}</Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        type="text"
+                                        disabled={true}
+                                        value={`${address.backend}/api/auth/sso/saml2/sp/metadata?providerId=sso`}
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() =>
+                                            copyToClipboard(
+                                                `${address.backend}/api/auth/sso/saml2/sp/metadata?providerId=sso`,
+                                            )
+                                        }
+                                    >
+                                        <Copy className="h-4 w-4" />
+                                    </Button>
                                 </div>
-                                <div>
-                                    <Label>
-                                        {SSO_PROVIDER_SP_ENTITY_ID_LABEL}
-                                    </Label>
-                                    <div className="flex gap-2">
-                                        <Input
-                                            type="text"
-                                            disabled={true}
-                                            value={`${address.backend}/api/auth/sso/saml2/sp/metadata?providerId=${providerId}`}
-                                        />
-                                        <Button
-                                            variant="outline"
-                                            size="icon"
-                                            onClick={() =>
-                                                copyToClipboard(
-                                                    `${address.backend}/api/auth/sso/saml2/sp/metadata?providerId=${providerId}`,
-                                                )
-                                            }
-                                        >
-                                            <Copy className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            </>
-                        )}
+                            </div>
+                        </>
                     </CardContent>
                 </Card>
             </div>

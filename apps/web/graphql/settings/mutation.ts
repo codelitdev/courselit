@@ -76,9 +76,7 @@ const mutations = {
     updateSSOProvider: {
         type: types.ssoProviderType,
         args: {
-            providerId: { type: new GraphQLNonNull(GraphQLString) },
             idpMetadata: { type: new GraphQLNonNull(GraphQLString) },
-            // domain: { type: new GraphQLNonNull(GraphQLString) },
             entryPoint: { type: new GraphQLNonNull(GraphQLString) },
             cert: { type: new GraphQLNonNull(GraphQLString) },
             backend: { type: new GraphQLNonNull(GraphQLString) },
@@ -86,16 +84,12 @@ const mutations = {
         resolve: async (
             _: any,
             {
-                providerId,
                 idpMetadata,
-                // domain,
                 entryPoint,
                 cert,
                 backend,
             }: {
-                providerId: string;
                 idpMetadata: string;
-                // domain: string;
                 entryPoint: string;
                 cert: string;
                 backend: string;
@@ -103,9 +97,7 @@ const mutations = {
             context: any,
         ) =>
             updateSSOProvider({
-                providerId,
                 idpMetadata,
-                // domain,
                 entryPoint,
                 cert,
                 backend,
