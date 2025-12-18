@@ -9,7 +9,7 @@ export default async function Page() {
     const profile = (await getProfile()) as Profile;
 
     if (!profile) {
-        await auth.signOut();
+        await auth.api.signOut();
     }
 
     if (checkPermission(profile?.permissions, ADMIN_PERMISSIONS)) {
