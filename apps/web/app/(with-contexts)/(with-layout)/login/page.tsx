@@ -31,15 +31,14 @@ export default async function LoginPage({
     );
 }
 
+export type SSOProvider = {
+    providerId: string;
+    domain: string;
+};
+
 export const getSSOProvider = async (
     backend: string,
-): Promise<
-    | {
-          providerId: string;
-          domain: string;
-      }
-    | undefined
-> => {
+): Promise<SSOProvider | undefined> => {
     const query = `
         query { 
             ssoProvider: getSSOProvider {

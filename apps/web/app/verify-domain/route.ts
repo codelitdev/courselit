@@ -184,7 +184,7 @@ export async function GET(req: Request) {
         }
     }
 
-    return Response.json({
+    const payload = {
         success: true,
         domain: domain!.name,
         domainId: domain!._id.toString(),
@@ -192,7 +192,10 @@ export async function GET(req: Request) {
         domainEmail: domain!.email,
         domainTitle: domain!.settings?.title,
         hideCourseLitBranding: domain!.settings?.hideCourseLitBranding,
-    });
+        ssoTrustedDomain: domain!.settings?.ssoTrustedDomain,
+    };
+
+    return Response.json(payload);
 }
 
 async function getSubscriberName(email: string): Promise<string | undefined> {

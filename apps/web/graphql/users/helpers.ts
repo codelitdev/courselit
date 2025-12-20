@@ -37,6 +37,7 @@ import {
 import CommunityPostModel from "@models/CommunityPost";
 import CommunityCommentModel from "@models/CommunityComment";
 import { deleteMedia } from "@/services/medialit";
+import Account from "@models/Account";
 
 const { permissions } = UIConstants;
 
@@ -360,9 +361,17 @@ export async function cleanupPersonalData(
         { $pull: { customers: userToDelete.userId } },
     );
 
+    await Account.deleteOne({
+        domain: ctx.subdomain._id,
+        userId: userToDelete._id,
+    });
+
     if (userToDelete.avatar?.mediaId) {
         await deleteMedia(userToDelete.avatar.mediaId);
     }
 
-    await UserModel.deleteOne({ _id: userToDelete._id });
+    await UserModel.deleteOne({
+        domain: ctx.subdomain._id,
+        _id: userToDelete._id,
+    });
 }

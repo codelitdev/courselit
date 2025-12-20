@@ -115,6 +115,7 @@ export const SIDEBAR: Sidebar = {
             { text: "Create a school", link: "en/schools/create" },
             { text: "Use custom domain", link: "en/schools/add-custom-domain" },
             { text: "Set up payments", link: "en/schools/set-up-payments" },
+            { text: "Single Sign-On", link: "en/schools/sso" },
             { text: "Delete a school", link: "en/schools/delete" },
         ],
         Users: [

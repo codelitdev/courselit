@@ -10,7 +10,7 @@ export const responses = {
     domain_super_admin_email_missing:
         "SUPER_ADMIN_EMAIL environment variable is not defined",
     not_valid_subscription: "No valid subscription found",
-    sign_in_mail_prefix: "Sign in to ",
+    sign_in_mail_prefix: "Sign in to",
     sign_in_mail_body: "Click the following link to sign in.",
     sign_in_link_text: "Sign in",
 

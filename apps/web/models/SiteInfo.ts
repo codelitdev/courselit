@@ -26,6 +26,7 @@ const SettingsSchema = new mongoose.Schema<SiteInfo>({
     lemonsqueezySubscriptionMonthlyVariantId: { type: String },
     lemonsqueezySubscriptionYearlyVariantId: { type: String },
     logins: { type: [String], enum: Object.values(Constants.LoginProvider) },
+    ssoTrustedDomain: { type: String },
 });
 
 export default SettingsSchema;

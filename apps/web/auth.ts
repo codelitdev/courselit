@@ -21,6 +21,12 @@ const db = client.db();
 const config: any = {
     appName: "CourseLit",
     secret: process.env.AUTH_SECRET,
+    account: {
+        accountLinking: {
+            enabled: true,
+            trustedProviders: ["sso", "email-otp"],
+        },
+    },
     advanced: {
         cookiePrefix: "courselit",
     },
@@ -35,17 +41,20 @@ const config: any = {
             async sendVerificationOTP({ email, otp, type }, ctx) {
                 const emailBody = pug.render(MagicCodeEmailTemplate, {
                     code: otp,
-                    hideCourseLitBranding:
-                        ctx!.headers?.get("hidecourselitbranding") || false,
+                    hideCourseLitBranding: ctx!.headers?.get(
+                        "hidecourselitbranding",
+                    )
+                        ? ctx!.headers?.get("hidecourselitbranding") === "true"
+                        : false,
                 });
 
                 await addMailJob({
                     to: [email],
-                    subject: `${responses.sign_in_mail_prefix} ${ctx!.headers?.get("domain")}`,
+                    subject: `${responses.sign_in_mail_prefix} ${ctx!.headers?.get("host")}`,
                     body: emailBody,
                     from: generateEmailFrom({
                         name:
-                            ctx!.headers?.get("domainTitle") ||
+                            ctx!.headers?.get("domaintitle") ||
                             ctx!.headers?.get("domain") ||
                             "",
                         email:
@@ -104,8 +113,11 @@ const config: any = {
         },
     },
     trustedOrigins: async (request: Request) => {
-        const backendAddress = await getBackendAddress(request.headers);
-        return [backendAddress];
+        const origins: string[] = [await getBackendAddress(request.headers)];
+        if (request.headers.get("ssotrusteddomain")) {
+            origins.push(request.headers.get("ssotrusteddomain")!);
+        }
+        return origins;
     },
 };
 

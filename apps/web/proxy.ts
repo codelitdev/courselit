@@ -27,6 +27,9 @@ export async function proxy(request: NextRequest) {
             "hideCourseLitBranding",
             resp.hideCourseLitBranding || false,
         );
+        if (resp.ssoTrustedDomain) {
+            requestHeaders.set("ssoTrustedDomain", resp.ssoTrustedDomain);
+        }
 
         if (request.nextUrl.pathname === "/favicon.ico") {
             try {

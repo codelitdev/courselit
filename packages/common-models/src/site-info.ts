@@ -27,4 +27,5 @@ export default interface SiteInfo {
     lemonsqueezySubscriptionYearlyVariantId?: string;
     lemonsqueezyWebhookSecret?: string;
     logins?: LoginProvider[];
+    ssoTrustedDomain?: string;
 }

@@ -75,7 +75,7 @@ export default function SSOProvider({ address }: NewSSOProviderProps) {
     const { toast } = useToast();
     const router = useRouter();
     const [isDeleting, setIsDeleting] = useState(false);
-    const [providerId, setProviderId] = useState();
+    const [isSSOProviderSet, setIsSSOProviderSet] = useState(false);
 
     const fetch = new FetchBuilder()
         .setUrl(`${address.backend}/api/graph`)
@@ -113,7 +113,7 @@ export default function SSOProvider({ address }: NewSSOProviderProps) {
                     form.setValue("idpMetadata", ssoProvider.idpMetadata);
                     form.setValue("entryPoint", ssoProvider.entryPoint);
                     form.setValue("cert", ssoProvider.cert);
-                    setProviderId(ssoProvider.providerId);
+                    setIsSSOProviderSet(true);
                 }
             } catch (err: any) {
                 toast({
@@ -315,7 +315,7 @@ export default function SSOProvider({ address }: NewSSOProviderProps) {
                         />
                     </CardContent>
                     <CardFooter>
-                        {providerId && (
+                        {isSSOProviderSet && (
                             <AlertDialog
                                 onOpenChange={(open) =>
                                     !open && setIsDeleting(false)

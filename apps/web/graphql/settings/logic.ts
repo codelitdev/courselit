@@ -279,6 +279,14 @@ export const updateSSOProvider = async ({
             },
         );
 
+        if (entryPoint) {
+            ctx.subdomain.settings.ssoTrustedDomain = new URL(
+                entryPoint,
+            ).origin;
+            (ctx.subdomain as any).markModified("settings");
+            await (ctx.subdomain as any).save();
+        }
+
         return ssoProvider;
     } catch (error: any) {
         throw error;
@@ -356,6 +364,10 @@ export const removeSSOProvider = async (ctx: GQLContext) => {
         value: false,
         ctx,
     });
+
+    ctx.subdomain.settings.ssoTrustedDomain = undefined;
+    (ctx.subdomain as any).markModified("settings");
+    await (ctx.subdomain as any).save();
 
     return true;
 };

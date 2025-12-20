@@ -4,8 +4,8 @@ const AccountSchema = new mongoose.Schema(
     {
         domain: { type: mongoose.Schema.Types.ObjectId, required: true },
         userId: { type: mongoose.Schema.Types.ObjectId, required: true },
-        accountId: { type: String, unique: true, required: true },
-        providerId: { type: String, required: true, unique: true },
+        accountId: { type: String, required: true },
+        providerId: { type: String, required: true },
         accessToken: String,
         refreshToken: String,
         accessTokenExpiresAt: Date,
