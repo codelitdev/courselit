@@ -42,8 +42,8 @@ type LoginStep = "email" | "otp" | "complete";
 interface LoginFormProps {
     onLoginComplete: (email: string, name: string) => void;
     ssoProvider?: SSOProvider;
-    type: MembershipEntityType;
-    id: string;
+    type?: MembershipEntityType;
+    id?: string;
 }
 
 export function LoginForm({
