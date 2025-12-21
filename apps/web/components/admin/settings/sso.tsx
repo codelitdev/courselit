@@ -20,7 +20,6 @@ import {
     SSO_PROVIDER_SP_ACS_LABEL,
     SSO_PROVIDER_SP_ENTITY_ID_LABEL,
 } from "@ui-config/strings";
-import { useRouter } from "next/navigation";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -73,7 +72,6 @@ interface NewSSOProviderProps {
 export default function SSOProvider({ address }: NewSSOProviderProps) {
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
-    const router = useRouter();
     const [isDeleting, setIsDeleting] = useState(false);
     const [isSSOProviderSet, setIsSSOProviderSet] = useState(false);
 
