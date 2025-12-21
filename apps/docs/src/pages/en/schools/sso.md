@@ -94,9 +94,19 @@ When the SSO login provider is configured and enabled, the customer will see a `
 
 ### 1. Email login is disabled and now I am locked out
 
+#### a. Cloud-hosted (courselit.app)
+
 You can re-enable the email provider from the [CourseLit](https://app.courselit.app) dashboard.
 
 ![Re-enable email login provider](/assets/schools/reenable-email-login-provider.png)
+
+#### b. Self-hosted
+
+You need to log in to your school's MongoDB instance and run the following query to re-enable the email provider:
+
+```javascript
+db.domains.updateMany({}, { $addToSet: { "settings.logins": "email" } });
+```
 
 ## Stuck somewhere?
 

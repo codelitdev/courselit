@@ -18,6 +18,7 @@ const config: Config = {
         "@/payments-new": "<rootDir>/payments-new",
         "@/graphql/(.*)": "<rootDir>/graphql/$1",
         "@/config/(.*)": "<rootDir>/config/$1",
+        "@/data/(.*)": "<rootDir>/data/$1",
         "@/lib/(.*)": "<rootDir>/lib/$1",
         "@/services/(.*)": "<rootDir>/services/$1",
         "@/templates/(.*)": "<rootDir>/templates/$1",
