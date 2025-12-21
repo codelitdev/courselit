@@ -319,7 +319,7 @@ export function LoginForm({
                     <Button
                         variant="outline"
                         onClick={async () => {
-                            const { error } = await authClient.signIn.sso({
+                            await authClient.signIn.sso({
                                 providerId: ssoProvider.providerId,
                                 callbackURL: `/checkout?type=${type}&id=${id}`,
                             });
