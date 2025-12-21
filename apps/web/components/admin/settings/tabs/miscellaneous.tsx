@@ -101,13 +101,6 @@ export default function MiscellaneousTab() {
         loadApiKeys();
     }, []);
 
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-        toast({
-            title: TOAST_TITLE_SUCCESS,
-            description: "Webhook URL copied to clipboard",
-        });
-    };
 
     const removeApikey = async (keyId: string) => {
         const query = `
