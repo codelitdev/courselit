@@ -68,7 +68,7 @@ import {
 import { Copy, Info } from "lucide-react";
 import { Input } from "@components/ui/input";
 import Resources from "@components/resources";
-import { AddressContext, FeaturesContext } from "@components/contexts";
+import { AddressContext } from "@components/contexts";
 import { Button } from "@components/ui/button";
 import dynamic from "next/dynamic";
 
@@ -110,7 +110,6 @@ const Settings = (props: SettingsProps) => {
         : SITE_SETTINGS_SECTION_GENERAL;
     const router = useRouter();
     const address = useContext(AddressContext);
-    const features = useContext(FeaturesContext);
     const { toast } = useToast();
 
     const fetch = new FetchBuilder()
