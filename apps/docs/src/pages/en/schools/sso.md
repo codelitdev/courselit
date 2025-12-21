@@ -108,6 +108,10 @@ You need to log in to your school's MongoDB instance and run the following query
 db.domains.updateMany({}, { $addToSet: { "settings.logins": "email" } });
 ```
 
+### 2. Can I add multiple SSO providers?
+
+Since this feature is currently in alpha, you can only add one SSO provider at a time. We want to make sure that the feature is stable before adding more providers.
+
 ## Stuck somewhere?
 
 We are always here for you. Come chat with us in our <a href="https://discord.com/invite/GR4bQsN" target="_blank">Discord</a> channel or send a tweet at <a href="https://twitter.com/courselit" target="_blank">@CourseLit</a>.
