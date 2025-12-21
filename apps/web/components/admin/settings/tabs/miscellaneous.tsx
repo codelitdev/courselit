@@ -21,7 +21,6 @@ import {
     LOGIN_METHODS_CARD_DESCRIPTION,
     LOGIN_METHODS_HEADER,
     TOAST_TITLE_ERROR,
-    TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import { useContext, useEffect, useState } from "react";
 import {
@@ -100,7 +99,6 @@ export default function MiscellaneousTab() {
 
         loadApiKeys();
     }, []);
-
 
     const removeApikey = async (keyId: string) => {
         const query = `

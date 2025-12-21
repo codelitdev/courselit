@@ -313,8 +313,7 @@ export default function LoginForm({
                                     variant="outline"
                                     onClick={async () => {
                                         await authClient.signIn.sso({
-                                            providerId:
-                                                ssoProvider.providerId,
+                                            providerId: ssoProvider.providerId,
                                             callbackURL: "/dashboard",
                                         });
                                     }}
