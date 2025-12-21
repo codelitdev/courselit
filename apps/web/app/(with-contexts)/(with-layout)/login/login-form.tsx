@@ -312,12 +312,11 @@ export default function LoginForm({
                                 <Button
                                     variant="outline"
                                     onClick={async () => {
-                                        const { error } =
-                                            await authClient.signIn.sso({
-                                                providerId:
-                                                    ssoProvider.providerId,
-                                                callbackURL: "/dashboard",
-                                            });
+                                        await authClient.signIn.sso({
+                                            providerId:
+                                                ssoProvider.providerId,
+                                            callbackURL: "/dashboard",
+                                        });
                                     }}
                                     className="w-full lg:w-[360px] mx-auto"
                                 >
