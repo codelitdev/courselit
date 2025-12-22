@@ -3,10 +3,12 @@ import { responses } from "../../config/strings";
 import currencies from "@/data/currencies.json";
 import {
     Constants,
+    LoginProvider,
     PaymentMethod,
     SiteInfo,
     UIConstants,
 } from "@courselit/common-models";
+import GQLContext from "@models/GQLContext";
 
 const currencyISOCodes = currencies.map((currency) =>
     currency.isoCode?.toLowerCase(),
@@ -105,3 +107,26 @@ export const getPaymentInvalidException = (paymentMethod: string) =>
             responses.payment_settings_invalid_suffix
         }`,
     );
+
+export async function saveLoginProvider({
+    ctx,
+    value,
+    provider,
+}: {
+    ctx: GQLContext;
+    value: boolean;
+    provider: LoginProvider;
+}) {
+    const loginsSet = new Set(ctx.subdomain.settings.logins || []);
+    if (value) {
+        loginsSet.add(provider);
+    } else {
+        loginsSet.delete(provider);
+    }
+    const logins = Array.from(loginsSet);
+    if (!logins.length) {
+        logins.push(Constants.LoginProvider.EMAIL);
+    }
+    ctx.subdomain.settings.logins = logins;
+    await (ctx.subdomain as any).save();
+}

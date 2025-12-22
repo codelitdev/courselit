@@ -23,14 +23,6 @@ import {
     BUTTON_SAVE,
     SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
     SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY,
-    SITE_APIKEYS_SETTING_HEADER,
-    APIKEY_NEW_BUTTON,
-    APIKEY_EXISTING_HEADER,
-    APIKEY_EXISTING_TABLE_HEADER_CREATED,
-    APIKEY_EXISTING_TABLE_HEADER_NAME,
-    APIKEY_REMOVE_BTN,
-    APIKEY_REMOVE_DIALOG_HEADER,
-    APIKYE_REMOVE_DIALOG_DESC,
     SITE_MAILS_HEADER,
     SITE_MAILING_ADDRESS_SETTING_HEADER,
     SITE_MAILING_ADDRESS_SETTING_EXPLANATION,
@@ -48,7 +40,7 @@ import {
     SITE_SETTINGS_LEMONSQUEEZY_SUB_MONTHLY_TEXT,
     SITE_SETTINGS_LEMONSQUEEZY_SUB_YEARLY_TEXT,
     SETTINGS_RESOURCE_PAYMENT,
-    SETTINGS_RESOURCE_API,
+    SITE_MISCELLANEOUS_SETTING_HEADER,
 } from "@/ui-config/strings";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
@@ -61,16 +53,9 @@ import {
     Tabbs,
     Form,
     FormField,
-    Button,
-    Link,
-    Table,
-    TableHead,
-    TableBody,
-    TableRow,
-    Dialog2,
     PageBuilderPropertyHeader,
-    Checkbox,
     useToast,
+    Checkbox,
 } from "@courselit/components-library";
 import { useRouter } from "next/navigation";
 import {
@@ -84,6 +69,10 @@ import { Copy, Info } from "lucide-react";
 import { Input } from "@components/ui/input";
 import Resources from "@components/resources";
 import { AddressContext } from "@components/contexts";
+import { Button } from "@components/ui/button";
+import dynamic from "next/dynamic";
+
+const MiscellaneousTab = dynamic(() => import("./tabs/miscellaneous"));
 
 const {
     PAYMENT_METHOD_PAYPAL,
@@ -103,28 +92,19 @@ interface SettingsProps {
         | typeof SITE_SETTINGS_SECTION_PAYMENT
         | typeof SITE_MAILS_HEADER
         | typeof SITE_CUSTOMISATIONS_SETTING_HEADER
-        | typeof SITE_APIKEYS_SETTING_HEADER;
+        | typeof SITE_MISCELLANEOUS_SETTING_HEADER;
 }
 
 const Settings = (props: SettingsProps) => {
     const [settings, setSettings] = useState<Partial<SiteInfo>>({});
     const [newSettings, setNewSettings] = useState<Partial<SiteInfo>>({});
-
-    type ApiKeyListItem = {
-        name: string;
-        keyId: string;
-        createdAt?: string | number | Date;
-    };
-
-    const [apikeyPage, setApikeyPage] = useState(1);
-    const [apikeys, setApikeys] = useState<ApiKeyListItem[]>([]);
     const [loading, setLoading] = useState(false);
     const selectedTab = [
         SITE_SETTINGS_SECTION_GENERAL,
         SITE_SETTINGS_SECTION_PAYMENT,
         SITE_MAILS_HEADER,
         SITE_CUSTOMISATIONS_SETTING_HEADER,
-        SITE_APIKEYS_SETTING_HEADER,
+        SITE_MISCELLANEOUS_SETTING_HEADER,
     ].includes(props.selectedTab)
         ? props.selectedTab
         : SITE_SETTINGS_SECTION_GENERAL;
@@ -182,9 +162,6 @@ const Settings = (props: SettingsProps) => {
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
-            }
-            if (response.apikeys) {
-                setApikeys(response.apikeys as ApiKeyListItem[]);
             }
         } catch (e) {}
     };
@@ -512,6 +489,14 @@ const Settings = (props: SettingsProps) => {
         setNewSettings(Object.assign({}, newSettings, change));
     };
 
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({
+            title: TOAST_TITLE_SUCCESS,
+            description: "URL copied to clipboard",
+        });
+    };
+
     const handlePaymentSettingsSubmit = async (
         event: React.FormEvent<HTMLFormElement>,
     ) => {
@@ -668,43 +653,13 @@ const Settings = (props: SettingsProps) => {
             : settings.lemonsqueezySubscriptionYearlyVariantId,
     });
 
-    const removeApikey = async (keyId: string) => {
-        const query = `
-            mutation {
-                removed: removeApikey(keyId: "${keyId}")
-            }
-        `;
-        try {
-            setLoading(true);
-            const fetchRequest = fetch.setPayload(query).build();
-            await fetchRequest.exec();
-            setApikeys(apikeys.filter((item) => item.keyId !== keyId));
-        } catch (e: any) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: e.message,
-                variant: "destructive",
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const items = [
         SITE_SETTINGS_SECTION_GENERAL,
         SITE_SETTINGS_SECTION_PAYMENT,
         SITE_MAILS_HEADER,
         SITE_CUSTOMISATIONS_SETTING_HEADER,
-        SITE_APIKEYS_SETTING_HEADER,
+        SITE_MISCELLANEOUS_SETTING_HEADER,
     ];
-
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-        toast({
-            title: TOAST_TITLE_SUCCESS,
-            description: "Webhook URL copied to clipboard",
-        });
-    };
 
     return (
         <div>
@@ -1124,7 +1079,7 @@ const Settings = (props: SettingsProps) => {
                             type="submit"
                             value={BUTTON_SAVE}
                             color="primary"
-                            variant="outlined"
+                            variant="outline"
                             disabled={
                                 settings.mailingAddress ===
                                     newSettings.mailingAddress || loading
@@ -1159,7 +1114,7 @@ const Settings = (props: SettingsProps) => {
                             type="submit"
                             value={BUTTON_SAVE}
                             color="primary"
-                            variant="outlined"
+                            variant="outline"
                             disabled={
                                 (settings.codeInjectionHead ===
                                     newSettings.codeInjectionHead &&
@@ -1172,76 +1127,7 @@ const Settings = (props: SettingsProps) => {
                         </Button>
                     </div>
                 </Form>
-                <div className="flex flex-col gap-4 pt-4">
-                    <div className="flex justify-between">
-                        <h2 className="text-lg font-semibold">
-                            {APIKEY_EXISTING_HEADER}
-                        </h2>
-                        <Link href={`/dashboard/settings/apikeys/new`}>
-                            <Button>{APIKEY_NEW_BUTTON}</Button>
-                        </Link>
-                    </div>
-                    <Table aria-label="API keys" className="mb-4">
-                        <TableHead className="border-0 border-b border-slate-200">
-                            <td>{APIKEY_EXISTING_TABLE_HEADER_NAME}</td>
-                            <td>{APIKEY_EXISTING_TABLE_HEADER_CREATED}</td>
-                            <td align="right"> </td>
-                        </TableHead>
-                        <TableBody
-                            endReached={true}
-                            page={apikeyPage}
-                            onPageChange={(value: number) => {
-                                setApikeyPage(value);
-                            }}
-                        >
-                            {apikeys.map(
-                                (item: ApiKeyListItem, index: number) => (
-                                    <TableRow key={item.name}>
-                                        <td className="py-4">{item.name}</td>
-                                        <td>
-                                            {new Date(
-                                                item.createdAt ?? 0,
-                                            ).toLocaleDateString()}
-                                        </td>
-                                        <td align="right">
-                                            <Dialog2
-                                                title={
-                                                    APIKEY_REMOVE_DIALOG_HEADER
-                                                }
-                                                trigger={
-                                                    <Button variant="soft">
-                                                        {APIKEY_REMOVE_BTN}
-                                                    </Button>
-                                                }
-                                                okButton={
-                                                    <Button
-                                                        onClick={() =>
-                                                            removeApikey(
-                                                                item.keyId,
-                                                            )
-                                                        }
-                                                    >
-                                                        {APIKEY_REMOVE_BTN}
-                                                    </Button>
-                                                }
-                                            >
-                                                {APIKYE_REMOVE_DIALOG_DESC}
-                                            </Dialog2>
-                                        </td>
-                                    </TableRow>
-                                ),
-                            )}
-                        </TableBody>
-                    </Table>
-                    <Resources
-                        links={[
-                            {
-                                href: "https://docs.courselit.app/en/developers/introduction",
-                                text: SETTINGS_RESOURCE_API,
-                            },
-                        ]}
-                    />
-                </div>
+                <MiscellaneousTab />
             </Tabbs>
         </div>
     );

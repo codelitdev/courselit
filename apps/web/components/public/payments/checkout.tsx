@@ -36,6 +36,7 @@ import Script from "next/script";
 import { Button, Header3, Text1 } from "@courselit/page-primitives";
 import { PaymentPlanCard } from "./payment-plan-card";
 import { MobileOrderSummary, DesktopOrderSummary } from "./order-summary";
+import { SSOProvider } from "@/app/(with-contexts)/(with-layout)/login/page";
 const { PaymentPlanType: paymentPlanType } = Constants;
 
 export interface Product {
@@ -54,6 +55,9 @@ export interface CheckoutScreenProps {
     product: Product;
     paymentPlans: PaymentPlan[];
     includedProducts: Course[];
+    ssoProvider?: SSOProvider;
+    type?: MembershipEntityType;
+    id?: string;
 }
 
 const formSchema = z.object({
@@ -65,6 +69,9 @@ export default function Checkout({
     product,
     paymentPlans,
     includedProducts,
+    ssoProvider,
+    type,
+    id,
 }: CheckoutScreenProps) {
     const siteinfo = useContext(SiteInfoContext);
     const { profile } = useContext(ProfileContext);
@@ -397,6 +404,9 @@ export default function Checkout({
                                             onLoginComplete={
                                                 handleLoginComplete
                                             }
+                                            ssoProvider={ssoProvider}
+                                            type={type}
+                                            id={id}
                                         />
                                     ) : (
                                         <div className="text-sm space-y-2">

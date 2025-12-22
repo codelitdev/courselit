@@ -68,3 +68,5 @@ export * from "./notification";
 export * from "./course";
 export * from "./activity-type";
 export * from "./email-event-action";
+export * from "./login-provider";
+export * from "./features";

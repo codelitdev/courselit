@@ -2,6 +2,9 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import LoginForm from "./login-form";
 import { headers } from "next/headers";
+import { getAddressFromHeaders } from "@/app/actions";
+import { FetchBuilder } from "@courselit/utils";
+import { error } from "@/services/logger";
 
 export default async function LoginPage({
     searchParams,
@@ -14,10 +17,48 @@ export default async function LoginPage({
     });
 
     const redirectTo = (await searchParams).redirect as string | undefined;
+    const address = await getAddressFromHeaders(headers);
 
     if (session) {
         redirect(redirectTo || "/dashboard");
     }
 
-    return <LoginForm redirectTo={redirectTo} />;
+    return (
+        <LoginForm
+            redirectTo={redirectTo}
+            ssoProvider={await getSSOProvider(address)}
+        />
+    );
 }
+
+export type SSOProvider = {
+    providerId: string;
+    domain: string;
+};
+
+export const getSSOProvider = async (
+    backend: string,
+): Promise<SSOProvider | undefined> => {
+    const query = `
+        query { 
+            ssoProvider: getSSOProvider {
+                providerId
+                domain
+            }
+        }
+        `;
+    const fetch = new FetchBuilder()
+        .setUrl(`${backend}/api/graph`)
+        .setPayload({ query })
+        .setIsGraphQLEndpoint(true)
+        .build();
+
+    try {
+        const response = await fetch.exec();
+        return response.ssoProvider;
+    } catch (e: any) {
+        error(`Error in fetching SSO provider`, {
+            stack: e.stack,
+        });
+    }
+};

@@ -1,10 +1,15 @@
 import mongoose from "mongoose";
 import { SettingsSchema } from "./site-info";
-import { Domain as PublicDomain } from "@courselit/common-models";
+import {
+    Constants,
+    Features,
+    Domain as PublicDomain,
+} from "@courselit/common-models";
 
 export interface Domain extends PublicDomain {
     _id: mongoose.Types.ObjectId;
     lastEditedThemeId?: string;
+    features?: Features[];
 }
 
 export const DomainSchema = new mongoose.Schema<Domain>(
@@ -37,6 +42,11 @@ export const DomainSchema = new mongoose.Schema<Domain>(
                 lastMonthlyCountUpdate: { type: Date, default: Date.now },
             }),
         }),
+        features: {
+            type: [String],
+            enum: Object.values(Constants.Features),
+            default: [],
+        },
     },
     {
         timestamps: true,

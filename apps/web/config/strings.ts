@@ -10,7 +10,7 @@ export const responses = {
     domain_super_admin_email_missing:
         "SUPER_ADMIN_EMAIL environment variable is not defined",
     not_valid_subscription: "No valid subscription found",
-    sign_in_mail_prefix: "Sign in to ",
+    sign_in_mail_prefix: "Sign in to",
     sign_in_mail_body: "Click the following link to sign in.",
     sign_in_link_text: "Sign in",
 
@@ -137,6 +137,8 @@ export const responses = {
     lead_magnet_invalid_settings:
         "Product must have exactly one free payment plan to enable lead magnet",
     certificate_invalid_settings: "Certificate can only be enabled for courses",
+    sso_provider_already_exists:
+        "A SSO provider with the same provider ID already exists",
 
     // api responses
     digital_download_no_files:
@@ -150,6 +152,8 @@ export const responses = {
         "Last section cannot be removed from a digital download",
     certificate_demo_course_id_required:
         "CourseID is required for demo certificate",
+    provider_not_configured: "Configure the provider before enabling",
+    provider_invalid_configuration: "Invalid provider configuration",
 };
 
 export const internal = {

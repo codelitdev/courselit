@@ -3,11 +3,13 @@
 import { AddressContext } from "@components/contexts";
 import Checkout, { Product } from "@components/public/payments/checkout";
 import { Constants, PaymentPlan, Course } from "@courselit/common-models";
+import type { MembershipEntityType } from "@courselit/common-models";
 import { useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useContext, useEffect, useState } from "react";
+import type { SSOProvider } from "../login/page";
 
 const { MembershipEntityType } = Constants;
 
@@ -21,6 +23,7 @@ export default function ProductCheckout() {
     const [product, setProduct] = useState<Product | null>(null);
     const [paymentPlans, setPaymentPlans] = useState<PaymentPlan[]>([]);
     const [includedProducts, setIncludedProducts] = useState<Course[]>([]);
+    const [ssoProvider, setSSOProvider] = useState<SSOProvider | undefined>();
 
     const getIncludedProducts = useCallback(async () => {
         const query = `
@@ -94,6 +97,10 @@ export default function ProductCheckout() {
                     }
                     defaultPaymentPlan
                 }
+                ssoProvider: getSSOProvider {
+                    providerId
+                    domain
+                }
             }
         `;
         const fetch = new FetchBuilder()
@@ -118,6 +125,9 @@ export default function ProductCheckout() {
                     title: TOAST_TITLE_ERROR,
                     description: "Course not found",
                 });
+            }
+            if (response.ssoProvider) {
+                setSSOProvider(response.ssoProvider);
             }
         } catch (err: any) {
             toast({
@@ -154,6 +164,10 @@ export default function ProductCheckout() {
                     joiningReasonText
                     defaultPaymentPlan
                 }
+                ssoProvider: getSSOProvider {
+                    providerId
+                    domain
+                }
             }
         `;
         const fetch = new FetchBuilder()
@@ -179,6 +193,9 @@ export default function ProductCheckout() {
                     title: TOAST_TITLE_ERROR,
                     description: "Community not found",
                 });
+            }
+            if (response.ssoProvider) {
+                setSSOProvider(response.ssoProvider);
             }
         } catch (err: any) {
             toast({
@@ -214,6 +231,9 @@ export default function ProductCheckout() {
             product={product}
             paymentPlans={paymentPlans}
             includedProducts={includedProducts}
+            ssoProvider={ssoProvider}
+            type={entityType as MembershipEntityType | undefined}
+            id={entityId as string | undefined}
         />
     );
 }

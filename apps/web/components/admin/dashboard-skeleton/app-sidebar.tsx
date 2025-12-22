@@ -39,6 +39,11 @@ import {
     SIDEBAR_MENU_PAGES,
     SIDEBAR_MENU_SETTINGS,
     SIDEBAR_MENU_USERS,
+    SITE_CUSTOMISATIONS_SETTING_HEADER,
+    SITE_MISCELLANEOUS_SETTING_HEADER,
+    SITE_SETTINGS_SECTION_GENERAL,
+    SITE_SETTINGS_SECTION_MAILS,
+    SITE_SETTINGS_SECTION_PAYMENT,
 } from "@ui-config/strings";
 import { NavSecondary } from "./nav-secondary";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -242,35 +247,39 @@ function getSidebarItems({
     if (profile.permissions!.includes(permissions.manageSettings)) {
         const items = [
             {
-                title: "Branding",
-                url: "/dashboard/settings?tab=Branding",
-                isActive:
-                    `${path}?tab=${tab}` === "/dashboard/settings?tab=Branding",
-            },
-            {
-                title: "Payment",
-                url: "/dashboard/settings?tab=Payment",
-                isActive:
-                    `${path}?tab=${tab}` === "/dashboard/settings?tab=Payment",
-            },
-            {
-                title: "Mails",
-                url: "/dashboard/settings?tab=Mails",
-                isActive:
-                    `${path}?tab=${tab}` === "/dashboard/settings?tab=Mails",
-            },
-            {
-                title: "Code injection",
-                url: "/dashboard/settings?tab=Code%20Injection",
+                title: SITE_SETTINGS_SECTION_GENERAL,
+                url: `/dashboard/settings?tab=${SITE_SETTINGS_SECTION_GENERAL}`,
                 isActive:
                     `${path}?tab=${tab}` ===
-                    "/dashboard/settings?tab=Code Injection",
+                    `/dashboard/settings?tab=${SITE_SETTINGS_SECTION_GENERAL}`,
             },
             {
-                title: "API Keys",
-                url: "/dashboard/settings?tab=API%20Keys",
+                title: SITE_SETTINGS_SECTION_PAYMENT,
+                url: `/dashboard/settings?tab=${SITE_SETTINGS_SECTION_PAYMENT}`,
                 isActive:
-                    `${path}?tab=${tab}` === "/dashboard/settings?tab=API Keys",
+                    `${path}?tab=${tab}` ===
+                    `/dashboard/settings?tab=${SITE_SETTINGS_SECTION_PAYMENT}`,
+            },
+            {
+                title: SITE_SETTINGS_SECTION_MAILS,
+                url: `/dashboard/settings?tab=${SITE_SETTINGS_SECTION_MAILS}`,
+                isActive:
+                    `${path}?tab=${tab}` ===
+                    `/dashboard/settings?tab=${SITE_SETTINGS_SECTION_MAILS}`,
+            },
+            {
+                title: SITE_CUSTOMISATIONS_SETTING_HEADER,
+                url: `/dashboard/settings?tab=${encodeURIComponent(SITE_CUSTOMISATIONS_SETTING_HEADER)}`,
+                isActive:
+                    `${path}?tab=${tab}` ===
+                    `/dashboard/settings?tab=${SITE_CUSTOMISATIONS_SETTING_HEADER}`,
+            },
+            {
+                title: SITE_MISCELLANEOUS_SETTING_HEADER,
+                url: `/dashboard/settings?tab=${SITE_MISCELLANEOUS_SETTING_HEADER}`,
+                isActive:
+                    `${path}?tab=${tab}` ===
+                    `/dashboard/settings?tab=${SITE_MISCELLANEOUS_SETTING_HEADER}`,
             },
         ];
         navMainItems.push({

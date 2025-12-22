@@ -7,6 +7,7 @@ import { headers } from "next/headers";
 import connectToDatabase from "../../services/db";
 import { warn } from "@/services/logger";
 import SubscriberModel, { Subscriber } from "@models/Subscriber";
+import { Constants } from "@courselit/common-models";
 
 const { domainNameForSingleTenancy, schoolNameForSingleTenancy } = constants;
 
@@ -107,8 +108,6 @@ export async function GET(req: Request) {
 
             const currentDate = new Date();
             const dateAfter24Hours = new Date(currentDate.getTime() + 86400000);
-            // domain.checkSubscriptionStatusAfter = dateAfter24Hours;
-            // await (domain as any).save({ timestamps: true });
             await DomainModel.findOneAndUpdate(
                 { _id: domain!._id },
                 { $set: { checkSubscriptionStatusAfter: dateAfter24Hours } },
@@ -145,7 +144,13 @@ export async function GET(req: Request) {
                     },
                     settings: {
                         title: schoolNameForSingleTenancy,
+                        logins: [Constants.LoginProvider.EMAIL],
                     },
+                    features: [
+                        Constants.Features.SSO,
+                        Constants.Features.API,
+                        Constants.Features.LOG,
+                    ],
                 },
                 {
                     upsert: true,
@@ -179,7 +184,7 @@ export async function GET(req: Request) {
         }
     }
 
-    return Response.json({
+    const payload = {
         success: true,
         domain: domain!.name,
         domainId: domain!._id.toString(),
@@ -187,7 +192,10 @@ export async function GET(req: Request) {
         domainEmail: domain!.email,
         domainTitle: domain!.settings?.title,
         hideCourseLitBranding: domain!.settings?.hideCourseLitBranding,
-    });
+        ssoTrustedDomain: domain!.settings?.ssoTrustedDomain,
+    };
+
+    return Response.json(payload);
 }
 
 async function getSubscriberName(email: string): Promise<string | undefined> {

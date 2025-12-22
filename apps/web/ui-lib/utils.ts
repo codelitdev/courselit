@@ -2,6 +2,7 @@ import type {
     CommunityMemberStatus,
     CommunityReportStatus,
     Course,
+    Features,
     Group,
     Membership,
     MembershipRole,
@@ -150,6 +151,7 @@ export const getSiteInfo = async (
                     lemonsqueezyOneTimeVariantId,
                     lemonsqueezySubscriptionMonthlyVariantId,
                     lemonsqueezySubscriptionYearlyVariantId,
+                    logins,
                 },
             }
         }
@@ -175,6 +177,7 @@ export const getFullSiteSetup = async (
           settings: SiteInfo;
           theme: Theme;
           page: FrontEndPage;
+          features: Features[];
       }
     | undefined
 > => {
@@ -204,6 +207,7 @@ export const getFullSiteSetup = async (
                 },
                 robotsAllowed,
             }
+            features: getFeatures
         }
         `;
     const fetch = new FetchBuilder()
@@ -228,6 +232,7 @@ export const getFullSiteSetup = async (
             settings,
             theme: transformedTheme,
             page: response.page,
+            features: response.features,
         };
     } catch (e: any) {
         console.log("getSiteInfo", e.message); // eslint-disable-line no-console

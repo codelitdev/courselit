@@ -11,6 +11,7 @@ import { mongodbAdapter } from "@/ba-multitenant-adapter";
 import { updateUserAfterCreationViaAuth } from "./graphql/users/logic";
 import UserModel from "@models/User";
 import { getBackendAddress } from "./app/actions";
+import { sso } from "@better-auth/sso";
 
 const client = new MongoClient(
     process.env.DB_CONNECTION_STRING || "mongodb://localhost:27017",
@@ -20,6 +21,12 @@ const db = client.db();
 const config: any = {
     appName: "CourseLit",
     secret: process.env.AUTH_SECRET,
+    account: {
+        accountLinking: {
+            enabled: true,
+            trustedProviders: ["sso", "email-otp"],
+        },
+    },
     advanced: {
         cookiePrefix: "courselit",
     },
@@ -34,17 +41,20 @@ const config: any = {
             async sendVerificationOTP({ email, otp, type }, ctx) {
                 const emailBody = pug.render(MagicCodeEmailTemplate, {
                     code: otp,
-                    hideCourseLitBranding:
-                        ctx!.headers?.get("hidecourselitbranding") || false,
+                    hideCourseLitBranding: ctx!.headers?.get(
+                        "hidecourselitbranding",
+                    )
+                        ? ctx!.headers?.get("hidecourselitbranding") === "true"
+                        : false,
                 });
 
                 await addMailJob({
                     to: [email],
-                    subject: `${responses.sign_in_mail_prefix} ${ctx!.headers?.get("domain")}`,
+                    subject: `${responses.sign_in_mail_prefix} ${ctx!.headers?.get("host")}`,
                     body: emailBody,
                     from: generateEmailFrom({
                         name:
-                            ctx!.headers?.get("domainTitle") ||
+                            ctx!.headers?.get("domaintitle") ||
                             ctx!.headers?.get("domain") ||
                             "",
                         email:
@@ -63,13 +73,24 @@ const config: any = {
                         (await UserModel.findOne({ _id: user.id })
                             .select("userId")
                             .lean()) as unknown as any
-                    ).userId,
+                    )?.userId,
                 },
                 session: {
                     ...session,
                     domainId: ctx.headers?.get("domainId"),
                 },
             };
+        }),
+        sso({
+            saml: {
+                enableInResponseToValidation: true,
+                requestTTL: 10 * 60 * 1000, // 10 minutes
+                clockSkew: 5 * 60 * 1000, // 5 minutes
+                requireTimestamps: true,
+            },
+            fields: {
+                domain: "domain_string",
+            },
         }),
     ],
     databaseHooks: {
@@ -92,8 +113,11 @@ const config: any = {
         },
     },
     trustedOrigins: async (request: Request) => {
-        const backendAddress = await getBackendAddress(request.headers);
-        return [backendAddress];
+        const origins: string[] = [await getBackendAddress(request.headers)];
+        if (request.headers.get("ssotrusteddomain")) {
+            origins.push(request.headers.get("ssotrusteddomain")!);
+        }
+        return origins;
     },
 };
 

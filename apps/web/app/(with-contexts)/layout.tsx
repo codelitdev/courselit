@@ -32,6 +32,7 @@ export default async function Layout({
             theme={siteSetup?.theme || defaultState.theme}
             config={config}
             session={session}
+            features={siteSetup?.features || defaultState.features}
         >
             {children}
         </LayoutWithContext>
@@ -61,4 +62,5 @@ const formatSiteInfo = (siteinfo?: SiteInfo) => ({
     razorpayKey: siteinfo?.razorpayKey || defaultState.siteinfo.razorpayKey,
     lemonsqueezyKey:
         siteinfo?.lemonsqueezyKey || defaultState.siteinfo.lemonsqueezyKey,
+    logins: siteinfo?.logins || defaultState.siteinfo.logins,
 });

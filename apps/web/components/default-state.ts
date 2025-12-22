@@ -4,6 +4,8 @@ import {
     SiteInfo,
     Typeface,
     ServerConfig,
+    Features,
+    Constants,
 } from "@courselit/common-models";
 import { Theme } from "@courselit/page-models";
 import { themes } from "@courselit/page-primitives";
@@ -16,6 +18,7 @@ export const defaultState: {
     typefaces: Typeface[];
     config: ServerConfig;
     theme: Theme;
+    features: Features[];
     [x: string]: any;
 } = {
     siteinfo: {
@@ -38,6 +41,7 @@ export const defaultState: {
         lemonsqueezyOneTimeVariantId: "",
         lemonsqueezySubscriptionMonthlyVariantId: "",
         lemonsqueezySubscriptionYearlyVariantId: "",
+        logins: [Constants.LoginProvider.EMAIL],
     },
     networkAction: false,
     profile: {
@@ -74,4 +78,5 @@ export const defaultState: {
         name: "",
         theme: themes.find((theme) => theme.id === "classic")?.theme!,
     },
+    features: [],
 };
