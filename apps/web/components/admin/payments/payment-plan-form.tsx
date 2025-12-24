@@ -521,7 +521,7 @@ function PricingSection({
                                         </span>
                                         <Input
                                             type="number"
-                                            className="border-0 focus-visible:ring-0 focus:outline-none"
+                                            className="border-0 focus-visible:ring-0 focus:outline-hidden"
                                             placeholder="Enter amount"
                                             {...field}
                                             onChange={(e) =>
@@ -558,7 +558,7 @@ function PricingSection({
                                                     <div className="flex items-center border rounded-md">
                                                         <Input
                                                             type="number"
-                                                            className="border-0 focus-visible:ring-0 focus:outline-none"
+                                                            className="border-0 focus-visible:ring-0 focus:outline-hidden"
                                                             placeholder="Enter number"
                                                             {...field}
                                                             onChange={(e) =>
@@ -594,7 +594,7 @@ function PricingSection({
                                                         </span>
                                                         <Input
                                                             type="number"
-                                                            className="border-0 focus-visible:ring-0 focus:outline-none"
+                                                            className="border-0 focus-visible:ring-0 focus:outline-hidden"
                                                             placeholder="Enter amount"
                                                             {...field}
                                                             onChange={(e) =>
@@ -694,7 +694,7 @@ function PricingSection({
                                                 </span>
                                                 <Input
                                                     type="number"
-                                                    className="border-0 focus-visible:ring-0 focus:outline-none"
+                                                    className="border-0 focus-visible:ring-0 focus:outline-hidden"
                                                     placeholder="Enter monthly amount"
                                                     {...field}
                                                     onChange={(e) =>
@@ -730,7 +730,7 @@ function PricingSection({
                                                 </span>
                                                 <Input
                                                     type="number"
-                                                    className="border-0 focus-visible:ring-0 focus:outline-none"
+                                                    className="border-0 focus-visible:ring-0 focus:outline-hidden"
                                                     placeholder="Enter yearly amount"
                                                     {...field}
                                                     onChange={(e) =>
@@ -882,7 +882,7 @@ function IncludedProductsSection({ form }: { form: any }) {
                                     return product ? (
                                         <div
                                             key={productId}
-                                            className="group relative inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg transition-all duration-200 hover:shadow-md hover:border-primary/30"
+                                            className="group relative inline-flex items-center gap-2 px-3 py-2 bg-linear-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg transition-all duration-200 hover:shadow-md hover:border-primary/30"
                                         >
                                             <div className="flex items-center gap-2">
                                                 <div className="w-2 h-2 rounded-full bg-primary opacity-60"></div>

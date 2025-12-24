@@ -89,7 +89,7 @@ export default function AccomplishmentPage() {
                 {/* User completion info - responsive layout */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                     {certificate.userImage && (
-                        <div className="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 rounded-full overflow-hidden flex-shrink-0 mx-auto sm:mx-0">
+                        <div className="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 rounded-full overflow-hidden shrink-0 mx-auto sm:mx-0">
                             <Image
                                 src={certificate.userImage.file}
                                 alt={certificate.userName}

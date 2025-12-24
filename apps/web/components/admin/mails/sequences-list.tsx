@@ -196,7 +196,7 @@ const SequencesList = ({ type }: SequencesListProps) => {
                                                           broadcast.emails[0].delayInMillis,
                                                       ),
                                                   ) && (
-                                                      <Chip className="!bg-black text-white !border-black">
+                                                      <Chip className="bg-black! text-white border-black!">
                                                           Sent
                                                       </Chip>
                                                   )}
@@ -236,7 +236,7 @@ const SequencesList = ({ type }: SequencesListProps) => {
                                               {broadcast.status ===
                                                   Constants
                                                       .sequenceStatus[1] && (
-                                                  <Chip className="!bg-black text-white !border-black">
+                                                  <Chip className="bg-black! text-white border-black!">
                                                       {capitalize(
                                                           broadcast.status,
                                                       )}

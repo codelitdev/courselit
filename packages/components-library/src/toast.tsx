@@ -59,13 +59,13 @@ const Toast = ({ message, dispatch, clearMessageAction }: ToastProps) => {
     return (
         <Provider>
             <Root
-                className="bg-white border rounded-md shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,_hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] p-[15px] grid [grid-template-areas:_'title_action'_'description_action'] grid-cols-[auto_max-content] gap-x-[15px] items-center data-[state=open]:animate-slideIn data-[state=closed]:animate-hide data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=cancel]:translate-x-0 data-[swipe=cancel]:transition-[transform_200ms_ease-out] data-[swipe=end]:animate-swipeOut"
+                className="bg-white border rounded-md shadow-[hsl(206_22%_7%/35%)_0px_10px_38px_-10px,hsl(206_22%_7%/20%)_0px_10px_20px_-15px] p-[15px] grid [grid-template-areas:'title_action'_'description_action'] grid-cols-[auto_max-content] gap-x-[15px] items-center data-[state=open]:animate-slideIn data-[state=closed]:animate-hide data-[swipe=move]:translate-x-(--radix-toast-swipe-move-x) data-[swipe=cancel]:translate-x-0 data-[swipe=cancel]:transition-[transform_200ms_ease-out] data-[swipe=end]:animate-swipeOut"
                 open={message.open}
                 onOpenChange={handleClose}
             >
                 <Description>{message.message}</Description>
                 <ToastAction
-                    className="[grid-area:_action]"
+                    className="[grid-area:action]"
                     asChild
                     altText="Close"
                 >
@@ -74,7 +74,7 @@ const Toast = ({ message, dispatch, clearMessageAction }: ToastProps) => {
                     </IconButton>
                 </ToastAction>
             </Root>
-            <Viewport className="[--viewport-padding:_25px] fixed bottom-0 right-0 flex flex-col p-[var(--viewport-padding)] gap-[10px] w-[390px] max-w-[100vw] m-0 list-none z-[2147483647] outline-none" />
+            <Viewport className="[--viewport-padding:25px] fixed bottom-0 right-0 flex flex-col p-(--viewport-padding) gap-[10px] w-[390px] max-w-[100vw] m-0 list-none z-2147483647 outline-hidden" />
         </Provider>
     );
 };

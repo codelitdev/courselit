@@ -20,6 +20,6 @@
         "tailwindcss-animate": "^1.0.7"
     },
     "devDependencies": {
-        "tailwindcss": "^3.4.1"
+        "tailwindcss": "^4.1.18"
     }
 }

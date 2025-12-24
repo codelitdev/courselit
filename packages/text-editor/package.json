@@ -52,7 +52,7 @@
         "@courselit/common-models": "workspace:^",
         "@courselit/utils": "workspace:^",
         "@floating-ui/dom": "^1.6.0",
-        "@tiptap/core": "^3.0.0",
+        "@tiptap/core": "^3.14.0",
         "@tiptap/extension-bubble-menu": "^3.10.4",
         "@tiptap/extension-code-block-lowlight": "^3.0.0",
         "@tiptap/extension-dropcursor": "^3.0.0",

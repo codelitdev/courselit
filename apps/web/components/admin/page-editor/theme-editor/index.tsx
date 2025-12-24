@@ -213,7 +213,7 @@ const colorCategories = [
         colors: [
             { name: "border", displayName: "Border" },
             { name: "input", displayName: "Input" },
-            { name: "ring", displayName: "Ring" },
+            { name: "ring-3", displayName: "Ring" },
         ],
     },
     {
@@ -864,7 +864,7 @@ function ThemeEditor({
                                     }
                                 >
                                     <ChevronDown
-                                        className={`h-4 w-4 mr-2 transition-transform ${collapsedCategories[category.name] ? "rotate-[-90deg]" : "rotate-0"}`}
+                                        className={`h-4 w-4 mr-2 transition-transform ${collapsedCategories[category.name] ? "-rotate-90" : "rotate-0"}`}
                                     />
                                     <span className="text-sm font-medium text-muted-foreground">
                                         {category.name}
@@ -990,7 +990,7 @@ function ThemeEditor({
                     >
                         <button
                             onClick={navigateBack}
-                            className="flex items-center rounded-md p-1 hover:bg-muted transition-colors focus:outline-none"
+                            className="flex items-center rounded-md p-1 hover:bg-muted transition-colors focus:outline-hidden"
                             aria-label="Back"
                         >
                             <ChevronLeft className="h-4 w-4" />

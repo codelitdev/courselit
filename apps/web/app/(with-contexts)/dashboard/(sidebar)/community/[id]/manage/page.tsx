@@ -833,7 +833,7 @@ export default function Page(props: {
                             Cancel
                         </Button>
                         <Button
-                            className="!bg-red-500 text-white hover:!bg-red-600"
+                            className="bg-red-500! text-white hover:bg-red-600!"
                             variant="destructive"
                             onClick={confirmDeleteCategory}
                         >

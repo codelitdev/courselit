@@ -446,7 +446,7 @@ export default function CustomersPage() {
                                                                       Progress
                                                                   </DialogTitle>
                                                               </DialogHeader>
-                                                              <DialogDescription>
+                                                              <DialogDescription className="max-h-[400px] overflow-y-scroll">
                                                                   {/* {product?.lessons?.map((lesson: any) => (
                                                     <div key={lesson.lessonId}>
                                                         <h3>{lesson.title}</h3>

@@ -35,10 +35,10 @@ const Button = React.forwardRef((props: ButtonProps, forwardedRef: any) => {
 
     if (variant === "classic") {
         commonClasses +=
-            " bg-black text-white hover:!text-white hover:!bg-slate-500 active:!bg-slate-600 disabled:bg-slate-300";
+            " bg-black text-white hover:text-white! hover:bg-slate-500! active:bg-slate-600! disabled:bg-slate-300";
     } else {
         commonClasses +=
-            " bg-slate-100 text-black hover:!bg-slate-200 active:!bg-slate-300 disabled:text-slate-300";
+            " bg-slate-100 text-black hover:bg-slate-200! active:bg-slate-300! disabled:text-slate-300";
     }
 
     if (component === "link") {

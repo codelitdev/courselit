@@ -90,7 +90,7 @@ export default function FormField({
                 <Control asChild>
                     <Component
                         type={type}
-                        className="outline-none w-full"
+                        className="outline-hidden w-full"
                         name={name}
                         {...componentProps}
                     />

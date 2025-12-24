@@ -813,7 +813,7 @@ export default function PageEditor({
                 <div className="flex w-full h-[calc(100vh-56px)] mt-14 gap-4 p-4 bg-muted/10">
                     <div
                         className={cn(
-                            "rounded-xl border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm",
+                            "rounded-xl border bg-background/98 backdrop-blur-sm supports-backdrop-filter:bg-background/80 shadow-sm",
                             leftPaneContent === "none" ? "w-full" : "flex-1",
                         )}
                     >
@@ -848,7 +848,7 @@ export default function PageEditor({
                         </ScrollArea>
                     </div>
                     {leftPaneContent !== "none" && (
-                        <div className="w-[300px] rounded-xl border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm flex flex-col overflow-hidden">
+                        <div className="w-[300px] rounded-xl border bg-background/98 backdrop-blur-sm supports-backdrop-filter:bg-background/80 shadow-sm flex flex-col overflow-hidden">
                             <PanelHeader
                                 title={
                                     leftPaneContent === "widgets"

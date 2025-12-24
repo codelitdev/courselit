@@ -34,8 +34,8 @@ export default function Page() {
             <p className="mb-8 text-slate-600">
                 If you need a helping hand, we are out there for you.
             </p>
-            <div className="flex flex-col lg:!flex-row gap-4 mb-16">
-                <Card className="lg:!w-1/3">
+            <div className="flex flex-col lg:flex-row! gap-4 mb-16">
+                <Card className="lg:w-1/3!">
                     <CardHeader>
                         <CardTitle>Documentation</CardTitle>
                     </CardHeader>
@@ -53,7 +53,7 @@ export default function Page() {
                         </a>
                     </CardFooter>
                 </Card>
-                <Card className="lg:!w-1/3">
+                <Card className="lg:w-1/3!">
                     <CardHeader>
                         <CardTitle>Ask in Discord</CardTitle>
                     </CardHeader>
@@ -72,7 +72,7 @@ export default function Page() {
                         </a>
                     </CardFooter>
                 </Card>
-                <Card className="lg:!w-1/3">
+                <Card className="lg:w-1/3!">
                     <CardHeader>
                         <CardTitle>Found a bug?</CardTitle>
                     </CardHeader>

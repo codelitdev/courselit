@@ -82,7 +82,7 @@ export function MobileOrderSummary({
                             <div className="flex items-center gap-1">
                                 <ShoppingCart className="h-5 w-5" />
                                 <Text1
-                                    className="p-0 !m-0 h-auto font-normal hover:bg-transparent flex items-center"
+                                    className="p-0 m-0! h-auto font-normal hover:bg-transparent flex items-center"
                                     onClick={() =>
                                         setIsOrderSummaryOpen(
                                             !isOrderSummaryOpen,

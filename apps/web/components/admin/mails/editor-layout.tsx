@@ -129,7 +129,7 @@ export const EmailEditorLayout = ({
                         )}
                     </div>
                 </div>
-                <div className="w-full rounded-xl overflow-hidden border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm flex flex-col">
+                <div className="w-full rounded-xl overflow-hidden border bg-background/98 backdrop-blur-sm supports-backdrop-filter:bg-background/80 shadow-sm flex flex-col">
                     {title ? (
                         <div className="border-b px-6 py-4">
                             <h1 className="text-lg font-semibold text-foreground">

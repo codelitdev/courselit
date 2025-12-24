@@ -260,7 +260,7 @@ export function VideoWithPreview({
                         <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                             <div className="relative">
                                 {/* Smaller grayish concentric wave animation */}
-                                <span className="absolute -inset-1.5 rounded-full bg-gray-200/50 animate-pulse duration-[3000ms]"></span>
+                                <span className="absolute -inset-1.5 rounded-full bg-gray-200/50 animate-pulse duration-3000"></span>
 
                                 {/* Play button */}
                                 <div className="relative rounded-full bg-primary p-4 z-1">
@@ -280,7 +280,7 @@ export function VideoWithPreview({
                 <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 sm:p-6 md:p-10">
                     <button
                         onClick={() => setIsModalOpen(false)}
-                        className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white hover:text-gray-300 focus:outline-none z-10"
+                        className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white hover:text-gray-300 focus:outline-hidden z-10"
                         aria-label="Close"
                     >
                         <X className="h-6 w-6 sm:h-8 sm:w-8" />

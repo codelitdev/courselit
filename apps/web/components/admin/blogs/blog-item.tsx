@@ -48,7 +48,7 @@ export default function BlogItem({
                 <Chip
                     className={
                         product.published
-                            ? "!bg-black text-white !border-black"
+                            ? "bg-black! text-white border-black!"
                             : ""
                     }
                 >

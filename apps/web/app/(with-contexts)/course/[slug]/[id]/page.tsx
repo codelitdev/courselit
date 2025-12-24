@@ -77,7 +77,7 @@ export default function ProductPage(props: {
         : TextEditorEmptyDoc;
 
     return (
-        <div className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
+        <div className="flex flex-col pb-[100px] lg:max-w-160 xl:max-w-3xl mx-auto">
             <h1 className="text-4xl font-semibold mb-8">{product.title}</h1>
             {progress?.certificateId && (
                 <Link
@@ -115,7 +115,7 @@ export default function ProductPage(props: {
                 )}
             {product.featuredImage && (
                 <div className="flex justify-center">
-                    <div className="mt-4 mb-8 w-full md:max-w-screen-md">
+                    <div className="mt-4 mb-8 w-full md:max-w-(--breakpoint-md)">
                         <Image
                             alt={product.featuredImage.caption}
                             src={product.featuredImage.file!}

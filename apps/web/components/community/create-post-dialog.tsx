@@ -204,7 +204,7 @@ export default function CreatePostDialog({
             <AlertDialogTrigger asChild>
                 <Button
                     variant="outline"
-                    className="w-full !text-left cursor-text"
+                    className="w-full text-left! cursor-text"
                     onClick={() => setIsOpen(true)}
                 >
                     Write something...

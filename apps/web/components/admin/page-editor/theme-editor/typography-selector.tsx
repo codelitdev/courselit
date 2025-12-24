@@ -83,7 +83,7 @@ function TypographySelector({
                                                 key={font.value}
                                                 value={font.value}
                                                 className={cn(
-                                                    "pl-8 text-sm min-h-[2rem] flex items-center",
+                                                    "pl-8 text-sm min-h-8 flex items-center",
                                                     font.value,
                                                 )}
                                                 style={{

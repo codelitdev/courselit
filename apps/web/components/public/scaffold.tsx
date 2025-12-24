@@ -50,7 +50,7 @@ export const ComponentScaffold = ({
                                 setOpen(false);
                                 navigateTo(item.href as string);
                             }}
-                            className={`flex items-center px-2 py-3 hover:!bg-accent hover:!text-accent-foreground cursor-pointer ${
+                            className={`flex items-center px-2 py-3 hover:bg-accent! hover:text-accent-foreground! cursor-pointer ${
                                 pathname === item.href
                                     ? "bg-accent text-accent-foreground"
                                     : ""
@@ -102,7 +102,7 @@ export const ComponentScaffold = ({
             <div className="flex h-screen pt-[64px] w-full">
                 <div
                     style={{ width: drawerWidth }}
-                    className={`hidden md:!flex overflow-x-hidden overflow-y-auto min-w-[240px] max-h-screen border-r border-border z-10 bg-background`}
+                    className={`hidden md:flex! overflow-x-hidden overflow-y-auto min-w-[240px] max-h-screen border-r border-border z-10 bg-background`}
                 >
                     {drawer}
                 </div>

@@ -340,7 +340,7 @@ export default function Checkout({
                     isOrderSummaryOpen={isOrderSummaryOpen}
                     setIsOrderSummaryOpen={setIsOrderSummaryOpen}
                 />
-                <div className="w-full grid md:grid-cols-[1fr,400px] gap-8">
+                <div className="w-full grid md:grid-cols-[1fr_400px] gap-8">
                     <div className="space-y-8">
                         {membershipStatus ===
                             Constants.MembershipStatus.ACTIVE ||

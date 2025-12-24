@@ -188,7 +188,7 @@ export const LessonViewer = ({
 
     return (
         <div className="h-full">
-            <article className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
+            <article className="flex flex-col pb-[100px] lg:max-w-160 xl:max-w-3xl mx-auto">
                 {!lesson && !error && (
                     <div className="flex flex-col">
                         <Skeleton className="h-12 w-full mb-8" />

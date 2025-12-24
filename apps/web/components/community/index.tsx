@@ -1033,7 +1033,7 @@ export function CommunityForum({
                                                 <CardHeader className="flex flex-row items-start space-y-0 gap-4">
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-2 mb-2">
-                                                            <Avatar className="h-10 w-10 flex-shrink-0">
+                                                            <Avatar className="h-10 w-10 shrink-0">
                                                                 <AvatarImage
                                                                     src={
                                                                         post
@@ -1092,7 +1092,7 @@ export function CommunityForum({
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className={`flex-shrink-0 rounded-full ${post.pinned ? "bg-accent" : ""}`}
+                                                                className={`shrink-0 rounded-full ${post.pinned ? "bg-accent" : ""}`}
                                                                 onClick={(e) =>
                                                                     togglePin(
                                                                         post.postId,
@@ -1122,7 +1122,7 @@ export function CommunityForum({
                                                             {post.media.map(
                                                                 (media) => (
                                                                     <div
-                                                                        className="flex-shrink-0"
+                                                                        className="shrink-0"
                                                                         key={
                                                                             media.title
                                                                         }
@@ -1307,7 +1307,7 @@ export function CommunityForum({
                                                         {post.media.map(
                                                             (media) => (
                                                                 <div
-                                                                    className="flex-shrink-0"
+                                                                    className="shrink-0"
                                                                     key={
                                                                         media.title
                                                                     }

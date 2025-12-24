@@ -106,7 +106,7 @@ export default function ColorSelector({
                             className="w-8 h-8 rounded-md cursor-pointer opacity-0 absolute inset-0"
                         />
                         <div
-                            className="w-8 h-8 rounded-md border border-input bg-background flex items-center justify-center overflow-hidden ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            className="w-8 h-8 rounded-md border border-input bg-background flex items-center justify-center overflow-hidden ring-offset-background focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                             style={{ backgroundColor: localValue }}
                         />
                     </div>

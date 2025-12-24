@@ -32,7 +32,7 @@ export default function Menu({
             </Trigger>
             <Portal>
                 <Content
-                    className="min-w-[180px] bg-popover rounded p-1 shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]"
+                    className="min-w-[180px] bg-popover rounded p-1 shadow-[0px_10px_38px_-10px_rgba(22,23,24,0.35),0px_10px_20px_-15px_rgba(22,23,24,0.2)]"
                     style={style}
                 >
                     {children}

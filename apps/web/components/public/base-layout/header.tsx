@@ -15,7 +15,7 @@ const Header = ({ onMenuClick, siteinfo }: HeaderProps) => {
         <header className="flex w-full z-10 justify-between">
             {onMenuClick && (
                 <IconButton
-                    className="px-2 md:!hidden"
+                    className="px-2 md:hidden!"
                     variant="soft"
                     onClick={onMenuClick}
                 >

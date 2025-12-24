@@ -43,6 +43,7 @@
         "react-dom": "*"
     },
     "devDependencies": {
+        "@tailwindcss/postcss": "^4.1.18",
         "@types/react": "^18.3.7",
         "@types/react-dom": "^18.3.0",
         "autoprefixer": "^10.4.14",
@@ -52,6 +53,7 @@
         "postcss": "^8.4.27",
         "rimraf": "^4.1.1",
         "tailwind-config": "workspace:^",
+        "tailwindcss": "^4.1.18",
         "tsconfig": "workspace:^",
         "tsup": "6.6.0",
         "typescript": "^5.1.6",
@@ -60,13 +62,13 @@
     "dependencies": {
         "@courselit/common-models": "workspace:^",
         "@courselit/components-library": "workspace:^",
-        "@courselit/text-editor": "workspace:^",
-        "@tiptap/core": "^3.0.0",
-        "@tiptap/static-renderer": "^3.10.7",
         "@courselit/icons": "workspace:^",
         "@courselit/page-models": "workspace:^",
         "@courselit/page-primitives": "workspace:^",
+        "@courselit/text-editor": "workspace:^",
         "@courselit/utils": "workspace:^",
+        "@tiptap/core": "^3.14.0",
+        "@tiptap/static-renderer": "^3.10.7",
         "clsx": "^2.1.1",
         "swr": "^2.3.3"
     },
