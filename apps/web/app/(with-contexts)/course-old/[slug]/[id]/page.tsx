@@ -12,6 +12,7 @@ import { checkPermission } from "@courselit/utils";
 import { Profile, UIConstants } from "@courselit/common-models";
 import {
     Link,
+    Button2,
     getSymbolFromCurrency,
     Image,
 } from "@courselit/components-library";
@@ -28,7 +29,6 @@ import { getUserProfile } from "@/app/(with-contexts)/helpers";
 import { BadgeCheck } from "lucide-react";
 import { emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
 import WidgetErrorBoundary from "@components/public/base-layout/template/widget-error-boundary";
-import { Button, Header1 } from "@courselit/page-primitives";
 const { permissions } = UIConstants;
 
 export default function ProductPage(props: {
@@ -78,18 +78,16 @@ export default function ProductPage(props: {
 
     return (
         <div className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
-            <Header1 className="mb-8 text-foreground" theme={theme.theme}>
-                {product.title}
-            </Header1>
+            <h1 className="text-4xl font-semibold mb-8">{product.title}</h1>
             {progress?.certificateId && (
                 <Link
                     href={`/accomplishment/${progress.certificateId}`}
                     className="mb-4"
                 >
-                    <Button theme={theme.theme}>
+                    <Button2>
                         <BadgeCheck className="h-4 w-4" />{" "}
                         {BTN_VIEW_CERTIFICATE}
-                    </Button>
+                    </Button2>
                 </Link>
             )}
             {!isEnrolled(product.courseId, profile as Profile) &&
@@ -110,9 +108,7 @@ export default function ProductPage(props: {
                             <Link
                                 href={`/checkout?type=course&id=${product.courseId}`}
                             >
-                                <Button theme={theme.theme}>
-                                    {ENROLL_BUTTON_TEXT}
-                                </Button>
+                                <Button2>{ENROLL_BUTTON_TEXT}</Button2>
                             </Link>
                         </div>
                     </div>
@@ -130,7 +126,7 @@ export default function ProductPage(props: {
                 </div>
             )}
             <div className="overflow-hidden min-h-[360px]">
-                <div className="flex flex-col gap-4 text-foreground">
+                <div className="flex flex-col gap-4">
                     <TableOfContent
                         json={descriptionJson}
                         theme={theme.theme}
@@ -148,13 +144,10 @@ export default function ProductPage(props: {
                     <Link
                         href={`/course/${product.slug}/${product.courseId}/${product.firstLesson}`}
                     >
-                        <Button
-                            theme={theme.theme}
-                            className="flex gap-1 items-center"
-                        >
+                        <Button2 className="flex gap-1 items-center">
                             {COURSE_PROGRESS_START}
                             <ArrowRight />
-                        </Button>
+                        </Button2>
                     </Link>
                 </div>
             )}

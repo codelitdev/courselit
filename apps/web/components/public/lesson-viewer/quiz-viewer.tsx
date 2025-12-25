@@ -4,7 +4,7 @@ import {
     Quiz as QuizContent,
 } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useContext, useState } from "react";
 import {
     TOAST_TITLE_ERROR,
     QUIZ_VIEWER_EVALUATE_BTN,
@@ -14,6 +14,8 @@ import {
     QUIZ_SCORE_PREFIX_MESSAGE,
 } from "@/ui-config/strings";
 import { Form, FormSubmit, useToast } from "@courselit/components-library";
+import { Header2, Text1 } from "@courselit/page-primitives";
+import { ThemeContext } from "@components/contexts";
 
 interface QuizViewerProps {
     lessonId: string;
@@ -32,6 +34,7 @@ export default function QuizViewer({
     ]);
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
+    const { theme } = useContext(ThemeContext);
 
     const setAnswerForQuestion = (
         checked: boolean,
@@ -119,9 +122,9 @@ export default function QuizViewer({
         <Form onSubmit={evaluate}>
             {questions.map((question: Question, questionIndex: number) => (
                 <fieldset className="flex flex-col mb-8" key={questionIndex}>
-                    <h2 className="font-medium mb-2">
+                    <Header2 theme={theme.theme} className="mb-4">
                         {questionIndex + 1}. {question.text}
-                    </h2>
+                    </Header2>
                     {question.options.map((option, index: number) => (
                         <div className="flex items-center mb-2" key={index}>
                             <input
@@ -145,7 +148,7 @@ export default function QuizViewer({
                                     )
                                 }
                             />
-                            <label>{option.text}</label>
+                            <Text1 theme={theme.theme}>{option.text}</Text1>
                         </div>
                     ))}
                 </fieldset>

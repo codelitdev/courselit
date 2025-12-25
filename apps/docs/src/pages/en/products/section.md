@@ -78,6 +78,12 @@ If drip configuration is enabled for a section, a student won't be able to acces
 
 ![Drip Notification](/assets/products/drip-notify-email.jpeg)
 
+### Customer's experience
+
+On the course viewer, the customer will see the clock icon against the section name until it has been dripped to them.
+
+![Customer's experience](/assets/products/drip-customer-experience.png)
+
 ## Delete Section
 
 1. To delete a section, click on its three dots menu and select `Delete section` from the dropdown, as shown below.
