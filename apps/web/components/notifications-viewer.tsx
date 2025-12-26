@@ -17,7 +17,6 @@ import {
     TriangleAlert,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-
 import { Button } from "@/components/ui/button";
 import {
     Popover,
@@ -229,11 +228,7 @@ export function NotificationsViewer() {
     return (
         <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 relative"
-                >
+                <Button variant="ghost" size="icon" className="relative">
                     <Bell className="h-4 w-4" />
                     {unreadCount > 0 && (
                         <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full" />

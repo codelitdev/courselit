@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { FetchBuilder } from "@courselit/utils";
 import {
     LESSON_TYPE_VIDEO,
@@ -18,12 +18,7 @@ import {
     TOAST_TITLE_ERROR,
     NOT_ENROLLED_HEADER,
 } from "@/ui-config/strings";
-import {
-    Link,
-    Button2,
-    Skeleton,
-    useToast,
-} from "@courselit/components-library";
+import { Link, Skeleton, useToast } from "@courselit/components-library";
 import { TextRenderer } from "@courselit/page-blocks";
 import {
     Constants,
@@ -39,6 +34,8 @@ import LessonEmbedViewer from "./embed-viewer";
 import QuizViewer from "./quiz-viewer";
 import { getUserProfile } from "@/app/(with-contexts)/helpers";
 import WidgetErrorBoundary from "../base-layout/template/widget-error-boundary";
+import { Button, Header1, Text1 } from "@courselit/page-primitives";
+import { ThemeContext } from "@components/contexts";
 
 interface CaptionProps {
     text: string;
@@ -63,6 +60,7 @@ interface LessonViewerProps {
     profile: Profile;
     setProfile: (profile: Profile) => void;
     address: Address;
+    path?: string;
 }
 
 export const LessonViewer = ({
@@ -72,12 +70,14 @@ export const LessonViewer = ({
     setProfile,
     address,
     productId,
+    path = "/course",
 }: LessonViewerProps) => {
     const [lesson, setLesson] = useState<Lesson>();
     const [error, setError] = useState();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
+    const { theme } = useContext(ThemeContext);
 
     useEffect(() => {
         setError(undefined);
@@ -149,7 +149,7 @@ export const LessonViewer = ({
                 if (lesson!.nextLesson) {
                     await updateUserProfile();
                     router.push(
-                        `/course/${slug}/${lesson!.courseId}/${
+                        `${path}/${slug}/${lesson!.courseId}/${
                             lesson!.nextLesson
                         }`,
                     );
@@ -187,7 +187,7 @@ export const LessonViewer = ({
     }
 
     return (
-        <div className="h-full">
+        <div className="text-foreground">
             <article className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
                 {!lesson && !error && (
                     <div className="flex flex-col">
@@ -201,25 +201,31 @@ export const LessonViewer = ({
                 )}
                 {error && (
                     <div className="flex flex-col ">
-                        <h1 className="text-4xl font-semibold mb-4">
-                            {NOT_ENROLLED_HEADER}
-                        </h1>
-                        <p className="mb-4">{error}.</p>
+                        <header className="mb-8">
+                            <Header1 theme={theme.theme}>
+                                {NOT_ENROLLED_HEADER}
+                            </Header1>
+                        </header>
+                        <Text1 theme={theme.theme} className="mb-4">
+                            {error}.
+                        </Text1>
                         {error === "You are not enrolled in the course" && (
                             <Link
                                 href={`/checkout?type=${Constants.MembershipEntityType.COURSE}&id=${productId}`}
                             >
-                                <Button2>{ENROLL_BUTTON_TEXT}</Button2>
+                                <Button theme={theme.theme}>
+                                    {ENROLL_BUTTON_TEXT}
+                                </Button>
                             </Link>
                         )}
                     </div>
                 )}
                 {lesson && !error && (
                     <>
-                        <header>
-                            <h1 className="text-4xl font-semibold mb-8">
+                        <header className="mb-8">
+                            <Header1 theme={theme.theme}>
                                 {lesson.title}
-                            </h1>
+                            </Header1>
                         </header>
                         {String.prototype.toUpperCase.call(
                             LESSON_TYPE_VIDEO,
@@ -308,6 +314,7 @@ export const LessonViewer = ({
                                                 unknown
                                             >
                                         }
+                                        theme={theme.theme}
                                     />
                                 </WidgetErrorBoundary>
                             )}
@@ -335,10 +342,13 @@ export const LessonViewer = ({
                             lesson.media?.file && (
                                 <div>
                                     <Link href={lesson.media.file}>
-                                        <Button2 className="flex gap-1 items-center">
+                                        <Button
+                                            theme={theme.theme}
+                                            className="flex gap-1 items-center"
+                                        >
                                             <ArrowDownward />
                                             {lesson.media?.originalFileName}
-                                        </Button2>
+                                        </Button>
                                     </Link>
                                 </div>
                             )}
@@ -349,32 +359,38 @@ export const LessonViewer = ({
                 <div className="bg-background fixed bottom-0 left-0 w-full p-4 flex justify-end">
                     <div className="mr-2">
                         {!lesson.prevLesson && (
-                            <Link href={`/course/${slug}/${lesson.courseId}`}>
-                                <Button2
+                            <Link href={`${path}/${slug}/${lesson.courseId}`}>
+                                <Button
+                                    theme={theme.theme}
                                     variant="secondary"
                                     className="flex gap-1 items-center"
                                     disabled={loading}
                                 >
                                     <ArrowLeft />
                                     {COURSE_PROGRESS_INTRO}
-                                </Button2>
+                                </Button>
                             </Link>
                         )}
                         {lesson.prevLesson && (
                             <Link
-                                href={`/course/${slug}/${lesson.courseId}/${lesson.prevLesson}`}
+                                href={`${path}/${slug}/${lesson.courseId}/${lesson.prevLesson}`}
                             >
-                                <Button2
+                                <Button
+                                    theme={theme.theme}
                                     variant="secondary"
                                     className="flex gap-1 items-center"
                                     disabled={loading}
                                 >
                                     <ArrowLeft /> {COURSE_PROGRESS_PREV}
-                                </Button2>
+                                </Button>
                             </Link>
                         )}
                     </div>
-                    <Button2 onClick={markCompleteAndNext} disabled={loading}>
+                    <Button
+                        theme={theme.theme}
+                        onClick={markCompleteAndNext}
+                        disabled={loading}
+                    >
                         {lesson.nextLesson ? (
                             <div className="flex gap-1 items-center">
                                 {COURSE_PROGRESS_NEXT} <ArrowRight />
@@ -382,7 +398,7 @@ export const LessonViewer = ({
                         ) : (
                             COURSE_PROGRESS_FINISH
                         )}
-                    </Button2>
+                    </Button>
                 </div>
             )}
         </div>
