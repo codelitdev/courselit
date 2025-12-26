@@ -13,8 +13,8 @@ import {
     TOAST_QUIZ_PASS_MESSAGE,
     QUIZ_SCORE_PREFIX_MESSAGE,
 } from "@/ui-config/strings";
-import { Form, FormSubmit, useToast } from "@courselit/components-library";
-import { Header2, Text1 } from "@courselit/page-primitives";
+import { Form, useToast } from "@courselit/components-library";
+import { Button, Header2, Text1 } from "@courselit/page-primitives";
 import { ThemeContext } from "@components/contexts";
 
 interface QuizViewerProps {
@@ -154,14 +154,11 @@ export default function QuizViewer({
                 </fieldset>
             ))}
             <div>
-                <FormSubmit
-                    disabled={loading}
-                    text={
-                        loading
-                            ? QUIZ_VIEWER_EVALUATE_BTN_LOADING
-                            : QUIZ_VIEWER_EVALUATE_BTN
-                    }
-                ></FormSubmit>
+                <Button type="submit" disabled={loading} theme={theme.theme}>
+                    {loading
+                        ? QUIZ_VIEWER_EVALUATE_BTN_LOADING
+                        : QUIZ_VIEWER_EVALUATE_BTN}
+                </Button>
             </div>
         </Form>
     );

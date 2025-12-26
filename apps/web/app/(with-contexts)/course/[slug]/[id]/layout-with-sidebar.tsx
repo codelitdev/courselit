@@ -149,7 +149,7 @@ export function AppSidebar({
                         <Collapsible
                             key={index}
                             asChild
-                            defaultOpen={item.isActive}
+                            defaultOpen={true}
                             className="group/collapsible"
                         >
                             <SidebarGroup>
