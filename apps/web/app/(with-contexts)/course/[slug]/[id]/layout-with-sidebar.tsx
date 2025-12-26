@@ -50,7 +50,6 @@ import {
 } from "@components/ui/collapsible";
 import { usePathname } from "next/navigation";
 import { Caption } from "@courselit/page-primitives";
-import { useTheme } from "next-themes";
 import NextThemeSwitcher from "@components/admin/next-theme-switcher";
 
 export default function ProductPage({
@@ -61,7 +60,6 @@ export default function ProductPage({
     children: React.ReactNode;
 }) {
     const { profile } = useContext(ProfileContext);
-    const { theme, setTheme } = useTheme();
 
     if (!profile) {
         return null;
