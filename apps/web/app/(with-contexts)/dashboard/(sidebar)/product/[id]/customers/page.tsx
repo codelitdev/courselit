@@ -446,27 +446,22 @@ export default function CustomersPage() {
                                                                       Progress
                                                                   </DialogTitle>
                                                               </DialogHeader>
-                                                              <DialogDescription>
-                                                                  {/* {product?.lessons?.map((lesson: any) => (
-                                                    <div key={lesson.lessonId}>
-                                                        <h3>{lesson.title}</h3>
-                                                    </div>
-                                                ))} */}
+                                                              <DialogDescription className="max-h-[400px] overflow-y-scroll">
                                                                   {product?.lessons?.map(
                                                                       (
                                                                           lesson: any,
                                                                       ) => (
-                                                                          <div
+                                                                          <span
                                                                               key={
                                                                                   lesson.lessonId
                                                                               }
                                                                               className="flex justify-between items-center mb-1"
                                                                           >
-                                                                              <p>
+                                                                              <span>
                                                                                   {
                                                                                       lesson.title
                                                                                   }
-                                                                              </p>
+                                                                              </span>
                                                                               <span>
                                                                                   {member.completedLessons?.includes(
                                                                                       lesson.lessonId,
@@ -476,7 +471,7 @@ export default function CustomersPage() {
                                                                                       <Circle />
                                                                                   )}
                                                                               </span>
-                                                                          </div>
+                                                                          </span>
                                                                       ),
                                                                   )}
                                                               </DialogDescription>
