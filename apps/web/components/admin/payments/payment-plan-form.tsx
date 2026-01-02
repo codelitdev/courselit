@@ -183,11 +183,11 @@ export function PaymentPlanForm({
                 $planId: String!
                 $name: String
                 $type: PaymentPlanType
-                $oneTimeAmount: Int
-                $emiAmount: Int
+                $oneTimeAmount: Float
+                $emiAmount: Float
                 $emiTotalInstallments: Int
-                $subscriptionMonthlyAmount: Int
-                $subscriptionYearlyAmount: Int
+                $subscriptionMonthlyAmount: Float
+                $subscriptionYearlyAmount: Float
                 $description: String
                 $includedProducts: [String]
             ) {
@@ -241,11 +241,11 @@ export function PaymentPlanForm({
                 $type: PaymentPlanType!
                 $entityId: String!
                 $entityType: MembershipEntityType!
-                $oneTimeAmount: Int
-                $emiAmount: Int
+                $oneTimeAmount: Float
+                $emiAmount: Float
                 $emiTotalInstallments: Int
-                $subscriptionMonthlyAmount: Int
-                $subscriptionYearlyAmount: Int
+                $subscriptionMonthlyAmount: Float
+                $subscriptionYearlyAmount: Float
                 $description: String
                 $includedProducts: [String]
             ) {
