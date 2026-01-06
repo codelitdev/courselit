@@ -8,17 +8,17 @@ A section is a logical grouping of lessons. It helps keep lessons structured and
 
 ## Look and Feel
 
-Here’s how it looks on various parts of the platform.
+Here’s how sections look in various parts of the platform.
 
-### Sections in Product Viewer
+### 1. Course Viewer
 
 ![Sections in Course Viewer](/assets/products/sections-on-course-viewer.png)
 
-### Sections in Product's Sales Page
+### 2. Product Sales Page
 
 ![Sections in Sales Page](/assets/products/sections-on-sales-page.png)
 
-### Sections in Product Editor
+### 3. Product Editor
 
 ![Sections in Product Editor](/assets/products/sections-on-product-editor.png)
 
@@ -26,25 +26,25 @@ Here’s how it looks on various parts of the platform.
 
 1. To add a new section, click on the `New section` button on the `Product > Content` screen.
 
-![Add Section](/assets/products/add-section.jpeg)
+![Add Section](/assets/products/add-section.png)
 
 2. Enter the name of the section and hit `Continue`. To cancel the operation or go back, hit `Cancel` instead.
 
-![New Section Screen](/assets/products/new-section-screen.jpeg)
+![New Section Screen](/assets/products/new-section-screen.png)
 
 3. The newly created section will become visible on the `Content` screen. You can now start adding lessons to it.
 
-![New Section Added](/assets/products/new-section-added.jpeg)
+![New Section Added](/assets/products/new-section-added.png)
 
 ## Edit Section
 
 1. To edit a section, click on its three dots menu and select `Edit section` from the dropdown, as shown below.
 
-![Edit Section](/assets/products/edit-section.jpeg)
+![Edit Section](/assets/products/edit-section.png)
 
 2. On the `Edit Section` screen, you can change the name of the section and the [drip settings](#drip-a-section).
 
-![Edit Section Settings](/assets/products/edit-section-settings.jpeg)
+![Edit Section Settings](/assets/products/edit-section-settings.png)
 
 ## Drip a Section
 
@@ -56,29 +56,31 @@ If drip configuration is enabled for a section, a student won't be able to acces
 
 1. If you want a section to be available to users on a specific date, this is the option you should opt for.
 
-![Drip by Date](/assets/products/drip-by-date.jpeg)
+![Drip by Date](/assets/products/drip-by-date.png)
 
 2. Select the date on which this section will be dripped.
 3. Click `Continue` to save it.
 
-### Drip After a Certain Number of Days Since Enrollment
+### Drip After a Certain Number of Days From Last Dripped Content
 
-1. If you want a section to be available to users after a certain number of days have elapsed since their enrollment in the course, this is the option you should opt for.
+1. If you want a section to be available to users after a certain number of days have elapsed since the last dripped content, this is the option you should opt for.
 
-![Drip After a Certain Number of Days Have Elapsed](/assets/products/drip-by-specific-days.jpeg)
+> For the first dripped section, the date of enrollment will be considered the last dripped content date.
+
+![Drip After a Certain Number of Days Have Elapsed](/assets/products/drip-by-specific-days.png)
 
 2. Select the number of days.
 3. Click `Continue` to save it.
 
 ### Notify Users When a Section Has Dripped
 
-1. Click on the `Send email notification` checkbox.
+1. Click on the `Email Notification` checkbox.
 2. Compose your email. Learn more about the email composition interface [here](/en/email-marketing/broadcasts#compose-your-email).
 3. Click `Continue` to save it.
 
-![Drip Notification](/assets/products/drip-notify-email.jpeg)
+![Drip Notification](/assets/products/drip-notify-email.png)
 
-### Customer's experience
+### Customer Experience
 
 On the course viewer, the customer will see the clock icon against the section name until it has been dripped to them.
 
@@ -88,13 +90,13 @@ On the course viewer, the customer will see the clock icon against the section n
 
 1. To delete a section, click on its three dots menu and select `Delete section` from the dropdown, as shown below.
 
-![Delete Section](/assets/products/delete-section.jpeg)
+![Delete Section](/assets/products/delete-section.png)
 
-2. Click `OK` on the confirmation dialog.
+2. Click `Delete` on the confirmation dialog.
 
-> A section has to be empty, i.e., no lessons attached to it, in order for it to be deleted.
+> A section must be empty (i.e., have no lessons attached to it) in order to be deleted.
 
-## Next step
+## Next Step
 
 Learn how to [sell digital downloads](/en/downloads/create).
 
