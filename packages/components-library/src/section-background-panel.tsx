@@ -146,8 +146,7 @@ export function SectionBackgroundPanel({
                                         value={value.backgroundColor || ""}
                                         onChange={(color) =>
                                             handleColorBackgroundChange({
-                                                backgroundColor:
-                                                    color || "#ffffff",
+                                                backgroundColor: color,
                                             })
                                         }
                                     />
