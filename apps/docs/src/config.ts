@@ -57,9 +57,10 @@ export const SIDEBAR: Sidebar = {
             { text: "Set a price", link: "en/courses/set-a-price-for-product" },
             { text: "Control visibility", link: "en/courses/visibility" },
             { text: "Add content", link: "en/courses/add-content" },
-            { text: "Manage sections", link: "en/products/section" },
+            { text: "Manage sections", link: "en/courses/section" },
             { text: "Invite customers", link: "en/products/invite-customers" },
-            { text: "Certificates", link: "en/products/certificates" },
+            { text: "Certificates", link: "en/courses/certificates" },
+            { text: "Customer reports", link: "en/products/reports" },
         ],
         "Digital downloads": [
             { text: "Introduction", link: "en/downloads/introduction" },
