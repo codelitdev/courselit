@@ -378,14 +378,14 @@ export default function SSOProvider({ address }: NewSSOProviderProps) {
                                     <Input
                                         type="text"
                                         disabled={true}
-                                        value={`${address.backend}/api/auth/sso/saml2/sp/acs/sso`}
+                                        value={`${address.backend}/api/auth/sso/saml2/callback/sso`}
                                     />
                                     <Button
                                         variant="outline"
                                         size="icon"
                                         onClick={() =>
                                             copyToClipboard(
-                                                `${address.backend}/api/auth/sso/saml2/sp/acs/sso`,
+                                                `${address.backend}/api/auth/sso/saml2/callback/sso`,
                                             )
                                         }
                                     >
