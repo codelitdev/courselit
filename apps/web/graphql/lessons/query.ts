@@ -20,8 +20,14 @@ export default {
             id: {
                 type: new GraphQLNonNull(GraphQLString),
             },
+            courseId: {
+                type: GraphQLString,
+            },
         },
-        resolve: (_: any, { id }: { id: string }, context: GQLContext) =>
-            getLessonDetails(id, context),
+        resolve: (
+            _: any,
+            { id, courseId }: { id: string; courseId?: string },
+            context: GQLContext,
+        ) => getLessonDetails(id, context, courseId),
     },
 };

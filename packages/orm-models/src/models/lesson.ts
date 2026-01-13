@@ -4,6 +4,7 @@ import {
     Quiz,
     TextEditorContent,
     Constants,
+    ScormContent,
 } from "@courselit/common-models";
 import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
@@ -15,7 +16,7 @@ export interface InternalLesson {
     lessonId: string;
     title: string;
     type: LessonType;
-    content?: Quiz | TextEditorContent | { value: string };
+    content?: Quiz | TextEditorContent | ScormContent | { value: string };
     media?: Media;
     downloadable: boolean;
     creatorId: string;

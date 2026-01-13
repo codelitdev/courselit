@@ -12,6 +12,7 @@ import {
     HelpCircle,
     File,
     Tv,
+    Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +56,7 @@ import { isTextEditorNonEmpty, truncate } from "@ui-lib/utils";
 import { Separator } from "@components/ui/separator";
 import { emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
 import { LessonSkeleton } from "./skeleton";
+import { ScormLessonUpload } from "./scorm-lesson-upload";
 
 const { permissions } = UIConstants;
 
@@ -66,6 +68,7 @@ const lessonTypes = [
     { value: Constants.LessonType.FILE, label: "File", icon: File },
     { value: Constants.LessonType.EMBED, label: "Embed", icon: Tv },
     { value: Constants.LessonType.QUIZ, label: "Quiz", icon: HelpCircle },
+    { value: Constants.LessonType.SCORM, label: "SCORM", icon: Package },
 ] as const;
 
 type LessonError = Partial<Record<keyof Lesson, string>>;
@@ -640,6 +643,23 @@ export default function LessonPage() {
                             </div>
                         </>
                     )}
+                    {lesson.type === Constants.LessonType.SCORM &&
+                        lesson.lessonId && (
+                            <>
+                                <Separator />
+                                <ScormLessonUpload
+                                    lessonId={lesson.lessonId}
+                                    content={lesson.content as any}
+                                    onUploadComplete={(newContent) => {
+                                        setLesson({
+                                            ...lesson,
+                                            content: newContent,
+                                        });
+                                        setContent(newContent);
+                                    }}
+                                />
+                            </>
+                        )}
                 </>
             )}
         </DashboardContent>

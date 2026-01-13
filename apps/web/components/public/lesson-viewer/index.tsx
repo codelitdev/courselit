@@ -8,6 +8,7 @@ import {
     LESSON_TYPE_TEXT,
     LESSON_TYPE_EMBED,
     LESSON_TYPE_QUIZ,
+    LESSON_TYPE_SCORM,
 } from "@/ui-config/constants";
 import {
     COURSE_PROGRESS_FINISH,
@@ -32,6 +33,7 @@ import { ArrowLeft, ArrowRight, ArrowDownward } from "@courselit/icons";
 import { isEnrolled } from "../../../ui-lib/utils";
 import LessonEmbedViewer from "./embed-viewer";
 import QuizViewer from "./quiz-viewer";
+import ScormViewer from "./scorm-viewer";
 import { getUserProfile } from "@/app/(with-contexts)/helpers";
 import WidgetErrorBoundary from "../base-layout/template/widget-error-boundary";
 import { Button, Header1, Text1 } from "@courselit/page-primitives";
@@ -90,7 +92,7 @@ export const LessonViewer = ({
     const loadLesson = async (id: string) => {
         const query = `
             query {
-                lesson: getLessonDetails(id: "${id}") {
+                lesson: getLessonDetails(id: "${id}", courseId: "${productId}") {
                     lessonId,
                     title,
                     downloadable,
@@ -351,6 +353,21 @@ export const LessonViewer = ({
                                         </Button>
                                     </Link>
                                 </div>
+                            )}
+                        {String.prototype.toUpperCase.call(
+                            LESSON_TYPE_SCORM,
+                        ) === lesson.type &&
+                            lesson.content && (
+                                <ScormViewer
+                                    lessonId={lesson.lessonId}
+                                    launchUrl={
+                                        (
+                                            lesson.content as unknown as {
+                                                launchUrl: string;
+                                            }
+                                        ).launchUrl
+                                    }
+                                />
                             )}
                     </>
                 )}

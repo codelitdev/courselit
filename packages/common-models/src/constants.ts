@@ -116,6 +116,7 @@ export const LessonType = {
     FILE: "file",
     EMBED: "embed",
     QUIZ: "quiz",
+    SCORM: "scorm",
 } as const;
 export const ActivityType = {
     ENROLLED: "enrolled",

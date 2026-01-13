@@ -30,8 +30,9 @@ import getDeletedMediaIds, {
     extractMediaIDs,
 } from "@/lib/get-deleted-media-ids";
 import ActivityModel from "@/models/Activity";
+import UserModel from "../../models/User";
 
-const { permissions, quiz } = constants;
+const { permissions, quiz, scorm } = constants;
 
 const getLessonOrThrow = async (
     id: string,
@@ -69,11 +70,19 @@ export const getLesson = async (id: string, ctx: GQLContext) => {
     return await getLessonOrThrow(id, ctx);
 };
 
-export const getLessonDetails = async (id: string, ctx: GQLContext) => {
-    const lesson = await LessonModel.findOne({
+export const getLessonDetails = async (
+    id: string,
+    ctx: GQLContext,
+    courseId?: string,
+) => {
+    const query: any = {
         lessonId: id,
         domain: ctx.subdomain._id,
-    });
+    };
+    if (courseId) {
+        query.courseId = courseId;
+    }
+    const lesson = await LessonModel.findOne(query);
 
     if (!lesson) {
         throw new Error(responses.item_not_found);
@@ -268,9 +277,7 @@ export const getAllLessons = async (
 ) => {
     const lessons = await LessonModel.find(
         {
-            lessonId: {
-                $in: [...course.lessons],
-            },
+            courseId: course.courseId,
             domain: ctx.subdomain._id,
         },
         {
@@ -335,6 +342,45 @@ export const markLessonCompleted = async (
         });
         if (lessonEvaluations === 0) {
             throw new Error(responses.need_to_pass);
+        }
+    }
+
+    // Check SCORM completion status
+    if (lesson.type === scorm) {
+        // Re-fetch user using .lean() to get a plain JS object.
+        const freshUser: any = await UserModel.findById(ctx.user._id).lean();
+        const purchase = freshUser?.purchases?.[enrolledItemIndex];
+        const lessonData = (purchase as any)?.scormData?.lessons?.[lessonId];
+
+        let isCompleted = false;
+
+        if (lessonData?.cmi) {
+            // SCORM 1.2
+            const status12 = lessonData.cmi.core?.lesson_status;
+            // SCORM 2004
+            const completion2004 = lessonData.cmi.completion_status;
+            const success2004 = lessonData.cmi.success_status;
+
+            isCompleted =
+                status12 === "completed" ||
+                status12 === "passed" ||
+                completion2004 === "completed" ||
+                success2004 === "passed";
+
+            // Fallback: Allow completion if user has interacted (saved data exists)
+            if (!isCompleted) {
+                const hasData =
+                    !!lessonData.cmi.suspend_data ||
+                    !!lessonData.cmi.core?.session_time ||
+                    !!lessonData.cmi.core?.exit;
+                if (hasData) {
+                    isCompleted = true;
+                }
+            }
+        }
+
+        if (!isCompleted) {
+            throw new Error("Please complete the SCORM content first");
         }
     }
 

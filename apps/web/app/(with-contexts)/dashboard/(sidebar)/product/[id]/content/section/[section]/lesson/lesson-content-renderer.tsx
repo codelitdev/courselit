@@ -211,6 +211,45 @@ export function LessonContentRenderer({
                     )}
                 </div>
             );
+        case Constants.LessonType.SCORM:
+            return (
+                <div className="space-y-4">
+                    <div className="p-4 rounded-lg border bg-muted/50">
+                        {(lesson.content as any)?.mediaId ? (
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-sm">
+                                    <span className="font-medium">
+                                        SCORM Package:
+                                    </span>
+                                    <span className="text-muted-foreground">
+                                        {(lesson.content as any)?.title ||
+                                            "Uploaded"}
+                                    </span>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                    Version:{" "}
+                                    {(lesson.content as any)?.version || "1.2"}
+                                    {(lesson.content as any)?.fileCount &&
+                                        ` • ${(lesson.content as any)?.fileCount} files`}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center py-4">
+                                <p className="text-sm text-muted-foreground mb-2">
+                                    Save the lesson first, then upload the SCORM
+                                    package.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                    {!lesson?.lessonId && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-2">
+                            <Info className="w-4 h-4" />
+                            Save the lesson to enable SCORM package upload
+                        </p>
+                    )}
+                </div>
+            );
         default:
             return null;
     }

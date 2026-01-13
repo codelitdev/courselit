@@ -84,9 +84,7 @@ export const getGroupedLessons = async (
     });
     const allLessons = await LessonModel.find<GroupLessonItem>(
         {
-            lessonId: {
-                $in: [...course.lessons],
-            },
+            courseId: courseId,
             domain: domainId,
         },
         {
