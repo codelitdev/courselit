@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useRef, useCallback, useState, useContext } from "react";
 import { debounce } from "@courselit/utils";
+import { Button } from "@courselit/page-primitives";
+import { ThemeContext } from "@components/contexts";
 
 interface ScormViewerProps {
     lessonId: string;
@@ -13,13 +15,11 @@ interface CMIData {
 }
 
 export function ScormViewer({ lessonId, launchUrl }: ScormViewerProps) {
-    const iframeRef = useRef<HTMLIFrameElement>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
     const [isDataLoaded, setIsDataLoaded] = useState(false);
     const scormState = useRef<CMIData>({});
     const pendingUpdates = useRef<Map<string, unknown>>(new Map());
     const sessionActive = useRef(false);
+    const { theme } = useContext(ThemeContext);
 
     // Centralized GetValue logic
     const getValue = useCallback((element: string): string => {
@@ -203,7 +203,6 @@ export function ScormViewer({ lessonId, launchUrl }: ScormViewerProps) {
         const API = {
             LMSInitialize: () => {
                 sessionActive.current = true;
-                setLoading(false);
                 return "true";
             },
             LMSGetValue: (element: string) => getValue(element),
@@ -248,7 +247,6 @@ export function ScormViewer({ lessonId, launchUrl }: ScormViewerProps) {
         const API_1484_11 = {
             Initialize: () => {
                 sessionActive.current = true;
-                setLoading(false);
                 return "true";
             },
             GetValue: (element: string) => getValue(element),
@@ -282,23 +280,6 @@ export function ScormViewer({ lessonId, launchUrl }: ScormViewerProps) {
         };
     }, [isDataLoaded, getValue, setValue, commitToServer, forceFlush]);
 
-    const handleIframeLoad = () => {
-        setLoading(false);
-    };
-
-    const handleIframeError = () => {
-        setError("Failed to load SCORM content");
-        setLoading(false);
-    };
-
-    const handleRetry = () => {
-        setError(null);
-        setLoading(true);
-        if (iframeRef.current) {
-            iframeRef.current.src = iframeRef.current.src;
-        }
-    };
-
     // Open in popup window
     const openInPopup = useCallback(() => {
         const url = `/api/scorm/lesson/${lessonId}/content/${launchUrl}`;
@@ -314,64 +295,11 @@ export function ScormViewer({ lessonId, launchUrl }: ScormViewerProps) {
         );
     }, [lessonId, launchUrl]);
 
-    if (error) {
-        return (
-            <div className="flex flex-col items-center justify-center h-full p-8 bg-muted rounded-lg">
-                <p className="text-destructive mb-4">{error}</p>
-                <button
-                    onClick={handleRetry}
-                    className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
-                >
-                    Retry
-                </button>
-            </div>
-        );
-    }
-
     return (
-        <div className="relative w-full h-[85vh] rounded-lg shadow-sm overflow-hidden border bg-background">
-            {/* Toolbar with open in popup button */}
-            <div className="absolute top-2 right-2 z-20 flex gap-2">
-                <button
-                    onClick={openInPopup}
-                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-background/90 border rounded-md hover:bg-muted transition-colors shadow-sm"
-                    title="Open in fullscreen window"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    >
-                        <polyline points="15 3 21 3 21 9" />
-                        <polyline points="9 21 3 21 3 15" />
-                        <line x1="21" y1="3" x2="14" y2="10" />
-                        <line x1="3" y1="21" x2="10" y2="14" />
-                    </svg>
-                    Open Fullscreen
-                </button>
-            </div>
-            {loading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-                </div>
-            )}
-            {isDataLoaded && (
-                <iframe
-                    ref={iframeRef}
-                    src={`/api/scorm/lesson/${lessonId}/content/${launchUrl}`}
-                    className="w-full h-full border-0"
-                    sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
-                    onLoad={handleIframeLoad}
-                    onError={handleIframeError}
-                    title="SCORM Content"
-                />
-            )}
+        <div>
+            <Button theme={theme.theme} onClick={openInPopup}>
+                Enter
+            </Button>
         </div>
     );
 }
