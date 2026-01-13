@@ -26,7 +26,7 @@ To use this feature on [courseLit.app](https://courselit.app), you need to be on
 
     The following is a description of the fields under this panel:
 
-    - **SAML ACS URL**: This is the URL that your IdP will send the SAML response to. This is usually `https://<school>.courselit.app/api/auth/sso/saml2/sp/acs/sso`
+    - **SAML ACS URL**: This is the URL that your IdP will send the SAML response to. This is usually `https://<school>.courselit.app/api/auth/sso/saml2/callback/sso`
     - **Audience URI (SP Entity ID)**: This is the URL that your IdP will use to validate the SAML response. This is usually `https://<school>.courselit.app/api/auth/sso/saml2/sp/metadata?providerId=sso`
 
 5. After configuring the IdP provider, obtain the required settings from it and populate the values in the `IDP Configuration` panel.
