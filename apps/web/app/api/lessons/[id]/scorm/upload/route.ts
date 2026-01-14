@@ -8,6 +8,7 @@ import Lesson from "@models/Lesson";
 import { extractScormPackage } from "@/lib/scorm/extractor";
 import { MediaLit } from "medialit";
 import { error as logError } from "@/services/logger";
+import appConstants from "@config/constants";
 
 /**
  * POST: Process a SCORM package for a lesson
@@ -22,6 +23,17 @@ export async function POST(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> },
 ) {
+    // Check if SCORM is enabled
+    if (!appConstants.cacheEnabled) {
+        return Response.json(
+            {
+                message:
+                    "SCORM is not enabled. Set CACHE_DIR environment variable.",
+            },
+            { status: 400 },
+        );
+    }
+
     const { id: lessonId } = await params;
 
     // Get domain

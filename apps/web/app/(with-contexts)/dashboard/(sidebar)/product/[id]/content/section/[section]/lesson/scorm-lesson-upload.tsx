@@ -189,7 +189,7 @@ export function ScormLessonUpload({
                         </Button>
                     </label>
                     <p className="text-xs text-muted-foreground mt-2">
-                        Upload a SCORM 1.2 or 2004 package (ZIP file, max 500MB)
+                        Upload a SCORM 1.2 or 2004 package (ZIP file)
                     </p>
                 </div>
             )}

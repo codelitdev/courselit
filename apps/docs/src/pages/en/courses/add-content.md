@@ -16,7 +16,7 @@ Sections are used to group lessons.
 
 ## Lessons
 
-A lesson is a container for the actual learning material. CourseLit supports seven types of lessons, which are as follows.
+A lesson is a container for the actual learning material. CourseLit supports multiple types of lessons, which are as follows.
 
 1. Text
 
@@ -47,6 +47,12 @@ A lesson is a container for the actual learning material. CourseLit supports sev
     For quizzing your students. You can create graded and non-graded quizzes.
 
     See the [guide to add a quiz](/en/lessons/add-quiz).
+
+8. SCORM
+
+    For sharing SCORM packages.
+
+    See the [guide to add a SCORM package](/en/lessons/scorm).
 
 ## Steps to add a new lesson
 
