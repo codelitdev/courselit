@@ -11,6 +11,7 @@ export const LESSON_TYPE_PDF = "pdf";
 export const LESSON_TYPE_QUIZ = "quiz";
 export const LESSON_TYPE_FILE = "file";
 export const LESSON_TYPE_EMBED = "embed";
+export const LESSON_TYPE_SCORM = "scorm";
 
 export const FREE_COURSES_TEXT = "FREE";
 

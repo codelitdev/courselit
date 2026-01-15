@@ -51,7 +51,7 @@ jest.mock("../../communities/logic", () => ({
     deleteCommunityPosts: jest.fn().mockResolvedValue(true),
 }));
 
-const DELETE_USER_SUITE_PREFIX = `delete-user-${Date.now()}`;
+const DELETE_USER_SUITE_PREFIX = `delete-user-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
 const duId = (suffix: string) => `${DELETE_USER_SUITE_PREFIX}-${suffix}`;
 const duEmail = (suffix: string) =>
     `${suffix}-${DELETE_USER_SUITE_PREFIX}@example.com`;

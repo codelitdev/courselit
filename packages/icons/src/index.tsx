@@ -56,5 +56,6 @@ export { PauseIcon as Pause } from "@radix-ui/react-icons";
 export { ExitIcon as Exit } from "@radix-ui/react-icons";
 export { CardStackIcon as MyContent } from "@radix-ui/react-icons";
 export { CubeIcon as Products } from "@radix-ui/react-icons";
+export { CubeIcon as Scorm } from "@radix-ui/react-icons";
 export { Component1Icon as Overview } from "@radix-ui/react-icons";
 export { ChevronRightIcon as ExpandMoreRight } from "@radix-ui/react-icons";

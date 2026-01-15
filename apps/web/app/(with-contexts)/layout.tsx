@@ -7,6 +7,7 @@ import { getAddressFromHeaders } from "@/app/actions";
 import { defaultState } from "@components/default-state";
 import { decode } from "base-64";
 import { ServerConfig, SiteInfo } from "@courselit/common-models";
+import constants from "@config/constants";
 
 export default async function Layout({
     children,
@@ -22,6 +23,7 @@ export default async function Layout({
     const config: ServerConfig = {
         turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || "",
         queueServer: process.env.QUEUE_SERVER || "",
+        cacheEnabled: constants.cacheEnabled,
         recaptchaSiteKey: process.env.RECAPTCHA_SITE_KEY || "",
     };
 

@@ -12,6 +12,7 @@ import {
     HelpCircle,
     File,
     Tv,
+    Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,10 +38,11 @@ import {
     MANAGE_COURSES_PAGE_HEADING,
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
+    ALPHA_LABEL,
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
 import useProduct from "@/hooks/use-product";
-import { AddressContext } from "@components/contexts";
+import { AddressContext, ServerConfigContext } from "@components/contexts";
 import {
     Constants,
     Lesson,
@@ -48,13 +50,20 @@ import {
     TextEditorContent,
     UIConstants,
 } from "@courselit/common-models";
-import { useToast } from "@courselit/components-library";
+import { useToast, Chip } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import { LessonContentRenderer } from "./lesson-content-renderer";
 import { isTextEditorNonEmpty, truncate } from "@ui-lib/utils";
 import { Separator } from "@components/ui/separator";
 import { emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
 import { LessonSkeleton } from "./skeleton";
+import { ScormLessonUpload } from "./scorm-lesson-upload";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const { permissions } = UIConstants;
 
@@ -66,6 +75,7 @@ const lessonTypes = [
     { value: Constants.LessonType.FILE, label: "File", icon: File },
     { value: Constants.LessonType.EMBED, label: "Embed", icon: Tv },
     { value: Constants.LessonType.QUIZ, label: "Quiz", icon: HelpCircle },
+    { value: Constants.LessonType.SCORM, label: "SCORM", icon: Package },
 ] as const;
 
 type LessonError = Partial<Record<keyof Lesson, string>>;
@@ -82,6 +92,7 @@ export default function LessonPage() {
     const { toast } = useToast();
     const [errors, setErrors] = useState<LessonError>({});
     const address = useContext(AddressContext);
+    const config = useContext(ServerConfigContext);
     const { product, loaded: productLoaded } = useProduct(productId);
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
@@ -455,30 +466,80 @@ export default function LessonPage() {
                                     disabled={isEditing}
                                 >
                                     {lessonTypes.map(
-                                        ({ value, label, icon: Icon }) => (
-                                            <Label
-                                                key={value}
-                                                htmlFor={value}
-                                                className={`flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary ${
-                                                    lesson.type === value
-                                                        ? "border-primary"
-                                                        : ""
-                                                } ${isEditing && value !== loadedLessonRef.current?.type?.toLowerCase() ? "opacity-50 cursor-not-allowed" : ""}`}
-                                            >
-                                                <RadioGroupItem
-                                                    value={value}
-                                                    id={value}
-                                                    className="sr-only"
-                                                    disabled={
-                                                        isEditing &&
-                                                        value !==
-                                                            loadedLessonRef.current?.type?.toLowerCase()
+                                        ({ value, label, icon: Icon }) => {
+                                            const isScormDisabled =
+                                                value ===
+                                                    Constants.LessonType
+                                                        .SCORM &&
+                                                !config.cacheEnabled;
+                                            const isTypeDisabled =
+                                                isEditing &&
+                                                value !==
+                                                    loadedLessonRef.current?.type?.toLowerCase();
+                                            const isDisabled =
+                                                isScormDisabled ||
+                                                isTypeDisabled;
+
+                                            const cardContent = (
+                                                <Label
+                                                    key={value}
+                                                    htmlFor={
+                                                        isDisabled
+                                                            ? undefined
+                                                            : value
                                                     }
-                                                />
-                                                <Icon className="mb-2 h-6 w-6" />
-                                                {label}
-                                            </Label>
-                                        ),
+                                                    className={`flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 ${!isDisabled ? "hover:bg-accent hover:text-accent-foreground cursor-pointer" : "opacity-50 cursor-not-allowed"} [&:has([data-state=checked])]:border-primary ${
+                                                        lesson.type === value
+                                                            ? "border-primary"
+                                                            : ""
+                                                    }`}
+                                                >
+                                                    <RadioGroupItem
+                                                        value={value}
+                                                        id={value}
+                                                        className="sr-only"
+                                                        disabled={isDisabled}
+                                                    />
+                                                    <Icon className="mb-2 h-6 w-6" />
+                                                    <span className="flex items-center gap-2">
+                                                        {label}
+                                                        {value ===
+                                                            Constants.LessonType
+                                                                .SCORM && (
+                                                            <Chip>
+                                                                {ALPHA_LABEL}
+                                                            </Chip>
+                                                        )}
+                                                    </span>
+                                                </Label>
+                                            );
+
+                                            if (isScormDisabled) {
+                                                return (
+                                                    <TooltipProvider
+                                                        key={value}
+                                                    >
+                                                        <Tooltip>
+                                                            <TooltipTrigger
+                                                                asChild
+                                                            >
+                                                                {cardContent}
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                <p>
+                                                                    Set
+                                                                    CACHE_DIR
+                                                                    env var to
+                                                                    enable SCORM
+                                                                </p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+                                                );
+                                            }
+
+                                            return cardContent;
+                                        },
                                     )}
                                 </RadioGroup>
                             </div>
@@ -640,6 +701,23 @@ export default function LessonPage() {
                             </div>
                         </>
                     )}
+                    {lesson.type === Constants.LessonType.SCORM &&
+                        lesson.lessonId && (
+                            <>
+                                <Separator />
+                                <ScormLessonUpload
+                                    lessonId={lesson.lessonId}
+                                    content={lesson.content as any}
+                                    onUploadComplete={(newContent) => {
+                                        setLesson({
+                                            ...lesson,
+                                            content: newContent,
+                                        });
+                                        setContent(newContent);
+                                    }}
+                                />
+                            </>
+                        )}
                 </>
             )}
         </DashboardContent>

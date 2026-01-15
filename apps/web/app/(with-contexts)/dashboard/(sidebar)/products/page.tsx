@@ -217,26 +217,27 @@ export default function Page() {
                     </Link>
                 </div>
             </div>
-            {totalPages > 0 && (
-                <div className="flex flex-col sm:flex-row justify-between gap-4">
-                    <Select value={filter} onValueChange={handleFilterChange}>
-                        <SelectTrigger className="w-full sm:w-[180px]">
-                            <SelectValue placeholder="Filter by status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All</SelectItem>
-                            {[
-                                Constants.CourseType.COURSE,
-                                Constants.CourseType.DOWNLOAD,
-                            ].map((status) => (
-                                <SelectItem value={status} key={status}>
-                                    {capitalize(status)}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-            )}
+            <div className="flex flex-col sm:flex-row justify-between gap-4">
+                <Select value={filter} onValueChange={handleFilterChange}>
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        {[
+                            Constants.CourseType.COURSE,
+                            Constants.CourseType.DOWNLOAD,
+                        ].map((status) => (
+                            <SelectItem value={status} key={status}>
+                                {capitalize(status)}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+            {totalPages > 0 ? (
+                <div className="mt-6" /> // spacer
+            ) : null}
             {loading ? (
                 <SkeletonGrid />
             ) : (

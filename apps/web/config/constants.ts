@@ -23,6 +23,7 @@ export default {
     quiz: "quiz",
     file: "file",
     embed: "embed",
+    scorm: "scorm",
 
     // media access type
     publicMedia: "public",
@@ -108,4 +109,13 @@ export default {
 
     // payment plan
     internalPaymentPlanName: "Internal Payment Plan",
+
+    // scorm configuration
+    cacheEnabled: !!process.env.CACHE_DIR,
+    scormCacheDir: process.env.CACHE_DIR
+        ? `${process.env.CACHE_DIR}/scorm`
+        : "",
+    scormPackageSizeLimit: process.env.SCORM_PACKAGE_SIZE_LIMIT
+        ? +process.env.SCORM_PACKAGE_SIZE_LIMIT
+        : 300 * 1024 * 1024, // 300MB
 } as const;

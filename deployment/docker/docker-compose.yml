@@ -2,7 +2,7 @@ version: "3"
 
 services:
     app:
-        image: codelit/courselit-app:latest
+        image: codelit/courselit-app:scorm
         environment:
             - NODE_ENV=production
 
@@ -33,6 +33,10 @@ services:
             # CourseLit configures a super admin user when it boots up for the very first time
             # The email that you provide here will become the identifier for that super admin.
             - SUPER_ADMIN_EMAIL=${SUPER_ADMIN_EMAIL?'SUPER_ADMIN_EMAIL environment variable is not defined'}
+
+            # SCORM cache directory.
+            # Optionally, mount a volume to this directory to persist the cache.
+            - CACHE_DIR=/tmp
 
             # For long running tasks like sending emails etc., the queue service can be
             # enabled. For using the queue service, uncomment the following line and the

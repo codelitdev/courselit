@@ -1,3 +1,7 @@
+export interface ScormData {
+    lessons?: Record<string, { cmi: Record<string, unknown> }>;
+}
+
 export interface Progress {
     courseId: string;
     completedLessons: string[];
@@ -5,6 +9,7 @@ export interface Progress {
     accessibleGroups: string[];
     lastDripAt?: Date;
     certificateId?: string;
+    scormData?: ScormData;
     createdAt?: Date;
     updatedAt?: Date;
 }

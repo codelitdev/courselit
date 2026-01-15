@@ -594,31 +594,6 @@ export const getProducts = async ({
         products.push(extendedCourse);
     }
 
-    // const products = courses.map(async (course) => ({
-    //     ...course,
-    //     groups: course.type !== constants.blog ? course.groups : null,
-    //     pageId: course.type !== constants.blog ? course.pageId : undefined,
-    //     customers:
-    //         hasManagePerm && course.type !== constants.blog
-    //             ? await (MembershipModel as any).countDocuments({
-    //                   entityId: course.courseId,
-    //                   entityType: Constants.MembershipEntityType.COURSE,
-    //                   domain: ctx.subdomain._id,
-    //               })
-    //             : undefined,
-    //     sales:
-    //         hasManagePerm && course.type !== constants.blog
-    //             ? (
-    //                   await getActivities({
-    //                       entityId: course.courseId,
-    //                       type: ActivityType.PURCHASED,
-    //                       duration: "lifetime",
-    //                       ctx,
-    //                   })
-    //               ).count
-    //             : undefined,
-    // }));
-
     return products;
 };
 

@@ -27,6 +27,7 @@ import {
     Video,
     HelpCircle,
     ChevronDown,
+    Droplets,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -52,7 +53,6 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Droplets } from "lucide-react";
 const { permissions } = UIConstants;
 
 export default function ContentPage() {

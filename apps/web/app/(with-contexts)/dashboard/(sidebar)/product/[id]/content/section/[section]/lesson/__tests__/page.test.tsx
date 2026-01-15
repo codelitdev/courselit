@@ -64,6 +64,12 @@ jest.mock("@courselit/components-library", () => ({
     useToast: () => ({
         toast: jest.fn(),
     }),
+    Chip: ({ children }: any) => <div data-testid="chip">{children}</div>,
+    useMediaLit: () => ({
+        uploadFile: jest.fn(),
+        isUploading: false,
+        uploadProgress: 0,
+    }),
 }));
 
 jest.mock("../lesson-content-renderer", () => ({

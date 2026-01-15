@@ -7,6 +7,9 @@ const ProgressSchema = new mongoose.Schema<Progress>(
         completedLessons: { type: [String] },
         downloaded: { type: Boolean },
         accessibleGroups: { type: [String] },
+        scormData: {
+            lessons: { type: mongoose.Schema.Types.Mixed },
+        },
     },
     {
         timestamps: true,

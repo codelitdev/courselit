@@ -70,3 +70,4 @@ export * from "./activity-type";
 export * from "./email-event-action";
 export * from "./login-provider";
 export * from "./features";
+export type { ScormContent } from "./scorm-content";

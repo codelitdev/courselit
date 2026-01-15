@@ -9,6 +9,9 @@ export const ProgressSchema = new mongoose.Schema<Progress>(
         accessibleGroups: { type: [String] },
         lastDripAt: { type: Date },
         certificateId: { type: String },
+        scormData: {
+            lessons: { type: mongoose.Schema.Types.Mixed },
+        },
     },
     {
         timestamps: true,

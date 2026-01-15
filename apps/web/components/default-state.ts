@@ -72,6 +72,7 @@ export const defaultState: {
     config: {
         turnstileSiteKey: "",
         queueServer: "",
+        cacheEnabled: false,
     },
     theme: {
         id: "",
