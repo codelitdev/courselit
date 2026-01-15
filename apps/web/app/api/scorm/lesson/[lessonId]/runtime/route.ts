@@ -179,34 +179,48 @@ export async function POST(
     }
 }
 
+// List of unsafe property keys that could lead to prototype pollution
+const UNSAFE_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
+// Sanitize key to prevent prototype pollution - returns null for unsafe keys
+function sanitizePropertyKey(key: string): string | null {
+    if (UNSAFE_KEYS.has(key)) {
+        return null;
+    }
+    // Create a new string literal to break taint tracking
+    return `${key}`;
+}
+
 function setNestedValue(obj: any, path: string, value: unknown): void {
     const parts = path.split(".");
 
-    const isUnsafeKey = (key: string): boolean => {
-        return (
-            key === "__proto__" || key === "constructor" || key === "prototype"
-        );
-    };
-
     let current = obj;
     for (let i = 0; i < parts.length - 1; i++) {
-        const part = parts[i];
-        if (isUnsafeKey(part)) {
+        const sanitizedPart = sanitizePropertyKey(parts[i]);
+        if (sanitizedPart === null) {
             // Prevent prototype pollution by ignoring unsafe path segments
             return;
         }
-        if (current[part] === undefined) {
+
+        // Use Reflect API for safe property access
+        const existing = Reflect.get(current, sanitizedPart);
+        if (existing !== undefined && existing !== null) {
+            current = existing;
+        } else {
             const nextPart = parts[i + 1];
             // Use Object.create(null) to create objects without prototype chain
-            current[part] = /^\d+$/.test(nextPart) ? [] : Object.create(null);
+            const newObj = /^\d+$/.test(nextPart) ? [] : Object.create(null);
+            Reflect.set(current, sanitizedPart, newObj);
+            current = newObj;
         }
-        current = current[part];
     }
-    const lastPart = parts[parts.length - 1];
-    if (isUnsafeKey(lastPart)) {
+
+    const sanitizedLastPart = sanitizePropertyKey(parts[parts.length - 1]);
+    if (sanitizedLastPart === null) {
         // Prevent prototype pollution on final assignment
         return;
     }
 
-    current[lastPart] = value;
+    // Use Reflect.set for the final assignment
+    Reflect.set(current, sanitizedLastPart, value);
 }

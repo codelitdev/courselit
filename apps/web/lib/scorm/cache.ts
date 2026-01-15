@@ -114,27 +114,39 @@ async function fetchZipFromMediaLit(
 }
 
 /**
- * Validate ZIP entry name to prevent directory traversal
+ * Sanitize ZIP entry name to prevent directory traversal.
+ * Returns sanitized path or null if the entry is unsafe.
  */
-function isSafeZipEntryName(entryName: string): boolean {
-    if (!entryName) return false;
+function sanitizeZipEntryName(entryName: string): string | null {
+    if (!entryName) return null;
 
     // ZIP specification uses '/' as directory separator; reject backslashes
-    if (entryName.includes("\\")) return false;
+    if (entryName.includes("\\")) return null;
 
     // Reject absolute paths or Windows drive-letter paths (e.g. "C:...").
-    if (entryName.startsWith("/")) return false;
-    if (/^[a-zA-Z]:/.test(entryName)) return false;
+    if (entryName.startsWith("/")) return null;
+    if (/^[a-zA-Z]:/.test(entryName)) return null;
 
-    // Normalize and ensure there are no ".." segments.
+    // Normalize path segments and filter out dangerous ones
     const segments = entryName.split("/");
+    const safeSegments: string[] = [];
+
     for (const segment of segments) {
+        // Reject path traversal
         if (segment === "..") {
-            return false;
+            return null;
         }
+        // Skip empty segments and current directory references
+        if (segment === "" || segment === ".") {
+            continue;
+        }
+        safeSegments.push(segment);
     }
 
-    return true;
+    if (safeSegments.length === 0) return null;
+
+    // Return a new sanitized path string
+    return safeSegments.join(path.sep);
 }
 
 /**
@@ -154,18 +166,20 @@ async function extractZipToDisk(
     const resolvedExtractDir = path.resolve(extractDir);
     for (const entry of zip.getEntries()) {
         if (!entry.isDirectory) {
-            // Validate entry name to prevent directory traversal (Zip Slip)
-            if (!isSafeZipEntryName(entry.entryName)) {
+            // Sanitize entry name to prevent directory traversal (Zip Slip)
+            const sanitizedName = sanitizeZipEntryName(entry.entryName);
+            if (sanitizedName === null) {
                 error("Skipping unsafe ZIP entry name during extraction", {
                     entryName: entry.entryName,
                 });
                 continue;
             }
 
-            const targetPath = path.join(resolvedExtractDir, entry.entryName);
+            // Use sanitized name for path construction
+            const targetPath = path.join(resolvedExtractDir, sanitizedName);
             const resolvedTargetPath = path.resolve(targetPath);
 
-            // Prevent Zip Slip / directory traversal: ensure target stays within extractDir
+            // Defense in depth: ensure target stays within extractDir
             if (
                 resolvedTargetPath !== resolvedExtractDir &&
                 !resolvedTargetPath.startsWith(resolvedExtractDir + path.sep)
