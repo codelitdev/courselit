@@ -127,11 +127,31 @@ async function extractZipToDisk(
     await fs.mkdir(extractDir, { recursive: true });
 
     // Extract all files
+    const resolvedExtractDir = path.resolve(extractDir);
     for (const entry of zip.getEntries()) {
         if (!entry.isDirectory) {
-            const targetPath = path.join(extractDir, entry.entryName);
-            await fs.mkdir(path.dirname(targetPath), { recursive: true });
-            await fs.writeFile(targetPath, new Uint8Array(entry.getData()));
+            const targetPath = path.join(resolvedExtractDir, entry.entryName);
+            const resolvedTargetPath = path.resolve(targetPath);
+
+            // Prevent Zip Slip / directory traversal: ensure target stays within extractDir
+            if (
+                resolvedTargetPath !== resolvedExtractDir &&
+                !resolvedTargetPath.startsWith(resolvedExtractDir + path.sep)
+            ) {
+                error("Skipping suspicious ZIP entry path during extraction", {
+                    entryName: entry.entryName,
+                    targetPath: resolvedTargetPath,
+                });
+                continue;
+            }
+
+            await fs.mkdir(path.dirname(resolvedTargetPath), {
+                recursive: true,
+            });
+            await fs.writeFile(
+                resolvedTargetPath,
+                new Uint8Array(entry.getData()),
+            );
         }
     }
 }

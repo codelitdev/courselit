@@ -309,17 +309,41 @@ function getNestedValue(obj: any, path: string): unknown {
     return path.split(".").reduce((curr, key) => curr?.[key], obj);
 }
 
+// Guard against prototype pollution by blocking dangerous keys
+function isUnsafeKey(key: string): boolean {
+    return key === "__proto__" || key === "constructor" || key === "prototype";
+}
+
 // Helper to set nested value in object
 function setNestedValue(obj: any, path: string, value: unknown): void {
     const parts = path.split(".");
-    let current = obj;
+    let current: any = obj;
+
     for (let i = 0; i < parts.length - 1; i++) {
-        if (current[parts[i]] === undefined) {
-            current[parts[i]] = {};
+        const part = parts[i];
+
+        // Prevent prototype pollution via unsafe keys
+        if (isUnsafeKey(part)) {
+            return;
         }
-        current = current[parts[i]];
+
+        if (current[part] === undefined || current[part] === null) {
+            current[part] = {};
+        }
+
+        current = current[part];
+        if (typeof current !== "object") {
+            // Cannot safely nest further into non-object
+            return;
+        }
     }
-    current[parts[parts.length - 1]] = value;
+
+    const lastPart = parts[parts.length - 1];
+    if (isUnsafeKey(lastPart)) {
+        return;
+    }
+
+    current[lastPart] = value;
 }
 
 export default ScormViewer;

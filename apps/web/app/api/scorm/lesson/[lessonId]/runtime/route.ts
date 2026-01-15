@@ -181,14 +181,31 @@ export async function POST(
 
 function setNestedValue(obj: any, path: string, value: unknown): void {
     const parts = path.split(".");
+
+    const isUnsafeKey = (key: string): boolean => {
+        return (
+            key === "__proto__" || key === "constructor" || key === "prototype"
+        );
+    };
+
     let current = obj;
     for (let i = 0; i < parts.length - 1; i++) {
         const part = parts[i];
+        if (isUnsafeKey(part)) {
+            // Prevent prototype pollution by ignoring unsafe path segments
+            return;
+        }
         if (current[part] === undefined) {
             const nextPart = parts[i + 1];
             current[part] = /^\d+$/.test(nextPart) ? [] : {};
         }
         current = current[part];
     }
-    current[parts[parts.length - 1]] = value;
+    const lastPart = parts[parts.length - 1];
+    if (isUnsafeKey(lastPart)) {
+        // Prevent prototype pollution on final assignment
+        return;
+    }
+
+    current[lastPart] = value;
 }
