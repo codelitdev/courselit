@@ -328,7 +328,8 @@ function setNestedValue(obj: any, path: string, value: unknown): void {
         }
 
         if (current[part] === undefined || current[part] === null) {
-            current[part] = {};
+            // Use Object.create(null) to create objects without prototype chain
+            current[part] = Object.create(null);
         }
 
         current = current[part];

@@ -114,6 +114,30 @@ async function fetchZipFromMediaLit(
 }
 
 /**
+ * Validate ZIP entry name to prevent directory traversal
+ */
+function isSafeZipEntryName(entryName: string): boolean {
+    if (!entryName) return false;
+
+    // ZIP specification uses '/' as directory separator; reject backslashes
+    if (entryName.includes("\\")) return false;
+
+    // Reject absolute paths or Windows drive-letter paths (e.g. "C:...").
+    if (entryName.startsWith("/")) return false;
+    if (/^[a-zA-Z]:/.test(entryName)) return false;
+
+    // Normalize and ensure there are no ".." segments.
+    const segments = entryName.split("/");
+    for (const segment of segments) {
+        if (segment === "..") {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
  * Extract ZIP to disk directory
  */
 async function extractZipToDisk(
@@ -130,6 +154,14 @@ async function extractZipToDisk(
     const resolvedExtractDir = path.resolve(extractDir);
     for (const entry of zip.getEntries()) {
         if (!entry.isDirectory) {
+            // Validate entry name to prevent directory traversal (Zip Slip)
+            if (!isSafeZipEntryName(entry.entryName)) {
+                error("Skipping unsafe ZIP entry name during extraction", {
+                    entryName: entry.entryName,
+                });
+                continue;
+            }
+
             const targetPath = path.join(resolvedExtractDir, entry.entryName);
             const resolvedTargetPath = path.resolve(targetPath);
 
