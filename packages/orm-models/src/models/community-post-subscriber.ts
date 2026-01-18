@@ -1,7 +1,8 @@
 import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
 
-export interface CommunityPostSubscriber {
+export interface InternalCommunityPostSubscriber {
+    _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
     subscriptionId: string;
     postId: string;
@@ -10,7 +11,7 @@ export interface CommunityPostSubscriber {
 }
 
 export const CommunityPostSubscriberSchema =
-    new mongoose.Schema<CommunityPostSubscriber>(
+    new mongoose.Schema<InternalCommunityPostSubscriber>(
         {
             domain: { type: mongoose.Schema.Types.ObjectId, required: true },
             subscriptionId: {
@@ -29,3 +30,12 @@ export const CommunityPostSubscriberSchema =
     );
 
 CommunityPostSubscriberSchema.index({ postId: 1, userId: 1 }, { unique: true });
+
+const CommunityPostSubscriberModel =
+    mongoose.models.CommunityPostSubscriber ||
+    mongoose.model<InternalCommunityPostSubscriber>(
+        "CommunityPostSubscriber",
+        CommunityPostSubscriberSchema,
+    );
+
+export default CommunityPostSubscriberModel;

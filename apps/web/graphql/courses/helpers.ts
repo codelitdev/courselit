@@ -1,10 +1,9 @@
 import { internal, responses } from "../../config/strings";
 import GQLContext from "../../models/GQLContext";
-import CourseModel from "../../models/Course";
 import constants from "../../config/constants";
-import Page from "../../models/Page";
 import slugify from "slugify";
 import { addGroup } from "./logic";
+import { repositories, Criteria } from "@courselit/orm-models";
 import { Constants, Course, Progress, User } from "@courselit/common-models";
 import { getPlans } from "../paymentplans/logic";
 import { InternalCourse } from "@courselit/common-logic";
@@ -101,36 +100,24 @@ export const validateCourse = async (
 // };
 
 export const getPaginatedCoursesForAdmin = async ({
-    query,
+    criteria,
     page,
     limit,
 }: {
-    query: Record<string, unknown>;
+    criteria: Criteria<Course>;
     page?: number;
     limit?: number;
 }): Promise<Course[]> => {
     const itemsPerPage = limit || constants.itemsPerPage;
     const offset = (page || constants.defaultOffset) - 1;
-    return CourseModel.aggregate([
-        { $match: query },
-        { $sort: { updatedAt: -1 } },
-        { $skip: offset * itemsPerPage },
-        { $limit: itemsPerPage },
-        {
-            $project: {
-                id: "$_id",
-                title: 1,
-                slug: 1,
-                featuredImage: 1,
-                isBlog: 1,
-                courseId: 1,
-                type: 1,
-                published: 1,
-                sales: 1,
-                pageId: 1,
-            },
-        },
-    ]);
+
+    criteria.orderBy("updatedAt", "desc");
+    criteria.skip(offset * itemsPerPage);
+    criteria.take(itemsPerPage);
+
+    // We used aggregate before with project.
+    // findMany returns full objects.
+    return await repositories.course.findMany(criteria);
 };
 
 export const calculatePercentageCompletion = (user: User, course: Course) => {
@@ -155,15 +142,15 @@ export const setupCourse = async ({
     type: "course" | "download";
     ctx: GQLContext;
 }) => {
-    const page = await Page.create({
-        domain: ctx.subdomain._id,
+    const page = await repositories.page.create({
+        domain: ctx.subdomain.id,
         name: title,
         creatorId: ctx.user.userId,
         pageId: slugify(title.toLowerCase()),
     });
 
-    const course = await CourseModel.create({
-        domain: ctx.subdomain._id,
+    const course = await repositories.course.create({
+        domain: ctx.subdomain.id,
         title: title,
         cost: 0,
         costType: constants.costFree,
@@ -172,16 +159,23 @@ export const setupCourse = async ({
         slug: slugify(title.toLowerCase()),
         type: type,
         pageId: page.pageId,
+        groups: [],
+        published: false,
     });
+
+    // addGroup uses repository now (if refactored), or logic.ts logic which we refactored.
+    // addGroup(id, name, ...).
     await addGroup({
         id: course.courseId,
         name: internal.default_group_name,
         collapsed: false,
         ctx,
     });
+
+    // Page updates
     page.entityId = course.courseId;
-    page.layout = getInitialLayout(type);
-    await page.save();
+    page.layout = getInitialLayout(type) as any;
+    await repositories.page.update((page as any).id, page);
 
     return course;
 };
@@ -193,8 +187,8 @@ export const setupBlog = async ({
     title: string;
     ctx: GQLContext;
 }) => {
-    const course = await CourseModel.create({
-        domain: ctx.subdomain._id,
+    const course = await repositories.course.create({
+        domain: ctx.subdomain.id,
         title: title,
         cost: 0,
         costType: constants.costFree,
@@ -202,6 +196,10 @@ export const setupBlog = async ({
         creatorId: ctx.user.userId,
         slug: slugify(title.toLowerCase()),
         type: constants.blog,
+        groups: [],
+        published: false,
+        // Course interface requires these potentially?
+        // common-models Course: groups?: Group[].
     });
 
     return course;

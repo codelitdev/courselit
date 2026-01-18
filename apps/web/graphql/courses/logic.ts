@@ -1,10 +1,8 @@
 /**
  * Business logic for managing courses.
  */
-import CourseModel from "@/models/Course";
+import { repositories, Criteria } from "@courselit/orm-models";
 import { InternalCourse } from "@courselit/common-logic";
-import UserModel from "@/models/User";
-import { User } from "@courselit/common-models";
 import { responses } from "@/config/strings";
 import {
     checkIfAuthenticated,
@@ -18,7 +16,6 @@ import {
     setupCourse,
     validateCourse,
 } from "./helpers";
-import Lesson from "@/models/Lesson";
 import GQLContext from "@/models/GQLContext";
 import Filter from "./models/filter";
 import mongoose from "mongoose";
@@ -30,28 +27,21 @@ import {
     Progress,
     PaymentPlan,
     Course,
+    Lesson,
+    Email,
 } from "@courselit/common-models";
 import { deleteAllLessons } from "../lessons/logic";
 import { deleteMedia } from "@/services/medialit";
-import PageModel from "@/models/Page";
 import { getPrevNextCursor } from "../lessons/helpers";
 import { checkPermission } from "@courselit/utils";
 import { error } from "@/services/logger";
-import {
-    deleteProductsFromPaymentPlans,
-    getPlans,
-} from "../paymentplans/logic";
-import MembershipModel from "@models/Membership";
+import { getPlans } from "../paymentplans/logic";
+
 import { getActivities } from "../activities/logic";
 import { ActivityType } from "@courselit/common-models/dist/constants";
 import { verifyMandatoryTags } from "../mails/helpers";
-import { Email } from "@courselit/email-editor";
-import PaymentPlanModel from "@models/PaymentPlan";
-import CertificateTemplateModel, {
-    CertificateTemplate,
-} from "@models/CertificateTemplate";
-import CertificateModel from "@models/Certificate";
-import ActivityModel from "@models/Activity";
+import { InternalCertificateTemplate as CertificateTemplate } from "@courselit/orm-models/dist/models/certificate-template";
+
 import getDeletedMediaIds, {
     extractMediaIDs,
 } from "@/lib/get-deleted-media-ids";
@@ -66,25 +56,24 @@ export const getCourseOrThrow = async (
 ): Promise<InternalCourse> => {
     checkIfAuthenticated(ctx);
 
-    const query = courseId
-        ? {
-              courseId,
-          }
-        : {
-              _id: id,
-          };
+    const cb = Criteria.create<Course>();
+    cb.where("domain" as keyof Course, "eq", ctx.subdomain._id);
+    if (courseId) {
+        cb.where("courseId", "eq", courseId);
+    } else if (id) {
+        cb.where("_id" as keyof Course, "eq", id.toString());
+    }
 
-    const course = await CourseModel.findOne({
-        ...query,
-        domain: ctx.subdomain._id,
-    });
+    const course = await repositories.course.findOne(cb);
 
     if (!course) {
         throw new Error(responses.item_not_found);
     }
 
+    const internalCourse = course as unknown as InternalCourse;
+
     if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
-        if (!checkOwnershipWithoutModel(course, ctx)) {
+        if (!checkOwnershipWithoutModel(internalCourse, ctx)) {
             throw new Error(responses.item_not_found);
         } else {
             if (
@@ -97,14 +86,15 @@ export const getCourseOrThrow = async (
         }
     }
 
-    return course;
+    return internalCourse;
 };
 
 async function formatCourse(courseId: string, ctx: GQLContext) {
-    const course: InternalCourse | null = (await CourseModel.findOne({
+    const courseResult = await repositories.course.findByCourseId(
         courseId,
-        domain: ctx.subdomain._id,
-    }).lean()) as unknown as InternalCourse;
+        ctx.subdomain.id,
+    );
+    const course = courseResult as unknown as InternalCourse;
 
     const paymentPlans = await getPlans({
         entityId: course!.courseId,
@@ -139,10 +129,10 @@ export const getCourse = async (
     ctx: GQLContext,
     asGuest: boolean = false,
 ) => {
-    const course: InternalCourse | null = (await CourseModel.findOne({
-        courseId: id,
-        domain: ctx.subdomain._id,
-    }).lean()) as unknown as InternalCourse | null;
+    const course = (await repositories.course.findByCourseId(
+        id,
+        ctx.subdomain.id,
+    )) as unknown as InternalCourse | null;
 
     if (!course) {
         throw new Error(responses.item_not_found);
@@ -231,61 +221,94 @@ export const updateCourse = async (
     for (const mediaId of mediaIdsMarkedForDeletion) {
         await deleteMedia(mediaId);
     }
-    course = await (course as any).save();
-    await PageModel.updateOne(
-        { entityId: course.courseId, domain: ctx.subdomain._id },
-        { $set: { name: course.title } },
+
+    // course is InternalCourse (cast from Course), so ID is string.
+    const updated = await repositories.course.update(
+        course.id.toString(),
+        course as unknown as Course,
     );
+    course = updated as unknown as InternalCourse;
+
+    if (course.pageId) {
+        await repositories.page.update(course.pageId, { name: course.title });
+    }
+
     return await formatCourse(course.courseId, ctx);
 };
 
 export const deleteCourse = async (id: string, ctx: GQLContext) => {
     const course = await getCourseOrThrow(undefined, ctx, id);
+
+    // Certificate Templates
+    const certTemplateCriteria = Criteria.create<CertificateTemplate>();
+    certTemplateCriteria.where(
+        "domain" as keyof CertificateTemplate,
+        "eq",
+        ctx.subdomain._id,
+    );
+    certTemplateCriteria.where("courseId", "eq", course.courseId);
+
+    // We need to fetch to delete media
     const certificateTemplate =
-        await CertificateTemplateModel.findOne<CertificateTemplate | null>({
-            domain: ctx.subdomain._id,
-            courseId: course.courseId,
-        });
+        await repositories.certificateTemplate.findOne(certTemplateCriteria);
+
     if (certificateTemplate?.signatureImage?.mediaId) {
         await deleteMedia(certificateTemplate.signatureImage.mediaId);
     }
     if (certificateTemplate?.logo?.mediaId) {
         await deleteMedia(certificateTemplate.logo.mediaId);
     }
-    await CertificateTemplateModel.deleteOne({
-        domain: ctx.subdomain._id,
-        courseId: course.courseId,
-    });
-    await CertificateModel.deleteMany({
-        domain: ctx.subdomain._id,
-        courseId: course.courseId,
-    });
-    await MembershipModel.deleteMany({
-        domain: ctx.subdomain._id,
-        entityId: course.courseId,
-        entityType: Constants.MembershipEntityType.COURSE,
-    });
-    await PaymentPlanModel.deleteMany({
-        domain: ctx.subdomain._id,
-        entityId: course.courseId,
-        entityType: Constants.MembershipEntityType.COURSE,
-    });
-    await deleteProductsFromPaymentPlans({
-        domain: ctx.subdomain._id,
-        courseId: course.courseId,
-    });
-    await ActivityModel.deleteMany({
-        domain: ctx.subdomain._id,
-        $or: [
-            { entityId: course.courseId },
-            { "metadata.courseId": course.courseId },
-        ],
-    });
+    await repositories.certificateTemplate.deleteMany(certTemplateCriteria);
+
+    // Certificates
+    const certCriteria = Criteria.create<any>();
+    certCriteria.where("domain", "eq", ctx.subdomain._id);
+    certCriteria.where("courseId", "eq", course.courseId);
+    await repositories.certificate.deleteMany(certCriteria);
+
+    // Membership
+    const memCriteria = Criteria.create<Membership>();
+    memCriteria.where("domain", "eq", ctx.subdomain._id);
+    memCriteria.where("entityId", "eq", course.courseId);
+    memCriteria.where(
+        "entityType",
+        "eq",
+        Constants.MembershipEntityType.COURSE,
+    );
+    await repositories.membership.deleteMany(memCriteria);
+
+    // Payment Plans
+    const planCriteria = Criteria.create<PaymentPlan>();
+    planCriteria.where("domain", "eq", ctx.subdomain._id);
+    planCriteria.where("entityId", "eq", course.courseId);
+    planCriteria.where(
+        "entityType",
+        "eq",
+        Constants.MembershipEntityType.COURSE,
+    );
+    await repositories.paymentPlan.deleteMany(planCriteria);
+
+    await repositories.paymentPlan.removeProductFromPlans(
+        course.courseId,
+        ctx.subdomain.id.toString(),
+    );
+
+    // Activities - Split $or into two delete calls
+    const actCriteria1 = Criteria.create<any>();
+    actCriteria1.where("domain", "eq", ctx.subdomain._id);
+    actCriteria1.where("entityId", "eq", course.courseId);
+    await repositories.activity.deleteMany(actCriteria1);
+
+    const actCriteria2 = Criteria.create<any>();
+    actCriteria2.where("domain", "eq", ctx.subdomain._id);
+    actCriteria2.where("metadata.courseId", "eq", course.courseId);
+    await repositories.activity.deleteMany(actCriteria2);
+
     await deleteAllLessons(course.courseId, ctx);
     if (course.featuredImage) {
         try {
             await deleteMedia(course.featuredImage.mediaId);
-        } catch (err) {
+        } catch (err: any) {
             error(err.message, {
                 stack: err.stack,
             });
@@ -297,23 +320,20 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
             await deleteMedia(mediaId);
         }
     }
-    await UserModel.updateMany(
-        {
-            domain: ctx.subdomain._id,
-        },
-        {
-            $pull: {
-                purchases: {
-                    courseId: course.courseId,
-                },
-            },
-        },
+
+    // Remove purchase from users
+    await repositories.user.removePurchaseFromUsers(
+        course.courseId,
+        ctx.subdomain.id.toString(),
     );
+
     await deletePageInternal(ctx, course.pageId!);
-    await CourseModel.deleteOne({
-        domain: ctx.subdomain._id,
-        courseId: course.courseId,
-    });
+
+    // Delete Course
+    const courseCriteria = Criteria.create<Course>();
+    courseCriteria.where("domain" as keyof Course, "eq", ctx.subdomain._id);
+    courseCriteria.where("courseId", "eq", course.courseId);
+    await repositories.course.deleteMany(courseCriteria);
     return true;
 };
 
@@ -341,36 +361,37 @@ export const getCoursesAsAdmin = async ({
         throw new Error(responses.action_not_allowed);
     }
 
-    const query: Partial<Omit<InternalCourse, "type">> & {
-        $text?: Record<string, unknown>;
-        type?: string | { $in: string[] };
-    } = {
-        domain: context.subdomain._id,
-    };
+    const criteria = Criteria.create<Course>();
+    criteria.where("domain" as keyof Course, "eq", context.subdomain._id);
+
     if (!checkPermission(user.permissions, [permissions.manageAnyCourse])) {
-        query.creatorId = user.userId;
+        criteria.where("creatorId", "eq", user.userId);
     }
 
     if (filterBy) {
-        query.type = { $in: filterBy };
+        criteria.where("type", "in", filterBy);
     } else {
-        query.type = { $in: [constants.download, constants.course] };
+        criteria.where("type", "in", [constants.download, constants.course]);
     }
 
-    if (searchText) query.$text = { $search: searchText };
+    if (searchText) {
+        criteria.where("$text" as any, "eq", { $search: searchText });
+    }
 
     const courses = await getPaginatedCoursesForAdmin({
-        query,
+        criteria,
         page: offset,
     });
 
     return courses.map(async (course) => ({
         ...course,
-        customers: await (MembershipModel as any).countDocuments({
-            entityId: course.courseId,
-            entityType: Constants.MembershipEntityType.COURSE,
-            domain: context.subdomain._id,
-        }),
+        customers: await (async () => {
+            const cb = Criteria.create<Membership>();
+            cb.where("entityId", "eq", course.courseId);
+            cb.where("entityType", "eq", Constants.MembershipEntityType.COURSE);
+            cb.where("domain", "eq", context.subdomain._id);
+            return await repositories.membership.count(cb);
+        })(),
         sales: (
             await getActivities({
                 entityId: course.courseId,
@@ -395,57 +416,32 @@ export const getCourses = async ({
     tag?: string;
     filterBy?: Filter[];
 }) => {
-    const query: Record<string, unknown> = {
-        published: true,
-        privacy: Constants.ProductAccessType.PUBLIC,
-        domain: ctx.subdomain._id,
-    };
+    const cb = Criteria.create<Course>();
+    cb.where("published", "eq", true);
+    cb.where(
+        "privacy" as keyof Course,
+        "eq",
+        Constants.ProductAccessType.PUBLIC,
+    );
+    cb.where("domain" as keyof Course, "eq", ctx.subdomain._id);
 
-    let courses;
     if (ids) {
-        query.courseId = {
-            $in: ids,
-        };
-        courses = await CourseModel.find(query, {
-            id: 1,
-            title: 1,
-            cost: 1,
-            description: 1,
-            type: 1,
-            updatedAt: 1,
-            slug: 1,
-            featuredImage: 1,
-            courseId: 1,
-            tags: 1,
-            groups: 1,
-            pageId: 1,
-        });
+        cb.where("courseId", "in", ids);
     } else {
         validateOffset(offset);
         if (tag) {
-            query.tags = tag;
+            cb.where("tags", "eq", tag);
         }
         if (filterBy) {
-            query.type = { $in: filterBy };
+            cb.where("type", "in", filterBy);
         }
-        courses = await CourseModel.find(query, {
-            id: 1,
-            title: 1,
-            cost: 1,
-            description: 1,
-            type: 1,
-            updatedAt: 1,
-            slug: 1,
-            featuredImage: 1,
-            courseId: 1,
-            tags: 1,
-            groups: 1,
-            pageId: 1,
-        })
-            .sort({ updatedAt: -1 })
-            .skip((offset! - 1) * itemsPerPage)
-            .limit(itemsPerPage);
+        cb.orderBy("updatedAt", "desc");
+        cb.skip((offset! - 1) * itemsPerPage);
+        cb.take(itemsPerPage);
     }
+
+    // We fetch full objects. Projection is not natively supported in repo yet, but overhead is acceptable.
+    const courses = await repositories.course.findMany(cb);
 
     return courses.map(async (x) => ({
         id: x.id,
@@ -458,7 +454,7 @@ export const getCourses = async ({
         featuredImage: x.featuredImage,
         courseId: x.courseId,
         tags: x.tags,
-        groups: x.isBlog ? null : x.groups,
+        groups: x.isBlog ? undefined : x.groups,
         pageId: x.isBlog ? undefined : x.pageId,
     }));
 };
@@ -470,9 +466,8 @@ const getProductsQuery = (
     ids?: string[],
     publicView: boolean = false,
 ) => {
-    const query: Record<string, unknown> = {
-        domain: ctx.subdomain._id,
-    };
+    const cb = Criteria.create<Course>();
+    cb.where("domain" as keyof Course, "eq", ctx.subdomain._id);
 
     if (
         !publicView &&
@@ -487,30 +482,32 @@ const getProductsQuery = (
         ) {
             // do nothing
         } else {
-            query.creatorId = ctx.user.userId;
+            cb.where("creatorId", "eq", ctx.user.userId);
         }
     } else {
-        query.published = true;
-        query.privacy = Constants.ProductAccessType.PUBLIC;
+        cb.where("published", "eq", true);
+        cb.where(
+            "privacy" as keyof Course,
+            "eq",
+            Constants.ProductAccessType.PUBLIC,
+        );
     }
 
     if (filter) {
-        query.type = { $in: filter };
+        cb.where("type", "in", filter);
     } else {
-        query.type = { $in: [constants.download, constants.course] };
+        cb.where("type", "in", [constants.download, constants.course]);
     }
 
     if (tags) {
-        query.tags = { $in: tags };
+        cb.where("tags", "in", tags);
     }
 
     if (ids) {
-        query.courseId = {
-            $in: ids,
-        };
+        cb.where("courseId", "in", ids);
     }
 
-    return query;
+    return cb;
 };
 
 export const getProducts = async ({
@@ -532,13 +529,14 @@ export const getProducts = async ({
     publicView?: boolean;
     sort?: number;
 }): Promise<InternalCourse[]> => {
-    const query = getProductsQuery(ctx, filterBy, tags, ids, publicView);
+    const cb = getProductsQuery(ctx, filterBy, tags, ids, publicView);
+    cb.skip((page - 1) * limit);
+    cb.take(limit);
+    if (sort) {
+        cb.orderBy("updatedAt", sort === 1 ? "asc" : "desc");
+    }
 
-    const courses = await (CourseModel as any).paginatedFind(query, {
-        page,
-        limit,
-        sort,
-    });
+    const { data: courses } = await repositories.course.findPaginated(cb);
 
     const hasManagePerm =
         ctx.user &&
@@ -547,17 +545,31 @@ export const getProducts = async ({
             permissions.manageCourse,
         ]);
 
-    const products: InternalCourse[] = [];
+    const products: any[] = [];
 
     for (const course of courses) {
         const customers =
             hasManagePerm && course.type !== constants.blog
-                ? await (MembershipModel as any).countDocuments({
-                      entityId: course.courseId,
-                      entityType: Constants.MembershipEntityType.COURSE,
-                      domain: ctx.subdomain._id,
-                      status: Constants.MembershipStatus.ACTIVE,
-                  })
+                ? await (async () => {
+                      const cb = Criteria.create<Membership>();
+                      cb.where("entityId", "eq", course.courseId);
+                      cb.where(
+                          "entityType",
+                          "eq",
+                          Constants.MembershipEntityType.COURSE,
+                      );
+                      cb.where(
+                          "domain" as keyof Membership,
+                          "eq",
+                          ctx.subdomain._id,
+                      );
+                      cb.where(
+                          "status",
+                          "eq",
+                          Constants.MembershipStatus.ACTIVE,
+                      );
+                      return await repositories.membership.count(cb);
+                  })()
                 : undefined;
         const sales =
             hasManagePerm && course.type !== constants.blog
@@ -578,13 +590,12 @@ export const getProducts = async ({
                       ctx,
                   })
                 : undefined;
-        const extendedCourse: InternalCourse & {
-            customers?: number;
-            sales: number;
-            paymentPlans?: PaymentPlan[];
-        } = {
-            ...course,
-            groups: course.type !== constants.blog ? course.groups : null,
+        const extendedCourse = {
+            ...(course as unknown as InternalCourse),
+            groups:
+                course.type !== constants.blog
+                    ? (course.groups ?? undefined)
+                    : undefined,
             pageId: course.type !== constants.blog ? course.pageId : undefined,
             customers,
             sales: sales ?? 0,
@@ -610,9 +621,9 @@ export const getProductsCount = async ({
     ids?: string[];
     publicView?: boolean;
 }) => {
-    const query = getProductsQuery(ctx, filterBy, tags, ids, publicView);
+    const cb = getProductsQuery(ctx, filterBy, tags, ids, publicView);
 
-    return await (CourseModel as any).countDocuments(query);
+    return await repositories.course.count(cb);
 };
 
 export const addGroup = async ({
@@ -640,19 +651,39 @@ export const addGroup = async ({
         throw new Error(responses.existing_group);
     }
 
+    if (!course.groups) {
+        course.groups = [];
+    }
+
     const maximumRank =
-        course.groups?.reduce(
+        course.groups.reduce(
             (acc: number, value: { rank: number }) =>
                 value.rank > acc ? value.rank : acc,
             0,
         ) ?? 0;
 
-    await (course.groups as any).push({
+    course.groups.push({
         rank: maximumRank + 1000,
         name,
-    } as Group);
+        // Assuming Group interface compatibility. Mongoose generates _id?
+        // We might need to generate an ID for the group if it's new.
+        // Mongoose subdocs get _id auto. POJO needs manual ID?
+        // Group definition: id, name, rank...
+        // If I push generic object, it won't have ID.
+        // I should probably generate an ID.
+        // using new mongoose.Types.ObjectId().toString()?
+        // Or generic UUID.
+        // Logic.ts imports mongoose.
+        id: new mongoose.Types.ObjectId().toString(),
+        // Check Group interface for other props. LessonOrder, etc.
+        lessonsOrder: [],
+        collapsed: false,
+    } as unknown as Group);
 
-    await (course as any).save();
+    await repositories.course.update(
+        course.id.toString(),
+        course as unknown as Course,
+    );
 
     return await formatCourse(course.courseId, ctx);
 };
@@ -676,31 +707,27 @@ export const removeGroup = async (
         throw new Error(responses.download_course_last_group_cannot_be_removed);
     }
 
-    const countOfAssociatedLessons = await Lesson.countDocuments({
-        courseId,
-        groupId: group.id,
-        domain: ctx.subdomain._id,
-    });
+    const countCriteria = Criteria.create<Lesson>();
+    countCriteria.where("domain" as keyof Lesson, "eq", ctx.subdomain._id);
+    countCriteria.where("courseId", "eq", courseId);
+    countCriteria.where("groupId", "eq", group.id);
+    const countOfAssociatedLessons =
+        await repositories.lesson.count(countCriteria);
 
     if (countOfAssociatedLessons > 0) {
         throw new Error(responses.group_not_empty);
     }
 
-    await (course.groups as any).pull({ _id: id });
-    await (course as any).save();
+    course.groups = course.groups!.filter((g) => g.id !== id);
+    await repositories.course.update(
+        course.id.toString(),
+        course as unknown as Course,
+    );
 
-    await UserModel.updateMany(
-        {
-            domain: ctx.subdomain._id,
-        },
-        {
-            $pull: {
-                "purchases.$[elem].accessibleGroups": id,
-            },
-        },
-        {
-            arrayFilters: [{ "elem.courseId": courseId }],
-        },
+    await repositories.user.removeGroupFromPurchases(
+        courseId,
+        id,
+        ctx.subdomain.id,
     );
 
     return await formatCourse(course.courseId, ctx);
@@ -718,85 +745,88 @@ export const updateGroup = async ({
 }) => {
     const course = await getCourseOrThrow(undefined, ctx, courseId);
 
-    const $set = {};
-    if (name) {
-        const existingName = (group) =>
-            group.name === name && group._id.toString() !== id;
+    // We cast to access InternalCourse props like id (string)
+    const group = course.groups?.find((group) => group.id === id);
 
-        if (course.groups?.some(existingName)) {
-            throw new Error(responses.existing_group);
-        }
+    if (group) {
+        if (name) {
+            const existingName = (g: Group) => g.name === name && g.id !== id;
 
-        $set["groups.$.name"] = name;
-    }
-
-    if (rank) {
-        $set["groups.$.rank"] = rank;
-    }
-
-    if (
-        lessonsOrder &&
-        lessonsOrder.every((lessonId) => course.lessons?.includes(lessonId)) &&
-        lessonsOrder.every((lessonId) =>
-            course.groups
-                ?.find((group) => group.id === id)
-                ?.lessonsOrder.includes(lessonId),
-        )
-    ) {
-        $set["groups.$.lessonsOrder"] = lessonsOrder;
-    }
-
-    if (typeof collapsed === "boolean") {
-        $set["groups.$.collapsed"] = collapsed;
-    }
-
-    if (drip) {
-        if (drip.status) {
-            $set["groups.$.drip.status"] = drip.status;
-        }
-        if (drip.type) {
-            $set["groups.$.drip.type"] = drip.type;
-        }
-        if (drip.type === Constants.dripType[0]) {
-            if (drip.delayInMillis) {
-                $set["groups.$.drip.delayInMillis"] =
-                    drip.delayInMillis * 86400000;
+            if (course.groups?.some(existingName)) {
+                throw new Error(responses.existing_group);
             }
-            $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
-        }
-        if (drip.type === Constants.dripType[1]) {
-            $set["groups.$.drip.delayInMillis"] = null;
-            if (drip.dateInUTC) {
-                $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
-            }
-        }
-        if (drip.email) {
-            if (!drip.email.content || !drip.email.subject) {
-                throw new Error(responses.invalid_drip_email);
-            }
-            const parsedContent: Email = JSON.parse(drip.email.content);
-            verifyMandatoryTags(parsedContent.content);
 
-            $set["groups.$.drip.email"] = {
-                content: parsedContent,
-                subject: drip.email.subject,
-                published: true,
-                delayInMillis: 0,
-            };
-        } else {
-            $set["groups.$.drip.email"] = null;
+            group.name = name;
         }
+
+        if (rank) {
+            group.rank = rank;
+        }
+
+        if (
+            lessonsOrder &&
+            lessonsOrder.every((lessonId: string) =>
+                course.lessons?.includes(lessonId),
+            ) &&
+            lessonsOrder.every((lessonId: string) =>
+                course.groups
+                    ?.find((group) => group.id === id)
+                    ?.lessonsOrder.includes(lessonId),
+            )
+        ) {
+            group.lessonsOrder = lessonsOrder;
+        }
+
+        if (typeof collapsed === "boolean") {
+            group.collapsed = collapsed;
+        }
+
+        if (drip) {
+            if (!group.drip) group.drip = {} as any;
+
+            if (drip.status) {
+                group.drip!.status = drip.status;
+            }
+            if (drip.type) {
+                group.drip!.type = drip.type;
+            }
+            if (drip.type === Constants.dripType[0]) {
+                if (drip.delayInMillis) {
+                    group.drip!.delayInMillis = drip.delayInMillis * 86400000;
+                }
+                group.drip!.dateInUTC = drip.dateInUTC;
+            }
+            if (drip.type === Constants.dripType[1]) {
+                group.drip!.delayInMillis = undefined;
+                if (drip.dateInUTC) {
+                    group.drip!.dateInUTC = drip.dateInUTC;
+                }
+            }
+            if (drip.email) {
+                if (!drip.email.content || !drip.email.subject) {
+                    throw new Error(responses.invalid_drip_email);
+                }
+                const parsedContent: Email = JSON.parse(drip.email.content);
+                verifyMandatoryTags(parsedContent.content as any);
+
+                group.drip!.email = {
+                    content: parsedContent,
+                    subject: drip.email.subject,
+                    published: true,
+                    delayInMillis: 0,
+                } as unknown as Email;
+            } else {
+                group.drip!.email = undefined;
+            }
+        }
+
+        await repositories.course.update(
+            course.id.toString(),
+            course as unknown as Course,
+        );
     }
 
-    return await CourseModel.findOneAndUpdate(
-        {
-            domain: ctx.subdomain._id,
-            courseId: course.courseId,
-            "groups._id": id,
-        },
-        { $set },
-        { new: true },
-    );
+    return await formatCourse(course.courseId, ctx);
 };
 
 export const getMembers = async ({
@@ -825,33 +855,30 @@ export const getMembers = async ({
 > => {
     const course = await getCourseOrThrow(undefined, ctx, courseId);
 
-    const query: Record<string, unknown> = {
-        domain: ctx.subdomain._id,
-        entityId: course.courseId,
-        entityType: Constants.MembershipEntityType.COURSE,
-    };
-
+    const cb = Criteria.create<Membership>();
+    cb.where("domain" as keyof Membership, "eq", ctx.subdomain._id);
+    cb.where("entityId", "eq", course.courseId);
+    cb.where("entityType", "eq", Constants.MembershipEntityType.COURSE);
     if (status) {
-        query.status = status;
+        cb.where("status", "eq", status);
     }
 
-    const members: Membership[] = await (MembershipModel as any).paginatedFind(
-        query,
-        {
-            page,
-            limit,
-        },
-    );
+    const itemsPerPage = limit || constants.itemsPerPage;
+    const offset = (page || constants.defaultOffset) - 1;
+    cb.skip(offset * itemsPerPage);
+    cb.take(itemsPerPage);
+
+    const { data: members } = await repositories.membership.findPaginated(cb);
 
     return await Promise.all(
         members.map(async (member) => {
-            const user = await UserModel.findOne<User>({
-                domain: ctx.subdomain._id,
-                userId: member.userId,
-            });
+            const user = await repositories.user.findByUserId(
+                member.userId,
+                ctx.subdomain.id,
+            );
 
             const purchase = user?.purchases.find(
-                (purchase) => purchase.courseId === course.courseId,
+                (purchase) => purchase.courseId === courseId,
             );
 
             return {
@@ -877,65 +904,11 @@ export const getStudents = async ({
     ctx: GQLContext;
     text?: string;
 }) => {
-    const matchCondition = text
-        ? {
-              $match: {
-                  "purchases.courseId": course.courseId,
-                  domain: ctx.subdomain._id,
-                  $or: [
-                      { email: new RegExp(text) },
-                      { name: new RegExp(text) },
-                  ],
-              },
-          }
-        : {
-              $match: {
-                  "purchases.courseId": course.courseId,
-                  domain: ctx.subdomain._id,
-              },
-          };
-
-    const result = await UserModel.aggregate([
-        matchCondition,
-        {
-            $addFields: {
-                completedLessons: {
-                    $filter: {
-                        input: "$purchases",
-                        as: "t",
-                        cond: {
-                            $eq: ["$$t.courseId", course.courseId],
-                        },
-                    },
-                },
-            },
-        },
-        {
-            $unwind: "$completedLessons",
-        },
-        {
-            $addFields: {
-                progress: "$completedLessons.completedLessons",
-                signedUpOn: "$completedLessons.createdAt",
-                lastAccessedOn: "$completedLessons.updatedAt",
-                downloaded: "$completedLessons.downloaded",
-            },
-        },
-        {
-            $project: {
-                userId: 1,
-                email: 1,
-                name: 1,
-                progress: 1,
-                signedUpOn: 1,
-                lastAccessedOn: 1,
-                downloaded: 1,
-                avatar: 1,
-            },
-        },
-    ]);
-
-    return result;
+    return await repositories.user.getStudentsForCourse(
+        course.courseId,
+        ctx.subdomain.id,
+        text,
+    );
 };
 
 export const getCourseCertificateTemplate = async (
@@ -944,10 +917,11 @@ export const getCourseCertificateTemplate = async (
 ) => {
     const course = await getCourseOrThrow(undefined, ctx, courseId);
 
-    const certificateTemplate = await CertificateTemplateModel.findOne({
-        domain: ctx.subdomain._id,
-        courseId: course.courseId,
-    });
+    const certificateTemplate =
+        await repositories.certificateTemplate.findByCourseId(
+            course.courseId,
+            ctx.subdomain.id,
+        );
 
     return certificateTemplate;
 };
@@ -975,22 +949,20 @@ export const updateCourseCertificateTemplate = async ({
 }) => {
     const course = await getCourseOrThrow(undefined, ctx, courseId);
 
-    const updatedTemplate = await CertificateTemplateModel.findOneAndUpdate(
-        {
-            domain: ctx.subdomain._id,
-            courseId: course.courseId,
-        },
-        {
-            title,
-            subtitle,
-            description,
-            signatureImage,
-            signatureName,
-            signatureDesignation,
-            logo,
-        },
-        { upsert: true, new: true },
-    );
+    const updatedTemplate =
+        await repositories.certificateTemplate.upsertForCourse(
+            course.courseId,
+            ctx.subdomain._id.toString(),
+            {
+                title,
+                subtitle,
+                description,
+                signatureImage: signatureImage as any,
+                signatureName,
+                signatureDesignation,
+                logo: logo as any,
+            },
+        );
     return {
         title: updatedTemplate.title,
         subtitle: updatedTemplate.subtitle,

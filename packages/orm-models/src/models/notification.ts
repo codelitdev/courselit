@@ -9,6 +9,7 @@ import mongoose from "mongoose";
 export interface InternalNotification
     extends Omit<Notification, "message" | "href">,
         mongoose.Document {
+    _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
     notificationId: string;
     userId: string;
@@ -83,3 +84,9 @@ NotificationSchema.statics.paginate = async function (userId, options) {
 
     return { notifications, total };
 };
+
+const NotificationModel =
+    mongoose.models.Notification ||
+    mongoose.model<InternalNotification>("Notification", NotificationSchema);
+
+export default NotificationModel;

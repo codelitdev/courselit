@@ -20,4 +20,6 @@ export default interface Page {
     draftDescription?: string;
     draftSocialImage?: Media;
     draftRobotsAllowed?: boolean;
+    domain?: string;
+    creatorId?: string;
 }

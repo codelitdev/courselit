@@ -2,7 +2,7 @@ import { OngoingSequence } from "@courselit/common-models";
 import mongoose, { Schema } from "mongoose";
 
 export const OngoingSequenceSchema: Schema = new Schema<
-    OngoingSequence & { domain: mongoose.Schema.Types.ObjectId }
+    Omit<OngoingSequence, "domain"> & { domain: mongoose.Types.ObjectId }
 >(
     {
         domain: { type: mongoose.Schema.Types.ObjectId, required: true },
@@ -18,3 +18,8 @@ export const OngoingSequenceSchema: Schema = new Schema<
 );
 
 OngoingSequenceSchema.index({ sequenceId: 1, userId: 1 }, { unique: true });
+
+const OngoingSequenceModel =
+    mongoose.models.OngoingSequence ||
+    mongoose.model("OngoingSequence", OngoingSequenceSchema);
+export default OngoingSequenceModel;

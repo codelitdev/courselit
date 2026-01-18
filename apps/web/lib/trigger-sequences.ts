@@ -2,6 +2,7 @@ import {
     Rule,
     Constants,
     Sequence,
+    User,
     type Event,
     Email,
 } from "@courselit/common-models";
@@ -10,14 +11,13 @@ import RuleModel from "@models/Rule";
 import SequenceModel from "@models/Sequence";
 import mongoose from "mongoose";
 import { error } from "../services/logger";
-import { InternalUser } from "@courselit/common-logic";
 
 export async function triggerSequences({
     user,
     event,
     data,
 }: {
-    user: InternalUser;
+    user: User;
     event: Event;
     data?: string;
 }) {
@@ -26,8 +26,8 @@ export async function triggerSequences({
     }
 
     try {
-        const filter: Partial<Rule & { domain: mongoose.Types.ObjectId }> = {
-            domain: user.domain,
+        const filter: Partial<Rule & { domain: string }> = {
+            domain: user.domain!,
             event,
         };
         if (data) {

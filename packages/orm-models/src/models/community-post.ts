@@ -15,6 +15,7 @@ export interface InternalCommunityPost
         | "pinned"
         | "deleted"
     > {
+    _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
     userId: string;
     likes: string[];
@@ -58,3 +59,9 @@ CommunityPostSchema.statics.paginatedFind = async function (filter, options) {
         .exec();
     return docs;
 };
+
+const CommunityPostModel =
+    mongoose.models.CommunityPost ||
+    mongoose.model<InternalCommunityPost>("CommunityPost", CommunityPostSchema);
+
+export default CommunityPostModel;

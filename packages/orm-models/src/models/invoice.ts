@@ -3,6 +3,7 @@ import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
 
 export interface InternalInvoice extends Invoice {
+    _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
 }
 
@@ -32,3 +33,9 @@ export const InvoiceSchema = new mongoose.Schema<InternalInvoice>(
         timestamps: true,
     },
 );
+
+const InvoiceModel =
+    mongoose.models.Invoice ||
+    mongoose.model<InternalInvoice>("Invoice", InvoiceSchema);
+
+export default InvoiceModel;

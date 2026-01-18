@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
         }
 
         const membership = await getMembership({
-            domainId: domain._id,
+            domainId: domain._id.toString(),
             userId: user.userId,
             entityType: type,
             entityId: id,

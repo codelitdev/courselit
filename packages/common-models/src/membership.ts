@@ -10,6 +10,7 @@ export type MembershipRole =
     (typeof MembershipRole)[keyof typeof MembershipRole];
 
 export interface Membership {
+    domain: string;
     membershipId: string;
     userId: string;
     entityId: string;

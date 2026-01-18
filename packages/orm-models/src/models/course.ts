@@ -9,7 +9,9 @@ import {
 import { MediaSchema } from "./media";
 import { EmailSchema } from "./email";
 
-export interface InternalCourse extends Omit<Course, "paymentPlans"> {
+export interface InternalCourse
+    extends Omit<Course, "paymentPlans" | "domain" | "id"> {
+    _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
     id: mongoose.Types.ObjectId;
     privacy: ProductAccessType;
@@ -114,3 +116,9 @@ CourseSchema.statics.paginatedFind = async function (
         .exec();
     return docs;
 };
+
+const CourseModel =
+    mongoose.models.Course ||
+    mongoose.model<InternalCourse>("Course", CourseSchema);
+
+export default CourseModel;

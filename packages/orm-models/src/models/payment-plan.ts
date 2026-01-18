@@ -2,7 +2,8 @@ import { Constants, PaymentPlan } from "@courselit/common-models";
 import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
 
-export interface InternalPaymentPlan extends PaymentPlan {
+export interface InternalPaymentPlan extends Omit<PaymentPlan, "domain"> {
+    _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
     userId: string;
     archived: boolean;
@@ -74,3 +75,9 @@ PaymentPlanSchema.index({ domain: 1, entityId: 1, entityType: 1, archived: 1 });
 PaymentPlanSchema.index({ domain: 1, internal: 1 });
 PaymentPlanSchema.index({ domain: 1, planId: 1, archived: 1 });
 PaymentPlanSchema.index({ domain: 1, archived: 1, type: 1 });
+
+const PaymentPlanModel =
+    mongoose.models.PaymentPlan ||
+    mongoose.model<InternalPaymentPlan>("PaymentPlan", PaymentPlanSchema);
+
+export default PaymentPlanModel;

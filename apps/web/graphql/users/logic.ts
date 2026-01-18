@@ -1,14 +1,14 @@
 "use server";
 
-import UserModel from "@models/User";
+import { repositories } from "@courselit/orm-models";
 import { responses } from "@/config/strings";
 import { makeModelTextSearchable, checkIfAuthenticated } from "@/lib/graphql";
 import constants from "@/config/constants";
 import GQLContext from "@/models/GQLContext";
 import { initMandatoryPages } from "../pages/logic";
-import { Domain } from "@models/Domain";
 import { checkPermission, generateUniqueId } from "@courselit/utils";
 import UserSegmentModel from "@models/UserSegment";
+import { default as LegacyUserModel } from "@models/User";
 import {
     InternalCourse,
     InternalUser,
@@ -26,6 +26,7 @@ import {
     Progress,
     UserFilterWithAggregator,
     type Event,
+    Domain,
 } from "@courselit/common-models";
 import { recordActivity } from "@/lib/record-activity";
 import { triggerSequences } from "@/lib/trigger-sequences";
@@ -59,7 +60,6 @@ import {
     cleanupPersonalData,
 } from "./helpers";
 const { permissions } = UIConstants;
-import { ObjectId } from "mongodb";
 
 const removeAdminFieldsFromUserObject = (user: any) => ({
     id: user._id,
@@ -77,7 +77,10 @@ export const getUser = async (
     let user: any = ctx.user;
 
     if (userId) {
-        user = await UserModel.findOne({ userId, domain: ctx.subdomain._id });
+        user = await repositories.user.findByUserId(
+            userId,
+            ctx.subdomain.id.toString(),
+        );
     }
 
     if (!user) {
@@ -128,25 +131,27 @@ export const updateUser = async (userData: UserData, ctx: GQLContext) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    let user = await UserModel.findOne({
-        userId: id,
-        domain: ctx.subdomain._id,
-    });
+    const user = await repositories.user.findByUserId(
+        id,
+        ctx.subdomain.id.toString(),
+    );
     if (!user) throw new Error(responses.item_not_found);
 
+    const updates: any = {};
     for (const key of keys.filter((key) => key !== "id")) {
         if (key === "tags") {
             addTags(userData["tags"]!, ctx);
         }
 
-        user[key] = userData[key];
+        updates[key] = userData[key];
     }
 
-    validateUserProperties(user);
+    // Validate merged object (simulating what the user would look like)
+    const pendingUser = { ...user, ...updates };
+    validateUserProperties(pendingUser);
 
-    user = await user.save();
-
-    return user;
+    const updatedUser = await repositories.user.update(user.id, updates);
+    return updatedUser;
 };
 
 export const inviteCustomer = async (
@@ -166,10 +171,10 @@ export const inviteCustomer = async (
     }
 
     const sanitizedEmail = (email as string).toLowerCase();
-    let user = await UserModel.findOne({
-        email: sanitizedEmail,
-        domain: ctx.subdomain._id,
-    });
+    let user = await repositories.user.findByEmail(
+        sanitizedEmail,
+        ctx.subdomain.id.toString(),
+    );
     if (!user) {
         user = await createUser({
             domain: ctx.subdomain!,
@@ -180,15 +185,15 @@ export const inviteCustomer = async (
 
     if (tags.length) {
         user = await updateUser(
-            { id: user.userId, tags: [...user.tags, ...tags] },
+            { id: user.userId, tags: [...(user.tags || []), ...tags] },
             ctx,
         );
     }
 
     const paymentPlan = await getInternalPaymentPlan(ctx);
     const membership = await getMembership({
-        domainId: ctx.subdomain._id,
-        userId: user.userId,
+        domainId: ctx.subdomain.id,
+        userId: user!.userId,
         entityType: Constants.MembershipEntityType.COURSE,
         entityId: course.courseId,
         planId: paymentPlan.planId,
@@ -209,7 +214,7 @@ export const inviteCustomer = async (
         });
 
         await addMailJob({
-            to: [user.email],
+            to: [user!.email],
             subject: `You have been invited to ${course.title}`,
             body: emailBody,
             from: generateEmailFrom({
@@ -235,10 +240,10 @@ export const deleteUser = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    const userToDelete = await UserModel.findOne<InternalUser>({
-        domain: ctx.subdomain._id,
+    const userToDelete = await repositories.user.findByUserId(
         userId,
-    });
+        ctx.subdomain.id.toString(),
+    );
 
     if (!userToDelete) {
         throw new Error(responses.user_not_found);
@@ -249,10 +254,10 @@ export const deleteUser = async (
     }
 
     const deleterUser =
-        (await UserModel.findOne<InternalUser>({
-            domain: ctx.subdomain._id,
-            userId: ctx.user.userId,
-        })) || (ctx.user as InternalUser);
+        (await repositories.user.findByUserId(
+            ctx.user.userId,
+            ctx.subdomain.id.toString(),
+        )) || (ctx.user as unknown as User);
 
     await validateUserDeletion(userToDelete, ctx);
 
@@ -281,8 +286,11 @@ export const getUsers = async ({
         throw new Error(responses.action_not_allowed);
     }
 
-    const searchUsers = makeModelTextSearchable(UserModel);
-    const query = await buildQueryFromSearchData(ctx.subdomain._id, filters);
+    const searchUsers = makeModelTextSearchable(LegacyUserModel);
+    const query = await buildQueryFromSearchData(
+        new mongoose.Types.ObjectId(ctx.subdomain.id),
+        filters,
+    );
     const users = await searchUsers(
         {
             offset: page,
@@ -308,8 +316,11 @@ export const getUsersCount = async (ctx: GQLContext, filters?: string) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    const query = await buildQueryFromSearchData(ctx.subdomain._id, filters);
-    return await UserModel.countDocuments(query);
+    const query = await buildQueryFromSearchData(
+        new mongoose.Types.ObjectId(ctx.subdomain.id),
+        filters,
+    );
+    return await LegacyUserModel.countDocuments(query);
 };
 
 const buildQueryFromSearchData = async (
@@ -323,7 +334,6 @@ const buildQueryFromSearchData = async (
         filters = await convertFiltersToDBConditions({
             domain,
             filter: filtersWithAggregator,
-            membershipModel: MembershipModel,
         });
     }
     return { domain, ...filters };
@@ -351,7 +361,11 @@ export const recordProgress = async ({
         -1
     ) {
         user.purchases[enrolledItemIndex].completedLessons.push(lessonId);
-        await (user as any).save();
+        const userIdForUpdate =
+            (user as any)._id?.toString() || user.id || user.userId;
+        await repositories.user.update(userIdForUpdate, {
+            purchases: user.purchases,
+        });
     }
 };
 
@@ -380,48 +394,49 @@ export async function createUser({
         checkForInvalidPermissions(permissions);
     }
 
-    const rawResult = await UserModel.findOneAndUpdate(
-        { domain: domain._id, email },
+    const upsertResult = await repositories.user.upsertUser(
+        { email, domainId: domain.id },
         {
-            $setOnInsert: {
-                domain: domain._id,
-                name,
-                email: email.toLowerCase(),
-                active: true,
-                purchases: [],
-                permissions: superAdmin
-                    ? [
-                          constants.permissions.manageCourse,
-                          constants.permissions.manageAnyCourse,
-                          constants.permissions.publishCourse,
-                          constants.permissions.manageMedia,
-                          constants.permissions.manageSite,
-                          constants.permissions.manageSettings,
-                          constants.permissions.manageUsers,
-                          constants.permissions.manageCommunity,
-                      ]
-                    : [
-                          constants.permissions.enrollInCourse,
-                          constants.permissions.manageMedia,
-                          ...permissions,
-                      ],
-                lead: lead || constants.leadWebsite,
-                subscribedToUpdates,
-            },
+            domain: domain.id,
+            // Note: Repository upsertUser sets on insert.
+            name,
+            email: email.toLowerCase(),
+            active: true,
+            purchases: [],
+            permissions: superAdmin
+                ? [
+                      constants.permissions.manageCourse,
+                      constants.permissions.manageAnyCourse,
+                      constants.permissions.publishCourse,
+                      constants.permissions.manageMedia,
+                      constants.permissions.manageSite,
+                      constants.permissions.manageSettings,
+                      constants.permissions.manageUsers,
+                      constants.permissions.manageCommunity,
+                  ]
+                : [
+                      constants.permissions.enrollInCourse,
+                      constants.permissions.manageMedia,
+                      ...permissions,
+                  ],
+            lead: lead || constants.leadWebsite,
+            subscribedToUpdates,
         },
-        { upsert: true, new: true, includeResultMetadata: true },
     );
 
-    const createdUser = rawResult.value;
-    const isNewUser = !rawResult.lastErrorObject!.updatedExisting;
+    const createdUser = upsertResult.user;
+    const isNewUser = upsertResult.isNew;
 
     if (isNewUser) {
         if (superAdmin) {
-            await initMandatoryPages(domain, createdUser);
-            await createInternalPaymentPlan(domain, createdUser.userId);
+            await initMandatoryPages(domain as any, createdUser);
+            await createInternalPaymentPlan(domain as any, createdUser.userId);
         }
 
-        await recordActivityAndTriggerSequences(createdUser, domain);
+        await recordActivityAndTriggerSequences(
+            { ...createdUser, domain: domain.id } as User,
+            domain,
+        );
     }
 
     return createdUser;
@@ -431,39 +446,36 @@ export async function updateUserAfterCreationViaAuth(
     id: string,
     domain: Domain,
 ) {
-    const updatedUser = await UserModel.findOneAndUpdate(
+    const updatedUser = await repositories.user.update(
+        id, // Assuming id here is _id as in original findOneAndUpdate query {_id: new ObjectId(id)}
         {
-            _id: new ObjectId(id),
-            domain: domain._id,
-        },
-        {
-            $set: {
-                domain: domain._id,
-                userId: generateUniqueId(),
-                active: true,
-                purchases: [],
-                permissions: [
-                    constants.permissions.enrollInCourse,
-                    constants.permissions.manageMedia,
-                ],
-                lead: constants.leadWebsite,
-                subscribedToUpdates: true,
-                tags: [],
-                unsubscribeToken: generateUniqueId(),
-            },
-        },
-        { new: true },
+            domain: domain.id,
+            userId: generateUniqueId(),
+            active: true,
+            purchases: [],
+            permissions: [
+                constants.permissions.enrollInCourse,
+                constants.permissions.manageMedia,
+            ],
+            lead: constants.leadWebsite,
+            subscribedToUpdates: true,
+            tags: [],
+            unsubscribeToken: generateUniqueId(),
+        } as any,
     );
 
-    await recordActivityAndTriggerSequences(updatedUser, domain);
+    // update returns null if not found
+    if (updatedUser) {
+        await recordActivityAndTriggerSequences(
+            { ...updatedUser, domain: domain.id } as User,
+            domain,
+        );
+    }
 }
 
-async function recordActivityAndTriggerSequences(
-    user: InternalUser,
-    domain: Domain,
-) {
+async function recordActivityAndTriggerSequences(user: User, domain: Domain) {
     await recordActivity({
-        domain: domain._id,
+        domain: domain.id,
         userId: user.userId,
         type: Constants.ActivityType.USER_CREATED,
     });
@@ -475,7 +487,7 @@ async function recordActivityAndTriggerSequences(
         });
 
         await recordActivity({
-            domain: domain!._id,
+            domain: domain!.id,
             userId: user.userId,
             type: Constants.ActivityType.NEWSLETTER_SUBSCRIBED,
         });
@@ -489,7 +501,7 @@ export async function getSegments(ctx: GQLContext): Promise<UserSegment[]> {
     }
 
     const segments = await UserSegmentModel.find({
-        domain: ctx.subdomain._id,
+        domain: ctx.subdomain.id,
         userId: ctx.user.userId,
     });
 
@@ -508,14 +520,14 @@ export async function createSegment(
     const filter: UserFilterWithAggregator = JSON.parse(segmentData.filter);
 
     await UserSegmentModel.create({
-        domain: ctx.subdomain._id,
+        domain: ctx.subdomain.id,
         userId: ctx.user.userId,
         name: segmentData.name,
         filter,
     });
 
     const segments = await UserSegmentModel.find({
-        domain: ctx.subdomain._id,
+        domain: ctx.subdomain.id,
         userId: ctx.user.userId,
     });
 
@@ -532,13 +544,13 @@ export async function deleteSegment(
     }
 
     await UserSegmentModel.deleteOne({
-        domain: ctx.subdomain._id,
+        domain: ctx.subdomain.id,
         userId: ctx.user.userId,
         segmentId,
     });
 
     const segments = await UserSegmentModel.find({
-        domain: ctx.subdomain._id,
+        domain: ctx.subdomain.id,
         userId: ctx.user.userId,
     });
 
@@ -567,52 +579,10 @@ export const getTagsWithDetails = async (ctx: GQLContext) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    const tagsWithUsersCount = await UserModel.aggregate([
-        { $unwind: "$tags" },
-        {
-            $match: {
-                tags: { $in: ctx.subdomain.tags },
-                domain: ctx.subdomain._id,
-            },
-        },
-        {
-            $group: {
-                _id: "$tags",
-                count: { $sum: 1 },
-            },
-        },
-        {
-            $project: {
-                tag: "$_id",
-                count: 1,
-                _id: 0,
-            },
-        },
-        {
-            $unionWith: {
-                coll: "domains",
-                pipeline: [
-                    { $match: { _id: ctx.subdomain._id } },
-                    { $unwind: "$tags" },
-                    { $project: { tag: "$tags", _id: 0 } },
-                ],
-            },
-        },
-        {
-            $group: {
-                _id: "$tag",
-                count: { $sum: "$count" },
-            },
-        },
-        {
-            $project: {
-                tag: "$_id",
-                count: 1,
-                _id: 0,
-            },
-        },
-        { $sort: { count: -1 } },
-    ]);
+    const tagsWithUsersCount = await repositories.user.getTagsWithDetails(
+        ctx.subdomain.id.toString(),
+        ctx.subdomain.tags,
+    );
 
     return tagsWithUsersCount;
 };
@@ -641,9 +611,9 @@ export const deleteTag = async (tag: string, ctx: GQLContext) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    await UserModel.updateMany(
-        { domain: ctx.subdomain._id },
-        { $pull: { tags: tag } },
+    await repositories.user.removeTagFromUsers(
+        tag,
+        ctx.subdomain.id.toString(),
     );
     const tagIndex = ctx.subdomain.tags.indexOf(tag);
     ctx.subdomain.tags.splice(tagIndex, 1);
@@ -660,9 +630,9 @@ export const untagUsers = async (tag: string, ctx: GQLContext) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    await UserModel.updateMany(
-        { domain: ctx.subdomain._id },
-        { $pull: { tags: tag } },
+    await repositories.user.removeTagFromUsers(
+        tag,
+        ctx.subdomain.id.toString(),
     );
 
     return getTagsWithDetails(ctx);
@@ -682,10 +652,10 @@ export const getUserContent = async (
         id = userId;
     }
 
-    const user = await UserModel.findOne({
-        userId: id,
-        domain: ctx.subdomain._id,
-    });
+    const user = await repositories.user.findByUserId(
+        id,
+        ctx.subdomain.id.toString(),
+    );
 
     if (!user) {
         throw new Error(responses.item_not_found);
@@ -696,7 +666,7 @@ export const getUserContent = async (
 
 async function getUserContentInternal(ctx: GQLContext, user: User) {
     const memberships = await MembershipModel.find<Membership>({
-        domain: ctx.subdomain._id,
+        domain: ctx.subdomain.id,
         userId: user.userId,
         status: Constants.MembershipStatus.ACTIVE,
     });
@@ -717,7 +687,7 @@ async function getUserContentInternal(ctx: GQLContext, user: User) {
 
             const course = await CourseModel.findOne({
                 courseId: membership.entityId,
-                domain: ctx.subdomain._id,
+                domain: ctx.subdomain.id,
             });
 
             if (course) {
@@ -747,7 +717,7 @@ async function getUserContentInternal(ctx: GQLContext, user: User) {
         ) {
             const community = await CommunityModel.findOne({
                 communityId: membership.entityId,
-                domain: ctx.subdomain._id,
+                domain: ctx.subdomain.id,
                 deleted: false,
             });
 
@@ -779,7 +749,7 @@ export const getMembershipStatus = async ({
     checkIfAuthenticated(ctx);
 
     const membership: Membership | null = await MembershipModel.findOne({
-        domain: ctx.subdomain._id,
+        domain: ctx.subdomain.id,
         entityId,
         entityType,
         userId: ctx.user.userId,
@@ -814,7 +784,7 @@ export const getMembership = async ({
     entityId,
     planId,
 }: {
-    domainId: mongoose.Types.ObjectId;
+    domainId: string;
     userId: string;
     entityType: MembershipEntityType;
     entityId: string;
@@ -822,7 +792,7 @@ export const getMembership = async ({
 }): Promise<InternalMembership> => {
     const existingMembership =
         await MembershipModel.findOne<InternalMembership>({
-            domain: domainId,
+            domain: new mongoose.Types.ObjectId(domainId),
             userId,
             entityType,
             entityId,
@@ -831,7 +801,7 @@ export const getMembership = async ({
     let membership: InternalMembership =
         existingMembership ||
         (await MembershipModel.create({
-            domain: domainId,
+            domain: new mongoose.Types.ObjectId(domainId),
             userId,
             paymentPlanId: planId,
             entityId,
@@ -851,9 +821,10 @@ export async function runPostMembershipTasks({
     membership: Membership;
     paymentPlan: PaymentPlan;
 }) {
-    const user = await UserModel.findOne<InternalUser>({
-        userId: membership.userId,
-    });
+    const user = await repositories.user.findByUserId(
+        membership.userId,
+        domain.toString(),
+    );
     if (!user) {
         return;
     }
@@ -864,7 +835,7 @@ export async function runPostMembershipTasks({
         !membership.isIncludedInPlan
     ) {
         await recordActivity({
-            domain,
+            domain: domain.toString(),
             userId: user.userId,
             type: constants.activityTypes[1],
             entityId: membership.entityId,
@@ -876,7 +847,7 @@ export async function runPostMembershipTasks({
     }
     if (membership.entityType === Constants.MembershipEntityType.COMMUNITY) {
         await recordActivity({
-            domain,
+            domain: domain.toString(),
             userId: user.userId,
             type: constants.activityTypes[15],
             entityId: membership.entityId,
@@ -895,7 +866,7 @@ export async function runPostMembershipTasks({
             });
         }
         await recordActivity({
-            domain,
+            domain: domain.toString(),
             userId: user.userId,
             type: constants.activityTypes[0],
             entityId: membership.entityId,
@@ -930,7 +901,11 @@ async function addProductToUser({
             completedLessons: [],
             accessibleGroups: [],
         });
-        await (user as any).save();
+        // user object here might be complex. If it has userId, use that.
+        // user from arguments is User | InternalUser. Both have userId.
+        await repositories.user.update(user.userId, {
+            purchases: user.purchases,
+        });
     }
 }
 
@@ -954,7 +929,7 @@ export const getCertificateInternal = async (
     const certificate =
         certificateId !== "demo"
             ? await CertificateModel.findOne({
-                  domain: domain._id,
+                  domain: domain.id,
                   certificateId,
               })
             : {
@@ -968,10 +943,10 @@ export const getCertificateInternal = async (
 
     const user =
         certificateId !== "demo"
-            ? ((await UserModel.findOne({
-                  domain: domain._id,
-                  userId: certificate.userId,
-              }).lean()) as unknown as User)
+            ? ((await repositories.user.findByUserId(
+                  certificate.userId,
+                  domain.id.toString(),
+              )) as unknown as User)
             : {
                   name: "John Doe",
                   email: "john.doe@example.com",
@@ -979,7 +954,7 @@ export const getCertificateInternal = async (
               };
 
     const course = (await CourseModel.findOne({
-        domain: domain._id,
+        domain: domain.id,
         courseId: certificateId !== "demo" ? certificate.courseId : courseId,
     }).lean()) as unknown as Course;
 
@@ -987,13 +962,13 @@ export const getCertificateInternal = async (
         throw new Error(responses.item_not_found);
     }
 
-    const creator = (await UserModel.findOne({
-        domain: domain._id,
-        userId: course.creatorId,
-    }).lean()) as unknown as User;
+    const creator = (await repositories.user.findByUserId(
+        course.creatorId,
+        domain.id.toString(),
+    )) as unknown as User;
 
     const template = (await CertificateTemplateModel.findOne({
-        domain: domain._id,
+        domain: domain.id,
         courseId: course.courseId,
     }).lean()) as unknown as CertificateTemplate;
 

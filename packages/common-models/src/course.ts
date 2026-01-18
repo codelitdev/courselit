@@ -13,6 +13,8 @@ export type ProductAccessType =
     (typeof ProductAccessType)[keyof typeof ProductAccessType];
 
 export interface Course {
+    id: string; // added
+    domain: string; // added
     courseId: string;
     title: string;
     description?: string;
@@ -25,6 +27,8 @@ export interface Course {
     isBlog: boolean;
     tags: string[];
     type: CourseType;
+    published: boolean; // added
+    privacy: ProductAccessType; // added
     pageId?: string;
     groups?: Group[];
     defaultPaymentPlan?: string;
@@ -34,4 +38,5 @@ export interface Course {
     lessons?: Lesson[];
     user: User;
     paymentPlans?: PaymentPlan[];
+    certificate?: boolean;
 }

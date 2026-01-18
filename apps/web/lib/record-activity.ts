@@ -1,7 +1,8 @@
-import ActivityModel, { Activity } from "@models/Activity";
+import ActivityModel from "@models/Activity";
+import { Activity } from "@courselit/common-models";
 import { error } from "../services/logger";
 
-export async function recordActivity(activity: Activity) {
+export async function recordActivity(activity: Partial<Activity>) {
     try {
         const existingActivity = await ActivityModel.findOne({
             domain: activity.domain,

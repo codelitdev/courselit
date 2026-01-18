@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { MediaSchema } from "./media";
 
 export interface InternalCommunity extends Omit<Community, "paymentPlans"> {
+    _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
     createdAt: Date;
     updatedAt: Date;
@@ -51,3 +52,9 @@ CommunitySchema.statics.paginatedFind = async function (filter, options) {
         .exec();
     return docs;
 };
+
+const CommunityModel =
+    mongoose.models.Community ||
+    mongoose.model<InternalCommunity>("Community", CommunitySchema);
+
+export default CommunityModel;

@@ -4,6 +4,7 @@ import {
     UserFilterWithAggregator,
 } from "@courselit/common-models";
 import mongoose from "mongoose";
+import { repositories } from "@courselit/orm-models";
 
 type EmailCondition = {
     email:
@@ -55,11 +56,9 @@ type DBCondition =
 export async function convertFiltersToDBConditions({
     domain,
     filter,
-    membershipModel,
 }: {
     domain: mongoose.Types.ObjectId;
     filter: UserFilterWithAggregator;
-    membershipModel: typeof mongoose.Model<Membership>;
 }): Promise<
     | {
           $and: DBCondition[];
@@ -96,24 +95,28 @@ export async function convertFiltersToDBConditions({
             const productCondition: ProductCondition = {
                 userId: { $in: [] },
             };
-            const memberships = await membershipModel.find(
-                {
-                    domain,
-                    entityType: Constants.MembershipEntityType.COURSE,
-                    entityId: value,
-                },
-                {
-                    userId: 1,
-                },
+            const memberships = await repositories.membership.findByEntity(
+                value as string,
+                Constants.MembershipEntityType.COURSE,
+                domain.toString(),
             );
+
+            // Map string userIds to ObjectIds because downstream logic likely expects ObjectIds for $in query on _id?
+            // "userId" field in User collection?
+            // "ProductCondition" defines userId: { $in: mongoose.Types.ObjectId[] }
+            // So we need to cast strings to ObjectIds.
+            const userIds = memberships.map(
+                (m) => new mongoose.Types.ObjectId(m.userId!),
+            );
+
             if (condition === "Has") {
                 productCondition.userId = {
-                    $in: memberships.map((m) => m.userId),
+                    $in: userIds,
                 };
             }
             if (condition === "Does not have") {
                 productCondition.userId = {
-                    $not: { $in: memberships.map((m) => m.userId) },
+                    $not: { $in: userIds },
                 };
             }
             dbFilters.push(productCondition);
@@ -122,24 +125,23 @@ export async function convertFiltersToDBConditions({
             const productCondition: ProductCondition = {
                 userId: { $in: [] },
             };
-            const memberships = await membershipModel.find(
-                {
-                    domain,
-                    entityType: Constants.MembershipEntityType.COMMUNITY,
-                    entityId: value,
-                },
-                {
-                    userId: 1,
-                },
+            const memberships = await repositories.membership.findByEntity(
+                value as string,
+                Constants.MembershipEntityType.COMMUNITY,
+                domain.toString(),
             );
+            const userIds = memberships.map(
+                (m) => new mongoose.Types.ObjectId(m.userId!),
+            );
+
             if (condition === "Member of") {
                 productCondition.userId = {
-                    $in: memberships.map((m) => m.userId),
+                    $in: userIds,
                 };
             }
             if (condition === "Not a member of") {
                 productCondition.userId = {
-                    $not: { $in: memberships.map((m) => m.userId) },
+                    $not: { $in: userIds },
                 };
             }
             dbFilters.push(productCondition);

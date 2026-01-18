@@ -5,7 +5,9 @@ import { generateUniqueId } from "@courselit/utils";
 
 const { MembershipEntityType, MembershipStatus, MembershipRole } = Constants;
 
-export interface InternalMembership extends Membership, Document {
+export interface InternalMembership
+    extends Omit<Membership, "domain">,
+        Document {
     domain: mongoose.Types.ObjectId;
 }
 

@@ -1,8 +1,5 @@
-import { Email } from "@courselit/common-models";
-import OngoingSequenceModel, {
-    OngoingSequence,
-} from "@/domain/model/ongoing-sequence";
-import SequenceModel from "@/domain/model/sequence";
+import { repositories } from "@courselit/orm-models";
+import { Email, OngoingSequence } from "@courselit/common-models";
 import { sequenceBounceLimit } from "@/constants";
 import {
     deleteOngoingSequence,
@@ -14,7 +11,6 @@ import {
 } from "@/domain/queries";
 import { sendMail } from "@/mail";
 import mongoose from "mongoose";
-import EmailDelivery from "@/domain/model/email-delivery";
 import { AdminSequence, InternalUser } from "@courselit/common-logic";
 import { Email as EmailType, renderEmailToHtml } from "@courselit/email-editor";
 import { getUnsubLink } from "@/utils/get-unsub-link";
@@ -29,13 +25,18 @@ const liquidEngine = new Liquid();
 export async function processOngoingSequence(
     ongoingSequenceId: mongoose.Types.ObjectId,
 ) {
-    const ongoingSequence =
-        await OngoingSequenceModel.findById(ongoingSequenceId);
+    const ongoingSequence = await repositories.ongoingSequence.findById(
+        ongoingSequenceId.toString(),
+    );
     if (!ongoingSequence) {
         return;
     }
 
-    const domain = await getDomain(ongoingSequence.domain);
+    // @ts-ignore - Domain in repo is string, but getDomain expects ObjectId. We should update getDomain to take string too?
+    // queries.ts expects ObjectId.
+    const domain = await getDomain(
+        new mongoose.Types.ObjectId(ongoingSequence.domain),
+    );
     if (
         !domain ||
         !domain.quota ||
@@ -56,37 +57,77 @@ export async function processOngoingSequence(
         return;
     }
 
-    const sequence = await getSequence(ongoingSequence.sequenceId);
+    const sequence = await getSequence(
+        ongoingSequence.sequenceId,
+        ongoingSequence.domain!,
+    );
+
     const [user, creator] = await Promise.all([
-        getUser(ongoingSequence.userId),
-        sequence ? getUser(sequence.creatorId) : null,
+        getUser(ongoingSequence.userId, ongoingSequence.domain!),
+        sequence
+            ? getUser(sequence.creatorId, sequence.domain.toString())
+            : null,
     ]);
 
     if (!sequence || !user || !creator) {
         return await cleanUpResources(ongoingSequence);
     }
 
-    const nextPublishedEmail = getNextPublishedEmail(sequence, ongoingSequence);
+    // Convert repo object back to mutable "Document"-like object if subsequent code relies on .save()?
+    // OR update logic to use repo.update().
+    // The existing code does: ongoingSequence.nextEmailScheduledTime = ...; ongoingSequence.save();
+    // Repositories return POJOs (Entities). They don't have .save().
+    // So "ongoingSequence" here is a POJO.
+    // I need to use repositories.ongoingSequence.update(id, { ... }) to save changes.
+
+    const nextPublishedEmail = getNextPublishedEmail(
+        sequence,
+        ongoingSequence as unknown as OngoingSequence,
+    );
 
     await attemptMailSending({
         domain,
         creator,
         user,
         sequence,
-        ongoingSequence,
+        ongoingSequence: ongoingSequence as unknown as OngoingSequence,
         email: nextPublishedEmail,
     });
 
-    ongoingSequence.sentEmailIds.push(nextPublishedEmail.emailId);
+    // Update sentEmailIds
+    // We need to re-fetch or keep state? ongoingSequence POJO is in memory.
+    const updatedSentEmailIds = [
+        ...(ongoingSequence.sentEmailIds || []),
+        nextPublishedEmail.emailId,
+    ];
+
     await domain.incrementEmailCount();
-    const nextEmail = getNextPublishedEmail(sequence, ongoingSequence);
+
+    // Pass the updated object (in memory) to getNextPublishedEmail
+    // Creating a mutated copy for logic calculation
+    const ongoingSequenceForNextCalc = {
+        ...ongoingSequence,
+        sentEmailIds: updatedSentEmailIds,
+    } as unknown as OngoingSequence;
+
+    const nextEmail = getNextPublishedEmail(
+        sequence,
+        ongoingSequenceForNextCalc,
+    );
+
     if (!nextEmail) {
-        return await cleanUpResources(ongoingSequence, true);
+        // We pass the ID to cleanup
+        await cleanUpResources(ongoingSequence, true);
     } else {
-        ongoingSequence.nextEmailScheduledTime = new Date(
-            ongoingSequence.nextEmailScheduledTime + nextEmail.delayInMillis,
+        const nextTime = new Date(
+            (ongoingSequence.nextEmailScheduledTime || Date.now()) +
+                nextEmail.delayInMillis,
         ).getTime();
-        await ongoingSequence.save();
+
+        await repositories.ongoingSequence.update(ongoingSequence.id!, {
+            sentEmailIds: updatedSentEmailIds,
+            nextEmailScheduledTime: nextTime,
+        });
     }
 }
 
@@ -109,22 +150,24 @@ export function getNextPublishedEmail(
 }
 
 async function cleanUpResources(
-    ongoingSequence: OngoingSequence,
+    ongoingSequence: any, // Typed as POJO from repo
     completed?: boolean,
 ) {
-    await deleteOngoingSequence(ongoingSequence.sequenceId);
+    await deleteOngoingSequence(ongoingSequence.id); // deleteOngoingSequence now takes ID
     if (completed) {
-        await updateSequenceReports(ongoingSequence.sequenceId);
+        await updateSequenceReports(
+            ongoingSequence.sequenceId,
+            ongoingSequence.domain,
+        );
     }
 }
 
-async function updateSequenceReports(sequenceId: string) {
-    const remainingOngoingSequencesWithSameSequenceId: OngoingSequence[] =
-        await OngoingSequenceModel.find({
-            sequenceId,
-        });
+async function updateSequenceReports(sequenceId: string, domainId: string) {
+    const remainingOngoingSequencesWithSameSequenceId =
+        await repositories.ongoingSequence.findBySequenceId(sequenceId);
+
     if (remainingOngoingSequencesWithSameSequenceId.length === 0) {
-        const sequence = await getSequence(sequenceId);
+        const sequence = await getSequence(sequenceId, domainId);
         if (!sequence) {
             return;
         }
@@ -219,28 +262,27 @@ async function attemptMailSending({
             subject,
             html: contentWithTrackedLinks,
         });
-        // @ts-ignore - Mongoose type compatibility issue
-        await EmailDelivery.create({
-            domain: (domain as any).id,
+
+        await repositories.emailDelivery.create({
+            domain: (domain as any).id, // domain here is DomainDocument? ID access?
             sequenceId: sequence.sequenceId,
             userId: user.userId,
             emailId: email.emailId,
         });
     } catch (err: any) {
-        ongoingSequence.retryCount++;
-        if (ongoingSequence.retryCount >= sequenceBounceLimit) {
-            // Use findOneAndUpdate to atomically update and avoid version conflicts
-            await (SequenceModel.findOneAndUpdate as any)(
-                { sequenceId: sequence.sequenceId },
-                {
-                    $addToSet: {
-                        "report.sequence.failed": ongoingSequence.userId,
-                    },
-                },
+        // ongoingSequence here is POJO.
+        const newRetryCount = (ongoingSequence.retryCount || 0) + 1;
+
+        if (newRetryCount >= sequenceBounceLimit) {
+            await repositories.sequence.addFailedReport(
+                sequence.sequenceId,
+                ongoingSequence.userId,
             );
-            await deleteOngoingSequence(ongoingSequence.sequenceId);
+            await repositories.ongoingSequence.delete(ongoingSequence.id!);
         } else {
-            await ongoingSequence.save();
+            await repositories.ongoingSequence.update(ongoingSequence.id!, {
+                retryCount: newRetryCount,
+            });
         }
         throw err;
     }

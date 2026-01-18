@@ -5,6 +5,7 @@ export type PaymentPlanType =
     (typeof PaymentPlanTypeConst)[keyof typeof PaymentPlanTypeConst];
 
 export interface PaymentPlan {
+    domain: string;
     name: string;
     planId: string;
     type: PaymentPlanType;

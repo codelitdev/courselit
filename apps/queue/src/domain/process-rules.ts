@@ -2,7 +2,6 @@ import RuleModel from "./model/rule";
 import OngoingSequence from "./model/ongoing-sequence";
 import SequenceModel from "./model/sequence";
 import UserModel from "./model/user";
-import MembershipModel from "./model/membership";
 import { logger } from "../logger";
 import { Constants, Rule, User } from "@courselit/common-models";
 import mongoose from "mongoose";
@@ -79,7 +78,6 @@ async function addBroadcastToOngoingSequence(sequence: AdminSequence) {
         ...(await convertFiltersToDBConditions({
             domain: sequence.domain,
             filter: sequence.filter,
-            membershipModel: MembershipModel,
         })),
         subscribedToUpdates: true,
     };

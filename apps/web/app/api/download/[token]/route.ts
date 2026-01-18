@@ -27,7 +27,6 @@ import {
 } from "fs";
 import { recordActivity } from "@/lib/record-activity";
 import path from "node:path";
-import { Types } from "mongoose";
 
 export async function GET(
     req: NextRequest,
@@ -137,7 +136,7 @@ export async function GET(
             await recordProgress({
                 courseId: downloadLink.courseId,
                 userId: downloadLink.userId,
-                domainId: downloadLink.domain,
+                domainId: downloadLink.domain.toString(),
             });
             downloadLink.consumed = true;
             await (downloadLink as any).save();
@@ -230,7 +229,7 @@ async function recordProgress({
 }: {
     courseId: string;
     userId: string;
-    domainId: Types.ObjectId;
+    domainId: string;
 }) {
     const user: User | null = await UserModel.findOne({ userId });
     if (!user) {

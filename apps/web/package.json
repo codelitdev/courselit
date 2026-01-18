@@ -15,6 +15,7 @@
     "@courselit/components-library": "workspace:^",
     "@courselit/email-editor": "workspace:^",
     "@courselit/icons": "workspace:^",
+    "@courselit/orm-models": "workspace:*",
     "@courselit/page-blocks": "workspace:^",
     "@courselit/page-models": "workspace:^",
     "@courselit/page-primitives": "workspace:^",

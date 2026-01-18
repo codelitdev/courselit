@@ -52,3 +52,7 @@ UserSchema.index(
     },
     { unique: true },
 );
+
+export const UserModel =
+    mongoose.models.User || mongoose.model<InternalUser>("User", UserSchema);
+export default UserModel;

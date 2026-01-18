@@ -10,7 +10,8 @@ import { MediaSchema } from "./media";
 
 const { PageType } = Constants;
 
-export interface InternalPage extends PublicPage {
+export interface InternalPage extends Omit<PublicPage, "domain"> {
+    _id: mongoose.Types.ObjectId;
     id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
     draftLayout: WidgetInstance[];
@@ -64,3 +65,8 @@ PageSchema.index(
     },
     { unique: true },
 );
+
+const PageModel =
+    mongoose.models.Page || mongoose.model<InternalPage>("Page", PageSchema);
+
+export default PageModel;

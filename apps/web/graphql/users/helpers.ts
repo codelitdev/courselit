@@ -4,12 +4,8 @@ import UserModel from "@models/User";
 import { responses, internal } from "@/config/strings";
 import constants from "@/config/constants";
 import GQLContext from "@/models/GQLContext";
-import {
-    InternalUser,
-    InternalMembership,
-    InternalCourse,
-} from "@courselit/common-logic";
-import { Constants, UIConstants } from "@courselit/common-models";
+import { InternalMembership, InternalCourse } from "@courselit/common-logic";
+import { Constants, UIConstants, User } from "@courselit/common-models";
 import CourseModel from "@models/Course";
 import PageModel from "@models/Page";
 import EmailTemplateModel from "@models/EmailTemplate";
@@ -56,7 +52,7 @@ const CRITICAL_PERMISSIONS = [
  * Ensures at least one other user has critical permissions.
  */
 export async function validateUserDeletion(
-    userToDelete: InternalUser,
+    userToDelete: User,
     ctx: GQLContext,
 ): Promise<void> {
     for (const permission of CRITICAL_PERMISSIONS) {
@@ -82,8 +78,8 @@ export async function validateUserDeletion(
  * This ensures business continuity by transferring ownership of critical resources.
  */
 export async function migrateBusinessEntities(
-    userToDelete: InternalUser,
-    deleterUser: InternalUser,
+    userToDelete: User,
+    deleterUser: User,
     ctx: GQLContext,
 ): Promise<void> {
     // ==========================================
@@ -253,7 +249,7 @@ export async function migrateBusinessEntities(
  * This ensures GDPR compliance by removing all personal information.
  */
 export async function cleanupPersonalData(
-    userToDelete: InternalUser,
+    userToDelete: User,
     ctx: GQLContext,
 ): Promise<void> {
     await Promise.all([
@@ -363,7 +359,7 @@ export async function cleanupPersonalData(
 
     await Account.deleteOne({
         domain: ctx.subdomain._id,
-        userId: userToDelete._id,
+        userId: userToDelete.id,
     });
 
     if (userToDelete.avatar?.mediaId) {
@@ -372,6 +368,6 @@ export async function cleanupPersonalData(
 
     await UserModel.deleteOne({
         domain: ctx.subdomain._id,
-        _id: userToDelete._id,
+        _id: userToDelete.id,
     });
 }

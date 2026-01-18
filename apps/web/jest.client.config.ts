@@ -41,6 +41,11 @@ const config = {
             "<rootDir>/../../packages/components-library/src",
         "@courselit/icons": "<rootDir>/../../packages/icons/src",
         "@courselit/text-editor": "<rootDir>/../../packages/text-editor/src",
+        "@courselit/orm-models/dist/(.*)":
+            "<rootDir>/../../packages/orm-models/src/$1",
+        "@courselit/orm-models": "<rootDir>/../../packages/orm-models/src",
+        "@courselit/common-models/dist/(.*)":
+            "<rootDir>/../../packages/common-models/src/$1",
         "@courselit/common-models":
             "<rootDir>/../../packages/common-models/src",
         nanoid: "<rootDir>/__mocks__/nanoid.ts",

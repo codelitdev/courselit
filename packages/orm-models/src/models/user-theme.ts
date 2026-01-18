@@ -15,6 +15,7 @@ export interface UserTheme {
 }
 
 export interface InternalUserTheme extends UserTheme {
+    _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
 }
 
@@ -36,3 +37,9 @@ export const UserThemeSchema = new mongoose.Schema<InternalUserTheme>({
 });
 
 UserThemeSchema.index({ domain: 1, name: 1 }, { unique: true });
+
+const UserThemeModel =
+    mongoose.models.UserTheme ||
+    mongoose.model<InternalUserTheme>("UserTheme", UserThemeSchema);
+
+export default UserThemeModel;

@@ -128,6 +128,9 @@ importers:
       '@courselit/email-editor':
         specifier: workspace:^
         version: link:../../packages/email-editor
+      '@courselit/orm-models':
+        specifier: workspace:^
+        version: link:../../packages/orm-models
       '@courselit/utils':
         specifier: workspace:^
         version: link:../../packages/utils
@@ -216,6 +219,9 @@ importers:
       '@courselit/icons':
         specifier: workspace:^
         version: link:../../packages/icons
+      '@courselit/orm-models':
+        specifier: workspace:*
+        version: link:../../packages/orm-models
       '@courselit/page-blocks':
         specifier: workspace:^
         version: link:../../packages/page-blocks
@@ -502,6 +508,9 @@ importers:
       '@courselit/email-editor':
         specifier: workspace:^
         version: link:../email-editor
+      '@courselit/orm-models':
+        specifier: workspace:^
+        version: link:../orm-models
       '@courselit/utils':
         specifier: workspace:^
         version: link:../utils

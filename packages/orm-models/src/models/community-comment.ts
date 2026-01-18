@@ -11,6 +11,7 @@ export interface InternalCommunityComment
         CommunityComment,
         "communityId" | "postId" | "commentId" | "content" | "media"
     > {
+    _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
     userId: string;
     likes: string[];
@@ -74,3 +75,12 @@ CommunityCommentSchema.statics.paginatedFind = async function (
     const docs = await this.find(filter).skip(skip).limit(limit).exec();
     return docs;
 };
+
+const CommunityCommentModel =
+    mongoose.models.CommunityComment ||
+    mongoose.model<InternalCommunityComment>(
+        "CommunityComment",
+        CommunityCommentSchema,
+    );
+
+export default CommunityCommentModel;

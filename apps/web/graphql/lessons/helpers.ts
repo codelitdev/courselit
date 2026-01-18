@@ -1,8 +1,7 @@
 import { responses } from "../../config/strings";
 import constants from "../../config/constants";
-import LessonModel, { Lesson } from "../../models/Lesson";
-import CourseModel from "../../models/Course";
-import { Group, Question, Quiz } from "@courselit/common-models";
+import { repositories, Criteria } from "@courselit/orm-models";
+import { Group, Lesson, Question, Quiz } from "@courselit/common-models";
 import mongoose from "mongoose";
 import { LessonWithStringContent } from "./logic";
 const { text, audio, video, pdf, embed, quiz, file } = constants;
@@ -78,34 +77,28 @@ export const getGroupedLessons = async (
     courseId: string,
     domainId: mongoose.Types.ObjectId,
 ): Promise<GroupLessonItem[]> => {
-    const course = await CourseModel.findOne({
-        courseId: courseId,
-        domain: domainId,
-    });
-    const allLessons = await LessonModel.find<GroupLessonItem>(
-        {
-            courseId: courseId,
-            domain: domainId,
-        },
-        {
-            lessonId: 1,
-            groupId: 1,
-        },
-    );
+    const courseCb = Criteria.create<any>();
+    courseCb.where("courseId", "eq", courseId);
+    courseCb.where("domain", "eq", domainId);
+    const course = (await repositories.course.findOne(courseCb)) as any;
+
+    const lessonCb = Criteria.create<Lesson>();
+    lessonCb.where("courseId", "eq", courseId);
+    lessonCb.where("domain" as keyof Lesson, "eq", domainId);
+
+    const allLessons = await repositories.lesson.findMany(lessonCb);
     const lessonsInSequentialOrder: GroupLessonItem[] = [];
     for (let group of course.groups.sort(
         (a: Group, b: Group) => a.rank - b.rank,
     )) {
         lessonsInSequentialOrder.push(
-            ...allLessons
-                .filter(
-                    (lesson: GroupLessonItem) => lesson.groupId === group.id,
-                )
+            ...(allLessons
+                .filter((lesson: any) => lesson.groupId === group.id)
                 .sort(
-                    (a: GroupLessonItem, b: GroupLessonItem) =>
+                    (a: any, b: any) =>
                         group.lessonsOrder?.indexOf(a.lessonId) -
                         group.lessonsOrder?.indexOf(b.lessonId),
-                ),
+                ) as unknown as GroupLessonItem[]),
         );
     }
     return lessonsInSequentialOrder;
@@ -185,15 +178,18 @@ export async function isPartOfDripGroup(
     lesson: Lesson,
     domain: mongoose.Types.ObjectId,
 ) {
-    const course = await CourseModel.findOne({
-        courseId: lesson.courseId,
-        domain,
-    });
+    const cb = Criteria.create<any>();
+    cb.where("courseId", "eq", lesson.courseId);
+    cb.where("domain", "eq", domain);
+
+    const course = (await repositories.course.findOne(cb)) as any;
     if (!course) {
         throw new Error(responses.item_not_found);
     }
-    const group = course.groups.find((group) => group._id === lesson.groupId);
-    if (group.drip && group.drip.status) {
+    const group = course.groups.find(
+        (group: any) => (group._id || group.id).toString() === lesson.groupId,
+    );
+    if (group && group.drip && group.drip.status) {
         return true;
     }
 

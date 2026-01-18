@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
-export interface DownloadLink {
+export interface InternalDownloadLink {
+    _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
     courseId: string;
     userId: string;
@@ -9,16 +10,7 @@ export interface DownloadLink {
     consumed: boolean;
 }
 
-// const generateUniqueToken = (): string =>
-//     randomBytes(constants.downLoadLinkLength).toString("hex");
-
-// const getDateAfter24Hours = (): Date => {
-//     const now = new Date();
-//     now.setDate(now.getDate() + constants.downLoadLinkExpiresInDays);
-//     return now;
-// };
-
-export const DownloadLinkSchema = new mongoose.Schema<DownloadLink>({
+export const DownloadLinkSchema = new mongoose.Schema<InternalDownloadLink>({
     domain: { type: mongoose.Schema.Types.ObjectId, required: true },
     courseId: { type: String, required: true },
     userId: { type: String, required: true },
@@ -26,3 +18,9 @@ export const DownloadLinkSchema = new mongoose.Schema<DownloadLink>({
     expiresAt: { type: Date, required: true },
     consumed: { type: Boolean, required: true, default: false },
 });
+
+const DownloadLinkModel =
+    mongoose.models.DownloadLink ||
+    mongoose.model<InternalDownloadLink>("DownloadLink", DownloadLinkSchema);
+
+export default DownloadLinkModel;

@@ -2,6 +2,7 @@ import { Constants, Media } from ".";
 import { Progress } from "./progress";
 
 export default interface User {
+    id: string;
     userId: string;
     domain?: string;
     email: string;

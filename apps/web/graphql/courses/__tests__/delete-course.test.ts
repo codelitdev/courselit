@@ -889,20 +889,20 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
             await deleteCourse(course.courseId, mockCtx);
 
-            const updatedRegularUser = await UserModel.findOne({
-                userId: regularUser.userId,
-            });
+            const updatedRegularUser = await UserModel.findById(
+                regularUser._id,
+            );
+            expect(updatedRegularUser).toBeDefined();
             expect(
-                updatedRegularUser?.purchases.some(
+                updatedRegularUser!.purchases.some(
                     (p: any) => p.courseId === course.courseId,
                 ),
             ).toBe(false);
 
-            const updatedAdminUser = await UserModel.findOne({
-                userId: adminUser.userId,
-            });
+            const updatedAdminUser = await UserModel.findById(adminUser._id);
+            expect(updatedAdminUser).toBeDefined();
             expect(
-                updatedAdminUser?.purchases.some(
+                updatedAdminUser!.purchases.some(
                     (p: any) => p.courseId === course.courseId,
                 ),
             ).toBe(false);

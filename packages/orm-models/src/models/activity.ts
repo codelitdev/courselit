@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 import { ActivityType, Constants } from "@courselit/common-models";
 
-export interface Activity {
+export interface InternalActivity {
+    _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
     userId: string;
     type: ActivityType;
@@ -11,7 +12,7 @@ export interface Activity {
     updatedAt?: Date;
 }
 
-export const ActivitySchema = new mongoose.Schema<Activity>(
+export const ActivitySchema = new mongoose.Schema<InternalActivity>(
     {
         domain: { type: mongoose.Schema.Types.ObjectId, required: true },
         userId: { type: String, required: true },
@@ -29,3 +30,9 @@ export const ActivitySchema = new mongoose.Schema<Activity>(
 );
 
 ActivitySchema.index({ domain: 1, type: 1, createdAt: 1 });
+
+const ActivityModel =
+    mongoose.models.Activity ||
+    mongoose.model<InternalActivity>("Activity", ActivitySchema);
+
+export default ActivityModel;

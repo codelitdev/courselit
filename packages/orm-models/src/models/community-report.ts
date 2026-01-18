@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 export interface InternalCommunityReport
     extends Omit<CommunityReport, "user" | "content">,
         mongoose.Document {
+    _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
     userId: string;
     contentId: string;
@@ -55,3 +56,12 @@ CommunityReportSchema.index(
     { communityId: 1, contentId: 1, userId: 1 },
     { unique: true },
 );
+
+const CommunityReportModel =
+    mongoose.models.CommunityReport ||
+    mongoose.model<InternalCommunityReport>(
+        "CommunityReport",
+        CommunityReportSchema,
+    );
+
+export default CommunityReportModel;

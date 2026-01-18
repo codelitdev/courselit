@@ -1,7 +1,7 @@
 import { APIError, betterAuth } from "better-auth";
 import { customSession, emailOTP } from "better-auth/plugins";
+import { repositories } from "@courselit/orm-models";
 import { MongoClient } from "mongodb";
-import DomainModel, { Domain } from "@models/Domain";
 import { addMailJob } from "@/services/queue";
 import pug from "pug";
 import MagicCodeEmailTemplate from "@/templates/magic-code-email";
@@ -9,7 +9,6 @@ import { generateEmailFrom } from "@/lib/utils";
 import { responses } from "@/config/strings";
 import { mongodbAdapter } from "@/ba-multitenant-adapter";
 import { updateUserAfterCreationViaAuth } from "./graphql/users/logic";
-import UserModel from "@models/User";
 import { getBackendAddress } from "./app/actions";
 import { sso } from "@better-auth/sso";
 
@@ -66,14 +65,11 @@ const config: any = {
             },
         }),
         customSession(async ({ user, session }, ctx) => {
+            const dbUser = await repositories.user.findById(user.id);
             return {
                 user: {
                     ...user,
-                    userId: (
-                        (await UserModel.findOne({ _id: user.id })
-                            .select("userId")
-                            .lean()) as unknown as any
-                    )?.userId,
+                    userId: dbUser?.userId,
                 },
                 session: {
                     ...session,
@@ -97,10 +93,10 @@ const config: any = {
         user: {
             create: {
                 after: async (user, ctx) => {
-                    const domainName = ctx!.headers?.get("domain");
-                    const domain = (await DomainModel.findOne<Domain>({
-                        name: domainName,
-                    }).lean()) as unknown as Domain;
+                    const domainName = ctx!.headers?.get("domain")!;
+                    const domain =
+                        await repositories.domain.findByHost(domainName);
+
                     if (!domain) {
                         throw new APIError("NOT_FOUND", {
                             message: "Domain not found",

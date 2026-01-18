@@ -5,7 +5,10 @@ import { generateUniqueId } from "@courselit/utils";
 
 const { MembershipEntityType, MembershipStatus, MembershipRole } = Constants;
 
-export interface InternalMembership extends Membership, Document {
+export interface InternalMembership
+    extends Omit<Membership, "domain">,
+        Document {
+    _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
 }
 
@@ -55,3 +58,9 @@ MembershipSchema.statics.paginatedFind = async function (filter, options) {
     const docs = await this.find(filter).skip(skip).limit(limit).exec();
     return docs;
 };
+
+const MembershipModel =
+    mongoose.models.Membership ||
+    mongoose.model<InternalMembership>("Membership", MembershipSchema);
+
+export default MembershipModel;

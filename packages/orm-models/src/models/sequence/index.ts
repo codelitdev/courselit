@@ -6,7 +6,7 @@ import { UserFilterWithAggregatorSchema } from "../user-filter";
 import { SequenceReportSchema } from "./sequence-report";
 import { Constants } from "@courselit/common-models";
 
-export interface AdminSequence
+export interface InternalSequence
     extends Pick<
         Sequence,
         | "sequenceId"
@@ -20,6 +20,7 @@ export interface AdminSequence
         | "status"
         | "emailsOrder"
     > {
+    _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
     creatorId: string;
     emails: Partial<Email>[];
@@ -40,7 +41,7 @@ const TriggerSchema = new mongoose.Schema({
     data: { type: String },
 });
 
-export const SequenceSchema = new mongoose.Schema<AdminSequence>(
+export const SequenceSchema = new mongoose.Schema<InternalSequence>(
     {
         domain: { type: mongoose.Schema.Types.ObjectId, required: true },
         sequenceId: {
@@ -71,3 +72,9 @@ export const SequenceSchema = new mongoose.Schema<AdminSequence>(
         timestamps: true,
     },
 );
+
+const SequenceModel =
+    mongoose.models.Sequence ||
+    mongoose.model<InternalSequence>("Sequence", SequenceSchema);
+
+export default SequenceModel;

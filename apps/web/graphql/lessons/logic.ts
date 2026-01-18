@@ -1,13 +1,9 @@
-/**
- * Business logic for managing lessons
- */
-import LessonModel, { Lesson } from "../../models/Lesson";
+import { repositories, Criteria } from "@courselit/orm-models";
 import { responses } from "../../config/strings";
 import {
     checkIfAuthenticated,
     checkOwnershipWithoutModel,
 } from "../../lib/graphql";
-import CourseModel from "../../models/Course";
 import {
     evaluateLessonResult,
     getPrevNextCursor,
@@ -19,18 +15,22 @@ import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
 import { deleteMedia } from "../../services/medialit";
 import { recordProgress } from "../users/logic";
-import { Constants, Progress, Quiz, User } from "@courselit/common-models";
-import LessonEvaluation from "../../models/LessonEvaluation";
+import {
+    Constants,
+    Progress,
+    Quiz,
+    User,
+    Lesson,
+    Course,
+} from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
 import { recordActivity } from "../../lib/record-activity";
 import { InternalCourse } from "@courselit/common-logic";
-import CertificateModel from "../../models/Certificate";
 import { error } from "@/services/logger";
 import getDeletedMediaIds, {
     extractMediaIDs,
 } from "@/lib/get-deleted-media-ids";
-import ActivityModel from "@/models/Activity";
-import UserModel from "../../models/User";
+import { InternalCertificate as Certificate } from "@courselit/orm-models/dist/models/certificate";
 
 const { permissions, quiz, scorm } = constants;
 
@@ -40,17 +40,18 @@ const getLessonOrThrow = async (
 ): Promise<Lesson> => {
     checkIfAuthenticated(ctx);
 
-    const lesson = await LessonModel.findOne({
-        lessonId: id,
-        domain: ctx.subdomain._id,
-    });
+    const cb = Criteria.create<Lesson>();
+    cb.where("lessonId", "eq", id);
+    cb.where("domain" as keyof Lesson, "eq", ctx.subdomain._id);
+
+    const lesson = await repositories.lesson.findOne(cb);
 
     if (!lesson) {
         throw new Error(responses.item_not_found);
     }
 
     if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
-        if (!checkOwnershipWithoutModel(lesson, ctx)) {
+        if (!checkOwnershipWithoutModel(lesson as any, ctx)) {
             throw new Error(responses.item_not_found);
         } else {
             if (
@@ -75,14 +76,13 @@ export const getLessonDetails = async (
     ctx: GQLContext,
     courseId?: string,
 ) => {
-    const query: any = {
-        lessonId: id,
-        domain: ctx.subdomain._id,
-    };
+    const cb = Criteria.create<Lesson>();
+    cb.where("lessonId", "eq", id);
+    cb.where("domain" as keyof Lesson, "eq", ctx.subdomain._id);
     if (courseId) {
-        query.courseId = courseId;
+        cb.where("courseId", "eq", courseId);
     }
-    const lesson = await LessonModel.findOne(query);
+    const lesson = (await repositories.lesson.findOne(cb)) as any;
 
     if (!lesson) {
         throw new Error(responses.item_not_found);
@@ -145,15 +145,15 @@ export const createLesson = async (
     lessonValidator(lessonData);
 
     try {
-        const course: InternalCourse | null = await CourseModel.findOne({
-            courseId: lessonData.courseId,
-            domain: ctx.subdomain._id,
-        });
+        const course = (await repositories.course.findByCourseId(
+            lessonData.courseId,
+            ctx.subdomain.id,
+        )) as any;
         if (!course) throw new Error(responses.item_not_found);
-        if (course.isBlog) throw new Error(responses.cannot_add_to_blogs); // TODO: refactor this
+        if (course.isBlog) throw new Error(responses.cannot_add_to_blogs);
 
-        const lesson = await LessonModel.create({
-            domain: ctx.subdomain._id,
+        const lesson = await repositories.lesson.create({
+            domain: ctx.subdomain.id,
             title: lessonData.title,
             type: lessonData.type,
             content: JSON.parse(lessonData.content),
@@ -163,15 +163,18 @@ export const createLesson = async (
             courseId: course.courseId,
             groupId: lessonData.groupId,
             requiresEnrollment: lessonData.requiresEnrollment,
-        });
+        } as any);
 
         course.lessons.push(lesson.lessonId);
         const group = course.groups?.find(
-            (group) =>
+            (group: any) =>
                 ((group as any)._id?.toString() ?? "") === lessonData.groupId,
         );
         group?.lessonsOrder.push(lesson.lessonId);
-        await (course as any).save();
+        await repositories.course.update(
+            course.id.toString(),
+            course as unknown as Course,
+        );
 
         return lesson;
     } catch (err: any) {
@@ -191,8 +194,9 @@ export const updateLesson = async (
     > & { id: string; lessonId: string },
     ctx: GQLContext,
 ) => {
-    let lesson = await getLessonOrThrow(lessonData.id, ctx);
+    let lesson = (await getLessonOrThrow(lessonData.id, ctx)) as any;
     lessonData.lessonId = lessonData.id;
+    const updateId = (lesson as any).id;
     delete (lessonData as any).id;
 
     lessonData.type = lesson.type;
@@ -209,35 +213,41 @@ export const updateLesson = async (
 
     lessonValidator(lessonData);
 
+    const updates: any = {};
     for (const key of Object.keys(lessonData)) {
         if (key === "content") {
-            lesson.content = JSON.parse(lessonData.content);
+            updates.content = JSON.parse(lessonData.content);
         } else {
-            lesson[key] = lessonData[key];
+            updates[key] = (lessonData as any)[key];
         }
     }
     for (const mediaId of contentMediaIdsMarkedForDeletion) {
         await deleteMedia(mediaId);
     }
 
-    lesson = await (lesson as any).save();
-    return lesson;
+    const updatedLesson = await repositories.lesson.update(updateId, updates);
+    return updatedLesson;
 };
 
 export const deleteLesson = async (id: string, ctx: GQLContext) => {
-    const lesson = await getLessonOrThrow(id, ctx);
+    const lesson = (await getLessonOrThrow(id, ctx)) as any;
 
     try {
         // remove from the parent Course's lessons array
-        let course: InternalCourse | null = await CourseModel.findOne({
-            domain: ctx.subdomain._id,
-        }).elemMatch("lessons", { $eq: lesson.lessonId });
+        const courseCb = Criteria.create<Course>();
+        courseCb.where("domain" as keyof Course, "eq", ctx.subdomain._id);
+        courseCb.where("lessons" as any, "eq", lesson.lessonId);
+        const course = (await repositories.course.findOne(courseCb)) as any;
+
         if (!course) {
             return false;
         }
 
         course.lessons.splice(course.lessons.indexOf(lesson.lessonId), 1);
-        await (course as any).save();
+        await repositories.course.update(
+            course.id.toString(),
+            course as unknown as Course,
+        );
 
         if (lesson.media?.mediaId) {
             await deleteMedia(lesson.media.mediaId);
@@ -252,19 +262,21 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
             }
         }
 
-        await LessonEvaluation.deleteMany({
-            domain: ctx.subdomain._id,
-            lessonId: lesson.lessonId,
-        });
-        await ActivityModel.deleteMany({
-            domain: ctx.subdomain._id,
-            entityId: lesson.lessonId,
-        });
+        const evaluationCb = Criteria.create<any>();
+        evaluationCb.where("domain", "eq", ctx.subdomain._id);
+        evaluationCb.where("lessonId", "eq", lesson.lessonId);
+        await repositories.lessonEvaluation.deleteMany(evaluationCb);
 
-        await LessonModel.deleteOne({
-            _id: lesson.id,
-            domain: ctx.subdomain._id,
-        });
+        const activityCb = Criteria.create<any>();
+        activityCb.where("domain", "eq", ctx.subdomain._id);
+        activityCb.where("entityId", "eq", lesson.lessonId);
+        await repositories.activity.deleteMany(activityCb);
+
+        const lessonCb = Criteria.create<Lesson>();
+        lessonCb.where("lessonId", "eq", lesson.lessonId);
+        lessonCb.where("domain" as keyof Lesson, "eq", ctx.subdomain._id);
+        await repositories.lesson.deleteMany(lessonCb);
+
         return true;
     } catch (err: any) {
         throw new Error(err.message);
@@ -275,30 +287,22 @@ export const getAllLessons = async (
     course: InternalCourse,
     ctx: GQLContext,
 ) => {
-    const lessons = await LessonModel.find(
-        {
-            courseId: course.courseId,
-            domain: ctx.subdomain._id,
-        },
-        {
-            id: 1,
-            lessonId: 1,
-            type: 1,
-            title: 1,
-            requiresEnrollment: 1,
-            courseId: 1,
-            groupId: 1,
-        },
-    );
+    const cb = Criteria.create<Lesson>();
+    cb.where("courseId", "eq", course.courseId);
+    cb.where("domain" as keyof Lesson, "eq", ctx.subdomain._id);
+
+    // findMany doesn't support projection yet, but we can return all and let GQL handle it
+    const lessons = await repositories.lesson.findMany(cb);
 
     return lessons;
 };
 
 export const deleteAllLessons = async (courseId: string, ctx: GQLContext) => {
-    const allLessons = await LessonModel.find<Lesson>({
-        domain: ctx.subdomain._id,
-        courseId,
-    });
+    const cb = Criteria.create<Lesson>();
+    cb.where("domain" as keyof Lesson, "eq", ctx.subdomain._id);
+    cb.where("courseId", "eq", courseId);
+
+    const allLessons = await repositories.lesson.findMany(cb);
     for (const lesson of allLessons) {
         await deleteLesson(lesson.lessonId, ctx);
     }
@@ -310,7 +314,10 @@ export const markLessonCompleted = async (
 ) => {
     checkIfAuthenticated(ctx);
 
-    const lesson = await LessonModel.findOne<Lesson>({ lessonId });
+    const lessonCb = Criteria.create<Lesson>();
+    lessonCb.where("lessonId", "eq", lessonId);
+    const lesson = await repositories.lesson.findOne(lessonCb);
+
     if (!lesson) {
         throw new Error(responses.item_not_found);
     }
@@ -334,12 +341,14 @@ export const markLessonCompleted = async (
     }
 
     if (lesson.type === quiz) {
-        const lessonEvaluations = await LessonEvaluation.countDocuments({
-            pass: true,
-            lessonId: lesson.lessonId,
-            userId: ctx.user.userId,
-            domain: ctx.subdomain._id,
-        });
+        const evaluationCb = Criteria.create<any>();
+        evaluationCb.where("pass", "eq", true);
+        evaluationCb.where("lessonId", "eq", lesson.lessonId);
+        evaluationCb.where("userId", "eq", ctx.user.userId);
+        evaluationCb.where("domain", "eq", ctx.subdomain._id);
+
+        const lessonEvaluations =
+            await repositories.lessonEvaluation.count(evaluationCb);
         if (lessonEvaluations === 0) {
             throw new Error(responses.need_to_pass);
         }
@@ -347,8 +356,7 @@ export const markLessonCompleted = async (
 
     // Check SCORM completion status
     if (lesson.type === scorm) {
-        // Re-fetch user using .lean() to get a plain JS object.
-        const freshUser: any = await UserModel.findById(ctx.user._id).lean();
+        const freshUser = await repositories.user.findById(ctx.user.id);
         const purchase = freshUser?.purchases?.[enrolledItemIndex];
         const lessonData = (purchase as any)?.scormData?.lessons?.[lessonId];
 
@@ -391,7 +399,7 @@ export const markLessonCompleted = async (
     });
 
     await recordActivity({
-        domain: ctx.subdomain._id,
+        domain: ctx.subdomain.id,
         userId: ctx.user.userId,
         type: Constants.ActivityType.LESSON_COMPLETED,
         entityId: lesson.lessonId,
@@ -409,7 +417,10 @@ const checkAndRecordCourseCompletion = async (
     courseId: string,
     ctx: GQLContext,
 ) => {
-    const course = await CourseModel.findOne({ courseId });
+    const cb = Criteria.create<Course>();
+    cb.where("courseId", "eq", courseId);
+    const course = await repositories.course.findOne(cb);
+
     if (!course) {
         throw new Error(responses.item_not_found);
     }
@@ -429,14 +440,14 @@ const checkAndRecordCourseCompletion = async (
     }
 
     await recordActivity({
-        domain: ctx.subdomain._id,
+        domain: ctx.subdomain.id,
         userId: ctx.user.userId,
         type: Constants.ActivityType.COURSE_COMPLETED,
         entityId: courseId,
     });
 
     if (course.certificate) {
-        await issueCertificate(course, ctx);
+        await issueCertificate(course as any, ctx);
     }
 
     return true;
@@ -446,20 +457,21 @@ const issueCertificate = async (
     course: InternalCourse,
     ctx: GQLContext,
 ): Promise<void> => {
-    const existingCertificate = await CertificateModel.findOne({
-        domain: ctx.subdomain._id,
-        courseId: course.courseId,
-        userId: ctx.user.userId,
-    });
+    const cb = Criteria.create<Certificate>();
+    cb.where("domain" as keyof Certificate, "eq", ctx.subdomain._id);
+    cb.where("courseId", "eq", course.courseId);
+    cb.where("userId", "eq", ctx.user.userId);
+
+    const existingCertificate = await repositories.certificate.findOne(cb);
     if (existingCertificate) {
         return;
     }
 
-    const certificate = await CertificateModel.create({
-        domain: ctx.subdomain._id,
+    const certificate = await repositories.certificate.create({
+        domain: ctx.subdomain.id,
         courseId: course.courseId,
         userId: ctx.user.userId,
-    });
+    } as any);
 
     const enrolledItemIndex = ctx.user.purchases.findIndex(
         (progress: Progress) => progress.courseId === course.courseId,
@@ -478,10 +490,14 @@ const issueCertificate = async (
 
     ctx.user.purchases[enrolledItemIndex].certificateId =
         certificate.certificateId;
-    await (ctx.user as any).save();
+
+    const userUpdates = {
+        purchases: ctx.user.purchases,
+    };
+    await repositories.user.update(ctx.user.id, userUpdates);
 
     await recordActivity({
-        domain: ctx.subdomain._id,
+        domain: ctx.subdomain.id,
         userId: ctx.user.userId,
         type: Constants.ActivityType.CERTIFICATE_ISSUED,
         entityId: course.courseId,
@@ -493,7 +509,9 @@ export const evaluateLesson = async (
     answers: { answers: number[][] },
     ctx: GQLContext,
 ) => {
-    const lesson = await LessonModel.findOne<Lesson>({ lessonId });
+    const cb = Criteria.create<Lesson>();
+    cb.where("lessonId", "eq", lessonId);
+    const lesson = await repositories.lesson.findOne(cb);
     if (!lesson) {
         throw new Error(responses.item_not_found);
     }
@@ -519,15 +537,15 @@ export const evaluateLesson = async (
         answers.answers,
     );
 
-    await LessonEvaluation.create({
-        domain: ctx.subdomain._id,
+    await repositories.lessonEvaluation.create({
+        domain: ctx.subdomain.id,
         lessonId: lesson.lessonId,
         userId: ctx.user.userId,
         pass,
         score,
         requiresPassingGrade: (lesson.content as Quiz).requiresPassingGrade,
         passingGrade: (lesson.content as Quiz).passingGrade,
-    });
+    } as any);
 
     return {
         pass,

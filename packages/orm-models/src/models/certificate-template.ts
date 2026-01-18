@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { MediaSchema } from "./media";
 
 export interface InternalCertificateTemplate {
+    _id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
     templateId: string;
     courseId: string;
@@ -41,3 +42,12 @@ export const CertificateTemplateSchema =
             timestamps: true,
         },
     );
+
+const CertificateTemplateModel =
+    mongoose.models.CertificateTemplate ||
+    mongoose.model<InternalCertificateTemplate>(
+        "CertificateTemplate",
+        CertificateTemplateSchema,
+    );
+
+export default CertificateTemplateModel;

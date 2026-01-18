@@ -7,6 +7,7 @@ interface SharedWidgets {
 }
 
 export interface Domain {
+    id: string;
     name: string;
     customDomain: string;
     email: string;

@@ -579,7 +579,7 @@ export async function sendCourseOverMail(
     }
 
     const membership = await getMembership({
-        domainId: ctx.subdomain._id,
+        domainId: ctx.subdomain.id,
         userId: dbUser!.userId,
         entityType: Constants.MembershipEntityType.COURSE,
         entityId: course.courseId,

@@ -9,6 +9,13 @@ const config: Config = {
         "@courselit/common-logic": "<rootDir>/../../packages/common-logic/src",
         "@courselit/page-primitives":
             "<rootDir>/../../packages/page-primitives/src",
+        "@courselit/orm-models/dist/(.*)":
+            "<rootDir>/../../packages/orm-models/src/$1",
+        "@courselit/orm-models": "<rootDir>/../../packages/orm-models/src",
+        "@courselit/common-models/dist/(.*)":
+            "<rootDir>/../../packages/common-models/src/$1",
+        "@courselit/common-models":
+            "<rootDir>/../../packages/common-models/src",
         nanoid: "<rootDir>/__mocks__/nanoid.ts",
         "better-auth": "<rootDir>/__mocks__/better-auth.ts",
         slugify: "<rootDir>/__mocks__/slugify.ts",

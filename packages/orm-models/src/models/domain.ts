@@ -52,3 +52,8 @@ export const DomainSchema = new mongoose.Schema<Domain>(
         timestamps: true,
     },
 );
+
+export const DomainModel =
+    mongoose.models.Domain || mongoose.model<Domain>("Domain", DomainSchema);
+export default DomainModel;
+export type InternalDomain = Domain;

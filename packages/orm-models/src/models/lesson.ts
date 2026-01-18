@@ -11,6 +11,7 @@ import mongoose from "mongoose";
 import { MediaSchema } from "./media";
 
 export interface InternalLesson {
+    _id: mongoose.Types.ObjectId;
     id: mongoose.Types.ObjectId;
     domain: mongoose.Types.ObjectId;
     lessonId: string;
@@ -44,3 +45,9 @@ export const LessonSchema = new mongoose.Schema<InternalLesson>({
     published: { type: Boolean, required: true, default: false },
     groupId: { type: String, required: true },
 });
+
+const LessonModel =
+    mongoose.models.Lesson ||
+    mongoose.model<InternalLesson>("Lesson", LessonSchema);
+
+export default LessonModel;

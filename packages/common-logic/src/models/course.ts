@@ -9,7 +9,8 @@ import {
 import { MediaSchema } from "./media";
 import { EmailSchema } from "./email";
 
-export interface InternalCourse extends Omit<Course, "paymentPlans"> {
+export interface InternalCourse
+    extends Omit<Course, "paymentPlans" | "id" | "domain"> {
     domain: mongoose.Types.ObjectId;
     id: mongoose.Types.ObjectId;
     privacy: ProductAccessType;

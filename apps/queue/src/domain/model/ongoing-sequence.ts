@@ -1,7 +1,7 @@
 import { OngoingSequence as OS } from "@courselit/common-models";
 import mongoose, { Schema, Document } from "mongoose";
 
-export type OngoingSequence = OS &
+export type OngoingSequence = Omit<OS, "domain" | "id"> &
     Document & {
         domain: mongoose.Types.ObjectId;
     };
