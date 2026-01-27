@@ -814,6 +814,10 @@ const Settings = (props: SettingsProps) => {
                             }
                             options={[
                                 {
+                                    label: SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
+                                    value: PAYMENT_METHOD_NONE,
+                                },
+                                {
                                     label: capitalize(
                                         PAYMENT_METHOD_STRIPE.toLowerCase(),
                                     ),
@@ -856,9 +860,6 @@ const Settings = (props: SettingsProps) => {
                                         paymentMethod: value,
                                     }),
                                 )
-                            }
-                            placeholderMessage={
-                                SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL
                             }
                             disabled={!newSettings.currencyISOCode}
                         />
