@@ -8,6 +8,7 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "domain:cleanup": "ts-node src/cleanup-domain.ts",
+        "media:refresh": "ts-node src/refresh-media.ts",
         "build": "tsc"
     },
     "keywords": [],
