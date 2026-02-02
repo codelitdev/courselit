@@ -19,6 +19,7 @@ import {
 import Filter from "./models/filter";
 import GQLContext from "../../models/GQLContext";
 import mediaTypes from "../media/types";
+import { Media } from "@courselit/common-models";
 
 export default {
     createCourse: {
@@ -168,10 +169,10 @@ export default {
                 title: string;
                 subtitle: string;
                 description: string;
-                signatureImage: string;
+                signatureImage: Media;
                 signatureName: string;
                 signatureDesignation: string;
-                logo: string;
+                logo: Media;
             },
             context: GQLContext,
         ) =>

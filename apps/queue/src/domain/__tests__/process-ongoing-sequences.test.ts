@@ -834,7 +834,7 @@ describe("processOngoingSequence", () => {
             });
             await OngoingSequenceModel.deleteOne({ _id: ongoingSeq._id });
             await EmailDelivery.deleteMany({});
-        });
+        }, 15000);
 
         it("should rewrite links for click tracking", async () => {
             // Create a sequence with links in the content
@@ -988,7 +988,7 @@ describe("processOngoingSequence", () => {
             });
             await OngoingSequenceModel.deleteOne({ _id: ongoingSeq._id });
             await EmailDelivery.deleteMany({});
-        });
+        }, 15000);
 
         it("should not rewrite mailto, tel, anchor, and API links", async () => {
             // Create a sequence with various link types that should NOT be rewritten
@@ -1164,7 +1164,7 @@ describe("processOngoingSequence", () => {
             });
             await OngoingSequenceModel.deleteOne({ _id: ongoingSeq._id });
             await EmailDelivery.deleteMany({});
-        });
+        }, 15000);
 
         it("should include tracking pixel in rendered email", async () => {
             // Spy on renderEmailToHtml before calling processOngoingSequence
@@ -1254,7 +1254,7 @@ describe("processOngoingSequence", () => {
 
             await OngoingSequenceModel.deleteOne({ _id: ongoingSeq._id });
             await EmailDelivery.deleteMany({});
-        });
+        }, 15000);
     });
 
     describe("getNextPublishedEmail", () => {

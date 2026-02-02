@@ -60,6 +60,7 @@ import {
 } from "./helpers";
 const { permissions } = UIConstants;
 import { ObjectId } from "mongodb";
+import { sealMedia } from "@/services/medialit";
 
 const removeAdminFieldsFromUserObject = (user: any) => ({
     id: user._id,
@@ -143,6 +144,12 @@ export const updateUser = async (userData: UserData, ctx: GQLContext) => {
     }
 
     validateUserProperties(user);
+
+    if (Object.prototype.hasOwnProperty.call(userData, "avatar")) {
+        user.avatar = userData.avatar?.mediaId
+            ? await sealMedia(userData.avatar.mediaId)
+            : undefined;
+    }
 
     user = await user.save();
 

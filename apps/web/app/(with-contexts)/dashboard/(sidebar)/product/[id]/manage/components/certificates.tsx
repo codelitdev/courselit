@@ -38,6 +38,18 @@ const MUTATION_UPDATE_CERTIFICATE_TEMPLATE = `
     mutation UpdateCertificateTemplate($courseId: String!, $title: String, $subtitle: String, $description: String, $signatureName: String, $signatureDesignation: String, $signatureImage: MediaInput, $logo: MediaInput) {
         updateCourseCertificateTemplate(courseId: $courseId, title: $title, subtitle: $subtitle, description: $description, signatureName: $signatureName, signatureDesignation: $signatureDesignation, signatureImage: $signatureImage, logo: $logo) {
             title
+            signatureImage {
+                mediaId
+                originalFileName
+                file
+                thumbnail
+            }
+            logo {
+                mediaId
+                originalFileName
+                file
+                thumbnail
+            }
         }
     }
 `;
@@ -246,12 +258,6 @@ export default function Certificates({
     const saveCertificateSignatureImage = async (media?: Media) => {
         if (!product?.courseId) return;
 
-        // Update local state immediately
-        setCertificateTemplate((prev) => ({
-            ...prev,
-            signatureImage: media || {},
-        }));
-
         // Prepare variables for the mutation
         const variables = {
             courseId: product.courseId,
@@ -269,6 +275,12 @@ export default function Certificates({
                 .exec();
 
             if (response?.updateCourseCertificateTemplate) {
+                setCertificateTemplate({
+                    ...certificateTemplate,
+                    signatureImage:
+                        response.updateCourseCertificateTemplate
+                            .signatureImage || {},
+                });
                 toast({
                     title: TOAST_TITLE_SUCCESS,
                     description: APP_MESSAGE_COURSE_SAVED,
@@ -288,9 +300,6 @@ export default function Certificates({
     const saveCertificateLogo = async (media?: Media) => {
         if (!product?.courseId) return;
 
-        // Update local state immediately
-        setCertificateTemplate((prev) => ({ ...prev, logo: media || {} }));
-
         // Prepare variables for the mutation
         const variables = {
             courseId: product.courseId,
@@ -308,6 +317,10 @@ export default function Certificates({
                 .exec();
 
             if (response?.updateCourseCertificateTemplate) {
+                setCertificateTemplate({
+                    ...certificateTemplate,
+                    logo: response.updateCourseCertificateTemplate.logo || {},
+                });
                 toast({
                     title: TOAST_TITLE_SUCCESS,
                     description: APP_MESSAGE_COURSE_SAVED,

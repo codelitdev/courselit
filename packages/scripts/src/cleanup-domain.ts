@@ -39,7 +39,10 @@ import type {
 import { loadEnvFile } from "node:process";
 import { MediaLit } from "medialit";
 import { extractMediaIDs } from "@courselit/utils";
-import CommonModels from "@courselit/common-models";
+import CommonModels, {
+    Constants,
+    ScormContent,
+} from "@courselit/common-models";
 const { CommunityMediaTypes } = CommonModels;
 
 function getMediaLitClient() {
@@ -243,19 +246,33 @@ async function deleteLessons(id: string, domain: mongoose.Types.ObjectId) {
         courseId: id,
         domain,
     }).lean()) as InternalLesson[];
+
+    const cleanupTasks: Promise<void>[] = [];
+
     for (const lesson of lessons) {
         if (lesson.media?.mediaId) {
-            await deleteMedia(lesson.media.mediaId);
+            cleanupTasks.push(deleteMedia(lesson.media.mediaId));
         }
-        if (lesson.content) {
+        if (lesson.type === Constants.LessonType.TEXT && lesson.content) {
             const extractedMediaIds = extractMediaIDs(
                 JSON.stringify(lesson.content),
             );
             for (const mediaId of Array.from(extractedMediaIds)) {
-                await deleteMedia(mediaId);
+                cleanupTasks.push(deleteMedia(mediaId));
             }
         }
+        if (
+            lesson.type === Constants.LessonType.SCORM &&
+            lesson.content &&
+            (lesson.content as ScormContent).mediaId
+        ) {
+            cleanupTasks.push(
+                deleteMedia((lesson.content as ScormContent).mediaId!),
+            );
+        }
     }
+
+    await Promise.all(cleanupTasks);
     await LessonModel.deleteMany({ courseId: id, domain });
 }
 

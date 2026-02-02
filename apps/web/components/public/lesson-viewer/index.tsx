@@ -23,6 +23,7 @@ import { Link, Skeleton, useToast } from "@courselit/components-library";
 import { TextRenderer } from "@courselit/page-blocks";
 import {
     Constants,
+    TextEditorContent,
     type Address,
     type Lesson,
     type Profile,
@@ -311,10 +312,7 @@ export const LessonViewer = ({
                                 <WidgetErrorBoundary widgetName="text-editor">
                                     <TextRenderer
                                         json={
-                                            lesson.content as unknown as Record<
-                                                string,
-                                                unknown
-                                            >
+                                            lesson.content as TextEditorContent
                                         }
                                         theme={theme.theme}
                                     />

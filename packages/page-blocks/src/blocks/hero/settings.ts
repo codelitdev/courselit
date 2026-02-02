@@ -1,6 +1,7 @@
 import {
     Alignment,
     Media,
+    TextEditorContent,
     WidgetDefaultSettings,
 } from "@courselit/common-models";
 import { ImageObjectFit } from "@courselit/components-library";
@@ -8,7 +9,7 @@ import { AspectRatio } from "@courselit/components-library";
 
 export default interface Settings extends WidgetDefaultSettings {
     title?: string;
-    description?: Record<string, unknown>;
+    description?: TextEditorContent;
     buttonCaption?: string;
     buttonAction?: string;
     media?: Media;

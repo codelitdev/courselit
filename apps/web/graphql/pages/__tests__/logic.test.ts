@@ -2,18 +2,28 @@
  * @jest-environment node
  */
 
-import { updatePage, getPage } from "../logic";
+import { updatePage, getPage, publish } from "../logic";
 import DomainModel from "@/models/Domain";
 import PageModel, { Page } from "@/models/Page";
 import Course from "@/models/Course";
 import CommunityModel from "@/models/Community";
 import constants from "@/config/constants";
 import { deleteMedia } from "@/services/medialit";
-import type GQLContext from "@/models/GQLContext";
+import GQLContext from "@/models/GQLContext";
 import { responses } from "@/config/strings";
 
 jest.mock("@/services/medialit", () => ({
     deleteMedia: jest.fn().mockResolvedValue(true),
+    sealMedia: jest.fn().mockImplementation((id) =>
+        Promise.resolve({
+            mediaId: id,
+            url: `https://cdn.test/${id}`,
+            originalFileName: "image.png",
+            mimeType: "image/png",
+            size: 1024,
+            access: "public",
+        }),
+    ),
 }));
 
 const { permissions } = constants;
@@ -51,7 +61,7 @@ describe("updatePage media handling", () => {
 
     beforeAll(async () => {
         domain = await DomainModel.create({
-            name: "protected-media-domain",
+            name: `protected-media-domain-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
             email: "owner@test.com",
             sharedWidgets: {},
             draftSharedWidgets: {},
@@ -62,7 +72,7 @@ describe("updatePage media handling", () => {
         jest.clearAllMocks();
 
         ctx = {
-            subdomain: await DomainModel.findById(domain._id),
+            subdomain: domain,
             user: {
                 userId: "admin-user",
                 permissions: [permissions.manageSite],
@@ -232,7 +242,7 @@ describe("getPage entity validation", () => {
 
     beforeAll(async () => {
         domain = await DomainModel.create({
-            name: "entity-validation-domain",
+            name: `entity-validation-domain-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
             email: "owner@test.com",
             sharedWidgets: {},
             draftSharedWidgets: {},
@@ -243,7 +253,7 @@ describe("getPage entity validation", () => {
         jest.clearAllMocks();
 
         ctx = {
-            subdomain: await DomainModel.findById(domain._id),
+            subdomain: domain,
             user: null,
             address: "https://entity-validation.test",
         } as unknown as GQLContext;
@@ -572,6 +582,724 @@ describe("getPage entity validation", () => {
 
             expect(result).toBeDefined();
             expect(result?.pageId).toBe(page.pageId);
+        });
+    });
+});
+
+describe("Media cleanup", () => {
+    let domain: any;
+    let ctx: GQLContext;
+
+    const media1 = "media-1";
+    const media2 = "media-2";
+    const media3 = "media-3";
+    const mediaObj1 = {
+        mediaId: media1,
+        url: `https://cdn.test/${media1}`,
+        originalFileName: "image1.png",
+        mimeType: "image/png",
+        size: 1024,
+        access: "public",
+    };
+    const mediaObj2 = {
+        mediaId: media2,
+        url: `https://cdn.test/${media2}`,
+        originalFileName: "image2.png",
+        mimeType: "image/png",
+        size: 2048,
+        access: "public",
+    };
+
+    beforeAll(async () => {
+        domain = await DomainModel.create({
+            name: `media-cleanup-domain-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
+            email: "owner@test.com",
+            sharedWidgets: {},
+            draftSharedWidgets: {},
+        });
+    });
+
+    beforeEach(async () => {
+        jest.clearAllMocks();
+
+        ctx = {
+            subdomain: domain,
+            user: {
+                userId: "admin-user",
+                permissions: [permissions.manageSite],
+            },
+            address: "https://media-cleanup.test",
+        } as unknown as GQLContext;
+
+        await PageModel.deleteMany({ domain: domain._id });
+    });
+
+    afterAll(async () => {
+        await PageModel.deleteMany({ domain: domain._id });
+        await DomainModel.deleteMany({ _id: domain._id });
+    });
+
+    it("updating title will not call deleteMedia", async () => {
+        // Setup: Page with media in draft layout
+        const page = await PageModel.create({
+            domain: ctx.subdomain._id,
+            pageId: "bug-partial-update",
+            type: constants.site,
+            creatorId: "creator-1",
+            name: "Bug Partial Update",
+            layout: [makeHeaderWidget(), makeFooterWidget()],
+            draftLayout: [
+                makeHeaderWidget(),
+                {
+                    widgetId: "media-widget",
+                    name: "hero",
+                    settings: { image: mediaObj1.url },
+                },
+                makeFooterWidget(),
+            ],
+        });
+
+        // Action: Update only title
+        try {
+            await updatePage({
+                context: ctx,
+                pageId: page.pageId,
+                title: "New Title",
+            });
+        } catch (e) {
+            // Ignore the crash to check if deleteMedia was called
+        }
+
+        // Assertion: media1 should NOT be deleted
+        expect(deleteMedia).not.toHaveBeenCalledWith(media1);
+    });
+
+    it("orphans social image when replaced", async () => {
+        // Setup: Page with social image ONLY in draft
+        const page = await PageModel.create({
+            domain: ctx.subdomain._id,
+            pageId: "bug-social-image-orphan",
+            type: constants.site,
+            creatorId: "creator-1",
+            name: "Bug Social Image Orphan",
+            layout: [],
+            draftLayout: [],
+            socialImage: undefined,
+            draftSocialImage: mediaObj1,
+        });
+
+        // Action: Update specific social image
+        await updatePage({
+            context: ctx,
+            pageId: page.pageId,
+            socialImage: mediaObj2 as any,
+        });
+
+        // Assertion: media1 should be deleted (replaced by media2 and Is not published)
+        expect(deleteMedia).toHaveBeenCalledWith(media1);
+    });
+
+    it("existing social image is deleted when publishing", async () => {
+        // Setup: Page with media1 as socialImage, and layout awaiting publish with media2 as new socialImage
+        const page = await PageModel.create({
+            domain: ctx.subdomain._id,
+            pageId: "bug-publish-social-orphan",
+            type: constants.site,
+            creatorId: "creator-1",
+            name: "Bug Publish Social Orphan",
+            layout: [],
+            draftLayout: [],
+            socialImage: mediaObj1,
+            draftSocialImage: mediaObj2,
+        });
+
+        // Action: Publish
+        await publish(page.pageId, ctx);
+
+        // Assertion: media1 should be deleted as it is replaced by media2
+        expect(deleteMedia).toHaveBeenCalledWith(media1);
+    });
+
+    describe("updatePage media cleanup", () => {
+        it("deletes media removed from draft layout when not in published layout", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "update-removes-media",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Update Removes Media",
+                layout: [makeHeaderWidget(), makeFooterWidget()],
+                draftLayout: [
+                    makeHeaderWidget(),
+                    {
+                        widgetId: "image-widget",
+                        name: "hero",
+                        settings: {
+                            image: `https://cdn.test/${media1}/main.png`,
+                        },
+                    },
+                    makeFooterWidget(),
+                ],
+            });
+
+            await updatePage({
+                context: ctx,
+                pageId: page.pageId,
+                layout: JSON.stringify([
+                    makeHeaderWidget(),
+                    makeFooterWidget(),
+                ]),
+            });
+
+            expect(deleteMedia).toHaveBeenCalledWith(media1);
+        });
+
+        it("does NOT delete media still present in published layout", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "update-protects-published",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Update Protects Published",
+                layout: [
+                    makeHeaderWidget(),
+                    {
+                        widgetId: "protected-widget",
+                        name: "hero",
+                        settings: {
+                            image: `https://cdn.test/${media1}/main.png`,
+                        },
+                    },
+                    makeFooterWidget(),
+                ],
+                draftLayout: [
+                    makeHeaderWidget(),
+                    {
+                        widgetId: "protected-widget",
+                        name: "hero",
+                        settings: {
+                            image: `https://cdn.test/${media1}/main.png`,
+                        },
+                    },
+                    makeFooterWidget(),
+                ],
+            });
+
+            await updatePage({
+                context: ctx,
+                pageId: page.pageId,
+                layout: JSON.stringify([
+                    makeHeaderWidget(),
+                    makeFooterWidget(),
+                ]),
+            });
+
+            expect(deleteMedia).not.toHaveBeenCalledWith(media1);
+        });
+
+        it("deletes old draftSocialImage when replaced with new one", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "update-replaces-social",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Update Replaces Social",
+                layout: [],
+                draftLayout: [],
+                draftSocialImage: mediaObj1,
+            });
+
+            await updatePage({
+                context: ctx,
+                pageId: page.pageId,
+                socialImage: mediaObj2 as any,
+            });
+
+            expect(deleteMedia).toHaveBeenCalledWith(media1);
+        });
+
+        it("does NOT delete draftSocialImage if it is the same as published socialImage", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "update-protects-published-social",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Update Protects Published Social",
+                layout: [],
+                draftLayout: [],
+                socialImage: mediaObj1,
+                draftSocialImage: mediaObj1,
+            });
+
+            await updatePage({
+                context: ctx,
+                pageId: page.pageId,
+                socialImage: mediaObj2 as any,
+            });
+
+            expect(deleteMedia).not.toHaveBeenCalledWith(media1);
+        });
+
+        it("handles multiple media in a single widget", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "update-multiple-media",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Update Multiple Media",
+                layout: [makeHeaderWidget(), makeFooterWidget()],
+                draftLayout: [
+                    makeHeaderWidget(),
+                    {
+                        widgetId: "gallery-widget",
+                        name: "gallery",
+                        settings: {
+                            images: [
+                                `https://cdn.test/${media1}/main.png`,
+                                `https://cdn.test/${media2}/main.png`,
+                            ],
+                        },
+                    },
+                    makeFooterWidget(),
+                ],
+            });
+
+            await updatePage({
+                context: ctx,
+                pageId: page.pageId,
+                layout: JSON.stringify([
+                    makeHeaderWidget(),
+                    {
+                        widgetId: "gallery-widget",
+                        name: "gallery",
+                        settings: {
+                            images: [`https://cdn.test/${media2}/main.png`],
+                        },
+                    },
+                    makeFooterWidget(),
+                ]),
+            });
+
+            expect(deleteMedia).toHaveBeenCalledWith(media1);
+            expect(deleteMedia).not.toHaveBeenCalledWith(media2);
+        });
+
+        it("handles deeply nested media in widget settings", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "update-nested-media",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Update Nested Media",
+                layout: [makeHeaderWidget(), makeFooterWidget()],
+                draftLayout: [
+                    makeHeaderWidget(),
+                    {
+                        widgetId: "complex-widget",
+                        name: "complex",
+                        settings: {
+                            sections: [
+                                {
+                                    items: [
+                                        {
+                                            media: {
+                                                url: `https://cdn.test/${media1}/main.png`,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                    makeFooterWidget(),
+                ],
+            });
+
+            await updatePage({
+                context: ctx,
+                pageId: page.pageId,
+                layout: JSON.stringify([
+                    makeHeaderWidget(),
+                    makeFooterWidget(),
+                ]),
+            });
+
+            expect(deleteMedia).toHaveBeenCalledWith(media1);
+        });
+
+        it("does not delete any media when updating only metadata (title/description)", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "update-metadata-only",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Update Metadata Only",
+                layout: [
+                    makeHeaderWidget(),
+                    {
+                        widgetId: "w1",
+                        name: "hero",
+                        settings: {
+                            image: `https://cdn.test/${media1}/main.png`,
+                        },
+                    },
+                    makeFooterWidget(),
+                ],
+                draftLayout: [
+                    makeHeaderWidget(),
+                    {
+                        widgetId: "w1",
+                        name: "hero",
+                        settings: {
+                            image: `https://cdn.test/${media1}/main.png`,
+                        },
+                    },
+                    makeFooterWidget(),
+                ],
+            });
+
+            await updatePage({
+                context: ctx,
+                pageId: page.pageId,
+                title: "New Title",
+                description: "New Description",
+            });
+
+            expect(deleteMedia).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("publish media cleanup", () => {
+        it("deletes media from old published layout not in new published layout", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "publish-removes-media",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Publish Removes Media",
+                layout: [
+                    makeHeaderWidget(),
+                    {
+                        widgetId: "w1",
+                        name: "hero",
+                        settings: {
+                            image: `https://cdn.test/${media1}/main.png`,
+                        },
+                    },
+                    makeFooterWidget(),
+                ],
+                draftLayout: [makeHeaderWidget(), makeFooterWidget()],
+            });
+
+            await publish(page.pageId, ctx);
+
+            expect(deleteMedia).toHaveBeenCalledWith(media1);
+        });
+
+        it("does NOT delete media that exists in both old and new layouts", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "publish-keeps-shared",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Publish Keeps Shared",
+                layout: [
+                    makeHeaderWidget(),
+                    {
+                        widgetId: "w1",
+                        name: "hero",
+                        settings: {
+                            image: `https://cdn.test/${media1}/main.png`,
+                        },
+                    },
+                    makeFooterWidget(),
+                ],
+                draftLayout: [
+                    makeHeaderWidget(),
+                    {
+                        widgetId: "w1",
+                        name: "hero",
+                        settings: {
+                            image: `https://cdn.test/${media1}/main.png`,
+                        },
+                    },
+                    {
+                        widgetId: "w2",
+                        name: "banner",
+                        settings: {
+                            image: `https://cdn.test/${media2}/main.png`,
+                        },
+                    },
+                    makeFooterWidget(),
+                ],
+            });
+
+            await publish(page.pageId, ctx);
+
+            expect(deleteMedia).not.toHaveBeenCalledWith(media1);
+            expect(deleteMedia).not.toHaveBeenCalledWith(media2);
+        });
+
+        it("deletes old socialImage when replaced during publish", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "publish-replaces-social",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Publish Replaces Social",
+                layout: [],
+                draftLayout: [],
+                socialImage: mediaObj1,
+                draftSocialImage: mediaObj2,
+            });
+
+            await publish(page.pageId, ctx);
+
+            expect(deleteMedia).toHaveBeenCalledWith(media1);
+            expect(deleteMedia).not.toHaveBeenCalledWith(media2);
+        });
+
+        it("does NOT delete socialImage if it still exists in draftLayout", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "publish-social-in-layout",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Publish Social In Layout",
+                layout: [],
+                draftLayout: [
+                    makeHeaderWidget(),
+                    {
+                        widgetId: "w1",
+                        name: "hero",
+                        settings: {
+                            image: `https://cdn.test/${media1}/main.png`,
+                        },
+                    },
+                    makeFooterWidget(),
+                ],
+                socialImage: mediaObj1,
+                draftSocialImage: undefined,
+            });
+
+            await publish(page.pageId, ctx);
+
+            expect(deleteMedia).not.toHaveBeenCalledWith(media1);
+        });
+
+        it("handles publishing with empty draftLayout - media is deleted", async () => {
+            // Note: When draftLayout is empty, the layout is NOT copied (checked via `if (page.draftLayout.length)`)
+            // However, the media diff computation still happens: currentPublished - nextPublished
+            // With empty draftLayout, nextPublishedMedia is empty, so ALL currentPublishedMedia is deleted
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "publish-empty-layouts",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Publish Empty Layouts",
+                layout: [
+                    makeHeaderWidget(),
+                    {
+                        widgetId: "w1",
+                        name: "hero",
+                        settings: {
+                            image: `https://cdn.test/${media1}/main.png`,
+                        },
+                    },
+                    makeFooterWidget(),
+                ],
+                draftLayout: [],
+            });
+
+            await publish(page.pageId, ctx);
+
+            // Media IS deleted because the diff is: {media1} - {} = {media1}
+            expect(deleteMedia).toHaveBeenCalledWith(media1);
+        });
+
+        it("deletes multiple media removed during publish", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "publish-removes-multiple",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Publish Removes Multiple",
+                layout: [
+                    makeHeaderWidget(),
+                    {
+                        widgetId: "w1",
+                        name: "hero",
+                        settings: {
+                            image: `https://cdn.test/${media1}/main.png`,
+                        },
+                    },
+                    {
+                        widgetId: "w2",
+                        name: "banner",
+                        settings: {
+                            image: `https://cdn.test/${media2}/main.png`,
+                        },
+                    },
+                    makeFooterWidget(),
+                ],
+                draftLayout: [
+                    makeHeaderWidget(),
+                    {
+                        widgetId: "w3",
+                        name: "cta",
+                        settings: {
+                            image: `https://cdn.test/${media3}/main.png`,
+                        },
+                    },
+                    makeFooterWidget(),
+                ],
+            });
+
+            await publish(page.pageId, ctx);
+
+            expect(deleteMedia).toHaveBeenCalledWith(media1);
+            expect(deleteMedia).toHaveBeenCalledWith(media2);
+            expect(deleteMedia).not.toHaveBeenCalledWith(media3);
+        });
+    });
+
+    describe("edge cases", () => {
+        it("handles widget with no media settings", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "no-media-widget",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "No Media Widget",
+                layout: [makeHeaderWidget(), makeFooterWidget()],
+                draftLayout: [
+                    makeHeaderWidget(),
+                    {
+                        widgetId: "text-widget",
+                        name: "text",
+                        settings: { content: "Hello world" },
+                    },
+                    makeFooterWidget(),
+                ],
+            });
+
+            await updatePage({
+                context: ctx,
+                pageId: page.pageId,
+                layout: JSON.stringify([
+                    makeHeaderWidget(),
+                    makeFooterWidget(),
+                ]),
+            });
+
+            expect(deleteMedia).not.toHaveBeenCalled();
+        });
+
+        it("handles media URL with different file extensions", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "media-extensions",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Media Extensions",
+                layout: [makeHeaderWidget(), makeFooterWidget()],
+                draftLayout: [
+                    makeHeaderWidget(),
+                    {
+                        widgetId: "w1",
+                        name: "video",
+                        settings: {
+                            src: `https://cdn.test/${media1}/main.mp4`,
+                        },
+                    },
+                    {
+                        widgetId: "w2",
+                        name: "image",
+                        settings: {
+                            src: `https://cdn.test/${media2}/main.webp`,
+                        },
+                    },
+                    makeFooterWidget(),
+                ],
+            });
+
+            await updatePage({
+                context: ctx,
+                pageId: page.pageId,
+                layout: JSON.stringify([
+                    makeHeaderWidget(),
+                    makeFooterWidget(),
+                ]),
+            });
+
+            expect(deleteMedia).toHaveBeenCalledWith(media1);
+            expect(deleteMedia).toHaveBeenCalledWith(media2);
+        });
+
+        it("does not crash when draftLayout is empty array", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "empty-draft-layout",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Empty Draft Layout",
+                layout: [makeHeaderWidget(), makeFooterWidget()],
+                draftLayout: [],
+            });
+
+            await expect(
+                updatePage({
+                    context: ctx,
+                    pageId: page.pageId,
+                    layout: JSON.stringify([
+                        makeHeaderWidget(),
+                        {
+                            widgetId: "w1",
+                            name: "hero",
+                            settings: {
+                                image: `https://cdn.test/${media1}/main.png`,
+                            },
+                        },
+                        makeFooterWidget(),
+                    ]),
+                }),
+            ).resolves.toBeDefined();
+
+            expect(deleteMedia).not.toHaveBeenCalled();
+        });
+
+        it("correctly identifies media IDs from complex URLs", async () => {
+            const complexMediaId = "abc123def456";
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "complex-url",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Complex URL",
+                layout: [makeHeaderWidget(), makeFooterWidget()],
+                draftLayout: [
+                    makeHeaderWidget(),
+                    {
+                        widgetId: "w1",
+                        name: "hero",
+                        settings: {
+                            image: `https://cdn.example.com/uploads/${complexMediaId}/main.jpg`,
+                        },
+                    },
+                    makeFooterWidget(),
+                ],
+            });
+
+            await updatePage({
+                context: ctx,
+                pageId: page.pageId,
+                layout: JSON.stringify([
+                    makeHeaderWidget(),
+                    makeFooterWidget(),
+                ]),
+            });
+
+            expect(deleteMedia).toHaveBeenCalledWith(complexMediaId);
         });
     });
 });

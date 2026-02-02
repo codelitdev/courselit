@@ -10,9 +10,15 @@ import {
 import type GQLContext from "../../models/GQLContext";
 import DomainModel, { Domain } from "../../models/Domain";
 import { checkPermission } from "@courselit/utils";
-import { Constants, LoginProvider, Typeface } from "@courselit/common-models";
+import {
+    Constants,
+    LoginProvider,
+    Media,
+    Typeface,
+} from "@courselit/common-models";
 import ApikeyModel, { ApiKey } from "@models/ApiKey";
 import SSOProviderModel from "@models/SSOProvider";
+import { sealMedia } from "@/services/medialit";
 
 const { permissions } = constants;
 
@@ -66,6 +72,12 @@ export const updateSiteInfo = async (
     }
 
     validateSiteInfo(domain);
+
+    if (Object.prototype.hasOwnProperty.call(siteData, "logo")) {
+        domain.settings.logo = (siteData.logo as Media)?.mediaId
+            ? await sealMedia((siteData.logo as Media).mediaId)
+            : undefined;
+    }
 
     await (domain as any).save();
 
