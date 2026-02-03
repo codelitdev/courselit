@@ -5,18 +5,18 @@
  * the latest URLs from MediaLit service using the stored mediaId.
  *
  * Usage:
- *   pnpm media:refresh [domain-name] [--discover]
+ *   pnpm media:refresh [domain-name] [--save]
  *
  * Options:
- *   --discover  Only print all media objects found, without fetching or updating
+ *   --save      Actually update the database (Default is DRY RUN / DISCOVER)
  *
  * If domain-name is provided, only that domain's media is refreshed.
  * If omitted, all domains are processed.
  *
  * Environment variables required:
  *   - DB_CONNECTION_STRING: MongoDB connection string
- *   - MEDIALIT_SERVER: MediaLit API server URL (not required for --discover)
- *   - MEDIALIT_APIKEY: MediaLit API key (not required for --discover)
+ *   - MEDIALIT_SERVER: MediaLit API server URL
+ *   - MEDIALIT_APIKEY: MediaLit API key
  */
 
 import mongoose from "mongoose";
@@ -51,19 +51,17 @@ loadEnvFile();
 
 // Parse command line arguments
 const args = process.argv.slice(2);
-const discoverMode = args.includes("--discover");
+const saveMode = args.includes("--save");
+const discoverMode = !saveMode;
 const domainArg = args.find((arg) => !arg.startsWith("--"));
 
 if (!process.env.DB_CONNECTION_STRING) {
     throw new Error("DB_CONNECTION_STRING is not set");
 }
 
-if (
-    !discoverMode &&
-    (!process.env.MEDIALIT_SERVER || !process.env.MEDIALIT_APIKEY)
-) {
+if (!process.env.MEDIALIT_SERVER || !process.env.MEDIALIT_APIKEY) {
     throw new Error(
-        "MEDIALIT_SERVER and MEDIALIT_APIKEY must be set (not required for --discover mode)",
+        "MEDIALIT_SERVER and MEDIALIT_APIKEY must be set to fetch refreshed URLs",
     );
 }
 
@@ -88,6 +86,29 @@ const stats = {
 
 // Cache to avoid duplicate API calls for the same mediaId
 const mediaCache = new Map<string, Media | null>();
+
+/**
+ * Extracts Media ID from a MediaLit URL
+ */
+function extractIdFromUrl(url: string): string | null {
+    try {
+        const { pathname } = new URL(url);
+        const segments = pathname.split("/").filter(Boolean);
+
+        if (segments.length < 2) {
+            return null;
+        }
+
+        const lastSegment = segments[segments.length - 1];
+        if (!/^main\.[^/]+$/i.test(lastSegment)) {
+            return null;
+        }
+
+        return segments[segments.length - 2] || null;
+    } catch {
+        return null;
+    }
+}
 
 /**
  * Fetch fresh media data from MediaLit
@@ -124,12 +145,32 @@ async function refreshMediaObject(
 
     stats.processed++;
 
-    // In discover mode, just print and return null (no update)
+    // In discover mode, fetch and print comparison but return null
     if (discoverMode) {
         console.log(`    📎 ${context || "Media"}: ${existingMedia.mediaId}`);
-        console.log(`       File: ${existingMedia.file || "(none)"}`);
+        console.log(
+            `       📄 Current File:  ${existingMedia.file || "(none)"}`,
+        );
         if (existingMedia.thumbnail) {
-            console.log(`       Thumb: ${existingMedia.thumbnail}`);
+            console.log(`       🖼️  Current Thumb: ${existingMedia.thumbnail}`);
+        }
+
+        const freshMedia = await fetchMediaFromMediaLit(existingMedia.mediaId);
+        if (freshMedia) {
+            if (freshMedia.file !== existingMedia.file) {
+                console.log(`       ✨ New File:      ${freshMedia.file}`);
+            }
+            if (freshMedia.thumbnail !== existingMedia.thumbnail) {
+                console.log(`       ✨ New Thumb:     ${freshMedia.thumbnail}`);
+            }
+            if (
+                freshMedia.file === existingMedia.file &&
+                freshMedia.thumbnail === existingMedia.thumbnail
+            ) {
+                console.log(`       ✅ URLs are already up to date`);
+            }
+        } else {
+            console.log(`       ❌ Could not fetch updated URLs from MediaLit`);
         }
         return null;
     }
@@ -206,7 +247,7 @@ async function recursiveMediaRefresh(obj: any): Promise<boolean> {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {
             const value = obj[key];
 
-            // Special handling for stringified JSON fields
+            // 1. Special handling for stringified JSON fields (e.g. ProseMirror docs)
             if (
                 typeof value === "string" &&
                 ((value.trim().startsWith("{") && value.trim().endsWith("}")) ||
@@ -220,12 +261,63 @@ async function recursiveMediaRefresh(obj: any): Promise<boolean> {
                         obj[key] = JSON.stringify(parsed);
                         updated = true;
                     }
-                    continue; // Skip normal recursion for this key
+                    continue; // Skip normal recursion/string check for this key
                 } catch {
                     // Not valid JSON
                 }
             }
 
+            // 2. If the value is a string, check if it's a MediaLit URL that needs refreshing
+            if (typeof value === "string") {
+                const extractedId = extractIdFromUrl(value);
+                if (extractedId) {
+                    stats.processed++;
+                    if (discoverMode) {
+                        console.log(
+                            `    📎 URL found in key '${key}': ${extractedId}`,
+                        );
+                        console.log(`       🔗 Current Value: ${value}`);
+
+                        const freshMedia =
+                            await fetchMediaFromMediaLit(extractedId);
+                        if (freshMedia) {
+                            if (freshMedia.file !== value) {
+                                console.log(
+                                    `       ✨ New Value:     ${freshMedia.file}`,
+                                );
+                            } else {
+                                console.log(
+                                    `       ✅ Value is already up to date`,
+                                );
+                            }
+                        } else {
+                            console.log(
+                                `       ❌ Could not fetch updated URL from MediaLit`,
+                            );
+                        }
+                        continue;
+                    }
+
+                    const freshMedia =
+                        await fetchMediaFromMediaLit(extractedId);
+                    if (freshMedia && freshMedia.file !== value) {
+                        // Check if we should use file or thumbnail URL
+                        // Usually for 'src' we use file URL.
+                        // If the current URL ends with main.png (or similar), we update it to freshMedia.file
+                        // Note: Our extractIdFromUrl only matches main images anyway.
+                        obj[key] = freshMedia.file;
+                        updated = true;
+                        stats.updated++;
+                    } else if (!freshMedia) {
+                        stats.failed++;
+                    } else {
+                        stats.skipped++;
+                    }
+                    continue;
+                }
+            }
+
+            // 3. Normal recursion for objects/arrays
             const result = await recursiveMediaRefresh(value);
             if (result) {
                 updated = true;
@@ -290,8 +382,17 @@ async function refreshCourseMedia(domainId: mongoose.Types.ObjectId) {
         }
 
         if (hasUpdates) {
-            await CourseModel.updateOne({ _id: course.id }, { $set: updates });
-            console.log(`  ✓ Course: ${course.title}`);
+            const result = await CourseModel.updateOne(
+                { _id: (course as any)._id },
+                { $set: updates },
+            );
+            if (result.matchedCount === 0) {
+                console.error(
+                    `  ✗ Failed to update course: ${course.title} (No document found)`,
+                );
+            } else {
+                console.log(`  ✓ Course: ${course.title}`);
+            }
         }
     }
 }
@@ -331,8 +432,17 @@ async function refreshLessonMedia(domainId: mongoose.Types.ObjectId) {
         }
 
         if (hasUpdates) {
-            await LessonModel.updateOne({ _id: lesson.id }, { $set: updates });
-            console.log(`  ✓ Lesson: ${lesson.title}`);
+            const result = await LessonModel.updateOne(
+                { _id: (lesson as any)._id },
+                { $set: updates },
+            );
+            if (result.matchedCount === 0) {
+                console.error(
+                    `  ✗ Failed to update lesson: ${lesson.title} (No document found)`,
+                );
+            } else {
+                console.log(`  ✓ Lesson: ${lesson.title}`);
+            }
         }
     }
 }
@@ -353,7 +463,7 @@ async function refreshUserMedia(domainId: mongoose.Types.ObjectId) {
             const updatedMedia = await refreshMediaObject(user.avatar);
             if (updatedMedia) {
                 await UserModel.updateOne(
-                    { _id: user._id },
+                    { _id: (user as any)._id },
                     { $set: { avatar: updatedMedia } },
                 );
                 console.log(`  ✓ User: ${user.email}`);
@@ -700,8 +810,11 @@ async function main() {
 
     if (discoverMode) {
         console.log(
-            "🔍 DISCOVER MODE: Only printing media objects, no updates\n",
+            "🔍 DRY RUN (Discover Mode): Showing changes without updating the database.",
         );
+        console.log("   To apply changes, run with --save\n");
+    } else {
+        console.log("💾 SAVE MODE: Updating database with fresh URLs\n");
     }
 
     if (domainArg) {

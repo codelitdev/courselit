@@ -1,3 +1,8 @@
+/**
+ * Deletes a domain and all its associated data.
+ *
+ * Usage: pnpm --filter @courselit/scripts domain:cleanup <domain-name>
+ */
 import mongoose from "mongoose";
 import {
     CourseSchema,
@@ -39,11 +44,8 @@ import type {
 import { loadEnvFile } from "node:process";
 import { MediaLit } from "medialit";
 import { extractMediaIDs } from "@courselit/utils";
-import CommonModels, {
-    Constants,
-    ScormContent,
-} from "@courselit/common-models";
-const { CommunityMediaTypes } = CommonModels;
+import CommonModels from "@courselit/common-models";
+const { CommunityMediaTypes, Constants } = CommonModels;
 
 function getMediaLitClient() {
     const medialit = new MediaLit({
@@ -167,6 +169,7 @@ async function cleanupDomain(name: string) {
         await deleteMedia(mediaId);
     }
     await DomainModel.deleteOne({ _id: domain._id });
+    console.log(`✅ Deleted: ${name}`);
 }
 
 async function deleteProduct({
@@ -264,10 +267,12 @@ async function deleteLessons(id: string, domain: mongoose.Types.ObjectId) {
         if (
             lesson.type === Constants.LessonType.SCORM &&
             lesson.content &&
-            (lesson.content as ScormContent).mediaId
+            (lesson.content as CommonModels.ScormContent).mediaId
         ) {
             cleanupTasks.push(
-                deleteMedia((lesson.content as ScormContent).mediaId!),
+                deleteMedia(
+                    (lesson.content as CommonModels.ScormContent).mediaId!,
+                ),
             );
         }
     }
