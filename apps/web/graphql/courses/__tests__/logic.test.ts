@@ -53,6 +53,11 @@ describe("updateCourse", () => {
         });
     });
 
+    beforeEach(async () => {
+        await CourseModel.deleteMany({ domain: testDomain._id });
+        jest.clearAllMocks();
+    });
+
     afterAll(async () => {
         await PageModel.deleteOne({ _id: page._id });
         await UserModel.deleteMany({ domain: testDomain._id });
@@ -93,8 +98,8 @@ describe("updateCourse", () => {
 
         const course = await CourseModel.create({
             domain: testDomain._id,
-            courseId: id("course"),
-            title: "Test Course",
+            courseId: id("course-unique"),
+            title: id("course-title"),
             creatorId: adminUser.userId,
             deleteable: true,
             pageId: page.pageId,
@@ -166,8 +171,8 @@ describe("updateCourse", () => {
 
         const course = await CourseModel.create({
             domain: testDomain._id,
-            courseId: id("course"),
-            title: "Test Course",
+            courseId: id("course-unique-2"),
+            title: id("course-title-2"),
             creatorId: adminUser.userId,
             deleteable: true,
             pageId: page.pageId,
