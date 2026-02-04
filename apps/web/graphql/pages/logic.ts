@@ -9,16 +9,15 @@ import {
 } from "./helpers";
 import constants from "../../config/constants";
 import Course from "../../models/Course";
-import { checkPermission } from "@courselit/utils";
+import { checkPermission, extractMediaIDs } from "@courselit/utils";
 import { Media, User, Constants } from "@courselit/common-models";
 import { Domain } from "../../models/Domain";
 import { homePageTemplate } from "./page-templates";
 import { publishTheme } from "../themes/logic";
-import getDeletedMediaIds, {
-    extractMediaIDs,
-} from "@/lib/get-deleted-media-ids";
-import { deleteMedia } from "@/services/medialit";
+import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
+import { deleteMedia, sealMedia } from "@/services/medialit";
 import CommunityModel from "@models/Community";
+import { replaceTempMediaWithSealedMediaInPageLayout } from "@/lib/replace-temp-media-with-sealed-media-in-page-layout";
 const { product, site, blogPage, communityPage, permissions, defaultPages } =
     constants;
 const { pageNames } = Constants;
@@ -155,6 +154,9 @@ export const updatePage = async ({
     const publishedLayoutMediaIds = extractMediaIDs(
         JSON.stringify(page.layout ?? []),
     );
+    if (page.socialImage?.mediaId) {
+        publishedLayoutMediaIds.add(page.socialImage?.mediaId);
+    }
     if (inputLayout) {
         try {
             let layout;
@@ -174,7 +176,11 @@ export const updatePage = async ({
             }
             const layoutWithSharedWidgetsSettings =
                 await copySharedWidgetsToDomain(layout, ctx.subdomain);
-            page.draftLayout = layoutWithSharedWidgetsSettings;
+            const draftLayoutWithSealedMedia =
+                await replaceTempMediaWithSealedMediaInPageLayout(
+                    layoutWithSharedWidgetsSettings,
+                );
+            page.draftLayout = draftLayoutWithSealedMedia;
         } catch (err: any) {
             throw new Error(err.message);
         }
@@ -185,8 +191,13 @@ export const updatePage = async ({
     if (description) {
         page.draftDescription = description;
     }
-    if (typeof socialImage !== "undefined") {
-        page.draftSocialImage = socialImage;
+    if (typeof socialImage !== "undefined" && socialImage?.mediaId) {
+        if (page.draftSocialImage?.mediaId) {
+            deletedMediaIds.push(page.draftSocialImage.mediaId);
+        }
+        page.draftSocialImage = socialImage?.mediaId
+            ? await sealMedia(socialImage.mediaId)
+            : undefined;
     }
     if (typeof robotsAllowed === "boolean") {
         page.draftRobotsAllowed = robotsAllowed;
@@ -230,21 +241,42 @@ export const publish = async (
         return null;
     }
 
+    // 1. Identify all media currently in PUBLISHED state (to be potentially deleted)
+    const currentPublishedMedia = extractMediaIDs(
+        JSON.stringify(page.layout || []),
+    );
+    if (page.socialImage?.mediaId) {
+        currentPublishedMedia.add(page.socialImage.mediaId);
+    }
+
+    // 2. Identify all media in NEW PUBLISHED state (from draft)
+    const nextPublishedMedia = extractMediaIDs(
+        JSON.stringify(page.draftLayout || []),
+    );
+    if (page.draftSocialImage?.mediaId) {
+        nextPublishedMedia.add(page.draftSocialImage.mediaId);
+    }
+
+    // 3. Delete (Current - Next)
+    const mediaToDelete = Array.from(currentPublishedMedia).filter(
+        (id) => !nextPublishedMedia.has(id),
+    );
+
     if (page.draftLayout.length) {
         page.layout = page.draftLayout;
-        page.draftLayout = [];
+        // page.draftLayout = [];
     }
     if (page.draftTitle) {
         page.title = page.draftTitle;
-        page.draftTitle = undefined;
+        // page.draftTitle = undefined;
     }
     if (page.draftDescription) {
         page.description = page.draftDescription;
-        page.draftDescription = undefined;
+        // page.draftDescription = undefined;
     }
     if (page.draftRobotsAllowed) {
         page.robotsAllowed = page.draftRobotsAllowed;
-        page.draftRobotsAllowed = undefined;
+        // page.draftRobotsAllowed = undefined;
     }
     page.socialImage = page.draftSocialImage;
 
@@ -257,6 +289,9 @@ export const publish = async (
     }
 
     await (ctx.subdomain as any).save();
+    for (const mediaId of mediaToDelete) {
+        await deleteMedia(mediaId);
+    }
     await (page as any).save();
 
     return getPageResponse(page!, ctx);
@@ -503,7 +538,13 @@ export const deleteBlock = async ({
     }
 
     const deletedMediaIds = extractMediaIDs(JSON.stringify(block));
-    for (const mediaId of Array.from(deletedMediaIds)) {
+    const publishedLayoutMediaIds = extractMediaIDs(
+        JSON.stringify(page.layout ?? []),
+    );
+    const deletableMediaIds = Array.from(deletedMediaIds).filter(
+        (mediaId) => !publishedLayoutMediaIds.has(mediaId),
+    );
+    for (const mediaId of deletableMediaIds) {
         await deleteMedia(mediaId);
     }
 

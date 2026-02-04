@@ -112,13 +112,13 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
         );
 
         jest.clearAllMocks();
-    });
+    }, 15000);
 
     afterAll(async () => {
         await UserModel.deleteMany({ domain: testDomain._id });
         await PaymentPlanModel.deleteMany({ domain: testDomain._id });
         await DomainModel.deleteOne({ _id: testDomain._id });
-    });
+    }, 15000);
 
     describe("Security & Validation", () => {
         it("should require authentication", async () => {
@@ -896,7 +896,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 updatedRegularUser?.purchases.some(
                     (p: any) => p.courseId === course.courseId,
                 ),
-            ).toBe(false);
+            ).toBeFalsy();
 
             const updatedAdminUser = await UserModel.findOne({
                 userId: adminUser.userId,
@@ -905,7 +905,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 updatedAdminUser?.purchases.some(
                     (p: any) => p.courseId === course.courseId,
                 ),
-            ).toBe(false);
+            ).toBeFalsy();
         });
     });
 

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import DashboardContent from "@components/admin/dashboard-content";
-import { redirect, useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { truncate } from "@ui-lib/utils";
 import { Constants, UIConstants } from "@courselit/common-models";
 import useProduct from "@/hooks/use-product";
@@ -58,9 +58,13 @@ export default function SettingsPage() {
         }
     }, [product]);
 
-    if (productLoaded && !product) {
-        redirect("/dashboard/products");
-    }
+    const router = useRouter();
+
+    useEffect(() => {
+        if (productLoaded && !product) {
+            router.replace("/dashboard/products");
+        }
+    }, [productLoaded, product, router]);
 
     if (!product) {
         return null;

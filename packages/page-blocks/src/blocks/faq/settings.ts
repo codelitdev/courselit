@@ -1,13 +1,17 @@
-import { Alignment, WidgetDefaultSettings } from "@courselit/common-models";
+import {
+    Alignment,
+    TextEditorContent,
+    WidgetDefaultSettings,
+} from "@courselit/common-models";
 
 export interface Item {
     title: string;
-    description: Record<string, unknown>;
+    description: TextEditorContent;
 }
 
 export default interface Settings extends WidgetDefaultSettings {
     title: string;
-    description?: Record<string, unknown>;
+    description?: TextEditorContent;
     headerAlignment: Alignment;
     itemsAlignment: Alignment;
     items?: Item[];

@@ -1,5 +1,10 @@
 import { FormEvent, useState } from "react";
-import { Constants, Media, WidgetProps } from "@courselit/common-models";
+import {
+    Constants,
+    Media,
+    TextEditorContent,
+    WidgetProps,
+} from "@courselit/common-models";
 import {
     Image,
     Link,
@@ -81,7 +86,7 @@ export default function Widget({
     const [success, setSuccess] = useState(false);
     const { toast } = useToast();
     const type = product.pageType;
-    const defaultSuccessMessage: Record<string, unknown> = {
+    const defaultSuccessMessage: TextEditorContent = {
         type: "doc",
         content: [
             {

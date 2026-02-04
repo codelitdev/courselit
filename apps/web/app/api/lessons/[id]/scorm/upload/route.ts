@@ -135,6 +135,10 @@ export async function POST(
 
         const { packageInfo } = result;
 
+        if (lesson.content?.mediaId && lesson.content.mediaId !== mediaId) {
+            await medialit.delete(lesson.content.mediaId);
+        }
+        await medialit.seal(mediaId);
         // Update lesson content with SCORM metadata
         await Lesson.updateOne(
             { lessonId, domain: domain._id },

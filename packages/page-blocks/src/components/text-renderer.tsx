@@ -14,9 +14,10 @@ import {
     Link,
     Text1,
 } from "@courselit/page-primitives";
+import { TextEditorContent } from "@courselit/common-models";
 
 interface TextRendererProps {
-    json: Record<string, unknown>;
+    json: TextEditorContent;
     className?: string;
     theme?: ThemeStyle;
 }

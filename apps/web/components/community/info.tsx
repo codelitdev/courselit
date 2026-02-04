@@ -5,6 +5,7 @@ import {
     Constants,
     Membership,
     PaymentPlan,
+    TextEditorContent,
     UIConstants,
 } from "@courselit/common-models";
 import { FormEvent, Fragment, useContext, useState } from "react";
@@ -40,7 +41,7 @@ const { permissions } = UIConstants;
 interface CommunityInfoProps {
     id: string;
     name: string;
-    description: Record<string, unknown>;
+    description: TextEditorContent;
     image: string;
     memberCount: number;
     paymentPlan?: PaymentPlan;

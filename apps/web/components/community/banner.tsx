@@ -80,14 +80,7 @@ export default function Banner({
                         <AlertDescription>
                             {isTextEditorNonEmpty(bannerText) ? (
                                 <WidgetErrorBoundary widgetName="text-editor">
-                                    <TextRenderer
-                                        json={
-                                            bannerText as unknown as Record<
-                                                string,
-                                                unknown
-                                            >
-                                        }
-                                    />
+                                    <TextRenderer json={bannerText} />
                                 </WidgetErrorBoundary>
                             ) : (
                                 canEdit && (
