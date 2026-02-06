@@ -1,0 +1,37 @@
+# Git
+.git
+.gitignore
+
+# Dependencies
+node_modules
+**/node_modules
+
+# Build outputs
+.next
+**/dist
+build
+out
+
+# Local env files
+.env
+.env.local
+.env.*.local
+
+# IDEs and editors
+.vscode
+.idea
+.cursor
+*.swp
+*.swo
+
+# Project specific
+.eslintcache
+.npmrc
+AGENTS.md
+docs
+deployment
+services/app/Dockerfile
+
+# OS files
+.DS_Store
+Thumbs.db

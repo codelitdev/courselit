@@ -197,9 +197,9 @@ export const homePageTemplate = [
                 mimeType: "image/jpeg",
                 size: 113901,
                 access: "public",
-                file: "https://d27g932tzd9f7s.cloudfront.net/medialit-service/public/dM3L-CVOXLGv3XxsnRUd_D3SD-S5hCkuTzTx432L/main.jpg",
+                file: "https://cdn.medialit.cloud/medialit-service/p/dM3L-CVOXLGv3XxsnRUd_D3SD-S5hCkuTzTx432L/main.jpg",
                 thumbnail:
-                    "https://d27g932tzd9f7s.cloudfront.net/medialit-service/public/dM3L-CVOXLGv3XxsnRUd_D3SD-S5hCkuTzTx432L/thumb.webp",
+                    "https://cdn.medialit.cloud/medialit-service/p/dM3L-CVOXLGv3XxsnRUd_D3SD-S5hCkuTzTx432L/thumb.webp",
                 caption: "",
             },
             mediaRadius: 2,
