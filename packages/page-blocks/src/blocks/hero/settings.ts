@@ -5,7 +5,7 @@ import {
     WidgetDefaultSettings,
 } from "@courselit/common-models";
 import { ImageObjectFit } from "@courselit/components-library";
-import { AspectRatio } from "@courselit/components-library";
+import { AspectRatio } from "../../components";
 
 export default interface Settings extends WidgetDefaultSettings {
     title?: string;

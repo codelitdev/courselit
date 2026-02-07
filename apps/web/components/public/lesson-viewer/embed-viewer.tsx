@@ -1,5 +1,6 @@
 import React from "react";
 import { UIConstants } from "@courselit/common-models";
+import { SandboxedEmbed } from "@courselit/page-blocks";
 
 const YouTubeEmbed = ({ content }: { content: string }) => {
     const match = content.match(UIConstants.YOUTUBE_REGEX);
@@ -22,11 +23,16 @@ interface LessonEmbedViewerProps {
 }
 
 const LessonEmbedViewer = ({ content }: LessonEmbedViewerProps) => {
+    const isYouTube =
+        content.value.includes("youtube") || content.value.includes("youtu.be");
+    const hasScript = content.value.includes("<script");
+
     return (
         <>
-            {content.value.includes("youtube") ||
-            content.value.includes("youtu.be") ? (
+            {isYouTube ? (
                 <YouTubeEmbed content={content.value} />
+            ) : hasScript ? (
+                <SandboxedEmbed content={content.value} />
             ) : (
                 <div
                     dangerouslySetInnerHTML={{

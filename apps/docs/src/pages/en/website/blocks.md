@@ -36,7 +36,7 @@ You will also see the newly added link on the header itself.
 3. Click on the pencil icon against the newly added link to edit it as shown above.
 4. Change the label (displayed as text on the header block) and the URL (where the user should be taken upon clicking the label on the header) and click `Done` to save.
    ![Header edit link](/assets/pages/header-edit-link.png)
-    </details>
+     </details>
 
 ### [Rich Text](#rich-text)
 
@@ -69,7 +69,7 @@ The rich text block uses the same text editor available elsewhere on the platfor
 2. Click on the floating `link` icon to reveal a text input.
 3. In the popup text input, enter the URL as shown below and press <kbd>Enter</kbd>.
    ![Create a hyperlink in rich text block](/assets/pages/courselit-text-editor-create-links.gif)
-    </details>
+     </details>
 
 ### [Hero](#hero)
 
@@ -95,7 +95,7 @@ Following is how it looks on a page.
 4. In the button action, enter the URL the user should be taken to upon clicking.
    a. If the URL is from your own school, use its relative form, i.e., `/courses`.
    b. If the URL is from some external website, use the absolute (complete) URL, i.e., `https://website.com/courses`.
-    </details>
+     </details>
 
 ### [Grid](#grid)
 
@@ -140,7 +140,7 @@ A grid block comes in handy when you want to show some sort of list, for example
 4. In the button action, enter the URL the user should be taken to upon clicking.
    a. If the URL is from your own school, use its relative form, i.e., `/courses`.
    b. If the URL is from some external website, use the absolute (complete) URL, i.e., `https://website.com/courses`.
-    </details>
+     </details>
 
 ### [Featured](#featured)
 
@@ -250,6 +250,52 @@ Following is an animation that shows the entire flow.
 
 </details>
 
+### [Embed](#embed)
+
+<details>
+<summary>Expand to see Embed block details</summary>
+
+Embedding content from other websites is a common requirement. CourseLit offers a dedicated block that lets you embed content from other websites.
+
+You can embed websites (using `URL` type) or widgets (using `Script` type).
+
+The height of the content in case of `Script` type embed is automatically calculated. The `Height` property in the builder has no effect.
+
+Following is how it looks while displaying a Cal.com calendar.
+
+## What embeds are supported
+
+Although, CourseLit platform should support any embed code, we have tested with the following platforms:
+<br />
+<br />
+
+- YouTube
+- Vimeo
+- Google Docs
+- Microsoft Word
+- Google Forms
+- Typeform
+- Microsoft Forms
+- Google Calendar
+- GitHub Gist
+- Apple Podcasts
+- SoundCloud
+- Spotify
+- Senja
+- Addcal
+  <br />
+  <br />
+
+Here is [Cal.com](https://cal.com/)'s embed looks on a page.
+<br />
+<br />
+
+![Embed block](/assets/pages/embed-block.png)
+
+> Embed code not working? Please reach out to us on <a href="https://discord.com/invite/GR4bQsN" target="_blank">Discord</a>.
+
+</details>
+
 ### [Footer](#footer)
 
 <details>
@@ -276,7 +322,7 @@ In the `Design` panel, you can customize:
 - Maximum width
 - Vertical padding
 - Social media links (Facebook, Twitter, Instagram, LinkedIn, YouTube, Discord, GitHub)
-    </details>
+      </details>
 
 ## [Shared blocks](#shared-blocks)
 

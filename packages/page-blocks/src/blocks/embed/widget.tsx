@@ -1,11 +1,13 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef } from "react";
 import { WidgetProps } from "@courselit/common-models";
 import { height as defaultHeight } from "./defaults";
 import Settings from "./settings";
 import { ThemeStyle } from "@courselit/page-models";
 import { Section } from "@courselit/page-primitives";
+import { SandboxedEmbed } from "../../components";
 
 export default function Widget({
+    id,
     settings: {
         contentType,
         content,
@@ -25,9 +27,11 @@ export default function Widget({
         verticalPadding || theme.theme.structure.section.padding.y;
 
     const iframeRef = useRef<HTMLIFrameElement>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
 
     const formattedHeight = `${height}px`;
+
+    // Check if content is "script" or "iframe" (not a direct URL)
+    const isEmbedCode = contentType === "script";
 
     const containerStyle =
         aspectRatio && aspectRatio !== "default"
@@ -36,7 +40,9 @@ export default function Widget({
                   width: "100%",
                   paddingTop: `calc(100% / (${aspectRatio.split(":")[0]} / ${aspectRatio.split(":")[1]}))`,
               } as React.CSSProperties)
-            : ({ height: formattedHeight } as React.CSSProperties);
+            : isEmbedCode
+              ? ({} as React.CSSProperties)
+              : ({ height: formattedHeight } as React.CSSProperties);
 
     const iframeStyle =
         aspectRatio && aspectRatio !== "default"
@@ -47,28 +53,35 @@ export default function Widget({
                   width: "100%",
                   height: "100%",
               } as React.CSSProperties)
-            : ({ height: "100%" } as React.CSSProperties);
+            : isEmbedCode
+              ? ({} as React.CSSProperties)
+              : ({ height: "100%" } as React.CSSProperties);
 
-    useEffect(() => {
-        if (contentType === "script" && content && containerRef.current) {
-            const tempContainer = document.createElement("div");
-            tempContainer.innerHTML = content;
-
-            // Append all elements to the container
-            Array.from(tempContainer.children).forEach((elem) => {
-                if (elem.nodeName === "SCRIPT") {
-                    const script = document.createElement("script");
-                    script.innerHTML = elem.innerHTML;
-                    Array.from(elem.attributes).forEach((attr) => {
-                        script.setAttribute(attr.name, attr.value);
-                    });
-                    containerRef.current?.appendChild(script);
-                } else {
-                    containerRef.current?.appendChild(elem.cloneNode(true));
-                }
-            });
+    const renderContent = () => {
+        if (isEmbedCode) {
+            // Content is a script or iframe code - use sandboxed embed for dynamic height
+            return (
+                <SandboxedEmbed
+                    id={id}
+                    content={content}
+                    className="w-full"
+                    style={iframeStyle}
+                />
+            );
+        } else {
+            // URL-based content
+            return (
+                <iframe
+                    ref={iframeRef}
+                    src={content}
+                    className="w-full border-0"
+                    style={iframeStyle}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                />
+            );
         }
-    }, [contentType, content]);
+    };
 
     return (
         <Section theme={overiddenTheme} id={cssId}>
@@ -78,22 +91,7 @@ export default function Widget({
                         className={`w-full overflow-hidden relative`}
                         style={containerStyle}
                     >
-                        {contentType === "script" ? (
-                            <div
-                                ref={containerRef}
-                                className="w-full h-full"
-                                style={iframeStyle}
-                            />
-                        ) : (
-                            <iframe
-                                ref={iframeRef}
-                                src={content}
-                                className="w-full border-0"
-                                style={iframeStyle}
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                            />
-                        )}
+                        {renderContent()}
                     </div>
                 </div>
             </div>
