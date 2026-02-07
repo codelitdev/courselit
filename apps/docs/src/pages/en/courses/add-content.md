@@ -42,6 +42,8 @@ A lesson is a container for the actual learning material. CourseLit supports mul
 
     For embedding HTML or iframe based content.
 
+    See the [guide to add an embed](/en/lessons/embed).
+
 7. Quiz
 
     For quizzing your students. You can create graded and non-graded quizzes.
