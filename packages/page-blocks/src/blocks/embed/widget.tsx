@@ -7,7 +7,6 @@ import { Section } from "@courselit/page-primitives";
 import { SandboxedEmbed } from "../../components";
 
 export default function Widget({
-    id,
     settings: {
         contentType,
         content,
@@ -30,8 +29,10 @@ export default function Widget({
 
     const formattedHeight = `${height}px`;
 
-    // Check if content is "script" or "iframe" (not a direct URL)
-    const isEmbedCode = contentType === "script";
+    // Check if content is "script" type but only contains an iframe (no actual scripts)
+    const hasScript = contentType === "script" && /<script[\s>]/i.test(content);
+    const isPureIframe =
+        contentType === "script" && !hasScript && /<iframe[\s>]/i.test(content);
 
     const containerStyle =
         aspectRatio && aspectRatio !== "default"
@@ -40,7 +41,7 @@ export default function Widget({
                   width: "100%",
                   paddingTop: `calc(100% / (${aspectRatio.split(":")[0]} / ${aspectRatio.split(":")[1]}))`,
               } as React.CSSProperties)
-            : isEmbedCode
+            : hasScript
               ? ({} as React.CSSProperties)
               : ({ height: formattedHeight } as React.CSSProperties);
 
@@ -53,19 +54,27 @@ export default function Widget({
                   width: "100%",
                   height: "100%",
               } as React.CSSProperties)
-            : isEmbedCode
+            : hasScript
               ? ({} as React.CSSProperties)
               : ({ height: "100%" } as React.CSSProperties);
 
     const renderContent = () => {
-        if (isEmbedCode) {
-            // Content is a script or iframe code - use sandboxed embed for dynamic height
+        if (hasScript) {
+            // Content has actual script tags - use sandboxed embed
             return (
                 <SandboxedEmbed
-                    id={id}
                     content={content}
                     className="w-full"
                     style={iframeStyle}
+                />
+            );
+        } else if (isPureIframe) {
+            // Content is a pure iframe without scripts - render directly
+            return (
+                <div
+                    className="w-full"
+                    style={iframeStyle}
+                    dangerouslySetInnerHTML={{ __html: content }}
                 />
             );
         } else {
