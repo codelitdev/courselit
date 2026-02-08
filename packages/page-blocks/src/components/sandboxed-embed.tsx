@@ -38,8 +38,8 @@ export const SandboxedEmbed = ({
         <html>
         <head>
             <style>
-                html, body { margin: 0; padding: 0; overflow: hidden; }
-                #content-wrapper { overflow: hidden; height: auto; }
+                html, body { margin: 0; padding: 0; height: auto; min-height: 100%; }
+                #content-wrapper { overflow: auto; height: auto; }
             </style>
         </head>
         <body>
@@ -91,7 +91,6 @@ export const SandboxedEmbed = ({
                 width: "100%",
                 height: height,
                 border: "none",
-                overflow: "hidden",
                 ...style,
             }}
             sandbox="allow-scripts allow-popups allow-forms allow-same-origin"
