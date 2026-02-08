@@ -38,8 +38,8 @@ export const SandboxedEmbed = ({
         <html>
         <head>
             <style>
-                html, body { margin: 0; padding: 0; height: auto; min-height: 100%; }
-                #content-wrapper { overflow: auto; height: auto; }
+                html, body { margin: 0; padding: 0; overflow: hidden; }
+                #content-wrapper { overflow: hidden; height: auto; }
             </style>
         </head>
         <body>
