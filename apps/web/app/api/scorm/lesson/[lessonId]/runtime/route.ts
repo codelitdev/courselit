@@ -6,13 +6,18 @@ import Lesson from "@courselit/orm-models/dao/lesson";
 import { isEnrolled } from "@/ui-lib/utils";
 import { error } from "@/services/logger";
 
+type ScormLessonRuntimeData = {
+    cmi?: Record<string, unknown>;
+    [key: string]: unknown;
+};
+
 export async function GET(
     req: NextRequest,
     { params }: { params: Promise<{ lessonId: string }> },
 ) {
     const { lessonId } = await params;
 
-    const domain = await DomainModel.findOne<Domain>({
+    const domain = await DomainModel.queryOne<Domain>({
         name: req.headers.get("domain"),
     });
     if (!domain) {
@@ -24,7 +29,7 @@ export async function GET(
         return Response.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await User.findOne({
+    const user = await User.queryOne({
         email: session.user?.email,
         domain: domain._id,
         active: true,
@@ -33,7 +38,7 @@ export async function GET(
         return Response.json({ message: "User not found" }, { status: 404 });
     }
 
-    const lesson = await Lesson.findOne({
+    const lesson = await Lesson.queryOne({
         lessonId,
         domain: domain._id,
     });
@@ -43,7 +48,7 @@ export async function GET(
 
     const { courseId } = lesson;
 
-    const enrolled = isEnrolled(courseId, user);
+    const enrolled = isEnrolled(courseId, user as any);
     if (!enrolled) {
         return Response.json(
             { message: "Enrollment required" },
@@ -59,7 +64,9 @@ export async function GET(
         );
     }
 
-    const lessonScormData = purchase.scormData?.lessons?.[lessonId] || {};
+    const lessonScormData =
+        (purchase.scormData?.lessons?.[lessonId] as ScormLessonRuntimeData) ||
+        {};
 
     const result = lessonScormData.cmi
         ? lessonScormData
@@ -74,7 +81,7 @@ export async function POST(
 ) {
     const { lessonId } = await params;
 
-    const domain = await DomainModel.findOne<Domain>({
+    const domain = await DomainModel.queryOne<Domain>({
         name: req.headers.get("domain"),
     });
     if (!domain) {
@@ -86,7 +93,7 @@ export async function POST(
         return Response.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await User.findOne({
+    const user = await User.queryOne({
         email: session.user?.email,
         domain: domain._id,
         active: true,
@@ -95,7 +102,7 @@ export async function POST(
         return Response.json({ message: "User not found" }, { status: 404 });
     }
 
-    const lesson = await Lesson.findOne({
+    const lesson = await Lesson.queryOne({
         lessonId,
         domain: domain._id,
     });
@@ -105,7 +112,7 @@ export async function POST(
 
     const { courseId } = lesson;
 
-    const enrolled = isEnrolled(courseId, user);
+    const enrolled = isEnrolled(courseId, user as any);
     if (!enrolled) {
         return Response.json(
             { message: "Enrollment required" },
@@ -131,7 +138,7 @@ export async function POST(
     }
 
     try {
-        const userDoc = await User.findById(user._id);
+        const userDoc = await User.getById(user._id);
         if (!userDoc) {
             return Response.json(
                 { message: "User not found" },
@@ -156,7 +163,7 @@ export async function POST(
             purchase.scormData.lessons = {};
         }
         if (!purchase.scormData.lessons[lessonId]) {
-            purchase.scormData.lessons[lessonId] = {};
+            purchase.scormData.lessons[lessonId] = { cmi: {} };
         }
 
         // Apply all updates
@@ -164,8 +171,7 @@ export async function POST(
             setNestedValue(purchase.scormData.lessons[lessonId], elem, val);
         }
 
-        userDoc.markModified("purchases");
-        await userDoc.save();
+        await User.saveOne(userDoc as any);
 
         return Response.json({ success: true });
     } catch (err: any) {

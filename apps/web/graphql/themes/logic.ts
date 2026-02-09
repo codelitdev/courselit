@@ -4,6 +4,7 @@ import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
 import { checkPermission } from "@courselit/utils";
 import UserThemeModel from "@courselit/orm-models/dao/user-theme";
+import DomainModel from "@courselit/orm-models/dao/domain";
 import { themes as SystemThemes } from "@courselit/page-primitives";
 import { ThemeStyle } from "@courselit/page-models";
 import { UITheme } from "@models/UITheme";
@@ -31,7 +32,7 @@ export const getTheme = async (
 ): Promise<UITheme> => {
     if (!themeId) {
         const defaultThemeId = ctx.subdomain.themeId || "classic";
-        let theme: any = await UserThemeModel.findOne(
+        let theme: any = await UserThemeModel.queryOne(
             {
                 themeId: defaultThemeId,
                 domain: ctx.subdomain._id,
@@ -42,7 +43,7 @@ export const getTheme = async (
                 theme: 1,
                 draftTheme: 1,
             },
-        ).lean();
+        );
 
         if (!theme) {
             theme = getSystemTheme(defaultThemeId);
@@ -61,7 +62,7 @@ export const getTheme = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    const theme: any = await UserThemeModel.findOne(
+    const theme: any = await UserThemeModel.queryOne(
         {
             domain: ctx.subdomain._id,
             themeId,
@@ -72,7 +73,7 @@ export const getTheme = async (
             theme: 1,
             draftTheme: 1,
         },
-    ).lean();
+    );
 
     if (!theme) {
         throw new Error(responses.item_not_found);
@@ -99,10 +100,10 @@ export const updateDraftTheme = async (
 
     let theme;
     if (systemTheme) {
-        const existingChildren = await UserThemeModel.find({
+        const existingChildren = await UserThemeModel.query({
             parentThemeId: systemTheme.themeId,
         });
-        theme = await UserThemeModel.create({
+        theme = await UserThemeModel.createOne({
             domain: ctx.subdomain._id,
             name: `${systemTheme.name} - Copy ${existingChildren.length + 1}`,
             parentThemeId: systemTheme.themeId,
@@ -112,7 +113,7 @@ export const updateDraftTheme = async (
         });
         // ctx.subdomain.themeId = theme.themeId;
     } else {
-        theme = await UserThemeModel.findOne({
+        theme = await UserThemeModel.queryOne({
             domain: ctx.subdomain._id,
             themeId,
         });
@@ -139,9 +140,9 @@ export const updateDraftTheme = async (
         theme.draftTheme.structure = JSON.parse(JSON.stringify(structure));
     }
 
-    await theme.save();
+    await UserThemeModel.saveOne(theme);
     ctx.subdomain.lastEditedThemeId = theme.themeId;
-    await (ctx.subdomain as any).save();
+    await DomainModel.saveOne(ctx.subdomain as any);
 
     return formatTheme(theme);
 };
@@ -157,7 +158,7 @@ export const getThemes = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    let userThemes = await UserThemeModel.find(
+    let userThemes = await UserThemeModel.query(
         {
             domain: ctx.subdomain._id,
         },
@@ -190,7 +191,7 @@ export const publishTheme = async (themeId: string, ctx: GQLContext) => {
         return formatTheme(theme);
     }
 
-    theme = await UserThemeModel.findOne({
+    theme = await UserThemeModel.queryOne({
         domain: ctx.subdomain._id,
         themeId,
     });
@@ -200,7 +201,7 @@ export const publishTheme = async (themeId: string, ctx: GQLContext) => {
     }
 
     theme.theme = theme.draftTheme;
-    await theme.save();
+    await UserThemeModel.saveOne(theme);
 
     return formatTheme(theme);
 };
@@ -218,7 +219,7 @@ export const switchTheme = async (themeId: string, ctx: GQLContext) => {
 
     ctx.subdomain.themeId = themeId;
     ctx.subdomain.lastEditedThemeId = themeId;
-    await (ctx.subdomain as any).save();
+    await DomainModel.saveOne(ctx.subdomain as any);
 
     return formatTheme(theme);
 };

@@ -7,7 +7,7 @@ export async function GET(
     req: NextRequest,
     { params }: { params: Promise<{ token: string }> },
 ) {
-    const domain = await DomainModel.findOne<Domain>({
+    const domain = await DomainModel.queryOne<Domain>({
         name: req.headers.get("domain"),
     });
     if (!domain) {
@@ -16,13 +16,16 @@ export async function GET(
 
     const token = (await params).token;
 
-    const user = await User.findOne({ unsubscribeToken: token });
+    const user = await User.queryOne({ unsubscribeToken: token });
 
     if (!user) {
         return Response.json({ message: responses.unsubscribe_success });
     }
 
-    await user.updateOne({ subscribedToUpdates: false });
+    await User.patchOne(
+        { _id: (user as any)._id },
+        { $set: { subscribedToUpdates: false } },
+    );
 
     return Response.json({ message: responses.unsubscribe_success });
 }

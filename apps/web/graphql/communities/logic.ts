@@ -86,7 +86,7 @@ export async function createCommunity({
         throw new Error(responses.action_not_allowed);
     }
 
-    const existingCommunity = await CommunityModel.findOne({
+    const existingCommunity = await CommunityModel.queryOne({
         domain: ctx.subdomain._id,
         name,
         deleted: false,
@@ -100,7 +100,7 @@ export async function createCommunity({
 
     const pageId = `${slugify(name.toLowerCase())}-${communityId.substring(0, 5)}`;
 
-    await PageModel.create({
+    await PageModel.createOne({
         domain: ctx.subdomain._id,
         pageId,
         type: communityPage,
@@ -125,7 +125,7 @@ export async function createCommunity({
         title: name,
     });
 
-    const community = await CommunityModel.create<Community>({
+    const community = await CommunityModel.createOne<Community>({
         domain: ctx.subdomain._id,
         communityId,
         name,
@@ -133,7 +133,7 @@ export async function createCommunity({
     });
 
     const paymentPlan = await getInternalPaymentPlan(ctx);
-    await MembershipModel.create({
+    await MembershipModel.createOne({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
         entityId: community.communityId,
@@ -160,7 +160,7 @@ export async function getCommunity({
         deleted: false,
     };
 
-    const community = await CommunityModel.findOne<InternalCommunity>(query);
+    const community = await CommunityModel.queryOne<InternalCommunity>(query);
 
     if (
         !community ||
@@ -250,7 +250,7 @@ export async function getCommunitiesCount({
         query.enabled = true;
     }
 
-    const count = await (CommunityModel as any).countDocuments(query);
+    const count = await CommunityModel.count(query);
 
     return count;
 }
@@ -278,7 +278,7 @@ export async function updateCommunity({
 }): Promise<Community> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, id),
     );
 
@@ -371,7 +371,7 @@ export async function updateCommunity({
         await deleteMedia(mediaId);
     }
 
-    await (community as any).save();
+    await CommunityModel.saveOne(community as any);
 
     return await formatCommunity(community, ctx);
 }
@@ -391,7 +391,7 @@ export async function addCategory({
     //     throw new Error(responses.action_not_allowed);
     // }
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, id),
     );
 
@@ -409,7 +409,7 @@ export async function addCategory({
         community.categories.push(category);
     }
 
-    await (community as any).save();
+    await CommunityModel.saveOne(community as any);
 
     return await formatCommunity(community, ctx);
 }
@@ -431,7 +431,7 @@ export async function deleteCategory({
     //     throw new Error(responses.action_not_allowed);
     // }
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, id),
     );
 
@@ -457,7 +457,7 @@ export async function deleteCategory({
 
     community.categories = community.categories.filter((c) => c !== category);
 
-    await (community as any).save();
+    await CommunityModel.saveOne(community as any);
 
     return await formatCommunity(community, ctx);
 }
@@ -477,7 +477,7 @@ export async function joinCommunity({
         throw new Error(responses.profile_incomplete);
     }
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, id),
     );
 
@@ -495,7 +495,7 @@ export async function joinCommunity({
         throw new Error(responses.community_has_no_payment_plans);
     }
 
-    const freePaymentPlanOfCommunity = await PaymentPlanModel.findOne({
+    const freePaymentPlanOfCommunity = await PaymentPlanModel.queryOne({
         domain: ctx.subdomain._id,
         entityId: community.communityId,
         entityType: Constants.MembershipEntityType.COMMUNITY,
@@ -507,7 +507,7 @@ export async function joinCommunity({
         throw new Error(responses.community_requires_payment);
     }
 
-    let member = await MembershipModel.findOne({
+    let member = await MembershipModel.queryOne({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
         paymentPlanId: freePaymentPlanOfCommunity.planId,
@@ -516,7 +516,7 @@ export async function joinCommunity({
     });
 
     if (!member) {
-        member = await MembershipModel.create({
+        member = await MembershipModel.createOne({
             domain: ctx.subdomain._id,
             userId: ctx.user.userId,
             paymentPlanId: freePaymentPlanOfCommunity.planId,
@@ -531,7 +531,7 @@ export async function joinCommunity({
             joiningReason,
         });
 
-        // const communityManagers: User[] = await UserModel.find(
+        // const communityManagers: User[] = await UserModel.query(
         //     {
         //         domain: ctx.subdomain._id,
         //         permissions: permissions.manageCommunity,
@@ -541,8 +541,7 @@ export async function joinCommunity({
         //         _id: 0,
         //         userId: 1,
         //     },
-        // ).lean();
-        const communityManagers: Membership[] = await MembershipModel.find({
+        const communityManagers: Membership[] = await MembershipModel.query({
             domain: ctx.subdomain._id,
             entityId: community.communityId,
             entityType: Constants.MembershipEntityType.COMMUNITY,
@@ -567,7 +566,7 @@ async function getMembership(
     ctx: GQLContext,
     communityId: string,
 ): Promise<Membership | null> {
-    return await MembershipModel.findOne({
+    return await MembershipModel.queryOne({
         domain: ctx.subdomain._id,
         entityId: communityId,
         entityType: Constants.MembershipEntityType.COMMUNITY,
@@ -593,7 +592,7 @@ export async function createCommunityPost({
 }): Promise<PublicPost> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
 
@@ -619,7 +618,7 @@ export async function createCommunityPost({
         }
     }
 
-    const post = await CommunityPostModel.create({
+    const post = await CommunityPostModel.createOne({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
         communityId: community.communityId,
@@ -636,12 +635,12 @@ export async function createCommunityPost({
     });
 
     try {
-        const members = await MembershipModel.find<Membership>({
+        const members = await MembershipModel.query<Membership>({
             domain: ctx.subdomain._id,
             entityId: community.communityId,
             entityType: Constants.MembershipEntityType.COMMUNITY,
             status: Constants.MembershipStatus.ACTIVE,
-        }).lean();
+        });
 
         await addNotification({
             domain: ctx.subdomain._id.toString(),
@@ -677,7 +676,7 @@ export async function deleteCommunityPost({
 }): Promise<CommunityPost> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
 
@@ -698,14 +697,14 @@ export async function deleteCommunityPost({
         query["userId"] = ctx.user.userId;
     }
 
-    const post = await CommunityPostModel.findOne<CommunityPost>(query);
+    const post = await CommunityPostModel.queryOne<CommunityPost>(query);
 
     if (!post) {
         throw new Error(responses.item_not_found);
     }
 
     post.deleted = true;
-    await (post as any).save();
+    await CommunityPostModel.saveOne(post as any);
 
     return post;
 }
@@ -721,14 +720,14 @@ export async function getPost({
 }): Promise<PublicPost | null> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
     if (!community) {
         throw new Error(responses.item_not_found);
     }
 
-    const post = await CommunityPostModel.findOne({
+    const post = await CommunityPostModel.queryOne({
         domain: ctx.subdomain._id,
         communityId,
         postId,
@@ -773,7 +772,7 @@ export async function getPosts({
 }): Promise<PublicPost[]> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
     if (!community) {
@@ -801,7 +800,7 @@ export async function getPosts({
     });
 
     if (!category) {
-        const pinnedPosts = await CommunityPostModel.find({
+        const pinnedPosts = await CommunityPostModel.query({
             domain: ctx.subdomain._id,
             communityId,
             pinned: true,
@@ -825,7 +824,7 @@ export async function getPostsCount({
 }): Promise<number> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
 
@@ -849,7 +848,7 @@ export async function getPostsCount({
         query.category = category;
     }
 
-    const count = await CommunityPostModel.countDocuments(query);
+    const count = await CommunityPostModel.count(query);
 
     return count;
 }
@@ -863,7 +862,7 @@ export async function getMember({
 }): Promise<string> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
 
@@ -871,7 +870,7 @@ export async function getMember({
         throw new Error(responses.item_not_found);
     }
 
-    const member = await MembershipModel.findOne({
+    const member = await MembershipModel.queryOne({
         domain: ctx.subdomain._id,
         entityId: communityId,
         entityType: Constants.MembershipEntityType.COMMUNITY,
@@ -911,7 +910,7 @@ export async function getMembers({
     //     throw new Error(responses.action_not_allowed);
     // }
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
 
@@ -998,7 +997,7 @@ export async function getMembersCount({
         query.status = status;
     }
 
-    const count = await (MembershipModel as any).countDocuments(query);
+    const count = await MembershipModel.count(query);
 
     return count;
 }
@@ -1020,7 +1019,7 @@ export async function updateMemberStatus({
         throw new Error(responses.action_not_allowed);
     }
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
 
@@ -1034,7 +1033,7 @@ export async function updateMemberStatus({
         throw new Error(responses.item_not_found);
     }
 
-    const targetMember = await MembershipModel.findOne<Membership>({
+    const targetMember = await MembershipModel.queryOne<Membership>({
         domain: ctx.subdomain._id,
         userId,
         entityId: communityId,
@@ -1045,7 +1044,7 @@ export async function updateMemberStatus({
         throw new Error(responses.item_not_found);
     }
 
-    const otherActiveModeratorsCount = await MembershipModel.countDocuments({
+    const otherActiveModeratorsCount = await MembershipModel.count({
         domain: ctx.subdomain._id,
         entityId: communityId,
         entityType: Constants.MembershipEntityType.COMMUNITY,
@@ -1085,7 +1084,7 @@ export async function updateMemberStatus({
 
     if (targetMember.status === Constants.MembershipStatus.ACTIVE) {
         targetMember.rejectionReason = undefined;
-        const paymentPlan = (await PaymentPlanModel.findOne({
+        const paymentPlan = (await PaymentPlanModel.queryOne({
             domain: ctx.subdomain._id,
             planId: targetMember.paymentPlanId,
         })) as PaymentPlan;
@@ -1109,7 +1108,7 @@ export async function updateMemberStatus({
         });
     }
 
-    await (targetMember as any).save();
+    await MembershipModel.saveOne(targetMember as any);
 
     return targetMember;
 }
@@ -1133,7 +1132,7 @@ export async function updateMemberRole({
         throw new Error(responses.action_not_allowed);
     }
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
 
@@ -1141,7 +1140,7 @@ export async function updateMemberRole({
         throw new Error(responses.item_not_found);
     }
 
-    // const member = await MembershipModel.findOne<Membership>({
+    // const member = await MembershipModel.queryOne<Membership>({
     //     domain: ctx.subdomain._id,
     //     userId,
     //     entityId: communityId,
@@ -1153,7 +1152,7 @@ export async function updateMemberRole({
         throw new Error(responses.item_not_found);
     }
 
-    const targetMember = await MembershipModel.findOne({
+    const targetMember = await MembershipModel.queryOne({
         domain: ctx.subdomain._id,
         userId,
         entityId: communityId,
@@ -1168,7 +1167,7 @@ export async function updateMemberRole({
         throw new Error(responses.cannot_change_role_inactive_member);
     }
 
-    const otherActiveModeratorsCount = await MembershipModel.countDocuments({
+    const otherActiveModeratorsCount = await MembershipModel.count({
         domain: ctx.subdomain._id,
         entityId: communityId,
         entityType: Constants.MembershipEntityType.COMMUNITY,
@@ -1187,7 +1186,7 @@ export async function updateMemberRole({
 
     targetMember.role = nextRole;
 
-    await (targetMember as any).save();
+    await MembershipModel.saveOne(targetMember as any);
 
     return targetMember;
 }
@@ -1203,7 +1202,7 @@ export async function togglePostLike({
 }): Promise<PublicPost> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
 
@@ -1211,7 +1210,7 @@ export async function togglePostLike({
         throw new Error(responses.item_not_found);
     }
 
-    const post = await CommunityPostModel.findOne({
+    const post = await CommunityPostModel.queryOne({
         domain: ctx.subdomain._id,
         communityId,
         postId,
@@ -1236,10 +1235,10 @@ export async function togglePostLike({
         liked = true;
     }
 
-    await post.save();
+    await CommunityPostModel.saveOne(post);
 
     if (liked && post.userId !== ctx.user.userId) {
-        const existingNotification = await NotificationModel.findOne({
+        const existingNotification = await NotificationModel.queryOne({
             domain: ctx.subdomain._id,
             entityId: post.postId,
             entityAction:
@@ -1277,7 +1276,7 @@ export async function togglePinned({
     //     throw new Error(responses.action_not_allowed);
     // }
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
 
@@ -1285,7 +1284,7 @@ export async function togglePinned({
         throw new Error(responses.item_not_found);
     }
 
-    const post = await CommunityPostModel.findOne({
+    const post = await CommunityPostModel.queryOne({
         domain: ctx.subdomain._id,
         communityId,
         postId,
@@ -1304,7 +1303,7 @@ export async function togglePinned({
 
     post.pinned = !post.pinned;
 
-    await post.save();
+    await CommunityPostModel.saveOne(post);
 
     return formatPost(post, ctx.user.userId);
 }
@@ -1332,7 +1331,7 @@ export async function postComment({
 }): Promise<PublicComment> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
 
@@ -1340,12 +1339,12 @@ export async function postComment({
         throw new Error(responses.item_not_found);
     }
 
-    const post = (await CommunityPostModel.findOne({
+    const post = (await CommunityPostModel.queryOne({
         domain: ctx.subdomain._id,
         communityId,
         postId,
         deleted: false,
-    }).lean()) as unknown as CommunityPost;
+    })) as unknown as CommunityPost;
 
     if (!post) {
         throw new Error(responses.item_not_found);
@@ -1359,7 +1358,7 @@ export async function postComment({
 
     let comment;
     if (parentCommentId) {
-        comment = await CommunityCommentModel.findOne({
+        comment = await CommunityCommentModel.queryOne({
             domain: ctx.subdomain._id,
             communityId,
             postId,
@@ -1381,7 +1380,7 @@ export async function postComment({
             parentReplyId,
         });
 
-        await comment.save();
+        await CommunityCommentModel.saveOne(comment);
 
         const postSubscribers = await getPostSubscribersExceptUserId({
             domain: ctx.subdomain._id,
@@ -1398,7 +1397,7 @@ export async function postComment({
             entityTargetId: comment.commentId,
         });
     } else {
-        comment = await CommunityCommentModel.create({
+        comment = await CommunityCommentModel.createOne({
             domain: ctx.subdomain._id,
             userId: ctx.user.userId,
             communityId,
@@ -1447,7 +1446,7 @@ export async function getComments({
 }): Promise<PublicComment[]> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
 
@@ -1489,7 +1488,7 @@ export async function toggleCommentLike({
 }): Promise<PublicComment> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
 
@@ -1497,7 +1496,7 @@ export async function toggleCommentLike({
         throw new Error(responses.item_not_found);
     }
 
-    const comment = await CommunityCommentModel.findOne({
+    const comment = await CommunityCommentModel.queryOne({
         domain: ctx.subdomain._id,
         communityId,
         postId,
@@ -1523,10 +1522,10 @@ export async function toggleCommentLike({
         liked = true;
     }
 
-    await comment.save();
+    await CommunityCommentModel.saveOne(comment);
 
     if (liked && comment.userId !== ctx.user.userId) {
-        const existingNotification = await NotificationModel.findOne({
+        const existingNotification = await NotificationModel.queryOne({
             domain: ctx.subdomain._id,
             entityId: comment.commentId,
             entityAction:
@@ -1564,7 +1563,7 @@ export async function toggleCommentReplyLike({
 }): Promise<PublicComment> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
 
@@ -1572,7 +1571,7 @@ export async function toggleCommentReplyLike({
         throw new Error(responses.item_not_found);
     }
 
-    const comment = await CommunityCommentModel.findOne({
+    const comment = await CommunityCommentModel.queryOne({
         domain: ctx.subdomain._id,
         communityId,
         postId,
@@ -1604,10 +1603,10 @@ export async function toggleCommentReplyLike({
         liked = true;
     }
 
-    await comment.save();
+    await CommunityCommentModel.saveOne(comment);
 
     if (liked && reply.userId !== ctx.user.userId) {
-        const existingNotification = await NotificationModel.findOne({
+        const existingNotification = await NotificationModel.queryOne({
             domain: ctx.subdomain._id,
             entityId: reply.replyId,
             entityAction:
@@ -1646,7 +1645,7 @@ export async function deleteComment({
 }): Promise<PublicComment | null> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
 
@@ -1654,7 +1653,7 @@ export async function deleteComment({
         throw new Error(responses.item_not_found);
     }
 
-    const post = await CommunityPostModel.findOne({
+    const post = await CommunityPostModel.queryOne({
         domain: ctx.subdomain._id,
         communityId,
         postId,
@@ -1665,7 +1664,7 @@ export async function deleteComment({
         throw new Error(responses.item_not_found);
     }
 
-    let comment = await CommunityCommentModel.findOne({
+    let comment = await CommunityCommentModel.queryOne({
         domain: ctx.subdomain._id,
         communityId,
         postId,
@@ -1695,15 +1694,15 @@ export async function deleteComment({
                 (r) => r.replyId !== replyId,
             );
         }
-        await comment.save();
+        await CommunityCommentModel.saveOne(comment);
     } else {
         if (comment.replies.length) {
             if (!comment.deleted) {
                 comment.deleted = true;
-                await comment.save();
+                await CommunityCommentModel.saveOne(comment);
             }
         } else {
-            await comment.deleteOne({
+            await CommunityCommentModel.removeOne({
                 domain: ctx.subdomain._id,
                 communityId,
                 postId,
@@ -1713,7 +1712,7 @@ export async function deleteComment({
         }
     }
 
-    // await post.save();
+    // await CommunityPostModel.saveOne(post);
 
     return comment ? formatComment(comment, ctx.user.userId) : null;
 }
@@ -1727,7 +1726,7 @@ export async function leaveCommunity({
 }): Promise<boolean> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, id),
     );
 
@@ -1735,7 +1734,7 @@ export async function leaveCommunity({
         throw new Error(responses.item_not_found);
     }
 
-    const member = await MembershipModel.findOne({
+    const member = await MembershipModel.queryOne({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
         entityId: id,
@@ -1748,7 +1747,7 @@ export async function leaveCommunity({
     }
 
     if (member.role === Constants.MembershipRole.MODERATE) {
-        const otherModeratorsCount = await MembershipModel.countDocuments({
+        const otherModeratorsCount = await MembershipModel.count({
             domain: ctx.subdomain._id,
             entityId: id,
             entityType: Constants.MembershipEntityType.COMMUNITY,
@@ -1758,7 +1757,7 @@ export async function leaveCommunity({
         });
 
         // const otherMembersWithManageCommunityPermission =
-        //     await UserModel.countDocuments({
+        //     await UserModel.count({
         //         domain: ctx.subdomain._id,
         //         userId: { $in: otherMembers.map((m) => m.userId) },
         //         permissions: permissions.manageCommunity,
@@ -1785,7 +1784,7 @@ export async function leaveCommunity({
         });
     }
 
-    await member.deleteOne();
+    await MembershipModel.removeDoc(member);
 
     return true;
 }
@@ -1803,15 +1802,15 @@ export async function deleteCommunity({
         throw new Error(responses.action_not_allowed);
     }
 
-    const community = (await CommunityModel.findOne<InternalCommunity>(
+    const community = (await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, id),
-    ).lean()) as unknown as Community;
+    )) as unknown as Community;
 
     if (!community) {
         throw new Error(responses.item_not_found);
     }
 
-    await CommunityReportModel.deleteMany({
+    await CommunityReportModel.removeMany({
         domain: ctx.subdomain._id,
         communityId: community.communityId,
     });
@@ -1819,7 +1818,7 @@ export async function deleteCommunity({
     await deleteCommunityPosts(ctx, "community", community.communityId);
     await deleteMemberships(community, ctx);
 
-    await PageModel.deleteOne({
+    await PageModel.removeOne({
         domain: ctx.subdomain._id,
         pageId: community.pageId,
         entityId: community.communityId,
@@ -1829,7 +1828,7 @@ export async function deleteCommunity({
     for (const mediaId of Array.from(mediaToBeDeleted)) {
         await deleteMedia(mediaId);
     }
-    await CommunityModel.deleteOne({
+    await CommunityModel.removeOne({
         domain: ctx.subdomain._id,
         communityId: id,
     });
@@ -1852,7 +1851,7 @@ export async function deleteCommunityPosts(
                   domain: ctx.subdomain._id,
                   userId: id,
               };
-    await CommunityCommentModel.deleteMany(query);
+    await CommunityCommentModel.removeMany(query);
     const mediaTypesToDelete = [
         CommunityMediaTypes.IMAGE,
         CommunityMediaTypes.VIDEO,
@@ -1895,7 +1894,7 @@ export async function deleteCommunityPosts(
             }
         }
     }
-    await CommunityPostModel.deleteMany(query);
+    await CommunityPostModel.removeMany(query);
 }
 
 async function deleteCommunityPostsSubscriptions(
@@ -1933,14 +1932,14 @@ async function deleteCommunityPostsSubscriptions(
     ]);
     const subscriberIds = subscriberAggregation[0]?.subscriberIds ?? [];
     if (subscriberIds.length > 0) {
-        await CommunityPostSubscriberModel.deleteMany({
+        await CommunityPostSubscriberModel.removeMany({
             _id: { $in: subscriberIds },
         });
     }
 }
 
 async function deleteMemberships(community: Community, ctx: GQLContext) {
-    const paymentPlans = await PaymentPlanModel.find({
+    const paymentPlans = await PaymentPlanModel.query({
         domain: ctx.subdomain._id,
         entityId: community.communityId,
         entityType: Constants.MembershipEntityType.COMMUNITY,
@@ -1952,30 +1951,30 @@ async function deleteMemberships(community: Community, ctx: GQLContext) {
             paymentPlan.includedProducts &&
             paymentPlan.includedProducts.length > 0
         ) {
-            await ActivityModel.deleteMany({
+            await ActivityModel.removeMany({
                 domain: ctx.subdomain._id,
                 type: constants.activityTypes[0],
                 "metadata.isIncludedInPlan": true,
                 "metadata.paymentPlanId": paymentPlan.planId,
             });
-            await MembershipModel.deleteMany({
+            await MembershipModel.removeMany({
                 domain: ctx.subdomain._id,
                 paymentPlanId: paymentPlan.planId,
                 entityType: Constants.MembershipEntityType.COURSE,
                 isIncludedInPlan: true,
             });
         }
-        const memberships = await MembershipModel.find({
+        const memberships = await MembershipModel.query({
             domain: ctx.subdomain._id,
             paymentPlanId: paymentPlan.planId,
         });
         await cancelAndDeleteMemberships(memberships, ctx);
-        await paymentPlan.deleteOne();
+        await PaymentPlanModel.removeDoc(paymentPlan);
     }
 
     // delete memberships joined via internal payment plan
     const paymentPlan = await getInternalPaymentPlan(ctx);
-    await MembershipModel.deleteMany({
+    await MembershipModel.removeMany({
         domain: ctx.subdomain._id,
         entityId: community.communityId,
         entityType: Constants.MembershipEntityType.COMMUNITY,
@@ -1998,13 +1997,13 @@ export async function cancelAndDeleteMemberships(
         }
 
         // Delete associated invoices
-        await InvoiceModel.deleteMany({
+        await InvoiceModel.removeMany({
             domain: ctx.subdomain._id,
             membershipId: membership.membershipId,
         });
 
         // Delete membership
-        await membership.deleteOne();
+        await MembershipModel.removeDoc(membership);
     }
 }
 
@@ -2025,7 +2024,7 @@ export async function reportCommunityContent({
 }): Promise<CommunityReportPartial> {
     checkIfAuthenticated(ctx);
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
 
@@ -2039,7 +2038,7 @@ export async function reportCommunityContent({
         throw new Error(responses.action_not_allowed);
     }
 
-    const existingReport = await CommunityReportModel.findOne({
+    const existingReport = await CommunityReportModel.queryOne({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
         communityId,
@@ -2053,21 +2052,21 @@ export async function reportCommunityContent({
     let content: any = undefined;
 
     if (type === Constants.CommunityReportType.POST) {
-        content = await CommunityPostModel.findOne({
+        content = await CommunityPostModel.queryOne({
             domain: ctx.subdomain._id,
             communityId,
             postId: contentId,
             deleted: false,
         });
     } else if (type === Constants.CommunityReportType.COMMENT) {
-        content = await CommunityCommentModel.findOne({
+        content = await CommunityCommentModel.queryOne({
             domain: ctx.subdomain._id,
             communityId,
             commentId: contentId,
             deleted: false,
         });
     } else if (type === Constants.CommunityReportType.REPLY) {
-        const comment = await CommunityCommentModel.findOne<CommunityComment>({
+        const comment = await CommunityCommentModel.queryOne<CommunityComment>({
             domain: ctx.subdomain._id,
             communityId,
             commentId: contentParentId,
@@ -2089,7 +2088,7 @@ export async function reportCommunityContent({
         throw new Error(responses.action_not_allowed);
     }
 
-    const report = await CommunityReportModel.create({
+    const report = await CommunityReportModel.createOne({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
         communityId,
@@ -2121,7 +2120,7 @@ export async function getCommunityReports({
     //     throw new Error(responses.action_not_allowed);
     // }
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
 
@@ -2167,7 +2166,7 @@ export async function getCommunityReportsCount({
     //     throw new Error(responses.action_not_allowed);
     // }
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
 
@@ -2190,7 +2189,7 @@ export async function getCommunityReportsCount({
         query.status = status;
     }
 
-    const count = await (CommunityReportModel as any).countDocuments(query);
+    const count = await CommunityReportModel.count(query);
 
     return count;
 }
@@ -2212,7 +2211,7 @@ export async function updateCommunityReportStatus({
     //     throw new Error(responses.action_not_allowed);
     // }
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = await CommunityModel.queryOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
 
@@ -2226,11 +2225,13 @@ export async function updateCommunityReportStatus({
         throw new Error(responses.action_not_allowed);
     }
 
-    const report = await CommunityReportModel.findOne<InternalCommunityReport>({
-        domain: ctx.subdomain._id,
-        communityId,
-        reportId,
-    });
+    const report = await CommunityReportModel.queryOne<InternalCommunityReport>(
+        {
+            domain: ctx.subdomain._id,
+            communityId,
+            reportId,
+        },
+    );
 
     if (!report) {
         throw new Error(responses.item_not_found);
@@ -2248,7 +2249,7 @@ export async function updateCommunityReportStatus({
 
     report.status = nextStatus;
 
-    await (report as any).save();
+    await CommunityReportModel.saveOne(report as any);
 
     if (report.status === Constants.CommunityReportStatus.ACCEPTED) {
         toggleContentVisibility(report.contentId, report.type, true);
@@ -2265,10 +2266,10 @@ export async function getCommentsCount(
 ): Promise<number> {
     let commentsCount = 0;
 
-    const comments = (await CommunityCommentModel.find({
+    const comments = (await CommunityCommentModel.query({
         domain: ctx.subdomain._id,
         postId: post.postId,
-    }).lean()) as unknown as CommunityComment[];
+    })) as unknown as CommunityComment[];
     for (const comment of comments) {
         if (!comment.deleted) {
             commentsCount += 1;

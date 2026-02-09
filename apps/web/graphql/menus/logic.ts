@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import { checkIfAuthenticated } from "../../lib/graphql";
 import type GQLContext from "../../models/GQLContext";
 import type { Link } from "@courselit/common-models";
@@ -8,10 +7,8 @@ import constants from "../../config/constants";
 import { checkPermission } from "@courselit/utils";
 const { permissions } = constants;
 
-type DomainWithLinks = Domain &
-    mongoose.Document & {
-        links?: mongoose.Types.DocumentArray<any>;
-    };
+type DomainLink = Link & { id?: string; _id?: string };
+type DomainWithLinks = Domain & { links?: DomainLink[] };
 
 export const saveLink = async (
     linkData: Omit<Link, "domain">,
@@ -23,7 +20,7 @@ export const saveLink = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    const domain = (await DomainModel.findById(
+    const domain = (await DomainModel.getById(
         ctx.subdomain._id,
     )) as DomainWithLinks | null;
     if (!domain) {
@@ -32,7 +29,12 @@ export const saveLink = async (
 
     let link: Link | null;
     if (linkData.id) {
-        link = (domain.links as any).id(linkData.id);
+        link =
+            domain.links?.find(
+                (item) =>
+                    item.id === linkData.id ||
+                    item._id?.toString() === linkData.id,
+            ) || null;
         if (!link) {
             throw new Error(responses.item_not_found);
         }
@@ -42,7 +44,7 @@ export const saveLink = async (
         link.category = linkData.category;
         link.newTab = linkData.newTab;
 
-        await domain.save();
+        await DomainModel.saveOne(domain);
     } else {
         if (!domain.links) {
             domain.links = [] as any;
@@ -54,14 +56,14 @@ export const saveLink = async (
             category: linkData.category,
             newTab: linkData.newTab,
         });
-        await domain.save();
+        await DomainModel.saveOne(domain);
     }
 
     return domain;
 };
 
 export const deleteLink = async (
-    id: mongoose.Types.ObjectId,
+    id: string,
     ctx: GQLContext,
 ): Promise<Domain | null> => {
     checkIfAuthenticated(ctx);
@@ -70,15 +72,18 @@ export const deleteLink = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    const domain = (await DomainModel.findById(
+    const domain = (await DomainModel.getById(
         ctx.subdomain._id,
     )) as DomainWithLinks | null;
     if (!domain) {
         return null;
     }
 
-    domain.links?.id(id)?.remove();
-    await domain.save();
+    domain.links =
+        domain.links?.filter(
+            (item) => item.id !== id && item._id?.toString() !== id,
+        ) || [];
+    await DomainModel.saveOne(domain);
 
     return domain;
 };

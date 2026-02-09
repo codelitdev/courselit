@@ -68,7 +68,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
         jest.clearAllMocks();
 
         // Mock Domain
-        (Domain.findOne as jest.Mock).mockResolvedValue({
+        (Domain.queryOne as jest.Mock).mockResolvedValue({
             _id: mockDomainId,
             settings: {
                 paymentMethods: ["stripe"],
@@ -76,7 +76,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
         });
 
         // Mock User
-        (User.findOne as jest.Mock).mockResolvedValue({
+        (User.queryOne as jest.Mock).mockResolvedValue({
             userId: mockUserId,
             name: "Tester",
             active: true,
@@ -84,7 +84,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
         });
 
         // Mock Community
-        (Community.findOne as jest.Mock).mockResolvedValue({
+        (Community.queryOne as jest.Mock).mockResolvedValue({
             communityId: mockCommunityId,
             name: "Test Community",
             autoAcceptMembers: true,
@@ -92,15 +92,15 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
         });
 
         // Mock Course
-        (Course.findOne as jest.Mock).mockResolvedValue({
+        (Course.queryOne as jest.Mock).mockResolvedValue({
             courseId: mockCourseId,
             title: "Test Course",
             published: true,
         });
 
         // Mock PaymentPlan
-        (PaymentPlan.exists as jest.Mock).mockResolvedValue(true);
-        (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+        (PaymentPlan.checkExists as jest.Mock).mockResolvedValue(true);
+        (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
             planId: mockPlanId,
             type: Constants.PaymentPlanType.FREE,
             entityId: mockCommunityId,
@@ -131,7 +131,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
         });
 
         // Mock Invoice
-        (Invoice.create as jest.Mock).mockResolvedValue({
+        (Invoice.createOne as jest.Mock).mockResolvedValue({
             invoiceId: "invoice-123",
         });
 
@@ -217,7 +217,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
 
     describe("Complete Flow - Paid Community with Included Products", () => {
         beforeEach(() => {
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: mockPlanId,
                 type: Constants.PaymentPlanType.ONE_TIME,
                 entityId: mockCommunityId,
@@ -238,7 +238,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
             expect(responseData.paymentTracker).toBe("payment-tracker-123");
 
             // Verify invoice creation
-            expect(Invoice.create).toHaveBeenCalledWith(
+            expect(Invoice.createOne).toHaveBeenCalledWith(
                 expect.objectContaining({
                     domain: mockDomainId,
                     membershipId: "membership-123",
@@ -251,7 +251,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
         });
 
         it("handles subscription payment plans with included products", async () => {
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: mockPlanId,
                 type: Constants.PaymentPlanType.SUBSCRIPTION,
                 entityId: mockCommunityId,
@@ -269,7 +269,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
         });
 
         it("handles EMI payment plans with included products", async () => {
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: mockPlanId,
                 type: Constants.PaymentPlanType.EMI,
                 entityId: mockCommunityId,
@@ -288,7 +288,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
 
     describe("Complete Flow - Manual Approval Community with Included Products", () => {
         beforeEach(() => {
-            (Community.findOne as jest.Mock).mockResolvedValue({
+            (Community.queryOne as jest.Mock).mockResolvedValue({
                 communityId: mockCommunityId,
                 name: "Test Community",
                 autoAcceptMembers: false,
@@ -330,7 +330,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
                 origin: "https://test.com",
             });
 
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: mockPlanId,
                 type: Constants.PaymentPlanType.FREE,
                 entityId: mockCourseId,
@@ -379,7 +379,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
                 save: jest.fn().mockResolvedValue(true),
             });
 
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: mockPlanId,
                 type: Constants.PaymentPlanType.SUBSCRIPTION,
                 entityId: mockCommunityId,
@@ -419,7 +419,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
 
     describe("Complete Flow - Error Scenarios", () => {
         it("handles payment method configuration errors gracefully", async () => {
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: mockPlanId,
                 type: Constants.PaymentPlanType.ONE_TIME,
                 entityId: mockCommunityId,
@@ -440,7 +440,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
         });
 
         it("handles database errors gracefully", async () => {
-            (PaymentPlan.exists as jest.Mock).mockRejectedValue(
+            (PaymentPlan.checkExists as jest.Mock).mockRejectedValue(
                 new Error("Database error"),
             );
 
@@ -453,7 +453,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
         });
 
         it("handles payment initiation errors gracefully", async () => {
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: mockPlanId,
                 type: Constants.PaymentPlanType.ONE_TIME,
                 entityId: mockCommunityId,
@@ -483,7 +483,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
 
     describe("Complete Flow - Edge Cases", () => {
         it("handles payment plan with no included products", async () => {
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: mockPlanId,
                 type: Constants.PaymentPlanType.FREE,
                 entityId: mockCommunityId,
@@ -501,7 +501,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
         });
 
         it("handles payment plan with undefined included products", async () => {
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: mockPlanId,
                 type: Constants.PaymentPlanType.FREE,
                 entityId: mockCommunityId,
@@ -524,7 +524,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
                 (_, i) => `course-${i}`,
             );
 
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: mockPlanId,
                 type: Constants.PaymentPlanType.FREE,
                 entityId: mockCommunityId,
@@ -552,7 +552,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
                 "777777777777777777777777",
             );
 
-            (Community.findOne as jest.Mock).mockResolvedValue({
+            (Community.queryOne as jest.Mock).mockResolvedValue({
                 communityId: mockCommunityId,
                 name: "Test Community",
                 autoAcceptMembers: true,
@@ -567,7 +567,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
         });
 
         it("prevents access to archived payment plans", async () => {
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: mockPlanId,
                 type: Constants.PaymentPlanType.FREE,
                 entityId: mockCommunityId,
@@ -584,7 +584,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
         });
 
         it("prevents access to internal payment plans", async () => {
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: mockPlanId,
                 type: Constants.PaymentPlanType.FREE,
                 entityId: mockCommunityId,
@@ -623,7 +623,7 @@ describe("Payment Initiate Integration Tests - Included Products", () => {
                 (_, i) => `course-${i}`,
             );
 
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: mockPlanId,
                 type: Constants.PaymentPlanType.FREE,
                 entityId: mockCommunityId,

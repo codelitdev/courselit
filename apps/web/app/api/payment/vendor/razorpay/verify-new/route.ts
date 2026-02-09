@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
         `POST /api/payment/vendor/razorpay/verify: domain detected: ${domainName}`,
     );
 
-    const domain = await DomainModel.findOne<Domain>({
+    const domain = await DomainModel.queryOne<Domain>({
         name: domainName,
     });
     if (!domain) {
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (isVerified) {
-        const invoice = await Invoice.findOne({
+        const invoice = await Invoice.queryOne({
             domain: domain._id,
             paymentProcessor: UIConstants.PAYMENT_METHOD_RAZORPAY,
             paymentProcessorEntityId: subscriptionId || orderId,

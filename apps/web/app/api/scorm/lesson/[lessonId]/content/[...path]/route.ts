@@ -20,7 +20,7 @@ export async function GET(
     const { lessonId, path: pathParts } = await params;
     const filePath = pathParts.join("/");
 
-    const domain = await DomainModel.findOne<Domain>({
+    const domain = await DomainModel.queryOne<Domain>({
         name: req.headers.get("domain"),
     });
     if (!domain) {
@@ -32,7 +32,7 @@ export async function GET(
         return Response.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await User.findOne({
+    const user = await User.queryOne({
         email: session.user?.email,
         domain: domain._id,
         active: true,
@@ -41,7 +41,7 @@ export async function GET(
         return Response.json({ message: "User not found" }, { status: 404 });
     }
 
-    const lesson = await Lesson.findOne({
+    const lesson = await Lesson.queryOne({
         lessonId,
         domain: domain._id,
     });
@@ -49,7 +49,7 @@ export async function GET(
         return Response.json({ message: "Lesson not found" }, { status: 404 });
     }
 
-    const enrolled = isEnrolled(lesson.courseId, user);
+    const enrolled = isEnrolled(lesson.courseId, user as any);
     if (!enrolled) {
         return Response.json(
             { message: "Enrollment required" },

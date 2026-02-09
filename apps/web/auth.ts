@@ -66,14 +66,15 @@ const config: any = {
             },
         }),
         customSession(async ({ user, session }, ctx) => {
+            const userRecord = await UserModel.queryOne(
+                { _id: user.id },
+                { userId: 1 },
+            );
+
             return {
                 user: {
                     ...user,
-                    userId: (
-                        (await UserModel.findOne({ _id: user.id })
-                            .select("userId")
-                            .lean()) as unknown as any
-                    )?.userId,
+                    userId: userRecord?.userId,
                 },
                 session: {
                     ...session,
@@ -98,9 +99,9 @@ const config: any = {
             create: {
                 after: async (user, ctx) => {
                     const domainName = ctx!.headers?.get("domain");
-                    const domain = (await DomainModel.findOne<Domain>({
+                    const domain = (await DomainModel.queryOne<Domain>({
                         name: domainName,
-                    }).lean()) as unknown as Domain;
+                    })) as unknown as Domain;
                     if (!domain) {
                         throw new APIError("NOT_FOUND", {
                             message: "Domain not found",

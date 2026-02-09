@@ -61,7 +61,7 @@ export async function validateUserDeletion(
 ): Promise<void> {
     for (const permission of CRITICAL_PERMISSIONS) {
         if (userToDelete.permissions?.includes(permission)) {
-            const otherUsersWithPermission = await UserModel.countDocuments({
+            const otherUsersWithPermission = await UserModel.count({
                 domain: ctx.subdomain._id,
                 userId: { $ne: userToDelete.userId },
                 permissions: permission,
@@ -89,15 +89,18 @@ export async function migrateBusinessEntities(
     // ==========================================
     // COURSE OWNERSHIP MIGRATION
     // ==========================================
-    const userCourses = await CourseModel.find<InternalCourse>({
-        domain: ctx.subdomain._id,
-        creatorId: userToDelete.userId,
-    }).select("courseId");
+    const userCourses = await CourseModel.query<InternalCourse>(
+        {
+            domain: ctx.subdomain._id,
+            creatorId: userToDelete.userId,
+        },
+        { courseId: 1 },
+    );
 
     const courseIds = userCourses.map((course) => course.courseId);
 
     if (courseIds.length > 0) {
-        await CourseModel.updateMany(
+        await CourseModel.patchMany(
             {
                 domain: ctx.subdomain._id,
                 creatorId: userToDelete.userId,
@@ -107,7 +110,7 @@ export async function migrateBusinessEntities(
             },
         );
 
-        await PageModel.updateMany(
+        await PageModel.patchMany(
             {
                 domain: ctx.subdomain._id,
                 entityId: { $in: courseIds },
@@ -121,56 +124,56 @@ export async function migrateBusinessEntities(
     // BUSINESS ENTITY OWNERSHIP MIGRATION
     // ==========================================
     await Promise.all([
-        EmailTemplateModel.updateMany(
+        EmailTemplateModel.patchMany(
             {
                 domain: ctx.subdomain._id,
                 creatorId: userToDelete.userId,
             },
             { creatorId: deleterUser.userId },
         ),
-        SequenceModel.updateMany(
+        SequenceModel.patchMany(
             {
                 domain: ctx.subdomain._id,
                 creatorId: userToDelete.userId,
             },
             { creatorId: deleterUser.userId },
         ),
-        PageModel.updateMany(
+        PageModel.patchMany(
             {
                 domain: ctx.subdomain._id,
                 creatorId: userToDelete.userId,
             },
             { creatorId: deleterUser.userId },
         ),
-        UserSegmentModel.updateMany(
+        UserSegmentModel.patchMany(
             {
                 domain: ctx.subdomain._id,
                 userId: userToDelete.userId,
             },
             { userId: deleterUser.userId },
         ),
-        EmailDeliveryModel.updateMany(
+        EmailDeliveryModel.patchMany(
             {
                 domain: ctx.subdomain._id,
                 userId: userToDelete.userId,
             },
             { userId: deleterUser.userId },
         ),
-        UserThemeModel.updateMany(
+        UserThemeModel.patchMany(
             {
                 domain: ctx.subdomain._id,
                 userId: userToDelete.userId,
             },
             { userId: deleterUser.userId },
         ),
-        PaymentPlanModel.updateMany(
+        PaymentPlanModel.patchMany(
             {
                 domain: ctx.subdomain._id,
                 userId: userToDelete.userId,
             },
             { userId: deleterUser.userId },
         ),
-        OngoingSequenceModel.updateMany(
+        OngoingSequenceModel.patchMany(
             {
                 domain: ctx.subdomain._id,
                 userId: userToDelete.userId,
@@ -182,7 +185,7 @@ export async function migrateBusinessEntities(
     // ==========================================
     // LESSON OWNERSHIP MIGRATION
     // ==========================================
-    await LessonModel.updateMany(
+    await LessonModel.patchMany(
         {
             domain: ctx.subdomain._id,
             creatorId: userToDelete.userId,
@@ -193,7 +196,7 @@ export async function migrateBusinessEntities(
     // ==========================================
     // COMMUNITY MODERATOR ROLE MIGRATION
     // ==========================================
-    const creatorMemberships = await MembershipModel.find<InternalMembership>({
+    const creatorMemberships = await MembershipModel.query<InternalMembership>({
         domain: ctx.subdomain._id,
         userId: userToDelete.userId,
         entityType: Constants.MembershipEntityType.COMMUNITY,
@@ -207,7 +210,7 @@ export async function migrateBusinessEntities(
         communityIds.add(membership.entityId);
 
         const existingMembership =
-            await MembershipModel.findOne<InternalMembership>({
+            await MembershipModel.queryOne<InternalMembership>({
                 domain: ctx.subdomain._id,
                 userId: deleterUser.userId,
                 entityId: membership.entityId,
@@ -223,21 +226,21 @@ export async function migrateBusinessEntities(
             ) {
                 existingMembership.status = Constants.MembershipStatus.ACTIVE;
             }
-            await existingMembership.save();
-            await membership.deleteOne();
+            await MembershipModel.saveOne(existingMembership);
+            await MembershipModel.removeDoc(membership);
         } else {
             // Transfer membership to deleter user
             membership.userId = deleterUser.userId;
             membership.role = Constants.MembershipRole.MODERATE;
             membership.joiningReason = internal.joining_reason_creator;
             membership.status = Constants.MembershipStatus.ACTIVE;
-            await membership.save();
+            await MembershipModel.saveOne(membership);
         }
     }
 
     // Migrate community pages
     if (communityIds.size > 0) {
-        await PageModel.updateMany(
+        await PageModel.patchMany(
             {
                 domain: ctx.subdomain._id,
                 entityId: { $in: Array.from(communityIds) },
@@ -257,42 +260,42 @@ export async function cleanupPersonalData(
     ctx: GQLContext,
 ): Promise<void> {
     await Promise.all([
-        NotificationModel.deleteMany({
+        NotificationModel.removeMany({
             domain: ctx.subdomain._id,
             $or: [
                 { forUserId: userToDelete.userId },
                 { userId: userToDelete.userId },
             ],
         }),
-        MailRequestStatusModel.deleteMany({
+        MailRequestStatusModel.removeMany({
             domain: ctx.subdomain._id,
             userId: userToDelete.userId,
         }),
-        LessonEvaluationModel.deleteMany({
+        LessonEvaluationModel.removeMany({
             domain: ctx.subdomain._id,
             userId: userToDelete.userId,
         }),
-        DownloadLinkModel.deleteMany({
+        DownloadLinkModel.removeMany({
             domain: ctx.subdomain._id,
             userId: userToDelete.userId,
         }),
-        CommunityReportModel.deleteMany({
+        CommunityReportModel.removeMany({
             domain: ctx.subdomain._id,
             userId: userToDelete.userId,
         }),
-        CertificateModel.deleteMany({
+        CertificateModel.removeMany({
             domain: ctx.subdomain._id,
             userId: userToDelete.userId,
         }),
-        ActivityModel.deleteMany({
+        ActivityModel.removeMany({
             domain: ctx.subdomain._id,
             userId: userToDelete.userId,
         }),
-        EmailEventModel.deleteMany({
+        EmailEventModel.removeMany({
             domain: ctx.subdomain._id,
             userId: userToDelete.userId,
         }),
-        CommunityPostSubscriberModel.deleteMany({
+        CommunityPostSubscriberModel.removeMany({
             domain: ctx.subdomain._id,
             userId: userToDelete.userId,
         }),
@@ -302,13 +305,13 @@ export async function cleanupPersonalData(
     await deleteCommunityPosts(ctx, "user", userToDelete.userId);
 
     // Remove user from likes on posts
-    await CommunityPostModel.updateMany(
+    await CommunityPostModel.patchMany(
         { domain: ctx.subdomain._id },
         { $pull: { likes: userToDelete.userId } },
     );
 
     // Remove user from likes on comments and replies
-    await CommunityCommentModel.updateMany(
+    await CommunityCommentModel.patchMany(
         { domain: ctx.subdomain._id },
         {
             $pull: {
@@ -319,7 +322,7 @@ export async function cleanupPersonalData(
     );
 
     // Delete memberships and cancel subscriptions
-    const memberships = await MembershipModel.find<InternalMembership>({
+    const memberships = await MembershipModel.query<InternalMembership>({
         domain: ctx.subdomain._id,
         userId: userToDelete.userId,
     });
@@ -335,18 +338,18 @@ export async function cleanupPersonalData(
     //     }
 
     //     // Delete associated invoices
-    //     await InvoiceModel.deleteMany({
+    //     await InvoiceModel.removeMany({
     //         domain: ctx.subdomain._id,
     //         membershipId: membership.membershipId,
     //     });
 
     //     // Delete membership
-    //     await membership.deleteOne();
+    //     await MembershipModel.removeDoc(membership);
     // }
     await cancelAndDeleteMemberships(memberships, ctx);
 
     // Remove user from sequence entrants
-    await SequenceModel.updateMany(
+    await SequenceModel.patchMany(
         { domain: ctx.subdomain._id },
         {
             $pull: {
@@ -356,12 +359,12 @@ export async function cleanupPersonalData(
     );
 
     // Remove user from course customers
-    await CourseModel.updateMany(
+    await CourseModel.patchMany(
         { domain: ctx.subdomain._id },
         { $pull: { customers: userToDelete.userId } },
     );
 
-    await Account.deleteOne({
+    await Account.removeOne({
         domain: ctx.subdomain._id,
         userId: userToDelete._id,
     });
@@ -370,7 +373,7 @@ export async function cleanupPersonalData(
         await deleteMedia(userToDelete.avatar.mediaId);
     }
 
-    await UserModel.deleteOne({
+    await UserModel.removeOne({
         domain: ctx.subdomain._id,
         _id: userToDelete._id,
     });

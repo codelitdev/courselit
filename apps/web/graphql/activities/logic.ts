@@ -50,7 +50,7 @@ export const getActivities = async ({
         domain: ctx.subdomain._id,
         ...(entityId ? { entityId } : {}),
     };
-    const activities: Activity[] = await ActivityModel.find(query);
+    const activities: Activity[] = await ActivityModel.query(query);
 
     // Split activities into current and previous periods
     const currentPeriodActivities = activities.filter(

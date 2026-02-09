@@ -16,13 +16,13 @@ const { domainNameForSingleTenancy, schoolNameForSingleTenancy } = constants;
 const getDomainBasedOnSubdomain = async (
     subdomain: string,
 ): Promise<Domain | null> => {
-    return await DomainModel.findOne({ name: subdomain, deleted: false });
+    return await DomainModel.queryOne({ name: subdomain, deleted: false });
 };
 
 const getDomainBasedOnCustomDomain = async (
     customDomain: string,
 ): Promise<Domain | null> => {
-    return await DomainModel.findOne({ customDomain, deleted: false });
+    return await DomainModel.queryOne({ customDomain, deleted: false });
 };
 
 const getDomain = async (hostName: string): Promise<Domain | null> => {
@@ -110,14 +110,14 @@ export async function GET(req: Request) {
 
             const currentDate = new Date();
             const dateAfter24Hours = new Date(currentDate.getTime() + 86400000);
-            await DomainModel.findOneAndUpdate(
+            await DomainModel.patchOneAndGet(
                 { _id: domain!._id },
                 { $set: { checkSubscriptionStatusAfter: dateAfter24Hours } },
                 { upsert: false },
             );
         }
     } else {
-        domain = await DomainModel.findOne({
+        domain = await DomainModel.queryOne({
             name: domainNameForSingleTenancy,
         });
 
@@ -127,7 +127,7 @@ export async function GET(req: Request) {
                 process.exit(1);
             }
 
-            domain = await DomainModel.findOneAndUpdate(
+            domain = await DomainModel.patchOneAndGet(
                 {
                     name: domainNameForSingleTenancy,
                 },
@@ -172,7 +172,7 @@ export async function GET(req: Request) {
                     ? await getSubscriberName(domain!.email)
                     : "",
             });
-            await DomainModel.findOneAndUpdate(
+            await DomainModel.patchOneAndGet(
                 { _id: domain!._id },
                 { $set: { firstRun: false } },
                 { upsert: false },
@@ -201,10 +201,10 @@ export async function GET(req: Request) {
 }
 
 async function getSubscriberName(email: string): Promise<string | undefined> {
-    const subscriber = (await SubscriberModel.findOne(
+    const subscriber = (await SubscriberModel.queryOne(
         { email },
         { name: 1, _id: 0 },
-    ).lean()) as unknown as Subscriber;
+    )) as unknown as Subscriber;
 
     return subscriber ? subscriber.name : "";
 }

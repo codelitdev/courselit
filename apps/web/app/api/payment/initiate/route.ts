@@ -13,12 +13,12 @@ import CommunityModel from "@courselit/orm-models/dao/community";
 import CourseModel from "@courselit/orm-models/dao/course";
 import constants from "@config/constants";
 import PaymentPlanModel from "@courselit/orm-models/dao/payment-plan";
+import MembershipModel from "@courselit/orm-models/dao/membership";
 import { getPaymentMethodFromSettings } from "@/payments-new";
 import { generateUniqueId } from "@courselit/utils";
 import InvoiceModel from "@courselit/orm-models/dao/invoice";
 import { error } from "@/services/logger";
 import { responses } from "@config/strings";
-import mongoose from "mongoose";
 import { activateMembership } from "../helpers";
 import { getMembership } from "@/graphql/users/logic";
 
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Verify the payment plan belongs to this entity
-        const planExists = await PaymentPlanModel.exists({
+        const planExists = await PaymentPlanModel.checkExists({
             domain: domain._id,
             planId: planId,
             entityId: id,
@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
                     return Response.json({ status: transactionSuccess });
                 } else {
                     membership.status = Constants.MembershipStatus.EXPIRED;
-                    await membership.save();
+                    await MembershipModel.saveOne(membership);
                 }
             }
         }
@@ -195,7 +195,7 @@ export async function POST(req: NextRequest) {
             origin,
         });
 
-        await InvoiceModel.create({
+        await InvoiceModel.createOne({
             domain: domain._id,
             invoiceId,
             membershipId: membership.membershipId,
@@ -214,7 +214,7 @@ export async function POST(req: NextRequest) {
 
         membership.subscriptionId = undefined;
         membership.subscriptionMethod = undefined;
-        await (membership as any).save();
+        await MembershipModel.saveOne(membership as any);
 
         return Response.json({
             status: transactionInitiated,
@@ -236,31 +236,27 @@ export async function POST(req: NextRequest) {
 
 export async function getDomain(domainName: string | null) {
     if (!domainName) return null;
-    return await DomainModel.findOne<Domain>({ name: domainName });
+    return await DomainModel.queryOne<Domain>({ name: domainName });
 }
 
-export async function getUser(session: any, domainId: mongoose.Types.ObjectId) {
+export async function getUser(session: any, domainId: Domain["_id"]) {
     if (!session) return null;
-    return await User.findOne({
+    return await User.queryOne({
         email: session.user!.email,
         domain: domainId,
         active: true,
     });
 }
 
-async function getEntity(
-    type: string,
-    id: string,
-    domainId: mongoose.Types.ObjectId,
-) {
+async function getEntity(type: string, id: string, domainId: Domain["_id"]) {
     if (type === Constants.MembershipEntityType.COMMUNITY) {
-        return await CommunityModel.findOne<Community>({
+        return await CommunityModel.queryOne<Community>({
             communityId: id,
             domain: domainId,
             deleted: false,
         });
     } else if (type === Constants.MembershipEntityType.COURSE) {
-        return await CourseModel.findOne<Course>({
+        return await CourseModel.queryOne<Course>({
             courseId: id,
             domain: domainId,
         });
@@ -268,11 +264,8 @@ async function getEntity(
     return null;
 }
 
-async function getPaymentPlan(
-    domainId: mongoose.Types.ObjectId,
-    planId: string,
-) {
-    return await PaymentPlanModel.findOne<PaymentPlan>({
+async function getPaymentPlan(domainId: Domain["_id"], planId: string) {
+    return await PaymentPlanModel.queryOne<PaymentPlan>({
         domain: domainId,
         planId,
         archived: false,

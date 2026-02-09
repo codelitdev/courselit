@@ -36,13 +36,13 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
     beforeAll(async () => {
         // Create unique test domain
-        testDomain = await DomainModel.create({
+        testDomain = await DomainModel.createOne({
             name: dcId("domain"),
             email: dcEmail("domain"),
         });
 
         // Create admin user with course management permissions
-        adminUser = await UserModel.create({
+        adminUser = await UserModel.createUser({
             domain: testDomain._id,
             userId: dcId("admin-user"),
             email: dcEmail("admin"),
@@ -54,7 +54,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
         });
 
         // Create regular user (student)
-        regularUser = await UserModel.create({
+        regularUser = await UserModel.createUser({
             domain: testDomain._id,
             userId: dcId("regular-user"),
             email: dcEmail("regular"),
@@ -67,7 +67,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
         // Create internal payment plan (required for memberships)
         // Use unique planId to avoid conflicts when running tests in parallel
-        await PaymentPlanModel.create({
+        await PaymentPlanModel.createOne({
             domain: testDomain._id,
             planId: dcId("internal-plan"),
             userId: adminUser.userId,
@@ -90,23 +90,23 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
     afterEach(async () => {
         // Clean up all test data (except internal plan and users)
         await Promise.all([
-            CourseModel.deleteMany({ domain: testDomain._id }),
-            LessonModel.deleteMany({ domain: testDomain._id }),
-            LessonEvaluation.deleteMany({ domain: testDomain._id }),
-            CertificateModel.deleteMany({ domain: testDomain._id }),
-            CertificateTemplateModel.deleteMany({ domain: testDomain._id }),
-            MembershipModel.deleteMany({ domain: testDomain._id }),
-            PaymentPlanModel.deleteMany({
+            CourseModel.removeMany({ domain: testDomain._id }),
+            LessonModel.removeMany({ domain: testDomain._id }),
+            LessonEvaluation.removeMany({ domain: testDomain._id }),
+            CertificateModel.removeMany({ domain: testDomain._id }),
+            CertificateTemplateModel.removeMany({ domain: testDomain._id }),
+            MembershipModel.removeMany({ domain: testDomain._id }),
+            PaymentPlanModel.removeMany({
                 domain: testDomain._id,
                 internal: { $ne: true },
             }),
-            ActivityModel.deleteMany({ domain: testDomain._id }),
-            PageModel.deleteMany({ domain: testDomain._id }),
-            InvoiceModel.deleteMany({ domain: testDomain._id }),
+            ActivityModel.removeMany({ domain: testDomain._id }),
+            PageModel.removeMany({ domain: testDomain._id }),
+            InvoiceModel.removeMany({ domain: testDomain._id }),
         ]);
 
         // Reset user purchases
-        await UserModel.updateMany(
+        await UserModel.patchMany(
             { domain: testDomain._id },
             { $set: { purchases: [] } },
         );
@@ -115,9 +115,9 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
     }, 15000);
 
     afterAll(async () => {
-        await UserModel.deleteMany({ domain: testDomain._id });
-        await PaymentPlanModel.deleteMany({ domain: testDomain._id });
-        await DomainModel.deleteOne({ _id: testDomain._id });
+        await UserModel.removeMany({ domain: testDomain._id });
+        await PaymentPlanModel.removeMany({ domain: testDomain._id });
+        await DomainModel.removeOne({ _id: testDomain._id });
     }, 15000);
 
     describe("Security & Validation", () => {
@@ -135,7 +135,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 subdomain: testDomain,
             } as any;
 
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-perm",
                 name: "Test Page",
@@ -143,7 +143,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-perm",
                 title: "Test Course",
@@ -171,7 +171,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
         });
 
         it("should allow owner with manageCourse permission to delete their own course", async () => {
-            const ownerUser = await UserModel.create({
+            const ownerUser = await UserModel.createUser({
                 domain: testDomain._id,
                 userId: dcId("owner-user"),
                 email: dcEmail("owner"),
@@ -187,7 +187,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 subdomain: testDomain,
             } as any;
 
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-owner",
                 name: "Test Page",
@@ -195,7 +195,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-owner",
                 title: "Test Course",
@@ -214,18 +214,18 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
             const result = await deleteCourse(course.courseId, ownerCtx);
             expect(result).toBe(true);
 
-            const deletedCourse = await CourseModel.findOne({
+            const deletedCourse = await CourseModel.queryOne({
                 courseId: course.courseId,
             });
             expect(deletedCourse).toBeNull();
 
-            await UserModel.deleteOne({ userId: ownerUser.userId });
+            await UserModel.removeOne({ userId: ownerUser.userId });
         });
     });
 
     describe("Course Deletion", () => {
         it("should delete a basic course successfully", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-basic",
                 name: "Test Page",
@@ -233,7 +233,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-basic",
                 title: "Test Course",
@@ -253,14 +253,14 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
             expect(result).toBe(true);
 
             // Verify course is deleted
-            const deletedCourse = await CourseModel.findOne({
+            const deletedCourse = await CourseModel.queryOne({
                 courseId: course.courseId,
             });
             expect(deletedCourse).toBeNull();
 
             // Verify page is deleted
             // Note: deletePageInternal removes the page if deleteable is true
-            const deletedPage = await PageModel.findOne({
+            const deletedPage = await PageModel.queryOne({
                 pageId: page.pageId,
             });
             expect(deletedPage).toBeNull();
@@ -269,7 +269,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
         it("should delete course with featured image", async () => {
             const { deleteMedia } = require("@/services/medialit");
 
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-media",
                 name: "Test Page",
@@ -277,7 +277,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-media",
                 title: "Test Course",
@@ -308,7 +308,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
         });
 
         it("should delete course with description media", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-desc-media",
                 name: "Test Page",
@@ -316,7 +316,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-desc-media",
                 title: "Test Course",
@@ -350,7 +350,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
     describe("Lesson Deletion", () => {
         it("should delete all lessons associated with the course", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-lessons",
                 name: "Test Page",
@@ -358,7 +358,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-lessons",
                 title: "Test Course",
@@ -381,7 +381,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 lessons: ["lesson-1", "lesson-2"],
             });
 
-            await LessonModel.create({
+            await LessonModel.createOne({
                 domain: testDomain._id,
                 lessonId: "lesson-1",
                 title: "Lesson 1",
@@ -393,7 +393,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 content: {},
             });
 
-            await LessonModel.create({
+            await LessonModel.createOne({
                 domain: testDomain._id,
                 lessonId: "lesson-2",
                 title: "Lesson 2",
@@ -407,14 +407,14 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
             await deleteCourse(course.courseId, mockCtx);
 
-            const remainingLessons = await LessonModel.find({
+            const remainingLessons = await LessonModel.query({
                 courseId: course.courseId,
             });
             expect(remainingLessons).toHaveLength(0);
         });
 
         it("should delete lesson evaluations when deleting lessons", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-evals",
                 name: "Test Page",
@@ -422,7 +422,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-evals",
                 title: "Test Course",
@@ -445,7 +445,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 lessons: ["lesson-quiz"],
             });
 
-            await LessonModel.create({
+            await LessonModel.createOne({
                 domain: testDomain._id,
                 lessonId: "lesson-quiz",
                 title: "Quiz Lesson",
@@ -457,7 +457,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 content: {},
             });
 
-            await LessonEvaluation.create({
+            await LessonEvaluation.createOne({
                 domain: testDomain._id,
                 lessonId: "lesson-quiz",
                 userId: regularUser.userId,
@@ -467,7 +467,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
             await deleteCourse(course.courseId, mockCtx);
 
-            const remainingEvaluations = await LessonEvaluation.find({
+            const remainingEvaluations = await LessonEvaluation.query({
                 lessonId: "lesson-quiz",
             });
             expect(remainingEvaluations).toHaveLength(0);
@@ -476,7 +476,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
     describe("Certificate Deletion", () => {
         it("should delete certificate template and all issued certificates", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-certs",
                 name: "Test Page",
@@ -484,7 +484,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-certs",
                 title: "Test Course",
@@ -501,7 +501,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 certificate: true,
             });
 
-            await CertificateTemplateModel.create({
+            await CertificateTemplateModel.createOne({
                 domain: testDomain._id,
                 courseId: course.courseId,
                 title: "Certificate of Completion",
@@ -511,14 +511,14 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 templateId: "template-123",
             });
 
-            await CertificateModel.create({
+            await CertificateModel.createOne({
                 domain: testDomain._id,
                 courseId: course.courseId,
                 userId: regularUser.userId,
                 certificateId: "cert-certs-123",
             });
 
-            await CertificateModel.create({
+            await CertificateModel.createOne({
                 domain: testDomain._id,
                 courseId: course.courseId,
                 userId: adminUser.userId,
@@ -527,12 +527,12 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
             await deleteCourse(course.courseId, mockCtx);
 
-            const remainingTemplates = await CertificateTemplateModel.find({
+            const remainingTemplates = await CertificateTemplateModel.query({
                 courseId: course.courseId,
             });
             expect(remainingTemplates).toHaveLength(0);
 
-            const remainingCertificates = await CertificateModel.find({
+            const remainingCertificates = await CertificateModel.query({
                 courseId: course.courseId,
             });
             expect(remainingCertificates).toHaveLength(0);
@@ -541,7 +541,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
         it("should delete certificate template media", async () => {
             const { deleteMedia } = require("@/services/medialit");
 
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-cert-media",
                 name: "Test Page",
@@ -549,7 +549,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-cert-media",
                 title: "Test Course",
@@ -566,7 +566,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 certificate: true,
             });
 
-            await CertificateTemplateModel.create({
+            await CertificateTemplateModel.createOne({
                 domain: testDomain._id,
                 courseId: course.courseId,
                 title: "Certificate of Completion",
@@ -601,7 +601,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
     describe("Membership & Payment Deletion", () => {
         it("should delete all memberships for the course", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-memberships",
                 name: "Test Page",
@@ -609,7 +609,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-memberships",
                 title: "Test Course",
@@ -625,7 +625,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 lessons: [],
             });
 
-            await MembershipModel.create({
+            await MembershipModel.createOne({
                 domain: testDomain._id,
                 membershipId: "mem-1",
                 userId: regularUser.userId,
@@ -636,7 +636,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 status: Constants.MembershipStatus.ACTIVE,
             });
 
-            await MembershipModel.create({
+            await MembershipModel.createOne({
                 domain: testDomain._id,
                 membershipId: "mem-2",
                 userId: adminUser.userId,
@@ -649,7 +649,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
             await deleteCourse(course.courseId, mockCtx);
 
-            const remainingMemberships = await MembershipModel.find({
+            const remainingMemberships = await MembershipModel.query({
                 entityId: course.courseId,
                 entityType: Constants.MembershipEntityType.COURSE,
             });
@@ -657,7 +657,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
         });
 
         it("should delete all payment plans for the course", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-plans",
                 name: "Test Page",
@@ -665,7 +665,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-plans",
                 title: "Test Course",
@@ -681,7 +681,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 lessons: [],
             });
 
-            await PaymentPlanModel.create({
+            await PaymentPlanModel.createOne({
                 domain: testDomain._id,
                 planId: "plan-course-1",
                 userId: adminUser.userId,
@@ -694,7 +694,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 currencyISOCode: "USD",
             });
 
-            await PaymentPlanModel.create({
+            await PaymentPlanModel.createOne({
                 domain: testDomain._id,
                 planId: "plan-course-2",
                 userId: adminUser.userId,
@@ -709,7 +709,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
             await deleteCourse(course.courseId, mockCtx);
 
-            const remainingPlans = await PaymentPlanModel.find({
+            const remainingPlans = await PaymentPlanModel.query({
                 entityId: course.courseId,
                 entityType: Constants.MembershipEntityType.COURSE,
             });
@@ -717,7 +717,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
         });
 
         it("should remove course from included products in other payment plans", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-included",
                 name: "Test Page",
@@ -725,7 +725,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-included",
                 title: "Test Course",
@@ -742,7 +742,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
             });
 
             // Create a bundle payment plan that includes this course
-            const bundlePlan = await PaymentPlanModel.create({
+            const bundlePlan = await PaymentPlanModel.createOne({
                 domain: testDomain._id,
                 planId: "plan-bundle",
                 userId: adminUser.userId,
@@ -758,7 +758,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
             await deleteCourse(course.courseId, mockCtx);
 
-            const updatedPlan = await PaymentPlanModel.findOne({
+            const updatedPlan = await PaymentPlanModel.queryOne({
                 planId: bundlePlan.planId,
             });
             expect(updatedPlan?.includedProducts).toEqual(["other-course-123"]);
@@ -767,7 +767,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
     describe("Activity Deletion", () => {
         it("should delete all activities related to the course", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-activities",
                 name: "Test Page",
@@ -775,7 +775,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-activities",
                 title: "Test Course",
@@ -792,7 +792,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
             });
 
             // Activity with entityId = courseId
-            await ActivityModel.create({
+            await ActivityModel.createOne({
                 domain: testDomain._id,
                 userId: regularUser.userId,
                 type: "enrolled",
@@ -800,7 +800,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
             });
 
             // Activity with metadata.courseId
-            await ActivityModel.create({
+            await ActivityModel.createOne({
                 domain: testDomain._id,
                 userId: regularUser.userId,
                 type: "lesson_completed",
@@ -811,7 +811,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
             });
 
             // Activity with both
-            await ActivityModel.create({
+            await ActivityModel.createOne({
                 domain: testDomain._id,
                 userId: regularUser.userId,
                 type: "course_completed",
@@ -823,7 +823,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
             await deleteCourse(course.courseId, mockCtx);
 
-            const remainingActivities = await ActivityModel.find({
+            const remainingActivities = await ActivityModel.query({
                 domain: testDomain._id,
                 $or: [
                     { entityId: course.courseId },
@@ -836,7 +836,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
     describe("User Purchase Cleanup", () => {
         it("should remove course from all user purchases", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-purchases",
                 name: "Test Page",
@@ -844,7 +844,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-purchases",
                 title: "Test Course",
@@ -861,7 +861,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
             });
 
             // Add course to user purchases
-            await UserModel.updateOne(
+            await UserModel.patchOne(
                 { userId: regularUser.userId },
                 {
                     $push: {
@@ -874,7 +874,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 },
             );
 
-            await UserModel.updateOne(
+            await UserModel.patchOne(
                 { userId: adminUser.userId },
                 {
                     $push: {
@@ -889,7 +889,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
             await deleteCourse(course.courseId, mockCtx);
 
-            const updatedRegularUser = await UserModel.findOne({
+            const updatedRegularUser = await UserModel.queryOne({
                 userId: regularUser.userId,
             });
             expect(
@@ -898,7 +898,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 ),
             ).toBeFalsy();
 
-            const updatedAdminUser = await UserModel.findOne({
+            const updatedAdminUser = await UserModel.queryOne({
                 userId: adminUser.userId,
             });
             expect(
@@ -911,7 +911,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
     describe("Invoice Deletion", () => {
         it("should NOT delete invoices when deleting course (current behavior)", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-invoices",
                 name: "Test Page",
@@ -919,7 +919,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-invoices",
                 title: "Test Course",
@@ -935,7 +935,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 lessons: [],
             });
 
-            const membership = await MembershipModel.create({
+            const membership = await MembershipModel.createOne({
                 domain: testDomain._id,
                 membershipId: "mem-invoice",
                 userId: regularUser.userId,
@@ -946,7 +946,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 status: Constants.MembershipStatus.ACTIVE,
             });
 
-            await InvoiceModel.create({
+            await InvoiceModel.createOne({
                 domain: testDomain._id,
                 invoiceId: "inv-1",
                 membershipId: membership.membershipId,
@@ -957,7 +957,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 status: Constants.InvoiceStatus.PAID,
             });
 
-            await InvoiceModel.create({
+            await InvoiceModel.createOne({
                 domain: testDomain._id,
                 invoiceId: "inv-2",
                 membershipId: membership.membershipId,
@@ -972,7 +972,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
             // Note: Current implementation does NOT delete invoices
             // This is a potential bug - invoices remain orphaned after course deletion
-            const remainingInvoices = await InvoiceModel.find({
+            const remainingInvoices = await InvoiceModel.query({
                 membershipId: membership.membershipId,
             });
             expect(remainingInvoices).toHaveLength(2); // Invoices NOT deleted
@@ -983,7 +983,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
         it("should handle course with all entities in lifecycle", async () => {
             const { deleteMedia } = require("@/services/medialit");
 
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-complex",
                 name: "Test Page",
@@ -991,7 +991,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-complex",
                 title: "Complex Course",
@@ -1030,7 +1030,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
             });
 
             // Create lessons
-            await LessonModel.create({
+            await LessonModel.createOne({
                 domain: testDomain._id,
                 lessonId: "lesson-1",
                 title: "Lesson 1",
@@ -1042,7 +1042,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 content: {},
             });
 
-            await LessonModel.create({
+            await LessonModel.createOne({
                 domain: testDomain._id,
                 lessonId: "lesson-2",
                 title: "Quiz",
@@ -1055,7 +1055,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
             });
 
             // Create certificate template
-            await CertificateTemplateModel.create({
+            await CertificateTemplateModel.createOne({
                 domain: testDomain._id,
                 courseId: course.courseId,
                 title: "Certificate",
@@ -1074,7 +1074,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
             });
 
             // Create certificates
-            await CertificateModel.create({
+            await CertificateModel.createOne({
                 domain: testDomain._id,
                 courseId: course.courseId,
                 userId: regularUser.userId,
@@ -1082,7 +1082,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
             });
 
             // Create payment plan
-            await PaymentPlanModel.create({
+            await PaymentPlanModel.createOne({
                 domain: testDomain._id,
                 planId: "plan-complex",
                 userId: adminUser.userId,
@@ -1096,7 +1096,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
             });
 
             // Create membership
-            const membership = await MembershipModel.create({
+            const membership = await MembershipModel.createOne({
                 domain: testDomain._id,
                 membershipId: "mem-complex",
                 userId: regularUser.userId,
@@ -1108,7 +1108,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
             });
 
             // Create invoice
-            await InvoiceModel.create({
+            await InvoiceModel.createOne({
                 domain: testDomain._id,
                 invoiceId: "inv-complex",
                 membershipId: membership.membershipId,
@@ -1120,14 +1120,14 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
             });
 
             // Create activities
-            await ActivityModel.create({
+            await ActivityModel.createOne({
                 domain: testDomain._id,
                 userId: regularUser.userId,
                 type: "enrolled",
                 entityId: course.courseId,
             });
 
-            await ActivityModel.create({
+            await ActivityModel.createOne({
                 domain: testDomain._id,
                 userId: regularUser.userId,
                 type: "lesson_completed",
@@ -1136,7 +1136,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
             });
 
             // Add to user purchases
-            await UserModel.updateOne(
+            await UserModel.patchOne(
                 { userId: regularUser.userId },
                 {
                     $push: {
@@ -1154,40 +1154,42 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
             // Verify everything is deleted
             expect(
-                await CourseModel.findOne({ courseId: course.courseId }),
+                await CourseModel.queryOne({ courseId: course.courseId }),
             ).toBeNull();
-            expect(await PageModel.findOne({ pageId: page.pageId })).toBeNull();
             expect(
-                await LessonModel.find({ courseId: course.courseId }),
+                await PageModel.queryOne({ pageId: page.pageId }),
+            ).toBeNull();
+            expect(
+                await LessonModel.query({ courseId: course.courseId }),
             ).toHaveLength(0);
             expect(
-                await CertificateTemplateModel.find({
+                await CertificateTemplateModel.query({
                     courseId: course.courseId,
                 }),
             ).toHaveLength(0);
             expect(
-                await CertificateModel.find({ courseId: course.courseId }),
+                await CertificateModel.query({ courseId: course.courseId }),
             ).toHaveLength(0);
             expect(
-                await PaymentPlanModel.find({
+                await PaymentPlanModel.query({
                     entityId: course.courseId,
                     entityType: Constants.MembershipEntityType.COURSE,
                 }),
             ).toHaveLength(0);
             expect(
-                await MembershipModel.find({
+                await MembershipModel.query({
                     entityId: course.courseId,
                     entityType: Constants.MembershipEntityType.COURSE,
                 }),
             ).toHaveLength(0);
             // Note: Invoices are NOT deleted in current implementation
             expect(
-                await InvoiceModel.find({
+                await InvoiceModel.query({
                     membershipId: membership.membershipId,
                 }),
             ).toHaveLength(1);
             expect(
-                await ActivityModel.find({
+                await ActivityModel.query({
                     $or: [
                         { entityId: course.courseId },
                         { "metadata.courseId": course.courseId },
@@ -1195,7 +1197,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 }),
             ).toHaveLength(0);
 
-            const updatedUser = await UserModel.findOne({
+            const updatedUser = await UserModel.queryOne({
                 userId: regularUser.userId,
             });
             const hasCoursePurchase =
@@ -1218,7 +1220,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 cancel: mockCancel,
             });
 
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-subscription",
                 name: "Test Page",
@@ -1226,7 +1228,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-subscription",
                 title: "Subscription Course",
@@ -1242,7 +1244,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 lessons: [],
             });
 
-            const membership = await MembershipModel.create({
+            const membership = await MembershipModel.createOne({
                 domain: testDomain._id,
                 membershipId: "mem-sub",
                 userId: regularUser.userId,
@@ -1255,7 +1257,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 subscriptionMethod: "stripe",
             });
 
-            await InvoiceModel.create({
+            await InvoiceModel.createOne({
                 domain: testDomain._id,
                 invoiceId: "inv-sub",
                 membershipId: membership.membershipId,
@@ -1274,14 +1276,14 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
             // Membership is deleted but subscription is not cancelled
             expect(
-                await MembershipModel.findOne({
+                await MembershipModel.queryOne({
                     membershipId: membership.membershipId,
                 }),
             ).toBeNull();
 
             // Invoices are NOT deleted (another potential bug)
             expect(
-                await InvoiceModel.find({
+                await InvoiceModel.query({
                     membershipId: membership.membershipId,
                 }),
             ).toHaveLength(1);
@@ -1290,7 +1292,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
     describe("Edge Cases", () => {
         it("should handle course without page gracefully", async () => {
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-no-page",
                 title: "Course Without Page",
@@ -1314,7 +1316,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
         });
 
         it("should handle course without any related entities", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-empty",
                 name: "Test Page",
@@ -1322,7 +1324,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-empty",
                 title: "Empty Course",
@@ -1342,11 +1344,11 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
             expect(result).toBe(true);
 
             expect(
-                await CourseModel.findOne({ courseId: course.courseId }),
+                await CourseModel.queryOne({ courseId: course.courseId }),
             ).toBeNull();
 
             // Page might be marked as deleted or removed depending on implementation
-            const deletedPage = await PageModel.findOne({
+            const deletedPage = await PageModel.queryOne({
                 pageId: page.pageId,
             });
             // Either page is deleted or marked as deleted
@@ -1361,7 +1363,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 new Error("Media deletion failed"),
             );
 
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "test-page-media-error",
                 name: "Test Page",
@@ -1369,7 +1371,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 deleteable: true,
             });
 
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "test-course-media-error",
                 title: "Course with Media Error",
@@ -1399,7 +1401,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
             // Course should still be deleted
             expect(
-                await CourseModel.findOne({ courseId: course.courseId }),
+                await CourseModel.queryOne({ courseId: course.courseId }),
             ).toBeNull();
         });
     });

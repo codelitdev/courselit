@@ -20,17 +20,40 @@ const { permissions } = UIConstants;
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+const parseDate = (value?: Date | number | string): Date | undefined => {
+    if (!value) {
+        return undefined;
+    }
+
+    if (value instanceof Date) {
+        return Number.isNaN(value.getTime()) ? undefined : value;
+    }
+
+    const dateFromNumber =
+        typeof value === "number"
+            ? new Date(value)
+            : /^\d+$/.test(value)
+              ? new Date(Number(value))
+              : new Date(value);
+
+    return Number.isNaN(dateFromNumber.getTime()) ? undefined : dateFromNumber;
+};
+
 export const formattedLocaleDate = (
-    epochString?: Date | number,
+    epochString?: Date | number | string,
     monthFormat?: "short" | "long",
-) =>
-    epochString
-        ? new Date(Number(epochString)).toLocaleString("en-US", {
-              year: "numeric",
-              month: monthFormat || "short",
-              day: "numeric",
-          })
-        : "";
+) => {
+    const date = parseDate(epochString);
+    if (!date) {
+        return "";
+    }
+
+    return date.toLocaleString("en-US", {
+        year: "numeric",
+        month: monthFormat || "short",
+        day: "numeric",
+    });
+};
 
 export const formulateCourseUrl = (course: any, backend = "") =>
     `${backend}/${course.isBlog ? "post" : "course"}/${course.courseId}/${

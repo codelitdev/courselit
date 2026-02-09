@@ -67,7 +67,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
     beforeAll(async () => {
         // Create test domain with unique name to avoid conflicts with other tests
-        testDomain = await DomainModel.create({
+        testDomain = await DomainModel.createOne({
             name: duId("domain"),
             email: duEmail("domain"),
             tags: ["tag1", "tag2"],
@@ -76,7 +76,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
     beforeEach(async () => {
         // Create admin user (deleter)
-        adminUser = await UserModel.create({
+        adminUser = await UserModel.createUser({
             domain: testDomain._id,
             userId: duId("admin-user"),
             name: "Admin User",
@@ -92,7 +92,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
         });
 
         // Create target user (to be deleted)
-        targetUser = await UserModel.create({
+        targetUser = await UserModel.createUser({
             domain: testDomain._id,
             userId: duId("target-user"),
             name: "Target User",
@@ -125,38 +125,38 @@ describe("deleteUser - Comprehensive Test Suite", () => {
     afterEach(async () => {
         // Clean up all collections - only this test's data
         await Promise.all([
-            UserModel.deleteMany({ domain: testDomain._id }),
-            CourseModel.deleteMany({ domain: testDomain._id }),
-            PageModel.deleteMany({ domain: testDomain._id }),
-            EmailTemplateModel.deleteMany({ domain: testDomain._id }),
-            SequenceModel.deleteMany({ domain: testDomain._id }),
-            UserSegmentModel.deleteMany({ domain: testDomain._id }),
-            EmailDeliveryModel.deleteMany({ domain: testDomain._id }),
-            UserThemeModel.deleteMany({ domain: testDomain._id }),
-            PaymentPlanModel.deleteMany({ domain: testDomain._id }),
-            OngoingSequenceModel.deleteMany({ domain: testDomain._id }),
-            NotificationModel.deleteMany({ domain: testDomain._id }),
-            MailRequestStatusModel.deleteMany({ domain: testDomain._id }),
-            LessonEvaluationModel.deleteMany({ domain: testDomain._id }),
-            DownloadLinkModel.deleteMany({ domain: testDomain._id }),
-            CommunityReportModel.deleteMany({ domain: testDomain._id }),
-            CertificateModel.deleteMany({ domain: testDomain._id }),
-            ActivityModel.deleteMany({ domain: testDomain._id }),
-            EmailEventModel.deleteMany({ domain: testDomain._id }),
-            CommunityPostSubscriberModel.deleteMany({ domain: testDomain._id }),
-            CommunityPostModel.deleteMany({ domain: testDomain._id }),
-            CommunityCommentModel.deleteMany({ domain: testDomain._id }),
-            InvoiceModel.deleteMany({ domain: testDomain._id }),
-            MembershipModel.deleteMany({ domain: testDomain._id }),
-            CommunityModel.deleteMany({ domain: testDomain._id }),
-            LessonModel.deleteMany({ domain: testDomain._id }),
+            UserModel.removeMany({ domain: testDomain._id }),
+            CourseModel.removeMany({ domain: testDomain._id }),
+            PageModel.removeMany({ domain: testDomain._id }),
+            EmailTemplateModel.removeMany({ domain: testDomain._id }),
+            SequenceModel.removeMany({ domain: testDomain._id }),
+            UserSegmentModel.removeMany({ domain: testDomain._id }),
+            EmailDeliveryModel.removeMany({ domain: testDomain._id }),
+            UserThemeModel.removeMany({ domain: testDomain._id }),
+            PaymentPlanModel.removeMany({ domain: testDomain._id }),
+            OngoingSequenceModel.removeMany({ domain: testDomain._id }),
+            NotificationModel.removeMany({ domain: testDomain._id }),
+            MailRequestStatusModel.removeMany({ domain: testDomain._id }),
+            LessonEvaluationModel.removeMany({ domain: testDomain._id }),
+            DownloadLinkModel.removeMany({ domain: testDomain._id }),
+            CommunityReportModel.removeMany({ domain: testDomain._id }),
+            CertificateModel.removeMany({ domain: testDomain._id }),
+            ActivityModel.removeMany({ domain: testDomain._id }),
+            EmailEventModel.removeMany({ domain: testDomain._id }),
+            CommunityPostSubscriberModel.removeMany({ domain: testDomain._id }),
+            CommunityPostModel.removeMany({ domain: testDomain._id }),
+            CommunityCommentModel.removeMany({ domain: testDomain._id }),
+            InvoiceModel.removeMany({ domain: testDomain._id }),
+            MembershipModel.removeMany({ domain: testDomain._id }),
+            CommunityModel.removeMany({ domain: testDomain._id }),
+            LessonModel.removeMany({ domain: testDomain._id }),
         ]);
 
         jest.clearAllMocks();
     });
 
     afterAll(async () => {
-        await DomainModel.deleteMany({ _id: testDomain._id });
+        await DomainModel.removeMany({ _id: testDomain._id });
     });
 
     // ============================================
@@ -172,7 +172,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
         });
 
         it("should require manageUsers permission", async () => {
-            const unauthorizedUser = await UserModel.create({
+            const unauthorizedUser = await UserModel.createUser({
                 domain: testDomain._id,
                 userId: duId("unauth-user"),
                 email: duEmail("unauth"),
@@ -209,13 +209,13 @@ describe("deleteUser - Comprehensive Test Suite", () => {
         it("should prevent deletion of last user with critical permission", async () => {
             // Make target user the only one with manageSite permission
             targetUser.permissions = [permissions.manageSite];
-            await targetUser.save();
+            await UserModel.saveOne(targetUser);
 
             // Remove manageSite from admin
             adminUser.permissions = adminUser.permissions.filter(
                 (p: string) => p !== permissions.manageSite,
             );
-            await adminUser.save();
+            await UserModel.saveOne(adminUser);
 
             await expect(
                 deleteUser(targetUser.userId, mockCtx),
@@ -229,7 +229,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
     describe("Business Entity Migration", () => {
         it("should migrate course ownership to deleter", async () => {
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "du-course-mig-123",
                 title: "Test Course",
@@ -245,14 +245,14 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const updatedCourse = await CourseModel.findOne({
+            const updatedCourse = await CourseModel.queryOne({
                 courseId: course.courseId,
             });
             expect(updatedCourse?.creatorId).toBe(adminUser.userId);
         });
 
         it("should migrate course pages to deleter", async () => {
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "du-course-123",
                 title: "Test Course",
@@ -266,7 +266,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 pageId: "du-page-123",
             });
 
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: testDomain._id,
                 pageId: "du-page-123",
                 type: constants.product,
@@ -278,14 +278,14 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const updatedPage = await PageModel.findOne({
+            const updatedPage = await PageModel.queryOne({
                 pageId: page.pageId,
             });
             expect(updatedPage?.creatorId).toBe(adminUser.userId);
         });
 
         it("should migrate email templates to deleter", async () => {
-            const template = await EmailTemplateModel.create({
+            const template = await EmailTemplateModel.createOne({
                 domain: testDomain._id,
                 templateId: "du-template-123",
                 title: "Test Template",
@@ -303,14 +303,14 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const updatedTemplate = await EmailTemplateModel.findOne({
+            const updatedTemplate = await EmailTemplateModel.queryOne({
                 templateId: template.templateId,
             });
             expect(updatedTemplate?.creatorId).toBe(adminUser.userId);
         });
 
         it("should migrate sequences to deleter", async () => {
-            const sequence = await SequenceModel.create({
+            const sequence = await SequenceModel.createOne({
                 domain: testDomain._id,
                 sequenceId: "du-seq-123",
                 title: "Test Sequence",
@@ -323,7 +323,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const updatedSequence = await SequenceModel.findOne({
+            const updatedSequence = await SequenceModel.queryOne({
                 sequenceId: sequence.sequenceId,
             });
             expect(updatedSequence?.creatorId).toBe(adminUser.userId);
@@ -332,7 +332,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
         });
 
         it("should migrate user segments to deleter", async () => {
-            const segment = await UserSegmentModel.create({
+            const segment = await UserSegmentModel.createOne({
                 domain: testDomain._id,
                 segmentId: "seg-123",
                 userId: targetUser.userId,
@@ -342,14 +342,14 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const updatedSegment = await UserSegmentModel.findOne({
+            const updatedSegment = await UserSegmentModel.queryOne({
                 segmentId: segment.segmentId,
             });
             expect(updatedSegment?.userId).toBe(adminUser.userId);
         });
 
         it("should migrate user themes to deleter", async () => {
-            const theme = await UserThemeModel.create({
+            const theme = await UserThemeModel.createOne({
                 domain: testDomain._id,
                 themeId: "theme-123",
                 userId: targetUser.userId,
@@ -371,14 +371,14 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const updatedTheme = await UserThemeModel.findOne({
+            const updatedTheme = await UserThemeModel.queryOne({
                 themeId: theme.themeId,
             });
             expect(updatedTheme?.userId).toBe(adminUser.userId);
         });
 
         it("should migrate payment plans to deleter", async () => {
-            const plan = await PaymentPlanModel.create({
+            const plan = await PaymentPlanModel.createOne({
                 domain: testDomain._id,
                 planId: "plan-123",
                 userId: targetUser.userId,
@@ -393,14 +393,14 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const updatedPlan = await PaymentPlanModel.findOne({
+            const updatedPlan = await PaymentPlanModel.queryOne({
                 planId: plan.planId,
             });
             expect(updatedPlan?.userId).toBe(adminUser.userId);
         });
 
         it("should migrate lessons to deleter", async () => {
-            const lesson = await LessonModel.create({
+            const lesson = await LessonModel.createOne({
                 domain: testDomain._id,
                 lessonId: "lesson-123",
                 title: "Test Lesson",
@@ -415,21 +415,21 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const updatedLesson = await LessonModel.findOne({
+            const updatedLesson = await LessonModel.queryOne({
                 lessonId: lesson.lessonId,
             });
             expect(updatedLesson?.creatorId).toBe(adminUser.userId);
         });
 
         it("should transfer community moderator role to deleter", async () => {
-            const community = await CommunityModel.create({
+            const community = await CommunityModel.createOne({
                 domain: testDomain._id,
                 communityId: "comm-123",
                 name: "Test Community",
                 pageId: "du-page-comm-123",
             });
 
-            await MembershipModel.create({
+            await MembershipModel.createOne({
                 domain: testDomain._id,
                 membershipId: "mem-123",
                 userId: targetUser.userId,
@@ -444,7 +444,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const newModeratorMembership = await MembershipModel.findOne({
+            const newModeratorMembership = await MembershipModel.queryOne({
                 userId: adminUser.userId,
                 entityId: community.communityId,
                 entityType: Constants.MembershipEntityType.COMMUNITY,
@@ -460,7 +460,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
         });
 
         it("should upgrade existing membership when transferring moderator role", async () => {
-            const community = await CommunityModel.create({
+            const community = await CommunityModel.createOne({
                 domain: testDomain._id,
                 communityId: "comm-123",
                 name: "Test Community",
@@ -468,7 +468,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             });
 
             // Target user is moderator
-            await MembershipModel.create({
+            await MembershipModel.createOne({
                 domain: testDomain._id,
                 membershipId: "mem-target",
                 userId: targetUser.userId,
@@ -482,7 +482,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             });
 
             // Admin already has regular membership
-            const existingMembership = await MembershipModel.create({
+            const existingMembership = await MembershipModel.createOne({
                 domain: testDomain._id,
                 membershipId: "mem-admin",
                 userId: adminUser.userId,
@@ -496,7 +496,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const updatedMembership = await MembershipModel.findOne({
+            const updatedMembership = await MembershipModel.queryOne({
                 membershipId: existingMembership.membershipId,
             });
 
@@ -508,7 +508,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             );
 
             // Target's membership should be deleted
-            const targetMembership = await MembershipModel.findOne({
+            const targetMembership = await MembershipModel.queryOne({
                 membershipId: "mem-target",
             });
             expect(targetMembership).toBeNull();
@@ -521,7 +521,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
     describe("Personal Data Cleanup", () => {
         it("should delete user's notifications (received)", async () => {
-            await NotificationModel.create({
+            await NotificationModel.createOne({
                 domain: testDomain._id,
                 notificationId: "notif-1",
                 userId: DU_OTHER_USER_ID,
@@ -533,14 +533,14 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const notifications = await NotificationModel.find({
+            const notifications = await NotificationModel.query({
                 forUserId: targetUser.userId,
             });
             expect(notifications).toHaveLength(0);
         });
 
         it("should delete user's notifications (created)", async () => {
-            await NotificationModel.create({
+            await NotificationModel.createOne({
                 domain: testDomain._id,
                 notificationId: "notif-2",
                 userId: targetUser.userId,
@@ -552,14 +552,14 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const notifications = await NotificationModel.find({
+            const notifications = await NotificationModel.query({
                 userId: targetUser.userId,
             });
             expect(notifications).toHaveLength(0);
         });
 
         it("should delete mail request status", async () => {
-            await MailRequestStatusModel.create({
+            await MailRequestStatusModel.createOne({
                 domain: testDomain._id,
                 userId: targetUser.userId,
                 reason: "test-reason",
@@ -568,14 +568,14 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const statuses = await MailRequestStatusModel.find({
+            const statuses = await MailRequestStatusModel.query({
                 userId: targetUser.userId,
             });
             expect(statuses).toHaveLength(0);
         });
 
         it("should delete lesson evaluations", async () => {
-            await LessonEvaluationModel.create({
+            await LessonEvaluationModel.createOne({
                 domain: testDomain._id,
                 userId: targetUser.userId,
                 lessonId: "lesson-123",
@@ -586,14 +586,14 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const evaluations = await LessonEvaluationModel.find({
+            const evaluations = await LessonEvaluationModel.query({
                 userId: targetUser.userId,
             });
             expect(evaluations).toHaveLength(0);
         });
 
         it("should delete download links", async () => {
-            await DownloadLinkModel.create({
+            await DownloadLinkModel.createOne({
                 domain: testDomain._id,
                 userId: targetUser.userId,
                 courseId: "du-course-123",
@@ -604,14 +604,14 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const links = await DownloadLinkModel.find({
+            const links = await DownloadLinkModel.query({
                 userId: targetUser.userId,
             });
             expect(links).toHaveLength(0);
         });
 
         it("should delete community reports", async () => {
-            await CommunityReportModel.create({
+            await CommunityReportModel.createOne({
                 domain: testDomain._id,
                 userId: targetUser.userId,
                 communityId: "comm-123",
@@ -623,7 +623,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const reports = await CommunityReportModel.find({
+            const reports = await CommunityReportModel.query({
                 userId: targetUser.userId,
             });
             expect(reports).toHaveLength(0);
@@ -631,7 +631,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
         it("should delete certificates", async () => {
             const uniqueId = Date.now();
-            await CertificateModel.create({
+            await CertificateModel.createOne({
                 domain: testDomain._id,
                 certificateId: `cert-${uniqueId}`,
                 userId: targetUser.userId,
@@ -640,14 +640,14 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const certificates = await CertificateModel.find({
+            const certificates = await CertificateModel.query({
                 userId: targetUser.userId,
             });
             expect(certificates).toHaveLength(0);
         });
 
         it("should delete activity logs", async () => {
-            await ActivityModel.create({
+            await ActivityModel.createOne({
                 domain: testDomain._id,
                 userId: targetUser.userId,
                 type: Constants.ActivityType.USER_CREATED,
@@ -655,14 +655,14 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const activities = await ActivityModel.find({
+            const activities = await ActivityModel.query({
                 userId: targetUser.userId,
             });
             expect(activities).toHaveLength(0);
         });
 
         it("should delete email events", async () => {
-            await EmailEventModel.create({
+            await EmailEventModel.createOne({
                 domain: testDomain._id,
                 userId: targetUser.userId,
                 sequenceId: "du-seq-123",
@@ -672,14 +672,14 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const events = await EmailEventModel.find({
+            const events = await EmailEventModel.query({
                 userId: targetUser.userId,
             });
             expect(events).toHaveLength(0);
         });
 
         it("should delete community post subscribers", async () => {
-            await CommunityPostSubscriberModel.create({
+            await CommunityPostSubscriberModel.createOne({
                 domain: testDomain._id,
                 userId: targetUser.userId,
                 postId: "post-123",
@@ -688,7 +688,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const subscribers = await CommunityPostSubscriberModel.find({
+            const subscribers = await CommunityPostSubscriberModel.query({
                 userId: targetUser.userId,
             });
             expect(subscribers).toHaveLength(0);
@@ -705,7 +705,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
         });
 
         it("should remove user from post likes arrays", async () => {
-            await CommunityPostModel.create({
+            await CommunityPostModel.createOne({
                 domain: testDomain._id,
                 postId: "post-123",
                 userId: DU_OTHER_USER_ID,
@@ -717,7 +717,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const post = await CommunityPostModel.findOne({
+            const post = await CommunityPostModel.queryOne({
                 postId: "post-123",
             });
             expect(post?.likes).not.toContain(targetUser.userId);
@@ -725,7 +725,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
         });
 
         it("should remove user from comment likes arrays", async () => {
-            await CommunityCommentModel.create({
+            await CommunityCommentModel.createOne({
                 domain: testDomain._id,
                 commentId: "comment-123",
                 postId: "post-123",
@@ -738,7 +738,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const comment = await CommunityCommentModel.findOne({
+            const comment = await CommunityCommentModel.queryOne({
                 commentId: "comment-123",
             });
             expect(comment?.likes).not.toContain(targetUser.userId);
@@ -746,7 +746,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
         });
 
         it("should remove user from reply likes arrays", async () => {
-            await CommunityCommentModel.create({
+            await CommunityCommentModel.createOne({
                 domain: testDomain._id,
                 commentId: "comment-123",
                 postId: "post-123",
@@ -767,7 +767,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const comment = await CommunityCommentModel.findOne({
+            const comment = await CommunityCommentModel.queryOne({
                 commentId: "comment-123",
             });
             const reply = comment?.replies[0];
@@ -776,7 +776,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
         });
 
         it("should delete memberships and associated invoices", async () => {
-            const membership = await MembershipModel.create({
+            const membership = await MembershipModel.createOne({
                 domain: testDomain._id,
                 membershipId: "mem-123",
                 userId: targetUser.userId,
@@ -787,7 +787,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 status: Constants.MembershipStatus.ACTIVE,
             });
 
-            await InvoiceModel.create({
+            await InvoiceModel.createOne({
                 domain: testDomain._id,
                 invoiceId: "inv-123",
                 membershipId: membership.membershipId,
@@ -800,12 +800,12 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const memberships = await MembershipModel.find({
+            const memberships = await MembershipModel.query({
                 userId: targetUser.userId,
             });
             expect(memberships).toHaveLength(0);
 
-            const invoices = await InvoiceModel.find({
+            const invoices = await InvoiceModel.query({
                 membershipId: membership.membershipId,
             });
             expect(invoices).toHaveLength(0);
@@ -818,7 +818,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 cancel: mockCancel,
             });
 
-            const membership = await MembershipModel.create({
+            const membership = await MembershipModel.createOne({
                 domain: testDomain._id,
                 membershipId: "mem-sub-123",
                 userId: targetUser.userId,
@@ -831,7 +831,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 subscriptionMethod: "stripe",
             });
 
-            await InvoiceModel.create({
+            await InvoiceModel.createOne({
                 domain: testDomain._id,
                 invoiceId: "inv-sub-123",
                 membershipId: membership.membershipId,
@@ -848,14 +848,14 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             expect(mockCancel).toHaveBeenCalledWith("sub_stripe_123");
 
             // Verify membership was deleted
-            const memberships = await MembershipModel.find({
+            const memberships = await MembershipModel.query({
                 userId: targetUser.userId,
                 membershipId: membership.membershipId,
             });
             expect(memberships).toHaveLength(0);
 
             // Verify invoices were deleted
-            const invoices = await InvoiceModel.find({
+            const invoices = await InvoiceModel.query({
                 membershipId: membership.membershipId,
             });
             expect(invoices).toHaveLength(0);
@@ -870,7 +870,9 @@ describe("deleteUser - Comprehensive Test Suite", () => {
         it("should delete the user document", async () => {
             await deleteUser(targetUser.userId, mockCtx);
 
-            const user = await UserModel.findOne({ userId: targetUser.userId });
+            const user = await UserModel.queryOne({
+                userId: targetUser.userId,
+            });
             expect(user).toBeNull();
         });
     });
@@ -881,7 +883,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
     describe("Array & Reference Cleanup", () => {
         it("should remove user from sequence entrants", async () => {
-            await SequenceModel.create({
+            await SequenceModel.createOne({
                 domain: testDomain._id,
                 sequenceId: "du-seq-123",
                 title: "Test Sequence",
@@ -894,7 +896,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const sequence = await SequenceModel.findOne({
+            const sequence = await SequenceModel.queryOne({
                 sequenceId: "du-seq-123",
             });
             expect(sequence?.entrants).not.toContain(targetUser.userId);
@@ -902,7 +904,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
         });
 
         it("should remove user from course customers", async () => {
-            await CourseModel.create({
+            await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "du-course-123",
                 title: "Test Course",
@@ -918,7 +920,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const course = await CourseModel.findOne({
+            const course = await CourseModel.queryOne({
                 courseId: "du-course-123",
             });
             expect(course?.customers).not.toContain(targetUser.userId);
@@ -933,7 +935,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
     describe("Integration Tests", () => {
         it("should handle complex scenario with multiple entities", async () => {
             // Create course
-            const course = await CourseModel.create({
+            const course = await CourseModel.createOne({
                 domain: testDomain._id,
                 courseId: "du-course-123",
                 title: "Test Course",
@@ -948,7 +950,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             });
 
             // Create community
-            const community = await CommunityModel.create({
+            const community = await CommunityModel.createOne({
                 domain: testDomain._id,
                 communityId: "comm-123",
                 name: "Test Community",
@@ -956,7 +958,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             });
 
             // Create membership
-            await MembershipModel.create({
+            await MembershipModel.createOne({
                 domain: testDomain._id,
                 membershipId: "mem-123",
                 userId: targetUser.userId,
@@ -970,7 +972,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             });
 
             // Create activity
-            await ActivityModel.create({
+            await ActivityModel.createOne({
                 domain: testDomain._id,
                 userId: targetUser.userId,
                 type: "purchased",
@@ -978,7 +980,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             });
 
             // Create notifications
-            await NotificationModel.create({
+            await NotificationModel.createOne({
                 domain: testDomain._id,
                 notificationId: "notif-1",
                 userId: targetUser.userId,
@@ -991,14 +993,14 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             await deleteUser(targetUser.userId, mockCtx);
 
             // Verify course migrated
-            const updatedCourse = await CourseModel.findOne({
+            const updatedCourse = await CourseModel.queryOne({
                 courseId: course.courseId,
             });
             expect(updatedCourse?.creatorId).toBe(adminUser.userId);
             expect(updatedCourse?.customers).not.toContain(targetUser.userId);
 
             // Verify community moderator migrated
-            const moderatorMembership = await MembershipModel.findOne({
+            const moderatorMembership = await MembershipModel.queryOne({
                 userId: adminUser.userId,
                 entityId: community.communityId,
             });
@@ -1007,18 +1009,20 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             );
 
             // Verify personal data deleted
-            const activities = await ActivityModel.find({
+            const activities = await ActivityModel.query({
                 userId: targetUser.userId,
             });
             expect(activities).toHaveLength(0);
 
-            const notifications = await NotificationModel.find({
+            const notifications = await NotificationModel.query({
                 userId: targetUser.userId,
             });
             expect(notifications).toHaveLength(0);
 
             // Verify user deleted
-            const user = await UserModel.findOne({ userId: targetUser.userId });
+            const user = await UserModel.queryOne({
+                userId: targetUser.userId,
+            });
             expect(user).toBeNull();
 
             // Verify avatar deleted
@@ -1029,12 +1033,14 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             const result = await deleteUser(targetUser.userId, mockCtx);
 
             expect(result).toBe(true);
-            const user = await UserModel.findOne({ userId: targetUser.userId });
+            const user = await UserModel.queryOne({
+                userId: targetUser.userId,
+            });
             expect(user).toBeNull();
         });
 
         it("should handle user with subscription cancellation", async () => {
-            await MembershipModel.create({
+            await MembershipModel.createOne({
                 domain: testDomain._id,
                 membershipId: "mem-123",
                 userId: targetUser.userId,
@@ -1052,7 +1058,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             const { getPaymentMethodFromSettings } = require("@/payments-new");
             expect(getPaymentMethodFromSettings).toHaveBeenCalled();
 
-            const memberships = await MembershipModel.find({
+            const memberships = await MembershipModel.query({
                 userId: targetUser.userId,
             });
             expect(memberships).toHaveLength(0);

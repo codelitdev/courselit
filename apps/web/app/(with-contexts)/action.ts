@@ -4,7 +4,6 @@ import { auth } from "@/auth";
 import { getUser } from "@/graphql/users/logic";
 import { Profile, User } from "@courselit/common-models";
 import GQLContext from "@models/GQLContext";
-import { Types } from "mongoose";
 import { headers } from "next/headers";
 
 export async function getProfile(): Promise<Profile | null> {
@@ -48,6 +47,6 @@ export async function getProfile(): Promise<Profile | null> {
     }
 }
 
-function isSelf(user: any): user is User & { _id: Types.ObjectId } {
+function isSelf(user: any): user is User {
     return !!user?.userId;
 }

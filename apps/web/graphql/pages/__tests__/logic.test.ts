@@ -60,7 +60,7 @@ describe("updatePage media handling", () => {
     const orphanUrl = "https://cdn.test/uploads/orphan-block/main.png";
 
     beforeAll(async () => {
-        domain = await DomainModel.create({
+        domain = await DomainModel.createOne({
             name: `protected-media-domain-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
             email: "owner@test.com",
             sharedWidgets: {},
@@ -80,21 +80,21 @@ describe("updatePage media handling", () => {
             address: "https://protected.test",
         } as unknown as GQLContext;
 
-        await DomainModel.updateOne(
+        await DomainModel.patchOne(
             { _id: domain._id },
             { $set: { sharedWidgets: {}, draftSharedWidgets: {} } },
         );
 
-        await PageModel.deleteMany({ domain: domain._id });
+        await PageModel.removeMany({ domain: domain._id });
     });
 
     afterAll(async () => {
-        await PageModel.deleteMany({ domain: domain._id });
-        await DomainModel.deleteMany({ _id: domain._id });
+        await PageModel.removeMany({ domain: domain._id });
+        await DomainModel.removeMany({ _id: domain._id });
     });
 
     it("skips deleting media that still exists in the published layout", async () => {
-        const page = await PageModel.create({
+        const page = await PageModel.createOne({
             domain: ctx.subdomain._id,
             pageId: "layout-protection",
             type: constants.site,
@@ -155,16 +155,16 @@ describe("updatePage media handling", () => {
         expect(deleteMediaMock).toHaveBeenCalledWith("orphan-block");
         expect(deleteMediaMock).not.toHaveBeenCalledWith("protected-block");
 
-        const updatedPage = (await PageModel.findOne({
+        const updatedPage = (await PageModel.queryOne({
             domain: ctx.subdomain._id,
             pageId: page.pageId,
-        }).lean()) as unknown as Page | null;
+        })) as unknown as Page | null;
 
         expect(updatedPage?.draftLayout).toHaveLength(2);
     });
 
     it("still deletes media that is no longer referenced anywhere", async () => {
-        const page = await PageModel.create({
+        const page = await PageModel.createOne({
             domain: ctx.subdomain._id,
             pageId: "layout-cleanup",
             type: constants.site,
@@ -203,7 +203,7 @@ describe("updatePage media handling", () => {
     });
 
     it("throws when requester lacks permission", async () => {
-        const page = await PageModel.create({
+        const page = await PageModel.createOne({
             domain: ctx.subdomain._id,
             pageId: "permission-check",
             type: constants.site,
@@ -241,7 +241,7 @@ describe("getPage entity validation", () => {
     let ctx: GQLContext;
 
     beforeAll(async () => {
-        domain = await DomainModel.create({
+        domain = await DomainModel.createOne({
             name: `entity-validation-domain-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
             email: "owner@test.com",
             sharedWidgets: {},
@@ -258,28 +258,28 @@ describe("getPage entity validation", () => {
             address: "https://entity-validation.test",
         } as unknown as GQLContext;
 
-        await DomainModel.updateOne(
+        await DomainModel.patchOne(
             { _id: domain._id },
             { $set: { sharedWidgets: {}, draftSharedWidgets: {} } },
         );
 
-        await PageModel.deleteMany({ domain: domain._id });
-        await Course.deleteMany({ domain: domain._id });
-        await CommunityModel.deleteMany({ domain: domain._id });
+        await PageModel.removeMany({ domain: domain._id });
+        await Course.removeMany({ domain: domain._id });
+        await CommunityModel.removeMany({ domain: domain._id });
     });
 
     afterAll(async () => {
-        await PageModel.deleteMany({ domain: domain._id });
-        await Course.deleteMany({ domain: domain._id });
-        await CommunityModel.deleteMany({ domain: domain._id });
-        await DomainModel.deleteMany({ _id: domain._id });
+        await PageModel.removeMany({ domain: domain._id });
+        await Course.removeMany({ domain: domain._id });
+        await CommunityModel.removeMany({ domain: domain._id });
+        await DomainModel.removeMany({ _id: domain._id });
     });
 
     describe("product page validation", () => {
         it("returns the page when course exists and is published", async () => {
             const courseId = "test-course-id";
 
-            await Course.create({
+            await Course.createOne({
                 courseId,
                 domain: ctx.subdomain._id,
                 published: true,
@@ -292,7 +292,7 @@ describe("getPage entity validation", () => {
                 cost: 0,
             });
 
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "product-page-1",
                 type: constants.product,
@@ -311,7 +311,7 @@ describe("getPage entity validation", () => {
         });
 
         it("returns undefined when course does not exist", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "product-page-2",
                 type: constants.product,
@@ -329,7 +329,7 @@ describe("getPage entity validation", () => {
         it("returns undefined when course exists but is not published", async () => {
             const courseId = "unpublished-course-id";
 
-            await Course.create({
+            await Course.createOne({
                 courseId,
                 domain: ctx.subdomain._id,
                 published: false,
@@ -342,7 +342,7 @@ describe("getPage entity validation", () => {
                 cost: 0,
             });
 
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "product-page-3",
                 type: constants.product,
@@ -358,7 +358,7 @@ describe("getPage entity validation", () => {
         });
 
         it("returns undefined when course belongs to different domain", async () => {
-            const otherDomain = await DomainModel.create({
+            const otherDomain = await DomainModel.createOne({
                 name: "other-domain",
                 email: "other@test.com",
                 sharedWidgets: {},
@@ -367,7 +367,7 @@ describe("getPage entity validation", () => {
 
             const courseId = "different-domain-course";
 
-            await Course.create({
+            await Course.createOne({
                 courseId,
                 domain: otherDomain._id,
                 published: true,
@@ -380,7 +380,7 @@ describe("getPage entity validation", () => {
                 cost: 0,
             });
 
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "product-page-4",
                 type: constants.product,
@@ -395,8 +395,8 @@ describe("getPage entity validation", () => {
             expect(result).toBeUndefined();
 
             // Clean up the extra domain created in this test
-            await Course.deleteMany({ domain: otherDomain._id });
-            await DomainModel.deleteOne({ _id: otherDomain._id });
+            await Course.removeMany({ domain: otherDomain._id });
+            await DomainModel.removeOne({ _id: otherDomain._id });
         });
     });
 
@@ -404,7 +404,7 @@ describe("getPage entity validation", () => {
         it("returns the page when community exists and is enabled", async () => {
             const communityId = "test-community-id";
 
-            await CommunityModel.create({
+            await CommunityModel.createOne({
                 communityId,
                 domain: ctx.subdomain._id,
                 enabled: true,
@@ -412,7 +412,7 @@ describe("getPage entity validation", () => {
                 pageId: "community-page-1",
             });
 
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "community-page-1",
                 type: constants.communityPage,
@@ -431,7 +431,7 @@ describe("getPage entity validation", () => {
         });
 
         it("returns undefined when community does not exist", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "community-page-2",
                 type: constants.communityPage,
@@ -449,7 +449,7 @@ describe("getPage entity validation", () => {
         it("returns undefined when community exists but is not enabled", async () => {
             const communityId = "disabled-community-id";
 
-            await CommunityModel.create({
+            await CommunityModel.createOne({
                 communityId,
                 domain: ctx.subdomain._id,
                 enabled: false,
@@ -457,7 +457,7 @@ describe("getPage entity validation", () => {
                 pageId: "community-page-3",
             });
 
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "community-page-3",
                 type: constants.communityPage,
@@ -473,7 +473,7 @@ describe("getPage entity validation", () => {
         });
 
         it("returns undefined when community belongs to different domain", async () => {
-            const otherDomain = await DomainModel.create({
+            const otherDomain = await DomainModel.createOne({
                 name: "other-community-domain",
                 email: "other-community@test.com",
                 sharedWidgets: {},
@@ -482,7 +482,7 @@ describe("getPage entity validation", () => {
 
             const communityId = "different-domain-community";
 
-            await CommunityModel.create({
+            await CommunityModel.createOne({
                 communityId,
                 domain: otherDomain._id,
                 enabled: true,
@@ -490,7 +490,7 @@ describe("getPage entity validation", () => {
                 pageId: "community-page-4",
             });
 
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "community-page-4",
                 type: constants.communityPage,
@@ -505,8 +505,8 @@ describe("getPage entity validation", () => {
             expect(result).toBeUndefined();
 
             // Clean up the extra domain created in this test
-            await CommunityModel.deleteMany({ domain: otherDomain._id });
-            await DomainModel.deleteOne({ _id: otherDomain._id });
+            await CommunityModel.removeMany({ domain: otherDomain._id });
+            await DomainModel.removeOne({ _id: otherDomain._id });
         });
     });
 
@@ -514,7 +514,7 @@ describe("getPage entity validation", () => {
         it("admin can view unpublished product page", async () => {
             const courseId = "admin-course-id";
 
-            await Course.create({
+            await Course.createOne({
                 courseId,
                 domain: ctx.subdomain._id,
                 published: false,
@@ -527,7 +527,7 @@ describe("getPage entity validation", () => {
                 cost: 0,
             });
 
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "admin-product-page",
                 type: constants.product,
@@ -557,7 +557,7 @@ describe("getPage entity validation", () => {
         it("admin can view disabled community page", async () => {
             const communityId = "admin-community-id";
 
-            await CommunityModel.create({
+            await CommunityModel.createOne({
                 communityId,
                 domain: ctx.subdomain._id,
                 enabled: false,
@@ -565,7 +565,7 @@ describe("getPage entity validation", () => {
                 pageId: "admin-community-page",
             });
 
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "admin-community-page",
                 type: constants.communityPage,
@@ -619,7 +619,7 @@ describe("Media cleanup", () => {
     };
 
     beforeAll(async () => {
-        domain = await DomainModel.create({
+        domain = await DomainModel.createOne({
             name: `media-cleanup-domain-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
             email: "owner@test.com",
             sharedWidgets: {},
@@ -639,17 +639,17 @@ describe("Media cleanup", () => {
             address: "https://media-cleanup.test",
         } as unknown as GQLContext;
 
-        await PageModel.deleteMany({ domain: domain._id });
+        await PageModel.removeMany({ domain: domain._id });
     });
 
     afterAll(async () => {
-        await PageModel.deleteMany({ domain: domain._id });
-        await DomainModel.deleteMany({ _id: domain._id });
+        await PageModel.removeMany({ domain: domain._id });
+        await DomainModel.removeMany({ _id: domain._id });
     });
 
     it("updating title will not call deleteMedia", async () => {
         // Setup: Page with media in draft layout
-        const page = await PageModel.create({
+        const page = await PageModel.createOne({
             domain: ctx.subdomain._id,
             pageId: "bug-partial-update",
             type: constants.site,
@@ -684,7 +684,7 @@ describe("Media cleanup", () => {
 
     it("orphans social image when replaced", async () => {
         // Setup: Page with social image ONLY in draft
-        const page = await PageModel.create({
+        const page = await PageModel.createOne({
             domain: ctx.subdomain._id,
             pageId: "bug-social-image-orphan",
             type: constants.site,
@@ -709,7 +709,7 @@ describe("Media cleanup", () => {
 
     it("existing social image is deleted when publishing", async () => {
         // Setup: Page with media1 as socialImage, and layout awaiting publish with media2 as new socialImage
-        const page = await PageModel.create({
+        const page = await PageModel.createOne({
             domain: ctx.subdomain._id,
             pageId: "bug-publish-social-orphan",
             type: constants.site,
@@ -730,7 +730,7 @@ describe("Media cleanup", () => {
 
     describe("updatePage media cleanup", () => {
         it("deletes media removed from draft layout when not in published layout", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "update-removes-media",
                 type: constants.site,
@@ -763,7 +763,7 @@ describe("Media cleanup", () => {
         });
 
         it("does NOT delete media still present in published layout", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "update-protects-published",
                 type: constants.site,
@@ -806,7 +806,7 @@ describe("Media cleanup", () => {
         });
 
         it("deletes old draftSocialImage when replaced with new one", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "update-replaces-social",
                 type: constants.site,
@@ -827,7 +827,7 @@ describe("Media cleanup", () => {
         });
 
         it("does NOT delete draftSocialImage if it is the same as published socialImage", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "update-protects-published-social",
                 type: constants.site,
@@ -849,7 +849,7 @@ describe("Media cleanup", () => {
         });
 
         it("handles multiple media in a single widget", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "update-multiple-media",
                 type: constants.site,
@@ -893,7 +893,7 @@ describe("Media cleanup", () => {
         });
 
         it("handles deeply nested media in widget settings", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "update-nested-media",
                 type: constants.site,
@@ -936,7 +936,7 @@ describe("Media cleanup", () => {
         });
 
         it("does not delete any media when updating only metadata (title/description)", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "update-metadata-only",
                 type: constants.site,
@@ -979,7 +979,7 @@ describe("Media cleanup", () => {
 
     describe("publish media cleanup", () => {
         it("deletes media from old published layout not in new published layout", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "publish-removes-media",
                 type: constants.site,
@@ -1005,7 +1005,7 @@ describe("Media cleanup", () => {
         });
 
         it("does NOT delete media that exists in both old and new layouts", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "publish-keeps-shared",
                 type: constants.site,
@@ -1049,7 +1049,7 @@ describe("Media cleanup", () => {
         });
 
         it("deletes old socialImage when replaced during publish", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "publish-replaces-social",
                 type: constants.site,
@@ -1068,7 +1068,7 @@ describe("Media cleanup", () => {
         });
 
         it("does NOT delete socialImage if it still exists in draftLayout", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "publish-social-in-layout",
                 type: constants.site,
@@ -1099,7 +1099,7 @@ describe("Media cleanup", () => {
             // Note: When draftLayout is empty, the layout is NOT copied (checked via `if (page.draftLayout.length)`)
             // However, the media diff computation still happens: currentPublished - nextPublished
             // With empty draftLayout, nextPublishedMedia is empty, so ALL currentPublishedMedia is deleted
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "publish-empty-layouts",
                 type: constants.site,
@@ -1126,7 +1126,7 @@ describe("Media cleanup", () => {
         });
 
         it("deletes multiple media removed during publish", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "publish-removes-multiple",
                 type: constants.site,
@@ -1173,7 +1173,7 @@ describe("Media cleanup", () => {
 
     describe("edge cases", () => {
         it("handles widget with no media settings", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "no-media-widget",
                 type: constants.site,
@@ -1204,7 +1204,7 @@ describe("Media cleanup", () => {
         });
 
         it("handles media URL with different file extensions", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "media-extensions",
                 type: constants.site,
@@ -1245,7 +1245,7 @@ describe("Media cleanup", () => {
         });
 
         it("does not crash when draftLayout is empty array", async () => {
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "empty-draft-layout",
                 type: constants.site,
@@ -1278,7 +1278,7 @@ describe("Media cleanup", () => {
 
         it("correctly identifies media IDs from complex URLs", async () => {
             const complexMediaId = "abc123def456";
-            const page = await PageModel.create({
+            const page = await PageModel.createOne({
                 domain: ctx.subdomain._id,
                 pageId: "complex-url",
                 type: constants.site,

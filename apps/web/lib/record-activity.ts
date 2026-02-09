@@ -3,7 +3,7 @@ import { error } from "../services/logger";
 
 export async function recordActivity(activity: Activity) {
     try {
-        const existingActivity = await ActivityModel.findOne({
+        const existingActivity = await ActivityModel.queryOne({
             domain: activity.domain,
             userId: activity.userId,
             type: activity.type,
@@ -14,7 +14,7 @@ export async function recordActivity(activity: Activity) {
             return;
         }
 
-        await ActivityModel.create(activity);
+        await ActivityModel.createOne(activity);
     } catch (err: any) {
         error(err.message, {
             stack: err.stack,

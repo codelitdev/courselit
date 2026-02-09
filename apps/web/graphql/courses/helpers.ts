@@ -155,14 +155,14 @@ export const setupCourse = async ({
     type: "course" | "download";
     ctx: GQLContext;
 }) => {
-    const page = await Page.create({
+    const page = await Page.createOne({
         domain: ctx.subdomain._id,
         name: title,
         creatorId: ctx.user.userId,
         pageId: slugify(title.toLowerCase()),
     });
 
-    const course = await CourseModel.create({
+    const course = await CourseModel.createOne({
         domain: ctx.subdomain._id,
         title: title,
         cost: 0,
@@ -181,7 +181,7 @@ export const setupCourse = async ({
     });
     page.entityId = course.courseId;
     page.layout = getInitialLayout(type);
-    await page.save();
+    await Page.saveOne(page);
 
     return course;
 };
@@ -193,7 +193,7 @@ export const setupBlog = async ({
     title: string;
     ctx: GQLContext;
 }) => {
-    const course = await CourseModel.create({
+    const course = await CourseModel.createOne({
         domain: ctx.subdomain._id,
         title: title,
         cost: 0,

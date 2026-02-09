@@ -43,7 +43,7 @@ export async function createSubscription(
 ): Promise<boolean> {
     try {
         const sanitizedEmail = email.toLowerCase();
-        let dbUser: User | null = await UserModel.findOne({
+        let dbUser: User | null = await UserModel.queryOne({
             email: sanitizedEmail,
             domain: ctx.subdomain._id,
         });
@@ -133,7 +133,7 @@ export async function createSequence(
                 filters: [],
             },
         };
-        const sequence = await SequenceModel.create(sequenceObj);
+        const sequence = await SequenceModel.createOne(sequenceObj);
         return sequence;
     } catch (e: any) {
         error(e.message, {
@@ -152,10 +152,10 @@ export async function getSequence(
 ): Promise<SequenceWithEntrantsCount | null> {
     checkIfAuthenticated(ctx);
 
-    const sequence = (await SequenceModel.findOne({
+    const sequence = (await SequenceModel.queryOne({
         sequenceId,
         domain: ctx.subdomain._id,
-    }).lean()) as SequenceWithEntrantsCount | null;
+    })) as SequenceWithEntrantsCount | null;
 
     if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
         throw new Error(responses.action_not_allowed);
@@ -191,7 +191,7 @@ export async function updateMail({
         throw new Error(responses.action_not_allowed);
     }
 
-    const sequence: AdminSequence | null = await SequenceModel.findOne({
+    const sequence: AdminSequence | null = await SequenceModel.queryOne({
         sequenceId,
         domain: ctx.subdomain._id,
     });
@@ -222,7 +222,7 @@ export async function updateMail({
         sequence.emails[0].delayInMillis = delayInMillis;
     }
 
-    await (sequence as any).save();
+    await SequenceModel.saveOne(sequence as any);
 
     return sequence;
 }
@@ -254,7 +254,7 @@ export async function updateSequence({
         throw new Error(responses.action_not_allowed);
     }
 
-    const sequence: AdminSequence | null = await SequenceModel.findOne({
+    const sequence: AdminSequence | null = await SequenceModel.queryOne({
         sequenceId,
         domain: ctx.subdomain._id,
     });
@@ -322,7 +322,7 @@ export async function updateSequence({
         sequence.trigger.data = triggerData;
     }
 
-    await (sequence as any).save();
+    await SequenceModel.saveOne(sequence as any);
 
     return sequence;
 }
@@ -380,7 +380,7 @@ export async function getSequenceCount({
         throw new Error(responses.action_not_allowed);
     }
 
-    return await SequenceModel.countDocuments({
+    return await SequenceModel.count({
         domain: ctx.subdomain._id,
         type,
     });
@@ -395,7 +395,7 @@ export async function getMailRequestStatus(
         throw new Error(responses.action_not_allowed);
     }
 
-    const status = await MailRequestStatusModel.findOne({
+    const status = await MailRequestStatusModel.queryOne({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
     });
@@ -410,16 +410,16 @@ export async function updateMailRequest(ctx: GQLContext, reason: string) {
         throw new Error(responses.action_not_allowed);
     }
 
-    let mailRequestStatus = await MailRequestStatusModel.findOne({
+    let mailRequestStatus = await MailRequestStatusModel.queryOne({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
     });
 
     if (mailRequestStatus) {
         mailRequestStatus.reason = reason;
-        await mailRequestStatus.save();
+        await MailRequestStatusModel.saveOne(mailRequestStatus);
     } else {
-        mailRequestStatus = await MailRequestStatusModel.create({
+        mailRequestStatus = await MailRequestStatusModel.createOne({
             domain: ctx.subdomain._id,
             userId: ctx.user.userId,
             reason,
@@ -450,7 +450,7 @@ export async function startSequence({
         throw new Error(responses.action_not_allowed);
     }
 
-    const sequence = await SequenceModel.findOne<Sequence>({
+    const sequence = await SequenceModel.queryOne<Sequence>({
         domain: ctx.subdomain._id,
         sequenceId,
     });
@@ -495,7 +495,7 @@ export async function startSequence({
     await addRule({ sequence, ctx });
 
     sequence.status = Constants.sequenceStatus[1];
-    await (sequence as any).save();
+    await SequenceModel.saveOne(sequence as any);
 
     return sequence;
 }
@@ -507,7 +507,7 @@ export async function pauseSequence({
     ctx: GQLContext;
     sequenceId: string;
 }): Promise<Sequence> {
-    const sequence = await SequenceModel.findOne({
+    const sequence = await SequenceModel.queryOne({
         domain: ctx.subdomain._id,
         sequenceId,
     });
@@ -530,7 +530,7 @@ export async function pauseSequence({
 
     await removeRule({ sequence, ctx });
     sequence.status = Constants.sequenceStatus[2];
-    await (sequence as any).save();
+    await SequenceModel.saveOne(sequence as any);
 
     return sequence;
 }
@@ -540,12 +540,12 @@ export async function sendCourseOverMail(
     email: string,
     ctx: GQLContext,
 ): Promise<boolean> {
-    const course = (await CourseModel.findOne({
+    const course = (await CourseModel.queryOne({
         courseId,
         domain: ctx.subdomain._id,
         published: true,
         leadMagnet: true,
-    }).lean()) as unknown as InternalCourse;
+    })) as unknown as InternalCourse;
 
     if (!course) {
         throw new Error(responses.item_not_found);
@@ -564,7 +564,7 @@ export async function sendCourseOverMail(
         throw new Error(responses.item_not_found);
     }
 
-    let dbUser: User | null = await UserModel.findOne({
+    let dbUser: User | null = await UserModel.queryOne({
         email,
         domain: ctx.subdomain._id,
     });
@@ -611,7 +611,7 @@ export async function deleteMailFromSequence({
         throw new Error(responses.action_not_allowed);
     }
 
-    const sequence = (await SequenceModel.findOne({
+    const sequence = (await SequenceModel.queryOne({
         sequenceId,
         domain: ctx.subdomain._id,
     })) as AdminSequence | null;
@@ -635,7 +635,7 @@ export async function deleteMailFromSequence({
         (existingEmailId) => existingEmailId !== emailId,
     );
 
-    await (sequence as any).save();
+    await SequenceModel.saveOne(sequence as any);
 
     return sequence;
 }
@@ -650,7 +650,7 @@ export async function addMailToSequence(
         throw new Error(responses.action_not_allowed);
     }
 
-    const sequence = (await SequenceModel.findOne({
+    const sequence = (await SequenceModel.queryOne({
         sequenceId,
         domain: ctx.subdomain._id,
     })) as AdminSequence | null;
@@ -683,7 +683,7 @@ export async function addMailToSequence(
     sequence.emails.push(email);
     sequence.emailsOrder.push(emailId);
 
-    await (sequence as any).save();
+    await SequenceModel.saveOne(sequence as any);
 
     return sequence;
 }
@@ -719,7 +719,7 @@ export async function updateMailInSequence({
         throw new Error(responses.action_not_allowed);
     }
 
-    const sequence: AdminSequence | null = await SequenceModel.findOne({
+    const sequence: AdminSequence | null = await SequenceModel.queryOne({
         sequenceId,
         domain: ctx.subdomain._id,
     });
@@ -767,7 +767,7 @@ export async function updateMailInSequence({
 
     verifyMandatoryTags(email.content?.content || []);
 
-    await (sequence as any).save();
+    await SequenceModel.saveOne(sequence as any);
 
     return sequence;
 }
@@ -830,7 +830,7 @@ export async function getEmailSentCount({
         throw new Error(responses.action_not_allowed);
     }
 
-    const sequence = await SequenceModel.findOne({
+    const sequence = await SequenceModel.queryOne({
         domain: ctx.subdomain._id,
         sequenceId,
     });
@@ -839,7 +839,7 @@ export async function getEmailSentCount({
         throw new Error(responses.item_not_found);
     }
 
-    const emailCount = await EmailDeliveryModel.countDocuments({
+    const emailCount = await EmailDeliveryModel.count({
         domain: ctx.subdomain._id,
         sequenceId,
     });
@@ -860,7 +860,7 @@ export async function getSequenceOpenRate({
         throw new Error(responses.action_not_allowed);
     }
 
-    const sequence = await SequenceModel.findOne({
+    const sequence = await SequenceModel.queryOne({
         domain: ctx.subdomain._id,
         sequenceId,
     });
@@ -890,10 +890,13 @@ export async function getSequenceOpenRate({
 
     const uniqueOpenersCount = openEvents.length;
 
-    const uniqueRecipientsCount = await EmailDeliveryModel.distinct("userId", {
-        domain: ctx.subdomain._id,
-        sequenceId,
-    });
+    const uniqueRecipientsCount = await EmailDeliveryModel.distinctValues(
+        "userId",
+        {
+            domain: ctx.subdomain._id,
+            sequenceId,
+        },
+    );
 
     return (uniqueOpenersCount / uniqueRecipientsCount.length) * 100 || 0;
 }
@@ -911,7 +914,7 @@ export async function getSequenceClickThroughRate({
         throw new Error(responses.action_not_allowed);
     }
 
-    const sequence = await SequenceModel.findOne({
+    const sequence = await SequenceModel.queryOne({
         domain: ctx.subdomain._id,
         sequenceId,
     });
@@ -940,10 +943,13 @@ export async function getSequenceClickThroughRate({
 
     const uniqueClickerCount = clickEvents.length;
 
-    const uniqueRecipientsCount = await EmailDeliveryModel.distinct("userId", {
-        domain: ctx.subdomain._id,
-        sequenceId,
-    });
+    const uniqueRecipientsCount = await EmailDeliveryModel.distinctValues(
+        "userId",
+        {
+            domain: ctx.subdomain._id,
+            sequenceId,
+        },
+    );
 
     return (uniqueClickerCount / uniqueRecipientsCount.length) * 100 || 0;
 }
@@ -965,7 +971,7 @@ export async function getSubscribers({
         throw new Error(responses.action_not_allowed);
     }
 
-    const sequence = await SequenceModel.findOne({
+    const sequence = await SequenceModel.queryOne({
         domain: ctx.subdomain._id,
         sequenceId,
     });
@@ -976,7 +982,7 @@ export async function getSubscribers({
 
     const skip = (page - 1) * limit;
 
-    const subscribers = await UserModel.find({
+    const subscribers = await UserModel.query<User>({
         domain: ctx.subdomain._id,
         userId: { $in: sequence.entrants },
     })
@@ -999,7 +1005,7 @@ export async function getSubscribersCount({
         throw new Error(responses.action_not_allowed);
     }
 
-    const sequence = await SequenceModel.findOne({
+    const sequence = await SequenceModel.queryOne({
         domain: ctx.subdomain._id,
         sequenceId,
     });
@@ -1008,7 +1014,7 @@ export async function getSubscribersCount({
         throw new Error(responses.item_not_found);
     }
 
-    const count = await UserModel.countDocuments({
+    const count = await UserModel.count({
         domain: ctx.subdomain._id,
         userId: { $in: sequence.entrants },
     });

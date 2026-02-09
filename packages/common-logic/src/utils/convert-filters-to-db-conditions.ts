@@ -52,6 +52,8 @@ type DBCondition =
     | SignedUpCondition
     | TagCondition;
 
+type MembershipLookupModel = Pick<typeof mongoose.Model<Membership>, "find">;
+
 export async function convertFiltersToDBConditions({
     domain,
     filter,
@@ -59,7 +61,7 @@ export async function convertFiltersToDBConditions({
 }: {
     domain: mongoose.Types.ObjectId;
     filter: UserFilterWithAggregator;
-    membershipModel: typeof mongoose.Model<Membership>;
+    membershipModel: MembershipLookupModel;
 }): Promise<
     | {
           $and: DBCondition[];

@@ -1,25 +1,28 @@
 import { responses } from "../config/strings";
 import constants from "../config/constants";
-import mongoose from "mongoose";
 import type GQLContext from "../models/GQLContext";
 
 export const checkIfAuthenticated = (ctx: GQLContext) => {
     if (!ctx.user) throw new Error(responses.request_not_authenticated);
 };
 
-const ObjectId = mongoose.Types.ObjectId;
+const OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/;
+
+const isObjectIdLike = (value: unknown) =>
+    typeof value === "string" && OBJECT_ID_REGEX.test(value);
 
 export const checkOwnership =
     (Model: any) => async (id: string, ctx: GQLContext) => {
-        const item = await Model.findOne({
+        const item = await Model.queryOne({
             _id: id,
             domain: ctx.subdomain._id,
         });
+        const creatorId = item?.creatorId ? String(item.creatorId) : "";
         if (
             !item ||
-            (ObjectId.isValid(item.creatorId)
-                ? item.creatorId.toString() !== ctx.user._id.toString()
-                : item.creatorId.toString() !== ctx.user.userId.toString())
+            (isObjectIdLike(creatorId)
+                ? creatorId !== ctx.user._id.toString()
+                : creatorId !== ctx.user.userId.toString())
         ) {
             throw new Error(responses.item_not_found);
         }
@@ -27,17 +30,16 @@ export const checkOwnership =
         return item;
     };
 
-export const checkOwnershipWithoutModel = <
-    T extends { creatorId: mongoose.Types.ObjectId | string },
->(
+export const checkOwnershipWithoutModel = <T extends { creatorId: unknown }>(
     item: T | null,
     ctx: GQLContext,
 ) => {
+    const creatorId = item?.creatorId ? String(item.creatorId) : "";
     if (
         !item ||
-        (ObjectId.isValid(item.creatorId)
-            ? item.creatorId.toString() !== ctx.user._id.toString()
-            : item.creatorId.toString() !== ctx.user.userId.toString())
+        (isObjectIdLike(creatorId)
+            ? creatorId !== ctx.user._id.toString()
+            : creatorId !== ctx.user.userId.toString())
     ) {
         return false;
     }
@@ -72,20 +74,23 @@ export const makeModelTextSearchable =
     async (searchData: SearchData, options: SearchOptions = {}) => {
         const itemsPerPage = options.itemsPerPage || constants.itemsPerPage;
         const checkIfRequestIsAuthenticated =
-            options.checkIfRequestIsAuthenticated || true;
+            options.checkIfRequestIsAuthenticated ?? true;
         const offset = (searchData.offset || constants.defaultOffset) - 1;
 
         validateSearchInput(searchData, checkIfRequestIsAuthenticated);
 
-        const query = Model.find(searchData.query).lean();
+        const queryOptions: Record<string, unknown> = {};
         if (itemsPerPage !== Infinity) {
-            query.skip(offset * itemsPerPage).limit(itemsPerPage);
+            queryOptions.skip = offset * itemsPerPage;
+            queryOptions.limit = itemsPerPage;
         }
         if (options.sortByColumn && options.sortOrder) {
-            query.sort({ [options.sortByColumn]: options.sortOrder });
+            queryOptions.sort = {
+                [options.sortByColumn]: options.sortOrder,
+            };
         }
 
-        return query;
+        return Model.query(searchData.query, undefined, queryOptions);
     };
 
 const validateSearchInput = (

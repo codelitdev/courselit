@@ -23,7 +23,6 @@ import {
     checkIncludedProducts,
     validatePaymentPlan,
 } from "./helpers";
-import mongoose from "mongoose";
 import MembershipModel from "@courselit/orm-models/dao/membership";
 import { runPostMembershipTasks } from "../users/logic";
 import ActivityModel from "@courselit/orm-models/dao/activity";
@@ -36,12 +35,12 @@ async function fetchEntity(
     ctx: any,
 ): Promise<InternalCourse | InternalCommunity | null> {
     if (entityType === membershipEntityType.COURSE) {
-        return (await CourseModel.findOne({
+        return (await CourseModel.queryOne({
             domain: ctx.subdomain._id,
             courseId: entityId,
         })) as InternalCourse;
     } else if (entityType === membershipEntityType.COMMUNITY) {
-        return (await CommunityModel.findOne({
+        return (await CommunityModel.queryOne({
             domain: ctx.subdomain._id,
             communityId: entityId,
             deleted: false,
@@ -77,7 +76,7 @@ function checkEntityManagementPermission(
 export async function getPlan({ planId, ctx }: { planId: string; ctx: any }) {
     checkIfAuthenticated(ctx);
 
-    const plan = await PaymentPlanModel.findOne({
+    const plan = await PaymentPlanModel.queryOne({
         domain: ctx.subdomain._id,
         planId,
         archived: false,
@@ -107,13 +106,13 @@ export async function getPlans({
     entityType: MembershipEntityType;
     ctx: any;
 }): Promise<PaymentPlan[]> {
-    return PaymentPlanModel.find<PaymentPlan>({
+    return (await PaymentPlanModel.query<PaymentPlan>({
         domain: ctx.subdomain._id,
         entityId,
         entityType,
         archived: false,
         internal: false,
-    }).lean() as unknown as PaymentPlan[];
+    })) as unknown as PaymentPlan[];
 }
 
 export async function getPlansForEntity({
@@ -135,13 +134,13 @@ export async function getPlansForEntity({
 
     checkEntityManagementPermission(entityType, ctx);
 
-    return (await PaymentPlanModel.find<PaymentPlan>({
+    return (await PaymentPlanModel.query<PaymentPlan>({
         domain: ctx.subdomain._id,
         entityId,
         entityType,
         archived: false,
         internal: false,
-    }).lean()) as unknown as PaymentPlan[];
+    })) as unknown as PaymentPlan[];
 }
 
 export async function createPlan({
@@ -200,13 +199,17 @@ export async function createPlan({
     await checkDuplicatePlan(paymentPlanPayload);
     await checkIncludedProducts(ctx.subdomain._id, paymentPlanPayload);
 
-    const paymentPlan = await PaymentPlanModel.create(paymentPlanPayload);
+    const paymentPlan = await PaymentPlanModel.createOne(paymentPlanPayload);
 
     if (!entity.defaultPaymentPlan) {
         (entity as InternalCourse | InternalCommunity).defaultPaymentPlan =
             paymentPlan.planId;
     }
-    await (entity as any).save();
+    if (entityType === Constants.MembershipEntityType.COMMUNITY) {
+        await CommunityModel.saveOne(entity as any);
+    } else {
+        await CourseModel.saveOne(entity as any);
+    }
 
     return paymentPlan;
 }
@@ -238,7 +241,7 @@ export async function updatePlan({
 }): Promise<PaymentPlan> {
     checkIfAuthenticated(ctx);
 
-    const paymentPlan = await PaymentPlanModel.findOne({
+    const paymentPlan = await PaymentPlanModel.queryOne({
         domain: ctx.subdomain._id,
         planId,
         archived: false,
@@ -278,7 +281,7 @@ export async function updatePlan({
     await checkDuplicatePlan(paymentPlan, true);
     await checkIncludedProducts(ctx.subdomain._id, paymentPlan);
 
-    await paymentPlan.save();
+    await PaymentPlanModel.saveOne(paymentPlan);
 
     return paymentPlan;
 }
@@ -292,7 +295,7 @@ export async function archivePaymentPlan({
 }): Promise<PaymentPlan> {
     checkIfAuthenticated(ctx);
 
-    const paymentPlan = await PaymentPlanModel.findOne({
+    const paymentPlan = await PaymentPlanModel.queryOne({
         domain: ctx.subdomain._id,
         planId,
         archived: false,
@@ -322,7 +325,7 @@ export async function archivePaymentPlan({
     }
 
     paymentPlan.archived = true;
-    await paymentPlan.save();
+    await PaymentPlanModel.saveOne(paymentPlan);
 
     return paymentPlan;
 }
@@ -348,7 +351,7 @@ export async function changeDefaultPlan({
 
     checkEntityManagementPermission(entityType, ctx);
 
-    const paymentPlan = await PaymentPlanModel.findOne({
+    const paymentPlan = await PaymentPlanModel.queryOne({
         domain: ctx.subdomain._id,
         planId,
         archived: false,
@@ -360,13 +363,17 @@ export async function changeDefaultPlan({
 
     (entity as InternalCommunity | InternalCourse).defaultPaymentPlan =
         paymentPlan.planId;
-    await (entity as any).save();
+    if (entityType === Constants.MembershipEntityType.COMMUNITY) {
+        await CommunityModel.saveOne(entity as any);
+    } else {
+        await CourseModel.saveOne(entity as any);
+    }
 
     return paymentPlan;
 }
 
 export async function getInternalPaymentPlan(ctx: any) {
-    return await PaymentPlanModel.findOne({
+    return await PaymentPlanModel.queryOne({
         domain: ctx.subdomain._id,
         internal: true,
     });
@@ -376,7 +383,7 @@ export async function createInternalPaymentPlan(
     domain: Domain,
     userId: string,
 ) {
-    return await PaymentPlanModel.create({
+    return await PaymentPlanModel.createOne({
         domain: domain._id,
         name: constants.internalPaymentPlanName,
         type: Constants.PaymentPlanType.FREE,
@@ -396,7 +403,7 @@ export async function getIncludedProducts({
     entityType: MembershipEntityType;
     ctx: GQLContext;
 }) {
-    const paymentPlans = (await PaymentPlanModel.find(
+    const paymentPlans = (await PaymentPlanModel.query(
         {
             domain: ctx.subdomain._id,
             entityId,
@@ -406,17 +413,17 @@ export async function getIncludedProducts({
         {
             includedProducts: 1,
         },
-    ).lean()) as unknown as PaymentPlan[];
+    )) as unknown as PaymentPlan[];
 
     const allIncludedProducts = paymentPlans.flatMap(
         (plan) => plan.includedProducts || [],
     );
 
-    const products = (await CourseModel.find({
+    const products = (await CourseModel.query({
         domain: ctx.subdomain._id,
         courseId: { $in: allIncludedProducts },
         published: true,
-    }).lean()) as unknown as InternalCourse[];
+    })) as unknown as InternalCourse[];
 
     return products;
 }
@@ -427,19 +434,19 @@ export async function addIncludedProductsMemberships({
     paymentPlan,
     sessionId,
 }: {
-    domain: mongoose.Types.ObjectId;
+    domain: Domain["_id"];
     userId: string;
     paymentPlan: PaymentPlan;
     sessionId: string;
 }) {
-    const courses = await CourseModel.find({
+    const courses = await CourseModel.query({
         domain,
         courseId: { $in: paymentPlan.includedProducts },
         published: true,
     });
 
     for (const course of courses) {
-        const membership = await MembershipModel.create({
+        const membership = await MembershipModel.createOne({
             domain,
             userId,
             entityId: course.courseId,
@@ -459,18 +466,18 @@ export async function deleteMembershipsActivatedViaPaymentPlan({
     userId,
     paymentPlanId,
 }: {
-    domain: mongoose.Types.ObjectId;
+    domain: Domain["_id"];
     userId: string;
     paymentPlanId: string;
 }) {
-    await ActivityModel.deleteMany({
+    await ActivityModel.removeMany({
         domain,
         userId,
         type: constants.activityTypes[0],
         "metadata.isIncludedInPlan": true,
         "metadata.paymentPlanId": paymentPlanId,
     });
-    await MembershipModel.deleteMany({
+    await MembershipModel.removeMany({
         domain,
         userId,
         paymentPlanId: paymentPlanId,
@@ -483,10 +490,10 @@ export async function deleteProductsFromPaymentPlans({
     domain,
     courseId,
 }: {
-    domain: mongoose.Types.ObjectId;
+    domain: Domain["_id"];
     courseId: string;
 }) {
-    await PaymentPlanModel.updateMany(
+    await PaymentPlanModel.patchMany(
         { domain, includedProducts: { $in: [courseId] } },
         { $pull: { includedProducts: courseId } },
     );

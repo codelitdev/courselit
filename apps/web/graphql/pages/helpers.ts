@@ -2,6 +2,7 @@ import { Constants } from "@courselit/common-models";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
 import { Page } from "@courselit/orm-models/dao/page";
+import DomainModel from "@courselit/orm-models/dao/domain";
 import { getCommunity } from "../communities/logic";
 import { getCourse } from "../courses/logic";
 import { generateUniqueId } from "@courselit/utils";
@@ -38,7 +39,7 @@ export async function getPageResponse(
                     defaultPaymentPlan: course.defaultPaymentPlan,
                     paymentPlans: (
                         await getPlans({
-                            entityId: course.courseId,
+                            entityId: course.courseId as string,
                             entityType: Constants.MembershipEntityType.COURSE,
                             ctx,
                         })
@@ -71,7 +72,7 @@ export async function getPageResponse(
                     featuredImage: community.featuredImage,
                     paymentPlans: (
                         await getPlans({
-                            entityId: community.communityId,
+                            entityId: community.communityId as string,
                             entityType:
                                 Constants.MembershipEntityType.COMMUNITY,
                             ctx,
@@ -141,7 +142,7 @@ export async function getPageResponse(
 //     | "defaultPaymentPlan"
 //     | "paymentPlans"
 // > | null> {
-//     return await CourseModel.findOne(
+//     return await CourseModel.queryOne(
 //         {
 //             courseId,
 //             domain,
@@ -247,9 +248,8 @@ export async function initSharedWidgets(ctx: GQLContext) {
     //     subdomainChanged = true;
     // }
     if (subdomainChanged) {
-        (ctx.subdomain as any).markModified("sharedWidgets");
         try {
-            await (ctx.subdomain as any).save();
+            await DomainModel.saveOne(ctx.subdomain as any);
         } catch (e) {}
     }
 }
@@ -268,8 +268,7 @@ export async function copySharedWidgetsToDomain(
             widget.settings = undefined;
         }
     }
-    (domain as any).markModified("draftSharedWidgets");
-    await (domain as any).save();
+    await DomainModel.saveOne(domain as any);
     return layout;
 }
 

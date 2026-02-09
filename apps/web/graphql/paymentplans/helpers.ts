@@ -6,7 +6,6 @@ import PaymentPlanModel, {
     InternalPaymentPlan,
 } from "@courselit/orm-models/dao/payment-plan";
 import CourseModel from "@courselit/orm-models/dao/course";
-import { ObjectId } from "mongodb";
 
 export const validatePaymentPlan = async (
     paymentPlan: Partial<PaymentPlan>,
@@ -66,12 +65,12 @@ export const checkDuplicatePlan = async (
     currentPlan: Partial<InternalPaymentPlan>,
     isUpdate: boolean = false,
 ) => {
-    const existingPlans = (await PaymentPlanModel.find({
+    const existingPlans = (await PaymentPlanModel.query({
         domain: currentPlan.domain,
         entityId: currentPlan.entityId,
         entityType: currentPlan.entityType,
         archived: false,
-    }).lean()) as unknown as PaymentPlan[];
+    })) as unknown as PaymentPlan[];
 
     const plansToCheck = isUpdate
         ? existingPlans.filter((plan) => plan.planId !== currentPlan.planId)
@@ -99,7 +98,7 @@ export const checkDuplicatePlan = async (
 };
 
 export const checkIncludedProducts = async (
-    domain: ObjectId,
+    domain: InternalPaymentPlan["domain"],
     paymentPlan: Partial<InternalPaymentPlan>,
 ) => {
     if (
@@ -108,7 +107,7 @@ export const checkIncludedProducts = async (
     )
         return;
 
-    const products = (await CourseModel.find(
+    const products = (await CourseModel.query(
         {
             domain,
             courseId: { $in: paymentPlan.includedProducts },
@@ -122,7 +121,7 @@ export const checkIncludedProducts = async (
         {
             courseId: 1,
         },
-    ).lean()) as unknown as Course[];
+    )) as unknown as Course[];
 
     let nonExistingProducts: string[] = [];
     for (const product of paymentPlan.includedProducts) {

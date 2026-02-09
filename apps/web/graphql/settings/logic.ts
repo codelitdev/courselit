@@ -40,7 +40,7 @@ export const getSiteInfo = async (ctx: GQLContext) => {
         exclusionProjection.draftTypefaces = 0;
         exclusionProjection.lastEditedThemeId = 0;
     }
-    const domain: Domain | null = await DomainModel.findById(
+    const domain: Domain | null = await DomainModel.getById(
         ctx.subdomain._id,
         exclusionProjection,
     );
@@ -58,7 +58,7 @@ export const updateSiteInfo = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    const domain: Domain | null = await DomainModel.findById(ctx.subdomain._id);
+    const domain: Domain | null = await DomainModel.getById(ctx.subdomain._id);
     if (!domain) {
         return null;
     }
@@ -79,7 +79,7 @@ export const updateSiteInfo = async (
             : undefined;
     }
 
-    await (domain as any).save();
+    await DomainModel.saveOne(domain as any);
 
     return domain;
 };
@@ -108,14 +108,14 @@ export const updateDraftTypefaces = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    const domain: Domain | null = await DomainModel.findById(ctx.subdomain._id);
+    const domain: Domain | null = await DomainModel.getById(ctx.subdomain._id);
     if (!domain) {
         return null;
     }
 
     domain.draftTypefaces = typefaces;
 
-    await (domain as any).save();
+    await DomainModel.saveOne(domain as any);
 
     return domain;
 };
@@ -130,7 +130,7 @@ export const updatePaymentInfo = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    const domain: Domain | null = await DomainModel.findById(ctx.subdomain._id);
+    const domain: Domain | null = await DomainModel.getById(ctx.subdomain._id);
     if (!domain) {
         return null;
     }
@@ -161,7 +161,7 @@ export const updatePaymentInfo = async (
         domain.settings.currencyISOCode =
             domain.settings.currencyISOCode?.toLowerCase();
     }
-    await (domain as any).save();
+    await DomainModel.saveOne(domain as any);
 
     return domain;
 };
@@ -177,7 +177,7 @@ export const getApikeys = async (ctx: GQLContext) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    const apikeys: ApiKey[] = await ApikeyModel.find(
+    const apikeys: ApiKey[] = await ApikeyModel.query(
         { domain: ctx.subdomain._id },
         {
             name: 1,
@@ -200,7 +200,7 @@ export const addApikey = async (name: string, ctx: GQLContext) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    const existingApikey = await ApikeyModel.findOne({
+    const existingApikey = await ApikeyModel.queryOne({
         name,
         domain: ctx.subdomain._id,
     });
@@ -209,7 +209,7 @@ export const addApikey = async (name: string, ctx: GQLContext) => {
         throw new Error(responses.apikey_already_exists);
     }
 
-    const apikey: ApiKey = await ApikeyModel.create({
+    const apikey: ApiKey = await ApikeyModel.createOne({
         name,
         domain: ctx.subdomain._id,
     });
@@ -232,7 +232,7 @@ export const removeApikey = async (keyId: string, ctx: GQLContext) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    await ApikeyModel.deleteOne({ keyId, domain: ctx.subdomain._id });
+    await ApikeyModel.removeOne({ keyId, domain: ctx.subdomain._id });
 
     return true;
 };
@@ -267,7 +267,7 @@ export const updateSSOProvider = async ({
     const backendUrl = new URL(backend);
 
     try {
-        const ssoProvider = await SSOProviderModel.findOneAndUpdate(
+        const ssoProvider = await SSOProviderModel.patchOneAndGet(
             {
                 domain: ctx.subdomain._id,
             },
@@ -292,8 +292,7 @@ export const updateSSOProvider = async ({
         );
 
         ctx.subdomain.settings.ssoTrustedDomain = new URL(entryPoint).origin;
-        (ctx.subdomain as any).markModified("settings");
-        await (ctx.subdomain as any).save();
+        await DomainModel.saveOne(ctx.subdomain as any);
 
         return ssoProvider;
     } catch (error: any) {
@@ -312,7 +311,7 @@ export const getSSOProviderSettings = async (ctx: GQLContext) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    const ssoProvider = await SSOProviderModel.findOne({
+    const ssoProvider = await SSOProviderModel.queryOne({
         domain: ctx.subdomain._id,
     });
 
@@ -334,7 +333,7 @@ export const getSSOProvider = async (ctx: GQLContext) => {
         return null;
     }
 
-    const ssoProvider = await SSOProviderModel.findOne(
+    const ssoProvider = await SSOProviderModel.queryOne(
         {
             domain: ctx.subdomain._id,
         },
@@ -365,7 +364,7 @@ export const removeSSOProvider = async (ctx: GQLContext) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    await SSOProviderModel.deleteMany({ domain: ctx.subdomain._id });
+    await SSOProviderModel.removeMany({ domain: ctx.subdomain._id });
 
     await toggleLoginProvider({
         provider: Constants.LoginProvider.SSO,
@@ -374,14 +373,13 @@ export const removeSSOProvider = async (ctx: GQLContext) => {
     });
 
     ctx.subdomain.settings.ssoTrustedDomain = undefined;
-    (ctx.subdomain as any).markModified("settings");
-    await (ctx.subdomain as any).save();
+    await DomainModel.saveOne(ctx.subdomain as any);
 
     return true;
 };
 
 export const getFeatures = async (ctx: GQLContext) => {
-    await DomainModel.findOne({
+    await DomainModel.queryOne({
         _id: ctx.subdomain._id,
     });
 
@@ -427,7 +425,7 @@ export const toggleLoginProvider = async ({
                     throw new Error(responses.action_not_allowed);
                 }
 
-                const ssoProviders = await SSOProviderModel.find({
+                const ssoProviders = await SSOProviderModel.query({
                     domain: ctx.subdomain._id,
                 });
 

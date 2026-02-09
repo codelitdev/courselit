@@ -30,7 +30,7 @@ export async function DELETE(
     req: NextRequest,
     { params }: { params: Promise<{ mediaId: string; type: string }> },
 ) {
-    const domain = await DomainModel.findOne<Domain>({
+    const domain = await DomainModel.queryOne<Domain>({
         name: req.headers.get("domain"),
     });
     if (!domain) {
@@ -43,7 +43,7 @@ export async function DELETE(
 
     let user;
     if (session) {
-        user = await UserModel.findOne({
+        user = await UserModel.queryOne({
             email: session.user!.email,
             domain: domain._id,
             active: true,
@@ -94,7 +94,7 @@ async function isActionAllowed(
 
     switch (type) {
         case "course":
-            const course = await CourseModel.findOne<InternalCourse>({
+            const course = await CourseModel.queryOne<InternalCourse>({
                 domain: domain._id,
                 "featuredImage.mediaId": mediaId,
             });
@@ -116,7 +116,7 @@ async function isActionAllowed(
                 );
             }
         case "lesson":
-            const lesson = await LessonModel.findOne<Lesson>({
+            const lesson = await LessonModel.queryOne<Lesson>({
                 domain: domain._id,
                 "media.mediaId": mediaId,
             });
@@ -138,7 +138,7 @@ async function isActionAllowed(
                 );
             }
         case "page":
-            const pages = await PageModel.find<Page>({
+            const pages = await PageModel.query<Page>({
                 domain: domain._id,
             });
             let mediaBelongsToThisDomain = false;
@@ -176,7 +176,7 @@ async function isActionAllowed(
             ]);
         case "certificate":
             const certificateTemplate =
-                await CertificateTemplateModel.findOne<CertificateTemplate>({
+                await CertificateTemplateModel.queryOne<CertificateTemplate>({
                     domain: domain._id,
                     $or: [
                         { "signatureImage.mediaId": mediaId },
@@ -186,12 +186,11 @@ async function isActionAllowed(
             if (!certificateTemplate) {
                 return false;
             }
-            const certificateCourse = await CourseModel.findOne<InternalCourse>(
-                {
+            const certificateCourse =
+                await CourseModel.queryOne<InternalCourse>({
                     domain: domain._id,
                     courseId: certificateTemplate.courseId,
-                },
-            );
+                });
             if (!certificateCourse) {
                 return false;
             }

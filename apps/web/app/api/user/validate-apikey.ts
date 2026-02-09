@@ -3,7 +3,7 @@ import DomainModel, { Domain } from "@courselit/orm-models/dao/domain";
 import ApiKey from "@courselit/orm-models/dao/apikey";
 
 export async function validateDomainAndApiKey(req: NextRequest) {
-    const domain = await DomainModel.findOne<Domain>({
+    const domain = await DomainModel.queryOne<Domain>({
         name: req.headers.get("domain"),
     });
     if (!domain) {
@@ -15,7 +15,7 @@ export async function validateDomainAndApiKey(req: NextRequest) {
     if (!apikey) {
         return { error: { message: "Bad request", status: 400 } };
     }
-    const apikeyObj = await ApiKey.findOne({
+    const apikeyObj = await ApiKey.queryOne({
         domain: domain._id,
         key: apikey,
     });

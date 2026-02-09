@@ -1,9 +1,8 @@
 "use server";
 
 import { auth } from "@/auth";
-import { Domain, Page } from "@courselit/common-models";
-import DomainModel from "@courselit/orm-models/dao/domain";
-import { ObjectId } from "mongodb";
+import { Page } from "@courselit/common-models";
+import DomainModel, { Domain } from "@courselit/orm-models/dao/domain";
 import { getProfile } from "../../action";
 import { hasPermissionToAccessSetupChecklist } from "@/lib/utils";
 import CourseModel from "@courselit/orm-models/dao/course";
@@ -26,9 +25,9 @@ export async function getSetupChecklist(): Promise<{
     }
 
     try {
-        const domain = await DomainModel.findOne<Domain>(
+        const domain = await DomainModel.queryOne<Domain>(
             {
-                _id: new ObjectId((session.session as any)?.domainId!),
+                _id: (session.session as any)?.domainId!,
             },
             {
                 _id: 1,
@@ -37,7 +36,7 @@ export async function getSetupChecklist(): Promise<{
                 "settings.currencyISOCode": 1,
                 "settings.paymentMethod": 1,
             },
-        ).lean();
+        );
         if (!domain) {
             return null;
         }
@@ -52,11 +51,11 @@ export async function getSetupChecklist(): Promise<{
         }
 
         const [publishedProducts, homePage] = await Promise.all([
-            CourseModel.countDocuments({
+            CourseModel.count({
                 domain: domain._id,
                 published: true,
             }),
-            PageModel.findOne(
+            PageModel.queryOne(
                 {
                     domain: domain._id,
                     pageId: "homepage",
@@ -65,7 +64,7 @@ export async function getSetupChecklist(): Promise<{
                     "layout.name": 1,
                     "layout.settings": 1,
                 },
-            ).lean() as unknown as Page,
+            ) as unknown as Page,
         ]);
 
         const checklist = {

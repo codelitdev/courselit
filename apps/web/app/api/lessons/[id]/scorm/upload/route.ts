@@ -37,7 +37,7 @@ export async function POST(
     const { id: lessonId } = await params;
 
     // Get domain
-    const domain = await DomainModel.findOne<Domain>({
+    const domain = await DomainModel.queryOne<Domain>({
         name: req.headers.get("domain"),
     });
     if (!domain) {
@@ -50,7 +50,7 @@ export async function POST(
         return Response.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await User.findOne({
+    const user = await User.queryOne({
         email: session.user?.email,
         domain: domain._id,
         active: true,
@@ -70,7 +70,7 @@ export async function POST(
     }
 
     // Get lesson
-    const lesson = await Lesson.findOne({
+    const lesson = await Lesson.queryOne({
         lessonId,
         domain: domain._id,
     });
@@ -140,7 +140,7 @@ export async function POST(
         }
         await medialit.seal(mediaId);
         // Update lesson content with SCORM metadata
-        await Lesson.updateOne(
+        await Lesson.patchOne(
             { lessonId, domain: domain._id },
             {
                 $set: {

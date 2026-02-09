@@ -17,12 +17,12 @@ import { deleteMedia } from "@/services/medialit";
 import { responses } from "@/config/strings";
 import MembershipModel from "@courselit/orm-models/dao/membership";
 import { error } from "@/services/logger";
-import mongoose from "mongoose";
 import { InternalCommunityReport } from "@courselit/orm-models/dao/community-report";
 import CommunityPostSubscriberModel, {
     CommunityPostSubscriber,
 } from "@courselit/orm-models/dao/community-post-subscriber";
 import { hasCommunityPermission } from "@ui-lib/utils";
+import type { Domain } from "@courselit/orm-models/dao/domain";
 
 export type PublicPost = Omit<
     CommunityPost,
@@ -80,17 +80,17 @@ export async function toggleContentVisibility(
     visible: boolean,
 ) {
     if (type === Constants.CommunityReportType.POST) {
-        await CommunityPostModel.updateOne(
+        await CommunityPostModel.patchOne(
             { postId: contentId },
             { $set: { deleted: visible } },
         );
     } else if (type === Constants.CommunityReportType.COMMENT) {
-        await CommunityCommentModel.updateOne(
+        await CommunityCommentModel.patchOne(
             { commentId: contentId },
             { $set: { deleted: visible } },
         );
     } else if (type === Constants.CommunityReportType.REPLY) {
-        await CommunityCommentModel.updateOne(
+        await CommunityCommentModel.patchOne(
             { "replies.replyId": contentId },
             { $set: { "replies.$.deleted": visible } },
         );
@@ -106,7 +106,7 @@ export async function getCommunityReportContent({
     contentId,
     contentParentId,
 }: {
-    domain: mongoose.Types.ObjectId;
+    domain: Domain["_id"];
     communityId: string;
     type: CommunityReportType;
     contentId: string;
@@ -119,19 +119,19 @@ export async function getCommunityReportContent({
     let content: any = undefined;
 
     if (type === Constants.CommunityReportType.POST) {
-        content = await CommunityPostModel.findOne({
+        content = await CommunityPostModel.queryOne({
             domain,
             communityId,
             postId: contentId,
         });
     } else if (type === Constants.CommunityReportType.COMMENT) {
-        content = await CommunityCommentModel.findOne({
+        content = await CommunityCommentModel.queryOne({
             domain,
             communityId,
             commentId: contentId,
         });
     } else if (type === Constants.CommunityReportType.REPLY) {
-        const comment = await CommunityCommentModel.findOne({
+        const comment = await CommunityCommentModel.queryOne({
             domain,
             communityId,
             commentId: contentParentId,
@@ -159,12 +159,12 @@ export async function deleteCommunityData(
     ctx: GQLContext,
     communityId: string,
 ) {
-    await CommunityCommentModel.deleteMany({
+    await CommunityCommentModel.removeMany({
         domain: ctx.subdomain._id,
         communityId,
     });
 
-    const posts = await CommunityPostModel.find<CommunityPost>({
+    const posts = await CommunityPostModel.query<CommunityPost>({
         domain: ctx.subdomain._id,
         communityId,
     });
@@ -185,12 +185,12 @@ export async function deleteCommunityData(
         }
     }
 
-    await CommunityPostModel.deleteMany({
+    await CommunityPostModel.removeMany({
         domain: ctx.subdomain._id,
         communityId,
     });
 
-    await MembershipModel.deleteMany({
+    await MembershipModel.removeMany({
         domain: ctx.subdomain._id,
         entityId: communityId,
         entityType: Constants.MembershipEntityType.COMMUNITY,
@@ -244,18 +244,18 @@ export async function addPostSubscription({
     userId,
     postId,
 }: {
-    domain: mongoose.Types.ObjectId;
+    domain: Domain["_id"];
     userId: string;
     postId: string;
 }) {
-    const existingSubscription = await CommunityPostSubscriberModel.findOne({
+    const existingSubscription = await CommunityPostSubscriberModel.queryOne({
         domain,
         userId,
         postId,
     });
 
     if (!existingSubscription) {
-        await CommunityPostSubscriberModel.create({
+        await CommunityPostSubscriberModel.createOne({
             domain,
             userId,
             postId,
@@ -268,11 +268,11 @@ export async function getPostSubscribersExceptUserId({
     userId,
     postId,
 }: {
-    domain: mongoose.Types.ObjectId;
+    domain: Domain["_id"];
     userId: string;
     postId: string;
 }): Promise<CommunityPostSubscriber[]> {
-    return await CommunityPostSubscriberModel.find({
+    return await CommunityPostSubscriberModel.query({
         domain,
         postId,
         userId: { $nin: [userId] },

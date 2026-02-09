@@ -159,12 +159,12 @@ export default class LemonSqueezyPayment implements Payment {
     private async cancelSubscriptionForAllPaidEMIPlan(event) {
         const metadata = this.getMetadata(event);
         const membership: InternalMembership | null =
-            await MembershipModel.findOne({
+            await MembershipModel.queryOne({
                 membershipId: metadata.membershipId,
             });
         if (membership) {
             const paymentPlan: PaymentPlan | null =
-                await PaymentPlanModel.findOne({
+                await PaymentPlanModel.queryOne({
                     planId: membership.paymentPlanId,
                     domain: membership.domain,
                 });
@@ -172,7 +172,7 @@ export default class LemonSqueezyPayment implements Payment {
                 paymentPlan &&
                 paymentPlan.type === Constants.PaymentPlanType.EMI
             ) {
-                const paidInvoicesCount = await Invoice.countDocuments({
+                const paidInvoicesCount = await Invoice.count({
                     domain: membership.domain,
                     membershipId: membership.membershipId,
                     status: Constants.InvoiceStatus.PAID,

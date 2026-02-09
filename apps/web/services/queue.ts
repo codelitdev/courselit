@@ -160,7 +160,7 @@ export async function addNotification({
 
         try {
             for (const forUserId of forUserIds) {
-                await NotificationModel.create({
+                await NotificationModel.createOne({
                     domain: new ObjectId(domain),
                     userId,
                     forUserId,

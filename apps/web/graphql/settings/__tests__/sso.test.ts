@@ -24,7 +24,7 @@ describe("SSO Logic Tests", () => {
 
     beforeAll(async () => {
         // Create test domain with SSO feature enabled
-        testDomain = await DomainModel.create({
+        testDomain = await DomainModel.createOne({
             name: id("domain"),
             email: email("domain"),
             features: [Constants.Features.SSO],
@@ -34,7 +34,7 @@ describe("SSO Logic Tests", () => {
         });
 
         // Create admin user with manageSettings permission
-        adminUser = await UserModel.create({
+        adminUser = await UserModel.createUser({
             domain: testDomain._id,
             userId: id("admin"),
             email: email("admin"),
@@ -46,7 +46,7 @@ describe("SSO Logic Tests", () => {
         });
 
         // Create regular user without permissions
-        regularUser = await UserModel.create({
+        regularUser = await UserModel.createUser({
             domain: testDomain._id,
             userId: id("regular"),
             email: email("regular"),
@@ -64,9 +64,9 @@ describe("SSO Logic Tests", () => {
     });
 
     afterEach(async () => {
-        await SSOProviderModel.deleteMany({ domain: testDomain._id });
+        await SSOProviderModel.removeMany({ domain: testDomain._id });
         // Reset domain settings
-        await DomainModel.updateOne(
+        await DomainModel.patchOne(
             { _id: testDomain._id },
             {
                 $set: {
@@ -76,13 +76,13 @@ describe("SSO Logic Tests", () => {
             },
         );
         // Refresh local domain object
-        const updatedDomain = await DomainModel.findById(testDomain._id);
+        const updatedDomain = await DomainModel.getById(testDomain._id);
         mockCtx.subdomain = updatedDomain;
     });
 
     afterAll(async () => {
-        await UserModel.deleteMany({ domain: testDomain._id });
-        await DomainModel.deleteOne({ _id: testDomain._id });
+        await UserModel.removeMany({ domain: testDomain._id });
+        await DomainModel.removeOne({ _id: testDomain._id });
     });
 
     describe("updateSSOProvider", () => {
@@ -134,7 +134,7 @@ describe("SSO Logic Tests", () => {
             expect(result).toBeDefined();
             expect(result.providerId).toBe("sso");
 
-            const savedProvider = await SSOProviderModel.findOne({
+            const savedProvider = await SSOProviderModel.queryOne({
                 domain: testDomain._id,
             });
             expect(savedProvider).toBeDefined();
@@ -142,7 +142,7 @@ describe("SSO Logic Tests", () => {
             expect(samlConfig.entryPoint).toBe(validConfig.entryPoint);
 
             // Check if domain settings updated (refresh context first or check DB)
-            const domain = await DomainModel.findById(testDomain._id);
+            const domain = await DomainModel.getById(testDomain._id);
             expect(domain!.settings.ssoTrustedDomain).toBe(
                 new URL(validConfig.entryPoint).origin,
             );
@@ -163,7 +163,7 @@ describe("SSO Logic Tests", () => {
                 idpMetadata: { metadata: "test-metadata" },
             };
 
-            await SSOProviderModel.create({
+            await SSOProviderModel.createOne({
                 id: id("sso-1"),
                 domain: testDomain._id,
                 providerId: "sso",
@@ -194,7 +194,7 @@ describe("SSO Logic Tests", () => {
         });
 
         it("should return provider info if configured", async () => {
-            await SSOProviderModel.create({
+            await SSOProviderModel.createOne({
                 id: id("sso-2"),
                 domain: testDomain._id,
                 providerId: "sso",
@@ -213,7 +213,7 @@ describe("SSO Logic Tests", () => {
     describe("removeSSOProvider", () => {
         it("should remove provider and disable SSO login", async () => {
             // Setup
-            await SSOProviderModel.create({
+            await SSOProviderModel.createOne({
                 id: id("sso-3"),
                 domain: testDomain._id,
                 providerId: "sso",
@@ -232,13 +232,13 @@ describe("SSO Logic Tests", () => {
             expect(result).toBe(true);
 
             // Verify removal
-            const provider = await SSOProviderModel.findOne({
+            const provider = await SSOProviderModel.queryOne({
                 domain: testDomain._id,
             });
             expect(provider).toBeNull();
 
             // Verify login disabled
-            const domain = await DomainModel.findById(testDomain._id);
+            const domain = await DomainModel.getById(testDomain._id);
             expect(domain!.settings.logins).not.toContain(
                 Constants.LoginProvider.SSO,
             );
@@ -249,7 +249,7 @@ describe("SSO Logic Tests", () => {
     describe("toggleLoginProvider", () => {
         it("should enable SSO login if provider configured", async () => {
             // Must have provider first
-            await SSOProviderModel.create({
+            await SSOProviderModel.createOne({
                 id: id("sso-4"),
                 domain: testDomain._id,
                 providerId: "sso",
@@ -290,7 +290,7 @@ describe("SSO Logic Tests", () => {
             ).rejects.toThrow();
 
             // Add SSO then disable email
-            await SSOProviderModel.create({
+            await SSOProviderModel.createOne({
                 id: id("sso-5"),
                 domain: testDomain._id,
                 providerId: "sso",
@@ -314,7 +314,7 @@ describe("SSO Logic Tests", () => {
 
         it("should automatically re-enable email if SSO is disabled and it was the only provider", async () => {
             // Setup: Create provider and enable SSO
-            await SSOProviderModel.create({
+            await SSOProviderModel.createOne({
                 id: id("sso-auto-enable"),
                 domain: testDomain._id,
                 providerId: "sso",

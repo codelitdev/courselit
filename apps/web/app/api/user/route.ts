@@ -104,7 +104,7 @@ export async function PATCH(req: NextRequest) {
     const { email, name, permissions, subscribedToUpdates } = body;
 
     try {
-        const user = await UserModel.findOneAndUpdate(
+        const user = await UserModel.patchOneAndGet(
             { email, domain: domain._id },
             { name, permissions, subscribedToUpdates },
             { new: true },

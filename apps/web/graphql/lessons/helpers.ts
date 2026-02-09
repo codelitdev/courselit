@@ -3,7 +3,7 @@ import constants from "../../config/constants";
 import LessonModel, { Lesson } from "@courselit/orm-models/dao/lesson";
 import CourseModel from "@courselit/orm-models/dao/course";
 import { Group, Question, Quiz } from "@courselit/common-models";
-import mongoose from "mongoose";
+import type { Domain } from "@courselit/orm-models/dao/domain";
 import { LessonWithStringContent } from "./logic";
 const { text, audio, video, pdf, embed, quiz, file } = constants;
 
@@ -76,13 +76,13 @@ function validateMediaContent(lessonData: LessonValidatorProps) {
 type GroupLessonItem = Pick<Lesson, "lessonId" | "groupId">;
 export const getGroupedLessons = async (
     courseId: string,
-    domainId: mongoose.Types.ObjectId,
+    domainId: Domain["_id"],
 ): Promise<GroupLessonItem[]> => {
-    const course = await CourseModel.findOne({
+    const course = await CourseModel.queryOne({
         courseId: courseId,
         domain: domainId,
     });
-    const allLessons = await LessonModel.find<GroupLessonItem>(
+    const allLessons = await LessonModel.query<GroupLessonItem>(
         {
             courseId: courseId,
             domain: domainId,
@@ -113,7 +113,7 @@ export const getGroupedLessons = async (
 
 export const getPrevNextCursor = async (
     courseId: string,
-    domainId: mongoose.Types.ObjectId,
+    domainId: Domain["_id"],
     lessonId?: string,
 ) => {
     const lessonsInSequentialOrder = await getGroupedLessons(
@@ -181,11 +181,8 @@ export function evaluateLessonResult(content: Quiz, answers: number[][]) {
     };
 }
 
-export async function isPartOfDripGroup(
-    lesson: Lesson,
-    domain: mongoose.Types.ObjectId,
-) {
-    const course = await CourseModel.findOne({
+export async function isPartOfDripGroup(lesson: Lesson, domain: Domain["_id"]) {
+    const course = await CourseModel.queryOne({
         courseId: lesson.courseId,
         domain,
     });

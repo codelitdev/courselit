@@ -45,7 +45,7 @@ const getLessonOrThrow = async (
 ): Promise<Lesson> => {
     checkIfAuthenticated(ctx);
 
-    const lesson = await LessonModel.findOne({
+    const lesson = await LessonModel.queryOne({
         lessonId: id,
         domain: ctx.subdomain._id,
     });
@@ -87,7 +87,7 @@ export const getLessonDetails = async (
     if (courseId) {
         query.courseId = courseId;
     }
-    const lesson = await LessonModel.findOne(query);
+    const lesson = await LessonModel.queryOne(query);
 
     if (!lesson) {
         throw new Error(responses.item_not_found);
@@ -150,14 +150,14 @@ export const createLesson = async (
     lessonValidator(lessonData);
 
     try {
-        const course: InternalCourse | null = await CourseModel.findOne({
+        const course: InternalCourse | null = await CourseModel.queryOne({
             courseId: lessonData.courseId,
             domain: ctx.subdomain._id,
         });
         if (!course) throw new Error(responses.item_not_found);
         if (course.isBlog) throw new Error(responses.cannot_add_to_blogs); // TODO: refactor this
 
-        const lesson = await LessonModel.create({
+        const lesson = await LessonModel.createOne({
             domain: ctx.subdomain._id,
             title: lessonData.title,
             type: lessonData.type,
@@ -178,7 +178,7 @@ export const createLesson = async (
                 ((group as any)._id?.toString() ?? "") === lessonData.groupId,
         );
         group?.lessonsOrder.push(lesson.lessonId);
-        await (course as any).save();
+        await CourseModel.saveOne(course as any);
 
         return lesson;
     } catch (err: any) {
@@ -238,7 +238,7 @@ export const updateLesson = async (
         await deleteMedia(mediaId);
     }
 
-    lesson = await (lesson as any).save();
+    lesson = (await LessonModel.saveOne(lesson as any)) as any;
     return lesson;
 };
 
@@ -272,19 +272,19 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
         }
 
         cleanupTasks.push(
-            LessonEvaluation.deleteMany({
+            LessonEvaluation.removeMany({
                 domain: ctx.subdomain._id,
                 lessonId: lesson.lessonId,
             }),
         );
         cleanupTasks.push(
-            ActivityModel.deleteMany({
+            ActivityModel.removeMany({
                 domain: ctx.subdomain._id,
                 entityId: lesson.lessonId,
             }),
         );
         cleanupTasks.push(
-            LessonModel.deleteOne({
+            LessonModel.removeOne({
                 _id: lesson.id,
                 domain: ctx.subdomain._id,
             }),
@@ -292,7 +292,7 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
 
         await Promise.all(cleanupTasks);
 
-        const courseUpdateResult = await CourseModel.updateOne(
+        const courseUpdateResult = await CourseModel.patchOne(
             {
                 domain: ctx.subdomain._id,
                 lessons: lesson.lessonId,
@@ -316,7 +316,7 @@ export const getAllLessons = async (
     course: InternalCourse,
     ctx: GQLContext,
 ) => {
-    const lessons = await LessonModel.find(
+    const lessons = await LessonModel.query(
         {
             courseId: course.courseId,
             domain: ctx.subdomain._id,
@@ -336,7 +336,7 @@ export const getAllLessons = async (
 };
 
 export const deleteAllLessons = async (courseId: string, ctx: GQLContext) => {
-    const allLessons = await LessonModel.find<Lesson>({
+    const allLessons = await LessonModel.query<Lesson>({
         domain: ctx.subdomain._id,
         courseId,
     });
@@ -351,7 +351,7 @@ export const markLessonCompleted = async (
 ) => {
     checkIfAuthenticated(ctx);
 
-    const lesson = await LessonModel.findOne<Lesson>({ lessonId });
+    const lesson = await LessonModel.queryOne<Lesson>({ lessonId });
     if (!lesson) {
         throw new Error(responses.item_not_found);
     }
@@ -375,7 +375,7 @@ export const markLessonCompleted = async (
     }
 
     if (lesson.type === quiz) {
-        const lessonEvaluations = await LessonEvaluation.countDocuments({
+        const lessonEvaluations = await LessonEvaluation.count({
             pass: true,
             lessonId: lesson.lessonId,
             userId: ctx.user.userId,
@@ -388,8 +388,7 @@ export const markLessonCompleted = async (
 
     // Check SCORM completion status
     if (lesson.type === scorm) {
-        // Re-fetch user using .lean() to get a plain JS object.
-        const freshUser: any = await UserModel.findById(ctx.user._id).lean();
+        const freshUser: any = await UserModel.getById(ctx.user._id);
         const purchase = freshUser?.purchases?.[enrolledItemIndex];
         const lessonData = (purchase as any)?.scormData?.lessons?.[lessonId];
 
@@ -450,7 +449,7 @@ const checkAndRecordCourseCompletion = async (
     courseId: string,
     ctx: GQLContext,
 ) => {
-    const course = await CourseModel.findOne({ courseId });
+    const course = await CourseModel.queryOne({ courseId });
     if (!course) {
         throw new Error(responses.item_not_found);
     }
@@ -487,7 +486,7 @@ const issueCertificate = async (
     course: InternalCourse,
     ctx: GQLContext,
 ): Promise<void> => {
-    const existingCertificate = await CertificateModel.findOne({
+    const existingCertificate = await CertificateModel.queryOne({
         domain: ctx.subdomain._id,
         courseId: course.courseId,
         userId: ctx.user.userId,
@@ -496,7 +495,7 @@ const issueCertificate = async (
         return;
     }
 
-    const certificate = await CertificateModel.create({
+    const certificate = await CertificateModel.createOne({
         domain: ctx.subdomain._id,
         courseId: course.courseId,
         userId: ctx.user.userId,
@@ -519,7 +518,7 @@ const issueCertificate = async (
 
     ctx.user.purchases[enrolledItemIndex].certificateId =
         certificate.certificateId;
-    await (ctx.user as any).save();
+    await UserModel.saveOne(ctx.user as any);
 
     await recordActivity({
         domain: ctx.subdomain._id,
@@ -534,7 +533,7 @@ export const evaluateLesson = async (
     answers: { answers: number[][] },
     ctx: GQLContext,
 ) => {
-    const lesson = await LessonModel.findOne<Lesson>({ lessonId });
+    const lesson = await LessonModel.queryOne<Lesson>({ lessonId });
     if (!lesson) {
         throw new Error(responses.item_not_found);
     }
@@ -560,7 +559,7 @@ export const evaluateLesson = async (
         answers.answers,
     );
 
-    await LessonEvaluation.create({
+    await LessonEvaluation.createOne({
         domain: ctx.subdomain._id,
         lessonId: lesson.lessonId,
         userId: ctx.user.userId,

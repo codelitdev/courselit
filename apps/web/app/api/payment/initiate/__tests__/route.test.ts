@@ -37,27 +37,27 @@ describe("Payment Initiate Route", () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        (Domain.findOne as jest.Mock).mockResolvedValue({
+        (Domain.queryOne as jest.Mock).mockResolvedValue({
             _id: new mongoose.Types.ObjectId("666666666666666666666666"),
             settings: {},
         });
 
-        (User.findOne as jest.Mock).mockResolvedValue({
+        (User.queryOne as jest.Mock).mockResolvedValue({
             userId: "tester",
             name: "Tester",
             active: true,
             domain: new mongoose.Types.ObjectId("666666666666666666666666"),
         });
 
-        // Mock Course.findOne for course entities
-        (Course.findOne as jest.Mock).mockResolvedValue({
+        // Mock Course.queryOne for course entities
+        (Course.queryOne as jest.Mock).mockResolvedValue({
             courseId: "course-123",
             title: "Test Course",
             paymentPlans: ["planA", "planB"],
         });
 
-        // Mock Community.findOne for community entities
-        (Community.findOne as jest.Mock).mockResolvedValue({
+        // Mock Community.queryOne for community entities
+        (Community.queryOne as jest.Mock).mockResolvedValue({
             communityId: "community-123",
             name: "Test Community",
             autoAcceptMembers: true,
@@ -80,11 +80,11 @@ describe("Payment Initiate Route", () => {
             },
         });
 
-        // Mock PaymentPlan.exists to return true by default
-        (PaymentPlan.exists as jest.Mock).mockResolvedValue(true);
+        // Mock PaymentPlan.checkExists to return true by default
+        (PaymentPlan.checkExists as jest.Mock).mockResolvedValue(true);
 
-        // Mock PaymentPlan.findOne
-        (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+        // Mock PaymentPlan.queryOne
+        (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
             planId: "planA",
             type: Constants.PaymentPlanType.FREE,
             entityId: "course-123",
@@ -118,8 +118,8 @@ describe("Payment Initiate Route", () => {
             validateSubscription: jest.fn().mockResolvedValue(true),
         });
 
-        // Mock Invoice.create
-        (Invoice.create as jest.Mock).mockResolvedValue({
+        // Mock Invoice.createOne
+        (Invoice.createOne as jest.Mock).mockResolvedValue({
             invoiceId: "invoice-123",
         });
     });
@@ -167,13 +167,13 @@ describe("Payment Initiate Route", () => {
             type: Constants.MembershipEntityType.COURSE,
             planId: "planA",
         });
-        (Course.findOne as jest.Mock).mockResolvedValue({
+        (Course.queryOne as jest.Mock).mockResolvedValue({
             title: "Test Course",
             paymentPlans: ["planC", "planB"],
         });
 
-        // Override PaymentPlan.exists to return false (plan doesn't belong to entity)
-        (PaymentPlan.exists as jest.Mock).mockResolvedValue(false);
+        // Override PaymentPlan.checkExists to return false (plan doesn't belong to entity)
+        (PaymentPlan.checkExists as jest.Mock).mockResolvedValue(false);
 
         const response = await POST(mockRequest);
         expect(response.status).toBe(404);
@@ -189,14 +189,14 @@ describe("Payment Initiate Route", () => {
                 origin: "https://test.com",
             });
 
-            (Community.findOne as jest.Mock).mockResolvedValue({
+            (Community.queryOne as jest.Mock).mockResolvedValue({
                 communityId: "community-123",
                 name: "Test Community",
                 autoAcceptMembers: true,
                 deleted: false,
             });
 
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: "plan-123",
                 type: Constants.PaymentPlanType.FREE,
                 entityId: "community-123",
@@ -207,8 +207,8 @@ describe("Payment Initiate Route", () => {
             });
 
             // Ensure all mocks are properly set up
-            (PaymentPlan.exists as jest.Mock).mockResolvedValue(true);
-            (Invoice.create as jest.Mock).mockResolvedValue({
+            (PaymentPlan.checkExists as jest.Mock).mockResolvedValue(true);
+            (Invoice.createOne as jest.Mock).mockResolvedValue({
                 invoiceId: "invoice-123",
             });
         });
@@ -232,7 +232,7 @@ describe("Payment Initiate Route", () => {
         });
 
         it("handles community with autoAcceptMembers=false requiring joining reason", async () => {
-            (Community.findOne as jest.Mock).mockResolvedValue({
+            (Community.queryOne as jest.Mock).mockResolvedValue({
                 communityId: "community-123",
                 name: "Test Community",
                 autoAcceptMembers: false,
@@ -252,7 +252,7 @@ describe("Payment Initiate Route", () => {
         });
 
         it("returns 400 if joining reason missing for manual approval community", async () => {
-            (Community.findOne as jest.Mock).mockResolvedValue({
+            (Community.queryOne as jest.Mock).mockResolvedValue({
                 communityId: "community-123",
                 name: "Test Community",
                 autoAcceptMembers: false,
@@ -276,14 +276,14 @@ describe("Payment Initiate Route", () => {
                 origin: "https://test.com",
             });
 
-            (Community.findOne as jest.Mock).mockResolvedValue({
+            (Community.queryOne as jest.Mock).mockResolvedValue({
                 communityId: "community-123",
                 name: "Test Community",
                 autoAcceptMembers: true,
                 deleted: false,
             });
 
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: "plan-123",
                 type: Constants.PaymentPlanType.ONE_TIME,
                 entityId: "community-123",
@@ -303,7 +303,7 @@ describe("Payment Initiate Route", () => {
             });
 
             // Mock Invoice
-            (Invoice.create as jest.Mock).mockResolvedValue({
+            (Invoice.createOne as jest.Mock).mockResolvedValue({
                 invoiceId: "invoice-123",
             });
         });
@@ -320,7 +320,7 @@ describe("Payment Initiate Route", () => {
         it("creates invoice for paid community", async () => {
             await POST(mockRequest);
 
-            expect(Invoice.create).toHaveBeenCalledWith(
+            expect(Invoice.createOne).toHaveBeenCalledWith(
                 expect.objectContaining({
                     domain: expect.any(Object),
                     membershipId: "membership-123",
@@ -333,7 +333,7 @@ describe("Payment Initiate Route", () => {
         });
 
         it("handles subscription payment plans with included products", async () => {
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: "plan-123",
                 type: Constants.PaymentPlanType.SUBSCRIPTION,
                 entityId: "community-123",
@@ -351,7 +351,7 @@ describe("Payment Initiate Route", () => {
         });
 
         it("handles EMI payment plans with included products", async () => {
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: "plan-123",
                 type: Constants.PaymentPlanType.EMI,
                 entityId: "community-123",
@@ -377,14 +377,14 @@ describe("Payment Initiate Route", () => {
                 origin: "https://test.com",
             });
 
-            (Community.findOne as jest.Mock).mockResolvedValue({
+            (Community.queryOne as jest.Mock).mockResolvedValue({
                 communityId: "community-123",
                 name: "Test Community",
                 autoAcceptMembers: true,
                 deleted: false,
             });
 
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: "plan-123",
                 type: Constants.PaymentPlanType.FREE,
                 entityId: "community-123",
@@ -420,7 +420,7 @@ describe("Payment Initiate Route", () => {
                 origin: "https://test.com",
             });
 
-            (Community.findOne as jest.Mock).mockResolvedValue({
+            (Community.queryOne as jest.Mock).mockResolvedValue({
                 communityId: "community-123",
                 name: "Test Community",
                 autoAcceptMembers: true,
@@ -455,14 +455,14 @@ describe("Payment Initiate Route", () => {
                 origin: "https://test.com",
             });
 
-            (Community.findOne as jest.Mock).mockResolvedValue({
+            (Community.queryOne as jest.Mock).mockResolvedValue({
                 communityId: "community-123",
                 name: "Test Community",
                 autoAcceptMembers: true,
                 deleted: false,
             });
 
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: "plan-123",
                 type: Constants.PaymentPlanType.ONE_TIME,
                 entityId: "community-123",
@@ -491,14 +491,14 @@ describe("Payment Initiate Route", () => {
                 origin: "https://test.com",
             });
 
-            (Community.findOne as jest.Mock).mockResolvedValue({
+            (Community.queryOne as jest.Mock).mockResolvedValue({
                 communityId: "community-123",
                 name: "Test Community",
                 autoAcceptMembers: true,
                 deleted: false,
             });
 
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: "plan-123",
                 type: Constants.PaymentPlanType.FREE,
                 entityId: "community-123",
@@ -525,14 +525,14 @@ describe("Payment Initiate Route", () => {
                 origin: "https://test.com",
             });
 
-            (Community.findOne as jest.Mock).mockResolvedValue({
+            (Community.queryOne as jest.Mock).mockResolvedValue({
                 communityId: "community-123",
                 name: "Test Community",
                 autoAcceptMembers: true,
                 deleted: false,
             });
 
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: "plan-123",
                 type: Constants.PaymentPlanType.FREE,
                 entityId: "community-123",
@@ -554,14 +554,14 @@ describe("Payment Initiate Route", () => {
                 origin: "https://test.com",
             });
 
-            (Community.findOne as jest.Mock).mockResolvedValue({
+            (Community.queryOne as jest.Mock).mockResolvedValue({
                 communityId: "community-123",
                 name: "Test Community",
                 autoAcceptMembers: true,
                 deleted: false,
             });
 
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: "plan-123",
                 type: Constants.PaymentPlanType.FREE,
                 entityId: "community-123",
@@ -583,7 +583,7 @@ describe("Payment Initiate Route", () => {
                 origin: "https://test.com",
             });
 
-            (Community.findOne as jest.Mock).mockResolvedValue({
+            (Community.queryOne as jest.Mock).mockResolvedValue({
                 communityId: "community-123",
                 name: "Test Community",
                 autoAcceptMembers: true,
@@ -595,7 +595,7 @@ describe("Payment Initiate Route", () => {
                 (_, i) => `course-${i}`,
             );
 
-            (PaymentPlan.findOne as jest.Mock).mockResolvedValue({
+            (PaymentPlan.queryOne as jest.Mock).mockResolvedValue({
                 planId: "plan-123",
                 type: Constants.PaymentPlanType.FREE,
                 entityId: "community-123",

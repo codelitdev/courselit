@@ -27,13 +27,13 @@ describe("updateCourse", () => {
     let page: any;
 
     beforeAll(async () => {
-        testDomain = await DomainModel.create({
+        testDomain = await DomainModel.createOne({
             name: id("domain"),
             email: email("domain"),
         });
 
         // Create admin user with course management permissions
-        adminUser = await UserModel.create({
+        adminUser = await UserModel.createUser({
             domain: testDomain._id,
             userId: id("admin-user"),
             email: email("admin"),
@@ -44,7 +44,7 @@ describe("updateCourse", () => {
             purchases: [],
         });
 
-        page = await PageModel.create({
+        page = await PageModel.createOne({
             domain: testDomain._id,
             pageId: "test-page-perm",
             name: "Test Page",
@@ -54,14 +54,14 @@ describe("updateCourse", () => {
     });
 
     beforeEach(async () => {
-        await CourseModel.deleteMany({ domain: testDomain._id });
+        await CourseModel.removeMany({ domain: testDomain._id });
         jest.clearAllMocks();
     });
 
     afterAll(async () => {
-        await PageModel.deleteOne({ _id: page._id });
-        await UserModel.deleteMany({ domain: testDomain._id });
-        await DomainModel.deleteOne({ _id: testDomain._id });
+        await PageModel.removeOne({ _id: page._id });
+        await UserModel.removeMany({ domain: testDomain._id });
+        await DomainModel.removeOne({ _id: testDomain._id });
     });
 
     it("Spot all the mediaIds to be deleted correctly", async () => {
@@ -96,7 +96,7 @@ describe("updateCourse", () => {
             ],
         };
 
-        const course = await CourseModel.create({
+        const course = await CourseModel.createOne({
             domain: testDomain._id,
             courseId: id("course-unique"),
             title: id("course-title"),
@@ -169,7 +169,7 @@ describe("updateCourse", () => {
             ],
         };
 
-        const course = await CourseModel.create({
+        const course = await CourseModel.createOne({
             domain: testDomain._id,
             courseId: id("course-unique-2"),
             title: id("course-title-2"),

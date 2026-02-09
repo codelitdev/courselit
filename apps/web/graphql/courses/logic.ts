@@ -21,7 +21,6 @@ import {
 import Lesson from "@courselit/orm-models/dao/lesson";
 import GQLContext from "@/models/GQLContext";
 import Filter from "./models/filter";
-import mongoose from "mongoose";
 import {
     Constants,
     Group,
@@ -59,7 +58,7 @@ import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-t
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
 export const getCourseOrThrow = async (
-    id: mongoose.Types.ObjectId | undefined,
+    id: string | undefined,
     ctx: GQLContext,
     courseId?: string,
 ): Promise<InternalCourse> => {
@@ -73,7 +72,7 @@ export const getCourseOrThrow = async (
               _id: id,
           };
 
-    const course = await CourseModel.findOne({
+    const course = await CourseModel.queryOne({
         ...query,
         domain: ctx.subdomain._id,
     });
@@ -100,31 +99,34 @@ export const getCourseOrThrow = async (
 };
 
 async function formatCourse(courseId: string, ctx: GQLContext) {
-    const course: InternalCourse | null = (await CourseModel.findOne({
+    const course: InternalCourse | null = (await CourseModel.queryOne({
         courseId,
         domain: ctx.subdomain._id,
-    }).lean()) as unknown as InternalCourse;
+    })) as unknown as InternalCourse;
+    const normalizedCourse = course
+        ? (JSON.parse(JSON.stringify(course)) as InternalCourse)
+        : null;
 
     const paymentPlans = await getPlans({
-        entityId: course!.courseId,
+        entityId: normalizedCourse!.courseId,
         entityType: Constants.MembershipEntityType.COURSE,
         ctx,
     });
 
     if (
-        course.type === Constants.CourseType.COURSE ||
-        course.type === Constants.CourseType.DOWNLOAD
+        normalizedCourse!.type === Constants.CourseType.COURSE ||
+        normalizedCourse!.type === Constants.CourseType.DOWNLOAD
     ) {
         const { nextLesson } = await getPrevNextCursor(
-            course.courseId,
+            normalizedCourse!.courseId,
             ctx.subdomain._id,
         );
-        (course as any).firstLesson = nextLesson;
+        (normalizedCourse as any).firstLesson = nextLesson;
     }
 
     const result = {
-        ...course,
-        groups: course!.groups?.map((group: any) => ({
+        ...normalizedCourse,
+        groups: normalizedCourse!.groups?.map((group: any) => ({
             ...group,
             id: group._id.toString(),
         })),
@@ -138,10 +140,10 @@ export const getCourse = async (
     ctx: GQLContext,
     asGuest: boolean = false,
 ) => {
-    const course: InternalCourse | null = (await CourseModel.findOne({
+    const course: InternalCourse | null = (await CourseModel.queryOne({
         courseId: id,
         domain: ctx.subdomain._id,
-    }).lean()) as unknown as InternalCourse | null;
+    })) as unknown as InternalCourse | null;
 
     if (!course) {
         throw new Error(responses.item_not_found);
@@ -246,8 +248,8 @@ export const updateCourse = async (
             course.featuredImage = featuredImage;
         }
     }
-    course = await (course as any).save();
-    await PageModel.updateOne(
+    course = (await CourseModel.saveOne(course as any)) as any;
+    await PageModel.patchOne(
         { entityId: course.courseId, domain: ctx.subdomain._id },
         { $set: { name: course.title } },
     );
@@ -257,7 +259,7 @@ export const updateCourse = async (
 export const deleteCourse = async (id: string, ctx: GQLContext) => {
     const course = await getCourseOrThrow(undefined, ctx, id);
     const certificateTemplate =
-        await CertificateTemplateModel.findOne<CertificateTemplate | null>({
+        await CertificateTemplateModel.queryOne<CertificateTemplate | null>({
             domain: ctx.subdomain._id,
             courseId: course.courseId,
         });
@@ -267,20 +269,20 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
     if (certificateTemplate?.logo?.mediaId) {
         await deleteMedia(certificateTemplate.logo.mediaId);
     }
-    await CertificateTemplateModel.deleteOne({
+    await CertificateTemplateModel.removeOne({
         domain: ctx.subdomain._id,
         courseId: course.courseId,
     });
-    await CertificateModel.deleteMany({
+    await CertificateModel.removeMany({
         domain: ctx.subdomain._id,
         courseId: course.courseId,
     });
-    await MembershipModel.deleteMany({
+    await MembershipModel.removeMany({
         domain: ctx.subdomain._id,
         entityId: course.courseId,
         entityType: Constants.MembershipEntityType.COURSE,
     });
-    await PaymentPlanModel.deleteMany({
+    await PaymentPlanModel.removeMany({
         domain: ctx.subdomain._id,
         entityId: course.courseId,
         entityType: Constants.MembershipEntityType.COURSE,
@@ -289,7 +291,7 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
         domain: ctx.subdomain._id,
         courseId: course.courseId,
     });
-    await ActivityModel.deleteMany({
+    await ActivityModel.removeMany({
         domain: ctx.subdomain._id,
         $or: [
             { entityId: course.courseId },
@@ -312,7 +314,7 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
             await deleteMedia(mediaId);
         }
     }
-    await UserModel.updateMany(
+    await UserModel.patchMany(
         {
             domain: ctx.subdomain._id,
         },
@@ -325,7 +327,7 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
         },
     );
     await deletePageInternal(ctx, course.pageId!);
-    await CourseModel.deleteOne({
+    await CourseModel.removeOne({
         domain: ctx.subdomain._id,
         courseId: course.courseId,
     });
@@ -381,7 +383,7 @@ export const getCoursesAsAdmin = async ({
 
     return courses.map(async (course) => ({
         ...course,
-        customers: await (MembershipModel as any).countDocuments({
+        customers: await MembershipModel.count({
             entityId: course.courseId,
             entityType: Constants.MembershipEntityType.COURSE,
             domain: context.subdomain._id,
@@ -421,7 +423,7 @@ export const getCourses = async ({
         query.courseId = {
             $in: ids,
         };
-        courses = await CourseModel.find(query, {
+        courses = await CourseModel.query(query, {
             id: 1,
             title: 1,
             cost: 1,
@@ -443,7 +445,7 @@ export const getCourses = async ({
         if (filterBy) {
             query.type = { $in: filterBy };
         }
-        courses = await CourseModel.find(query, {
+        courses = await CourseModel.query(query, {
             id: 1,
             title: 1,
             cost: 1,
@@ -567,7 +569,7 @@ export const getProducts = async ({
     for (const course of courses) {
         const customers =
             hasManagePerm && course.type !== constants.blog
-                ? await (MembershipModel as any).countDocuments({
+                ? await MembershipModel.count({
                       entityId: course.courseId,
                       entityType: Constants.MembershipEntityType.COURSE,
                       domain: ctx.subdomain._id,
@@ -627,7 +629,7 @@ export const getProductsCount = async ({
 }) => {
     const query = getProductsQuery(ctx, filterBy, tags, ids, publicView);
 
-    return await (CourseModel as any).countDocuments(query);
+    return await CourseModel.count(query);
 };
 
 export const addGroup = async ({
@@ -667,7 +669,7 @@ export const addGroup = async ({
         name,
     } as Group);
 
-    await (course as any).save();
+    await CourseModel.saveOne(course as any);
 
     return await formatCourse(course.courseId, ctx);
 };
@@ -691,7 +693,7 @@ export const removeGroup = async (
         throw new Error(responses.download_course_last_group_cannot_be_removed);
     }
 
-    const countOfAssociatedLessons = await Lesson.countDocuments({
+    const countOfAssociatedLessons = await Lesson.count({
         courseId,
         groupId: group.id,
         domain: ctx.subdomain._id,
@@ -702,9 +704,9 @@ export const removeGroup = async (
     }
 
     await (course.groups as any).pull({ _id: id });
-    await (course as any).save();
+    await CourseModel.saveOne(course as any);
 
-    await UserModel.updateMany(
+    await UserModel.patchMany(
         {
             domain: ctx.subdomain._id,
         },
@@ -803,7 +805,7 @@ export const updateGroup = async ({
         }
     }
 
-    return await CourseModel.findOneAndUpdate(
+    return await CourseModel.patchOneAndGet(
         {
             domain: ctx.subdomain._id,
             courseId: course.courseId,
@@ -860,7 +862,7 @@ export const getMembers = async ({
 
     return await Promise.all(
         members.map(async (member) => {
-            const user = await UserModel.findOne<User>({
+            const user = await UserModel.queryOne<User>({
                 domain: ctx.subdomain._id,
                 userId: member.userId,
             });
@@ -959,7 +961,7 @@ export const getCourseCertificateTemplate = async (
 ) => {
     const course = await getCourseOrThrow(undefined, ctx, courseId);
 
-    const certificateTemplate = await CertificateTemplateModel.findOne({
+    const certificateTemplate = await CertificateTemplateModel.queryOne({
         domain: ctx.subdomain._id,
         courseId: course.courseId,
     });
@@ -1004,7 +1006,7 @@ export const updateCourseCertificateTemplate = async ({
         }
     }
 
-    const updatedTemplate = await CertificateTemplateModel.findOneAndUpdate(
+    const updatedTemplate = await CertificateTemplateModel.patchOneAndGet(
         {
             domain: ctx.subdomain._id,
             courseId: course.courseId,

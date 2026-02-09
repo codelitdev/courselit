@@ -1,17 +1,17 @@
 import {
     Community,
-    Domain,
     Constants,
     Membership,
     PaymentPlan,
 } from "@courselit/common-models";
 import CommunityModel from "@courselit/orm-models/dao/community";
-import mongoose from "mongoose";
+import MembershipModel from "@courselit/orm-models/dao/membership";
 import { addIncludedProductsMemberships } from "@/graphql/paymentplans/logic";
 import { runPostMembershipTasks } from "@/graphql/users/logic";
+import type { Domain } from "@courselit/orm-models/dao/domain";
 
 export async function activateMembership(
-    domain: Domain & { _id: mongoose.Types.ObjectId },
+    domain: Domain,
     membership: Membership,
     paymentPlan: PaymentPlan | null,
 ) {
@@ -21,7 +21,7 @@ export async function activateMembership(
 
     if (membership.entityType === Constants.MembershipEntityType.COMMUNITY) {
         if (paymentPlan?.type === Constants.PaymentPlanType.FREE) {
-            const community = await CommunityModel.findOne<Community>({
+            const community = await CommunityModel.queryOne<Community>({
                 communityId: membership.entityId,
             });
             if (community) {
@@ -56,7 +56,7 @@ export async function activateMembership(
         membership.status = Constants.MembershipStatus.ACTIVE;
     }
 
-    await (membership as any).save();
+    await MembershipModel.saveOne(membership as any);
 
     if (paymentPlan) {
         await runPostMembershipTasks({

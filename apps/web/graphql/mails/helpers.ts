@@ -1,7 +1,6 @@
 import RuleModel from "@courselit/orm-models/dao/rule";
 import { Email, Rule, Sequence, User } from "@courselit/common-models";
 import GQLContext from "@models/GQLContext";
-import mongoose from "mongoose";
 import SearchData from "./models/search-data";
 import DownloadLinkModel from "@courselit/orm-models/dao/download-link";
 import pug from "pug";
@@ -29,7 +28,7 @@ export async function addRule({
     sequence: Sequence;
     ctx: GQLContext;
 }) {
-    const rule: Partial<Rule> & { domain: mongoose.Types.ObjectId } = {
+    const rule: Partial<Rule> & { domain: GQLContext["subdomain"]["_id"] } = {
         domain: ctx.subdomain._id,
         event: sequence.trigger.type,
         sequenceId: sequence.sequenceId,
@@ -41,7 +40,7 @@ export async function addRule({
         rule.eventData = sequence.trigger.data;
     }
 
-    await RuleModel.create(rule);
+    await RuleModel.createOne(rule);
 }
 
 export async function removeRule({
@@ -51,7 +50,7 @@ export async function removeRule({
     sequence: Sequence;
     ctx: GQLContext;
 }) {
-    await RuleModel.deleteMany({
+    await RuleModel.removeMany({
         domain: ctx.subdomain._id,
         // event: sequence.trigger.type,
         sequenceId: sequence.sequenceId,
@@ -59,7 +58,7 @@ export async function removeRule({
 }
 
 export const buildQueryFromSearchData = (
-    domain: mongoose.Types.ObjectId,
+    domain: GQLContext["subdomain"]["_id"],
     searchData: SearchData = {},
     creatorId?: string,
 ) => {
@@ -81,15 +80,18 @@ export async function createTemplateAndSendMail({
     ctx: GQLContext;
     user: User;
 }) {
-    const downloadLink = await DownloadLinkModel.create({
+    const downloadLink = await DownloadLinkModel.createOne({
         domain: ctx.subdomain!._id,
         courseId: course.courseId,
         userId: user.userId,
     });
 
-    const creator = await UserModel.findOne({
-        userId: course.creatorId,
-    }).select("name");
+    const creator = await UserModel.queryOne(
+        {
+            userId: course.creatorId,
+        },
+        { name: 1 },
+    );
 
     const emailBody = pug.render(digitalDownloadTemplate, {
         downloadLink: `${ctx.address}/api/download/${downloadLink.token}`,

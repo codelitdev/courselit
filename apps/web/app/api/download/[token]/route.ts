@@ -29,13 +29,12 @@ import {
 } from "fs";
 import { recordActivity } from "@/lib/record-activity";
 import path from "node:path";
-import { Types } from "mongoose";
 
 export async function GET(
     req: NextRequest,
     { params }: { params: Promise<{ token: string }> },
 ) {
-    const domain = await DomainModel.findOne<Domain>({
+    const domain = await DomainModel.queryOne<Domain>({
         name: req.headers.get("domain"),
     });
     if (!domain) {
@@ -47,7 +46,7 @@ export async function GET(
         return Response.json({ message: "Missing token" }, { status: 400 });
     }
 
-    const downloadLink: DownloadLink | null = await DownloadLinkModel.findOne({
+    const downloadLink: DownloadLink | null = await DownloadLinkModel.queryOne({
         token,
         domain: domain._id,
         expiresAt: { $gt: new Date() },
@@ -59,14 +58,14 @@ export async function GET(
         );
     }
     if (downloadLink.expiresAt.getTime() - Date.now() < 0) {
-        await (downloadLink as any).remove();
+        await DownloadLinkModel.removeDoc(downloadLink as any);
         return Response.json(
             { message: responses.download_link_expired },
             { status: 404 },
         );
     }
 
-    const course: Course | null = await CourseModel.findOne({
+    const course: Course | null = await CourseModel.queryOne({
         domain: domain._id,
         courseId: downloadLink.courseId,
         published: true,
@@ -78,7 +77,7 @@ export async function GET(
         );
     }
 
-    const allLessons: Lesson[] = await LessonModel.find(
+    const allLessons: Lesson[] = await LessonModel.query(
         {
             courseId: course.courseId,
             domain: domain._id,
@@ -142,7 +141,7 @@ export async function GET(
                 domainId: downloadLink.domain,
             });
             downloadLink.consumed = true;
-            await (downloadLink as any).save();
+            await DownloadLinkModel.saveOne(downloadLink as any);
             rmSync(targetDirectory, { recursive: true, force: true });
         });
 
@@ -232,9 +231,9 @@ async function recordProgress({
 }: {
     courseId: string;
     userId: string;
-    domainId: Types.ObjectId;
+    domainId: DownloadLink["domain"];
 }) {
-    const user: User | null = await UserModel.findOne({ userId });
+    const user: User | null = await UserModel.queryOne({ userId });
     if (!user) {
         return;
     }
@@ -248,7 +247,7 @@ async function recordProgress({
     }
 
     user.purchases[enrolledItemIndex].downloaded = true;
-    await (user as any).save();
+    await UserModel.saveOne(user as any);
 
     await recordActivity({
         domain: domainId,

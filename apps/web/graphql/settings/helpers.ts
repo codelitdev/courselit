@@ -8,6 +8,7 @@ import {
     SiteInfo,
     UIConstants,
 } from "@courselit/common-models";
+import DomainModel from "@courselit/orm-models/dao/domain";
 import GQLContext from "@models/GQLContext";
 
 const currencyISOCodes = currencies.map((currency) =>
@@ -128,5 +129,5 @@ export async function saveLoginProvider({
         logins.push(Constants.LoginProvider.EMAIL);
     }
     ctx.subdomain.settings.logins = logins;
-    await (ctx.subdomain as any).save();
+    await DomainModel.saveOne(ctx.subdomain as any);
 }

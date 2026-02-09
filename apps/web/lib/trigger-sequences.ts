@@ -8,7 +8,6 @@ import {
 import OngoingSequence from "@courselit/orm-models/dao/ongoing-sequence";
 import RuleModel from "@courselit/orm-models/dao/rule";
 import SequenceModel from "@courselit/orm-models/dao/sequence";
-import mongoose from "mongoose";
 import { error } from "../services/logger";
 import { InternalUser } from "@courselit/common-logic";
 
@@ -26,24 +25,22 @@ export async function triggerSequences({
     }
 
     try {
-        const filter: Partial<Rule & { domain: mongoose.Types.ObjectId }> = {
+        const filter: Partial<Rule> & { domain: InternalUser["domain"] } = {
             domain: user.domain,
             event,
         };
         if (data) {
             filter.eventData = data;
         }
-        const rules = (await RuleModel.find(
-            filter,
-        ).lean()) as unknown as Rule[];
+        const rules = (await RuleModel.query(filter)) as unknown as Rule[];
 
         for (const rule of rules) {
-            const sequence = (await SequenceModel.findOne({
+            const sequence = (await SequenceModel.queryOne({
                 domain: user.domain,
                 sequenceId: rule.sequenceId,
                 status: Constants.sequenceStatus[1],
-            }).lean()) as unknown as Sequence & {
-                _id: mongoose.Types.ObjectId;
+            })) as unknown as Sequence & {
+                _id: InternalUser["domain"];
             };
 
             if (!sequence) {
@@ -68,7 +65,7 @@ export async function triggerSequences({
                 continue;
             }
 
-            await OngoingSequence.create({
+            await OngoingSequence.createOne({
                 domain: user.domain,
                 sequenceId: sequence.sequenceId,
                 userId: user.userId,
@@ -76,7 +73,7 @@ export async function triggerSequences({
                     new Date().getTime() + firstPublishedEmail.delayInMillis,
             });
 
-            await SequenceModel.updateOne(
+            await SequenceModel.patchOne(
                 { _id: sequence._id },
                 { $addToSet: { entrants: user.userId } },
             );

@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
             return Response.json({ message: "Bad request" }, { status: 400 });
         }
 
-        const invoice = await InvoiceModel.findOne({ invoiceId: id });
+        const invoice = await InvoiceModel.queryOne({ invoiceId: id });
 
         if (!invoice) {
             return Response.json(
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const membership = await Membership.findOne({
+        const membership = await Membership.queryOne({
             membershipId: invoice.membershipId,
         });
 

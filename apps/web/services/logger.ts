@@ -8,7 +8,7 @@ export const info = async (
     metadata?: Record<string, unknown>,
 ) => {
     if (process.env.NODE_ENV === "production") {
-        await Log.create({
+        await Log.createOne({
             severity: severityInfo,
             message,
             metadata,
@@ -23,7 +23,7 @@ export const warn = async (
     metadata?: Record<string, unknown>,
 ) => {
     if (process.env.NODE_ENV === "production") {
-        await Log.create({
+        await Log.createOne({
             severity: severityWarn,
             message,
             metadata,
@@ -42,7 +42,7 @@ export const error = async (
     },
 ) => {
     if (process.env.NODE_ENV === "production") {
-        await Log.create({
+        await Log.createOne({
             severity: severityError,
             message,
             metadata,

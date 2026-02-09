@@ -12,7 +12,7 @@ const {
 const { update_payment_method: updatePaymentMethod } = responses;
 
 export const getPaymentMethod = async (domainName: string) => {
-    const domain: Domain | null = await DomainModel.findOne({
+    const domain: Domain | null = await DomainModel.queryOne({
         _id: domainName,
     });
     const siteInfo: SiteInfo | null = domain && domain.settings;

@@ -11,7 +11,7 @@ import constants from "../../config/constants";
 import Course from "@courselit/orm-models/dao/course";
 import { checkPermission, extractMediaIDs } from "@courselit/utils";
 import { Media, User, Constants } from "@courselit/common-models";
-import { Domain } from "@courselit/orm-models/dao/domain";
+import DomainModel, { Domain } from "@courselit/orm-models/dao/domain";
 import { homePageTemplate } from "./page-templates";
 import { publishTheme } from "../themes/logic";
 import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
@@ -46,7 +46,7 @@ export async function getPage({
         ctx.user &&
         checkPermission(ctx.user.permissions, [permissions.manageSite]);
     if (isAdmin) {
-        const page = await PageModel.findOne(
+        const page = await PageModel.queryOne(
             {
                 pageId: id,
                 domain: ctx.subdomain._id,
@@ -72,7 +72,7 @@ export async function getPage({
 
         return getPageResponse(page, ctx);
     } else {
-        const page = await PageModel.findOne(
+        const page = await PageModel.queryOne(
             {
                 pageId: id,
                 domain: ctx.subdomain._id,
@@ -92,7 +92,7 @@ export async function getPage({
         if (!page) return;
 
         if (page.type === product) {
-            const course = await Course.findOne({
+            const course = await Course.queryOne({
                 courseId: page.entityId,
                 domain: ctx.subdomain._id,
                 published: true,
@@ -103,7 +103,7 @@ export async function getPage({
         }
 
         if (page.type === communityPage) {
-            const community = await CommunityModel.findOne({
+            const community = await CommunityModel.queryOne({
                 domain: ctx.subdomain._id,
                 communityId: page.entityId,
                 enabled: true,
@@ -138,7 +138,7 @@ export const updatePage = async ({
     if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
         throw new Error(responses.action_not_allowed);
     }
-    const page: Page | null = await PageModel.findOne({
+    const page: Page | null = await PageModel.queryOne({
         pageId,
         domain: ctx.subdomain._id,
     });
@@ -212,7 +212,7 @@ export const updatePage = async ({
     }
 
     try {
-        await (page as any).save();
+        await PageModel.saveOne(page as any);
     } catch (e: any) {
         // We want to safely ignore the error where `__v` property does not
         // match for a document as it signifies a race condition in mongoose.
@@ -232,7 +232,7 @@ export const publish = async (
     if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
         throw new Error(responses.action_not_allowed);
     }
-    const page: Page | null = await PageModel.findOne({
+    const page: Page | null = await PageModel.queryOne({
         pageId,
         domain: ctx.subdomain._id,
     });
@@ -288,11 +288,11 @@ export const publish = async (
         await publishTheme(ctx.subdomain.themeId, ctx);
     }
 
-    await (ctx.subdomain as any).save();
+    await DomainModel.saveOne(ctx.subdomain as any);
     for (const mediaId of mediaToDelete) {
         await deleteMedia(mediaId);
     }
-    await (page as any).save();
+    await PageModel.saveOne(page as any);
 
     return getPageResponse(page!, ctx);
 };
@@ -318,7 +318,7 @@ export const getPages = async (
         filter.type = type;
     }
 
-    const pages: Page[] = await PageModel.find(filter, {
+    const pages: Page[] = await PageModel.query(filter, {
         pageId: 1,
         name: 1,
         type: 1,
@@ -330,7 +330,7 @@ export const getPages = async (
 };
 
 export const initMandatoryPages = async (domain: Domain, user: User) => {
-    await PageModel.bulkWrite([
+    await PageModel.bulkPatch([
         {
             updateOne: {
                 filter: { domain: domain._id, pageId: defaultPages[0] },
@@ -433,7 +433,7 @@ export const createPage = async ({
         throw new Error(responses.action_not_allowed);
     }
 
-    const existingPage = await PageModel.findOne({
+    const existingPage = await PageModel.queryOne({
         domain: ctx.subdomain._id,
         pageId,
         type: site,
@@ -443,7 +443,7 @@ export const createPage = async ({
         throw new Error(responses.page_exists);
     }
 
-    const page: Page = await PageModel.create({
+    const page: Page = await PageModel.createOne({
         domain: ctx.subdomain._id,
         pageId,
         type: site,
@@ -487,10 +487,10 @@ export const deletePage = async (
 };
 
 export const deletePageInternal = async (ctx: GQLContext, id: string) => {
-    const page = (await PageModel.findOne({
+    const page = (await PageModel.queryOne({
         domain: ctx.subdomain._id,
         pageId: id,
-    }).lean()) as unknown as Page;
+    })) as unknown as Page;
 
     if (!page) {
         throw new Error(responses.item_not_found);
@@ -501,7 +501,7 @@ export const deletePageInternal = async (ctx: GQLContext, id: string) => {
         await deleteMedia(mediaId);
     }
 
-    await PageModel.deleteOne({
+    await PageModel.removeOne({
         domain: ctx.subdomain._id,
         deleteable: true,
         pageId: id,
@@ -521,7 +521,7 @@ export const deleteBlock = async ({
     if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
         throw new Error(responses.action_not_allowed);
     }
-    const page: Page | null = await PageModel.findOne({
+    const page: Page | null = await PageModel.queryOne({
         pageId,
         domain: ctx.subdomain._id,
     });
@@ -551,6 +551,6 @@ export const deleteBlock = async ({
     page.draftLayout = page.draftLayout.filter(
         (block: any) => block.widgetId !== blockId,
     );
-    await (page as any).save();
+    await PageModel.saveOne(page as any);
     return getPageResponse(page!, ctx);
 };

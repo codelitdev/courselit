@@ -9,7 +9,7 @@ import { error } from "@/services/logger";
 import { MediaLit } from "medialit";
 
 export async function POST(req: NextRequest) {
-    const domain = await DomainModel.findOne<Domain>({
+    const domain = await DomainModel.queryOne<Domain>({
         name: req.headers.get("domain"),
     });
     if (!domain) {
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     let user;
     if (session) {
-        user = await User.findOne({
+        user = await User.queryOne({
             email: session.user!.email,
             domain: domain._id,
             active: true,

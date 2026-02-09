@@ -62,6 +62,31 @@ const { permissions } = UIConstants;
 
 const { ActivityType } = Constants;
 
+function toValidDate(value: unknown): Date | null {
+    if (!value) {
+        return null;
+    }
+
+    let date: Date | null = null;
+
+    if (value instanceof Date) {
+        date = value;
+    } else if (typeof value === "number") {
+        date = new Date(value);
+    } else if (typeof value === "string") {
+        const numericDate = /^\d+$/.test(value)
+            ? new Date(Number(value))
+            : new Date(value);
+        date = numericDate;
+    }
+
+    if (!date || Number.isNaN(date.getTime())) {
+        return null;
+    }
+
+    return date;
+}
+
 export default function DashboardPage() {
     const params = useParams();
     const productId = params?.id as string;
@@ -87,6 +112,8 @@ export default function DashboardPage() {
     if (productLoaded && !product) {
         redirect("/dashboard/products");
     }
+
+    const productUpdatedAt = toValidDate(product?.updatedAt);
 
     const handleShareClick = () => {
         navigator.clipboard.writeText(
@@ -156,9 +183,9 @@ export default function DashboardPage() {
                                     </Badge>
                                     <span className="text-sm text-muted-foreground">
                                         Last updated{" "}
-                                        {product.updatedAt
+                                        {productUpdatedAt
                                             ? formatDistanceToNow(
-                                                  new Date(+product.updatedAt),
+                                                  productUpdatedAt,
                                                   { addSuffix: true },
                                               )
                                             : "N/A"}

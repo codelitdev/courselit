@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
 
     try {
         const domainName = req.headers.get("domain");
-        const domain = await DomainModel.findOne<Domain>({
+        const domain = await DomainModel.queryOne<Domain>({
             name: domainName,
         });
         if (!domain) {
@@ -68,17 +68,17 @@ export async function GET(req: NextRequest) {
             );
         }
 
-        const sequence = await SequenceModel.findOne<Sequence>({
+        const sequence = await SequenceModel.queryOne<Sequence>({
             domain: domain._id,
             sequenceId,
         });
-        const user = await UserModel.findOne<User>({
+        const user = await UserModel.queryOne<User>({
             domain: domain._id,
             userId,
         });
         const email = sequence?.emails.find((e) => e.emailId === emailId);
         if (sequence && user && email) {
-            await EmailEventModel.create({
+            await EmailEventModel.createOne({
                 domain: domain._id,
                 sequenceId,
                 userId,

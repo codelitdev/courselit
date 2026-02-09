@@ -11,7 +11,6 @@ import {
 import PaymentPlanModel from "@courselit/orm-models/dao/payment-plan";
 import InvoiceModel from "@courselit/orm-models/dao/invoice";
 import { error } from "@/services/logger";
-import mongoose from "mongoose";
 import Payment from "@/payments-new/payment";
 import { activateMembership } from "../helpers";
 
@@ -92,24 +91,18 @@ export async function POST(req: NextRequest) {
 }
 
 async function getDomain(domainName: string | null) {
-    return DomainModel.findOne<Domain>({ name: domainName });
+    return DomainModel.queryOne<Domain>({ name: domainName });
 }
 
-async function getMembership(
-    domainId: mongoose.Types.ObjectId,
-    membershipId: string,
-) {
-    return MembershipModel.findOne<Membership>({
+async function getMembership(domainId: Domain["_id"], membershipId: string) {
+    return MembershipModel.queryOne<Membership>({
         domain: domainId,
         membershipId,
     });
 }
 
-async function getPaymentPlan(
-    domainId: mongoose.Types.ObjectId,
-    paymentPlanId: string,
-) {
-    return PaymentPlanModel.findOne<PaymentPlan>({
+async function getPaymentPlan(domainId: Domain["_id"], paymentPlanId: string) {
+    return PaymentPlanModel.queryOne<PaymentPlan>({
         domain: domainId,
         planId: paymentPlanId,
         internal: false,
@@ -131,7 +124,7 @@ async function handleSubscription(
         if (!membership.subscriptionId) {
             membership.subscriptionId = subscriptionId;
             membership.subscriptionMethod = paymentMethod.getName();
-            await (membership as any).save();
+            await MembershipModel.saveOne(membership as any);
         }
     }
     return subscriptionId;
@@ -146,7 +139,7 @@ async function handleInvoice(
     currencyISOCode: string,
     body: any,
 ) {
-    const invoice = await InvoiceModel.findOne<Invoice>({
+    const invoice = await InvoiceModel.queryOne<Invoice>({
         domain: domain._id,
         invoiceId,
         status: Constants.InvoiceStatus.PENDING,
@@ -155,9 +148,9 @@ async function handleInvoice(
         invoice.paymentProcessorTransactionId =
             paymentMethod.getPaymentIdentifier(body);
         invoice.status = Constants.InvoiceStatus.PAID;
-        await (invoice as any).save();
+        await InvoiceModel.saveOne(invoice as any);
     } else {
-        await InvoiceModel.create({
+        await InvoiceModel.createOne({
             domain: domain._id,
             membershipId: membership.membershipId,
             membershipSessionId: membership.sessionId,
@@ -177,13 +170,13 @@ async function handleInvoice(
 }
 
 async function handleEMICancellation(
-    domainId: mongoose.Types.ObjectId,
+    domainId: Domain["_id"],
     membership: Membership,
     paymentPlan: PaymentPlan,
     subscriptionId: string,
     paymentMethod: any,
 ) {
-    const paidInvoicesCount = await InvoiceModel.countDocuments({
+    const paidInvoicesCount = await InvoiceModel.count({
         domain: domainId,
         membershipId: membership.membershipId,
         status: Constants.InvoiceStatus.PAID,

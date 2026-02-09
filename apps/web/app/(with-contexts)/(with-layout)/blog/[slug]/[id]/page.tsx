@@ -19,6 +19,31 @@ import {
     BreadcrumbSeparator,
 } from "@components/ui/breadcrumb";
 
+function parseDescription(value?: string): {
+    json?: Record<string, unknown>;
+    plainText?: string;
+} {
+    if (!value) {
+        return {};
+    }
+
+    try {
+        const parsed = JSON.parse(value);
+        if (parsed && typeof parsed === "object") {
+            return { json: parsed };
+        }
+        if (typeof parsed === "string" && parsed.trim()) {
+            return { plainText: parsed };
+        }
+    } catch {
+        if (value.trim()) {
+            return { plainText: value };
+        }
+    }
+
+    return {};
+}
+
 export default async function ProductPage(props: {
     params: Promise<{ slug: string; id: string }>;
     course: Course;
@@ -38,6 +63,8 @@ export default async function ProductPage(props: {
     if (!product) {
         return <Section theme={theme.theme}>Post not found</Section>;
     }
+
+    const parsedDescription = parseDescription(product.description);
 
     return (
         <Section theme={theme.theme}>
@@ -95,11 +122,16 @@ export default async function ProductPage(props: {
                         />
                     </div>
                 )}
-                {product?.description && (
+                {parsedDescription.json && (
                     <ClientSideTextRenderer
-                        json={JSON.parse(product.description)}
+                        json={parsedDescription.json}
                         theme={theme.theme}
                     />
+                )}
+                {parsedDescription.plainText && (
+                    <Text2 theme={theme.theme}>
+                        {parsedDescription.plainText}
+                    </Text2>
                 )}
             </div>
         </Section>

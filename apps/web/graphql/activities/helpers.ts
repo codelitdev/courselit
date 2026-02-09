@@ -60,7 +60,7 @@ async function getCourse(
     | "tags"
     | "featuredImage"
 > | null> {
-    return await CourseModel.findOne(
+    return await CourseModel.queryOne(
         {
             courseId,
             domain,

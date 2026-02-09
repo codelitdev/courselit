@@ -23,7 +23,7 @@ export async function getNotification({
 }): Promise<Notification | null> {
     checkIfAuthenticated(ctx);
 
-    const notification = await NotificationModel.findOne({
+    const notification = await NotificationModel.queryOne({
         domain: ctx.subdomain._id,
         forUserId: ctx.user.userId,
         notificationId,
@@ -48,7 +48,9 @@ export async function getNotifications({
     notifications: Notification[];
     total: number;
 }> {
-    const { notifications, total } = await (NotificationModel as any).paginate(
+    checkIfAuthenticated(ctx);
+
+    const { notifications, total } = await NotificationModel.paginate(
         ctx.user.userId,
         {
             page,
@@ -73,7 +75,7 @@ async function formatNotifications(
     notifications: InternalNotification[],
     ctx: GQLContext,
 ): Promise<Notification[]> {
-    // const users = await UserModel.find(
+    // const users = await UserModel.query(
     //     {
     //         userId: {
     //             $in: notifications.map((n) => n.userId),
@@ -110,7 +112,7 @@ async function formatNotification(notification, ctx): Promise<Notification> {
 }
 
 async function getUserName(userId: string): Promise<string> {
-    const user = await UserModel.findOne({ userId });
+    const user = await UserModel.queryOne({ userId });
     return user?.name || user?.email || "Someone";
 }
 
@@ -129,13 +131,13 @@ async function getMessage({
 }): Promise<{ message: string; href: string }> {
     switch (entityAction) {
         case Constants.NotificationEntityAction.COMMUNITY_POSTED:
-            let post = await CommunityPost.findOne({
+            let post = await CommunityPost.queryOne({
                 postId: entityId,
             });
             if (!post) {
                 return { message: "", href: "" };
             }
-            let community = await Community.findOne({
+            let community = await Community.queryOne({
                 communityId: post.communityId,
             });
             if (!community) {
@@ -146,13 +148,13 @@ async function getMessage({
                 href: `/dashboard/community/${community.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_COMMENTED:
-            const post1 = await CommunityPost.findOne({
+            const post1 = await CommunityPost.queryOne({
                 postId: entityId,
             });
             if (!post1) {
                 return { message: "", href: "" };
             }
-            const community1 = await Community.findOne({
+            const community1 = await Community.queryOne({
                 communityId: post1.communityId,
             });
             if (!community1) {
@@ -164,7 +166,7 @@ async function getMessage({
                 href: `/dashboard/community/${community1.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_REPLIED:
-            const comment = await CommunityComment.findOne({
+            const comment = await CommunityComment.queryOne({
                 commentId: entityTargetId,
             });
             if (!comment) {
@@ -182,10 +184,10 @@ async function getMessage({
             }
 
             const [post2, community2] = await Promise.all([
-                CommunityPost.findOne({
+                CommunityPost.queryOne({
                     postId: comment.postId,
                 }),
-                Community.findOne({
+                Community.queryOne({
                     communityId: comment.communityId,
                 }),
             ]);
@@ -207,13 +209,13 @@ async function getMessage({
                 href: `/dashboard/community/${community2.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_POST_LIKED:
-            const post3 = await CommunityPost.findOne({
+            const post3 = await CommunityPost.queryOne({
                 postId: entityId,
             });
             if (!post3) {
                 return { message: "", href: "" };
             }
-            const community3 = await Community.findOne({
+            const community3 = await Community.queryOne({
                 communityId: post3.communityId,
             });
             if (!community3) {
@@ -225,17 +227,17 @@ async function getMessage({
                 href: `/dashboard/community/${community3.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_COMMENT_LIKED:
-            const comment1 = await CommunityComment.findOne({
+            const comment1 = await CommunityComment.queryOne({
                 commentId: entityId,
             });
             if (!comment1) {
                 return { message: "", href: "" };
             }
             const [post4, community4] = await Promise.all([
-                CommunityPost.findOne({
+                CommunityPost.queryOne({
                     postId: comment1.postId,
                 }),
-                Community.findOne({
+                Community.queryOne({
                     communityId: comment1.communityId,
                 }),
             ]);
@@ -249,7 +251,7 @@ async function getMessage({
                 href: `/dashboard/community/${community4.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_REPLY_LIKED:
-            const comment2 = await CommunityComment.findOne({
+            const comment2 = await CommunityComment.queryOne({
                 commentId: entityTargetId,
             });
             if (!comment2) {
@@ -261,10 +263,10 @@ async function getMessage({
             }
 
             const [post5, community5] = await Promise.all([
-                CommunityPost.findOne({
+                CommunityPost.queryOne({
                     postId: comment2.postId,
                 }),
-                Community.findOne({
+                Community.queryOne({
                     communityId: comment2.communityId,
                 }),
             ]);
@@ -278,7 +280,7 @@ async function getMessage({
                 href: `/dashboard/community/${community5.communityId}`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_MEMBERSHIP_REQUESTED:
-            const community6 = await Community.findOne({
+            const community6 = await Community.queryOne({
                 communityId: entityId,
             });
             if (!community6) {
@@ -290,7 +292,7 @@ async function getMessage({
                 href: `/dashboard/community/${community6.communityId}/manage/memberships`,
             };
         case Constants.NotificationEntityAction.COMMUNITY_MEMBERSHIP_GRANTED:
-            const community7 = await Community.findOne({
+            const community7 = await Community.queryOne({
                 communityId: entityId,
             });
             if (!community7) {
@@ -315,7 +317,7 @@ export async function markAsRead({
 }): Promise<boolean> {
     checkIfAuthenticated(ctx);
 
-    await NotificationModel.updateOne(
+    await NotificationModel.patchOne(
         {
             domain: ctx.subdomain._id,
             forUserId: ctx.user.userId,
@@ -332,7 +334,7 @@ export async function markAsRead({
 export async function markAllAsRead(ctx: GQLContext): Promise<boolean> {
     checkIfAuthenticated(ctx);
 
-    await NotificationModel.updateMany(
+    await NotificationModel.patchMany(
         {
             domain: ctx.subdomain._id,
             forUserId: ctx.user.userId,
