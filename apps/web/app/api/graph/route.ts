@@ -2,8 +2,8 @@ import { NextRequest } from "next/server";
 import schema from "@/graphql";
 import { graphql } from "graphql";
 import { getAddress } from "@/lib/utils";
-import User from "@models/User";
-import DomainModel, { Domain } from "@models/Domain";
+import User from "@courselit/orm-models/dao/user";
+import DomainModel, { Domain } from "@courselit/orm-models/dao/domain";
 import { auth } from "@/auth";
 import { als } from "@/async-local-storage";
 

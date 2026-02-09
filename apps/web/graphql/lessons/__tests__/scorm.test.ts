@@ -1,8 +1,8 @@
 import { markLessonCompleted } from "../logic";
-import LessonModel from "@/models/Lesson";
-import UserModel from "@/models/User";
-import CourseModel from "@/models/Course";
-import DomainModel from "@/models/Domain";
+import LessonModel from "@courselit/orm-models/dao/lesson";
+import UserModel from "@courselit/orm-models/dao/user";
+import CourseModel from "@courselit/orm-models/dao/course";
+import DomainModel from "@courselit/orm-models/dao/domain";
 import { Constants } from "@courselit/common-models";
 import mongoose from "mongoose";
 

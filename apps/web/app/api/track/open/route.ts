@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import DomainModel, { Domain } from "@models/Domain";
-import EmailEventModel from "@models/EmailEvent";
-import UserModel from "@models/User";
-import SequenceModel from "@models/Sequence";
+import DomainModel, { Domain } from "@courselit/orm-models/dao/domain";
+import EmailEventModel from "@courselit/orm-models/dao/email-event";
+import UserModel from "@courselit/orm-models/dao/user";
+import SequenceModel from "@courselit/orm-models/dao/sequence";
 import { Constants, Sequence, User } from "@courselit/common-models";
 import { error } from "@/services/logger";
 import { jwtUtils } from "@courselit/utils";

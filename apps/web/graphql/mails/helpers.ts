@@ -1,16 +1,16 @@
-import RuleModel from "@models/Rule";
+import RuleModel from "@courselit/orm-models/dao/rule";
 import { Email, Rule, Sequence, User } from "@courselit/common-models";
 import GQLContext from "@models/GQLContext";
 import mongoose from "mongoose";
 import SearchData from "./models/search-data";
-import DownloadLinkModel from "@models/DownloadLink";
+import DownloadLinkModel from "@courselit/orm-models/dao/download-link";
 import pug from "pug";
 import digitalDownloadTemplate from "../../templates/download-link";
 import { responses } from "@config/strings";
 import { generateEmailFrom } from "@/lib/utils";
 import { addMailJob } from "@/services/queue";
 import { EmailBlock } from "@courselit/email-editor";
-import UserModel from "@models/User";
+import UserModel from "@courselit/orm-models/dao/user";
 import { InternalCourse } from "@courselit/common-logic";
 
 export function areAllEmailIdsValid(

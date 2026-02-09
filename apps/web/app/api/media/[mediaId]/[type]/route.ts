@@ -3,16 +3,16 @@ import { responses } from "@/config/strings";
 import * as medialitService from "@/services/medialit";
 import { UIConstants as constants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
-import UserModel from "@models/User";
+import UserModel from "@courselit/orm-models/dao/user";
 import { InternalUser, InternalCourse } from "@courselit/common-logic";
-import DomainModel, { Domain } from "@models/Domain";
+import DomainModel, { Domain } from "@courselit/orm-models/dao/domain";
 import { auth } from "@/auth";
-import CourseModel from "@models/Course";
-import LessonModel, { Lesson } from "@models/Lesson";
-import PageModel, { Page } from "@models/Page";
+import CourseModel from "@courselit/orm-models/dao/course";
+import LessonModel, { Lesson } from "@courselit/orm-models/dao/lesson";
+import PageModel, { Page } from "@courselit/orm-models/dao/page";
 import CertificateTemplateModel, {
     CertificateTemplate,
-} from "@models/CertificateTemplate";
+} from "@courselit/orm-models/dao/certificate-template";
 
 const types = [
     "course",

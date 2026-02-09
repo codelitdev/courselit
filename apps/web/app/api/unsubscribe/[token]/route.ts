@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { responses } from "@/config/strings";
-import User from "@models/User";
-import DomainModel, { Domain } from "@models/Domain";
+import User from "@courselit/orm-models/dao/user";
+import DomainModel, { Domain } from "@courselit/orm-models/dao/domain";
 
 export async function GET(
     req: NextRequest,

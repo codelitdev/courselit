@@ -4,7 +4,7 @@ import GQLContext from "../../models/GQLContext";
 import constants from "../../config/constants";
 import { checkPermission } from "@courselit/utils";
 const { permissions, activityTypes, analyticsDurations } = constants;
-import ActivityModel, { Activity } from "../../models/Activity";
+import ActivityModel, { Activity } from "@courselit/orm-models/dao/activity";
 import { calculatePastDate } from "./helpers";
 import { ActivityType } from "@courselit/common-models";
 

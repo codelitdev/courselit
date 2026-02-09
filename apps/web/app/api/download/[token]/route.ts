@@ -1,11 +1,13 @@
-import DomainModel, { Domain } from "@models/Domain";
+import DomainModel, { Domain } from "@courselit/orm-models/dao/domain";
 import { NextRequest } from "next/server";
-import DownloadLinkModel, { DownloadLink } from "@models/DownloadLink";
+import DownloadLinkModel, {
+    DownloadLink,
+} from "@courselit/orm-models/dao/download-link";
 import { responses } from "@config/strings";
 import { error } from "@/services/logger";
 import { Readable } from "node:stream";
 import archiver from "archiver";
-import UserModel from "@models/User";
+import UserModel from "@courselit/orm-models/dao/user";
 import {
     Progress,
     Constants,
@@ -14,8 +16,8 @@ import {
     type Course,
     type Lesson,
 } from "@courselit/common-models";
-import CourseModel from "@models/Course";
-import LessonModel from "@models/Lesson";
+import CourseModel from "@courselit/orm-models/dao/course";
+import LessonModel from "@courselit/orm-models/dao/lesson";
 import { getMedia } from "@/graphql/media/logic";
 import {
     createReadStream,

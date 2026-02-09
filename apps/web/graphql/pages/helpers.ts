@@ -1,7 +1,7 @@
 import { Constants } from "@courselit/common-models";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
-import { Page } from "../../models/Page";
+import { Page } from "@courselit/orm-models/dao/page";
 import { getCommunity } from "../communities/logic";
 import { getCourse } from "../courses/logic";
 import { generateUniqueId } from "@courselit/utils";

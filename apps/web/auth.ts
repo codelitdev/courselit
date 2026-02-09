@@ -1,7 +1,7 @@
 import { APIError, betterAuth } from "better-auth";
 import { customSession, emailOTP } from "better-auth/plugins";
 import { MongoClient } from "mongodb";
-import DomainModel, { Domain } from "@models/Domain";
+import DomainModel, { Domain } from "@courselit/orm-models/dao/domain";
 import { addMailJob } from "@/services/queue";
 import pug from "pug";
 import MagicCodeEmailTemplate from "@/templates/magic-code-email";
@@ -9,7 +9,7 @@ import { generateEmailFrom } from "@/lib/utils";
 import { responses } from "@/config/strings";
 import { mongodbAdapter } from "@/ba-multitenant-adapter";
 import { updateUserAfterCreationViaAuth } from "./graphql/users/logic";
-import UserModel from "@models/User";
+import UserModel from "@courselit/orm-models/dao/user";
 import { getBackendAddress } from "./app/actions";
 import { sso } from "@better-auth/sso";
 

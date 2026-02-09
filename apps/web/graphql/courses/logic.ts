@@ -1,9 +1,9 @@
 /**
  * Business logic for managing courses.
  */
-import CourseModel from "@/models/Course";
+import CourseModel from "@courselit/orm-models/dao/course";
 import { InternalCourse } from "@courselit/common-logic";
-import UserModel from "@/models/User";
+import UserModel from "@courselit/orm-models/dao/user";
 import { Media, User } from "@courselit/common-models";
 import { responses } from "@/config/strings";
 import {
@@ -18,7 +18,7 @@ import {
     setupCourse,
     validateCourse,
 } from "./helpers";
-import Lesson from "@/models/Lesson";
+import Lesson from "@courselit/orm-models/dao/lesson";
 import GQLContext from "@/models/GQLContext";
 import Filter from "./models/filter";
 import mongoose from "mongoose";
@@ -33,7 +33,7 @@ import {
 } from "@courselit/common-models";
 import { deleteAllLessons } from "../lessons/logic";
 import { deleteMedia, sealMedia } from "@/services/medialit";
-import PageModel from "@/models/Page";
+import PageModel from "@courselit/orm-models/dao/page";
 import { getPrevNextCursor } from "../lessons/helpers";
 import { checkPermission, extractMediaIDs } from "@courselit/utils";
 import { error } from "@/services/logger";
@@ -41,17 +41,17 @@ import {
     deleteProductsFromPaymentPlans,
     getPlans,
 } from "../paymentplans/logic";
-import MembershipModel from "@models/Membership";
+import MembershipModel from "@courselit/orm-models/dao/membership";
 import { getActivities } from "../activities/logic";
 import { ActivityType } from "@courselit/common-models/dist/constants";
 import { verifyMandatoryTags } from "../mails/helpers";
 import { Email } from "@courselit/email-editor";
-import PaymentPlanModel from "@models/PaymentPlan";
+import PaymentPlanModel from "@courselit/orm-models/dao/payment-plan";
 import CertificateTemplateModel, {
     CertificateTemplate,
-} from "@models/CertificateTemplate";
-import CertificateModel from "@models/Certificate";
-import ActivityModel from "@models/Activity";
+} from "@courselit/orm-models/dao/certificate-template";
+import CertificateModel from "@courselit/orm-models/dao/certificate";
+import ActivityModel from "@courselit/orm-models/dao/activity";
 import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
 import { deletePageInternal } from "../pages/logic";
 import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";

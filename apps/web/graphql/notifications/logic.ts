@@ -4,12 +4,14 @@ import {
     Notification,
     NotificationEntityAction,
 } from "@courselit/common-models";
-import Community from "@models/Community";
-import CommunityComment from "@models/CommunityComment";
-import CommunityPost from "@models/CommunityPost";
+import Community from "@courselit/orm-models/dao/community";
+import CommunityComment from "@courselit/orm-models/dao/community-comment";
+import CommunityPost from "@courselit/orm-models/dao/community-post";
 import GQLContext from "@models/GQLContext";
-import NotificationModel, { InternalNotification } from "@models/Notification";
-import UserModel from "@models/User";
+import NotificationModel, {
+    InternalNotification,
+} from "@courselit/orm-models/dao/notification";
+import UserModel from "@courselit/orm-models/dao/user";
 import { truncate } from "@ui-lib/utils";
 
 export async function getNotification({

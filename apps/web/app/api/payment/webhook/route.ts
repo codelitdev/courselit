@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
-import DomainModel, { Domain } from "@models/Domain";
-import MembershipModel from "@models/Membership";
+import DomainModel, { Domain } from "@courselit/orm-models/dao/domain";
+import MembershipModel from "@courselit/orm-models/dao/membership";
 import { getPaymentMethod } from "@/payments-new";
 import {
     Constants,
@@ -8,8 +8,8 @@ import {
     Membership,
     PaymentPlan,
 } from "@courselit/common-models";
-import PaymentPlanModel from "@models/PaymentPlan";
-import InvoiceModel from "@models/Invoice";
+import PaymentPlanModel from "@courselit/orm-models/dao/payment-plan";
+import InvoiceModel from "@courselit/orm-models/dao/invoice";
 import { error } from "@/services/logger";
 import mongoose from "mongoose";
 import Payment from "@/payments-new/payment";

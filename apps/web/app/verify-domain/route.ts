@@ -1,4 +1,4 @@
-import DomainModel, { Domain } from "../../models/Domain";
+import DomainModel, { Domain } from "@courselit/orm-models/dao/domain";
 import { responses } from "../../config/strings";
 import constants from "@/config/constants";
 import { isDateInFuture } from "../../lib/utils";
@@ -6,7 +6,9 @@ import { createUser } from "../../graphql/users/logic";
 import { headers } from "next/headers";
 import connectToDatabase from "../../services/db";
 import { warn } from "@/services/logger";
-import SubscriberModel, { Subscriber } from "@models/Subscriber";
+import SubscriberModel, {
+    Subscriber,
+} from "@courselit/orm-models/dao/subscriber";
 import { Constants } from "@courselit/common-models";
 
 const { domainNameForSingleTenancy, schoolNameForSingleTenancy } = constants;

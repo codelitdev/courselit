@@ -6,9 +6,9 @@ import {
     getFeatures,
     toggleLoginProvider,
 } from "../logic";
-import DomainModel from "@models/Domain";
-import UserModel from "@models/User";
-import SSOProviderModel from "@models/SSOProvider";
+import DomainModel from "@courselit/orm-models/dao/domain";
+import UserModel from "@courselit/orm-models/dao/user";
+import SSOProviderModel from "@courselit/orm-models/dao/sso-provider";
 import constants from "@/config/constants";
 import { Constants } from "@courselit/common-models";
 

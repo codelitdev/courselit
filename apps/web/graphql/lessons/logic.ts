@@ -1,13 +1,13 @@
 /**
  * Business logic for managing lessons
  */
-import LessonModel, { Lesson } from "../../models/Lesson";
+import LessonModel, { Lesson } from "@courselit/orm-models/dao/lesson";
 import { responses } from "../../config/strings";
 import {
     checkIfAuthenticated,
     checkOwnershipWithoutModel,
 } from "../../lib/graphql";
-import CourseModel from "../../models/Course";
+import CourseModel from "@courselit/orm-models/dao/course";
 import {
     evaluateLessonResult,
     getPrevNextCursor,
@@ -26,15 +26,15 @@ import {
     ScormContent,
     User,
 } from "@courselit/common-models";
-import LessonEvaluation from "../../models/LessonEvaluation";
+import LessonEvaluation from "@courselit/orm-models/dao/lesson-evaluation";
 import { checkPermission, extractMediaIDs } from "@courselit/utils";
 import { recordActivity } from "../../lib/record-activity";
 import { InternalCourse } from "@courselit/common-logic";
-import CertificateModel from "../../models/Certificate";
+import CertificateModel from "@courselit/orm-models/dao/certificate";
 import { error } from "@/services/logger";
 import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
-import ActivityModel from "@/models/Activity";
-import UserModel from "../../models/User";
+import ActivityModel from "@courselit/orm-models/dao/activity";
+import UserModel from "@courselit/orm-models/dao/user";
 import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
 
 const { permissions, quiz, scorm } = constants;

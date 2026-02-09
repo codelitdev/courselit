@@ -6,12 +6,16 @@ import {
     Constants,
     PaymentPlanType,
 } from "@courselit/common-models";
-import CourseModel from "@models/Course";
-import CommunityModel, { InternalCommunity } from "@models/Community";
+import CourseModel from "@courselit/orm-models/dao/course";
+import CommunityModel, {
+    InternalCommunity,
+} from "@courselit/orm-models/dao/community";
 import constants from "@config/constants";
 import { checkPermission } from "@courselit/utils";
-import PaymentPlanModel, { InternalPaymentPlan } from "@models/PaymentPlan";
-import { Domain } from "@models/Domain";
+import PaymentPlanModel, {
+    InternalPaymentPlan,
+} from "@courselit/orm-models/dao/payment-plan";
+import { Domain } from "@courselit/orm-models/dao/domain";
 import { InternalCourse } from "@courselit/common-logic";
 import GQLContext from "@models/GQLContext";
 import {
@@ -20,9 +24,9 @@ import {
     validatePaymentPlan,
 } from "./helpers";
 import mongoose from "mongoose";
-import MembershipModel from "@models/Membership";
+import MembershipModel from "@courselit/orm-models/dao/membership";
 import { runPostMembershipTasks } from "../users/logic";
-import ActivityModel from "@models/Activity";
+import ActivityModel from "@courselit/orm-models/dao/activity";
 const { MembershipEntityType: membershipEntityType } = Constants;
 const { permissions } = constants;
 

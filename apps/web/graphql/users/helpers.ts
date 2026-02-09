@@ -1,6 +1,6 @@
 "use server";
 
-import UserModel from "@models/User";
+import UserModel from "@courselit/orm-models/dao/user";
 import { responses, internal } from "@/config/strings";
 import constants from "@/config/constants";
 import GQLContext from "@/models/GQLContext";
@@ -10,34 +10,34 @@ import {
     InternalCourse,
 } from "@courselit/common-logic";
 import { Constants, UIConstants } from "@courselit/common-models";
-import CourseModel from "@models/Course";
-import PageModel from "@models/Page";
-import EmailTemplateModel from "@models/EmailTemplate";
-import SequenceModel from "@models/Sequence";
-import UserSegmentModel from "@models/UserSegment";
-import EmailDeliveryModel from "@models/EmailDelivery";
-import UserThemeModel from "@models/UserTheme";
-import PaymentPlanModel from "@models/PaymentPlan";
-import OngoingSequenceModel from "@models/OngoingSequence";
-import LessonModel from "@models/Lesson";
-import MembershipModel from "@models/Membership";
-import NotificationModel from "@models/Notification";
-import MailRequestStatusModel from "@models/MailRequestStatus";
-import LessonEvaluationModel from "@models/LessonEvaluation";
-import DownloadLinkModel from "@models/DownloadLink";
-import CommunityReportModel from "@models/CommunityReport";
-import CertificateModel from "@models/Certificate";
-import ActivityModel from "@models/Activity";
-import EmailEventModel from "@models/EmailEvent";
-import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
+import CourseModel from "@courselit/orm-models/dao/course";
+import PageModel from "@courselit/orm-models/dao/page";
+import EmailTemplateModel from "@courselit/orm-models/dao/email-template";
+import SequenceModel from "@courselit/orm-models/dao/sequence";
+import UserSegmentModel from "@courselit/orm-models/dao/user-segment";
+import EmailDeliveryModel from "@courselit/orm-models/dao/email-delivery";
+import UserThemeModel from "@courselit/orm-models/dao/user-theme";
+import PaymentPlanModel from "@courselit/orm-models/dao/payment-plan";
+import OngoingSequenceModel from "@courselit/orm-models/dao/ongoing-sequence";
+import LessonModel from "@courselit/orm-models/dao/lesson";
+import MembershipModel from "@courselit/orm-models/dao/membership";
+import NotificationModel from "@courselit/orm-models/dao/notification";
+import MailRequestStatusModel from "@courselit/orm-models/dao/mail-request-status";
+import LessonEvaluationModel from "@courselit/orm-models/dao/lesson-evaluation";
+import DownloadLinkModel from "@courselit/orm-models/dao/download-link";
+import CommunityReportModel from "@courselit/orm-models/dao/community-report";
+import CertificateModel from "@courselit/orm-models/dao/certificate";
+import ActivityModel from "@courselit/orm-models/dao/activity";
+import EmailEventModel from "@courselit/orm-models/dao/email-event";
+import CommunityPostSubscriberModel from "@courselit/orm-models/dao/community-post-subscriber";
 import {
     cancelAndDeleteMemberships,
     deleteCommunityPosts,
 } from "../communities/logic";
-import CommunityPostModel from "@models/CommunityPost";
-import CommunityCommentModel from "@models/CommunityComment";
+import CommunityPostModel from "@courselit/orm-models/dao/community-post";
+import CommunityCommentModel from "@courselit/orm-models/dao/community-comment";
 import { deleteMedia } from "@/services/medialit";
-import Account from "@models/Account";
+import Account from "@courselit/orm-models/dao/account";
 
 const { permissions } = UIConstants;
 

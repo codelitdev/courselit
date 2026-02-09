@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
-import DomainModel, { Domain } from "@models/Domain";
-import ApiKey from "@/models/ApiKey";
+import DomainModel, { Domain } from "@courselit/orm-models/dao/domain";
+import ApiKey from "@courselit/orm-models/dao/apikey";
 
 export async function validateDomainAndApiKey(req: NextRequest) {
     const domain = await DomainModel.findOne<Domain>({

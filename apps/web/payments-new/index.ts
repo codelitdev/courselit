@@ -1,6 +1,6 @@
 import { SiteInfo, UIConstants } from "@courselit/common-models";
 import { internal } from "../config/strings";
-import DomainModel, { Domain } from "../models/Domain";
+import DomainModel, { Domain } from "@courselit/orm-models/dao/domain";
 import StripePayment from "./stripe-payment";
 import RazorpayPayment from "./razorpay-payment";
 import LemonSqueezyPayment from "./lemonsqueezy-payment";

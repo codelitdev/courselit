@@ -7,9 +7,9 @@ import {
     UIConstants,
 } from "@courselit/common-models";
 import { getUnitAmount } from "./helpers";
-import MembershipModel from "@models/Membership";
-import PaymentPlanModel from "@models/PaymentPlan";
-import Invoice from "@models/Invoice";
+import MembershipModel from "@courselit/orm-models/dao/membership";
+import PaymentPlanModel from "@courselit/orm-models/dao/payment-plan";
+import Invoice from "@courselit/orm-models/dao/invoice";
 import { error } from "@/services/logger";
 import { InternalMembership } from "@courselit/common-logic";
 

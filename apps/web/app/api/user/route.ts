@@ -4,7 +4,7 @@ import { createUser } from "@/graphql/users/logic";
 import constants from "@config/constants";
 import { createHash } from "crypto";
 import { validateDomainAndApiKey } from "./validate-apikey";
-import UserModel from "@models/User";
+import UserModel from "@courselit/orm-models/dao/user";
 import { checkForInvalidPermissions } from "@/lib/check-invalid-permissions";
 
 function validateRequestBody(body: any) {

@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
-import DomainModel, { Domain } from "@models/Domain";
+import DomainModel, { Domain } from "@courselit/orm-models/dao/domain";
 import { auth } from "@/auth";
-import User from "@models/User";
+import User from "@courselit/orm-models/dao/user";
 import {
     Community,
     Constants,
@@ -9,13 +9,13 @@ import {
     MembershipEntityType,
     PaymentPlan,
 } from "@courselit/common-models";
-import CommunityModel from "@models/Community";
-import CourseModel from "@models/Course";
+import CommunityModel from "@courselit/orm-models/dao/community";
+import CourseModel from "@courselit/orm-models/dao/course";
 import constants from "@config/constants";
-import PaymentPlanModel from "@models/PaymentPlan";
+import PaymentPlanModel from "@courselit/orm-models/dao/payment-plan";
 import { getPaymentMethodFromSettings } from "@/payments-new";
 import { generateUniqueId } from "@courselit/utils";
-import InvoiceModel from "@models/Invoice";
+import InvoiceModel from "@courselit/orm-models/dao/invoice";
 import { error } from "@/services/logger";
 import { responses } from "@config/strings";
 import mongoose from "mongoose";

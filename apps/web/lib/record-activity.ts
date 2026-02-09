@@ -1,4 +1,4 @@
-import ActivityModel, { Activity } from "@models/Activity";
+import ActivityModel, { Activity } from "@courselit/orm-models/dao/activity";
 import { error } from "../services/logger";
 
 export async function recordActivity(activity: Activity) {

@@ -4,7 +4,9 @@ import {
     generateUniqueId,
     slugify,
 } from "@courselit/utils";
-import CommunityModel, { InternalCommunity } from "@models/Community";
+import CommunityModel, {
+    InternalCommunity,
+} from "@courselit/orm-models/dao/community";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
 import { checkIfAuthenticated } from "@/lib/graphql";
@@ -24,16 +26,16 @@ import {
     PaymentPlan,
     CommunityMediaTypes,
 } from "@courselit/common-models";
-import CommunityPostModel from "@models/CommunityPost";
+import CommunityPostModel from "@courselit/orm-models/dao/community-post";
 import {
     getNextRoleForCommunityMember,
     getNextStatusForCommunityMember,
     getNextStatusForCommunityReport,
 } from "@ui-lib/utils";
-import CommunityCommentModel from "@models/CommunityComment";
-import PageModel from "@models/Page";
-import PaymentPlanModel from "@models/PaymentPlan";
-import MembershipModel from "@models/Membership";
+import CommunityCommentModel from "@courselit/orm-models/dao/community-comment";
+import PageModel from "@courselit/orm-models/dao/page";
+import PaymentPlanModel from "@courselit/orm-models/dao/payment-plan";
+import MembershipModel from "@courselit/orm-models/dao/membership";
 import {
     addIncludedProductsMemberships,
     deleteMembershipsActivatedViaPaymentPlan,
@@ -43,7 +45,7 @@ import {
 import { getPaymentMethodFromSettings } from "@/payments-new";
 import CommunityReportModel, {
     InternalCommunityReport,
-} from "@models/CommunityReport";
+} from "@courselit/orm-models/dao/community-report";
 import {
     addPostSubscription,
     CommunityReportPartial,
@@ -56,16 +58,16 @@ import {
     toggleContentVisibility,
 } from "./helpers";
 import { error } from "@/services/logger";
-import NotificationModel from "@models/Notification";
+import NotificationModel from "@courselit/orm-models/dao/notification";
 import { addNotification } from "@/services/queue";
 import { hasActiveSubscription } from "../users/logic";
 import { internal } from "@config/strings";
 import { hasCommunityPermission as hasPermission } from "@ui-lib/utils";
-import ActivityModel from "@models/Activity";
+import ActivityModel from "@courselit/orm-models/dao/activity";
 import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
 import { deleteMedia, sealMedia } from "@/services/medialit";
-import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
-import InvoiceModel from "@models/Invoice";
+import CommunityPostSubscriberModel from "@courselit/orm-models/dao/community-post-subscriber";
+import InvoiceModel from "@courselit/orm-models/dao/invoice";
 import { InternalMembership } from "@courselit/common-logic";
 import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
 

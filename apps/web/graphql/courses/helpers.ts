@@ -1,8 +1,8 @@
 import { internal, responses } from "../../config/strings";
 import GQLContext from "../../models/GQLContext";
-import CourseModel from "../../models/Course";
+import CourseModel from "@courselit/orm-models/dao/course";
 import constants from "../../config/constants";
-import Page from "../../models/Page";
+import Page from "@courselit/orm-models/dao/page";
 import slugify from "slugify";
 import { addGroup } from "./logic";
 import { Constants, Course, Progress, User } from "@courselit/common-models";

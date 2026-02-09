@@ -3,7 +3,7 @@ import { responses } from "../../config/strings";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
 import { checkPermission } from "@courselit/utils";
-import UserThemeModel from "@/models/UserTheme";
+import UserThemeModel from "@courselit/orm-models/dao/user-theme";
 import { themes as SystemThemes } from "@courselit/page-primitives";
 import { ThemeStyle } from "@courselit/page-models";
 import { UITheme } from "@models/UITheme";

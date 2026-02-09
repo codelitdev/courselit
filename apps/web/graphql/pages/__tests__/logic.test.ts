@@ -3,10 +3,10 @@
  */
 
 import { updatePage, getPage, publish } from "../logic";
-import DomainModel from "@/models/Domain";
-import PageModel, { Page } from "@/models/Page";
-import Course from "@/models/Course";
-import CommunityModel from "@/models/Community";
+import DomainModel from "@courselit/orm-models/dao/domain";
+import PageModel, { Page } from "@courselit/orm-models/dao/page";
+import Course from "@courselit/orm-models/dao/course";
+import CommunityModel from "@courselit/orm-models/dao/community";
 import constants from "@/config/constants";
 import { deleteMedia } from "@/services/medialit";
 import GQLContext from "@/models/GQLContext";
@@ -305,7 +305,9 @@ describe("getPage entity validation", () => {
             const result = await getPage({ id: page.pageId, ctx });
 
             expect(result).toBeDefined();
-            expect(result?.pageId).toBe(page.pageId);
+            expect(
+                result && "pageId" in result ? result.pageId : undefined,
+            ).toBe(page.pageId);
         });
 
         it("returns undefined when course does not exist", async () => {
@@ -423,7 +425,9 @@ describe("getPage entity validation", () => {
             const result = await getPage({ id: page.pageId, ctx });
 
             expect(result).toBeDefined();
-            expect(result?.pageId).toBe(page.pageId);
+            expect(
+                result && "pageId" in result ? result.pageId : undefined,
+            ).toBe(page.pageId);
         });
 
         it("returns undefined when community does not exist", async () => {
@@ -545,7 +549,9 @@ describe("getPage entity validation", () => {
             const result = await getPage({ id: page.pageId, ctx: adminCtx });
 
             expect(result).toBeDefined();
-            expect(result?.pageId).toBe(page.pageId);
+            expect(
+                result && "pageId" in result ? result.pageId : undefined,
+            ).toBe(page.pageId);
         });
 
         it("admin can view disabled community page", async () => {
@@ -581,7 +587,9 @@ describe("getPage entity validation", () => {
             const result = await getPage({ id: page.pageId, ctx: adminCtx });
 
             expect(result).toBeDefined();
-            expect(result?.pageId).toBe(page.pageId);
+            expect(
+                result && "pageId" in result ? result.pageId : undefined,
+            ).toBe(page.pageId);
         });
     });
 });

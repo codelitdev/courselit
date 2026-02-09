@@ -2,8 +2,8 @@ import { NextRequest } from "next/server";
 import { getDomain, getUser } from "../initiate/route";
 import { auth } from "@/auth";
 import { error } from "@/services/logger";
-import InvoiceModel from "@models/Invoice";
-import Membership from "@models/Membership";
+import InvoiceModel from "@courselit/orm-models/dao/invoice";
+import Membership from "@courselit/orm-models/dao/membership";
 
 interface RequestPayload {
     id: string;

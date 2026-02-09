@@ -13,6 +13,10 @@
             "@ui-lib/*": ["./ui-lib/*"],
             "@config/*": ["./config/*"],
             "@models/*": ["./models/*"],
+            "@courselit/orm-models": ["../../packages/orm-models/src/index.ts"],
+            "@courselit/orm-models/dao/*": [
+                "../../packages/orm-models/src/dao/*"
+            ],
             "@/*": ["./*"]
         },
         "strictNullChecks": true

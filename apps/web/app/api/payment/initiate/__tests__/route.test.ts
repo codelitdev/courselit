@@ -4,22 +4,22 @@
 
 import { NextRequest } from "next/server";
 import { POST } from "../route";
-import Domain from "@models/Domain";
+import Domain from "@courselit/orm-models/dao/domain";
 import { auth } from "@/auth";
 import mongoose from "mongoose";
-import User from "@models/User";
+import User from "@courselit/orm-models/dao/user";
 import { Constants } from "@courselit/common-models";
-import Course from "@models/Course";
-import PaymentPlan from "@models/PaymentPlan";
-import Invoice from "@models/Invoice";
-import Community from "@models/Community";
+import Course from "@courselit/orm-models/dao/course";
+import PaymentPlan from "@courselit/orm-models/dao/payment-plan";
+import Invoice from "@courselit/orm-models/dao/invoice";
+import Community from "@courselit/orm-models/dao/community";
 
-jest.mock("@models/Domain");
-jest.mock("@models/User");
-jest.mock("@models/Course");
-jest.mock("@models/PaymentPlan");
-jest.mock("@models/Invoice");
-jest.mock("@models/Community");
+jest.mock("@courselit/orm-models/dao/domain");
+jest.mock("@courselit/orm-models/dao/user");
+jest.mock("@courselit/orm-models/dao/course");
+jest.mock("@courselit/orm-models/dao/payment-plan");
+jest.mock("@courselit/orm-models/dao/invoice");
+jest.mock("@courselit/orm-models/dao/community");
 jest.mock("@/auth", () => ({
     auth: {
         api: {
@@ -74,7 +74,7 @@ describe("Payment Initiate Route", () => {
             },
         } as unknown as NextRequest;
 
-        (auth.api.getSession as jest.Mock).mockResolvedValue({
+        (auth.api.getSession as unknown as jest.Mock).mockResolvedValue({
             user: {
                 email: "test@test.com",
             },
@@ -125,7 +125,7 @@ describe("Payment Initiate Route", () => {
     });
 
     it("returns 401 if user is not authenticated", async () => {
-        (auth.api.getSession as jest.Mock).mockResolvedValue(null);
+        (auth.api.getSession as unknown as jest.Mock).mockResolvedValue(null);
 
         const response = await POST(mockRequest);
         expect(response.status).toBe(401);

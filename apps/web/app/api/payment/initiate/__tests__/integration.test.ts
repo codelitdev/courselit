@@ -4,15 +4,15 @@
 
 import { NextRequest } from "next/server";
 import { POST } from "../route";
-import Domain from "@models/Domain";
+import Domain from "@courselit/orm-models/dao/domain";
 import { auth } from "@/auth";
 import mongoose from "mongoose";
-import User from "@models/User";
+import User from "@courselit/orm-models/dao/user";
 import { Constants } from "@courselit/common-models";
-import Course from "@models/Course";
-import Community from "@models/Community";
-import PaymentPlan from "@models/PaymentPlan";
-import Invoice from "@models/Invoice";
+import Course from "@courselit/orm-models/dao/course";
+import Community from "@courselit/orm-models/dao/community";
+import PaymentPlan from "@courselit/orm-models/dao/payment-plan";
+import Invoice from "@courselit/orm-models/dao/invoice";
 import { getPaymentMethodFromSettings } from "@/payments-new";
 import { activateMembership } from "../../helpers";
 import { getMembership } from "@/graphql/users/logic";
@@ -22,13 +22,13 @@ import {
 } from "@/graphql/paymentplans/logic";
 
 // Mock all external dependencies
-jest.mock("@models/Domain");
-jest.mock("@models/User");
-jest.mock("@models/Course");
-jest.mock("@models/Community");
-jest.mock("@models/PaymentPlan");
-jest.mock("@models/Membership");
-jest.mock("@models/Invoice");
+jest.mock("@courselit/orm-models/dao/domain");
+jest.mock("@courselit/orm-models/dao/user");
+jest.mock("@courselit/orm-models/dao/course");
+jest.mock("@courselit/orm-models/dao/community");
+jest.mock("@courselit/orm-models/dao/payment-plan");
+jest.mock("@courselit/orm-models/dao/membership");
+jest.mock("@courselit/orm-models/dao/invoice");
 jest.mock("@/auth", () => ({
     auth: {
         api: {

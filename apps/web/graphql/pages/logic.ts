@@ -1,22 +1,22 @@
 import { responses } from "../../config/strings";
 import { checkIfAuthenticated } from "../../lib/graphql";
 import GQLContext from "../../models/GQLContext";
-import PageModel, { Page } from "../../models/Page";
+import PageModel, { Page } from "@courselit/orm-models/dao/page";
 import {
     copySharedWidgetsToDomain,
     getPageResponse,
     initSharedWidgets,
 } from "./helpers";
 import constants from "../../config/constants";
-import Course from "../../models/Course";
+import Course from "@courselit/orm-models/dao/course";
 import { checkPermission, extractMediaIDs } from "@courselit/utils";
 import { Media, User, Constants } from "@courselit/common-models";
-import { Domain } from "../../models/Domain";
+import { Domain } from "@courselit/orm-models/dao/domain";
 import { homePageTemplate } from "./page-templates";
 import { publishTheme } from "../themes/logic";
 import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
 import { deleteMedia, sealMedia } from "@/services/medialit";
-import CommunityModel from "@models/Community";
+import CommunityModel from "@courselit/orm-models/dao/community";
 import { replaceTempMediaWithSealedMediaInPageLayout } from "@/lib/replace-temp-media-with-sealed-media-in-page-layout";
 const { product, site, blogPage, communityPage, permissions, defaultPages } =
     constants;

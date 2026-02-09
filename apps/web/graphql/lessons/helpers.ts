@@ -1,7 +1,7 @@
 import { responses } from "../../config/strings";
 import constants from "../../config/constants";
-import LessonModel, { Lesson } from "../../models/Lesson";
-import CourseModel from "../../models/Course";
+import LessonModel, { Lesson } from "@courselit/orm-models/dao/lesson";
+import CourseModel from "@courselit/orm-models/dao/course";
 import { Group, Question, Quiz } from "@courselit/common-models";
 import mongoose from "mongoose";
 import { LessonWithStringContent } from "./logic";

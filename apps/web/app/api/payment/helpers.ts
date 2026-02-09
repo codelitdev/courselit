@@ -5,7 +5,7 @@ import {
     Membership,
     PaymentPlan,
 } from "@courselit/common-models";
-import CommunityModel from "@models/Community";
+import CommunityModel from "@courselit/orm-models/dao/community";
 import mongoose from "mongoose";
 import { addIncludedProductsMemberships } from "@/graphql/paymentplans/logic";
 import { runPostMembershipTasks } from "@/graphql/users/logic";

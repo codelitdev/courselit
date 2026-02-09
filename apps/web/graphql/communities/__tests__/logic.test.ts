@@ -3,14 +3,14 @@
  */
 
 import { getCommentsCount } from "../logic";
-import CommunityModel from "@models/Community";
-import CommunityPostModel from "@models/CommunityPost";
-import CommunityCommentModel from "@models/CommunityComment";
-import MembershipModel from "@models/Membership";
-import PaymentPlanModel from "@models/PaymentPlan";
-import PageModel from "@models/Page";
-import DomainModel from "@models/Domain";
-import UserModel from "@models/User";
+import CommunityModel from "@courselit/orm-models/dao/community";
+import CommunityPostModel from "@courselit/orm-models/dao/community-post";
+import CommunityCommentModel from "@courselit/orm-models/dao/community-comment";
+import MembershipModel from "@courselit/orm-models/dao/membership";
+import PaymentPlanModel from "@courselit/orm-models/dao/payment-plan";
+import PageModel from "@courselit/orm-models/dao/page";
+import DomainModel from "@courselit/orm-models/dao/domain";
+import UserModel from "@courselit/orm-models/dao/user";
 import constants from "@/config/constants";
 import { Constants } from "@courselit/common-models";
 

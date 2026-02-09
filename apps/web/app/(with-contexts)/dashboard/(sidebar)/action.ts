@@ -2,12 +2,12 @@
 
 import { auth } from "@/auth";
 import { Domain, Page } from "@courselit/common-models";
-import DomainModel from "@models/Domain";
+import DomainModel from "@courselit/orm-models/dao/domain";
 import { ObjectId } from "mongodb";
 import { getProfile } from "../../action";
 import { hasPermissionToAccessSetupChecklist } from "@/lib/utils";
-import CourseModel from "@models/Course";
-import PageModel from "@models/Page";
+import CourseModel from "@courselit/orm-models/dao/course";
+import PageModel from "@courselit/orm-models/dao/page";
 import constants from "@config/constants";
 import { headers } from "next/headers";
 

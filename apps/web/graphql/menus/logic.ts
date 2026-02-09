@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { checkIfAuthenticated } from "../../lib/graphql";
 import type GQLContext from "../../models/GQLContext";
 import type { Link } from "@courselit/common-models";
-import DomainModel, { Domain } from "../../models/Domain";
+import DomainModel, { Domain } from "@courselit/orm-models/dao/domain";
 import { responses } from "../../config/strings";
 import constants from "../../config/constants";
 import { checkPermission } from "@courselit/utils";

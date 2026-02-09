@@ -4,13 +4,25 @@ import {
     Constants,
     Features,
     Domain as PublicDomain,
+    Typeface,
 } from "@courselit/common-models";
+import { TypefaceSchema } from "./typeface";
 
 export interface Domain extends PublicDomain {
     _id: mongoose.Types.ObjectId;
     lastEditedThemeId?: string;
     features?: Features[];
 }
+
+export const defaultTypeface: Typeface = {
+    section: "default",
+    typeface: "Roboto",
+    fontWeights: [300, 400, 500, 700],
+    fontSize: 0,
+    lineHeight: 0,
+    letterSpacing: 0,
+    case: "captilize",
+};
 
 export const DomainSchema = new mongoose.Schema<Domain>(
     {
@@ -28,6 +40,14 @@ export const DomainSchema = new mongoose.Schema<Domain>(
         draftSharedWidgets: {
             type: mongoose.Schema.Types.Mixed,
             default: {},
+        },
+        typefaces: {
+            type: [TypefaceSchema],
+            default: [defaultTypeface],
+        },
+        draftTypefaces: {
+            type: [TypefaceSchema],
+            default: [defaultTypeface],
         },
         firstRun: { type: Boolean, required: true, default: false },
         tags: { type: [String], default: [] },

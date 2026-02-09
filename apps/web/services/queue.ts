@@ -3,7 +3,7 @@ import { jwtUtils } from "@courselit/utils";
 import { error } from "./logger";
 import nodemailer from "nodemailer";
 import { responses } from "@/config/strings";
-import NotificationModel from "@models/Notification";
+import NotificationModel from "@courselit/orm-models/dao/notification";
 import { ObjectId } from "mongodb";
 
 const queueServer = process.env.QUEUE_SERVER || "http://localhost:4000";

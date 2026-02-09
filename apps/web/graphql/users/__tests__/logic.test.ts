@@ -3,15 +3,15 @@
  */
 
 import { getCertificate } from "../logic";
-import CertificateModel from "@models/Certificate";
-import UserModel from "@models/User";
-import CourseModel from "@models/Course";
-import CertificateTemplateModel from "@models/CertificateTemplate";
+import CertificateModel from "@courselit/orm-models/dao/certificate";
+import UserModel from "@courselit/orm-models/dao/user";
+import CourseModel from "@courselit/orm-models/dao/course";
+import CertificateTemplateModel from "@courselit/orm-models/dao/certificate-template";
 import { responses } from "@/config/strings";
-import Domain from "@models/Domain";
-import PageModel from "@models/Page";
-import MembershipModel from "@models/Membership";
-import CommunityModel from "@models/Community";
+import Domain from "@courselit/orm-models/dao/domain";
+import PageModel from "@courselit/orm-models/dao/page";
+import MembershipModel from "@courselit/orm-models/dao/membership";
+import CommunityModel from "@courselit/orm-models/dao/community";
 
 describe("Certificate generation", () => {
     let mockCtx: any;

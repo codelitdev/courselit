@@ -2,8 +2,10 @@ import { PaymentPlan, Constants, Course } from "@courselit/common-models";
 import { responses } from "@config/strings";
 import { getPaymentMethodFromSettings } from "@/payments-new";
 import GQLContext from "@models/GQLContext";
-import PaymentPlanModel, { InternalPaymentPlan } from "@models/PaymentPlan";
-import CourseModel from "@models/Course";
+import PaymentPlanModel, {
+    InternalPaymentPlan,
+} from "@courselit/orm-models/dao/payment-plan";
+import CourseModel from "@courselit/orm-models/dao/course";
 import { ObjectId } from "mongodb";
 
 export const validatePaymentPlan = async (

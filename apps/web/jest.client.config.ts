@@ -43,6 +43,10 @@ const config = {
         "@courselit/text-editor": "<rootDir>/../../packages/text-editor/src",
         "@courselit/common-models":
             "<rootDir>/../../packages/common-models/src",
+        "^@courselit/orm-models/dao/(.*)$":
+            "<rootDir>/../../packages/orm-models/src/dao/$1.ts",
+        "^@courselit/orm-models$":
+            "<rootDir>/../../packages/orm-models/src/index.ts",
         nanoid: "<rootDir>/__mocks__/nanoid.ts",
         slugify: "<rootDir>/__mocks__/slugify.ts",
         "@models/(.*)": "<rootDir>/models/$1",

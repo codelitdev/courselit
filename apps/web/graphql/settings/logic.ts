@@ -8,7 +8,7 @@ import {
     saveLoginProvider,
 } from "./helpers";
 import type GQLContext from "../../models/GQLContext";
-import DomainModel, { Domain } from "../../models/Domain";
+import DomainModel, { Domain } from "@courselit/orm-models/dao/domain";
 import { checkPermission } from "@courselit/utils";
 import {
     Constants,
@@ -16,8 +16,8 @@ import {
     Media,
     Typeface,
 } from "@courselit/common-models";
-import ApikeyModel, { ApiKey } from "@models/ApiKey";
-import SSOProviderModel from "@models/SSOProvider";
+import ApikeyModel, { ApiKey } from "@courselit/orm-models/dao/apikey";
+import SSOProviderModel from "@courselit/orm-models/dao/sso-provider";
 import { sealMedia } from "@/services/medialit";
 
 const { permissions } = constants;

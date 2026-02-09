@@ -5,9 +5,9 @@ import {
     type Event,
     Email,
 } from "@courselit/common-models";
-import OngoingSequence from "@models/OngoingSequence";
-import RuleModel from "@models/Rule";
-import SequenceModel from "@models/Sequence";
+import OngoingSequence from "@courselit/orm-models/dao/ongoing-sequence";
+import RuleModel from "@courselit/orm-models/dao/rule";
+import SequenceModel from "@courselit/orm-models/dao/sequence";
 import mongoose from "mongoose";
 import { error } from "../services/logger";
 import { InternalUser } from "@courselit/common-logic";

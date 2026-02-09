@@ -1,14 +1,14 @@
 "use server";
 
-import UserModel from "@models/User";
+import UserModel from "@courselit/orm-models/dao/user";
 import { responses } from "@/config/strings";
 import { makeModelTextSearchable, checkIfAuthenticated } from "@/lib/graphql";
 import constants from "@/config/constants";
 import GQLContext from "@/models/GQLContext";
 import { initMandatoryPages } from "../pages/logic";
-import { Domain } from "@models/Domain";
+import { Domain } from "@courselit/orm-models/dao/domain";
 import { checkPermission, generateUniqueId } from "@courselit/utils";
-import UserSegmentModel from "@models/UserSegment";
+import UserSegmentModel from "@courselit/orm-models/dao/user-segment";
 import {
     InternalCourse,
     InternalUser,
@@ -33,9 +33,9 @@ import { getCourseOrThrow } from "../courses/logic";
 import pug from "pug";
 import courseEnrollTemplate from "@/templates/course-enroll";
 import { generateEmailFrom } from "@/lib/utils";
-import MembershipModel from "@models/Membership";
-import CommunityModel from "@models/Community";
-import CourseModel from "@models/Course";
+import MembershipModel from "@courselit/orm-models/dao/membership";
+import CommunityModel from "@courselit/orm-models/dao/community";
+import CourseModel from "@courselit/orm-models/dao/course";
 import { addMailJob } from "@/services/queue";
 import { getPaymentMethodFromSettings } from "@/payments-new";
 import { checkForInvalidPermissions } from "@/lib/check-invalid-permissions";
@@ -49,10 +49,10 @@ import {
     InternalMembership,
 } from "@courselit/common-logic";
 import { getPlanPrice } from "@courselit/utils";
-import CertificateModel from "@models/Certificate";
+import CertificateModel from "@courselit/orm-models/dao/certificate";
 import CertificateTemplateModel, {
     CertificateTemplate,
-} from "@models/CertificateTemplate";
+} from "@courselit/orm-models/dao/certificate-template";
 import {
     validateUserDeletion,
     migrateBusinessEntities,

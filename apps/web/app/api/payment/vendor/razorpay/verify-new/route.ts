@@ -1,9 +1,9 @@
 import { error, info } from "@/services/logger";
 import { NextRequest } from "next/server";
-import DomainModel, { Domain } from "@models/Domain";
+import DomainModel, { Domain } from "@courselit/orm-models/dao/domain";
 import { validatePaymentVerification } from "razorpay/dist/utils/razorpay-utils";
 import { responses } from "@config/strings";
-import Invoice from "@models/Invoice";
+import Invoice from "@courselit/orm-models/dao/invoice";
 import { UIConstants } from "@courselit/common-models";
 
 export async function POST(req: NextRequest) {

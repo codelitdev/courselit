@@ -1,16 +1,16 @@
 import { deleteCommunity } from "../logic";
-import CommunityModel from "@models/Community";
-import CommunityPostModel from "@models/CommunityPost";
-import CommunityCommentModel from "@models/CommunityComment";
-import CommunityReportModel from "@models/CommunityReport";
-import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
-import MembershipModel from "@models/Membership";
-import PaymentPlanModel from "@models/PaymentPlan";
-import ActivityModel from "@models/Activity";
-import PageModel from "@models/Page";
-import DomainModel from "@models/Domain";
-import UserModel from "@models/User";
-import InvoiceModel from "@models/Invoice";
+import CommunityModel from "@courselit/orm-models/dao/community";
+import CommunityPostModel from "@courselit/orm-models/dao/community-post";
+import CommunityCommentModel from "@courselit/orm-models/dao/community-comment";
+import CommunityReportModel from "@courselit/orm-models/dao/community-report";
+import CommunityPostSubscriberModel from "@courselit/orm-models/dao/community-post-subscriber";
+import MembershipModel from "@courselit/orm-models/dao/membership";
+import PaymentPlanModel from "@courselit/orm-models/dao/payment-plan";
+import ActivityModel from "@courselit/orm-models/dao/activity";
+import PageModel from "@courselit/orm-models/dao/page";
+import DomainModel from "@courselit/orm-models/dao/domain";
+import UserModel from "@courselit/orm-models/dao/user";
+import InvoiceModel from "@courselit/orm-models/dao/invoice";
 import constants from "@/config/constants";
 import { Constants } from "@courselit/common-models";
 

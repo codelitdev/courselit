@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/auth";
-import DomainModel, { Domain } from "@models/Domain";
-import User from "@models/User";
-import Lesson from "@models/Lesson";
+import DomainModel, { Domain } from "@courselit/orm-models/dao/domain";
+import User from "@courselit/orm-models/dao/user";
+import Lesson from "@courselit/orm-models/dao/lesson";
 import { MediaLit } from "medialit";
 import { isEnrolled } from "@/ui-lib/utils";
 import path from "path";

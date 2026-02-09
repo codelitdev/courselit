@@ -1,6 +1,6 @@
 import constants from "@config/constants";
 import GQLContext from "@models/GQLContext";
-import UserModel from "@models/User";
+import UserModel from "@courselit/orm-models/dao/user";
 import { error } from "../../services/logger";
 import { createUser, getMembership } from "../users/logic";
 import {
@@ -11,8 +11,8 @@ import { responses, internal } from "../../config/strings";
 import { checkPermission, generateUniqueId } from "@courselit/utils";
 import { Constants, Email, Sequence } from "@courselit/common-models";
 import type { Event as SequenceEvent } from "@courselit/common-models";
-import CourseModel from "@models/Course";
-import SequenceModel from "@models/Sequence";
+import CourseModel from "@courselit/orm-models/dao/course";
+import SequenceModel from "@courselit/orm-models/dao/sequence";
 import {
     addRule,
     areAllEmailIdsValid,
@@ -22,13 +22,13 @@ import {
 } from "./helpers";
 import MailRequestStatusModel, {
     MailRequestStatus,
-} from "@models/MailRequestStatus";
+} from "@courselit/orm-models/dao/mail-request-status";
 import { getPlans } from "../paymentplans/logic";
 import { activateMembership } from "@/app/api/payment/helpers";
 import { AdminSequence, InternalCourse } from "@courselit/common-logic";
 import { User } from "@courselit/common-models";
-import EmailDeliveryModel from "@models/EmailDelivery";
-import EmailEventModel from "@models/EmailEvent";
+import EmailDeliveryModel from "@courselit/orm-models/dao/email-delivery";
+import EmailEventModel from "@courselit/orm-models/dao/email-event";
 import { defaultEmail } from "./default-email";
 
 const { permissions } = constants;

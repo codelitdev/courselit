@@ -1,4 +1,4 @@
-import Log from "../models/Log";
+import Log from "@courselit/orm-models/dao/log";
 import constants from "../config/constants";
 
 const { severityError, severityInfo, severityWarn } = constants;

@@ -1,7 +1,7 @@
-import DomainModel from "@models/Domain";
-import UserModel from "@models/User";
-import CourseModel from "@models/Course";
-import PageModel from "@models/Page";
+import DomainModel from "@courselit/orm-models/dao/domain";
+import UserModel from "@courselit/orm-models/dao/user";
+import CourseModel from "@courselit/orm-models/dao/course";
+import PageModel from "@courselit/orm-models/dao/page";
 import constants from "@/config/constants";
 import { updateCourse } from "../logic";
 import { deleteMedia, sealMedia } from "@/services/medialit";

@@ -8,20 +8,20 @@ import {
 } from "@courselit/common-models";
 import CommunityCommentModel, {
     InternalCommunityComment,
-} from "@models/CommunityComment";
+} from "@courselit/orm-models/dao/community-comment";
 import CommunityPostModel, {
     InternalCommunityPost,
-} from "@models/CommunityPost";
+} from "@courselit/orm-models/dao/community-post";
 import GQLContext from "@models/GQLContext";
 import { deleteMedia } from "@/services/medialit";
 import { responses } from "@/config/strings";
-import MembershipModel from "@models/Membership";
+import MembershipModel from "@courselit/orm-models/dao/membership";
 import { error } from "@/services/logger";
 import mongoose from "mongoose";
-import { InternalCommunityReport } from "@models/CommunityReport";
+import { InternalCommunityReport } from "@courselit/orm-models/dao/community-report";
 import CommunityPostSubscriberModel, {
     CommunityPostSubscriber,
-} from "@models/CommunityPostSubscriber";
+} from "@courselit/orm-models/dao/community-post-subscriber";
 import { hasCommunityPermission } from "@ui-lib/utils";
 
 export type PublicPost = Omit<

@@ -1,8 +1,8 @@
 import constants from "../../config/constants";
-import CourseModel from "../../models/Course";
+import CourseModel from "@courselit/orm-models/dao/course";
 import GQLContext from "../../models/GQLContext";
-import { Page } from "../../models/Page";
-import { Domain } from "@models/Domain";
+import { Page } from "@courselit/orm-models/dao/page";
+import { Domain } from "@courselit/orm-models/dao/domain";
 import { Course } from "@courselit/common-models";
 
 const { analyticsDurations } = constants;

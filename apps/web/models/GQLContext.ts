@@ -1,5 +1,5 @@
 import { InternalUser } from "@courselit/common-logic";
-import { Domain } from "./Domain";
+import type { Domain } from "@courselit/orm-models/dao/domain";
 
 export default interface GQLContext {
     user: InternalUser;
