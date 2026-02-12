@@ -85,6 +85,8 @@ export default function CustomersPage() {
                 .includes(searchTerm.toLowerCase()) ||
             member.user.email.toLowerCase().includes(searchTerm.toLowerCase()),
     );
+    const publishedLessons =
+        product?.lessons?.filter((lesson) => lesson.published) || [];
 
     const fetchStudents = async () => {
         setLoading(true);
@@ -137,16 +139,23 @@ export default function CustomersPage() {
             .build();
         try {
             const response = await fetch.exec();
+            const publishedLessonIds = new Set(
+                publishedLessons.map((lesson) => lesson.lessonId),
+            );
+            const publishedLessonsCount = publishedLessonIds.size;
             setMembers(
                 response.members.map((member: any) => ({
                     ...member,
                     progressInPercentage:
                         product?.type?.toLowerCase() ===
                             Constants.CourseType.COURSE &&
-                        product?.lessons?.length! > 0
+                        publishedLessonsCount > 0
                             ? Math.round(
-                                  ((member.completedLessons?.length || 0) /
-                                      (product?.lessons?.length || 0)) *
+                                  ((member.completedLessons || []).filter(
+                                      (lessonId: string) =>
+                                          publishedLessonIds.has(lessonId),
+                                  ).length /
+                                      publishedLessonsCount) *
                                       100,
                               )
                             : undefined,
@@ -409,8 +418,7 @@ export default function CustomersPage() {
                                       {product?.type?.toLowerCase() ===
                                       Constants.CourseType.COURSE ? (
                                           <>
-                                              {product?.lessons?.length! >
-                                                  0 && (
+                                              {publishedLessons.length > 0 && (
                                                   <div className="flex items-center space-x-2">
                                                       <div className="w-20 bg-gray-200 rounded-full h-2.5">
                                                           <div
@@ -447,7 +455,7 @@ export default function CustomersPage() {
                                                                   </DialogTitle>
                                                               </DialogHeader>
                                                               <DialogDescription className="max-h-[400px] overflow-y-scroll">
-                                                                  {product?.lessons?.map(
+                                                                  {publishedLessons.map(
                                                                       (
                                                                           lesson: any,
                                                                       ) => (

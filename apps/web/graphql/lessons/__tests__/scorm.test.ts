@@ -74,6 +74,7 @@ describe("SCORM Logic Integration", () => {
             lessonId: id("lesson-scorm"),
             title: "SCORM Lesson",
             type: Constants.LessonType.SCORM,
+            published: true,
             requiresEnrollment: true,
             content: {
                 launchUrl: "index.html",

@@ -30,11 +30,15 @@ import {
 } from "@/components/ui/dialog";
 import {
     APP_MESSAGE_LESSON_DELETED,
+    BTN_PUBLISH,
+    BTN_UNPUBLISH,
     BUTTON_NEW_LESSON_TEXT,
     COURSE_CONTENT_HEADER,
     EDIT_LESSON_TEXT,
     LESSON_EMBED_URL_LABEL,
     LESSON_CONTENT_LABEL,
+    LESSON_VISIBILITY,
+    LESSON_VISIBILITY_TOOLTIP,
     MANAGE_COURSES_PAGE_HEADING,
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
@@ -124,6 +128,7 @@ export default function LessonPage() {
         media: undefined,
         downloadable: false,
         requiresEnrollment: true,
+        published: false,
         courseId: productId,
         groupId: sectionId,
     });
@@ -177,6 +182,7 @@ export default function LessonPage() {
                         caption
                     },
                     requiresEnrollment,
+                    published,
                     lessonId
                 }
             }
@@ -194,6 +200,7 @@ export default function LessonPage() {
                 const loadedLesson = {
                     ...response.lesson,
                     type: response.lesson.type.toLowerCase() as LessonType,
+                    published: response.lesson.published ?? false,
                 };
 
                 // Store the loaded lesson in ref for future comparison
@@ -300,6 +307,7 @@ export default function LessonPage() {
                         downloadable: lesson?.downloadable,
                         content: JSON.stringify(content),
                         requiresEnrollment: lesson?.requiresEnrollment,
+                        published: !!lesson?.published,
                     },
                 },
             })
@@ -344,6 +352,7 @@ export default function LessonPage() {
                         courseId: lesson?.courseId,
                         requiresEnrollment: lesson?.requiresEnrollment,
                         groupId: lesson?.groupId,
+                        published: !!lesson?.published,
                     },
                 },
             })
@@ -604,6 +613,7 @@ export default function LessonPage() {
                                     </Label>
                                     <p className="text-sm text-muted-foreground">
                                         Allow students to preview this lesson
+                                        without enrolling
                                     </p>
                                 </div>
                                 <Switch
@@ -615,6 +625,35 @@ export default function LessonPage() {
                                         })
                                     }
                                 />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label
+                                        htmlFor="published"
+                                        className="font-semibold"
+                                    >
+                                        {LESSON_VISIBILITY}
+                                    </Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        {LESSON_VISIBILITY_TOOLTIP}
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-muted-foreground">
+                                        {lesson.published
+                                            ? BTN_UNPUBLISH
+                                            : BTN_PUBLISH}
+                                    </span>
+                                    <Switch
+                                        id="published"
+                                        checked={!!lesson.published}
+                                        onCheckedChange={(checked) =>
+                                            updateLesson({
+                                                published: checked,
+                                            })
+                                        }
+                                    />
+                                </div>
                             </div>
                         </div>
 

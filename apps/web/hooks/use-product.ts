@@ -8,7 +8,10 @@ import { InternalCourse } from "@courselit/common-logic";
 export type ProductWithAdminProps = Partial<
     Omit<InternalCourse, "paymentPlans"> &
         Pick<Course, "paymentPlans"> & {
-            lessons: Pick<Lesson, "title" | "groupId" | "lessonId" | "type"> &
+            lessons: Pick<
+                Lesson,
+                "title" | "groupId" | "lessonId" | "type" | "published"
+            > &
                 { id: string }[];
         }
 >;
@@ -41,6 +44,7 @@ export default function useProduct(id?: string | null): {
                         groupId,
                         lessonId,
                         type
+                        published
                     },
                     groups {
                         id,
