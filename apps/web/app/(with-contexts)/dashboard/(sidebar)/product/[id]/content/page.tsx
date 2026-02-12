@@ -3,6 +3,7 @@
 import { useContext, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -350,7 +351,17 @@ export default function ContentPage() {
                                                     {lesson.title}
                                                 </span>
                                             </div>
-                                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                            <div className="flex items-center space-x-3">
+                                                {!lesson.published && (
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="ml-2 text-xs"
+                                                    >
+                                                        Draft
+                                                    </Badge>
+                                                )}
+                                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                            </div>
                                         </div>
                                     )}
                                     key={JSON.stringify(product.lessons)}

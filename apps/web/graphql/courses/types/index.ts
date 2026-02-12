@@ -140,7 +140,11 @@ const courseType = new GraphQLObjectType({
         lessons: {
             type: new GraphQLList(lessonMetaType),
             resolve: (course, args, context, info) =>
-                getAllLessons(course, context),
+                getAllLessons(
+                    course,
+                    context,
+                    Boolean((course as any).__forcePublishedLessons),
+                ),
         },
         updatedAt: { type: new GraphQLNonNull(GraphQLString) },
         slug: { type: new GraphQLNonNull(GraphQLString) },

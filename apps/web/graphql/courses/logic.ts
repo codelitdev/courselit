@@ -99,7 +99,11 @@ export const getCourseOrThrow = async (
     return course;
 };
 
-async function formatCourse(courseId: string, ctx: GQLContext) {
+async function formatCourse(
+    courseId: string,
+    ctx: GQLContext,
+    includeUnpublishedLessons: boolean = false,
+) {
     const course: InternalCourse | null = (await CourseModel.findOne({
         courseId,
         domain: ctx.subdomain._id,
@@ -118,6 +122,8 @@ async function formatCourse(courseId: string, ctx: GQLContext) {
         const { nextLesson } = await getPrevNextCursor(
             course.courseId,
             ctx.subdomain._id,
+            undefined,
+            !includeUnpublishedLessons,
         );
         (course as any).firstLesson = nextLesson;
     }
@@ -154,12 +160,15 @@ export const getCourse = async (
             ]) || checkOwnershipWithoutModel(course, ctx);
 
         if (isOwner) {
-            return await formatCourse(course.courseId, ctx);
+            return await formatCourse(course.courseId, ctx, true);
         }
     }
 
     if (course.published) {
-        return await formatCourse(course.courseId, ctx);
+        const formattedCourse = await formatCourse(course.courseId, ctx);
+        return asGuest
+            ? { ...formattedCourse, __forcePublishedLessons: true }
+            : formattedCourse;
     } else {
         return null;
     }

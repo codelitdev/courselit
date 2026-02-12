@@ -36,6 +36,7 @@ import { generateEmailFrom } from "@/lib/utils";
 import MembershipModel from "@models/Membership";
 import CommunityModel from "@models/Community";
 import CourseModel from "@models/Course";
+import LessonModel from "@models/Lesson";
 import { addMailJob } from "@/services/queue";
 import { getPaymentMethodFromSettings } from "@/payments-new";
 import { checkForInvalidPermissions } from "@/lib/check-invalid-permissions";
@@ -728,6 +729,27 @@ async function getUserContentInternal(ctx: GQLContext, user: User) {
             });
 
             if (course) {
+                const publishedLessonIds = new Set(
+                    (
+                        await LessonModel.find(
+                            {
+                                domain: ctx.subdomain._id,
+                                courseId: course.courseId,
+                                published: true,
+                            },
+                            {
+                                lessonId: 1,
+                            },
+                        )
+                    ).map((lesson) => lesson.lessonId),
+                );
+                const completedPublishedLessons = (
+                    user.purchases.find(
+                        (progress: Progress) =>
+                            progress.courseId === course.courseId,
+                    )?.completedLessons || []
+                ).filter((lessonId) => publishedLessonIds.has(lessonId));
+
                 content.push({
                     entityType: Constants.MembershipEntityType.COURSE,
                     entity: {
@@ -735,11 +757,8 @@ async function getUserContentInternal(ctx: GQLContext, user: User) {
                         title: course.title,
                         slug: course.slug,
                         type: course.type,
-                        totalLessons: course.lessons.length,
-                        completedLessonsCount: user.purchases.find(
-                            (progress: Progress) =>
-                                progress.courseId === course.courseId,
-                        )?.completedLessons.length,
+                        totalLessons: publishedLessonIds.size,
+                        completedLessonsCount: completedPublishedLessons.length,
                         featuredImage: course.featuredImage,
                         certificateId: user.purchases.find(
                             (progress: Progress) =>

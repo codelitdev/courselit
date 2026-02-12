@@ -39,6 +39,14 @@ import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-t
 
 const { permissions, quiz, scorm } = constants;
 
+export const canViewUnpublished = (ctx: GQLContext, entity: any): boolean => {
+    return (
+        !!ctx.user &&
+        (checkPermission(ctx.user.permissions, [permissions.manageAnyCourse]) ||
+            checkOwnershipWithoutModel(entity, ctx))
+    );
+};
+
 const getLessonOrThrow = async (
     id: string,
     ctx: GQLContext,
@@ -89,7 +97,7 @@ export const getLessonDetails = async (
     }
     const lesson = await LessonModel.findOne(query);
 
-    if (!lesson) {
+    if (!lesson || !lesson.published) {
         throw new Error(responses.item_not_found);
     }
 
@@ -123,6 +131,7 @@ export const getLessonDetails = async (
         lesson.courseId,
         ctx.subdomain._id,
         lesson.lessonId,
+        true,
     );
     lesson.prevLesson = prevLesson;
     lesson.nextLesson = nextLesson;
@@ -170,6 +179,7 @@ export const createLesson = async (
             courseId: course.courseId,
             groupId: lessonData.groupId,
             requiresEnrollment: lessonData.requiresEnrollment,
+            published: lessonData.published || false,
         });
 
         course.lessons.push(lesson.lessonId);
@@ -194,6 +204,7 @@ export const updateLesson = async (
         | "media"
         | "downloadable"
         | "requiresEnrollment"
+        | "published"
         | "type"
     > & { id: string; lessonId: string },
     ctx: GQLContext,
@@ -315,22 +326,30 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
 export const getAllLessons = async (
     course: InternalCourse,
     ctx: GQLContext,
+    forcePublishedOnly: boolean = false,
 ) => {
-    const lessons = await LessonModel.find(
-        {
-            courseId: course.courseId,
-            domain: ctx.subdomain._id,
-        },
-        {
-            id: 1,
-            lessonId: 1,
-            type: 1,
-            title: 1,
-            requiresEnrollment: 1,
-            courseId: 1,
-            groupId: 1,
-        },
-    );
+    const canViewUnpublishedLessons =
+        !forcePublishedOnly && canViewUnpublished(ctx, course);
+
+    const query: Record<string, unknown> = {
+        courseId: course.courseId,
+        domain: ctx.subdomain._id,
+    };
+
+    if (!canViewUnpublishedLessons) {
+        query.published = true;
+    }
+
+    const lessons = await LessonModel.find(query, {
+        id: 1,
+        lessonId: 1,
+        type: 1,
+        title: 1,
+        requiresEnrollment: 1,
+        courseId: 1,
+        groupId: 1,
+        published: 1,
+    });
 
     return lessons;
 };
@@ -352,7 +371,7 @@ export const markLessonCompleted = async (
     checkIfAuthenticated(ctx);
 
     const lesson = await LessonModel.findOne<Lesson>({ lessonId });
-    if (!lesson) {
+    if (!lesson || !lesson.published) {
         throw new Error(responses.item_not_found);
     }
 
@@ -455,15 +474,34 @@ const checkAndRecordCourseCompletion = async (
         throw new Error(responses.item_not_found);
     }
 
-    const isCourseCompleted = course.lessons.every((lessonId) => {
-        const progress = ctx.user.purchases.find(
-            (progress: Progress) => progress.courseId === course.courseId,
-        );
-        if (!progress) {
-            return false;
-        }
-        return progress.completedLessons.includes(lessonId);
-    });
+    const publishedLessons = await LessonModel.find(
+        {
+            courseId: course.courseId,
+            domain: ctx.subdomain._id,
+            published: true,
+        },
+        {
+            lessonId: 1,
+        },
+    );
+    const publishedLessonIds = publishedLessons.map(
+        (lesson) => lesson.lessonId,
+    );
+    if (publishedLessonIds.length === 0) {
+        return false;
+    }
+
+    const progress = ctx.user.purchases.find(
+        (purchase: Progress) => purchase.courseId === course.courseId,
+    );
+    if (!progress) {
+        return false;
+    }
+
+    const completedLessons = new Set(progress.completedLessons);
+    const isCourseCompleted = publishedLessonIds.every((lessonId) =>
+        completedLessons.has(lessonId),
+    );
 
     if (!isCourseCompleted) {
         return false;

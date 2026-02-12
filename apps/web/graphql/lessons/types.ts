@@ -51,6 +51,7 @@ const lessonType = new GraphQLObjectType({
             description: DESCRIPTION_REQUIRES_ENROLLMENT,
             type: new GraphQLNonNull(GraphQLBoolean),
         },
+        published: { type: GraphQLBoolean },
         courseId: { type: new GraphQLNonNull(GraphQLID) },
         content: { type: GraphQLJSONObject },
         media: {
@@ -76,6 +77,7 @@ const lessonMetaType = new GraphQLObjectType({
             description: DESCRIPTION_REQUIRES_ENROLLMENT,
             type: new GraphQLNonNull(GraphQLBoolean),
         },
+        published: { type: GraphQLBoolean },
         courseId: { type: new GraphQLNonNull(GraphQLID) },
         groupId: { type: new GraphQLNonNull(GraphQLID) },
     },
@@ -98,6 +100,7 @@ const lessonInputType = new GraphQLInputObjectType({
         // media: { type: mediaTypes.mediaInputType },
         downloadable: { type: GraphQLBoolean },
         groupId: { type: new GraphQLNonNull(GraphQLID) },
+        published: { type: GraphQLBoolean },
     },
 });
 
@@ -116,6 +119,7 @@ const lessonUpdateType = new GraphQLInputObjectType({
             description: DESCRIPTION_REQUIRES_ENROLLMENT,
             type: GraphQLBoolean,
         },
+        published: { type: GraphQLBoolean },
     },
 });
 

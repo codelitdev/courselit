@@ -187,6 +187,9 @@ export const DIALOG_SELECT_BUTTON = "Select";
 export const LESSON_PREVIEW = "Preview";
 export const LESSON_PREVIEW_TOOLTIP =
     "This lesson will be freely available to the users.";
+export const LESSON_VISIBILITY = "Visibility";
+export const LESSON_VISIBILITY_TOOLTIP =
+    "When unpublished, this lesson is hidden from enrolled learners.";
 export const DELETE_LESSON_POPUP_HEADER = "Delete lesson";
 export const APP_MESSAGE_COURSE_DELETED = "Product deleted";
 export const APP_MESSAGE_LESSON_DELETED = "Lesson deleted";

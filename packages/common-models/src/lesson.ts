@@ -13,6 +13,7 @@ export default interface Lesson {
     courseId: string;
     groupId: string;
     downloadable: boolean;
+    published: boolean;
     media?: Partial<Media>;
     prevLesson?: string;
     nextLesson?: string;

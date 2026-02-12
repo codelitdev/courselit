@@ -77,21 +77,23 @@ type GroupLessonItem = Pick<Lesson, "lessonId" | "groupId">;
 export const getGroupedLessons = async (
     courseId: string,
     domainId: mongoose.Types.ObjectId,
+    publishedOnly: boolean = false,
 ): Promise<GroupLessonItem[]> => {
     const course = await CourseModel.findOne({
         courseId: courseId,
         domain: domainId,
     });
-    const allLessons = await LessonModel.find<GroupLessonItem>(
-        {
-            courseId: courseId,
-            domain: domainId,
-        },
-        {
-            lessonId: 1,
-            groupId: 1,
-        },
-    );
+    const lessonsQuery: Record<string, unknown> = {
+        courseId: courseId,
+        domain: domainId,
+    };
+    if (publishedOnly) {
+        lessonsQuery.published = true;
+    }
+    const allLessons = await LessonModel.find<GroupLessonItem>(lessonsQuery, {
+        lessonId: 1,
+        groupId: 1,
+    });
     const lessonsInSequentialOrder: GroupLessonItem[] = [];
     for (let group of course.groups.sort(
         (a: Group, b: Group) => a.rank - b.rank,
@@ -115,10 +117,12 @@ export const getPrevNextCursor = async (
     courseId: string,
     domainId: mongoose.Types.ObjectId,
     lessonId?: string,
+    publishedOnly: boolean = false,
 ) => {
     const lessonsInSequentialOrder = await getGroupedLessons(
         courseId,
         domainId,
+        publishedOnly,
     );
     const indexOfCurrentLesson = lessonId
         ? lessonsInSequentialOrder.findIndex(
