@@ -43,6 +43,7 @@ import {
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
     ALPHA_LABEL,
+    LESSON_PREVIEW,
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
 import useProduct from "@/hooks/use-product";
@@ -603,29 +604,32 @@ export default function LessonPage() {
                                     />
                                 </>
                             )}
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label
-                                        htmlFor="preview"
-                                        className="font-semibold"
-                                    >
-                                        Preview
-                                    </Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        Allow students to preview this lesson
-                                        without enrolling
-                                    </p>
+                            {product?.type?.toLowerCase() !==
+                                UIConstants.COURSE_TYPE_DOWNLOAD && (
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-0.5">
+                                        <Label
+                                            htmlFor="preview"
+                                            className="font-semibold"
+                                        >
+                                            {LESSON_PREVIEW}
+                                        </Label>
+                                        <p className="text-sm text-muted-foreground">
+                                            Allow students to preview this
+                                            lesson without enrolling
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        id="preview"
+                                        checked={!lesson.requiresEnrollment}
+                                        onCheckedChange={(checked) =>
+                                            updateLesson({
+                                                requiresEnrollment: !checked,
+                                            })
+                                        }
+                                    />
                                 </div>
-                                <Switch
-                                    id="preview"
-                                    checked={!lesson.requiresEnrollment}
-                                    onCheckedChange={(checked) =>
-                                        updateLesson({
-                                            requiresEnrollment: !checked,
-                                        })
-                                    }
-                                />
-                            </div>
+                            )}
                             <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
                                     <Label
