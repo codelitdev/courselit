@@ -21,13 +21,13 @@ import {
     PageBuilderSlider,
     PageBuilderPropertyHeader,
     CssIdField,
-    AspectRatio,
     ImageObjectFit,
     Checkbox,
     VerticalPaddingSelector,
     MaxWidthSelector,
     SectionBackgroundPanel,
 } from "@courselit/components-library";
+import { AspectRatio } from "../../components";
 import { isVideo } from "@courselit/utils";
 import { Editor } from "@courselit/text-editor";
 

@@ -1,7 +1,13 @@
 import React, { useEffect, useState } from "react";
 import Settings, { Item } from "../settings";
 import ItemEditor from "./item-editor";
-import { Address, Auth, Profile, Alignment } from "@courselit/common-models";
+import {
+    Address,
+    Auth,
+    Profile,
+    Alignment,
+    TextEditorContent,
+} from "@courselit/common-models";
 import { Theme, ThemeStyle } from "@courselit/page-models";
 import {
     AdminWidgetPanel,
@@ -58,7 +64,7 @@ export default function AdminWidget({
             },
         ],
     };
-    const dummyItemDescription: Record<string, unknown> = {
+    const dummyItemDescription: TextEditorContent = {
         type: "doc",
         content: [
             {

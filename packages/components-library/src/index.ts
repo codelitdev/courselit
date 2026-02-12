@@ -54,7 +54,6 @@ export * from "./paginated-table";
 import getSymbolFromCurrency from "currency-symbol-map";
 export * from "./content-card";
 export * from "./skeleton-card";
-export * from "./video-with-preview";
 export * from "./image";
 export * from "./vertical-padding-selector";
 export * from "./max-width-selector";

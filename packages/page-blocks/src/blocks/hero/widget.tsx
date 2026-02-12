@@ -1,8 +1,8 @@
 import React from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
-import { Image, VideoWithPreview, Link } from "@courselit/components-library";
-import { TextRenderer } from "../../components";
+import { Image, Link } from "@courselit/components-library";
+import { TextRenderer, VideoWithPreview } from "../../components";
 import { isVideo } from "@courselit/utils";
 import clsx from "clsx";
 import {

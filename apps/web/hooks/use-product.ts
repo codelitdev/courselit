@@ -1,6 +1,5 @@
 import { Course } from "@courselit/common-models";
 import { Lesson } from "@courselit/common-models";
-import { useToast } from "@courselit/components-library";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useGraphQLFetch } from "./use-graphql-fetch";
 import { AddressContext } from "@components/contexts";
@@ -9,7 +8,10 @@ import { InternalCourse } from "@courselit/common-logic";
 export type ProductWithAdminProps = Partial<
     Omit<InternalCourse, "paymentPlans"> &
         Pick<Course, "paymentPlans"> & {
-            lessons: Pick<Lesson, "title" | "groupId" | "lessonId" | "type"> &
+            lessons: Pick<
+                Lesson,
+                "title" | "groupId" | "lessonId" | "type" | "published"
+            > &
                 { id: string }[];
         }
 >;
@@ -17,20 +19,18 @@ export type ProductWithAdminProps = Partial<
 export default function useProduct(id?: string | null): {
     product: ProductWithAdminProps | undefined | null;
     loaded: boolean;
+    error: any;
 } {
     const [product, setProduct] = useState<
         ProductWithAdminProps | undefined | null
     >();
-    const { toast } = useToast();
     const [loaded, setLoaded] = useState(false);
-    const [hasError, setHasError] = useState(false);
+    const [error, setError] = useState<any>(null);
     const address = useContext(AddressContext);
     const fetch = useGraphQLFetch();
 
     const loadProduct = useCallback(
         async (courseId: string) => {
-            if (hasError) return;
-
             const query = `
             query {
                 course: getCourse(id: "${courseId}") {
@@ -44,6 +44,7 @@ export default function useProduct(id?: string | null): {
                         groupId,
                         lessonId,
                         type
+                        published
                     },
                     groups {
                         id,
@@ -110,24 +111,25 @@ export default function useProduct(id?: string | null): {
                 const response = await fetchInstance.exec();
                 if (response.course) {
                     setProduct(response.course);
+                    setError(null);
                 } else {
                     setProduct(null);
                 }
             } catch (err: any) {
-                setHasError(true);
+                setError(err);
                 setProduct(null);
             } finally {
                 setLoaded(true);
             }
         },
-        [fetch, hasError],
+        [fetch],
     );
 
     useEffect(() => {
-        if (id && address && !hasError) {
+        if (id && address) {
             loadProduct(id);
         }
-    }, [id, address, loadProduct, hasError]);
+    }, [id, address, loadProduct]);
 
-    return { product, loaded };
+    return { product, loaded, error };
 }

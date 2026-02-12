@@ -33,3 +33,9 @@ export async function deleteMedia(mediaId: string): Promise<boolean> {
     await medialitClient.delete(mediaId);
     return true;
 }
+
+export async function sealMedia(mediaId: string): Promise<Media> {
+    const medialitClient = getMediaLitClient();
+    const media = await medialitClient.seal(mediaId);
+    return media as unknown as Media;
+}

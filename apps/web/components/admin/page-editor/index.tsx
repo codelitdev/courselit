@@ -460,13 +460,6 @@ export default function PageEditor({
     };
 
     const deleteWidget = async (widgetId: string) => {
-        // const widgetIndex = layout.findIndex(
-        //     (widget) => widget.widgetId === widgetId,
-        // );
-        // layout.splice(widgetIndex, 1);
-        // setLayout(layout);
-        // onClose();
-        // await savePage({ pageId: page.pageId!, layout });
         const mutation = `
             mutation ($pageId: String!, $blockId: String!) {
                 page: deleteBlock(pageId: $pageId, blockId: $blockId) {
@@ -513,7 +506,6 @@ export default function PageEditor({
             },
         });
         setLayout(layout);
-        //setShowWidgetSelector(false);
         onItemClick(widgetId);
         setLeftPaneContent("editor");
         await savePage({ pageId: page.pageId!, layout: [...layout] });
@@ -579,13 +571,6 @@ export default function PageEditor({
                 />
             )}
             {leftPaneContent === "editor" && editWidget}
-            {/* {leftPaneContent === "fonts" && (
-                <FontsList
-                    draftTypefaces={draftTypefaces}
-                    onClose={onClose}
-                    saveDraftTypefaces={saveDraftTypefaces}
-                />
-            )} */}
             {leftPaneContent === "theme" && (
                 <ThemeEditor
                     onThemeChange={(theme) => {

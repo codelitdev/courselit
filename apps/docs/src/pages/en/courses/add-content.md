@@ -42,6 +42,8 @@ A lesson is a container for the actual learning material. CourseLit supports mul
 
     For embedding HTML or iframe based content.
 
+    See the [guide to add an embed](/en/lessons/embed).
+
 7. Quiz
 
     For quizzing your students. You can create graded and non-graded quizzes.
@@ -75,6 +77,18 @@ A lesson is a container for the actual learning material. CourseLit supports mul
     This can be a great way to provide a sneak peek into your course.
 
 6. Click `Save lesson`.
+
+## Preview lessons
+
+By default, lessons are visible only to learners after enrollment. To offer a lesson to potential learners without requiring enrollment, toggle the `Preview` switch as shown.
+
+![Preview lesson](/assets/lessons/preview.png)
+
+## Control lesson visibility
+
+By default, lessons are unpublished i.e., not visible to learners. To publish a lesson, toggle the `Publish` switch as shown.
+
+![Publish lesson](/assets/lessons/visibility.png)
 
 ## Stuck somewhere?
 

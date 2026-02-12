@@ -80,6 +80,7 @@ export async function GET(
         {
             courseId: course.courseId,
             domain: domain._id,
+            published: true,
         },
         {
             media: 1,

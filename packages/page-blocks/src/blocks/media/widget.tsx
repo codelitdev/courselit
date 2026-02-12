@@ -1,7 +1,8 @@
 import React from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
-import { Image, VideoWithPreview } from "@courselit/components-library";
+import { Image } from "@courselit/components-library";
+import { VideoWithPreview } from "../../components";
 import { isVideo } from "@courselit/utils";
 import { Section } from "@courselit/page-primitives";
 import { ThemeStyle } from "@courselit/page-models";

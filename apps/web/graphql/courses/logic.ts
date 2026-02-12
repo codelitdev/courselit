@@ -4,7 +4,7 @@
 import CourseModel from "@/models/Course";
 import { InternalCourse } from "@courselit/common-logic";
 import UserModel from "@/models/User";
-import { User } from "@courselit/common-models";
+import { Media, User } from "@courselit/common-models";
 import { responses } from "@/config/strings";
 import {
     checkIfAuthenticated,
@@ -32,10 +32,10 @@ import {
     Course,
 } from "@courselit/common-models";
 import { deleteAllLessons } from "../lessons/logic";
-import { deleteMedia } from "@/services/medialit";
+import { deleteMedia, sealMedia } from "@/services/medialit";
 import PageModel from "@/models/Page";
 import { getPrevNextCursor } from "../lessons/helpers";
-import { checkPermission } from "@courselit/utils";
+import { checkPermission, extractMediaIDs } from "@courselit/utils";
 import { error } from "@/services/logger";
 import {
     deleteProductsFromPaymentPlans,
@@ -52,10 +52,9 @@ import CertificateTemplateModel, {
 } from "@models/CertificateTemplate";
 import CertificateModel from "@models/Certificate";
 import ActivityModel from "@models/Activity";
-import getDeletedMediaIds, {
-    extractMediaIDs,
-} from "@/lib/get-deleted-media-ids";
+import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
 import { deletePageInternal } from "../pages/logic";
+import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -100,7 +99,11 @@ export const getCourseOrThrow = async (
     return course;
 };
 
-async function formatCourse(courseId: string, ctx: GQLContext) {
+async function formatCourse(
+    courseId: string,
+    ctx: GQLContext,
+    includeUnpublishedLessons: boolean = false,
+) {
     const course: InternalCourse | null = (await CourseModel.findOne({
         courseId,
         domain: ctx.subdomain._id,
@@ -119,6 +122,8 @@ async function formatCourse(courseId: string, ctx: GQLContext) {
         const { nextLesson } = await getPrevNextCursor(
             course.courseId,
             ctx.subdomain._id,
+            undefined,
+            !includeUnpublishedLessons,
         );
         (course as any).firstLesson = nextLesson;
     }
@@ -155,12 +160,15 @@ export const getCourse = async (
             ]) || checkOwnershipWithoutModel(course, ctx);
 
         if (isOwner) {
-            return await formatCourse(course.courseId, ctx);
+            return await formatCourse(course.courseId, ctx, true);
         }
     }
 
     if (course.published) {
-        return await formatCourse(course.courseId, ctx);
+        const formattedCourse = await formatCourse(course.courseId, ctx);
+        return asGuest
+            ? { ...formattedCourse, __forcePublishedLessons: true }
+            : formattedCourse;
     } else {
         return null;
     }
@@ -199,8 +207,8 @@ export const updateCourse = async (
     ctx: GQLContext,
 ) => {
     let course = await getCourseOrThrow(undefined, ctx, courseData.id);
-    const mediaIdsMarkedForDeletion: string[] = [];
 
+    const mediaIdsMarkedForDeletion: string[] = [];
     if (Object.prototype.hasOwnProperty.call(courseData, "description")) {
         const nextDescription = (courseData.description ?? "") as string;
         mediaIdsMarkedForDeletion.push(
@@ -228,8 +236,24 @@ export const updateCourse = async (
     }
 
     course = await validateCourse(course, ctx);
-    for (const mediaId of mediaIdsMarkedForDeletion) {
-        await deleteMedia(mediaId);
+    if (Object.prototype.hasOwnProperty.call(courseData, "description")) {
+        for (const mediaId of mediaIdsMarkedForDeletion) {
+            await deleteMedia(mediaId);
+        }
+        const descriptionWithSealedMedia =
+            await replaceTempMediaWithSealedMediaInProseMirrorDoc(
+                course.description || "",
+            );
+        course.description = JSON.stringify(descriptionWithSealedMedia);
+    }
+    if (
+        Object.prototype.hasOwnProperty.call(courseData, "featuredImage") &&
+        courseData.featuredImage
+    ) {
+        const featuredImage = await sealMedia(courseData.featuredImage.mediaId);
+        if (featuredImage) {
+            course.featuredImage = featuredImage;
+        }
     }
     course = await (course as any).save();
     await PageModel.updateOne(
@@ -968,12 +992,26 @@ export const updateCourseCertificateTemplate = async ({
     title?: string;
     subtitle?: string;
     description?: string;
-    signatureImage?: string;
+    signatureImage?: Media;
     signatureName?: string;
     signatureDesignation?: string;
-    logo?: string;
+    logo?: Media;
 }) => {
     const course = await getCourseOrThrow(undefined, ctx, courseId);
+
+    if (signatureImage) {
+        const sealedImage = await sealMedia(signatureImage.mediaId);
+        if (sealedImage) {
+            signatureImage = sealedImage;
+        }
+    }
+
+    if (logo) {
+        const sealedLogo = await sealMedia(logo.mediaId);
+        if (sealedLogo) {
+            logo = sealedLogo;
+        }
+    }
 
     const updatedTemplate = await CertificateTemplateModel.findOneAndUpdate(
         {

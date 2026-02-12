@@ -1,3 +1,8 @@
+/**
+ * Deletes a domain and all its associated data.
+ *
+ * Usage: pnpm --filter @courselit/scripts domain:cleanup <domain-name>
+ */
 import mongoose from "mongoose";
 import {
     CourseSchema,
@@ -40,7 +45,7 @@ import { loadEnvFile } from "node:process";
 import { MediaLit } from "medialit";
 import { extractMediaIDs } from "@courselit/utils";
 import CommonModels from "@courselit/common-models";
-const { CommunityMediaTypes } = CommonModels;
+const { CommunityMediaTypes, Constants } = CommonModels;
 
 function getMediaLitClient() {
     const medialit = new MediaLit({
@@ -164,6 +169,7 @@ async function cleanupDomain(name: string) {
         await deleteMedia(mediaId);
     }
     await DomainModel.deleteOne({ _id: domain._id });
+    console.log(`✅ Deleted: ${name}`);
 }
 
 async function deleteProduct({
@@ -243,19 +249,35 @@ async function deleteLessons(id: string, domain: mongoose.Types.ObjectId) {
         courseId: id,
         domain,
     }).lean()) as InternalLesson[];
+
+    const cleanupTasks: Promise<void>[] = [];
+
     for (const lesson of lessons) {
         if (lesson.media?.mediaId) {
-            await deleteMedia(lesson.media.mediaId);
+            cleanupTasks.push(deleteMedia(lesson.media.mediaId));
         }
-        if (lesson.content) {
+        if (lesson.type === Constants.LessonType.TEXT && lesson.content) {
             const extractedMediaIds = extractMediaIDs(
                 JSON.stringify(lesson.content),
             );
             for (const mediaId of Array.from(extractedMediaIds)) {
-                await deleteMedia(mediaId);
+                cleanupTasks.push(deleteMedia(mediaId));
             }
         }
+        if (
+            lesson.type === Constants.LessonType.SCORM &&
+            lesson.content &&
+            (lesson.content as CommonModels.ScormContent).mediaId
+        ) {
+            cleanupTasks.push(
+                deleteMedia(
+                    (lesson.content as CommonModels.ScormContent).mediaId!,
+                ),
+            );
+        }
     }
+
+    await Promise.all(cleanupTasks);
     await LessonModel.deleteMany({ courseId: id, domain });
 }
 

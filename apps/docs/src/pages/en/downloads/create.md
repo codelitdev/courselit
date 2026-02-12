@@ -52,6 +52,12 @@ Now that we have added some content to the course, it's time to publish. By defa
 
 11. To share your digital download with your audience, simply copy the URL and share it. When your users click on the `Buy now` button, they will be redirected to the login screen so that they can add the course into their accounts.
 
+## Control file visibility
+
+By default, files are unpublished i.e., it will not be included in the ZIP download. To included it in the ZIP file, toggle the `Publish` switch as shown.
+
+![Publish file](/assets/downloads/visibility.png)
+
 ## Stuck somewhere?
 
 We are always here for you. Come chat with us in our <a href="https://discord.com/invite/GR4bQsN" target="_blank">Discord</a> channel or send a tweet at <a href="https://twitter.com/courselit" target="_blank">@CourseLit</a>.

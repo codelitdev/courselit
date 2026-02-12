@@ -11,13 +11,13 @@ import {
     PageBuilderSlider,
     CssIdField,
     Checkbox,
-    AspectRatio,
     ImageObjectFit,
     Select,
     MaxWidthSelector,
     VerticalPaddingSelector,
     Tooltip,
 } from "@courselit/components-library";
+import { AspectRatio } from "../../components";
 import { isVideo } from "@courselit/utils";
 import type { Theme, ThemeStyle } from "@courselit/page-models";
 import { Help } from "@courselit/icons";

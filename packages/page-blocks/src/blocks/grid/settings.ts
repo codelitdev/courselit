@@ -1,13 +1,14 @@
 import type {
     Alignment,
     Media,
+    TextEditorContent,
     VerticalAlignment,
     WidgetDefaultSettings,
 } from "@courselit/common-models";
 
 export interface Item {
     title: string;
-    description?: Record<string, unknown>;
+    description?: TextEditorContent;
     buttonCaption?: string;
     buttonAction?: string;
     media?: Partial<Media>;
@@ -28,7 +29,7 @@ export interface SvgStyle {
 
 export default interface Settings extends WidgetDefaultSettings {
     title: string;
-    description?: Record<string, unknown>;
+    description?: TextEditorContent;
     headerAlignment: Alignment;
     itemsAlignment: Alignment;
     buttonCaption?: string;

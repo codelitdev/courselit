@@ -2,7 +2,7 @@ version: "3"
 
 services:
     app:
-        image: codelit/courselit-app:scorm
+        image: codelit/courselit-app
         environment:
             - NODE_ENV=production
 
@@ -149,7 +149,7 @@ services:
     #         - CLOUD_SECRET=${CLOUD_SECRET?'CLOUD_SECRET is required'}
     #         - CLOUD_BUCKET_NAME=${CLOUD_BUCKET_NAME?'CLOUD_BUCKET_NAME is required'}
     #         - CLOUD_PREFIX=${CLOUD_PREFIX?'CLOUD_PREFIX is required'}
-    #         - S3_ENDPOINT=${S3_ENDPOINT?'S3_ENDPOINT is required'}
+    #         - CDN_ENDPOINT=${CDN_ENDPOINT?'CDN_ENDPOINT is required'}
 
     #         # Temporary file directory for uploads transformations
     #         - TEMP_FILE_DIR_FOR_UPLOADS=/tmp
@@ -157,8 +157,7 @@ services:
     #         - ENABLE_TRUST_PROXY=${ENABLE_TRUST_PROXY}
 
     #         # CloudFront configuration
-    #         - USE_CLOUDFRONT=${USE_CLOUDFRONT} 
-    #         - CLOUDFRONT_ENDPOINT=${CLOUDFRONT_ENDPOINT} 
+    #         - ACCESS_PRIVATE_BUCKET_VIA_CLOUDFRONT=${ACCESS_PRIVATE_BUCKET_VIA_CLOUDFRONT} 
     #         - CLOUDFRONT_KEY_PAIR_ID=${CLOUDFRONT_KEY_PAIR_ID} 
     #         - CLOUDFRONT_PRIVATE_KEY=${CLOUDFRONT_PRIVATE_KEY}
     #         - CDN_MAX_AGE=${CDN_MAX_AGE}

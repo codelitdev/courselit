@@ -1,4 +1,9 @@
-import { checkPermission, generateUniqueId, slugify } from "@courselit/utils";
+import {
+    checkPermission,
+    extractMediaIDs,
+    generateUniqueId,
+    slugify,
+} from "@courselit/utils";
 import CommunityModel, { InternalCommunity } from "@models/Community";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
@@ -57,13 +62,12 @@ import { hasActiveSubscription } from "../users/logic";
 import { internal } from "@config/strings";
 import { hasCommunityPermission as hasPermission } from "@ui-lib/utils";
 import ActivityModel from "@models/Activity";
-import getDeletedMediaIds, {
-    extractMediaIDs,
-} from "@/lib/get-deleted-media-ids";
-import { deleteMedia } from "@/services/medialit";
+import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
+import { deleteMedia, sealMedia } from "@/services/medialit";
 import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
 import InvoiceModel from "@models/Invoice";
 import { InternalMembership } from "@courselit/common-logic";
+import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
 
 const { permissions, communityPage } = constants;
 
@@ -272,10 +276,6 @@ export async function updateCommunity({
 }): Promise<Community> {
     checkIfAuthenticated(ctx);
 
-    // if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-    //     throw new Error(responses.action_not_allowed);
-    // }
-
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, id),
     );
@@ -307,7 +307,10 @@ export async function updateCommunity({
         );
 
         if (nextDescription) {
-            community.description = JSON.parse(nextDescription);
+            community.description =
+                await replaceTempMediaWithSealedMediaInProseMirrorDoc(
+                    nextDescription,
+                );
         }
     }
 
@@ -321,7 +324,10 @@ export async function updateCommunity({
         );
 
         if (nextBanner) {
-            community.banner = JSON.parse(nextBanner);
+            community.banner =
+                await replaceTempMediaWithSealedMediaInProseMirrorDoc(
+                    nextBanner,
+                );
         }
     }
 
@@ -334,7 +340,9 @@ export async function updateCommunity({
     }
 
     if (featuredImage !== undefined) {
-        community.featuredImage = featuredImage;
+        community.featuredImage = featuredImage?.mediaId
+            ? await sealMedia(featuredImage.mediaId)
+            : undefined;
     }
 
     const plans = await getPlans({
@@ -599,6 +607,14 @@ export async function createCommunityPost({
 
     if (!community.categories.includes(category)) {
         throw new Error(responses.invalid_category);
+    }
+
+    if (media?.length) {
+        for (const med of media) {
+            if (med.media?.mediaId) {
+                med.media = await sealMedia(med.media.mediaId);
+            }
+        }
     }
 
     const post = await CommunityPostModel.create({

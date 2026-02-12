@@ -143,21 +143,22 @@ export default function ProductPage(props: {
                     </WidgetErrorBoundary>
                 </div>
             </div>
-            {isEnrolled(product.courseId, profile as Profile) && (
-                <div className="self-end">
-                    <Link
-                        href={`/course/${product.slug}/${product.courseId}/${product.firstLesson}`}
-                    >
-                        <Button
-                            theme={theme.theme}
-                            className="flex gap-1 items-center"
+            {isEnrolled(product.courseId, profile as Profile) &&
+                product.firstLesson && (
+                    <div className="self-end">
+                        <Link
+                            href={`/course/${product.slug}/${product.courseId}/${product.firstLesson}`}
                         >
-                            {COURSE_PROGRESS_START}
-                            <ArrowRight />
-                        </Button>
-                    </Link>
-                </div>
-            )}
+                            <Button
+                                theme={theme.theme}
+                                className="flex gap-1 items-center"
+                            >
+                                {COURSE_PROGRESS_START}
+                                <ArrowRight />
+                            </Button>
+                        </Link>
+                    </div>
+                )}
         </div>
     );
 }
