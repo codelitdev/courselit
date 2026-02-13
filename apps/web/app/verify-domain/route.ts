@@ -8,32 +8,9 @@ import connectToDatabase from "../../services/db";
 import { warn } from "@/services/logger";
 import SubscriberModel, { Subscriber } from "@models/Subscriber";
 import { Constants } from "@courselit/common-models";
+import { getCachedDomain, invalidateDomainCache } from "@/lib/domain-cache";
 
 const { domainNameForSingleTenancy, schoolNameForSingleTenancy } = constants;
-
-const getDomainBasedOnSubdomain = async (
-    subdomain: string,
-): Promise<Domain | null> => {
-    return await DomainModel.findOne({ name: subdomain, deleted: false });
-};
-
-const getDomainBasedOnCustomDomain = async (
-    customDomain: string,
-): Promise<Domain | null> => {
-    return await DomainModel.findOne({ customDomain, deleted: false });
-};
-
-const getDomain = async (hostName: string): Promise<Domain | null> => {
-    const isProduction = process.env.NODE_ENV === "production";
-    const isSubdomain = hostName.endsWith(`.${process.env.DOMAIN}`);
-
-    if (isProduction && (hostName === process.env.DOMAIN || !isSubdomain)) {
-        return getDomainBasedOnCustomDomain(hostName);
-    }
-
-    const [subdomain] = hostName?.split(".");
-    return getDomainBasedOnSubdomain(subdomain);
-};
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +34,7 @@ export async function GET(req: Request) {
             );
         }
 
-        domain = await getDomain(host);
+        domain = await getCachedDomain(host);
 
         if (!domain) {
             return Response.json(
@@ -113,11 +90,10 @@ export async function GET(req: Request) {
                 { $set: { checkSubscriptionStatusAfter: dateAfter24Hours } },
                 { upsert: false },
             );
+            invalidateDomainCache(host);
         }
     } else {
-        domain = await DomainModel.findOne({
-            name: domainNameForSingleTenancy,
-        });
+        domain = await getCachedDomain(domainNameForSingleTenancy);
 
         if (!domain) {
             if (!process.env.SUPER_ADMIN_EMAIL) {
@@ -174,6 +150,11 @@ export async function GET(req: Request) {
                 { _id: domain!._id },
                 { $set: { firstRun: false } },
                 { upsert: false },
+            );
+            invalidateDomainCache(
+                constants.multitenant
+                    ? headerList.get("host") || ""
+                    : domainNameForSingleTenancy,
             );
         } catch (err) {
             warn(`Error in creating user: ${err.message}`, {

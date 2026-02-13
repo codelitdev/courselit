@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type {
     CommunityMemberStatus,
     CommunityReportStatus,
@@ -73,12 +74,10 @@ type FrontEndPage = Pick<
     | "socialImage"
     | "robotsAllowed"
 >;
-export const getPage = async (
-    backend: string,
-    id?: string,
-): Promise<FrontEndPage | null> => {
-    const query = id
-        ? `
+export const getPage = cache(
+    async (backend: string, id?: string): Promise<FrontEndPage | null> => {
+        const query = id
+            ? `
     query {
         page: getPage(id: "${id}") {
             type,
@@ -96,7 +95,7 @@ export const getPage = async (
         }
     }
     `
-        : `
+            : `
     query {
         page: getPage {
             type,
@@ -112,24 +111,24 @@ export const getPage = async (
         }
     }
     `;
-    try {
-        const fetch = new FetchBuilder()
-            .setUrl(`${backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
-        const response = await fetch.exec();
-        return response.page;
-    } catch (e: any) {
-        console.log("getPage", e.message); // eslint-disable-line no-console
-    }
-    return null;
-};
+        try {
+            const fetch = new FetchBuilder()
+                .setUrl(`${backend}/api/graph`)
+                .setPayload(query)
+                .setIsGraphQLEndpoint(true)
+                .build();
+            const response = await fetch.exec();
+            return response.page;
+        } catch (e: any) {
+            console.log("getPage", e.message); // eslint-disable-line no-console
+        }
+        return null;
+    },
+);
 
-export const getSiteInfo = async (
-    backend: string,
-): Promise<SiteInfo | undefined> => {
-    const query = `
+export const getSiteInfo = cache(
+    async (backend: string): Promise<SiteInfo | undefined> => {
+        const query = `
         query { 
             site: getSiteInfo {
                 settings {
@@ -156,32 +155,34 @@ export const getSiteInfo = async (
             }
         }
     `;
-    try {
-        const fetch = new FetchBuilder()
-            .setUrl(`${backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
-        const response = await fetch.exec();
-        return response.site.settings;
-    } catch (e: any) {
-        console.log("getSiteInfo", e.message); // eslint-disable-line no-console
-    }
-};
+        try {
+            const fetch = new FetchBuilder()
+                .setUrl(`${backend}/api/graph`)
+                .setPayload(query)
+                .setIsGraphQLEndpoint(true)
+                .build();
+            const response = await fetch.exec();
+            return response.site.settings;
+        } catch (e: any) {
+            console.log("getSiteInfo", e.message); // eslint-disable-line no-console
+        }
+    },
+);
 
-export const getFullSiteSetup = async (
-    backend: string,
-    id?: string,
-): Promise<
-    | {
-          settings: SiteInfo;
-          theme: Theme;
-          page: FrontEndPage;
-          features: Features[];
-      }
-    | undefined
-> => {
-    const query = `
+export const getFullSiteSetup = cache(
+    async (
+        backend: string,
+        id?: string,
+    ): Promise<
+        | {
+              settings: SiteInfo;
+              theme: Theme;
+              page: FrontEndPage;
+              features: Features[];
+          }
+        | undefined
+    > => {
+        const query = `
         query ($id: String) { 
             theme: getTheme {
                 themeId
@@ -210,35 +211,36 @@ export const getFullSiteSetup = async (
             features: getFeatures
         }
         `;
-    const fetch = new FetchBuilder()
-        .setUrl(`${backend}/api/graph`)
-        .setPayload({ query, variables: { id } })
-        .setIsGraphQLEndpoint(true)
-        .build();
+        const fetch = new FetchBuilder()
+            .setUrl(`${backend}/api/graph`)
+            .setPayload({ query, variables: { id } })
+            .setIsGraphQLEndpoint(true)
+            .build();
 
-    const settings = await getSiteInfo(backend);
-    if (!settings) {
-        return undefined;
-    }
+        const settings = await getSiteInfo(backend);
+        if (!settings) {
+            return undefined;
+        }
 
-    try {
-        const response = await fetch.exec();
-        const transformedTheme: Theme = {
-            id: response.theme.themeId,
-            name: response.theme.name,
-            theme: response.theme.theme,
-        };
-        return {
-            settings,
-            theme: transformedTheme,
-            page: response.page,
-            features: response.features,
-        };
-    } catch (e: any) {
-        console.log("getSiteInfo", e.message); // eslint-disable-line no-console
-        return undefined;
-    }
-};
+        try {
+            const response = await fetch.exec();
+            const transformedTheme: Theme = {
+                id: response.theme.themeId,
+                name: response.theme.name,
+                theme: response.theme.theme,
+            };
+            return {
+                settings,
+                theme: transformedTheme,
+                page: response.page,
+                features: response.features,
+            };
+        } catch (e: any) {
+            console.log("getSiteInfo", e.message); // eslint-disable-line no-console
+            return undefined;
+        }
+    },
+);
 
 export const isEnrolled = (courseId: string, profile: Profile) =>
     profile.purchases.some((purchase: any) => purchase.courseId === courseId);
