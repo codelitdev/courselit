@@ -17,13 +17,13 @@ CourseLit offers integrations with the following payment platforms:
 ## Stripe setup
 
 1. Sign up for an account on Stripe and get your business approved (or use a test account).
-2. In the Stripe dashboard, go to `Developers > API Keys` section as shown below.
+2. In the Stripe dashboard, go to the `Developers > API Keys` section as shown below.
    ![Stripe dashboard](/assets/schools/stripe-api-keys.png)
 3. In your CourseLit school, go to the `Settings > Payment` tab and select `Stripe` in the `Payment Method` dropdown.
 4. Enter your Stripe publishable key and secret key in the `Stripe Publishable Key` and `Stripe Secret Key` input boxes as shown below:  
    ![Payment setup for Stripe](/assets/schools/payment-setup-stripe.png)
 5. Set up the webhooks. Using webhooks, your school receives timely updates about payments from Stripe.
-6. Open the webhook configuration dock, by clicking on `Developers > Webhooks` menu option.
+6. Open the webhook configuration dock by clicking on the `Developers > Webhooks` menu option.
    ![Stripe webhook navigation](/assets/schools/stripe-webhook-navigation.png)
 7. Create a new webhook using the button as shown below:  
    ![Stripe add webhook](/assets/schools/stripe-add-webhook.png)
@@ -58,9 +58,9 @@ CourseLit offers integrations with the following payment platforms:
           ![Razorpay webhook configuration](/assets/schools/razorpay-webhook-config.png)
 10. That's it! Your Razorpay configuration is complete, and you are ready to receive payments.
 
-## Lemon squeezy setup
+## Lemon Squeezy setup
 
-> Lemon Squeezy does not support creating custom products on the fly. Hence, we have built around the restrictions laid down by Lemon Squeezy. That's why we are calling our integration experimental. If something does not work, reach out to us.
+> Lemon Squeezy does not support creating custom products on the fly. Hence, we have built around the restrictions laid down by Lemon Squeezy. That's why we call our integration experimental. If something does not work, reach out to us.
 
 1. Sign up for an account on Lemon Squeezy and get your business approved (or use a test account).
 2. In the Lemon Squeezy dashboard, go to `Products` and click on the `New product` button to create a generic product.  
@@ -78,14 +78,14 @@ CourseLit offers integrations with the following payment platforms:
 4. The following screenshot shows how to select a variant's pricing.  
    ![Lemon Squeezy variant pricing](/assets/schools/lemon-variant-payment-config.png)
 
-5. In your CourseLit school's dashboard, go to `Settings > Payments` and configure the settings as described below.  
+5. In your CourseLit school's dashboard, go to `Settings > Payment` and configure the settings as described below.  
    ![CourseLit Lemon Squeezy config](/assets/schools/courselit-lemonsqueezy-config.png)
 
     1. **Currency**: This will be visible throughout your school but won't affect Lemon Squeezy checkouts, as Lemon Squeezy does not allow overriding it via custom checkout.
     2. **Payment method**: Select Lemon Squeezy.
     3. **Lemon Squeezy Store ID**: In the Lemon Squeezy dashboard, go to `Settings > Stores` as shown below. Copy and paste this ID into the CourseLit settings.  
        ![Lemon Squeezy store ID](/assets/schools/lemon-store-id.png)
-    4. **One-time variant ID**: In the Lemon Squeezy dashboard, go to `Products` and click on the product you configured in the steps above. In the slider popup, scroll down to the `Variants` section, click on the triple dots menu of the one-time variant, and `Copy ID`. Paste this ID into the CourseLit settings.
+    4. **One-time variant ID**: In the Lemon Squeezy dashboard, go to `Products` and click on the product you configured in the steps above. In the slider popup, scroll down to the `Variants` section, click the three-dot menu for the one-time variant, and then click `Copy ID`. Paste this ID into the CourseLit settings.
     5. **Subscription (Monthly) variant ID**: Do the same as #4.
     6. **Subscription (Yearly) variant ID**: Do the same as #4.
     7. **Lemon Squeezy Key**: In the Lemon Squeezy dashboard, go to `Settings > API` and click on the `+` icon to generate a new key. Paste this key into the CourseLit settings.  
@@ -107,9 +107,23 @@ CourseLit offers integrations with the following payment platforms:
 
 9. That's it! Your Lemon Squeezy configuration is complete, and you are ready to receive payments.
 
+## Reset payment method
+
+If you want to stop using the currently selected payment platform, go to `Settings > Payment` and click the reset icon next to the `Payment Method` dropdown.
+
+- This sets the payment method to `None`.
+- This does **not** delete existing gateway credentials (keys/secrets) from your settings.
+- You can pick another payment method later and save the settings again.
+
+![Reset payment method](/assets/schools/reset-payment-method.png)
+
+> After reset, all paid plans of all products will fail at checkout with the error `Payment configuration is invalid`. Free plans will keep on working..
+
+![Reset payment paid plan error](/assets/schools/checkout-payment-invalid.png)
+
 ## Looking for developer docs?
 
-We have created a detailed documentation for understanding the payment flow in CourseLit. Check it out [here]().
+We have created detailed documentation to help you understand the payment flow in CourseLit. Check it out [here]().
 
 ## Stuck somewhere?
 

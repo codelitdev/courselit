@@ -10,6 +10,13 @@
 - Check the name field inside each package's package.json to confirm the right name—skip the top-level one.
 - While working with forms, always use zod and react-hook-form to validate the form. Take reference implementation from `apps/web/components/admin/settings/sso/new.tsx`.
 
+## Documentation tips
+
+- We manage product's documentation in `apps/docs`.
+- When working on a new feature or changing an existing feature significantly, see if documenation should be updated.
+- No need to update documentation while doing bug fixes and refactors.
+- If browser tool is available, see if you can automatically take revelant screenshots and include it in the documentation.
+
 ## Testing instructions
 
 - Always add or update test when introducing changes to `apps/web/graphql` folder, even if nobody asked.

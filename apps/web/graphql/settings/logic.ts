@@ -166,6 +166,28 @@ export const updatePaymentInfo = async (
     return domain;
 };
 
+export const resetPaymentMethod = async (ctx: GQLContext) => {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const domain: Domain | null = await DomainModel.findById(ctx.subdomain._id);
+    if (!domain) {
+        return null;
+    }
+
+    if (!domain.settings || !domain.settings.title) {
+        throw new Error(responses.school_title_not_set);
+    }
+
+    domain.settings.paymentMethod = "";
+    await (domain as any).save();
+
+    return domain;
+};
+
 export const getApikeys = async (ctx: GQLContext) => {
     if (!ctx.subdomain.features?.includes(Constants.Features.API)) {
         return [];

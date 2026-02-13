@@ -8,6 +8,7 @@ import types from "./types";
 import {
     updateSiteInfo,
     updatePaymentInfo,
+    resetPaymentMethod,
     updateDraftTypefaces,
     removeApikey,
     addApikey,
@@ -43,6 +44,11 @@ const mutations = {
             { siteData }: { siteData: Record<string, unknown> },
             context: any,
         ) => updatePaymentInfo(siteData, context),
+    },
+    resetPaymentMethod: {
+        type: types.domain,
+        resolve: async (_: any, __: any, context: any) =>
+            resetPaymentMethod(context),
     },
     updateDraftTypefaces: {
         type: types.domain,
