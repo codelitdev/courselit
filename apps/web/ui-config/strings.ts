@@ -120,6 +120,14 @@ export const SITE_SETTINGS_LEMONSQUEEZY_SUB_MONTHLY_TEXT =
 export const SITE_SETTINGS_LEMONSQUEEZY_SUB_YEARLY_TEXT =
     "Subscription (Yearly) variant ID";
 export const SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL = "None";
+export const SITE_SETTINGS_PAYMENT_METHOD_RESET_BUTTON = "Reset";
+export const SITE_SETTINGS_PAYMENT_METHOD_RESET_TOOLTIP =
+    "Clear the current payment method and keep saved gateway credentials";
+export const SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_TITLE =
+    "Reset payment method?";
+export const SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_DESCRIPTION =
+    "After reset, all paid plans of all products will fail at checkout with an error. Free plans will keep on working.";
+export const SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_ACTION = "Reset";
 export const FREE_COST = "FREE";
 export const SIDEBAR_TEXT_COURSE_ABOUT = "Introduction";
 export const REACT_COMPONENT_CRASHED =

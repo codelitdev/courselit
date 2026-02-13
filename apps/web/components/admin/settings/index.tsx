@@ -22,6 +22,11 @@ import {
     SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
     BUTTON_SAVE,
     SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
+    SITE_SETTINGS_PAYMENT_METHOD_RESET_BUTTON,
+    SITE_SETTINGS_PAYMENT_METHOD_RESET_TOOLTIP,
+    SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_TITLE,
+    SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_DESCRIPTION,
+    SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_ACTION,
     SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY,
     SITE_MAILS_HEADER,
     SITE_MAILING_ADDRESS_SETTING_HEADER,
@@ -41,6 +46,7 @@ import {
     SITE_SETTINGS_LEMONSQUEEZY_SUB_YEARLY_TEXT,
     SETTINGS_RESOURCE_PAYMENT,
     SITE_MISCELLANEOUS_SETTING_HEADER,
+    BUTTON_CANCEL_TEXT,
 } from "@/ui-config/strings";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
@@ -49,6 +55,7 @@ import type { SiteInfo, Media } from "@courselit/common-models";
 import currencies from "@/data/currencies.json";
 import {
     Select,
+    Tooltip,
     MediaSelector,
     Tabbs,
     Form,
@@ -65,11 +72,21 @@ import {
     CardHeader,
     CardTitle,
 } from "@components/ui/card";
-import { Copy, Info } from "lucide-react";
+import { Copy, Info, RotateCcw } from "lucide-react";
 import { Input } from "@components/ui/input";
 import Resources from "@components/resources";
 import { AddressContext } from "@components/contexts";
 import { Button } from "@components/ui/button";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@components/ui/alert-dialog";
 import dynamic from "next/dynamic";
 
 const MiscellaneousTab = dynamic(() => import("./tabs/miscellaneous"));
@@ -80,7 +97,6 @@ const {
     PAYMENT_METHOD_RAZORPAY,
     PAYMENT_METHOD_STRIPE,
     PAYMENT_METHOD_LEMONSQUEEZY,
-    PAYMENT_METHOD_NONE,
     MIMETYPE_IMAGE,
 } = UIConstants;
 
@@ -99,6 +115,8 @@ const Settings = (props: SettingsProps) => {
     const [settings, setSettings] = useState<Partial<SiteInfo>>({});
     const [newSettings, setNewSettings] = useState<Partial<SiteInfo>>({});
     const [loading, setLoading] = useState(false);
+    const [isResetPaymentMethodDialogOpen, setIsResetPaymentMethodDialogOpen] =
+        useState(false);
     const selectedTab = [
         SITE_SETTINGS_SECTION_GENERAL,
         SITE_SETTINGS_SECTION_PAYMENT,
@@ -607,6 +625,61 @@ const Settings = (props: SettingsProps) => {
         }
     };
 
+    const handleResetPaymentMethod = async () => {
+        const query = `
+            mutation {
+                settings: resetPaymentMethod {
+                    settings {
+                        title,
+                        subtitle,
+                        logo {
+                            mediaId,
+                            originalFileName,
+                            mimeType,
+                            size,
+                            access,
+                            file,
+                            thumbnail,
+                            caption
+                        },
+                        currencyISOCode,
+                        paymentMethod,
+                        stripeKey,
+                        razorpayKey,
+                        lemonsqueezyStoreId,
+                        lemonsqueezyOneTimeVariantId,
+                        lemonsqueezySubscriptionMonthlyVariantId,
+                        lemonsqueezySubscriptionYearlyVariantId,
+                        codeInjectionHead,
+                        codeInjectionBody,
+                        mailingAddress,
+                        hideCourseLitBranding
+                    }
+                }
+            }`;
+
+        try {
+            setLoading(true);
+            const fetchRequest = fetch.setPayload(query).build();
+            const response = await fetchRequest.exec();
+            if (response.settings.settings) {
+                setSettingsState(response.settings.settings);
+                toast({
+                    title: TOAST_TITLE_SUCCESS,
+                    description: APP_MESSAGE_SETTINGS_SAVED,
+                });
+            }
+        } catch (e: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const getPaymentSettings = (getNewSettings = false) => ({
         currencyISOCode: getNewSettings
             ? newSettings.currencyISOCode
@@ -807,62 +880,116 @@ const Settings = (props: SettingsProps) => {
                                 </p>
                             )}
                         </div>
-                        <Select
-                            title={SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
-                            value={
-                                newSettings.paymentMethod || PAYMENT_METHOD_NONE
-                            }
-                            options={[
-                                {
-                                    label: SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
-                                    value: PAYMENT_METHOD_NONE,
-                                },
-                                {
-                                    label: capitalize(
-                                        PAYMENT_METHOD_STRIPE.toLowerCase(),
-                                    ),
-                                    value: PAYMENT_METHOD_STRIPE,
-                                    disabled: currencies.some(
-                                        (x) =>
-                                            x.isoCode ===
-                                                newSettings.currencyISOCode?.toUpperCase() &&
-                                            !x.stripe,
-                                    ),
-                                },
-                                {
-                                    label: capitalize(
-                                        PAYMENT_METHOD_RAZORPAY.toLowerCase(),
-                                    ),
-                                    value: PAYMENT_METHOD_RAZORPAY,
-                                    disabled: currencies.some(
-                                        (x) =>
-                                            x.isoCode ===
-                                                newSettings.currencyISOCode?.toUpperCase() &&
-                                            !x.razorpay,
-                                    ),
-                                },
-                                {
-                                    label: capitalize(
-                                        PAYMENT_METHOD_LEMONSQUEEZY.toLowerCase(),
-                                    ),
-                                    value: PAYMENT_METHOD_LEMONSQUEEZY,
-                                    disabled: currencies.some(
-                                        (x) =>
-                                            x.isoCode ===
-                                                newSettings.currencyISOCode?.toUpperCase() &&
-                                            !x.lemonsqueezy,
-                                    ),
-                                },
-                            ]}
-                            onChange={(value) =>
-                                setNewSettings(
-                                    Object.assign({}, newSettings, {
-                                        paymentMethod: value,
-                                    }),
-                                )
-                            }
-                            disabled={!newSettings.currencyISOCode}
-                        />
+                        <div className="flex items-end gap-2">
+                            <Select
+                                className="w-full"
+                                title={SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
+                                value={newSettings.paymentMethod || ""}
+                                options={[
+                                    {
+                                        label: capitalize(
+                                            PAYMENT_METHOD_STRIPE.toLowerCase(),
+                                        ),
+                                        value: PAYMENT_METHOD_STRIPE,
+                                        disabled: currencies.some(
+                                            (x) =>
+                                                x.isoCode ===
+                                                    newSettings.currencyISOCode?.toUpperCase() &&
+                                                !x.stripe,
+                                        ),
+                                    },
+                                    {
+                                        label: capitalize(
+                                            PAYMENT_METHOD_RAZORPAY.toLowerCase(),
+                                        ),
+                                        value: PAYMENT_METHOD_RAZORPAY,
+                                        disabled: currencies.some(
+                                            (x) =>
+                                                x.isoCode ===
+                                                    newSettings.currencyISOCode?.toUpperCase() &&
+                                                !x.razorpay,
+                                        ),
+                                    },
+                                    {
+                                        label: capitalize(
+                                            PAYMENT_METHOD_LEMONSQUEEZY.toLowerCase(),
+                                        ),
+                                        value: PAYMENT_METHOD_LEMONSQUEEZY,
+                                        disabled: currencies.some(
+                                            (x) =>
+                                                x.isoCode ===
+                                                    newSettings.currencyISOCode?.toUpperCase() &&
+                                                !x.lemonsqueezy,
+                                        ),
+                                    },
+                                ]}
+                                onChange={(value) =>
+                                    setNewSettings(
+                                        Object.assign({}, newSettings, {
+                                            paymentMethod: value,
+                                        }),
+                                    )
+                                }
+                                disabled={!newSettings.currencyISOCode}
+                                placeholderMessage={
+                                    SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL
+                                }
+                            />
+                            <Tooltip
+                                title={
+                                    SITE_SETTINGS_PAYMENT_METHOD_RESET_TOOLTIP
+                                }
+                                side="top"
+                            >
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    aria-label={
+                                        SITE_SETTINGS_PAYMENT_METHOD_RESET_BUTTON
+                                    }
+                                    disabled={
+                                        loading || !newSettings.paymentMethod
+                                    }
+                                    onClick={() =>
+                                        setIsResetPaymentMethodDialogOpen(true)
+                                    }
+                                >
+                                    <RotateCcw className="h-4 w-4" />
+                                </Button>
+                            </Tooltip>
+                        </div>
+                        <AlertDialog
+                            open={isResetPaymentMethodDialogOpen}
+                            onOpenChange={setIsResetPaymentMethodDialogOpen}
+                        >
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                        {
+                                            SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_TITLE
+                                        }
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        {
+                                            SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_DESCRIPTION
+                                        }
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>
+                                        {BUTTON_CANCEL_TEXT}
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={handleResetPaymentMethod}
+                                    >
+                                        {
+                                            SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_ACTION
+                                        }
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
 
                         {newSettings.paymentMethod ===
                             PAYMENT_METHOD_STRIPE && (
