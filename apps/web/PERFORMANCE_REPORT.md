@@ -99,69 +99,13 @@ For multi-server environments, use **Redis** to cache the domain lookup result k
 
 ---
 
-## 🟡 3. Direct Database Queries Instead of HTTP Self-Fetch (High ROI)
+## ~~🟡 3. Direct Database Queries Instead of HTTP Self-Fetch~~ — Not Viable
 
-**Impact: ~50–100ms saved per internal API call**
-**Effort: Medium**
-
-### The Problem
-
-Server Components fetch data by making **HTTP requests to themselves** via the GraphQL API:
-
-```typescript
-// ui-lib/utils.ts - Server component making an HTTP request to itself
-const fetch = new FetchBuilder()
-    .setUrl(`${backend}/api/graph`) // self-referencing HTTP call!
-    .setPayload({ query })
-    .build();
-```
-
-Each call to `/api/graph` goes through:
-
-1. Network round-trip (even if localhost, ~5-15ms)
-2. Next.js request handling + middleware re-execution
-3. [GraphQL route handler](file:///Users/rajat/dev/projects/courselit/apps/web/app/api/graph/route.ts#L22-L84) does another `DomainModel.findOne()` + `auth.api.getSession()` + `User.findOne()`
-4. Then the actual resolver logic runs
-
-### The Fix
-
-**For public pages** (no auth needed), call the database models directly from Server Components:
-
-```typescript
-// lib/public-queries.ts
-import PageModel from "@models/Page";
-import DomainModel from "@models/Domain";
-import { cache } from "react";
-
-export const getPublicPage = cache(async (domainId: string, pageId: string) => {
-    return PageModel.findOne(
-        { pageId, domain: domainId },
-        {
-            layout: 1,
-            title: 1,
-            description: 1,
-            socialImage: 1,
-            robotsAllowed: 1,
-        },
-    ).lean();
-});
-
-export const getPublicSiteSetup = cache(async (domainId: string) => {
-    const [domain, theme] = await Promise.all([
-        DomainModel.findById(domainId, {
-            /* projections */
-        }).lean(),
-        ThemeModel.findOne({ domain: domainId, active: true }).lean(),
-    ]);
-    return { settings: domain?.settings, theme, features: domain?.features };
-});
-```
-
-This eliminates the HTTP round-trip overhead and the redundant auth/domain resolution in the GraphQL handler.
+> [!CAUTION] > **Decision: Keep data fetching through the GraphQL API.** The GraphQL resolvers contain critical business logic that runs on first access — such as `initSharedWidgets`, permission checks, and admin-vs-public field filtering. Duplicating this logic in direct DB queries would be fragile, error-prone, and hard to maintain. The HTTP self-fetch overhead is acceptable given the `React.cache()` deduplication (item #1) and domain caching (item #2) already in place.
 
 ---
 
-## 🟡 4. Redis Caching Layer for Tenant Data (High ROI for Multi-Tenant)
+## 🟡 4. Redis Caching Layer for Tenant Data — Phase 2
 
 **Impact: ~80–95% reduction in MongoDB load for public pages**
 **Effort: Medium**
@@ -318,14 +262,12 @@ For a multi-tenant setup, put a CDN (Cloudflare, CloudFront) in front with **Var
 
 ## Priority Summary
 
-|  #  | Optimization                           | Impact      | Effort    |    ROI     |
-| :-: | -------------------------------------- | ----------- | --------- | :--------: |
-|  1  | `React.cache()` on data fetchers       | 🔴 Critical | ⬜ Small  | ⭐⭐⭐⭐⭐ |
-|  2  | Cache `verify-domain`                  | 🔴 High     | ⬜ Small  | ⭐⭐⭐⭐⭐ |
-|  3  | Direct DB calls from Server Components | 🟡 High     | 🟨 Medium |  ⭐⭐⭐⭐  |
-|  4  | Redis caching layer                    | 🟡 High     | 🟨 Medium |  ⭐⭐⭐⭐  |
-|  5  | Convert client → server components     | 🟡 Medium   | 🟥 High   |   ⭐⭐⭐   |
-|  6  | Optimize font loading                  | 🟢 Medium   | ⬜ Small  |   ⭐⭐⭐   |
-|  7  | HTTP caching / CDN                     | 🟢 Medium   | ⬜ Small  |   ⭐⭐⭐   |
-
-> [!TIP] > **Recommended first step**: Apply optimization #1 (`React.cache()`) — it's a 15-minute change that will immediately cut your per-page HTTP requests from ~11 down to ~3, giving you the biggest bang for minimal effort.
+|  #  | Optimization                           | Impact      | Effort    |    Status     |
+| :-: | -------------------------------------- | ----------- | --------- | :-----------: |
+|  1  | `React.cache()` on data fetchers       | 🔴 Critical | ⬜ Small  |    ✅ Done    |
+|  2  | Cache `verify-domain`                  | 🔴 High     | ⬜ Small  |    ✅ Done    |
+|  3  | Direct DB calls from Server Components | 🟡 High     | 🟨 Medium | ❌ Not viable |
+|  4  | Redis caching layer                    | 🟡 High     | 🟨 Medium |  ⬜ Phase 2   |
+|  5  | Convert client → server components     | 🟡 Medium   | 🟥 High   |  ⬜ Phase 2   |
+|  6  | Optimize font loading                  | 🟢 Medium   | ⬜ Small  |  ⬜ Phase 2   |
+|  7  | HTTP caching / CDN                     | 🟢 Medium   | ⬜ Small  |  ⬜ Phase 2   |
