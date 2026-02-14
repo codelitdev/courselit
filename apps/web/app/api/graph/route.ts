@@ -3,9 +3,9 @@ import schema from "@/graphql";
 import { graphql } from "graphql";
 import { getAddress } from "@/lib/utils";
 import User from "@models/User";
-import DomainModel, { Domain } from "@models/Domain";
 import { auth } from "@/auth";
 import { als } from "@/async-local-storage";
+import { getCachedDomain } from "@/lib/domain-cache";
 
 async function updateLastActive(user: any) {
     const dateNow = new Date();
@@ -20,25 +20,24 @@ async function updateLastActive(user: any) {
 }
 
 export async function POST(req: NextRequest) {
-    const domain = await DomainModel.findOne<Domain>({
-        name: req.headers.get("domain"),
-    });
+    const [domain, session, body] = await Promise.all([
+        getCachedDomain(req.headers.get("domain")!),
+        auth.api.getSession({ headers: req.headers }),
+        req.json(),
+    ]);
+
     if (!domain) {
         return Response.json({ message: "Domain not found" }, { status: 404 });
+    }
+
+    if (!body.hasOwnProperty("query")) {
+        return Response.json({ error: "Query is missing" }, { status: 400 });
     }
 
     const map = new Map();
     map.set("domain", req.headers.get("domain"));
     map.set("domainId", req.headers.get("domainId"));
     als.enterWith(map);
-
-    const session = await auth.api.getSession({
-        headers: req.headers,
-    });
-    const body = await req.json();
-    if (!body.hasOwnProperty("query")) {
-        return Response.json({ error: "Query is missing" }, { status: 400 });
-    }
 
     let user;
     if (session) {
@@ -52,11 +51,6 @@ export async function POST(req: NextRequest) {
             updateLastActive(user);
         }
     }
-
-    // const body = await req.json();
-    // if (!body.hasOwnProperty("query")) {
-    //     return Response.json({ error: "Query is missing" }, { status: 400 });
-    // }
 
     let query, variables;
     if (typeof body.query === "string") {

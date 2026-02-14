@@ -2,7 +2,7 @@ import DomainModel, { Domain } from "../models/Domain";
 
 const domainCache = new Map<
     string,
-    { data: Domain | null; expiresAt: number }
+    { data: Record<string, any>; expiresAt: number }
 >();
 const TTL = 60_000; // 60 seconds
 
@@ -35,11 +35,16 @@ export async function getCachedDomain(
 ): Promise<Domain | null> {
     const cached = domainCache.get(hostName);
     if (cached && cached.expiresAt > Date.now()) {
-        return cached.data;
+        return DomainModel.hydrate(cached.data) as unknown as Domain;
     }
 
     const domain = await getDomain(hostName);
-    domainCache.set(hostName, { data: domain, expiresAt: Date.now() + TTL });
+    if (domain) {
+        domainCache.set(hostName, {
+            data: (domain as any).toObject(),
+            expiresAt: Date.now() + TTL,
+        });
+    }
     return domain;
 }
 

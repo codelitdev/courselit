@@ -1,4 +1,5 @@
 import { responses } from "../../config/strings";
+import DomainModel from "@models/Domain";
 import { checkIfAuthenticated } from "../../lib/graphql";
 import GQLContext from "../../models/GQLContext";
 import PageModel, { Page } from "../../models/Page";
@@ -280,15 +281,19 @@ export const publish = async (
     }
     page.socialImage = page.draftSocialImage;
 
-    ctx.subdomain.typefaces = ctx.subdomain.draftTypefaces;
-    ctx.subdomain.sharedWidgets = ctx.subdomain.draftSharedWidgets;
-    // ctx.subdomain.draftSharedWidgets = {};
-
     if (ctx.subdomain.themeId) {
         await publishTheme(ctx.subdomain.themeId, ctx);
     }
 
-    await (ctx.subdomain as any).save();
+    await DomainModel.findOneAndUpdate(
+        { _id: ctx.subdomain._id },
+        {
+            $set: {
+                typefaces: ctx.subdomain.draftTypefaces,
+                sharedWidgets: ctx.subdomain.draftSharedWidgets,
+            },
+        },
+    );
     for (const mediaId of mediaToDelete) {
         await deleteMedia(mediaId);
     }

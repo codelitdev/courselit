@@ -1,4 +1,5 @@
 import { checkIfAuthenticated } from "../../lib/graphql";
+import DomainModel from "@models/Domain";
 import { responses } from "../../config/strings";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
@@ -140,8 +141,10 @@ export const updateDraftTheme = async (
     }
 
     await theme.save();
-    ctx.subdomain.lastEditedThemeId = theme.themeId;
-    await (ctx.subdomain as any).save();
+    await DomainModel.findOneAndUpdate(
+        { _id: ctx.subdomain._id },
+        { $set: { lastEditedThemeId: theme.themeId } },
+    );
 
     return formatTheme(theme);
 };
@@ -216,9 +219,10 @@ export const switchTheme = async (themeId: string, ctx: GQLContext) => {
         theme = await publishTheme(themeId, ctx);
     }
 
-    ctx.subdomain.themeId = themeId;
-    ctx.subdomain.lastEditedThemeId = themeId;
-    await (ctx.subdomain as any).save();
+    await DomainModel.findOneAndUpdate(
+        { _id: ctx.subdomain._id },
+        { $set: { themeId, lastEditedThemeId: themeId } },
+    );
 
     return formatTheme(theme);
 };
