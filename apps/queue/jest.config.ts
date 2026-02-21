@@ -7,6 +7,7 @@ const config = {
         "@courselit/common-logic": "<rootDir>/../../packages/common-logic/src",
         "@courselit/common-models":
             "<rootDir>/../../packages/common-models/src",
+        "@courselit/orm-models": "<rootDir>/../../packages/orm-models/src",
         "@courselit/email-editor":
             "<rootDir>/__mocks__/@courselit/email-editor.ts",
         nanoid: "<rootDir>/__mocks__/nanoid.ts",

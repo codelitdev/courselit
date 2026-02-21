@@ -22,6 +22,7 @@ import OngoingSequenceModel from "@models/OngoingSequence";
 import LessonModel from "@models/Lesson";
 import MembershipModel from "@models/Membership";
 import NotificationModel from "@models/Notification";
+import NotificationPreferenceModel from "@models/NotificationPreference";
 import MailRequestStatusModel from "@models/MailRequestStatus";
 import LessonEvaluationModel from "@models/LessonEvaluation";
 import DownloadLinkModel from "@models/DownloadLink";
@@ -263,6 +264,10 @@ export async function cleanupPersonalData(
                 { forUserId: userToDelete.userId },
                 { userId: userToDelete.userId },
             ],
+        }),
+        NotificationPreferenceModel.deleteMany({
+            domain: ctx.subdomain._id,
+            userId: userToDelete.userId,
         }),
         MailRequestStatusModel.deleteMany({
             domain: ctx.subdomain._id,

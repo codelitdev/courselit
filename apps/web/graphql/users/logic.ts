@@ -7,7 +7,12 @@ import constants from "@/config/constants";
 import GQLContext from "@/models/GQLContext";
 import { initMandatoryPages } from "../pages/logic";
 import { Domain } from "@models/Domain";
-import { checkPermission, generateUniqueId } from "@courselit/utils";
+import {
+    checkPermission,
+    generateUniqueId,
+    getEmailFrom,
+    getPlanPrice,
+} from "@courselit/utils";
 import UserSegmentModel from "@models/UserSegment";
 import {
     InternalCourse,
@@ -32,7 +37,6 @@ import { triggerSequences } from "@/lib/trigger-sequences";
 import { getCourseOrThrow } from "../courses/logic";
 import pug from "pug";
 import courseEnrollTemplate from "@/templates/course-enroll";
-import { generateEmailFrom } from "@/lib/utils";
 import MembershipModel from "@models/Membership";
 import CommunityModel from "@models/Community";
 import CourseModel from "@models/Course";
@@ -49,7 +53,6 @@ import {
     convertFiltersToDBConditions,
     InternalMembership,
 } from "@courselit/common-logic";
-import { getPlanPrice } from "@courselit/utils";
 import CertificateModel from "@models/Certificate";
 import CertificateTemplateModel, {
     CertificateTemplate,
@@ -62,6 +65,7 @@ import {
 const { permissions } = UIConstants;
 import { ObjectId } from "mongodb";
 import { sealMedia } from "@/services/medialit";
+import { seedNotificationPreferencesForUser } from "../notifications/logic";
 
 const removeAdminFieldsFromUserObject = (user: any) => ({
     id: user._id,
@@ -154,6 +158,17 @@ export const updateUser = async (userData: UserData, ctx: GQLContext) => {
 
     user = await user.save();
 
+    if (Object.prototype.hasOwnProperty.call(userData, "subscribedToUpdates")) {
+        recordActivity({
+            domain: ctx.subdomain._id,
+            userId: user.userId,
+            type: userData.subscribedToUpdates
+                ? Constants.ActivityType.NEWSLETTER_SUBSCRIBED
+                : Constants.ActivityType.NEWSLETTER_UNSUBSCRIBED,
+            entityId: user.userId,
+        });
+    }
+
     return user;
 };
 
@@ -220,7 +235,7 @@ export const inviteCustomer = async (
             to: [user.email],
             subject: `You have been invited to ${course.title}`,
             body: emailBody,
-            from: generateEmailFrom({
+            from: getEmailFrom({
                 name: ctx.subdomain?.settings?.title || ctx.subdomain.name,
                 email: process.env.EMAIL_FROM || ctx.subdomain.email,
             }),
@@ -424,6 +439,11 @@ export async function createUser({
     const isNewUser = !rawResult.lastErrorObject!.updatedExisting;
 
     if (isNewUser) {
+        await seedNotificationPreferencesForUser({
+            domain: domain._id,
+            userId: createdUser.userId,
+        });
+
         if (superAdmin) {
             await initMandatoryPages(domain, createdUser);
             await createInternalPaymentPlan(domain, createdUser.userId);
@@ -463,6 +483,13 @@ export async function updateUserAfterCreationViaAuth(
         { new: true },
     );
 
+    if (updatedUser) {
+        await seedNotificationPreferencesForUser({
+            domain: domain._id,
+            userId: updatedUser.userId,
+        });
+    }
+
     await recordActivityAndTriggerSequences(updatedUser, domain);
 }
 
@@ -474,6 +501,7 @@ async function recordActivityAndTriggerSequences(
         domain: domain._id,
         userId: user.userId,
         type: Constants.ActivityType.USER_CREATED,
+        entityId: user.userId,
     });
 
     if (user.subscribedToUpdates) {
@@ -486,6 +514,7 @@ async function recordActivityAndTriggerSequences(
             domain: domain!._id,
             userId: user.userId,
             type: Constants.ActivityType.NEWSLETTER_SUBSCRIBED,
+            entityId: user.userId,
         });
     }
 }

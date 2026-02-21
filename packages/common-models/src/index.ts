@@ -65,6 +65,8 @@ export * from "./membership";
 export * from "./invoice";
 export * from "./community-report";
 export * from "./notification";
+export * from "./notification-channel";
+export * from "./notification-preference";
 export * from "./course";
 export * from "./activity-type";
 export * from "./email-event-action";

@@ -1,0 +1,42 @@
+---
+title: Customize notifications
+description: Customize app and email notifications
+layout: ../../../layouts/MainLayout.astro
+---
+
+CourseLit lets each user control how they receive notifications for different activities.
+
+> This feature is currently in beta, which means you may encounter bugs. Please report them in our <a href="https://discord.com/invite/GR4bQsN" target="_blank">Discord</a> group if you run into any issues.
+
+## Open notification settings
+
+1. Log in to your school.
+2. Open `Dashboard`.
+3. Click on your avatar (in the bottom-left corner) to open up the user menu.
+4. Click on `Notifications`.
+
+![Notifications hub](/assets/users/notifications-hub.png)
+
+## Understand notification groups
+
+Notification preferences are shown in groups based on activity type:
+
+- **General**
+- **Product**
+- **User**
+- **Community**
+
+General notification preferences are available to all users.
+
+## Choose channels
+
+Each activity row has two channels:
+
+- **App**: sends notifications inside your CourseLit dashboard.
+- **Email**: sends notifications to your email inbox.
+
+Tick or untick the checkboxes to turn each channel on or off for that activity. Changes are saved immediately.
+
+## Stuck somewhere?
+
+We are always here for you. Come chat with us in our <a href="https://discord.com/invite/GR4bQsN" target="_blank">Discord</a> channel or send a tweet at <a href="https://twitter.com/courselit" target="_blank">@CourseLit</a>.

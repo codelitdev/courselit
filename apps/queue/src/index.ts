@@ -4,7 +4,8 @@ import sseRoutes from "./sse/routes";
 
 // start workers
 import "./domain/worker";
-import "./workers/notifications";
+import "./notifications/worker/notification";
+import "./notifications/worker/dispatch-notification";
 
 // start loops
 import { startEmailAutomation } from "./start-email-automation";

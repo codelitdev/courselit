@@ -1,5 +1,5 @@
 import { Queue } from "bullmq";
-import redis from "../redis";
+import redis from "../../redis";
 
 const notificationQueue = new Queue("notification", {
     connection: redis,
