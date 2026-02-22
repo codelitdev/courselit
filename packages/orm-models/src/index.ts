@@ -29,6 +29,7 @@ export * from "./models/invoice";
 export * from "./models/theme";
 export * from "./models/ongoing-sequence";
 export * from "./models/notification";
+export * from "./models/notification-preference";
 export * from "./models/download-link";
 export * from "./models/apikey";
 export * from "./models/user-theme";

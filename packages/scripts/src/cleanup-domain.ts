@@ -108,6 +108,12 @@ const OngoingSequenceModel = mongoose.model(
     OngoingSequenceSchema,
 );
 const NotificationModel = mongoose.model("Notification", NotificationSchema);
+const NotificationPreferenceModel =
+    mongoose.models.NotificationPreference ||
+    mongoose.model(
+        "NotificationPreference",
+        new mongoose.Schema({}, { strict: false }),
+    );
 const RuleModel = mongoose.model("Rule", RuleSchema);
 const EmailEventModel = mongoose.model("EmailEvent", EmailEventSchema);
 const EmailDeliveryModel = mongoose.model("EmailDelivery", EmailDeliverySchema);
@@ -132,6 +138,7 @@ async function cleanupDomain(name: string) {
     await UserSegmentModel.deleteMany({ domain: domain._id });
     await UserThemeModel.deleteMany({ domain: domain._id });
     await NotificationModel.deleteMany({ domain: domain._id });
+    await NotificationPreferenceModel.deleteMany({ domain: domain._id });
     await RuleModel.deleteMany({ domain: domain._id });
     await OngoingSequenceModel.deleteMany({ domain: domain._id });
     await SequenceModel.deleteMany({ domain: domain._id });

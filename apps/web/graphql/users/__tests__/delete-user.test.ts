@@ -14,6 +14,7 @@ import UserThemeModel from "@models/UserTheme";
 import PaymentPlanModel from "@models/PaymentPlan";
 import OngoingSequenceModel from "@models/OngoingSequence";
 import NotificationModel from "@models/Notification";
+import NotificationPreferenceModel from "@models/NotificationPreference";
 import MailRequestStatusModel from "@models/MailRequestStatus";
 import LessonEvaluationModel from "@models/LessonEvaluation";
 import DownloadLinkModel from "@models/DownloadLink";
@@ -136,6 +137,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             PaymentPlanModel.deleteMany({ domain: testDomain._id }),
             OngoingSequenceModel.deleteMany({ domain: testDomain._id }),
             NotificationModel.deleteMany({ domain: testDomain._id }),
+            NotificationPreferenceModel.deleteMany({ domain: testDomain._id }),
             MailRequestStatusModel.deleteMany({ domain: testDomain._id }),
             LessonEvaluationModel.deleteMany({ domain: testDomain._id }),
             DownloadLinkModel.deleteMany({ domain: testDomain._id }),
@@ -526,8 +528,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 notificationId: "notif-1",
                 userId: DU_OTHER_USER_ID,
                 forUserId: targetUser.userId,
-                entityAction:
-                    Constants.NotificationEntityAction.COMMUNITY_POSTED,
+                activityType: Constants.ActivityType.COMMUNITY_POST_CREATED,
                 entityId: "post-123",
             });
 
@@ -545,8 +546,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 notificationId: "notif-2",
                 userId: targetUser.userId,
                 forUserId: DU_OTHER_USER_ID,
-                entityAction:
-                    Constants.NotificationEntityAction.COMMUNITY_POSTED,
+                activityType: Constants.ActivityType.COMMUNITY_POST_CREATED,
                 entityId: "post-123",
             });
 
@@ -556,6 +556,22 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 userId: targetUser.userId,
             });
             expect(notifications).toHaveLength(0);
+        });
+
+        it("should delete user's notification preferences", async () => {
+            await NotificationPreferenceModel.create({
+                domain: testDomain._id,
+                userId: targetUser.userId,
+                activityType: Constants.ActivityType.COMMUNITY_POST_CREATED,
+                channels: [Constants.NotificationChannel.APP],
+            });
+
+            await deleteUser(targetUser.userId, mockCtx);
+
+            const preferences = await NotificationPreferenceModel.find({
+                userId: targetUser.userId,
+            });
+            expect(preferences).toHaveLength(0);
         });
 
         it("should delete mail request status", async () => {
@@ -983,8 +999,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 notificationId: "notif-1",
                 userId: targetUser.userId,
                 forUserId: DU_OTHER_USER_ID,
-                entityAction:
-                    Constants.NotificationEntityAction.COMMUNITY_POSTED,
+                activityType: Constants.ActivityType.COMMUNITY_POST_CREATED,
                 entityId: "post-123",
             });
 

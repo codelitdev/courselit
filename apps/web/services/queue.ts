@@ -1,10 +1,8 @@
-import { NotificationEntityAction } from "@courselit/common-models";
+import { ActivityType } from "@courselit/common-models";
 import { jwtUtils } from "@courselit/utils";
 import { error } from "./logger";
 import nodemailer from "nodemailer";
 import { responses } from "@/config/strings";
-import NotificationModel from "@models/Notification";
-import { ObjectId } from "mongodb";
 
 const queueServer = process.env.QUEUE_SERVER || "http://localhost:4000";
 
@@ -27,6 +25,7 @@ interface MailProps {
     subject: string;
     body: string;
     from: string;
+    headers?: Record<string, string>;
 }
 if (mailHost && mailUser && mailPass && mailPort) {
     transporter = nodemailer.createTransport({
@@ -50,7 +49,13 @@ if (mailHost && mailUser && mailPass && mailPort) {
     };
 }
 
-export async function addMailJob({ to, from, subject, body }: MailProps) {
+export async function addMailJob({
+    to,
+    from,
+    subject,
+    body,
+    headers,
+}: MailProps) {
     try {
         const jwtSecret = getJwtSecret();
         const token = jwtUtils.generateToken({ service: "app" }, jwtSecret);
@@ -65,6 +70,7 @@ export async function addMailJob({ to, from, subject, body }: MailProps) {
                 from,
                 subject,
                 body,
+                headers,
             }),
         });
         const jsonResponse = await response.json();
@@ -88,6 +94,7 @@ export async function addMailJob({ to, from, subject, body }: MailProps) {
                     to: recipient,
                     subject,
                     html: body,
+                    headers,
                 });
                 atLeastOneSuccessfulSend = true;
             } catch (err: any) {
@@ -103,20 +110,20 @@ export async function addMailJob({ to, from, subject, body }: MailProps) {
     }
 }
 
-export async function addNotification({
+export async function addNotificationDispatchJob({
     domain,
     entityId,
-    entityAction,
-    forUserIds,
+    activityType,
     userId,
     entityTargetId,
+    metadata = {},
 }: {
     domain: string;
     entityId: string;
-    entityAction: NotificationEntityAction;
-    forUserIds: string[];
+    activityType: ActivityType;
     userId: string;
     entityTargetId?: string;
+    metadata?: Record<string, unknown>;
 }) {
     try {
         const jwtSecret = getJwtSecret();
@@ -130,49 +137,35 @@ export async function addNotification({
             },
             jwtSecret,
         );
-        const response = await fetch(`${queueServer}/job/notification`, {
-            method: "POST",
-            headers: {
-                "content-type": "application/json",
-                Authorization: `Bearer ${token}`,
+        const response = await fetch(
+            `${queueServer}/job/dispatch-notification`,
+            {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    activityType,
+                    entityId,
+                    entityTargetId,
+                    metadata,
+                }),
             },
-            body: JSON.stringify({
-                forUserIds,
-                entityAction,
-                entityId,
-                entityTargetId,
-            }),
-        });
+        );
         const jsonResponse = await response.json();
 
         if (response.status !== 200) {
             throw new Error(jsonResponse.error);
         }
     } catch (err) {
-        error(`Error adding notification job: ${err.message}`, {
+        error(`Error adding notification dispatch job: ${err.message}`, {
             domain,
             entityId,
-            entityAction,
-            forUserIds,
+            activityType,
             userId,
             entityTargetId,
+            metadata,
         });
-
-        try {
-            for (const forUserId of forUserIds) {
-                await NotificationModel.create({
-                    domain: new ObjectId(domain),
-                    userId,
-                    forUserId,
-                    entityAction,
-                    entityId,
-                    entityTargetId,
-                });
-            }
-        } catch (err) {
-            error(`Error adding notification locally: ${err.message}`, {
-                stack: err.stack,
-            });
-        }
     }
 }

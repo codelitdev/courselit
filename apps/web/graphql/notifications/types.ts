@@ -26,7 +26,16 @@ const notifications = new GraphQLObjectType({
     },
 });
 
+const notificationPreference = new GraphQLObjectType({
+    name: "NotificationPreference",
+    fields: {
+        activityType: { type: GraphQLString },
+        channels: { type: new GraphQLList(GraphQLString) },
+    },
+});
+
 export default {
     notification,
     notifications,
+    notificationPreference,
 };

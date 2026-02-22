@@ -56,8 +56,6 @@ import {
     toggleContentVisibility,
 } from "./helpers";
 import { error } from "@/services/logger";
-import NotificationModel from "@models/Notification";
-import { addNotification } from "@/services/queue";
 import { hasActiveSubscription } from "../users/logic";
 import { internal } from "@config/strings";
 import { hasCommunityPermission as hasPermission } from "@ui-lib/utils";
@@ -68,6 +66,7 @@ import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
 import InvoiceModel from "@models/Invoice";
 import { InternalMembership } from "@courselit/common-logic";
 import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
+import { recordActivity } from "@/lib/record-activity";
 
 const { permissions, communityPage } = constants;
 
@@ -547,14 +546,14 @@ export async function joinCommunity({
             role: Constants.MembershipRole.MODERATE,
         });
 
-        addNotification({
-            domain: ctx.subdomain._id.toString(),
-            entityId: community.communityId,
-            entityAction:
-                Constants.NotificationEntityAction
-                    .COMMUNITY_MEMBERSHIP_REQUESTED,
-            forUserIds: communityManagers.map((m) => m.userId),
+        await recordActivity({
+            domain: ctx.subdomain._id,
             userId: ctx.user.userId,
+            type: Constants.ActivityType.COMMUNITY_MEMBERSHIP_REQUESTED,
+            entityId: community.communityId,
+            metadata: {
+                forUserIds: communityManagers.map((m) => m.userId),
+            },
         });
     }
 
@@ -641,14 +640,17 @@ export async function createCommunityPost({
             status: Constants.MembershipStatus.ACTIVE,
         }).lean();
 
-        await addNotification({
-            domain: ctx.subdomain._id.toString(),
-            entityId: post.postId,
-            entityAction: Constants.NotificationEntityAction.COMMUNITY_POSTED,
-            forUserIds: members
-                .map((m) => m.userId)
-                .filter((id) => id !== ctx.user.userId),
+        await recordActivity({
+            domain: ctx.subdomain._id,
             userId: ctx.user.userId,
+            type: Constants.ActivityType.COMMUNITY_POST_CREATED,
+            entityId: post.postId,
+            metadata: {
+                communityId: community.communityId,
+                forUserIds: members
+                    .map((m) => m.userId)
+                    .filter((id) => id !== ctx.user.userId),
+            },
         });
     } catch (err) {
         error(
@@ -1097,13 +1099,14 @@ export async function updateMemberStatus({
             });
         }
 
-        await addNotification({
-            domain: ctx.subdomain._id.toString(),
-            entityId: community.communityId,
-            entityAction:
-                Constants.NotificationEntityAction.COMMUNITY_MEMBERSHIP_GRANTED,
-            forUserIds: [userId],
+        await recordActivity({
+            domain: ctx.subdomain._id,
             userId: ctx.user.userId,
+            type: Constants.ActivityType.COMMUNITY_MEMBERSHIP_GRANTED,
+            entityId: community.communityId,
+            metadata: {
+                forUserIds: [userId],
+            },
         });
     }
 
@@ -1237,24 +1240,16 @@ export async function togglePostLike({
     await post.save();
 
     if (liked && post.userId !== ctx.user.userId) {
-        const existingNotification = await NotificationModel.findOne({
+        await recordActivity({
             domain: ctx.subdomain._id,
-            entityId: post.postId,
-            entityAction:
-                Constants.NotificationEntityAction.COMMUNITY_POST_LIKED,
-            forUserId: post.userId,
             userId: ctx.user.userId,
-        });
-        if (!existingNotification) {
-            await addNotification({
-                domain: ctx.subdomain._id.toString(),
-                entityId: post.postId,
-                entityAction:
-                    Constants.NotificationEntityAction.COMMUNITY_POST_LIKED,
+            type: Constants.ActivityType.COMMUNITY_POST_LIKED,
+            entityId: post.postId,
+            metadata: {
+                communityId: community.communityId,
                 forUserIds: [post.userId],
-                userId: ctx.user.userId,
-            });
-        }
+            },
+        });
     }
 
     return formatPost(post, ctx.user.userId);
@@ -1387,13 +1382,18 @@ export async function postComment({
             userId: ctx.user.userId,
         });
 
-        await addNotification({
-            domain: ctx.subdomain._id.toString(),
-            entityId: replyId,
-            entityAction: Constants.NotificationEntityAction.COMMUNITY_REPLIED,
-            forUserIds: postSubscribers.map((s) => s.userId),
+        await recordActivity({
+            domain: ctx.subdomain._id,
             userId: ctx.user.userId,
-            entityTargetId: comment.commentId,
+            type: Constants.ActivityType.COMMUNITY_REPLY_CREATED,
+            entityId: replyId,
+            metadata: {
+                communityId: community.communityId,
+                postId: post.postId,
+                commentId: comment.commentId,
+                entityTargetId: comment.commentId,
+                forUserIds: postSubscribers.map((s) => s.userId),
+            },
         });
     } else {
         comment = await CommunityCommentModel.create({
@@ -1411,13 +1411,16 @@ export async function postComment({
             userId: ctx.user.userId,
         });
 
-        await addNotification({
-            domain: ctx.subdomain._id.toString(),
-            entityId: post.postId,
-            entityAction:
-                Constants.NotificationEntityAction.COMMUNITY_COMMENTED,
-            forUserIds: postSubscribers.map((s) => s.userId),
+        await recordActivity({
+            domain: ctx.subdomain._id,
             userId: ctx.user.userId,
+            type: Constants.ActivityType.COMMUNITY_COMMENT_CREATED,
+            entityId: comment.commentId,
+            metadata: {
+                communityId: community.communityId,
+                postId: post.postId,
+                forUserIds: postSubscribers.map((s) => s.userId),
+            },
         });
     }
 
@@ -1524,24 +1527,17 @@ export async function toggleCommentLike({
     await comment.save();
 
     if (liked && comment.userId !== ctx.user.userId) {
-        const existingNotification = await NotificationModel.findOne({
+        await recordActivity({
             domain: ctx.subdomain._id,
-            entityId: comment.commentId,
-            entityAction:
-                Constants.NotificationEntityAction.COMMUNITY_COMMENT_LIKED,
-            forUserId: comment.userId,
             userId: ctx.user.userId,
-        });
-        if (!existingNotification) {
-            await addNotification({
-                domain: ctx.subdomain._id.toString(),
-                entityId: comment.commentId,
-                entityAction:
-                    Constants.NotificationEntityAction.COMMUNITY_COMMENT_LIKED,
+            type: Constants.ActivityType.COMMUNITY_COMMENT_LIKED,
+            entityId: comment.commentId,
+            metadata: {
+                communityId: community.communityId,
+                postId,
                 forUserIds: [comment.userId],
-                userId: ctx.user.userId,
-            });
-        }
+            },
+        });
     }
 
     return formatComment(comment, ctx.user.userId);
@@ -1605,25 +1601,19 @@ export async function toggleCommentReplyLike({
     await comment.save();
 
     if (liked && reply.userId !== ctx.user.userId) {
-        const existingNotification = await NotificationModel.findOne({
+        await recordActivity({
             domain: ctx.subdomain._id,
-            entityId: reply.replyId,
-            entityAction:
-                Constants.NotificationEntityAction.COMMUNITY_REPLY_LIKED,
-            forUserId: reply.userId,
             userId: ctx.user.userId,
-        });
-        if (!existingNotification) {
-            await addNotification({
-                domain: ctx.subdomain._id.toString(),
-                entityId: reply.replyId,
-                entityAction:
-                    Constants.NotificationEntityAction.COMMUNITY_REPLY_LIKED,
-                forUserIds: [reply.userId],
-                userId: ctx.user.userId,
+            type: Constants.ActivityType.COMMUNITY_REPLY_LIKED,
+            entityId: reply.replyId,
+            metadata: {
+                communityId: community.communityId,
+                postId,
+                commentId: comment.commentId,
                 entityTargetId: comment.commentId,
-            });
-        }
+                forUserIds: [reply.userId],
+            },
+        });
     }
 
     return formatComment(comment, ctx.user.userId);
@@ -1784,6 +1774,23 @@ export async function leaveCommunity({
     }
 
     await member.deleteOne();
+
+    const communityManagers: Membership[] = await MembershipModel.find({
+        domain: ctx.subdomain._id,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+        role: Constants.MembershipRole.MODERATE,
+    });
+
+    await recordActivity({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        type: Constants.ActivityType.COMMUNITY_LEFT,
+        entityId: community.communityId,
+        metadata: {
+            forUserIds: communityManagers.map((m) => m.userId),
+        },
+    });
 
     return true;
 }

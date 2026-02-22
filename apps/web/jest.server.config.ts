@@ -7,6 +7,9 @@ const config: Config = {
     moduleNameMapper: {
         "@courselit/utils": "<rootDir>/../../packages/utils/src",
         "@courselit/common-logic": "<rootDir>/../../packages/common-logic/src",
+        "@courselit/common-models":
+            "<rootDir>/../../packages/common-models/src",
+        "@courselit/orm-models": "<rootDir>/../../packages/orm-models/src",
         "@courselit/page-primitives":
             "<rootDir>/../../packages/page-primitives/src",
         nanoid: "<rootDir>/__mocks__/nanoid.ts",

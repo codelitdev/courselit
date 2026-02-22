@@ -15,6 +15,7 @@ COPY packages/page-models ./packages/page-models
 COPY packages/email-editor ./packages/email-editor
 COPY packages/common-models ./packages/common-models
 COPY packages/common-logic ./packages/common-logic
+COPY packages/orm-models ./packages/orm-models
 COPY packages/utils ./packages/utils
 COPY apps/queue ./apps/queue
 

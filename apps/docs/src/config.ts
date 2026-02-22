@@ -122,6 +122,7 @@ export const SIDEBAR: Sidebar = {
         Users: [
             { text: "Introduction", link: "en/users/introduction" },
             { text: "Manage users", link: "en/users/manage" },
+            { text: "Customize notifications", link: "en/users/notifications" },
             { text: "User permissions", link: "en/users/permissions" },
             { text: "Filter users", link: "en/users/filters" },
             { text: "Segment users", link: "en/users/segments" },

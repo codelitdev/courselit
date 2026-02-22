@@ -10,3 +10,5 @@ export * from "./models/rule";
 export * from "./models/email";
 export * from "./models/email-delivery";
 export * from "./models/email-event";
+export * from "./utils/get-notification-message-and-href";
+export * from "./notification-entity-resolver";
