@@ -511,6 +511,9 @@ importers:
       '@courselit/email-editor':
         specifier: workspace:^
         version: link:../email-editor
+      '@courselit/orm-models':
+        specifier: workspace:^
+        version: link:../orm-models
       '@courselit/utils':
         specifier: workspace:^
         version: link:../utils
