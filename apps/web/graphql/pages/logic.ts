@@ -4,8 +4,10 @@ import GQLContext from "../../models/GQLContext";
 import PageModel, { Page } from "../../models/Page";
 import {
     copySharedWidgetsToDomain,
+    generateUniquePageId,
     getPageResponse,
     initSharedWidgets,
+    isDuplicateKeyError,
 } from "./helpers";
 import constants from "../../config/constants";
 import Course from "../../models/Course";
@@ -433,39 +435,42 @@ export const createPage = async ({
         throw new Error(responses.action_not_allowed);
     }
 
-    const existingPage = await PageModel.findOne({
-        domain: ctx.subdomain._id,
+    const uniquePageId = await generateUniquePageId(
+        ctx.subdomain._id,
         pageId,
-        type: site,
-    });
+        false,
+    );
 
-    if (existingPage) {
-        throw new Error(responses.page_exists);
+    try {
+        const page: Page = await PageModel.create({
+            domain: ctx.subdomain._id,
+            pageId: uniquePageId,
+            type: site,
+            creatorId: ctx.user.userId,
+            name,
+            entityId: ctx.subdomain.name,
+            deleteable: true,
+            layout: [
+                {
+                    name: "header",
+                    deleteable: false,
+                    shared: true,
+                },
+                {
+                    name: "footer",
+                    deleteable: false,
+                    shared: true,
+                },
+            ],
+        });
+
+        return page;
+    } catch (err) {
+        if (isDuplicateKeyError(err)) {
+            throw new Error(responses.page_id_already_exists);
+        }
+        throw err;
     }
-
-    const page: Page = await PageModel.create({
-        domain: ctx.subdomain._id,
-        pageId,
-        type: site,
-        creatorId: ctx.user.userId,
-        name,
-        entityId: ctx.subdomain.name,
-        deleteable: true,
-        layout: [
-            {
-                name: "header",
-                deleteable: false,
-                shared: true,
-            },
-            {
-                name: "footer",
-                deleteable: false,
-                shared: true,
-            },
-        ],
-    });
-
-    return page;
 };
 
 export const deletePage = async (

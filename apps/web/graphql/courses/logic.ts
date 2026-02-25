@@ -55,6 +55,7 @@ import ActivityModel from "@models/Activity";
 import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
 import { deletePageInternal } from "../pages/logic";
 import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
+import { validateSlug, isDuplicateKeyError } from "../pages/helpers";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -217,7 +218,7 @@ export const updateCourse = async (
     }
 
     for (const key of Object.keys(courseData)) {
-        if (key === "id") {
+        if (key === "id" || key === "slug") {
             continue;
         }
 
@@ -255,7 +256,36 @@ export const updateCourse = async (
             course.featuredImage = featuredImage;
         }
     }
-    course = await (course as any).save();
+    // Handle slug update with Page-first atomicity
+    if (courseData.slug) {
+        const newSlug = validateSlug(courseData.slug);
+        if (newSlug !== course.slug) {
+            try {
+                await PageModel.updateOne(
+                    {
+                        domain: ctx.subdomain._id,
+                        pageId: course.pageId,
+                    },
+                    { $set: { pageId: newSlug } },
+                );
+            } catch (err) {
+                if (isDuplicateKeyError(err)) {
+                    throw new Error(responses.page_id_already_exists);
+                }
+                throw err;
+            }
+            course.slug = newSlug;
+            course.pageId = newSlug;
+        }
+    }
+    try {
+        course = await (course as any).save();
+    } catch (err) {
+        if (isDuplicateKeyError(err)) {
+            throw new Error(responses.page_id_already_exists);
+        }
+        throw err;
+    }
     await PageModel.updateOne(
         { entityId: course.courseId, domain: ctx.subdomain._id },
         { $set: { name: course.title } },

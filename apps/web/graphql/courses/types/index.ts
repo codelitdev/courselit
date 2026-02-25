@@ -186,6 +186,7 @@ const courseUpdateInput = new GraphQLInputObjectType({
     fields: {
         id: { type: new GraphQLNonNull(GraphQLString) },
         title: { type: GraphQLString },
+        slug: { type: GraphQLString },
         costType: { type: courseCostType },
         cost: { type: GraphQLFloat },
         published: { type: GraphQLBoolean },

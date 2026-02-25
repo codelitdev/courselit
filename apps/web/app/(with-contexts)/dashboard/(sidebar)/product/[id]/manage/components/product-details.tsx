@@ -19,8 +19,8 @@ import { Save, Loader2 } from "lucide-react";
 import { Editor, emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
 
 const MUTATION_UPDATE_BASIC_DETAILS = `
-    mutation UpdateBasicDetails($courseId: String!, $title: String!, $description: String!) {
-        updateCourse(courseData: { id: $courseId, title: $title, description: $description }) {
+    mutation UpdateBasicDetails($courseId: String!, $title: String!, $description: String!, $slug: String) {
+        updateCourse(courseData: { id: $courseId, title: $title, description: $description, slug: $slug }) {
            courseId 
         }
     }
@@ -39,9 +39,11 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
     const [refresh, setRefresh] = useState(0);
     const [formData, setFormData] = useState<{
         name: string;
+        slug: string;
         description: any;
     }>({
         name: product?.title || "",
+        slug: product?.slug || "",
         description: product?.description
             ? JSON.parse(product.description)
             : TextEditorEmptyDoc,
@@ -78,6 +80,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                         courseId: product.courseId,
                         title: formData.name,
                         description: JSON.stringify(formData.description),
+                        slug: formData.slug || undefined,
                     },
                 })
                 .build()
@@ -118,6 +121,23 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                     {errors.name && (
                         <p className="text-red-500 text-sm">{errors.name}</p>
                     )}
+                </div>
+
+                <div className="space-y-4">
+                    <Label htmlFor="slug" className="text-base font-semibold">
+                        Slug
+                    </Label>
+                    <Input
+                        id="slug"
+                        name="slug"
+                        value={formData.slug}
+                        onChange={handleInputChange}
+                        disabled={loading}
+                        placeholder="my-awesome-course"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                        The URL-friendly identifier for this product page.
+                    </p>
                 </div>
 
                 <div className="space-y-4">

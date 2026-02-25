@@ -48,6 +48,7 @@ const mutations = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLString) },
             name: { type: GraphQLString },
+            slug: { type: GraphQLString },
             description: { type: GraphQLString },
             enabled: { type: GraphQLBoolean },
             banner: { type: GraphQLString },
@@ -60,6 +61,7 @@ const mutations = {
             {
                 id,
                 name,
+                slug,
                 description,
                 enabled,
                 banner,
@@ -69,6 +71,7 @@ const mutations = {
             }: {
                 id: string;
                 name?: string;
+                slug?: string;
                 description?: string;
                 enabled?: boolean;
                 banner?: string;
@@ -81,6 +84,7 @@ const mutations = {
             updateCommunity({
                 id,
                 name,
+                slug,
                 description,
                 ctx,
                 enabled,

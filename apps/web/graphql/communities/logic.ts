@@ -2,7 +2,6 @@ import {
     checkPermission,
     extractMediaIDs,
     generateUniqueId,
-    slugify,
 } from "@courselit/utils";
 import CommunityModel, { InternalCommunity } from "@models/Community";
 import constants from "../../config/constants";
@@ -33,6 +32,11 @@ import {
 import CommunityCommentModel from "@models/CommunityComment";
 import PageModel from "@models/Page";
 import PaymentPlanModel from "@models/PaymentPlan";
+import {
+    generateUniquePageId,
+    isDuplicateKeyError,
+    validateSlug,
+} from "../pages/helpers";
 import MembershipModel from "@models/Membership";
 import {
     addIncludedProductsMemberships,
@@ -95,39 +99,48 @@ export async function createCommunity({
 
     const communityId = generateUniqueId();
 
-    const pageId = `${slugify(name.toLowerCase())}-${communityId.substring(0, 5)}`;
+    const pageId = await generateUniquePageId(ctx.subdomain._id, name);
 
-    await PageModel.create({
-        domain: ctx.subdomain._id,
-        pageId,
-        type: communityPage,
-        creatorId: ctx.user.userId,
-        name,
-        entityId: communityId,
-        layout: [
-            {
-                name: "header",
-                deleteable: false,
-                shared: true,
-            },
-            {
-                name: "banner",
-            },
-            {
-                name: "footer",
-                deleteable: false,
-                shared: true,
-            },
-        ],
-        title: name,
-    });
+    let community;
+    try {
+        await PageModel.create({
+            domain: ctx.subdomain._id,
+            pageId,
+            type: communityPage,
+            creatorId: ctx.user.userId,
+            name,
+            entityId: communityId,
+            layout: [
+                {
+                    name: "header",
+                    deleteable: false,
+                    shared: true,
+                },
+                {
+                    name: "banner",
+                },
+                {
+                    name: "footer",
+                    deleteable: false,
+                    shared: true,
+                },
+            ],
+            title: name,
+        });
 
-    const community = await CommunityModel.create<Community>({
-        domain: ctx.subdomain._id,
-        communityId,
-        name,
-        pageId,
-    });
+        community = await CommunityModel.create({
+            domain: ctx.subdomain._id,
+            communityId,
+            name,
+            slug: pageId,
+            pageId,
+        });
+    } catch (err) {
+        if (isDuplicateKeyError(err)) {
+            throw new Error(responses.page_id_already_exists);
+        }
+        throw err;
+    }
 
     const paymentPlan = await getInternalPaymentPlan(ctx);
     await MembershipModel.create({
@@ -255,6 +268,7 @@ export async function getCommunitiesCount({
 export async function updateCommunity({
     id,
     name,
+    slug,
     description,
     ctx,
     enabled,
@@ -265,6 +279,7 @@ export async function updateCommunity({
 }: {
     id: string;
     name?: string;
+    slug?: string;
     description?: string;
     ctx: GQLContext;
     enabled?: boolean;
@@ -291,6 +306,29 @@ export async function updateCommunity({
 
     if (name) {
         community.name = name;
+    }
+
+    if (slug) {
+        const newSlug = validateSlug(slug);
+        if (newSlug !== community.slug) {
+            // Page-first atomicity: update Page record first (hard unique constraint)
+            try {
+                await PageModel.updateOne(
+                    {
+                        domain: ctx.subdomain._id,
+                        pageId: community.pageId,
+                    },
+                    { $set: { pageId: newSlug } },
+                );
+            } catch (err) {
+                if (isDuplicateKeyError(err)) {
+                    throw new Error(responses.page_id_already_exists);
+                }
+                throw err;
+            }
+            community.slug = newSlug;
+            community.pageId = newSlug;
+        }
     }
 
     const descriptionMediaIdsMarkedForDeletion: string[] = [];
@@ -960,6 +998,7 @@ async function formatCommunity(
 ): Promise<Community & Pick<InternalCommunity, "autoAcceptMembers">> {
     return {
         name: community.name,
+        slug: community.slug,
         communityId: community.communityId,
         banner: community.banner,
         enabled: community.enabled,
