@@ -4,9 +4,17 @@ description: Introduction to CourseLit's Build-in Website Builder
 layout: ../../../layouts/MainLayout.astro
 ---
 
-CourseLit comes with a powerful website builder. Using the website builder, you can build all sorts of web pages for various use cases like landing pages, sales pages, email list builder etc.
+CourseLit comes with a powerful website builder. Using the website builder, you can build all sorts of web pages for various use cases like landing pages, [sales pages](/en/website/sales-pages), email list builder etc.
 
 ![CourseLit's Page builder](/assets/pages/page-builder-home.png)
+
+## Understanding page URL
+
+The page URL is structured as `/p/<slug>`.
+
+## Understanding page slug
+
+A slug is a unique identifier for your page. No two pages can have the same slug in a school. Hence, a slug is unique among product sales pages, community sales pages, and other custom pages you create.
 
 ## Default pages
 
@@ -20,21 +28,17 @@ This is your school's landing page hosted at `/`.
 
 Your blog's homepage hosted at `/blog`. You can add additional blocks to the blog's home page.
 
-2. Terms
+3. Terms
 
 This is a page for hosting your terms and conditions for your school. This is hosted at `/terms`.
 
-3. Privacy policy
+4. Privacy policy
 
 This is a page for hosting the privacy policy for your school. This is hosted at `/privacy`.
 
-## Sales pages
-
-Each product that you create, gets its own sales page. This comes handy if you want to add additional information about your product for better conversion (and more sales).
-
 ## Next step
 
-[Learn about page blocks](/en/website/blocks).
+[Learn how to create a page](/en/website/create-page).
 
 ## Stuck somewhere?
 

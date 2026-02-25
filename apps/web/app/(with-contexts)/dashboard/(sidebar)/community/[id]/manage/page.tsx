@@ -87,6 +87,7 @@ export default function Page(props: {
     const address = useContext(AddressContext);
 
     const [name, setName] = useState("");
+    const [slug, setSlug] = useState("");
     const [enabled, setEnabled] = useState(false);
     const [autoAcceptMembers, setAutoAcceptMembers] = useState(false);
     const [banner, setBanner] = useState(TextEditorEmptyDoc);
@@ -171,6 +172,7 @@ export default function Page(props: {
 
     const setCommunity = (community: any) => {
         setName(community.name);
+        setSlug(community.slug || "");
         if (community.description) {
             setDescription(community.description);
         }
@@ -194,6 +196,7 @@ export default function Page(props: {
             mutation UpdateCommunity(
                 $id: String!
                 $name: String
+                $slug: String
                 $description: String
                 $enabled: Boolean
                 $autoAcceptMembers: Boolean
@@ -202,6 +205,7 @@ export default function Page(props: {
                 community: updateCommunity(
                     id: $id
                     name: $name
+                    slug: $slug
                     description: $description
                     enabled: $enabled
                     autoAcceptMembers: $autoAcceptMembers
@@ -209,6 +213,7 @@ export default function Page(props: {
                 ) {
                     communityId
                     name
+                    slug
                     description
                     enabled
                     banner
@@ -248,6 +253,7 @@ export default function Page(props: {
                 variables: {
                     id,
                     name,
+                    slug: slug || undefined,
                     description: JSON.stringify(description),
                     enabled,
                     autoAcceptMembers,
@@ -287,6 +293,7 @@ export default function Page(props: {
                 ) {
                     communityId
                     name
+                    slug
                     description
                     enabled
                     banner
@@ -557,6 +564,23 @@ export default function Page(props: {
                         }
                         placeholder="Community name"
                     />
+                    <div className="space-y-2">
+                        <Label htmlFor="slug" className="font-semibold">
+                            Slug
+                        </Label>
+                        <Input
+                            id="slug"
+                            name="slug"
+                            value={slug}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                setSlug(e.target.value)
+                            }
+                            placeholder="my-community"
+                        />
+                        <p className="text-sm text-muted-foreground">
+                            The URL-friendly identifier for this community page.
+                        </p>
+                    </div>
                     <div>
                         <h2 className="font-semibold">Description</h2>
                         <Editor

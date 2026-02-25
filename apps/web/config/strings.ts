@@ -154,6 +154,8 @@ export const responses = {
         "CourseID is required for demo certificate",
     provider_not_configured: "Configure the provider before enabling",
     provider_invalid_configuration: "Invalid provider configuration",
+    page_id_already_exists:
+        "This URL slug is already in use. Please choose a different one.",
 };
 
 export const internal = {

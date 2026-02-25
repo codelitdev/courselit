@@ -254,6 +254,7 @@ describe("Notification Preferences", () => {
             communityId: id("community"),
             name: "Community A",
             pageId: id("community-page"),
+            slug: id("community-page"),
         });
 
         const post = await CommunityPostModel.create({

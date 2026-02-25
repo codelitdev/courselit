@@ -82,6 +82,7 @@ describe("Community Logic - Comment Count Tests", () => {
             communityId: "test-comm-logic",
             name: "Test Community Logic",
             pageId: "test-page-logic",
+            slug: "test-page-logic",
             enabled: true,
             deleted: false,
             categories: ["General"],

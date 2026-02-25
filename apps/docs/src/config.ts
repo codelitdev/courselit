@@ -103,8 +103,10 @@ export const SIDEBAR: Sidebar = {
         ],
         Website: [
             { text: "Introduction", link: "en/website/introduction" },
-            { text: "Page blocks", link: "en/website/blocks" },
+            { text: "Create a page", link: "en/website/create-page" },
+            { text: "Sales pages", link: "en/website/sales-pages" },
             { text: "Edit page", link: "en/website/edit" },
+            { text: "Page blocks", link: "en/website/blocks" },
             { text: "Themes", link: "en/website/themes" },
         ],
         Blog: [

@@ -20,6 +20,7 @@ export const CommunitySchema = new mongoose.Schema<InternalCommunity>(
             default: generateUniqueId,
         },
         name: { type: String, required: true },
+        slug: { type: String, required: true },
         description: { type: mongoose.Schema.Types.Mixed, default: null },
         banner: { type: mongoose.Schema.Types.Mixed, default: null },
         enabled: { type: Boolean, default: false },
@@ -37,6 +38,7 @@ export const CommunitySchema = new mongoose.Schema<InternalCommunity>(
 );
 
 CommunitySchema.index({ domain: 1, name: 1 }, { unique: true });
+CommunitySchema.index({ domain: 1, slug: 1 }, { unique: true });
 
 CommunitySchema.statics.paginatedFind = async function (filter, options) {
     const page = options.page || 1;
