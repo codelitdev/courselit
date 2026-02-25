@@ -196,10 +196,11 @@ export async function isPartOfDripGroup(
     if (!course) {
         throw new Error(responses.item_not_found);
     }
-    // @ts-expect-error _id exists at runtime via MongoDB
-    const group = (course.groups ?? []).find(
-        (group) => group._id === lesson.groupId,
-    );
+    const group = (course.groups ?? []).find((group) => {
+        const groupId =
+            (group as { _id?: string; id?: string })._id ?? group.id;
+        return groupId === lesson.groupId;
+    });
     if (group?.drip && group.drip.status) {
         return true;
     }
