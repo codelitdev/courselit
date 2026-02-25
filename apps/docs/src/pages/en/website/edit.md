@@ -36,7 +36,7 @@ Before you can edit your page, you need to get to the page editor. Accessing the
 
 Let's see how.
 
-> All the edits you make to a page will be saved in a draft. In order to see the changes on a live page, you need to publish it. See the [publishing guide](#publish-page).
+> All the edits you make to a page will be saved in a draft. In order to see the changes on a live page, you need to publish it.
 
 ### To edit a website page
 
@@ -95,7 +95,7 @@ Following are the step to delete a block.
 
 ## Next step
 
-Explore all the blocks CourseLit has to offer.
+[Explore all the blocks CourseLit has to offer](/en/website/blocks).
 
 ## Stuck somewhere?
 
