@@ -408,6 +408,7 @@ describe("getPage entity validation", () => {
                 enabled: true,
                 name: "Test Community",
                 pageId: "community-page-1",
+                slug: "community-page-1",
             });
 
             const page = await PageModel.create({
@@ -451,6 +452,7 @@ describe("getPage entity validation", () => {
                 enabled: false,
                 name: "Disabled Community",
                 pageId: "community-page-3",
+                slug: "community-page-3",
             });
 
             const page = await PageModel.create({
@@ -484,6 +486,7 @@ describe("getPage entity validation", () => {
                 enabled: true,
                 name: "Other Domain Community",
                 pageId: "community-page-4",
+                slug: "community-page-4",
             });
 
             const page = await PageModel.create({
@@ -557,6 +560,7 @@ describe("getPage entity validation", () => {
                 enabled: false,
                 name: "Admin Community",
                 pageId: "admin-community-page",
+                slug: "admin-community-page",
             });
 
             const page = await PageModel.create({

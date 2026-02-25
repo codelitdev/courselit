@@ -429,6 +429,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 communityId: "comm-123",
                 name: "Test Community",
                 pageId: "du-page-comm-123",
+                slug: "du-page-comm-123",
             });
 
             await MembershipModel.create({
@@ -467,6 +468,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 communityId: "comm-123",
                 name: "Test Community",
                 pageId: "du-page-comm-123",
+                slug: "du-page-comm-123",
             });
 
             // Target user is moderator
@@ -969,6 +971,7 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 communityId: "comm-123",
                 name: "Test Community",
                 pageId: "du-page-comm-123",
+                slug: "du-page-comm-123",
             });
 
             // Create membership
