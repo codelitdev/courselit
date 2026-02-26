@@ -103,8 +103,10 @@ export const SIDEBAR: Sidebar = {
         ],
         Website: [
             { text: "Introduction", link: "en/website/introduction" },
-            { text: "Page blocks", link: "en/website/blocks" },
+            { text: "Create a page", link: "en/website/create-page" },
+            { text: "Sales pages", link: "en/website/sales-pages" },
             { text: "Edit page", link: "en/website/edit" },
+            { text: "Page blocks", link: "en/website/blocks" },
             { text: "Themes", link: "en/website/themes" },
         ],
         Blog: [
@@ -122,6 +124,7 @@ export const SIDEBAR: Sidebar = {
         Users: [
             { text: "Introduction", link: "en/users/introduction" },
             { text: "Manage users", link: "en/users/manage" },
+            { text: "Customize notifications", link: "en/users/notifications" },
             { text: "User permissions", link: "en/users/permissions" },
             { text: "Filter users", link: "en/users/filters" },
             { text: "Segment users", link: "en/users/segments" },

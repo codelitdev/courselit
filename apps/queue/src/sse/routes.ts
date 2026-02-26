@@ -1,5 +1,5 @@
 import express from "express";
-import { notificationEmitter } from "../domain/emitters/notification";
+import { notificationEmitter } from "../notifications/utils/emitter";
 
 const router: any = express.Router();
 

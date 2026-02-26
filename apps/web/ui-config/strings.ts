@@ -282,6 +282,7 @@ export const SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK =
 export const PURCHASE_STATUS_PAGE_HEADER = "Purchase Status";
 export const MAIN_MENU_ITEM_DASHBOARD = "Dashboard";
 export const MAIN_MENU_ITEM_PROFILE = "Profile";
+export const MAIN_MENU_ITEM_NOTIFICATIONS = "Notifications";
 export const LAYOUT_SECTION_MAIN_CONTENT = "Main Content";
 export const LAYOUT_SECTION_FOOTER_LEFT = "Left Section";
 export const LAYOUT_SECTION_FOOTER_RIGHT = "Right Section";
@@ -309,6 +310,17 @@ export const HEADER_YOUR_PROFILE = "Your Profile";
 export const PROFILE_PAGE_MESSAGE_NOT_LOGGED_IN = "to see your profile.";
 export const PROFILE_PAGE_HEADER = "Profile";
 export const MY_CONTENT_HEADER = "My content";
+export const NOTIFICATION_SETTINGS_PAGE_HEADER = "Notifications";
+export const NOTIFICATION_SETTINGS_PAGE_DESCRIPTION =
+    "Manage how you receive notifications for each activity.";
+export const NOTIFICATION_SETTINGS_RESOURCE_TEXT = "Customize notifications";
+export const NOTIFICATION_SETTINGS_COLUMN_ACTIVITY = "Activity";
+export const NOTIFICATION_SETTINGS_EMPTY_STATE =
+    "No notification preferences are available for your account.";
+export const NOTIFICATION_SETTINGS_GROUP_GENERAL = "General";
+export const NOTIFICATION_SETTINGS_GROUP_PRODUCT_MANAGEMENT = "Product";
+export const NOTIFICATION_SETTINGS_GROUP_USER_MANAGEMENT = "User";
+export const NOTIFICATION_SETTINGS_GROUP_COMMUNITY_MANAGEMENT = "Community";
 export const PROFILE_EMAIL_PREFERENCES = "Email preferences";
 export const PROFILE_SECTION_DETAILS = "Personal details";
 export const PROFILE_SECTION_DETAILS_NAME = "Name";

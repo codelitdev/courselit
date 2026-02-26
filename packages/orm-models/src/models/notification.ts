@@ -1,7 +1,7 @@
 import {
+    ActivityType,
     Constants,
     Notification,
-    NotificationEntityAction,
 } from "@courselit/common-models";
 import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
@@ -12,12 +12,13 @@ export interface InternalNotification
     domain: mongoose.Types.ObjectId;
     notificationId: string;
     userId: string;
-    entityAction: NotificationEntityAction;
+    activityType: ActivityType;
     entityId: string;
     read: boolean;
     createdAt: Date;
     updatedAt: Date;
     entityTargetId?: string;
+    metadata?: Record<string, unknown>;
 }
 
 export const NotificationSchema = new mongoose.Schema(
@@ -42,10 +43,10 @@ export const NotificationSchema = new mongoose.Schema(
             required: true,
             ref: "User",
         },
-        entityAction: {
+        activityType: {
             type: String,
             required: true,
-            enum: Object.values(Constants.NotificationEntityAction),
+            enum: Object.values(Constants.ActivityType),
         },
         entityId: {
             type: String,
@@ -57,6 +58,10 @@ export const NotificationSchema = new mongoose.Schema(
         },
         entityTargetId: {
             type: String,
+        },
+        metadata: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {},
         },
     },
     {

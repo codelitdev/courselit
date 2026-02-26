@@ -7,11 +7,15 @@ const config: Config = {
     moduleNameMapper: {
         "@courselit/utils": "<rootDir>/../../packages/utils/src",
         "@courselit/common-logic": "<rootDir>/../../packages/common-logic/src",
+        "@courselit/common-models":
+            "<rootDir>/../../packages/common-models/src",
+        "@courselit/orm-models": "<rootDir>/../../packages/orm-models/src",
         "@courselit/page-primitives":
             "<rootDir>/../../packages/page-primitives/src",
         nanoid: "<rootDir>/__mocks__/nanoid.ts",
         "better-auth": "<rootDir>/__mocks__/better-auth.ts",
-        slugify: "<rootDir>/__mocks__/slugify.ts",
+        "^slugify$": "<rootDir>/__mocks__/slugify.ts",
+        "^@sindresorhus/slugify$": "<rootDir>/__mocks__/slugify.ts",
         "@models/(.*)": "<rootDir>/models/$1",
         "@/auth": "<rootDir>/auth.ts",
         "@/ba-multitenant-adapter": "<rootDir>/ba-multitenant-adapter",

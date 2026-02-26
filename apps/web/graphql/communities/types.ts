@@ -43,6 +43,7 @@ const community = new GraphQLObjectType({
     fields: {
         communityId: { type: new GraphQLNonNull(GraphQLString) },
         name: { type: new GraphQLNonNull(GraphQLString) },
+        slug: { type: GraphQLString },
         description: { type: GraphQLJSONObject },
         banner: { type: GraphQLJSONObject },
         enabled: { type: GraphQLBoolean },

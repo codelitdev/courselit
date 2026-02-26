@@ -136,6 +136,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 communityId: "dc-disabled-comm",
                 name: "Disabled Community",
                 pageId: "disabled-page",
+                slug: "disabled-page",
                 enabled: false,
                 deleted: false,
             });
@@ -170,6 +171,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 communityId: "dc-comm-posts",
                 name: "Community with Posts",
                 pageId: "comm-posts-page",
+                slug: "comm-posts-page",
                 enabled: true,
                 deleted: false,
             });
@@ -208,6 +210,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 communityId: "dc-comm-comments",
                 name: "Community with Comments",
                 pageId: "comm-comments-page",
+                slug: "comm-comments-page",
                 enabled: true,
                 deleted: false,
             });
@@ -255,6 +258,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 communityId: "dc-comm-reports",
                 name: "Community with Reports",
                 pageId: "comm-reports-page",
+                slug: "comm-reports-page",
                 enabled: true,
                 deleted: false,
             });
@@ -293,6 +297,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 communityId: "dc-comm-subs",
                 name: "Community with Subscriptions",
                 pageId: "comm-subs-page",
+                slug: "comm-subs-page",
                 enabled: true,
                 deleted: false,
             });
@@ -340,6 +345,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 communityId: "dc-comm-members",
                 name: "Community with Members",
                 pageId: "comm-members-page",
+                slug: "comm-members-page",
                 enabled: true,
                 deleted: false,
             });
@@ -399,6 +405,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 communityId: "dc-comm-subscriptions",
                 name: "Community with Subscriptions",
                 pageId: "comm-subscriptions-page",
+                slug: "comm-subscriptions-page",
                 enabled: true,
                 deleted: false,
             });
@@ -476,6 +483,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 communityId: "dc-comm-plans",
                 name: "Community with Plans",
                 pageId: "comm-plans-page",
+                slug: "comm-plans-page",
                 enabled: true,
                 deleted: false,
             });
@@ -518,6 +526,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 communityId: "dc-comm-included",
                 name: "Community with Included Products",
                 pageId: "comm-included-page",
+                slug: "comm-included-page",
                 enabled: true,
                 deleted: false,
             });
@@ -592,6 +601,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 communityId: "dc-comm-page",
                 name: "Community with Page",
                 pageId: "comm-page-test",
+                slug: "comm-page-test",
                 enabled: true,
                 deleted: false,
             });
@@ -620,6 +630,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 communityId: "dc-comm-media",
                 name: "Community with Media",
                 pageId: "comm-media-page",
+                slug: "comm-media-page",
                 enabled: true,
                 deleted: false,
                 featuredImage: {
@@ -657,6 +668,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 communityId: "dc-comm-delete",
                 name: "Community to Delete",
                 pageId: "comm-delete-page",
+                slug: "comm-delete-page",
                 enabled: true,
                 deleted: false,
             });
@@ -687,6 +699,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 communityId: "dc-comm-complex",
                 name: "Complex Community",
                 pageId: "comm-complex-page",
+                slug: "comm-complex-page",
                 enabled: true,
                 deleted: false,
                 featuredImage: {
@@ -836,6 +849,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 communityId: "dc-comm-empty",
                 name: "Empty Community",
                 pageId: "comm-empty-page",
+                slug: "comm-empty-page",
                 enabled: true,
                 deleted: false,
             });

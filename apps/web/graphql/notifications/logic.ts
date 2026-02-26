@@ -1,16 +1,192 @@
+import { responses } from "@/config/strings";
 import { checkIfAuthenticated } from "@/lib/graphql";
+import { getNotificationMessageAndHref } from "@courselit/common-logic";
 import {
+    ActivityType,
     Constants,
     Notification,
-    NotificationEntityAction,
+    NotificationChannel,
 } from "@courselit/common-models";
-import Community from "@models/Community";
-import CommunityComment from "@models/CommunityComment";
-import CommunityPost from "@models/CommunityPost";
 import GQLContext from "@models/GQLContext";
-import NotificationModel, { InternalNotification } from "@models/Notification";
+import NotificationModel from "@models/Notification";
+import NotificationPreferenceModel from "@models/NotificationPreference";
 import UserModel from "@models/User";
-import { truncate } from "@ui-lib/utils";
+import mongoose from "mongoose";
+import {
+    getGeneralDefaultPreferences,
+    getAllowedActivityTypesForPermissions,
+    isActivityAllowedForPermissions,
+} from "./helpers";
+
+interface NotificationDocument {
+    notificationId: string;
+    userId: string;
+    activityType: ActivityType;
+    entityId: string;
+    entityTargetId?: string;
+    metadata?: Record<string, unknown>;
+    read: boolean;
+    createdAt: Date;
+}
+
+export interface NotificationPreferenceItem {
+    activityType: ActivityType;
+    channels: NotificationChannel[];
+}
+
+export async function seedNotificationPreferencesForUser({
+    domain,
+    userId,
+}: {
+    domain: mongoose.Types.ObjectId;
+    userId: string;
+}): Promise<void> {
+    const defaults = getGeneralDefaultPreferences();
+
+    if (!defaults.length) {
+        return;
+    }
+
+    await NotificationPreferenceModel.bulkWrite(
+        defaults.map(({ activityType, channels }) => ({
+            updateOne: {
+                filter: {
+                    domain,
+                    userId,
+                    activityType,
+                },
+                update: {
+                    $setOnInsert: {
+                        domain,
+                        userId,
+                        activityType,
+                        channels,
+                    },
+                },
+                upsert: true,
+            },
+        })),
+    );
+}
+
+export async function getNotificationPreferences({
+    ctx,
+}: {
+    ctx: GQLContext;
+}): Promise<NotificationPreferenceItem[]> {
+    checkIfAuthenticated(ctx);
+
+    const allowedActivityTypes = getAllowedActivityTypesForPermissions(
+        ctx.user.permissions,
+    );
+
+    const preferences = await NotificationPreferenceModel.find(
+        {
+            domain: ctx.subdomain._id,
+            userId: ctx.user.userId,
+            activityType: {
+                $in: allowedActivityTypes,
+            },
+        },
+        {
+            _id: 0,
+            activityType: 1,
+            channels: 1,
+        },
+    )
+        .sort({ activityType: 1 })
+        .lean<NotificationPreferenceItem[]>();
+
+    const preferencesByActivityType = new Map<
+        ActivityType,
+        NotificationPreferenceItem
+    >(
+        preferences.map((preference) => [
+            preference.activityType,
+            {
+                activityType: preference.activityType,
+                channels: preference.channels,
+            },
+        ]),
+    );
+
+    return allowedActivityTypes
+        .map((activityType) => preferencesByActivityType.get(activityType))
+        .filter((preference): preference is NotificationPreferenceItem =>
+            Boolean(preference),
+        );
+}
+
+export async function updateNotificationPreference({
+    ctx,
+    activityType,
+    channels,
+}: {
+    ctx: GQLContext;
+    activityType: ActivityType;
+    channels: NotificationChannel[];
+}): Promise<NotificationPreferenceItem> {
+    checkIfAuthenticated(ctx);
+
+    if (!Object.values(Constants.ActivityType).includes(activityType)) {
+        throw new Error(responses.invalid_input);
+    }
+
+    if (!isActivityAllowedForPermissions(activityType, ctx.user.permissions)) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const uniqueChannels = Array.from(new Set(channels));
+    const validChannels = Object.values(Constants.NotificationChannel);
+
+    if (!uniqueChannels.every((channel) => validChannels.includes(channel))) {
+        throw new Error(responses.invalid_input);
+    }
+
+    if (!uniqueChannels.length) {
+        await NotificationPreferenceModel.deleteOne({
+            domain: ctx.subdomain._id,
+            userId: ctx.user.userId,
+            activityType,
+        });
+
+        return {
+            activityType,
+            channels: [],
+        };
+    }
+
+    const preference = await NotificationPreferenceModel.findOneAndUpdate(
+        {
+            domain: ctx.subdomain._id,
+            userId: ctx.user.userId,
+            activityType,
+        },
+        {
+            $set: {
+                channels: uniqueChannels,
+            },
+            $setOnInsert: {
+                domain: ctx.subdomain._id,
+                userId: ctx.user.userId,
+                activityType,
+            },
+        },
+        {
+            upsert: true,
+            new: true,
+        },
+    );
+
+    if (!preference) {
+        throw new Error(responses.internal_error);
+    }
+
+    return {
+        activityType: preference.activityType,
+        channels: preference.channels,
+    };
+}
 
 export async function getNotification({
     ctx,
@@ -21,17 +197,20 @@ export async function getNotification({
 }): Promise<Notification | null> {
     checkIfAuthenticated(ctx);
 
-    const notification = await NotificationModel.findOne({
+    const notification = await NotificationModel.findOne<NotificationDocument>({
         domain: ctx.subdomain._id,
         forUserId: ctx.user.userId,
         notificationId,
-    });
+    }).lean();
 
     if (!notification) {
         return null;
     }
 
-    return await formatNotification(notification, ctx);
+    return await formatNotification(
+        notification as unknown as NotificationDocument,
+        ctx,
+    );
 }
 
 export async function getNotifications({
@@ -46,61 +225,60 @@ export async function getNotifications({
     notifications: Notification[];
     total: number;
 }> {
-    const { notifications, total } = await (NotificationModel as any).paginate(
-        ctx.user.userId,
-        {
-            page,
-            limit,
-        },
-    );
+    checkIfAuthenticated(ctx);
 
-    const result = notifications.length
-        ? {
-              notifications: await formatNotifications(notifications, ctx),
-              total,
-          }
-        : {
-              notifications: [],
-              total: 0,
-          };
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.max(1, limit);
+    const skip = (safePage - 1) * safeLimit;
 
-    return result;
+    const query = {
+        domain: ctx.subdomain._id,
+        forUserId: ctx.user.userId,
+    };
+
+    const [notifications, total] = await Promise.all([
+        NotificationModel.find<NotificationDocument>(query)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(safeLimit)
+            .lean(),
+        NotificationModel.countDocuments(query),
+    ]);
+
+    if (!notifications.length) {
+        return {
+            notifications: [],
+            total: 0,
+        };
+    }
+
+    return {
+        notifications: await Promise.all(
+            notifications.map((notification) =>
+                formatNotification(
+                    notification as unknown as NotificationDocument,
+                    ctx,
+                ),
+            ),
+        ),
+        total,
+    };
 }
 
-async function formatNotifications(
-    notifications: InternalNotification[],
+async function formatNotification(
+    notification: NotificationDocument,
     ctx: GQLContext,
-): Promise<Notification[]> {
-    // const users = await UserModel.find(
-    //     {
-    //         userId: {
-    //             $in: notifications.map((n) => n.userId),
-    //         },
-    //     },
-    //     {
-    //         userId: 1,
-    //         name: 1,
-    //         email: 1,
-    //         _id: 0,
-    //     },
-    // );
-
-    return Promise.all(
-        notifications.map(async (notification) => {
-            return await formatNotification(notification, ctx);
-        }),
-    );
-}
-
-async function formatNotification(notification, ctx): Promise<Notification> {
+): Promise<Notification> {
     return {
         notificationId: notification.notificationId,
-        ...(await getMessage({
-            entityAction: notification.entityAction,
+        ...(await getNotificationMessageAndHref({
+            activityType: notification.activityType,
             entityId: notification.entityId,
-            userName: await getUserName(notification.userId),
-            loggedInUserId: ctx.user.userId,
+            actorName: await getUserName(notification.userId),
+            recipientUserId: ctx.user.userId,
             entityTargetId: notification.entityTargetId,
+            metadata: notification.metadata,
+            domainId: ctx.subdomain._id,
         })),
         read: notification.read,
         createdAt: notification.createdAt,
@@ -110,198 +288,6 @@ async function formatNotification(notification, ctx): Promise<Notification> {
 async function getUserName(userId: string): Promise<string> {
     const user = await UserModel.findOne({ userId });
     return user?.name || user?.email || "Someone";
-}
-
-async function getMessage({
-    entityAction,
-    entityId,
-    userName,
-    loggedInUserId,
-    entityTargetId,
-}: {
-    entityAction: NotificationEntityAction;
-    entityId: string;
-    entityTargetId?: string;
-    userName: string;
-    loggedInUserId: string;
-}): Promise<{ message: string; href: string }> {
-    switch (entityAction) {
-        case Constants.NotificationEntityAction.COMMUNITY_POSTED:
-            let post = await CommunityPost.findOne({
-                postId: entityId,
-            });
-            if (!post) {
-                return { message: "", href: "" };
-            }
-            let community = await Community.findOne({
-                communityId: post.communityId,
-            });
-            if (!community) {
-                return { message: "", href: "" };
-            }
-            return {
-                message: `${userName} created a post '${truncate(post.title, 20).trim()}' in ${community.name}`,
-                href: `/dashboard/community/${community.communityId}`,
-            };
-        case Constants.NotificationEntityAction.COMMUNITY_COMMENTED:
-            const post1 = await CommunityPost.findOne({
-                postId: entityId,
-            });
-            if (!post1) {
-                return { message: "", href: "" };
-            }
-            const community1 = await Community.findOne({
-                communityId: post1.communityId,
-            });
-            if (!community1) {
-                return { message: "", href: "" };
-            }
-
-            return {
-                message: `${userName} commented on ${loggedInUserId === post1.userId ? "your" : ""} post '${truncate(post1.title, 20).trim()}' in ${community1.name}`,
-                href: `/dashboard/community/${community1.communityId}`,
-            };
-        case Constants.NotificationEntityAction.COMMUNITY_REPLIED:
-            const comment = await CommunityComment.findOne({
-                commentId: entityTargetId,
-            });
-            if (!comment) {
-                return { message: "", href: "" };
-            }
-            const reply = comment.replies.find((r) => r.replyId === entityId);
-            if (!reply) {
-                return { message: "", href: "" };
-            }
-            let parentReply;
-            if (reply.parentReplyId) {
-                parentReply = comment.replies.find(
-                    (r) => r.replyId === reply.parentReplyId,
-                );
-            }
-
-            const [post2, community2] = await Promise.all([
-                CommunityPost.findOne({
-                    postId: comment.postId,
-                }),
-                Community.findOne({
-                    communityId: comment.communityId,
-                }),
-            ]);
-
-            if (!post2 || !community2) {
-                return { message: "", href: "" };
-            }
-
-            const prefix = parentReply
-                ? loggedInUserId === parentReply.userId
-                    ? "your"
-                    : "a"
-                : loggedInUserId === comment.userId
-                  ? "your"
-                  : "a";
-
-            return {
-                message: `${userName} replied to ${prefix} comment on '${truncate(post2.title, 20).trim()}' in ${community2.name}`,
-                href: `/dashboard/community/${community2.communityId}`,
-            };
-        case Constants.NotificationEntityAction.COMMUNITY_POST_LIKED:
-            const post3 = await CommunityPost.findOne({
-                postId: entityId,
-            });
-            if (!post3) {
-                return { message: "", href: "" };
-            }
-            const community3 = await Community.findOne({
-                communityId: post3.communityId,
-            });
-            if (!community3) {
-                return { message: "", href: "" };
-            }
-
-            return {
-                message: `${userName} liked your post '${truncate(post3.title, 20).trim()}' in ${community3.name}`,
-                href: `/dashboard/community/${community3.communityId}`,
-            };
-        case Constants.NotificationEntityAction.COMMUNITY_COMMENT_LIKED:
-            const comment1 = await CommunityComment.findOne({
-                commentId: entityId,
-            });
-            if (!comment1) {
-                return { message: "", href: "" };
-            }
-            const [post4, community4] = await Promise.all([
-                CommunityPost.findOne({
-                    postId: comment1.postId,
-                }),
-                Community.findOne({
-                    communityId: comment1.communityId,
-                }),
-            ]);
-
-            if (!post4 || !community4) {
-                return { message: "", href: "" };
-            }
-
-            return {
-                message: `${userName} liked your comment '${truncate(comment1.content, 20).trim()}' on '${truncate(post4.title, 20).trim()}' in ${community4.name}`,
-                href: `/dashboard/community/${community4.communityId}`,
-            };
-        case Constants.NotificationEntityAction.COMMUNITY_REPLY_LIKED:
-            const comment2 = await CommunityComment.findOne({
-                commentId: entityTargetId,
-            });
-            if (!comment2) {
-                return { message: "", href: "" };
-            }
-            const reply1 = comment2.replies.find((r) => r.replyId === entityId);
-            if (!reply1) {
-                return { message: "", href: "" };
-            }
-
-            const [post5, community5] = await Promise.all([
-                CommunityPost.findOne({
-                    postId: comment2.postId,
-                }),
-                Community.findOne({
-                    communityId: comment2.communityId,
-                }),
-            ]);
-
-            if (!post5 || !community5) {
-                return { message: "", href: "" };
-            }
-
-            return {
-                message: `${userName} liked your reply '${truncate(reply1.content, 20).trim()}' on '${truncate(post5.title, 20).trim()}' in ${community5.name}`,
-                href: `/dashboard/community/${community5.communityId}`,
-            };
-        case Constants.NotificationEntityAction.COMMUNITY_MEMBERSHIP_REQUESTED:
-            const community6 = await Community.findOne({
-                communityId: entityId,
-            });
-            if (!community6) {
-                return { message: "", href: "" };
-            }
-
-            return {
-                message: `${userName} requested to join ${community6.name}`,
-                href: `/dashboard/community/${community6.communityId}/manage/memberships`,
-            };
-        case Constants.NotificationEntityAction.COMMUNITY_MEMBERSHIP_GRANTED:
-            const community7 = await Community.findOne({
-                communityId: entityId,
-            });
-            if (!community7) {
-                return { message: "", href: "" };
-            }
-
-            return {
-                message: `${userName} granted your request to join ${community7.name}`,
-                href: `/dashboard/community/${community7.communityId}`,
-            };
-        default:
-            return { message: "", href: "" };
-    }
 }
 
 export async function markAsRead({

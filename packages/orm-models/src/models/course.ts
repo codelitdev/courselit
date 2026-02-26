@@ -92,6 +92,7 @@ CourseSchema.index({
 });
 
 CourseSchema.index({ domain: 1, title: 1 }, { unique: true });
+CourseSchema.index({ domain: 1, slug: 1 }, { unique: true });
 
 CourseSchema.statics.paginatedFind = async function (
     filter,

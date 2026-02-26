@@ -1,20 +1,22 @@
 {
     "name": "@courselit/queue",
     "version": "0.25.10",
+    "type": "module",
     "private": true,
     "packageManager": "pnpm@9.14.2",
     "scripts": {
         "build": "tsup",
         "tsc:build": "tsc",
         "check-types": "tsc --noEmit",
-        "start": "node dist/index.mjs",
+        "start": "node dist/index.js",
         "build:dev": "tsup --watch",
-        "dev": "node --env-file .env.local --watch dist/index.mjs"
+        "dev": "node --watch --env-file .env.local --import tsx src/index.ts"
     },
     "dependencies": {
         "@courselit/common-logic": "workspace:^",
         "@courselit/common-models": "workspace:^",
         "@courselit/email-editor": "workspace:^",
+        "@courselit/orm-models": "workspace:^",
         "@courselit/utils": "workspace:^",
         "@types/jsdom": "^21.1.7",
         "bullmq": "^4.14.0",
@@ -37,6 +39,7 @@
         "ts-jest": "^29.4.4",
         "tsconfig": "workspace:^",
         "tsup": "^7.2.0",
+        "tsx": "^4.21.0",
         "typescript": "^5.9.3",
         "typescript-eslint": "^8.46.4"
     }

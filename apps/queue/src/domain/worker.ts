@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
 const worker = new Worker(
     "mail",
     async (job) => {
-        const { to, from, subject, body } = job.data;
+        const { to, from, subject, body, headers } = job.data;
 
         try {
             await transporter.sendMail({
@@ -23,6 +23,7 @@ const worker = new Worker(
                 to,
                 subject,
                 html: body,
+                headers,
             });
         } catch (err: any) {
             logger.error(err);

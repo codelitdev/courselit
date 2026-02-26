@@ -4,6 +4,7 @@ import { TextEditorContent } from "./text-editor-content";
 export interface Community {
     communityId: string;
     name: string;
+    slug: string;
     description: TextEditorContent;
     banner: TextEditorContent | null;
     categories: string[];

@@ -184,30 +184,6 @@ export const homePageTemplate = [
     },
     {
         widgetId: generateUniqueId(),
-        name: "media",
-        deleteable: true,
-        shared: false,
-        settings: {
-            pageId: "homepage",
-            type: "site",
-            entityId: "demo",
-            media: {
-                mediaId: "dM3L-CVOXLGv3XxsnRUd_D3SD-S5hCkuTzTx432L",
-                originalFileName: "Basics.jpg",
-                mimeType: "image/jpeg",
-                size: 113901,
-                access: "public",
-                file: "https://cdn.medialit.cloud/medialit-service/p/dM3L-CVOXLGv3XxsnRUd_D3SD-S5hCkuTzTx432L/main.jpg",
-                thumbnail:
-                    "https://cdn.medialit.cloud/medialit-service/p/dM3L-CVOXLGv3XxsnRUd_D3SD-S5hCkuTzTx432L/thumb.webp",
-                caption: "",
-            },
-            mediaRadius: 2,
-            // backgroundColor: "#171127",
-        },
-    },
-    {
-        widgetId: generateUniqueId(),
         name: "faq",
         deleteable: true,
         shared: false,

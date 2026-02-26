@@ -42,6 +42,7 @@
         "typescript": "^4.9.5"
     },
     "dependencies": {
+        "@courselit/orm-models": "workspace:^",
         "@courselit/common-models": "workspace:^",
         "@courselit/utils": "workspace:^",
         "@courselit/email-editor": "workspace:^",

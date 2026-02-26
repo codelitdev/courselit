@@ -95,7 +95,7 @@ export const getGroupedLessons = async (
         groupId: 1,
     });
     const lessonsInSequentialOrder: GroupLessonItem[] = [];
-    for (let group of course.groups.sort(
+    for (let group of (course?.groups ?? []).sort(
         (a: Group, b: Group) => a.rank - b.rank,
     )) {
         lessonsInSequentialOrder.push(
@@ -196,8 +196,12 @@ export async function isPartOfDripGroup(
     if (!course) {
         throw new Error(responses.item_not_found);
     }
-    const group = course.groups.find((group) => group._id === lesson.groupId);
-    if (group.drip && group.drip.status) {
+    const group = (course.groups ?? []).find((group) => {
+        const groupId =
+            (group as { _id?: string; id?: string })._id ?? group.id;
+        return groupId === lesson.groupId;
+    });
+    if (group?.drip && group.drip.status) {
         return true;
     }
 

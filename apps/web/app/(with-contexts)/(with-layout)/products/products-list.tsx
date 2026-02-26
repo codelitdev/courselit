@@ -27,7 +27,10 @@ export function ProductsList({
 }) {
     const siteinfo = useContext(SiteInfoContext);
     const filters = useMemo(
-        () => [Constants.CourseType.COURSE.toUpperCase()],
+        () => [
+            Constants.CourseType.COURSE.toUpperCase(),
+            Constants.CourseType.DOWNLOAD.toUpperCase(),
+        ],
         [],
     );
 

@@ -28,6 +28,7 @@ export const useCommunity = (id?: string | null) => {
                 community: getCommunity(id: $id) {
                     communityId
                     name
+                    slug
                     description
                     enabled
                     banner

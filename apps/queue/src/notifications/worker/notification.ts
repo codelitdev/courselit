@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
-import redis from "../redis";
-import { logger } from "../logger";
-import { notificationEmitter } from "../domain/emitters/notification";
+import redis from "../../redis";
+import { logger } from "../../logger";
+import { notificationEmitter } from "../utils/emitter";
 
 const worker = new Worker(
     "notification",
