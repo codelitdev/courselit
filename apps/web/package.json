@@ -8,6 +8,21 @@
         "start": "next start",
         "prettier": "prettier --write **/*.ts"
     },
+    "browserslist": {
+        "production": [
+            "chrome >= 109",
+            "edge >= 109",
+            "firefox >= 109",
+            "safari >= 15.4",
+            "ios_saf >= 15.4",
+            "not dead"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    },
     "dependencies": {
         "@better-auth/sso": "^1.4.6",
         "@courselit/common-logic": "workspace:^",

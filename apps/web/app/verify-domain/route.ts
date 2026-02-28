@@ -8,7 +8,8 @@ import connectToDatabase from "../../services/db";
 import { warn } from "@/services/logger";
 import SubscriberModel, { Subscriber } from "@models/Subscriber";
 import { Constants } from "@courselit/common-models";
-import { getCachedDomain, invalidateDomainCache } from "@/lib/domain-cache";
+import { cacheDomainByName, invalidateDomainCache } from "@/lib/domain-cache";
+import { resolveDomainFromHost } from "./resolve-domain";
 
 const { domainNameForSingleTenancy, schoolNameForSingleTenancy } = constants;
 
@@ -34,7 +35,11 @@ export async function GET(req: Request) {
             );
         }
 
-        domain = await getCachedDomain(host);
+        domain = await resolveDomainFromHost({
+            multitenant: constants.multitenant,
+            host,
+            domainNameForSingleTenancy,
+        });
 
         if (!domain) {
             return Response.json(
@@ -90,10 +95,16 @@ export async function GET(req: Request) {
                 { $set: { checkSubscriptionStatusAfter: dateAfter24Hours } },
                 { upsert: false },
             );
-            invalidateDomainCache(host);
+            invalidateDomainCache(domain.name);
         }
+
+        cacheDomainByName(domain);
     } else {
-        domain = await getCachedDomain(domainNameForSingleTenancy);
+        domain = await resolveDomainFromHost({
+            multitenant: constants.multitenant,
+            host: headerList.get("host"),
+            domainNameForSingleTenancy,
+        });
 
         if (!domain) {
             if (!process.env.SUPER_ADMIN_EMAIL) {
@@ -134,6 +145,8 @@ export async function GET(req: Request) {
                 },
             );
         }
+
+        cacheDomainByName(domain!);
     }
 
     if (domain!.firstRun) {
@@ -151,11 +164,7 @@ export async function GET(req: Request) {
                 { $set: { firstRun: false } },
                 { upsert: false },
             );
-            invalidateDomainCache(
-                constants.multitenant
-                    ? headerList.get("host") || ""
-                    : domainNameForSingleTenancy,
-            );
+            invalidateDomainCache(domain!.name);
         } catch (err) {
             warn(`Error in creating user: ${err.message}`, {
                 domain: domain?.name,

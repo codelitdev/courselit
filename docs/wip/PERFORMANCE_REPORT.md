@@ -6,6 +6,32 @@ After auditing the `apps/web` codebase, I found that the public page rendering p
 
 ---
 
+## Priority Summary
+
+|  #  | Optimization                           | Impact      | Effort    |    Status     |
+| :-: | -------------------------------------- | ----------- | --------- | :-----------: |
+|  1  | `React.cache()` on data fetchers       | 🔴 Critical | ⬜ Small  |    ✅ Done    |
+|  2  | Cache `verify-domain`                  | 🔴 High     | ⬜ Small  |    ✅ Done    |
+|  3  | Direct DB calls from Server Components | 🟡 High     | 🟨 Medium | ❌ Not viable |
+|  4  | Redis caching layer                    | 🟡 High     | 🟨 Medium |  ⬜ Phase 2   |
+|  5  | Convert client → server components     | 🟡 Medium   | 🟥 High   |  ⬜ Phase 2   |
+|  6  | Optimize font loading                  | 🟢 Medium   | ⬜ Small  |  ⬜ Phase 2   |
+|  7  | HTTP caching / CDN                     | 🟢 Medium   | ⬜ Small  |  ⬜ Phase 2   |
+
+## Task Checklist
+
+- [x] Add `React.cache()` wrappers for `getPage`, `getSiteInfo`, and `getFullSiteSetup`.
+- [x] Add in-memory domain cache (`TTL = 60s`) and use it in `verify-domain`.
+- [x] Use cached domain lookup in `/api/graph` and parallelize domain/session/body fetch with `Promise.all`.
+- [x] Avoid cross-request mutation by caching plain domain objects and hydrating per request.
+- [x] Record decision for item #3: direct DB replacement for GraphQL self-fetch is not viable.
+- [ ] Add Redis tenant cache layer with resolver-level invalidation.
+- [ ] Refactor public rendering path from broad client boundaries to server components.
+- [ ] Load fonts dynamically per tenant theme instead of preloading all families.
+- [ ] Add HTTP caching strategy (`revalidate`/`Cache-Control`) and CDN partitioning with `Vary: Host`.
+
+--
+
 ## 🔴 1. Eliminate Redundant Data Fetching with `React.cache()` (Highest ROI)
 
 **Impact: ~60–70% reduction in server-side render time**
@@ -257,29 +283,3 @@ async headers() {
 ```
 
 For a multi-tenant setup, put a CDN (Cloudflare, CloudFront) in front with **Vary: Host** so each tenant gets its own cache partition.
-
----
-
-## Priority Summary
-
-|  #  | Optimization                           | Impact      | Effort    |    Status     |
-| :-: | -------------------------------------- | ----------- | --------- | :-----------: |
-|  1  | `React.cache()` on data fetchers       | 🔴 Critical | ⬜ Small  |    ✅ Done    |
-|  2  | Cache `verify-domain`                  | 🔴 High     | ⬜ Small  |    ✅ Done    |
-|  3  | Direct DB calls from Server Components | 🟡 High     | 🟨 Medium | ❌ Not viable |
-|  4  | Redis caching layer                    | 🟡 High     | 🟨 Medium |  ⬜ Phase 2   |
-|  5  | Convert client → server components     | 🟡 Medium   | 🟥 High   |  ⬜ Phase 2   |
-|  6  | Optimize font loading                  | 🟢 Medium   | ⬜ Small  |  ⬜ Phase 2   |
-|  7  | HTTP caching / CDN                     | 🟢 Medium   | ⬜ Small  |  ⬜ Phase 2   |
-
-## Task Checklist
-
-- [x] Add `React.cache()` wrappers for `getPage`, `getSiteInfo`, and `getFullSiteSetup`.
-- [x] Add in-memory domain cache (`TTL = 60s`) and use it in `verify-domain`.
-- [x] Use cached domain lookup in `/api/graph` and parallelize domain/session/body fetch with `Promise.all`.
-- [x] Avoid cross-request mutation by caching plain domain objects and hydrating per request.
-- [x] Record decision for item #3: direct DB replacement for GraphQL self-fetch is not viable.
-- [ ] Add Redis tenant cache layer with resolver-level invalidation.
-- [ ] Refactor public rendering path from broad client boundaries to server components.
-- [ ] Load fonts dynamically per tenant theme instead of preloading all families.
-- [ ] Add HTTP caching strategy (`revalidate`/`Cache-Control`) and CDN partitioning with `Vary: Host`.

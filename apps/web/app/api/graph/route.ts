@@ -20,14 +20,25 @@ async function updateLastActive(user: any) {
 }
 
 export async function POST(req: NextRequest) {
+    const domainName = req.headers.get("domain");
+    if (!domainName) {
+        return Response.json(
+            { errors: [{ message: "Domain header is missing" }] },
+            { status: 400 },
+        );
+    }
+
     const [domain, session, body] = await Promise.all([
-        getCachedDomain(req.headers.get("domain")!),
+        getCachedDomain(domainName),
         auth.api.getSession({ headers: req.headers }),
         req.json(),
     ]);
 
     if (!domain) {
-        return Response.json({ message: "Domain not found" }, { status: 404 });
+        return Response.json(
+            { errors: [{ message: "Domain not found" }] },
+            { status: 404 },
+        );
     }
 
     if (!body.hasOwnProperty("query")) {
@@ -35,8 +46,8 @@ export async function POST(req: NextRequest) {
     }
 
     const map = new Map();
-    map.set("domain", req.headers.get("domain"));
-    map.set("domainId", req.headers.get("domainId"));
+    map.set("domain", domainName);
+    map.set("domainId", req.headers.get("domainId") || domain._id.toString());
     als.enterWith(map);
 
     let user;
