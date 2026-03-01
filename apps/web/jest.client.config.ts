@@ -44,7 +44,8 @@ const config = {
         "@courselit/common-models":
             "<rootDir>/../../packages/common-models/src",
         nanoid: "<rootDir>/__mocks__/nanoid.ts",
-        slugify: "<rootDir>/__mocks__/slugify.ts",
+        "^slugify$": "<rootDir>/__mocks__/slugify.ts",
+        "^@sindresorhus/slugify$": "<rootDir>/__mocks__/slugify.ts",
         "@models/(.*)": "<rootDir>/models/$1",
         "@/auth": "<rootDir>/auth.ts",
         "@/payments-new": "<rootDir>/payments-new",

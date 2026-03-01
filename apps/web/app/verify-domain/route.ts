@@ -8,32 +8,10 @@ import connectToDatabase from "../../services/db";
 import { warn } from "@/services/logger";
 import SubscriberModel, { Subscriber } from "@models/Subscriber";
 import { Constants } from "@courselit/common-models";
+import { cacheDomainByName, invalidateDomainCache } from "@/lib/domain-cache";
+import { resolveDomainFromHost } from "./resolve-domain";
 
 const { domainNameForSingleTenancy, schoolNameForSingleTenancy } = constants;
-
-const getDomainBasedOnSubdomain = async (
-    subdomain: string,
-): Promise<Domain | null> => {
-    return await DomainModel.findOne({ name: subdomain, deleted: false });
-};
-
-const getDomainBasedOnCustomDomain = async (
-    customDomain: string,
-): Promise<Domain | null> => {
-    return await DomainModel.findOne({ customDomain, deleted: false });
-};
-
-const getDomain = async (hostName: string): Promise<Domain | null> => {
-    const isProduction = process.env.NODE_ENV === "production";
-    const isSubdomain = hostName.endsWith(`.${process.env.DOMAIN}`);
-
-    if (isProduction && (hostName === process.env.DOMAIN || !isSubdomain)) {
-        return getDomainBasedOnCustomDomain(hostName);
-    }
-
-    const [subdomain] = hostName?.split(".");
-    return getDomainBasedOnSubdomain(subdomain);
-};
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +35,11 @@ export async function GET(req: Request) {
             );
         }
 
-        domain = await getDomain(host);
+        domain = await resolveDomainFromHost({
+            multitenant: constants.multitenant,
+            host,
+            domainNameForSingleTenancy,
+        });
 
         if (!domain) {
             return Response.json(
@@ -113,10 +95,15 @@ export async function GET(req: Request) {
                 { $set: { checkSubscriptionStatusAfter: dateAfter24Hours } },
                 { upsert: false },
             );
+            invalidateDomainCache(domain.name);
         }
+
+        cacheDomainByName(domain);
     } else {
-        domain = await DomainModel.findOne({
-            name: domainNameForSingleTenancy,
+        domain = await resolveDomainFromHost({
+            multitenant: constants.multitenant,
+            host: headerList.get("host"),
+            domainNameForSingleTenancy,
         });
 
         if (!domain) {
@@ -158,6 +145,8 @@ export async function GET(req: Request) {
                 },
             );
         }
+
+        cacheDomainByName(domain!);
     }
 
     if (domain!.firstRun) {
@@ -175,6 +164,7 @@ export async function GET(req: Request) {
                 { $set: { firstRun: false } },
                 { upsert: false },
             );
+            invalidateDomainCache(domain!.name);
         } catch (err) {
             warn(`Error in creating user: ${err.message}`, {
                 domain: domain?.name,

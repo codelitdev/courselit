@@ -14,7 +14,8 @@ const config: Config = {
             "<rootDir>/../../packages/page-primitives/src",
         nanoid: "<rootDir>/__mocks__/nanoid.ts",
         "better-auth": "<rootDir>/__mocks__/better-auth.ts",
-        slugify: "<rootDir>/__mocks__/slugify.ts",
+        "^slugify$": "<rootDir>/__mocks__/slugify.ts",
+        "^@sindresorhus/slugify$": "<rootDir>/__mocks__/slugify.ts",
         "@models/(.*)": "<rootDir>/models/$1",
         "@/auth": "<rootDir>/auth.ts",
         "@/ba-multitenant-adapter": "<rootDir>/ba-multitenant-adapter",
@@ -43,7 +44,7 @@ const config: Config = {
     },
     testMatch: [
         "**/graphql/**/__tests__/**/*.test.ts",
-        "**/api/**/__tests__/**/*.test.ts",
+        "**/app/**/__tests__/**/*.test.ts",
     ],
     testPathIgnorePatterns: [
         "/node_modules/",
