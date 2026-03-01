@@ -1,3 +1,4 @@
+// This is majorly extracted for easier testing of host name resolution
 import { Domain } from "@/models/Domain";
 import { getCachedDomain, getDomainFromHost } from "@/lib/domain-cache";
 
