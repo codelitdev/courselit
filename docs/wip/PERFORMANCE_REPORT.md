@@ -16,7 +16,8 @@ After auditing the `apps/web` codebase, I found that the public page rendering p
 |  4  | Redis caching layer                    | 🟡 High     | 🟨 Medium |  ⬜ Phase 2   |
 |  5  | Convert client → server components     | 🟡 Medium   | 🟥 High   |  ⬜ Phase 2   |
 |  6  | Optimize font loading                  | 🟢 Medium   | ⬜ Small  |  ⬜ Phase 2   |
-|  7  | HTTP caching / CDN                     | 🟢 Medium   | ⬜ Small  |  ⬜ Phase 2   |
+|  7  | Lazy-load hero media                   | 🟢 Medium   | ⬜ Small  |  ⬜ Phase 2   |
+|  8  | HTTP caching / CDN                     | 🟢 Medium   | ⬜ Small  |  ⬜ Phase 2   |
 
 ## Task Checklist
 
@@ -28,6 +29,7 @@ After auditing the `apps/web` codebase, I found that the public page rendering p
 - [ ] Add Redis tenant cache layer with resolver-level invalidation.
 - [ ] Refactor public rendering path from broad client boundaries to server components.
 - [ ] Load fonts dynamically per tenant theme instead of preloading all families.
+- [ ] Lazy-load hero video/iframes using facade or `loading="lazy"`.
 - [ ] Add HTTP caching strategy (`revalidate`/`Cache-Control`) and CDN partitioning with `Vary: Host`.
 
 --
@@ -283,3 +285,18 @@ async headers() {
 ```
 
 For a multi-tenant setup, put a CDN (Cloudflare, CloudFront) in front with **Vary: Host** so each tenant gets its own cache partition.
+
+---
+
+## 🟡 8. Lazy-Load Hero Media (High ROI)
+
+**Impact: Faster LCP on pages with media**
+**Effort: Small**
+
+### The Problem
+
+The 16.0s Largest Contentful Paint is driven by the iframe/video at the top of the page, which competes with the 21 fonts for limited bandwidth.
+
+### The Fix
+
+Use an iframe facade (like `lite-youtube-embed`) or `loading="lazy"` for the hero video.
