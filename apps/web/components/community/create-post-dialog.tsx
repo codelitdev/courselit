@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useContext, useMemo } from "react";
+import {
+    useState,
+    useContext,
+    useMemo,
+    useEffect,
+    useCallback,
+    useRef,
+} from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +24,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { Paperclip, Video, Smile, Image } from "lucide-react";
+import { Paperclip, Video, Smile, Image as ImageIcon } from "lucide-react";
 import { EmojiPicker } from "./emoji-picker";
 import { GifSelector } from "./gif-selector";
 import { MediaPreview } from "./media-preview";
@@ -25,23 +32,45 @@ import { CommunityMediaTypes, CommunityPost } from "@courselit/common-models";
 import { type MediaItem } from "./media-item";
 import { ProfileContext } from "@components/contexts";
 import {
-    AlertDialog,
-    AlertDialogContent,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from "@components/ui/alert-dialog";
-import {
-    AlertDialogAction,
-    AlertDialogCancel,
-} from "@radix-ui/react-alert-dialog";
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+    DialogClose,
+} from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 
+const createClientId = () => {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
+
+const withClientIds = (items: MediaItem[]) =>
+    items.map((item) =>
+        item.clientId ? item : { ...item, clientId: createClientId() },
+    );
+
+const EMPTY_MEDIA: MediaItem[] = [];
+
 interface CreatePostDialogProps {
+    postId?: string;
+    title?: string;
+    content?: string;
+    category?: string;
+    media?: MediaItem[];
+    trigger?: React.ReactNode;
+    hideTrigger?: boolean;
+    isOpen?: boolean;
+    onOpenChange?: (open: boolean) => void;
     createPost: (
         post: Pick<CommunityPost, "title" | "content" | "category"> & {
             media: MediaItem[];
+            postId?: string;
         },
     ) => void;
     categories: string[];
@@ -51,19 +80,39 @@ interface CreatePostDialogProps {
 }
 
 export default function CreatePostDialog({
+    postId,
+    title: initialTitle = "",
+    content: initialContent = "",
+    category: initialCategory = "",
+    media: initialMedia = EMPTY_MEDIA,
+    trigger,
+    hideTrigger = false,
+    isOpen: controlledIsOpen,
+    onOpenChange: controlledOnOpenChange,
     createPost,
     categories,
     isFileUploading,
     fileUploadProgress,
     fileBeingUploadedNumber = 0,
 }: CreatePostDialogProps) {
-    const [isOpen, setIsOpen] = useState(false);
-    const [title, setTitle] = useState("");
-    const [content, setContent] = useState("");
-    const [category, setCategory] = useState("");
+    const [internalIsOpen, setInternalIsOpen] = useState(false);
+    const initialMediaWithClientIds = useMemo(
+        () => withClientIds(initialMedia),
+        [initialMedia],
+    );
+
+    // Use controlled state if provided, otherwise use internal state
+    const isOpen =
+        controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
+    const setIsOpen = controlledOnOpenChange || setInternalIsOpen;
+
+    const [title, setTitle] = useState(initialTitle);
+    const [content, setContent] = useState(initialContent);
+    const [category, setCategory] = useState(initialCategory);
     const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
     const [isGifSelectorOpen, setIsGifSelectorOpen] = useState(false);
-    const [media, setMedia] = useState<MediaItem[]>([]);
+    const [media, setMedia] = useState<MediaItem[]>(initialMediaWithClientIds);
+    const [videoUrl, setVideoUrl] = useState("");
     const [errors, setErrors] = useState<{
         title?: string;
         content?: string;
@@ -71,57 +120,107 @@ export default function CreatePostDialog({
     }>({});
     const { profile } = useContext(ProfileContext);
     const [isPosting, setIsPosting] = useState(false);
+    const mediaRef = useRef<MediaItem[]>(initialMediaWithClientIds);
+
+    const revokeMediaObjectUrls = useCallback((items: MediaItem[]) => {
+        for (const item of items) {
+            if (item.file && item.url?.startsWith("blob:")) {
+                URL.revokeObjectURL(item.url);
+            }
+        }
+    }, []);
+
+    // Re-sync form state from props whenever the dialog opens with new data
+    useEffect(() => {
+        if (!isOpen) {
+            return;
+        }
+
+        revokeMediaObjectUrls(mediaRef.current);
+        setTitle(initialTitle);
+        setContent(initialContent);
+        setCategory(initialCategory);
+        setMedia(initialMediaWithClientIds);
+        mediaRef.current = initialMediaWithClientIds;
+        setVideoUrl("");
+        setErrors({});
+    }, [
+        isOpen,
+        initialTitle,
+        initialContent,
+        initialCategory,
+        initialMediaWithClientIds,
+        revokeMediaObjectUrls,
+    ]);
+
+    useEffect(() => {
+        mediaRef.current = media;
+    }, [media]);
+
+    useEffect(() => {
+        return () => {
+            revokeMediaObjectUrls(mediaRef.current);
+        };
+    }, [revokeMediaObjectUrls]);
 
     const isPostButtonDisabled = useMemo(
-        () => title.trim() === "" || content.trim() === "" || isPosting,
-        [title, content, isPosting],
+        () =>
+            title.trim() === "" ||
+            content.trim() === "" ||
+            category.trim() === "" ||
+            isPosting,
+        [title, content, category, isPosting],
     );
 
-    const handleEmojiSelect = (emoji: string) => {
+    const handleEmojiSelect = useCallback((emoji: string) => {
         setContent((prevContent) => prevContent + emoji);
         setIsEmojiPickerOpen(false);
-    };
+    }, []);
 
-    const handleGifSelect = (gifUrl: string) => {
+    const handleGifSelect = useCallback((gifUrl: string) => {
         setMedia((prevMedia) => [
             ...prevMedia,
             {
                 type: "gif",
                 url: gifUrl,
                 title: "GIF",
+                clientId: createClientId(),
             },
         ]);
         setIsGifSelectorOpen(false);
-    };
+    }, []);
 
-    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files;
-        if (files) {
-            Array.from(files).forEach((file) => {
-                const url = URL.createObjectURL(file);
-                const isPdf = file.type === "application/pdf";
-                const isImage = file.type.startsWith("image/");
-                const type = isPdf ? "pdf" : isImage ? "image" : "video";
+    const handleFileUpload = useCallback(
+        (event: React.ChangeEvent<HTMLInputElement>) => {
+            const files = event.target.files;
+            if (files) {
+                const nextItems: MediaItem[] = Array.from(files).map((file) => {
+                    const url = URL.createObjectURL(file);
+                    const isPdf = file.type === "application/pdf";
+                    const isImage = file.type.startsWith("image/");
+                    const type = isPdf ? "pdf" : isImage ? "image" : "video";
 
-                setMedia((prevMedia) => [
-                    ...prevMedia,
-                    {
+                    return {
                         type,
                         url,
                         title: file.name,
                         file,
-                        // fileSize: `${(file.size / (1024 * 1024)).toFixed(1)}mb`,
-                    },
-                ]);
-            });
-        }
-    };
+                        clientId: createClientId(),
+                        fileSize: `${(file.size / (1024 * 1024)).toFixed(1)}mb`,
+                    };
+                });
+
+                setMedia((prevMedia) => [...prevMedia, ...nextItems]);
+            }
+        },
+        [],
+    );
 
     // const handleLinkAdd = (url: string) => {
     //     setContent((prevContent) => `${prevContent} ${url} `);
     // };
 
-    const handleVideoAdd = (url: string) => {
+    const handleVideoAdd = useCallback((url: string) => {
         if (url.includes("youtube.com") || url.includes("youtu.be")) {
             const videoId = url.includes("youtu.be")
                 ? url.split("/").pop()
@@ -134,17 +233,25 @@ export default function CreatePostDialog({
                         type: "youtube",
                         url: `https://www.youtube.com/embed/${videoId}`,
                         title: "YouTube Video",
+                        clientId: createClientId(),
                     },
                 ]);
             }
         } else {
             setContent((prevContent) => `${prevContent} ${url} `);
         }
-    };
+    }, []);
 
-    const handleMediaRemove = (index: number) => {
-        setMedia((prevMedia) => prevMedia.filter((_, i) => i !== index));
-    };
+    const handleMediaRemove = useCallback((index: number) => {
+        setMedia((prevMedia) => {
+            const mediaToRemove = prevMedia[index];
+            if (mediaToRemove?.file && mediaToRemove.url?.startsWith("blob:")) {
+                URL.revokeObjectURL(mediaToRemove.url);
+            }
+
+            return prevMedia.filter((_, i) => i !== index);
+        });
+    }, []);
 
     const handlePost = async () => {
         if (title.trim() === "" || content.trim() === "") {
@@ -165,27 +272,41 @@ export default function CreatePostDialog({
         }
 
         setIsPosting(true);
-        await createPost({
-            category,
-            title,
-            content,
-            media,
-        });
-        setIsPosting(false);
+        try {
+            await createPost({
+                postId,
+                category,
+                title,
+                content,
+                media,
+            });
 
-        resetForm();
+            resetForm();
+        } finally {
+            setIsPosting(false);
+        }
     };
 
-    const resetForm = () => {
+    const resetForm = useCallback(() => {
+        revokeMediaObjectUrls(mediaRef.current);
         setIsOpen(false);
-        setTitle("");
-        setContent("");
-        setCategory("");
-        setMedia([]);
+        setTitle(initialTitle);
+        setContent(initialContent);
+        setCategory(initialCategory);
+        setMedia(initialMediaWithClientIds);
+        mediaRef.current = initialMediaWithClientIds;
+        setVideoUrl("");
         setErrors({});
-    };
+    }, [
+        setIsOpen,
+        initialTitle,
+        initialContent,
+        initialCategory,
+        initialMediaWithClientIds,
+        revokeMediaObjectUrls,
+    ]);
 
-    const getUploadableMediaCount = () => {
+    const uploadableMediaCount = useMemo(() => {
         return media.filter((x) =>
             [
                 CommunityMediaTypes.IMAGE,
@@ -193,26 +314,31 @@ export default function CreatePostDialog({
                 CommunityMediaTypes.PDF,
             ].includes(x.type as any),
         ).length;
-    };
+    }, [media]);
 
     if (!profile) {
         return null;
     }
 
     return (
-        <AlertDialog open={isOpen}>
-            <AlertDialogTrigger asChild>
-                <Button
-                    variant="outline"
-                    className="w-full !text-left cursor-text"
-                    onClick={() => setIsOpen(true)}
-                >
-                    Write something...
-                </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="sm:max-w-[90vw] md:max-w-[600px] w-full overflow-y-auto max-h-[calc(100vh-4rem)] my-8">
-                <AlertDialogHeader>
-                    <AlertDialogTitle>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            {!hideTrigger &&
+                (trigger ? (
+                    <DialogTrigger asChild>{trigger}</DialogTrigger>
+                ) : (
+                    <DialogTrigger asChild>
+                        <div
+                            role="button"
+                            tabIndex={0}
+                            className="flex items-start w-full rounded-md border border-input bg-background px-3 pt-3 pb-8 text-sm text-muted-foreground ring-offset-background cursor-text hover:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                            Write something...
+                        </div>
+                    </DialogTrigger>
+                ))}
+            <DialogContent className="sm:max-w-[90vw] md:max-w-[600px] w-full overflow-y-auto max-h-[calc(100vh-4rem)] my-8">
+                <DialogHeader>
+                    <DialogTitle>
                         <div className="flex items-center gap-2 mb-4">
                             <Avatar className="h-10 w-10">
                                 <AvatarImage
@@ -236,8 +362,8 @@ export default function CreatePostDialog({
                                 </span>
                             </div>
                         </div>
-                    </AlertDialogTitle>
-                </AlertDialogHeader>
+                    </DialogTitle>
+                </DialogHeader>
 
                 <div className="space-y-4">
                     <div>
@@ -363,17 +489,16 @@ export default function CreatePostDialog({
                                         id="video"
                                         type="url"
                                         placeholder="https://youtube.com/watch?v="
-                                        onChange={(e) => {}}
+                                        value={videoUrl}
+                                        onChange={(e) =>
+                                            setVideoUrl(e.target.value)
+                                        }
                                     />
                                     <Button
                                         size="sm"
                                         onClick={() => {
-                                            const videoInput =
-                                                document.getElementById(
-                                                    "video",
-                                                ) as HTMLInputElement;
-                                            handleVideoAdd(videoInput.value);
-                                            videoInput.value = "";
+                                            handleVideoAdd(videoUrl);
+                                            setVideoUrl("");
                                         }}
                                     >
                                         Add Video
@@ -413,7 +538,7 @@ export default function CreatePostDialog({
                                     size="icon"
                                     className="h-9 w-9"
                                 >
-                                    <Image className="h-5 w-5" />
+                                    <ImageIcon className="h-5 w-5" />
                                     <span className="sr-only">Add GIF</span>
                                 </Button>
                             </PopoverTrigger>
@@ -438,13 +563,6 @@ export default function CreatePostDialog({
                                             {category}
                                         </SelectItem>
                                     ))}
-                                    {/* <SelectItem value="general">
-                                        General Discussion
-                                    </SelectItem>
-                                    <SelectItem value="tips">Tips</SelectItem>
-                                    <SelectItem value="questions">
-                                        Questions
-                                    </SelectItem> */}
                                 </SelectContent>
                             </Select>
                             {errors.category && (
@@ -454,34 +572,19 @@ export default function CreatePostDialog({
                             )}
                         </div>
                     </div>
-                    {/* <div className="flex items-center gap-2">
-                        <Button
-                            variant="ghost"
-                            onClick={() => setIsOpen(false)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            className="px-8"
-                            onClick={handlePost}
-                            disabled={isPostButtonDisabled}
-                        >
-                            Post
-                        </Button>
-                    </div> */}
                 </div>
-                {isPosting && getUploadableMediaCount() > 0 && (
+                {isFileUploading && uploadableMediaCount > 0 && (
                     <>
                         <p className="text-xs text-muted-foreground">
                             Uploading {fileBeingUploadedNumber} of{" "}
-                            {getUploadableMediaCount()} files -{" "}
+                            {uploadableMediaCount} files -{" "}
                             {Math.round(fileUploadProgress)}%
                         </p>
                         <Progress value={fileUploadProgress} className="h-2" />
                     </>
                 )}
-                <AlertDialogFooter>
-                    <AlertDialogCancel asChild>
+                <DialogFooter className="flex space-x-2">
+                    <DialogClose asChild>
                         <Button
                             onClick={resetForm}
                             variant="outline"
@@ -489,17 +592,21 @@ export default function CreatePostDialog({
                         >
                             Cancel
                         </Button>
-                    </AlertDialogCancel>
-                    <AlertDialogAction asChild>
-                        <Button
-                            onClick={handlePost}
-                            disabled={isPostButtonDisabled}
-                        >
-                            {isPosting ? "Posting..." : "Post"}
-                        </Button>
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+                    </DialogClose>
+                    <Button
+                        onClick={handlePost}
+                        disabled={isPostButtonDisabled}
+                    >
+                        {isPosting
+                            ? postId
+                                ? "Saving..."
+                                : "Posting..."
+                            : postId
+                              ? "Save"
+                              : "Post"}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }

@@ -30,6 +30,7 @@ import { User } from "@courselit/common-models";
 import EmailDeliveryModel from "@models/EmailDelivery";
 import EmailEventModel from "@models/EmailEvent";
 import { defaultEmail } from "./default-email";
+import { sanitizeEmail } from "@/lib/sanitize-email";
 
 const { permissions } = constants;
 
@@ -42,7 +43,7 @@ export async function createSubscription(
     ctx: GQLContext,
 ): Promise<boolean> {
     try {
-        const sanitizedEmail = email.toLowerCase();
+        const sanitizedEmail = sanitizeEmail(email);
         let dbUser: User | null = await UserModel.findOne({
             email: sanitizedEmail,
             domain: ctx.subdomain._id,
