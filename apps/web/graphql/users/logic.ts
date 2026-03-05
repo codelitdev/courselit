@@ -66,6 +66,7 @@ const { permissions } = UIConstants;
 import { ObjectId } from "mongodb";
 import { sealMedia } from "@/services/medialit";
 import { seedNotificationPreferencesForUser } from "../notifications/logic";
+import { sanitizeEmail } from "@/lib/sanitize-email";
 
 const removeAdminFieldsFromUserObject = (user: any) => ({
     id: user._id,
@@ -188,7 +189,7 @@ export const inviteCustomer = async (
         throw new Error(responses.cannot_invite_to_unpublished_product);
     }
 
-    const sanitizedEmail = (email as string).toLowerCase();
+    const sanitizedEmail = sanitizeEmail(email);
     let user = await UserModel.findOne({
         email: sanitizedEmail,
         domain: ctx.subdomain._id,
@@ -409,7 +410,7 @@ export async function createUser({
             $setOnInsert: {
                 domain: domain._id,
                 name,
-                email: email.toLowerCase(),
+                email: sanitizeEmail(email),
                 active: true,
                 purchases: [],
                 permissions: superAdmin
