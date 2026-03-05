@@ -194,11 +194,7 @@ export function Comment({
                                 {comment.user.name}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                                {formattedLocaleDate(
-                                    comment.updatedAt
-                                        ? new Date(comment.updatedAt).getTime()
-                                        : undefined,
-                                )}
+                                {formattedLocaleDate(comment.updatedAt)}
                             </span>
                         </div>
                         {!comment.deleted && (

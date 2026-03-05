@@ -11,6 +11,7 @@ import {
     addCategory,
     deleteCategory,
     createCommunityPost,
+    updateCommunityPost,
     joinCommunity,
     updateMemberStatus,
     togglePostLike,
@@ -163,6 +164,45 @@ const mutations = {
         ) =>
             createCommunityPost({
                 communityId,
+                title,
+                content,
+                category,
+                media,
+                ctx,
+            }),
+    },
+    updateCommunityPost: {
+        type: types.communityPost,
+        args: {
+            communityId: { type: new GraphQLNonNull(GraphQLString) },
+            postId: { type: new GraphQLNonNull(GraphQLString) },
+            title: { type: GraphQLString },
+            content: { type: GraphQLString },
+            category: { type: GraphQLString },
+            media: { type: new GraphQLList(types.communityPostInputMedia) },
+        },
+        resolve: async (
+            _: any,
+            {
+                communityId,
+                postId,
+                title,
+                content,
+                category,
+                media,
+            }: {
+                communityId: string;
+                postId: string;
+                title?: string;
+                content?: string;
+                category?: string;
+                media?: CommunityMedia[];
+            },
+            ctx: GQLContext,
+        ) =>
+            updateCommunityPost({
+                communityId,
+                postId,
                 title,
                 content,
                 category,

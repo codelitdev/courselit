@@ -704,6 +704,107 @@ export async function createCommunityPost({
     return formatPost(post, ctx.user.userId);
 }
 
+export async function updateCommunityPost({
+    communityId,
+    postId,
+    title,
+    content,
+    category,
+    media,
+    ctx,
+}: {
+    communityId: string;
+    postId: string;
+    title?: string;
+    content?: string;
+    category?: string;
+    media?: CommunityMedia[];
+    ctx: GQLContext;
+}): Promise<PublicPost> {
+    checkIfAuthenticated(ctx);
+
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
+
+    if (!community) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const member = await getMembership(ctx, communityId);
+
+    if (!member || !hasPermission(member, Constants.MembershipRole.POST)) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const post = await CommunityPostModel.findOne({
+        domain: ctx.subdomain._id,
+        communityId,
+        postId,
+        deleted: false,
+    });
+
+    if (!post) {
+        throw new Error(responses.item_not_found);
+    }
+
+    if (post.userId !== ctx.user.userId) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    if (category && !community.categories.includes(category)) {
+        throw new Error(responses.invalid_category);
+    }
+
+    if (title !== undefined) post.title = title;
+    if (content !== undefined) post.content = content;
+    if (category !== undefined) post.category = category;
+
+    if (media !== undefined) {
+        const oldMediaIds = (post.media || [])
+            .map((m: any) => m.media?.mediaId)
+            .filter(Boolean);
+        const newMediaIds = media.map((m) => m.media?.mediaId).filter(Boolean);
+
+        const removedMediaIds = oldMediaIds.filter(
+            (id: string) => !newMediaIds.includes(id),
+        );
+
+        for (const mediaId of removedMediaIds) {
+            if (mediaId && mediaId !== "none") {
+                try {
+                    await deleteMedia(mediaId);
+                } catch (err: any) {
+                    error(err.message, { stack: err.stack });
+                }
+            }
+        }
+
+        const oldMediaList = post.media || [];
+
+        for (const med of media) {
+            if (med.media?.mediaId && med.media.mediaId !== "none") {
+                if (!oldMediaIds.includes(med.media.mediaId)) {
+                    med.media = await sealMedia(med.media.mediaId);
+                } else {
+                    const oldMedItem = oldMediaList.find(
+                        (m: any) => m.media?.mediaId === med.media?.mediaId,
+                    );
+                    if (oldMedItem && oldMedItem.media && med.media) {
+                        med.media = oldMedItem.media;
+                    }
+                }
+            }
+        }
+
+        post.media = media;
+    }
+
+    await post.save();
+
+    return formatPost(post, ctx.user.userId);
+}
+
 export async function deleteCommunityPost({
     ctx,
     communityId,
@@ -728,9 +829,6 @@ export async function deleteCommunityPost({
         communityId,
         postId,
     };
-    // if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-    //     query["userId"] = ctx.user.userId;
-    // }
     const member = await getMembership(ctx, communityId);
     if (!hasPermission(member!, Constants.MembershipRole.MODERATE)) {
         query["userId"] = ctx.user.userId;
@@ -742,8 +840,26 @@ export async function deleteCommunityPost({
         throw new Error(responses.item_not_found);
     }
 
-    post.deleted = true;
-    await (post as any).save();
+    if (post.media?.length) {
+        for (const media of post.media) {
+            const mediaId = media.media?.mediaId;
+            if (mediaId) {
+                await deleteMedia(mediaId);
+            }
+        }
+    }
+
+    await CommunityCommentModel.deleteMany({
+        domain: ctx.subdomain._id,
+        communityId,
+        postId,
+    });
+
+    await CommunityPostModel.deleteOne({
+        domain: ctx.subdomain._id,
+        communityId,
+        postId,
+    });
 
     return post;
 }

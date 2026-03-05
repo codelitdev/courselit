@@ -107,6 +107,7 @@ export default function CommentSection({
                             mediaId
                             file
                             thumbnail
+                            size
                         }
                     }
                     likesCount
@@ -183,6 +184,7 @@ export default function CommentSection({
                             mediaId
                             file
                             thumbnail
+                            size
                         }
                     }
                     likesCount
@@ -278,6 +280,7 @@ export default function CommentSection({
                             mediaId
                             file
                             thumbnail
+                            size
                         }
                     }
                     likesCount
@@ -364,6 +367,7 @@ export default function CommentSection({
                             mediaId
                             file
                             thumbnail
+                            size
                         }
                     }
                     likesCount
@@ -517,6 +521,7 @@ export default function CommentSection({
                             mediaId
                             file
                             thumbnail
+                            size
                         }
                     }
                     likesCount

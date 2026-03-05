@@ -22,16 +22,28 @@ const { permissions } = UIConstants;
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export const formattedLocaleDate = (
-    epochString?: Date | number,
+    epochString?: Date | number | string,
     monthFormat?: "short" | "long",
-) =>
-    epochString
-        ? new Date(Number(epochString)).toLocaleString("en-US", {
+) => {
+    if (!epochString) return "";
+
+    let time: number;
+    if (typeof epochString === "string") {
+        time = /^\d+$/.test(epochString)
+            ? parseInt(epochString, 10)
+            : new Date(epochString).getTime();
+    } else {
+        time = Number(epochString);
+    }
+
+    return isNaN(time)
+        ? ""
+        : new Date(time).toLocaleString("en-US", {
               year: "numeric",
               month: monthFormat || "short",
               day: "numeric",
-          })
-        : "";
+          });
+};
 
 export const formulateCourseUrl = (course: any, backend = "") =>
     `${backend}/${course.isBlog ? "post" : "course"}/${course.courseId}/${
