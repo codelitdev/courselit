@@ -760,25 +760,17 @@ export async function updateCommunityPost({
     if (content !== undefined) post.content = content;
     if (category !== undefined) post.category = category;
 
+    let removedMediaIds: string[] = [];
+
     if (media !== undefined) {
         const oldMediaIds = (post.media || [])
             .map((m: any) => m.media?.mediaId)
             .filter(Boolean);
         const newMediaIds = media.map((m) => m.media?.mediaId).filter(Boolean);
 
-        const removedMediaIds = oldMediaIds.filter(
+        removedMediaIds = oldMediaIds.filter(
             (id: string) => !newMediaIds.includes(id),
         );
-
-        for (const mediaId of removedMediaIds) {
-            if (mediaId && mediaId !== "none") {
-                try {
-                    await deleteMedia(mediaId);
-                } catch (err: any) {
-                    error(err.message, { stack: err.stack });
-                }
-            }
-        }
 
         const oldMediaList = post.media || [];
 
@@ -801,6 +793,16 @@ export async function updateCommunityPost({
     }
 
     await post.save();
+
+    for (const mediaId of removedMediaIds) {
+        if (mediaId && mediaId !== "none") {
+            try {
+                await deleteMedia(mediaId);
+            } catch (err: any) {
+                error(err.message, { stack: err.stack });
+            }
+        }
+    }
 
     return formatPost(post, ctx.user.userId);
 }
@@ -830,7 +832,7 @@ export async function deleteCommunityPost({
         postId,
     };
     const member = await getMembership(ctx, communityId);
-    if (!hasPermission(member!, Constants.MembershipRole.MODERATE)) {
+    if (!member || !hasPermission(member, Constants.MembershipRole.MODERATE)) {
         query["userId"] = ctx.user.userId;
     }
 
@@ -844,7 +846,11 @@ export async function deleteCommunityPost({
         for (const media of post.media) {
             const mediaId = media.media?.mediaId;
             if (mediaId) {
-                await deleteMedia(mediaId);
+                try {
+                    await deleteMedia(mediaId);
+                } catch (err: any) {
+                    error(err.message, { stack: err.stack });
+                }
             }
         }
     }
