@@ -25,6 +25,7 @@ import {
     FlagTriangleRight,
     Maximize2,
     ArrowLeft,
+    Download,
 } from "lucide-react";
 import {
     Dialog,
@@ -103,7 +104,8 @@ export function CommunityForum({
         () => categories.filter((x) => x !== "All"),
         [categories],
     );
-    const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+    const [fullscreenMedia, setFullscreenMedia] =
+        useState<CommunityMedia | null>(null);
     const [page, setPage] = useState(1);
     const [totalPosts, setTotalPosts] = useState(0);
     const [postToDelete, setPostToDelete] = useState<CommunityPost | null>(
@@ -650,7 +652,7 @@ export function CommunityForum({
                                     type="button"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        setFullscreenImage(media.media!.file!);
+                                        setFullscreenMedia(media);
                                     }}
                                     className="absolute top-2 right-2 rounded-md bg-black/60 text-white p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80"
                                     aria-label="View full screen"
@@ -733,10 +735,40 @@ export function CommunityForum({
                 if (options && options.renderActualFile) {
                     // embed pdf
                     return (
-                        <iframe
-                            src={media.media?.file}
-                            className="w-full h-48"
-                        ></iframe>
+                        <div
+                            className="relative group w-full h-48"
+                            onContextMenu={(e) => e.preventDefault()}
+                        >
+                            <div className="absolute inset-0 z-10" />
+                            <iframe
+                                src={`${media.media?.file}#toolbar=0&view=FitH`}
+                                className="w-full h-full pointer-events-none"
+                                onContextMenu={(e) => e.preventDefault()}
+                            ></iframe>
+                            <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                                {media.media?.mediaId && (
+                                    <a
+                                        href={`/api/media/${encodeURIComponent(media.media.mediaId)}`}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="rounded-md bg-black/60 text-white p-1.5 hover:bg-black/80"
+                                        aria-label="Download"
+                                    >
+                                        <Download className="h-4 w-4" />
+                                    </a>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setFullscreenMedia(media);
+                                    }}
+                                    className="rounded-md bg-black/60 text-white p-1.5 hover:bg-black/80"
+                                    aria-label="View full screen"
+                                >
+                                    <Maximize2 className="h-4 w-4" />
+                                </button>
+                            </div>
+                        </div>
                     );
                 }
                 return (
@@ -1376,7 +1408,7 @@ export function CommunityForum({
                         onOpenChange={(open) => {
                             if (!open) {
                                 setOpenPostId(null);
-                                setFullscreenImage(null);
+                                setFullscreenMedia(null);
                             }
                         }}
                     >
@@ -1387,13 +1419,13 @@ export function CommunityForum({
                             <VisuallyHidden>
                                 <DialogTitle>Post&apos; content</DialogTitle>
                             </VisuallyHidden>
-                            {openPost && fullscreenImage ? (
-                                <div className="flex flex-col items-center gap-4">
+                            {openPost && fullscreenMedia ? (
+                                <div className="flex flex-col items-center gap-4 w-full">
                                     <div className="flex w-full justify-start">
                                         <button
                                             type="button"
                                             onClick={() =>
-                                                setFullscreenImage(null)
+                                                setFullscreenMedia(null)
                                             }
                                             className="rounded-md bg-muted text-muted-foreground p-1.5 hover:bg-accent transition-colors"
                                             aria-label="Back to post"
@@ -1401,11 +1433,20 @@ export function CommunityForum({
                                             <ArrowLeft className="h-5 w-5" />
                                         </button>
                                     </div>
-                                    <img
-                                        src={fullscreenImage}
-                                        alt="Full size preview"
-                                        className="max-w-full max-h-[65vh] object-contain rounded-md"
-                                    />
+                                    {fullscreenMedia.type === "pdf" ? (
+                                        <div className="w-full h-[70vh] relative">
+                                            <iframe
+                                                src={`${fullscreenMedia.media?.file}#toolbar=0&view=FitH`}
+                                                className="w-full h-full rounded-md"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <img
+                                            src={fullscreenMedia.media?.file}
+                                            alt="Full size preview"
+                                            className="max-w-full max-h-[65vh] object-contain rounded-md"
+                                        />
+                                    )}
                                 </div>
                             ) : openPost ? (
                                 <div className="grid gap-4">
