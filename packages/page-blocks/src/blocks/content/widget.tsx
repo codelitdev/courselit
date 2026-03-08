@@ -42,6 +42,7 @@ export default function Widget({
         cssId,
         maxWidth,
         verticalPadding,
+        openByDefault = false,
     },
     state,
     pageData: product,
@@ -184,59 +185,63 @@ export default function Widget({
                         ))}
                     </div>
                 )}
-                <Accordion type="single" collapsible>
-                    {Object.keys(formattedCourse).map((group, index) => (
-                        <AccordionItem
-                            value={group}
-                            key={index}
-                            // className="border-b-0"
+                {course &&
+                    Object.keys(formattedCourse).length > 0 &&
+                    (openByDefault ? (
+                        <Accordion
+                            key={`open-${Object.keys(formattedCourse).length}`}
+                            type="multiple"
+                            defaultValue={Object.keys(formattedCourse)}
                         >
-                            <AccordionTrigger>
-                                <div className="flex grow justify-between mr-2">
-                                    <Text1 theme={overiddenTheme}>
-                                        {group}
-                                    </Text1>
-                                    <Badge variant="outline">
-                                        {`${formattedCourse[group].length} lessons`}
-                                    </Badge>
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                                {formattedCourse[group].map(
-                                    (lesson: Lesson) => (
-                                        <Link
-                                            key={lesson.lessonId}
-                                            href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
-                                        >
-                                            <div className="flex justify-between items-center gap-2 py-2 px-2 hover:bg-muted rounded transition-colors">
-                                                <span className="flex items-center gap-2">
-                                                    <LessonIcon
-                                                        type={
-                                                            lesson.type as LessonType
-                                                        }
-                                                    />
-
-                                                    <Text1
-                                                        theme={overiddenTheme}
-                                                    >
-                                                        {lesson.title}
-                                                    </Text1>
-                                                </span>
-
-                                                {!lesson.requiresEnrollment && (
-                                                    <Badge variant="outline">
-                                                        Preview
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                        </Link>
-                                    ),
-                                )}
-                            </AccordionContent>
-                        </AccordionItem>
+                            {renderItems()}
+                        </Accordion>
+                    ) : (
+                        <Accordion type="single" collapsible>
+                            {renderItems()}
+                        </Accordion>
                     ))}
-                </Accordion>
             </div>
         </Section>
     );
+
+    function renderItems() {
+        return Object.keys(formattedCourse).map((group) => (
+            <AccordionItem value={group} key={group}>
+                <AccordionTrigger>
+                    <div className="flex grow justify-between mr-2">
+                        <Text1 theme={overiddenTheme}>{group}</Text1>
+                        <Badge variant="outline">
+                            {`${formattedCourse[group].length} lessons`}
+                        </Badge>
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                    {formattedCourse[group].map((lesson: Lesson) => (
+                        <Link
+                            key={lesson.lessonId}
+                            href={`/course/${course!.slug}/${
+                                course!.courseId
+                            }/${lesson.lessonId}`}
+                        >
+                            <div className="flex justify-between items-center gap-2 py-2 px-2 hover:bg-muted rounded transition-colors">
+                                <span className="flex items-center gap-2">
+                                    <LessonIcon
+                                        type={lesson.type as LessonType}
+                                    />
+
+                                    <Text1 theme={overiddenTheme}>
+                                        {lesson.title}
+                                    </Text1>
+                                </span>
+
+                                {!lesson.requiresEnrollment && (
+                                    <Badge variant="outline">Preview</Badge>
+                                )}
+                            </div>
+                        </Link>
+                    ))}
+                </AccordionContent>
+            </AccordionItem>
+        ));
+    }
 }
