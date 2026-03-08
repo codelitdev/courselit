@@ -1413,7 +1413,7 @@ export function CommunityForum({
                         }}
                     >
                         <DialogContent
-                            className="sm:max-w-[600px] w-full overflow-y-auto max-h-[80vh] my-8"
+                            className="sm:max-w-4xl w-full overflow-y-auto max-h-[90vh] my-8"
                             aria-describedby={undefined}
                         >
                             <VisuallyHidden>

@@ -594,7 +594,7 @@ export default function CommentSection({
 
     return (
         <div className="flex flex-col gap-4">
-            <div className="space-y-4 max-h-[300px] overflow-y-auto">
+            <div className="space-y-4 overflow-y-auto">
                 {comments.map((comment) => (
                     <Comment
                         communityId={communityId}

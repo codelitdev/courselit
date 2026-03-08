@@ -336,7 +336,7 @@ export default function CreatePostDialog({
                         </div>
                     </DialogTrigger>
                 ))}
-            <DialogContent className="sm:max-w-[90vw] md:max-w-[600px] w-full overflow-y-auto max-h-[calc(100vh-4rem)] my-8">
+            <DialogContent className="sm:max-w-4xl w-full overflow-y-auto max-h-[90vh] my-8">
                 <DialogHeader>
                     <DialogTitle>
                         <div className="flex items-center gap-2 mb-4">
