@@ -7,13 +7,21 @@ export async function replaceTempMediaWithSealedMediaInPageLayout(
 ): Promise<any> {
     const mediaIds = Array.from(extractMediaIDs(JSON.stringify(layout)));
     for (const mediaId of mediaIds) {
-        const media = await sealMedia(mediaId);
+        const media = await safeSealMedia(mediaId);
         if (media) {
             layout = replaceMediaURLinPageLayout(layout, mediaId, media);
         }
     }
 
     return layout;
+}
+
+export async function safeSealMedia(mediaId: string) {
+    try {
+        return await sealMedia(mediaId);
+    } catch (err) {
+        console.error(`Error while sealing media`, mediaId);
+    }
 }
 
 function replaceMediaURLinPageLayout(

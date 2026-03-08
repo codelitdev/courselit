@@ -18,9 +18,12 @@ import { Domain } from "../../models/Domain";
 import { homePageTemplate } from "./page-templates";
 import { publishTheme } from "../themes/logic";
 import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
-import { deleteMedia, sealMedia } from "@/services/medialit";
+import { deleteMedia } from "@/services/medialit";
 import CommunityModel from "@models/Community";
-import { replaceTempMediaWithSealedMediaInPageLayout } from "@/lib/replace-temp-media-with-sealed-media-in-page-layout";
+import {
+    replaceTempMediaWithSealedMediaInPageLayout,
+    safeSealMedia,
+} from "@/lib/replace-temp-media-with-sealed-media-in-page-layout";
 const { product, site, blogPage, communityPage, permissions, defaultPages } =
     constants;
 const { pageNames } = Constants;
@@ -198,9 +201,12 @@ export const updatePage = async ({
         if (page.draftSocialImage?.mediaId) {
             deletedMediaIds.push(page.draftSocialImage.mediaId);
         }
-        page.draftSocialImage = socialImage?.mediaId
-            ? await sealMedia(socialImage.mediaId)
-            : undefined;
+        if (socialImage?.mediaId) {
+            const sealedMedia = await safeSealMedia(socialImage.mediaId);
+            if (sealedMedia) {
+                page.draftSocialImage = sealedMedia;
+            }
+        }
     }
     if (typeof robotsAllowed === "boolean") {
         page.draftRobotsAllowed = robotsAllowed;
@@ -211,7 +217,12 @@ export const updatePage = async ({
     );
 
     for (const mediaId of deletableMediaIds) {
-        await deleteMedia(mediaId);
+        try {
+            await deleteMedia(mediaId);
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.log(`Error while deleting media`, mediaId);
+        }
     }
 
     try {
