@@ -8,6 +8,7 @@ import UserThemeModel from "@/models/UserTheme";
 import { themes as SystemThemes } from "@courselit/page-primitives";
 import { ThemeStyle } from "@courselit/page-models";
 import { UITheme } from "@models/UITheme";
+import { invalidateDomainCache } from "@/lib/domain-cache";
 
 const { permissions } = constants;
 
@@ -223,6 +224,8 @@ export const switchTheme = async (themeId: string, ctx: GQLContext) => {
         { _id: ctx.subdomain._id },
         { $set: { themeId, lastEditedThemeId: themeId } },
     );
+
+    invalidateDomainCache(ctx.subdomain.name);
 
     return formatTheme(theme);
 };
