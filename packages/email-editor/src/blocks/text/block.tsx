@@ -23,6 +23,39 @@ export function TextBlock({ block, style, selectedBlockId }: TextBlockProps) {
     const content =
         block.settings.content || (isSelected ? "" : "Text content");
 
+    // Common text styles to avoid repetition
+    const commonTextStyles = {
+        fontFamily:
+            block.settings.fontFamily ||
+            style?.typography.text.fontFamily ||
+            "Arial, sans-serif",
+        fontSize:
+            block.settings.fontSize ||
+            style?.typography.text.fontSize ||
+            "16px",
+        lineHeight:
+            block.settings.lineHeight ||
+            style?.typography.text.lineHeight ||
+            "1.5",
+        letterSpacing:
+            block.settings.letterSpacing ||
+            style?.typography.text.letterSpacing ||
+            "normal",
+        textTransform:
+            block.settings.textTransform ||
+            style?.typography.text.textTransform ||
+            "none",
+        textDecoration:
+            block.settings.textDecoration ||
+            style?.typography.text.textDecoration ||
+            "none",
+    };
+
+    const headerFontFamily =
+        block.settings.fontFamily ||
+        style?.typography.header.fontFamily ||
+        "Arial, sans-serif";
+
     return (
         <Section>
             <div
@@ -37,101 +70,62 @@ export function TextBlock({ block, style, selectedBlockId }: TextBlockProps) {
                         h1: {
                             fontWeight: "bold",
                             fontSize: `${Math.max(parseInt(block.settings.fontSize || "16") * 2, 32)}px`,
-                            fontFamily:
-                                block.settings.fontFamily ||
-                                style?.typography.header.fontFamily ||
-                                "Arial, sans-serif",
+                            fontFamily: headerFontFamily,
+                            margin: "16px 0 8px",
                         },
                         h2: {
                             fontWeight: "bold",
                             fontSize: `${Math.max(parseInt(block.settings.fontSize || "16") * 1.5, 24)}px`,
-                            fontFamily:
-                                block.settings.fontFamily ||
-                                style?.typography.header.fontFamily ||
-                                "Arial, sans-serif",
+                            fontFamily: headerFontFamily,
+                            margin: "16px 0 8px",
                         },
                         h3: {
                             fontWeight: "bold",
                             fontSize: `${Math.max(parseInt(block.settings.fontSize || "16") * 1.25, 20)}px`,
-                            fontFamily:
-                                block.settings.fontFamily ||
-                                style?.typography.header.fontFamily ||
-                                "Arial, sans-serif",
+                            fontFamily: headerFontFamily,
+                            margin: "16px 0 8px",
                         },
                         h4: {
                             fontWeight: "bold",
                             fontSize: `${Math.max(parseInt(block.settings.fontSize || "16") * 1.125, 18)}px`,
-                            fontFamily:
-                                block.settings.fontFamily ||
-                                style?.typography.header.fontFamily ||
-                                "Arial, sans-serif",
+                            fontFamily: headerFontFamily,
+                            margin: "16px 0 8px",
                         },
                         h5: {
                             fontWeight: "bold",
                             fontSize: `${Math.max(parseInt(block.settings.fontSize || "16") * 1.0625, 16)}px`,
-                            fontFamily:
-                                block.settings.fontFamily ||
-                                style?.typography.header.fontFamily ||
-                                "Arial, sans-serif",
+                            fontFamily: headerFontFamily,
+                            margin: "16px 0 8px",
                         },
                         h6: {
                             fontWeight: "bold",
                             fontSize: `${Math.max(parseInt(block.settings.fontSize || "16") * 1.03125, 14)}px`,
-                            fontFamily:
-                                block.settings.fontFamily ||
-                                style?.typography.header.fontFamily ||
-                                "Arial, sans-serif",
+                            fontFamily: headerFontFamily,
+                            margin: "16px 0 8px",
                         },
                         p: {
-                            fontSize: `${block.settings.fontSize || style?.typography.text.fontSize || "16px"}`,
-                            fontFamily:
-                                block.settings.fontFamily ||
-                                style?.typography.text.fontFamily ||
-                                "Arial, sans-serif",
-                            lineHeight:
-                                block.settings.lineHeight ||
-                                style?.typography.text.lineHeight ||
-                                "1.5",
-                            letterSpacing:
-                                block.settings.letterSpacing ||
-                                style?.typography.text.letterSpacing ||
-                                "normal",
-                            textTransform:
-                                block.settings.textTransform ||
-                                style?.typography.text.textTransform ||
-                                "none",
-                            textDecoration:
-                                block.settings.textDecoration ||
-                                style?.typography.text.textDecoration ||
-                                "none",
-                            margin: "0",
+                            ...commonTextStyles,
+                            margin: "0 0 16px",
+                        },
+                        ul: {
+                            ...commonTextStyles,
+                            margin: "0 0 16px",
+                            paddingLeft: "24px",
+                            listStyleType: "disc",
+                        },
+                        ol: {
+                            ...commonTextStyles,
+                            margin: "0 0 16px",
+                            paddingLeft: "24px",
+                            listStyleType: "decimal",
+                        },
+                        li: {
+                            ...commonTextStyles,
+                            margin: "4px 0",
                         },
                         link: {
+                            ...commonTextStyles,
                             color: style?.colors.accent || "inherit",
-                            fontFamily:
-                                block.settings.fontFamily ||
-                                style?.typography.link.fontFamily ||
-                                "Arial, sans-serif",
-                            fontSize:
-                                block.settings.fontSize ||
-                                style?.typography.link.fontSize ||
-                                "16px",
-                            lineHeight:
-                                block.settings.lineHeight ||
-                                style?.typography.link.lineHeight ||
-                                "1.5",
-                            letterSpacing:
-                                block.settings.letterSpacing ||
-                                style?.typography.link.letterSpacing ||
-                                "normal",
-                            textTransform:
-                                block.settings.textTransform ||
-                                style?.typography.link.textTransform ||
-                                "none",
-                            textDecoration:
-                                block.settings.textDecoration ||
-                                style?.typography.link.textDecoration ||
-                                "none",
                         },
                     }}
                     markdownContainerStyles={{
