@@ -9,7 +9,7 @@ const { text, audio, video, pdf, embed, quiz, file } = constants;
 
 type LessonValidatorProps = Pick<
     LessonWithStringContent,
-    "content" | "type" | "media"
+    "content" | "type" | "media" | "requiresEnrollment"
 >;
 
 export const lessonValidator = (lessonData: LessonValidatorProps) => {
@@ -38,6 +38,16 @@ export function validateTextContent(lessonData: LessonValidatorProps) {
     }
 
     if (lessonData.type === quiz) {
+        if (
+            Object.prototype.hasOwnProperty.call(
+                lessonData,
+                "requiresEnrollment",
+            ) &&
+            !lessonData.requiresEnrollment
+        ) {
+            throw new Error(responses.quiz_cannot_be_previewed);
+        }
+
         if (content && content.questions) {
             validateQuizContent(content.questions);
         }

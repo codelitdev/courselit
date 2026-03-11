@@ -604,32 +604,34 @@ export default function LessonPage() {
                                     />
                                 </>
                             )}
-                            {product?.type?.toLowerCase() !==
-                                UIConstants.COURSE_TYPE_DOWNLOAD && (
-                                <div className="flex items-center justify-between">
-                                    <div className="space-y-0.5">
-                                        <Label
-                                            htmlFor="preview"
-                                            className="font-semibold"
-                                        >
-                                            {LESSON_PREVIEW}
-                                        </Label>
-                                        <p className="text-sm text-muted-foreground">
-                                            Allow students to preview this
-                                            lesson without enrolling
-                                        </p>
+                            {product?.type?.toLowerCase() ===
+                                Constants.CourseType.COURSE &&
+                                lesson.type !== Constants.LessonType.QUIZ && (
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-0.5">
+                                            <Label
+                                                htmlFor="preview"
+                                                className="font-semibold"
+                                            >
+                                                {LESSON_PREVIEW}
+                                            </Label>
+                                            <p className="text-sm text-muted-foreground">
+                                                Allow students to preview this
+                                                lesson without enrolling
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            id="preview"
+                                            checked={!lesson.requiresEnrollment}
+                                            onCheckedChange={(checked) =>
+                                                updateLesson({
+                                                    requiresEnrollment:
+                                                        !checked,
+                                                })
+                                            }
+                                        />
                                     </div>
-                                    <Switch
-                                        id="preview"
-                                        checked={!lesson.requiresEnrollment}
-                                        onCheckedChange={(checked) =>
-                                            updateLesson({
-                                                requiresEnrollment: !checked,
-                                            })
-                                        }
-                                    />
-                                </div>
-                            )}
+                                )}
                             <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
                                     <Label
