@@ -365,7 +365,10 @@ const Settings = (props: SettingsProps) => {
     ) => {
         event.preventDefault();
 
-        if (!newSettings.codeInjectionHead && !newSettings.codeInjectionBody) {
+        if (
+            newSettings.codeInjectionHead === settings.codeInjectionHead &&
+            newSettings.codeInjectionBody === settings.codeInjectionBody
+        ) {
             return;
         }
 
