@@ -1,5 +1,18 @@
 import React, { useEffect, useState } from "react";
-import Settings, { Item, SvgStyle } from "../settings";
+import Settings, {
+    GraphicMediaAspectRatio,
+    GridGraphicType,
+    GridMediaAlignment,
+    GridStyle,
+    Item,
+    SvgStyle,
+} from "../settings";
+import {
+    DEFAULT_GRID_STYLE,
+    getDefaultMediaAlignment,
+    normalizeGraphicType,
+    normalizeMediaAlignment,
+} from "../normalizers";
 import ItemEditor from "./item-editor";
 import {
     Address,
@@ -50,6 +63,7 @@ export default function AdminWidget({
     preservedStateAcrossRerender,
     theme,
 }: AdminWidgetProps): JSX.Element {
+    const initialStyle: GridStyle = settings.style || DEFAULT_GRID_STYLE;
     const dummyDescription: Record<string, unknown> = {
         type: "doc",
         content: [
@@ -120,6 +134,37 @@ export default function AdminWidget({
     );
     const [svgInline, setSvgInline] = useState(settings.svgInline || false);
     const [editingSvgStyle, setEditingSvgStyle] = useState(false);
+    const [style, setStyle] = useState<GridStyle>(initialStyle);
+    const [graphicType, setGraphicType] = useState<GridGraphicType>(
+        normalizeGraphicType(initialStyle, settings.graphicType || "media"),
+    );
+    const [graphicMediaAspectRatio, setGraphicMediaAspectRatio] =
+        useState<GraphicMediaAspectRatio>(
+            settings.graphicMediaAspectRatio ||
+                (settings.style === "mediacard" ? "16/9" : "1/1"),
+        );
+    const [mediaAlignment, setMediaAlignment] = useState<GridMediaAlignment>(
+        normalizeMediaAlignment(
+            initialStyle,
+            settings.mediaAlignment || getDefaultMediaAlignment(initialStyle),
+        ),
+    );
+
+    useEffect(() => {
+        const normalizedGraphicType = normalizeGraphicType(style, graphicType);
+        const normalizedMediaAlignment = normalizeMediaAlignment(
+            style,
+            mediaAlignment,
+        );
+
+        if (normalizedGraphicType !== graphicType) {
+            setGraphicType(normalizedGraphicType);
+        }
+
+        if (normalizedMediaAlignment !== mediaAlignment) {
+            setMediaAlignment(normalizedMediaAlignment);
+        }
+    }, [style, graphicType, mediaAlignment]);
 
     const onSettingsChanged = () =>
         onChange({
@@ -136,6 +181,10 @@ export default function AdminWidget({
             columns,
             svgStyle,
             svgInline,
+            style,
+            graphicType,
+            graphicMediaAspectRatio,
+            mediaAlignment,
         });
 
     useEffect(() => {
@@ -154,11 +203,16 @@ export default function AdminWidget({
         columns,
         svgStyle,
         svgInline,
+        style,
+        graphicType,
+        graphicMediaAspectRatio,
+        mediaAlignment,
     ]);
 
     const onItemChange = (newItemData: Item) => {
-        items[itemBeingEditedIndex] = newItemData;
-        setItems([...items]);
+        const newItems = [...items];
+        newItems[itemBeingEditedIndex] = newItemData;
+        setItems(newItems);
         setItemBeingEditedIndex(-1);
         hideActionButtons(false, {});
     };
@@ -193,6 +247,8 @@ export default function AdminWidget({
                 profile={profile}
                 address={address}
                 svgStyle={svgStyle}
+                graphicType={graphicType}
+                style={style}
             />
         );
     }
@@ -287,7 +343,18 @@ export default function AdminWidget({
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Design" value="design">
                 <Select
-                    title="Items alignment"
+                    title="Style"
+                    value={style}
+                    options={[
+                        { label: "Default", value: "default" },
+                        { label: "Testimonial", value: "testimonial" },
+                        { label: "Feature grid", value: "featuregrid" },
+                        { label: "Media card", value: "mediacard" },
+                    ]}
+                    onChange={(value: GridStyle) => setStyle(value)}
+                />
+                <Select
+                    title="Item text alignment"
                     value={itemsAlignment}
                     options={[
                         { label: "Left", value: "left" },
@@ -295,6 +362,74 @@ export default function AdminWidget({
                     ]}
                     onChange={(value: Alignment) => setItemsAlignment(value)}
                 />
+                {style !== "mediacard" && (
+                    <div className="flex flex-col gap-4 mb-4">
+                        {(style === "default" || style === "featuregrid") && (
+                            <Select
+                                title="Graphic type"
+                                value={graphicType}
+                                options={[
+                                    { label: "Media", value: "media" },
+                                    { label: "SVG", value: "svg" },
+                                ]}
+                                onChange={(value: GridGraphicType) =>
+                                    setGraphicType(value)
+                                }
+                            />
+                        )}
+                        {(graphicType === "media" ||
+                            style === "testimonial" ||
+                            style === "featuregrid") && (
+                            <Select
+                                title="Media alignment"
+                                value={mediaAlignment}
+                                options={
+                                    style === "default"
+                                        ? [
+                                              { label: "Top", value: "top" },
+                                              {
+                                                  label: "Bottom",
+                                                  value: "bottom",
+                                              },
+                                          ]
+                                        : [
+                                              { label: "Left", value: "left" },
+                                              {
+                                                  label: "Center",
+                                                  value: "center",
+                                              },
+                                              {
+                                                  label: "Right",
+                                                  value: "right",
+                                              },
+                                          ]
+                                }
+                                onChange={(value: GridMediaAlignment) =>
+                                    setMediaAlignment(value)
+                                }
+                            />
+                        )}
+                    </div>
+                )}
+                {((graphicType === "media" &&
+                    (style === "default" || style === "featuregrid")) ||
+                    style === "mediacard") && (
+                    <Select
+                        title="Media aspect ratio"
+                        value={graphicMediaAspectRatio}
+                        options={[
+                            { label: "Auto", value: "auto" },
+                            { label: "16:9", value: "16/9" },
+                            { label: "4:3", value: "4/3" },
+                            { label: "1:1", value: "1/1" },
+                            { label: "3:4", value: "3/4" },
+                            { label: "9:16", value: "9/16" },
+                        ]}
+                        onChange={(value: GraphicMediaAspectRatio) =>
+                            setGraphicMediaAspectRatio(value)
+                        }
+                    />
+                )}
                 <PageBuilderSlider
                     title="Columns"
                     value={columns}
@@ -313,33 +448,39 @@ export default function AdminWidget({
                     }
                     onChange={setVerticalPadding}
                 />
-                <div className="flex justify-between mt-2">
-                    <div className="flex grow items-center gap-1">
-                        <p>Icon inline</p>
-                        <Tooltip title="The icon (if used) will show inline with the item header">
-                            <HelpCircle className="w-4 h-4" />
-                        </Tooltip>
+                {graphicType === "svg" && style === "default" && (
+                    <div className="flex justify-between mt-2">
+                        <div className="flex grow items-center gap-1">
+                            <p>Icon inline</p>
+                            <Tooltip title="The icon (if used) will show inline with the item header">
+                                <HelpCircle className="w-4 h-4" />
+                            </Tooltip>
+                        </div>
+                        <Checkbox
+                            checked={svgInline}
+                            onChange={(value: boolean) => setSvgInline(value)}
+                        />
                     </div>
-                    <Checkbox
-                        checked={svgInline}
-                        onChange={(value: boolean) => setSvgInline(value)}
-                    />
-                </div>
-                <div className="flex justify-between mt-2">
-                    <div className="flex grow items-center gap-1">
-                        <p>Icon style</p>
-                    </div>
-                    <Button2
-                        size="icon"
-                        variant="outline"
-                        onClick={() => {
-                            setEditingSvgStyle(true);
-                            hideActionButtons(true, {});
-                        }}
-                    >
-                        <WandSparkles className="w-4 h-4" />
-                    </Button2>
-                </div>
+                )}
+                {graphicType === "svg" &&
+                    style !== "mediacard" &&
+                    style !== "testimonial" && (
+                        <div className="flex justify-between mt-2">
+                            <div className="flex grow items-center gap-1">
+                                <p>Icon style</p>
+                            </div>
+                            <Button2
+                                size="icon"
+                                variant="outline"
+                                onClick={() => {
+                                    setEditingSvgStyle(true);
+                                    hideActionButtons(true, {});
+                                }}
+                            >
+                                <WandSparkles className="w-4 h-4" />
+                            </Button2>
+                        </div>
+                    )}
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Advanced" value="advanced">
                 <CssIdField value={cssId} onChange={setCssId} />

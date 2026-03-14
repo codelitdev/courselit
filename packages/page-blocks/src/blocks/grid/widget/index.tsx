@@ -1,6 +1,12 @@
 import React from "react";
 import { WidgetProps } from "@courselit/common-models";
-import Settings from "../settings";
+import Settings, { GraphicMediaAspectRatio, GridStyle } from "../settings";
+import {
+    DEFAULT_GRID_STYLE,
+    getDefaultMediaAlignment,
+    normalizeGraphicType,
+    normalizeMediaAlignment,
+} from "../normalizers";
 import { Link } from "@courselit/components-library";
 import { TextRenderer } from "../../../components";
 import Itemm from "./item";
@@ -33,9 +39,26 @@ export default function Widget({
         verticalPadding,
         svgInline,
         svgStyle,
+        style,
+        graphicType = "media",
+        mediaAlignment,
+        graphicMediaAspectRatio,
     },
     state: { theme },
 }: WidgetProps<Settings>): JSX.Element {
+    const resolvedStyle: GridStyle = style || DEFAULT_GRID_STYLE;
+    const resolvedGraphicType = normalizeGraphicType(
+        resolvedStyle,
+        graphicType,
+    );
+    const resolvedMediaAlignment = normalizeMediaAlignment(
+        resolvedStyle,
+        mediaAlignment || getDefaultMediaAlignment(resolvedStyle),
+    );
+    const resolvedGraphicMediaAspectRatio: GraphicMediaAspectRatio =
+        graphicMediaAspectRatio ||
+        (resolvedStyle === "mediacard" ? "16/9" : "1/1");
+
     const overiddenTheme: ThemeStyle = JSON.parse(JSON.stringify(theme.theme));
     overiddenTheme.structure.page.width =
         maxWidth || theme.theme.structure.page.width;
@@ -93,6 +116,14 @@ export default function Widget({
                                             theme={overiddenTheme}
                                             svgStyle={svgStyle}
                                             svgInline={svgInline}
+                                            style={resolvedStyle}
+                                            graphicType={resolvedGraphicType}
+                                            graphicMediaAspectRatio={
+                                                resolvedGraphicMediaAspectRatio
+                                            }
+                                            mediaAlignment={
+                                                resolvedMediaAlignment
+                                            }
                                         />
                                     </div>
                                 </div>
