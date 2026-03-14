@@ -44,7 +44,7 @@ export class EmailChannel implements NotificationChannel {
             to: [payload.recipient.email],
             from: getEmailFrom({
                 name: payload.domain.settings?.title || payload.domain.name,
-                email: process.env.EMAIL_FROM || payload.domain.email,
+                email: process.env.EMAIL_FROM || "",
             }),
             subject: notificationDetails.message,
             body: `

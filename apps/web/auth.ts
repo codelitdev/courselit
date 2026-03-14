@@ -2,10 +2,10 @@ import { APIError, betterAuth } from "better-auth";
 import { customSession, emailOTP } from "better-auth/plugins";
 import { MongoClient } from "mongodb";
 import DomainModel, { Domain } from "@models/Domain";
+import { getEmailFrom } from "@courselit/utils";
 import { addMailJob } from "@/services/queue";
 import pug from "pug";
 import MagicCodeEmailTemplate from "@/templates/magic-code-email";
-import { generateEmailFrom } from "@/lib/utils";
 import { responses } from "@/config/strings";
 import { mongodbAdapter } from "@/ba-multitenant-adapter";
 import { updateUserAfterCreationViaAuth } from "./graphql/users/logic";
@@ -52,15 +52,12 @@ const config: any = {
                     to: [email],
                     subject: `${responses.sign_in_mail_prefix} ${ctx!.headers?.get("host")}`,
                     body: emailBody,
-                    from: generateEmailFrom({
+                    from: getEmailFrom({
                         name:
                             ctx!.headers?.get("domaintitle") ||
                             ctx!.headers?.get("domain") ||
                             "",
-                        email:
-                            process.env.EMAIL_FROM ||
-                            ctx!.headers?.get("domainemail") ||
-                            "",
+                        email: process.env.EMAIL_FROM || "",
                     }),
                 });
             },

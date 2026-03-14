@@ -238,7 +238,7 @@ export const inviteCustomer = async (
             body: emailBody,
             from: getEmailFrom({
                 name: ctx.subdomain?.settings?.title || ctx.subdomain.name,
-                email: process.env.EMAIL_FROM || ctx.subdomain.email,
+                email: process.env.EMAIL_FROM || "",
             }),
         });
     } catch (error) {
