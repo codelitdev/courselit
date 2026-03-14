@@ -15,7 +15,7 @@ import EmailDelivery from "../model/email-delivery";
 import * as queries from "../queries";
 import * as mail from "../../mail";
 import { AdminSequence, InternalUser } from "@courselit/common-logic";
-import { jwtUtils } from "@courselit/utils";
+import { getEmailFrom, jwtUtils } from "@courselit/utils";
 import { getUnsubLink } from "../../utils/get-unsub-link";
 import { getSiteUrl } from "../../utils/get-site-url";
 import { sequenceBounceLimit } from "../../constants";
@@ -77,6 +77,9 @@ jest.mock("liquidjs", () => {
 const mockedSendMail = mail.sendMail as jest.MockedFunction<
     typeof mail.sendMail
 >;
+const mockedGetEmailFrom = getEmailFrom as jest.MockedFunction<
+    typeof getEmailFrom
+>;
 const mockedJwtUtils = jwtUtils as jest.Mocked<typeof jwtUtils>;
 const mockedGetUnsubLink = getUnsubLink as jest.MockedFunction<
     typeof getUnsubLink
@@ -100,6 +103,7 @@ describe("processOngoingSequence", () => {
         process.env.PROTOCOL = "https";
         process.env.DOMAIN = "test.com";
         process.env.NODE_ENV = "test";
+        process.env.EMAIL_FROM = "verified-sender@example.com";
 
         // Create test domain
         testDomain = await (DomainModel.create as any)({
@@ -264,6 +268,9 @@ describe("processOngoingSequence", () => {
         mockedGetSiteUrl.mockReturnValue("https://test.com");
         mockedGetUnsubLink.mockReturnValue(
             "https://test.com/api/unsubscribe/unsub-token-123",
+        );
+        mockedGetEmailFrom.mockImplementation(
+            ({ name, email }) => `${name} <${email}>`,
         );
         mockedJwtUtils.generateToken = jest.fn().mockReturnValue("test-token");
         // renderEmailToHtml is not mocked - we test the real email formatting
@@ -466,7 +473,9 @@ describe("processOngoingSequence", () => {
             // Verify email was sent
             expect(mockedSendMail).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    from: expect.stringContaining("queue-creator@example.com"),
+                    from: expect.stringContaining(
+                        "verified-sender@example.com",
+                    ),
                     to: "queue-user@example.com",
                     subject: "First Email",
                     html: expect.any(String),

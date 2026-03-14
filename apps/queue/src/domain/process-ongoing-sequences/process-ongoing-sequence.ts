@@ -19,7 +19,7 @@ import { AdminSequence, InternalUser } from "@courselit/common-logic";
 import { Email as EmailType, renderEmailToHtml } from "@courselit/email-editor";
 import { getUnsubLink } from "@/utils/get-unsub-link";
 import { getSiteUrl } from "@/utils/get-site-url";
-import { jwtUtils } from "@courselit/utils";
+import { getEmailFrom, jwtUtils } from "@courselit/utils";
 import { JSDOM } from "jsdom";
 import { DomainDocument } from "@/domain/model/domain";
 import { Liquid } from "liquidjs";
@@ -150,9 +150,10 @@ async function attemptMailSending({
     email: Email;
     domain: DomainDocument;
 }) {
-    const from = sequence.from
-        ? `${sequence.from.name} <${creator.email}>`
-        : `${creator.email} <${creator.email}>`;
+    const from = getEmailFrom({
+        name: sequence.from?.name || creator.name || creator.email,
+        email: process.env.EMAIL_FROM || "",
+    });
     const to = user.email;
     const subject = email.subject;
     const unsubscribeLink = getUnsubLink(domain, user.unsubscribeToken);

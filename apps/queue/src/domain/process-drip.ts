@@ -5,6 +5,7 @@ import { Liquid } from "liquidjs";
 import { getDomain, getMemberships } from "./queries";
 import { Constants } from "@courselit/common-models";
 import { InternalCourse, InternalUser } from "@courselit/common-logic";
+import { getEmailFrom } from "@courselit/utils";
 import { FilterQuery, UpdateQuery } from "mongoose";
 import { renderEmailToHtml } from "@courselit/email-editor";
 import { getSiteUrl } from "../utils/get-site-url";
@@ -146,9 +147,10 @@ export async function processDrip() {
                                     firstGroupWithDripEmailSet.drip.email
                                         .subject,
                                 body: content,
-                                from: `${creator?.name || creator?.email} <${
-                                    creator?.email
-                                }>`,
+                                from: getEmailFrom({
+                                    name: creator?.name || creator?.email || "",
+                                    email: process.env.EMAIL_FROM || "",
+                                }),
                             });
                         }
                     }
