@@ -805,7 +805,7 @@ export const updateGroup = async ({
     }
 
     if (drip) {
-        if (drip.status) {
+        if (typeof drip.status === "boolean") {
             $set["groups.$.drip.status"] = drip.status;
         }
         if (drip.type) {
