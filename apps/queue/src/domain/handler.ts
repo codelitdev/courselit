@@ -6,6 +6,7 @@ export async function addMailJob({
     subject,
     body,
     from,
+    domainId,
     headers,
 }: MailJob) {
     for (const recipient of to) {
@@ -14,6 +15,7 @@ export async function addMailJob({
             subject,
             body,
             from,
+            domainId,
             headers,
         });
     }

@@ -68,7 +68,7 @@ import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
 import { deleteMedia, sealMedia } from "@/services/medialit";
 import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
 import InvoiceModel from "@models/Invoice";
-import { InternalMembership } from "@courselit/common-logic";
+import { InternalMembership } from "@courselit/orm-models";
 import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
 import { recordActivity } from "@/lib/record-activity";
 

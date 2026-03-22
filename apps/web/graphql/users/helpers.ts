@@ -8,7 +8,7 @@ import {
     InternalUser,
     InternalMembership,
     InternalCourse,
-} from "@courselit/common-logic";
+} from "@courselit/orm-models";
 import { Constants, UIConstants } from "@courselit/common-models";
 import CourseModel from "@models/Course";
 import PageModel from "@models/Page";

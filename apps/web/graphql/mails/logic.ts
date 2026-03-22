@@ -25,7 +25,7 @@ import MailRequestStatusModel, {
 } from "@models/MailRequestStatus";
 import { getPlans } from "../paymentplans/logic";
 import { activateMembership } from "@/app/api/payment/helpers";
-import { AdminSequence, InternalCourse } from "@courselit/common-logic";
+import { AdminSequence, InternalCourse } from "@courselit/orm-models";
 import { User } from "@courselit/common-models";
 import EmailDeliveryModel from "@models/EmailDelivery";
 import EmailEventModel from "@models/EmailEvent";

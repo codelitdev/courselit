@@ -5,6 +5,7 @@ export const MailJob = z.object({
     from: z.string(),
     subject: z.string(),
     body: z.string(),
+    domainId: z.string(),
     headers: z.record(z.string()).optional(),
 });
 

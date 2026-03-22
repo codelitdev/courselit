@@ -2,7 +2,7 @@
  * Business logic for managing courses.
  */
 import CourseModel from "@/models/Course";
-import { InternalCourse } from "@courselit/common-logic";
+import { InternalCourse } from "@courselit/orm-models";
 import UserModel from "@/models/User";
 import { Media, User } from "@courselit/common-models";
 import { responses } from "@/config/strings";
@@ -795,6 +795,24 @@ export const updateGroup = async ({
     lessonsOrder,
     drip,
     ctx,
+}: {
+    id: string;
+    courseId: string;
+    name?: string;
+    rank?: number;
+    collapsed?: boolean;
+    lessonsOrder?: string[];
+    drip?: {
+        type?: string;
+        status?: boolean;
+        delayInMillis?: number;
+        dateInUTC?: number;
+        email?: {
+            content: string;
+            subject: string;
+        };
+    };
+    ctx: GQLContext;
 }) => {
     const course = await getCourseOrThrow(undefined, ctx, courseId);
 
@@ -838,9 +856,9 @@ export const updateGroup = async ({
             $set["groups.$.drip.type"] = drip.type;
         }
         if (drip.type === Constants.dripType[0]) {
-            if (drip.delayInMillis) {
+            if (typeof drip.delayInMillis === "number") {
                 $set["groups.$.drip.delayInMillis"] =
-                    drip.delayInMillis * 86400000;
+                    drip.delayInMillis * constants.relativeDripUnitInMillis;
             }
             $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
         }

@@ -18,7 +18,7 @@ import {
     InternalCourse,
     InternalUser,
     UserSegment,
-} from "@courselit/common-logic";
+} from "@courselit/orm-models";
 import { Course, UIConstants, User } from "@courselit/common-models";
 import mongoose from "mongoose";
 import {
@@ -49,10 +49,8 @@ import {
     createInternalPaymentPlan,
     getInternalPaymentPlan,
 } from "../paymentplans/logic";
-import {
-    convertFiltersToDBConditions,
-    InternalMembership,
-} from "@courselit/common-logic";
+import { convertFiltersToDBConditions } from "@courselit/common-logic";
+import { InternalMembership } from "@courselit/orm-models";
 import CertificateModel from "@models/Certificate";
 import CertificateTemplateModel, {
     CertificateTemplate,

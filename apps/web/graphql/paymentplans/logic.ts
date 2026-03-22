@@ -12,7 +12,7 @@ import constants from "@config/constants";
 import { checkPermission } from "@courselit/utils";
 import PaymentPlanModel, { InternalPaymentPlan } from "@models/PaymentPlan";
 import { Domain } from "@models/Domain";
-import { InternalCourse } from "@courselit/common-logic";
+import { InternalCourse } from "@courselit/orm-models";
 import GQLContext from "@models/GQLContext";
 import {
     checkDuplicatePlan,

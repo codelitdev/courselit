@@ -14,7 +14,7 @@ import UserModel from "../model/user";
 import EmailDelivery from "../model/email-delivery";
 import * as queries from "../queries";
 import * as mail from "../../mail";
-import { InternalUser } from "@courselit/common-logic";
+import { InternalUser } from "@courselit/orm-models";
 import { getEmailFrom, jwtUtils } from "@courselit/utils";
 import { getUnsubLink } from "../../utils/get-unsub-link";
 import { getSiteUrl } from "../../utils/get-site-url";

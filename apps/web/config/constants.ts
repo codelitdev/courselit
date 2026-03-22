@@ -103,6 +103,9 @@ export default {
 
     // durations
     analyticsDurations: ["1d", "7d", "30d", "90d", "1y", "lifetime"],
+    relativeDripUnitInMillis: process.env.NEXT_PUBLIC_RELATIVE_DRIP_UNIT_MS
+        ? +process.env.NEXT_PUBLIC_RELATIVE_DRIP_UNIT_MS
+        : 86_400_000,
 
     // mails
     minMailingAddressLength: 10,

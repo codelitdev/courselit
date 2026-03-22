@@ -11,7 +11,7 @@ import { responses } from "@config/strings";
 import { addMailJob } from "@/services/queue";
 import { EmailBlock } from "@courselit/email-editor";
 import UserModel from "@models/User";
-import { InternalCourse } from "@courselit/common-logic";
+import { InternalCourse } from "@courselit/orm-models";
 
 export function areAllEmailIdsValid(
     emailsOrder: string[],

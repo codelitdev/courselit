@@ -45,7 +45,7 @@ import DashboardContent from "@components/admin/dashboard-content";
 import { AddressContext } from "@components/contexts";
 import useProduct from "@/hooks/use-product";
 import { truncate } from "@ui-lib/utils";
-import { Constants, Lesson, UIConstants } from "@courselit/common-models";
+import { Constants, UIConstants } from "@courselit/common-models";
 import { DragAndDrop, useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import {
@@ -58,6 +58,9 @@ const { permissions } = UIConstants;
 
 export default function ContentPage() {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [sectionMenuOpenId, setSectionMenuOpenId] = useState<string | null>(
+        null,
+    );
     const [itemToDelete, setItemToDelete] = useState<Record<
         string,
         string
@@ -82,9 +85,11 @@ export default function ContentPage() {
     const { toast } = useToast();
 
     const handleDelete = async () => {
+        const item = itemToDelete;
         setDeleteDialogOpen(false);
         setItemToDelete(null);
-        await removeGroup(itemToDelete?.id!, product?.courseId!);
+        setSectionMenuOpenId(null);
+        await removeGroup(item?.id!, product?.courseId!);
     };
 
     const toggleSectionCollapse = (sectionId: string) => {
@@ -244,7 +249,15 @@ export default function ContentPage() {
                                     )}
                                 </div>
                             </div>
-                            <DropdownMenu>
+                            <DropdownMenu
+                                modal={false}
+                                open={sectionMenuOpenId === section.id}
+                                onOpenChange={(open) =>
+                                    setSectionMenuOpenId(
+                                        open ? section.id : null,
+                                    )
+                                }
+                            >
                                 <DropdownMenuTrigger asChild>
                                     <Button
                                         variant="ghost"
@@ -282,6 +295,7 @@ export default function ContentPage() {
                                             <DropdownMenuSeparator />
                                             <DropdownMenuItem
                                                 onClick={() => {
+                                                    setSectionMenuOpenId(null);
                                                     setItemToDelete({
                                                         type: "section",
                                                         title: section.name,
@@ -316,7 +330,7 @@ export default function ContentPage() {
                                 <DragAndDrop
                                     items={product
                                         ?.lessons!.filter(
-                                            (lesson: Lesson) =>
+                                            (lesson) =>
                                                 lesson.groupId === section.id,
                                         )
                                         .sort(
@@ -328,7 +342,7 @@ export default function ContentPage() {
                                                     section.lessonsOrder as any[]
                                                 )?.indexOf(b.lessonId),
                                         )
-                                        .map((lesson: Lesson) => ({
+                                        .map((lesson) => ({
                                             id: lesson.lessonId,
                                             courseId: product?.courseId,
                                             groupId: lesson.groupId,
@@ -436,8 +450,18 @@ export default function ContentPage() {
                 )}
             </ScrollArea>
 
-            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                <DialogContent>
+            <Dialog
+                open={deleteDialogOpen}
+                onOpenChange={(open) => {
+                    setDeleteDialogOpen(open);
+                    if (!open) {
+                        setItemToDelete(null);
+                    }
+                }}
+            >
+                <DialogContent
+                    onCloseAutoFocus={(event) => event.preventDefault()}
+                >
                     <DialogHeader>
                         <DialogTitle className="text-xl font-semibold">
                             Confirm Deletion

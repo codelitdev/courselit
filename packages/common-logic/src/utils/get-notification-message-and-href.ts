@@ -1,6 +1,6 @@
 import { ActivityType, Constants } from "@courselit/common-models";
 import { truncate } from "@courselit/utils";
-import { createNotificationEntityResolver } from "../notification-entity-resolver";
+import { createNotificationEntityResolver } from "./notification-entity-resolver";
 
 export interface NotificationReplyEntity {
     replyId: string;

@@ -7,7 +7,7 @@ import { slugify } from "@courselit/utils";
 import { addGroup } from "./logic";
 import { Constants, Course, Progress, User } from "@courselit/common-models";
 import { getPlans } from "../paymentplans/logic";
-import { InternalCourse } from "@courselit/common-logic";
+import { InternalCourse } from "@courselit/orm-models";
 import { generateUniquePageId, isDuplicateKeyError } from "../pages/helpers";
 
 export const validateCourse = async (

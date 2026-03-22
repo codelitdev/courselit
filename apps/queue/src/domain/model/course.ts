@@ -1,4 +1,4 @@
 import mongoose from "mongoose";
-import { CourseSchema } from "@courselit/common-logic";
+import { CourseSchema } from "@courselit/orm-models";
 
-export default mongoose.models.Domain || mongoose.model("Course", CourseSchema);
+export default mongoose.models.Course || mongoose.model("Course", CourseSchema);

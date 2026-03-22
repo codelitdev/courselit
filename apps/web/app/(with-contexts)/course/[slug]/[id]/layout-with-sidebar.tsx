@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode, useContext } from "react";
+import constants from "@/config/constants";
 import {
     formattedLocaleDate,
     isEnrolled,
@@ -332,19 +333,12 @@ export function generateSideBarItems(
         },
     ];
 
-    let lastGroupDripDateInMillis = Date.now();
+    let lastGroupDripDateInMillis = getRelativeDripAnchorMillis(
+        course,
+        profile,
+    );
 
     for (const group of course.groups) {
-        // Update lastGroupDripDateInMillis for relative drip types
-        if (
-            group.drip &&
-            group.drip.status &&
-            group.drip.type ===
-                Constants.dripType[0].split("-")[0].toUpperCase()
-        ) {
-            lastGroupDripDateInMillis += group?.drip?.delayInMillis ?? 0;
-        }
-
         const groupItem: SidebarItem = {
             title: group.name,
             href: "#",
@@ -391,6 +385,18 @@ export function generateSideBarItems(
         }
 
         items.push(groupItem);
+
+        // Advance the cumulative relative drip cursor after computing the
+        // current group's label so the current delay is counted exactly once.
+        if (
+            group.drip &&
+            group.drip.status &&
+            group.drip.type ===
+                Constants.dripType[0].split("-")[0].toUpperCase() &&
+            !isGroupAccessibleToUser(course, profile as Profile, group)
+        ) {
+            lastGroupDripDateInMillis += group?.drip?.delayInMillis ?? 0;
+        }
     }
 
     return items;
@@ -407,6 +413,13 @@ function getDripLabel({
     profile: Profile;
     lastGroupDripDateInMillis: number;
 }): { text: string; description: string } | undefined {
+    if (
+        group.drip?.status &&
+        isGroupAccessibleToUser(course, profile as Profile, group)
+    ) {
+        return undefined;
+    }
+
     if (group.drip && group.drip.status) {
         let availableLabel = "";
         let text = "";
@@ -417,7 +430,8 @@ function getDripLabel({
             const delayInMillis =
                 (group?.drip?.delayInMillis ?? 0) + lastGroupDripDateInMillis;
             const daysUntilAvailable = Math.ceil(
-                (delayInMillis - Date.now()) / 86400000,
+                (delayInMillis - Date.now()) /
+                    constants.relativeDripUnitInMillis,
             );
             availableLabel =
                 daysUntilAvailable &&
@@ -448,6 +462,48 @@ function getDripLabel({
     return undefined;
 }
 
+function getRelativeDripAnchorMillis(
+    course: CourseFrontend,
+    profile: Profile,
+): number {
+    const purchase = profile.purchases?.find(
+        (purchase) => purchase.courseId === course.courseId,
+    );
+
+    if (purchase?.lastDripAt) {
+        const lastDripAt = normalizeTimestamp(purchase.lastDripAt);
+        if (!Number.isNaN(lastDripAt)) {
+            return lastDripAt;
+        }
+    }
+
+    if (purchase?.createdAt) {
+        const createdAt = normalizeTimestamp(purchase.createdAt);
+        if (!Number.isNaN(createdAt)) {
+            return createdAt;
+        }
+    }
+
+    return Date.now();
+}
+
+function normalizeTimestamp(value: string | number | Date): number {
+    if (typeof value === "number") {
+        return value;
+    }
+
+    if (value instanceof Date) {
+        return value.getTime();
+    }
+
+    const numericValue = Number(value);
+    if (!Number.isNaN(numericValue)) {
+        return numericValue;
+    }
+
+    return new Date(value).getTime();
+}
+
 export function isGroupAccessibleToUser(
     course: CourseFrontend,
     profile: Profile,
@@ -456,11 +512,18 @@ export function isGroupAccessibleToUser(
     if (!group.drip || !group.drip.status) return true;
 
     if (!Array.isArray(profile.purchases)) return false;
+    const groupId = getGroupId(group);
+    if (!groupId) return false;
 
     for (const purchase of profile.purchases) {
         if (purchase.courseId === course.courseId) {
             if (Array.isArray(purchase.accessibleGroups)) {
-                if (purchase.accessibleGroups.includes(group.id)) {
+                const accessibleGroupIds = purchase.accessibleGroups
+                    .map((id) =>
+                        id === null || id === undefined ? "" : String(id),
+                    )
+                    .filter(Boolean);
+                if (accessibleGroupIds.includes(groupId)) {
                     return true;
                 }
             }
@@ -468,4 +531,15 @@ export function isGroupAccessibleToUser(
     }
 
     return false;
+}
+
+function getGroupId(group: GroupWithLessons): string | undefined {
+    const value =
+        (group as GroupWithLessons & { _id?: unknown }).id ??
+        (group as GroupWithLessons & { _id?: unknown })._id;
+    if (value === null || value === undefined) {
+        return undefined;
+    }
+
+    return String(value);
 }
