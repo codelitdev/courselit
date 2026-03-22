@@ -70,11 +70,19 @@ describe("Course Slug Tests", () => {
     });
 
     afterEach(async () => {
+        if (!domain?._id) {
+            return;
+        }
+
         await CourseModel.deleteMany({ domain: domain._id });
         await PageModel.deleteMany({ domain: domain._id });
     });
 
     afterAll(async () => {
+        if (!domain?._id) {
+            return;
+        }
+
         await CourseModel.deleteMany({ domain: domain._id });
         await PageModel.deleteMany({ domain: domain._id });
         await UserModel.deleteMany({ domain: domain._id });

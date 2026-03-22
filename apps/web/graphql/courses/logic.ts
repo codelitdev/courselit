@@ -209,6 +209,22 @@ export const updateCourse = async (
 ) => {
     let course = await getCourseOrThrow(undefined, ctx, courseData.id);
 
+    if (
+        typeof courseData.title === "string" &&
+        courseData.title.trim() &&
+        courseData.title !== course.title
+    ) {
+        const conflictingCourse = await CourseModel.findOne({
+            domain: ctx.subdomain._id,
+            title: courseData.title,
+            courseId: { $ne: course.courseId },
+        }).select("_id");
+
+        if (conflictingCourse) {
+            throw new Error(responses.page_id_already_exists);
+        }
+    }
+
     const mediaIdsMarkedForDeletion: string[] = [];
     if (Object.prototype.hasOwnProperty.call(courseData, "description")) {
         const nextDescription = (courseData.description ?? "") as string;
@@ -260,6 +276,16 @@ export const updateCourse = async (
     if (courseData.slug) {
         const newSlug = validateSlug(courseData.slug);
         if (newSlug !== course.slug) {
+            const conflictingCourse = await CourseModel.findOne({
+                domain: ctx.subdomain._id,
+                slug: newSlug,
+                courseId: { $ne: course.courseId },
+            }).select("_id");
+
+            if (conflictingCourse) {
+                throw new Error(responses.page_id_already_exists);
+            }
+
             try {
                 await PageModel.updateOne(
                     {

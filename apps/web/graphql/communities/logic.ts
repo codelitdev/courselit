@@ -311,6 +311,17 @@ export async function updateCommunity({
     if (slug) {
         const newSlug = validateSlug(slug);
         if (newSlug !== community.slug) {
+            const conflictingCommunity =
+                await CommunityModel.findOne<InternalCommunity>({
+                    domain: ctx.subdomain._id,
+                    slug: newSlug,
+                    communityId: { $ne: community.communityId },
+                }).select("_id");
+
+            if (conflictingCommunity) {
+                throw new Error(responses.page_id_already_exists);
+            }
+
             // Page-first atomicity: update Page record first (hard unique constraint)
             try {
                 await PageModel.updateOne(

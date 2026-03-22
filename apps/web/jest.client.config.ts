@@ -25,8 +25,6 @@ const config = {
     //     '!**/jest.config.ts',
     //     '!**/setupTests.ts',
     // ],
-    globalSetup: "<rootDir>/jest.setup.ts",
-    globalTeardown: "<rootDir>/jest.teardown.ts",
     moduleNameMapper: {
         // Ensure a single React instance is used in tests to avoid
         // "A React Element from an older version of React was rendered" errors
