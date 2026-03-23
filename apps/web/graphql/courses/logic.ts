@@ -906,6 +906,65 @@ export const updateGroup = async ({
     );
 };
 
+const GROUP_RANK_GAP = 1000;
+
+export const reorderGroups = async ({
+    courseId,
+    groupIds,
+    ctx,
+}: {
+    courseId: string;
+    groupIds: string[];
+    ctx: GQLContext;
+}) => {
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
+    const existingGroupIds = (course.groups ?? []).map((group) => group.id);
+
+    if (existingGroupIds.length !== groupIds.length) {
+        throw new Error(responses.invalid_input);
+    }
+
+    if (new Set(groupIds).size !== groupIds.length) {
+        throw new Error(responses.invalid_input);
+    }
+
+    const existingIdSet = new Set(existingGroupIds);
+    if (!groupIds.every((groupId) => existingIdSet.has(groupId))) {
+        throw new Error(responses.invalid_input);
+    }
+
+    const rankByGroupId = new Map<string, number>();
+    groupIds.forEach((groupId, index) => {
+        rankByGroupId.set(groupId, (index + 1) * GROUP_RANK_GAP);
+    });
+
+    const updatedGroups = (course.groups ?? []).map((group) => {
+        const plainGroup =
+            typeof (group as any).toObject === "function"
+                ? (group as any).toObject()
+                : { ...group };
+
+        return {
+            ...plainGroup,
+            rank: rankByGroupId.get(group.id) ?? group.rank,
+        };
+    });
+
+    await CourseModel.updateOne(
+        {
+            domain: ctx.subdomain._id,
+            courseId: course.courseId,
+        },
+        {
+            $set: {
+                groups: updatedGroups,
+            },
+        },
+    );
+
+    return await formatCourse(course.courseId, ctx);
+};
+
 export const getMembers = async ({
     ctx,
     courseId,

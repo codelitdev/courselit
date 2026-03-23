@@ -14,6 +14,7 @@ import {
     removeGroup,
     addGroup,
     updateGroup,
+    reorderGroups,
     updateCourseCertificateTemplate,
 } from "./logic";
 import Filter from "./models/filter";
@@ -124,6 +125,21 @@ export default {
                 drip,
                 ctx: context,
             }),
+    },
+    reorderGroups: {
+        type: types.courseType,
+        args: {
+            courseId: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+            groupIds: {
+                type: new GraphQLNonNull(
+                    new GraphQLList(new GraphQLNonNull(GraphQLString)),
+                ),
+            },
+        },
+        resolve: async (_: unknown, { courseId, groupIds }, context) =>
+            reorderGroups({ courseId, groupIds, ctx: context }),
     },
     updateCourseCertificateTemplate: {
         type: types.certificateTemplateType,

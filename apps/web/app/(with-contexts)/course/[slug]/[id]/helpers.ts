@@ -92,7 +92,9 @@ export const getProduct = async (
 export function formatCourse(
     post: Course & { lessons: Lesson[]; firstLesson: string; groups: Group[] },
 ): CourseFrontend {
-    for (const group of sortCourseGroups(post as Course)) {
+    const sortedGroups = sortCourseGroups(post as Course);
+
+    for (const group of sortedGroups) {
         (group as GroupWithLessons).lessons = post.lessons
             .filter((lesson: Lesson) => lesson.groupId === group.id)
             .sort(
@@ -111,7 +113,7 @@ export function formatCourse(
         slug: post.slug,
         cost: post.cost,
         courseId: post.courseId,
-        groups: post.groups as GroupWithLessons[],
+        groups: sortedGroups as GroupWithLessons[],
         tags: post.tags,
         firstLesson: post.firstLesson,
         paymentPlans: post.paymentPlans,
