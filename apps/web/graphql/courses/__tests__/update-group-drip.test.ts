@@ -2,6 +2,7 @@ import DomainModel from "@models/Domain";
 import UserModel from "@models/User";
 import CourseModel from "@models/Course";
 import constants from "@/config/constants";
+import { responses } from "@/config/strings";
 import { Constants } from "@courselit/common-models";
 import { updateGroup } from "../logic";
 
@@ -93,5 +94,52 @@ describe("updateGroup drip status updates", () => {
         expect(updatedCourse?.groups?.[0]?.drip?.delayInMillis).toBe(
             2 * constants.relativeDripUnitInMillis,
         );
+    });
+
+    it("rejects status-only drip updates when the group has no drip type yet", async () => {
+        const groupId = id("group-without-drip");
+        const course = await CourseModel.create({
+            domain: testDomain._id,
+            courseId: id("course-without-drip"),
+            title: id("course-title-without-drip"),
+            creatorId: adminUser.userId,
+            groups: [
+                {
+                    _id: groupId,
+                    name: "Group 1",
+                    rank: 1000,
+                    collapsed: true,
+                    lessonsOrder: [],
+                },
+            ],
+            lessons: [],
+            type: "course",
+            privacy: "unlisted",
+            costType: "free",
+            cost: 0,
+            slug: id("course-slug-without-drip"),
+        });
+
+        await expect(
+            updateGroup({
+                id: groupId,
+                courseId: course.courseId,
+                drip: {
+                    status: false,
+                },
+                ctx: {
+                    subdomain: testDomain,
+                    user: adminUser,
+                    address: "",
+                },
+            }),
+        ).rejects.toThrow(responses.invalid_input);
+
+        const updatedCourse = await CourseModel.findOne({
+            domain: testDomain._id,
+            courseId: course.courseId,
+        }).lean();
+
+        expect(updatedCourse?.groups?.[0]?.drip).toBeUndefined();
     });
 });

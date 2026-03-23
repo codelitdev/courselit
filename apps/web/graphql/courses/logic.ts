@@ -815,6 +815,9 @@ export const updateGroup = async ({
     ctx: GQLContext;
 }) => {
     const course = await getCourseOrThrow(undefined, ctx, courseId);
+    const currentGroup = course.groups?.find((group) => group.id === id);
+    const existingDripType = currentGroup?.drip?.type;
+    const effectiveDripType = drip?.type || existingDripType;
 
     const $set = {};
     if (name) {
@@ -849,20 +852,26 @@ export const updateGroup = async ({
     }
 
     if (drip) {
+        const hasDripUpdates = Object.keys(drip).some((key) => key !== "type");
+
+        if (!effectiveDripType && hasDripUpdates) {
+            throw new Error(responses.invalid_input);
+        }
+
         if (typeof drip.status === "boolean") {
             $set["groups.$.drip.status"] = drip.status;
         }
         if (drip.type) {
             $set["groups.$.drip.type"] = drip.type;
         }
-        if (drip.type === Constants.dripType[0]) {
+        if (effectiveDripType === Constants.dripType[0]) {
             if (typeof drip.delayInMillis === "number") {
                 $set["groups.$.drip.delayInMillis"] =
                     drip.delayInMillis * constants.relativeDripUnitInMillis;
             }
             $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
         }
-        if (drip.type === Constants.dripType[1]) {
+        if (effectiveDripType === Constants.dripType[1]) {
             $set["groups.$.drip.delayInMillis"] = null;
             if (drip.dateInUTC) {
                 $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
