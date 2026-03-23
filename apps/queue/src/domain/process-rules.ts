@@ -107,12 +107,15 @@ async function addBroadcastToOngoingSequence(sequence: AdminSequence) {
         `Adding ${allUsers.length} users to ongoing sequence`,
         JSON.stringify(query),
     );
-    logInfo("Subscribers Added", {
-        source: "processRules.addBroadcastToOngoingSequence",
-        domain_id: getDomainId(sequence.domain),
-        sequence_id: sequence.sequenceId,
-        subscribers_count: allUsers.length,
-    });
+    logInfo(
+        `${allUsers.length} subscribers added to ${sequence.type} ${sequence.sequenceId}`,
+        {
+            source: "processRules.addBroadcastToOngoingSequence",
+            domain_id: getDomainId(sequence.domain),
+            sequence_id: sequence.sequenceId,
+            subscribers_count: allUsers.length,
+        },
+    );
     const ongoingSequences = allUsers.map((user) => ({
         domain: sequence.domain,
         sequenceId: sequence.sequenceId,
