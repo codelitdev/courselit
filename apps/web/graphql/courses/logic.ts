@@ -2,7 +2,7 @@
  * Business logic for managing courses.
  */
 import CourseModel from "@/models/Course";
-import { InternalCourse } from "@courselit/common-logic";
+import { InternalCourse } from "@courselit/orm-models";
 import UserModel from "@/models/User";
 import { Media, User } from "@courselit/common-models";
 import { responses } from "@/config/strings";
@@ -209,6 +209,22 @@ export const updateCourse = async (
 ) => {
     let course = await getCourseOrThrow(undefined, ctx, courseData.id);
 
+    if (
+        typeof courseData.title === "string" &&
+        courseData.title.trim() &&
+        courseData.title !== course.title
+    ) {
+        const conflictingCourse = await CourseModel.findOne({
+            domain: ctx.subdomain._id,
+            title: courseData.title,
+            courseId: { $ne: course.courseId },
+        }).select("_id");
+
+        if (conflictingCourse) {
+            throw new Error(responses.page_id_already_exists);
+        }
+    }
+
     const mediaIdsMarkedForDeletion: string[] = [];
     if (Object.prototype.hasOwnProperty.call(courseData, "description")) {
         const nextDescription = (courseData.description ?? "") as string;
@@ -260,6 +276,16 @@ export const updateCourse = async (
     if (courseData.slug) {
         const newSlug = validateSlug(courseData.slug);
         if (newSlug !== course.slug) {
+            const conflictingCourse = await CourseModel.findOne({
+                domain: ctx.subdomain._id,
+                slug: newSlug,
+                courseId: { $ne: course.courseId },
+            }).select("_id");
+
+            if (conflictingCourse) {
+                throw new Error(responses.page_id_already_exists);
+            }
+
             try {
                 await PageModel.updateOne(
                     {
@@ -769,8 +795,29 @@ export const updateGroup = async ({
     lessonsOrder,
     drip,
     ctx,
+}: {
+    id: string;
+    courseId: string;
+    name?: string;
+    rank?: number;
+    collapsed?: boolean;
+    lessonsOrder?: string[];
+    drip?: {
+        type?: string;
+        status?: boolean;
+        delayInMillis?: number;
+        dateInUTC?: number;
+        email?: {
+            content: string;
+            subject: string;
+        };
+    };
+    ctx: GQLContext;
 }) => {
     const course = await getCourseOrThrow(undefined, ctx, courseId);
+    const currentGroup = course.groups?.find((group) => group.id === id);
+    const existingDripType = currentGroup?.drip?.type;
+    const effectiveDripType = drip?.type || existingDripType;
 
     const $set = {};
     if (name) {
@@ -805,20 +852,26 @@ export const updateGroup = async ({
     }
 
     if (drip) {
-        if (drip.status) {
+        const hasDripUpdates = Object.keys(drip).some((key) => key !== "type");
+
+        if (!effectiveDripType && hasDripUpdates) {
+            throw new Error(responses.invalid_input);
+        }
+
+        if (typeof drip.status === "boolean") {
             $set["groups.$.drip.status"] = drip.status;
         }
         if (drip.type) {
             $set["groups.$.drip.type"] = drip.type;
         }
-        if (drip.type === Constants.dripType[0]) {
-            if (drip.delayInMillis) {
+        if (effectiveDripType === Constants.dripType[0]) {
+            if (typeof drip.delayInMillis === "number") {
                 $set["groups.$.drip.delayInMillis"] =
-                    drip.delayInMillis * 86400000;
+                    drip.delayInMillis * constants.relativeDripUnitInMillis;
             }
             $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
         }
-        if (drip.type === Constants.dripType[1]) {
+        if (effectiveDripType === Constants.dripType[1]) {
             $set["groups.$.drip.delayInMillis"] = null;
             if (drip.dateInUTC) {
                 $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;

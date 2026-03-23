@@ -17,6 +17,7 @@ import {
     ChannelPayload,
     NotificationChannel,
 } from "../services/channels/types";
+import { captureError, getDomainId } from "../../observability/posthog";
 
 interface DispatchNotificationJob {
     domain: string | mongoose.Types.ObjectId;
@@ -35,12 +36,21 @@ const channelRegistry: Record<string, NotificationChannel> = {
 const worker = new Worker(
     "dispatch-notification",
     async (job) => {
+        const payload = job.data as DispatchNotificationJob;
         try {
-            await processDispatchNotificationJob(
-                job.data as DispatchNotificationJob,
-            );
+            await processDispatchNotificationJob(payload);
         } catch (err: any) {
             logger.error(err);
+            captureError({
+                error: err,
+                source: "worker.dispatch_notification",
+                domainId: getDomainId(payload?.domain),
+                context: {
+                    queue_name: "dispatch-notification",
+                    job_id: String(job.id),
+                    activity_type: payload?.activityType,
+                },
+            });
             throw err;
         }
     },

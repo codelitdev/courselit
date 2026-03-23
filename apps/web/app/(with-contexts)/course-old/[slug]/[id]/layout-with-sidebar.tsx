@@ -1,6 +1,7 @@
 "use client";
 
 import { useContext } from "react";
+import constants from "@/config/constants";
 import {
     formattedLocaleDate,
     isEnrolled,
@@ -56,11 +57,18 @@ export function generateSideBarItems(
         },
     ];
 
-    let lastGroupDripDateInMillis = Date.now();
+    let lastGroupDripDateInMillis = getRelativeDripAnchorMillis(
+        course,
+        profile,
+    );
 
     for (const group of course.groups) {
         let availableLabel = "";
-        if (group.drip && group.drip.status) {
+        const isAccessible =
+            group.drip?.status &&
+            isGroupAccessibleToUser(course, profile as Profile, group);
+
+        if (group.drip && group.drip.status && !isAccessible) {
             if (
                 group.drip.type ===
                 Constants.dripType[0].split("-")[0].toUpperCase()
@@ -69,7 +77,8 @@ export function generateSideBarItems(
                     (group?.drip?.delayInMillis ?? 0) +
                     lastGroupDripDateInMillis;
                 const daysUntilAvailable = Math.ceil(
-                    (delayInMillis - Date.now()) / 86400000,
+                    (delayInMillis - Date.now()) /
+                        constants.relativeDripUnitInMillis,
                 );
                 availableLabel =
                     daysUntilAvailable &&
@@ -97,7 +106,8 @@ export function generateSideBarItems(
             group.drip &&
             group.drip.status &&
             group.drip.type ===
-                Constants.dripType[0].split("-")[0].toUpperCase()
+                Constants.dripType[0].split("-")[0].toUpperCase() &&
+            !isGroupAccessibleToUser(course, profile as Profile, group)
         ) {
             lastGroupDripDateInMillis += group?.drip?.delayInMillis ?? 0;
         }
@@ -145,11 +155,18 @@ export function isGroupAccessibleToUser(
     if (!group.drip || !group.drip.status) return true;
 
     if (!Array.isArray(profile.purchases)) return false;
+    const groupId = getGroupId(group);
+    if (!groupId) return false;
 
     for (const purchase of profile.purchases) {
         if (purchase.courseId === course.courseId) {
             if (Array.isArray(purchase.accessibleGroups)) {
-                if (purchase.accessibleGroups.includes(group.id)) {
+                const accessibleGroupIds = purchase.accessibleGroups
+                    .map((id) =>
+                        id === null || id === undefined ? "" : String(id),
+                    )
+                    .filter(Boolean);
+                if (accessibleGroupIds.includes(groupId)) {
                     return true;
                 }
             }
@@ -157,4 +174,57 @@ export function isGroupAccessibleToUser(
     }
 
     return false;
+}
+
+function getGroupId(group: GroupWithLessons): string | undefined {
+    const value =
+        (group as GroupWithLessons & { _id?: unknown }).id ??
+        (group as GroupWithLessons & { _id?: unknown })._id;
+    if (value === null || value === undefined) {
+        return undefined;
+    }
+
+    return String(value);
+}
+
+function getRelativeDripAnchorMillis(
+    course: CourseFrontend,
+    profile: Profile,
+): number {
+    const purchase = profile.purchases?.find(
+        (purchase) => purchase.courseId === course.courseId,
+    );
+
+    if (purchase?.lastDripAt) {
+        const lastDripAt = normalizeTimestamp(purchase.lastDripAt);
+        if (!Number.isNaN(lastDripAt)) {
+            return lastDripAt;
+        }
+    }
+
+    if (purchase?.createdAt) {
+        const createdAt = normalizeTimestamp(purchase.createdAt);
+        if (!Number.isNaN(createdAt)) {
+            return createdAt;
+        }
+    }
+
+    return Date.now();
+}
+
+function normalizeTimestamp(value: string | number | Date): number {
+    if (typeof value === "number") {
+        return value;
+    }
+
+    if (value instanceof Date) {
+        return value.getTime();
+    }
+
+    const numericValue = Number(value);
+    if (!Number.isNaN(numericValue)) {
+        return numericValue;
+    }
+
+    return new Date(value).getTime();
 }

@@ -10,22 +10,48 @@ import NotificationModel from "../notifications/model/notification";
 import { ObjectId } from "mongodb";
 import { Constants, User } from "@courselit/common-models";
 import { z } from "zod";
+import { captureError, getDomainId } from "../observability/posthog";
 
 const router: any = express.Router();
 
-router.post("/mail", async (req: express.Request, res: express.Response) => {
-    try {
-        const { to, from, subject, body, headers } = req.body;
-        MailJob.parse({ to, from, subject, body, headers });
+router.post(
+    "/mail",
+    async (
+        req: express.Request & { user: User & { domain: string } },
+        res: express.Response,
+    ) => {
+        const domainId = getDomainId(req.user?.domain);
 
-        await addMailJob({ to, from, subject, body, headers });
+        try {
+            const { to, from, subject, body, headers } = req.body;
+            MailJob.parse({
+                to,
+                from,
+                subject,
+                body,
+                headers,
+                domainId,
+            });
 
-        res.status(200).json({ message: "Success" });
-    } catch (err: any) {
-        logger.error(err);
-        res.status(500).json({ error: err.message });
-    }
-});
+            await addMailJob({ to, from, subject, body, headers, domainId });
+
+            res.status(200).json({ message: "Success" });
+        } catch (err: any) {
+            logger.error(err);
+            captureError({
+                error: err,
+                source: "job.mail.route",
+                domainId,
+                context: {
+                    path: req.path,
+                    method: req.method,
+                    route: "/job/mail",
+                },
+            });
+            res.status(500).json({ error: err.message });
+        }
+    },
+);
 
 const DispatchNotificationJob = z.object({
     activityType: z
@@ -73,6 +99,16 @@ router.post(
             res.status(200).json({ message: "Success" });
         } catch (err: any) {
             logger.error(err);
+            captureError({
+                error: err,
+                source: "job.dispatch_notification.route",
+                domainId: getDomainId(user.domain),
+                context: {
+                    path: req.path,
+                    method: req.method,
+                    route: "/job/dispatch-notification",
+                },
+            });
             res.status(500).json({ error: err.message });
         }
     },
@@ -107,6 +143,16 @@ router.post(
             res.status(200).json({ message: "Success" });
         } catch (err: any) {
             logger.error(err);
+            captureError({
+                error: err,
+                source: "job.notification.route",
+                domainId: getDomainId(user.domain),
+                context: {
+                    path: req.path,
+                    method: req.method,
+                    route: "/job/notification",
+                },
+            });
             res.status(500).json({ error: err.message });
         }
     },

@@ -5,7 +5,7 @@ import {
     CommunitySchema,
     CourseSchema,
 } from "@courselit/orm-models";
-import type { NotificationEntityResolver } from "./utils/get-notification-message-and-href";
+import type { NotificationEntityResolver } from "./get-notification-message-and-href";
 
 export interface CreateNotificationEntityResolverOptions {
     domainId?: unknown;

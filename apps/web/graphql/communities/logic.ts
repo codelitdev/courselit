@@ -68,7 +68,7 @@ import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
 import { deleteMedia, sealMedia } from "@/services/medialit";
 import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
 import InvoiceModel from "@models/Invoice";
-import { InternalMembership } from "@courselit/common-logic";
+import { InternalMembership } from "@courselit/orm-models";
 import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
 import { recordActivity } from "@/lib/record-activity";
 
@@ -311,6 +311,17 @@ export async function updateCommunity({
     if (slug) {
         const newSlug = validateSlug(slug);
         if (newSlug !== community.slug) {
+            const conflictingCommunity =
+                await CommunityModel.findOne<InternalCommunity>({
+                    domain: ctx.subdomain._id,
+                    slug: newSlug,
+                    communityId: { $ne: community.communityId },
+                }).select("_id");
+
+            if (conflictingCommunity) {
+                throw new Error(responses.page_id_already_exists);
+            }
+
             // Page-first atomicity: update Page record first (hard unique constraint)
             try {
                 await PageModel.updateOne(

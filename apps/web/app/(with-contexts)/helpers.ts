@@ -14,6 +14,8 @@ export const getUserProfile = async (address: string) => {
                 completedLessons
                 accessibleGroups
                 certificateId
+                createdAt
+                lastDripAt
             }
             avatar {
                 mediaId,
@@ -34,5 +36,10 @@ export const getUserProfile = async (address: string) => {
         .setIsGraphQLEndpoint(true)
         .build();
     const response = await fetch.exec();
-    return response.profile;
+    return response.profile
+        ? {
+              ...response.profile,
+              fetched: true,
+          }
+        : undefined;
 };

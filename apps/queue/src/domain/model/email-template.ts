@@ -1,6 +1,6 @@
 import mongoose, { Model } from "mongoose";
 import { EmailTemplate as PublicEmailTemplate } from "@courselit/common-models";
-import { EmailContentSchema } from "@courselit/common-logic";
+import { EmailContentSchema } from "@courselit/orm-models";
 
 interface EmailTemplate extends PublicEmailTemplate {
     domain: mongoose.Schema.Types.ObjectId;

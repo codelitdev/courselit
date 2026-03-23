@@ -4,6 +4,7 @@ import { addMailJob } from "../../../domain/handler";
 import { getSiteUrl } from "../../../utils/get-site-url";
 import { getUnsubLink } from "../../../utils/get-unsub-link";
 import { ChannelPayload, NotificationChannel } from "./types";
+import { getDomainId } from "../../../observability/posthog";
 
 export class EmailChannel implements NotificationChannel {
     async send(payload: ChannelPayload): Promise<void> {
@@ -46,6 +47,7 @@ export class EmailChannel implements NotificationChannel {
                 name: payload.domain.settings?.title || payload.domain.name,
                 email: process.env.EMAIL_FROM || "",
             }),
+            domainId: getDomainId(payload.domain?._id),
             subject: notificationDetails.message,
             body: `
                 <p>${notificationDetails.message}</p>

@@ -15,7 +15,7 @@ import {
 import { sendMail } from "@/mail";
 import mongoose from "mongoose";
 import EmailDelivery from "@/domain/model/email-delivery";
-import { AdminSequence, InternalUser } from "@courselit/common-logic";
+import { AdminSequence, InternalUser } from "@courselit/orm-models";
 import { Email as EmailType, renderEmailToHtml } from "@courselit/email-editor";
 import { getUnsubLink } from "@/utils/get-unsub-link";
 import { getSiteUrl } from "@/utils/get-site-url";
@@ -24,69 +24,90 @@ import { JSDOM } from "jsdom";
 import { DomainDocument } from "@/domain/model/domain";
 import { Liquid } from "liquidjs";
 import { logger } from "@/logger";
+import { captureError, getDomainId } from "@/observability/posthog";
 const liquidEngine = new Liquid();
 
 export async function processOngoingSequence(
-    ongoingSequenceId: mongoose.Types.ObjectId,
+    ongoingSequenceId: mongoose.Types.ObjectId | string,
 ) {
-    const ongoingSequence =
-        await OngoingSequenceModel.findById(ongoingSequenceId);
-    if (!ongoingSequence) {
-        return;
-    }
+    let domainId = getDomainId();
+    try {
+        const ongoingSequence =
+            await OngoingSequenceModel.findById(ongoingSequenceId);
+        if (!ongoingSequence) {
+            return;
+        }
 
-    const domain = await getDomain(ongoingSequence.domain);
-    if (
-        !domain ||
-        !domain.quota ||
-        !domain.quota.mail ||
-        !domain.settings?.mailingAddress
-    ) {
-        console.log(
-            `Invalid domain settings for "${domain?.name || "unknown"}"`,
+        domainId = getDomainId(ongoingSequence.domain);
+
+        const domain = await getDomain(ongoingSequence.domain);
+        if (
+            !domain ||
+            !domain.quota ||
+            !domain.quota.mail ||
+            !domain.settings?.mailingAddress
+        ) {
+            console.log(
+                `Invalid domain settings for "${domain?.name || "unknown"}"`,
+                domain,
+            ); // eslint-disable-line no-console
+            return;
+        }
+        if (
+            domain.quota.mail.dailyCount >= domain.quota.mail.daily ||
+            domain.quota.mail.monthlyCount >= domain.quota.mail.monthly
+        ) {
+            console.log(`Domain quota exceeded for "${domain.name}"`); // eslint-disable-line no-console
+            return;
+        }
+
+        const sequence = await getSequence(ongoingSequence.sequenceId);
+        const [user, creator] = await Promise.all([
+            getUser(ongoingSequence.userId),
+            sequence ? getUser(sequence.creatorId) : null,
+        ]);
+
+        if (!sequence || !user || !creator) {
+            return await cleanUpResources(ongoingSequence);
+        }
+
+        const nextPublishedEmail = getNextPublishedEmail(
+            sequence,
+            ongoingSequence,
+        );
+
+        await attemptMailSending({
             domain,
-        ); // eslint-disable-line no-console
-        return;
-    }
-    if (
-        domain.quota.mail.dailyCount >= domain.quota.mail.daily ||
-        domain.quota.mail.monthlyCount >= domain.quota.mail.monthly
-    ) {
-        console.log(`Domain quota exceeded for "${domain.name}"`); // eslint-disable-line no-console
-        return;
-    }
+            creator,
+            user,
+            sequence,
+            ongoingSequence,
+            email: nextPublishedEmail,
+        });
 
-    const sequence = await getSequence(ongoingSequence.sequenceId);
-    const [user, creator] = await Promise.all([
-        getUser(ongoingSequence.userId),
-        sequence ? getUser(sequence.creatorId) : null,
-    ]);
-
-    if (!sequence || !user || !creator) {
-        return await cleanUpResources(ongoingSequence);
-    }
-
-    const nextPublishedEmail = getNextPublishedEmail(sequence, ongoingSequence);
-
-    await attemptMailSending({
-        domain,
-        creator,
-        user,
-        sequence,
-        ongoingSequence,
-        email: nextPublishedEmail,
-    });
-
-    ongoingSequence.sentEmailIds.push(nextPublishedEmail.emailId);
-    await domain.incrementEmailCount();
-    const nextEmail = getNextPublishedEmail(sequence, ongoingSequence);
-    if (!nextEmail) {
-        return await cleanUpResources(ongoingSequence, true);
-    } else {
-        ongoingSequence.nextEmailScheduledTime = new Date(
-            ongoingSequence.nextEmailScheduledTime + nextEmail.delayInMillis,
-        ).getTime();
-        await ongoingSequence.save();
+        ongoingSequence.sentEmailIds.push(nextPublishedEmail.emailId);
+        await domain.incrementEmailCount();
+        const nextEmail = getNextPublishedEmail(sequence, ongoingSequence);
+        if (!nextEmail) {
+            return await cleanUpResources(ongoingSequence, true);
+        } else {
+            ongoingSequence.nextEmailScheduledTime = new Date(
+                ongoingSequence.nextEmailScheduledTime +
+                    nextEmail.delayInMillis,
+            ).getTime();
+            await ongoingSequence.save();
+        }
+    } catch (err: any) {
+        logger.error(err);
+        captureError({
+            error: err,
+            source: "processOngoingSequence.handler",
+            domainId,
+            context: {
+                ongoing_sequence_id: String(ongoingSequenceId),
+            },
+        });
+        throw err;
     }
 }
 
@@ -243,6 +264,19 @@ async function attemptMailSending({
         } else {
             await ongoingSequence.save();
         }
+        logger.error(err);
+        captureError({
+            error: err,
+            source: "processOngoingSequence.mail_send",
+            domainId: getDomainId(domain?.id),
+            context: {
+                sequence_id: sequence.sequenceId,
+                user_id: user.userId,
+                error_code: err?.code,
+                response_code: err?.responseCode,
+                command: err?.command,
+            },
+        });
         throw err;
     }
 }
@@ -296,6 +330,15 @@ function transformLinksForClickTracking(
         return dom.serialize();
     } catch (error) {
         logger.error("Error transforming links with jsdom:", error);
+        captureError({
+            error,
+            source: "processOngoingSequence.transform_links",
+            domainId: getDomainId(domain?.id),
+            context: {
+                sequence_id: sequenceId,
+                user_id: userId,
+            },
+        });
         return htmlContent;
     }
 }

@@ -1,9 +1,9 @@
 import type { Config } from "jest";
 
 const config: Config = {
-    preset: "@shelf/jest-mongodb",
     setupFilesAfterEnv: ["<rootDir>/setupTests.server.ts"],
     watchPathIgnorePatterns: ["globalConfig"],
+    testEnvironment: "node",
     moduleNameMapper: {
         "@courselit/utils": "<rootDir>/../../packages/utils/src",
         "@courselit/common-logic": "<rootDir>/../../packages/common-logic/src",

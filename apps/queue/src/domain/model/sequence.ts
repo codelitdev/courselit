@@ -1,5 +1,5 @@
 import mongoose, { Model } from "mongoose";
-import { SequenceSchema } from "@courselit/common-logic";
+import { SequenceSchema } from "@courselit/orm-models";
 
 const SequenceModel =
     (mongoose.models.Sequence as Model<any>) ||

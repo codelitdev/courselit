@@ -14,11 +14,12 @@ import UserModel from "../model/user";
 import EmailDelivery from "../model/email-delivery";
 import * as queries from "../queries";
 import * as mail from "../../mail";
-import { AdminSequence, InternalUser } from "@courselit/common-logic";
+import { InternalUser } from "@courselit/orm-models";
 import { getEmailFrom, jwtUtils } from "@courselit/utils";
 import { getUnsubLink } from "../../utils/get-unsub-link";
 import { getSiteUrl } from "../../utils/get-site-url";
 import { sequenceBounceLimit } from "../../constants";
+import { AdminSequence } from "@courselit/orm-models";
 
 // Mock dependencies
 jest.mock("../../mail");
@@ -288,6 +289,20 @@ describe("processOngoingSequence", () => {
             sequenceId: { $ne: TEST_SEQUENCE_ID }, // Keep main test sequence
         });
         jest.clearAllMocks();
+
+        mockedGetSiteUrl.mockReturnValue("https://test.com");
+        mockedGetUnsubLink.mockReturnValue(
+            "https://test.com/api/unsubscribe/unsub-token-123",
+        );
+        mockedGetEmailFrom.mockImplementation(
+            ({ name, email }) => `${name} <${email}>`,
+        );
+        mockedJwtUtils.generateToken = jest.fn().mockReturnValue("test-token");
+        mockedSendMail.mockResolvedValue(undefined);
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
     });
 
     afterAll(async () => {

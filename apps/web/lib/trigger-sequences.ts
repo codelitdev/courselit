@@ -10,7 +10,7 @@ import RuleModel from "@models/Rule";
 import SequenceModel from "@models/Sequence";
 import mongoose from "mongoose";
 import { error } from "../services/logger";
-import { InternalUser } from "@courselit/common-logic";
+import { InternalUser } from "@courselit/orm-models";
 
 export async function triggerSequences({
     user,

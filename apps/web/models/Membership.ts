@@ -1,4 +1,4 @@
-import { MembershipSchema } from "@courselit/common-logic";
+import { MembershipSchema } from "@courselit/orm-models";
 import mongoose from "mongoose";
 
 export default mongoose.models.Membership ||

@@ -3,16 +3,15 @@ import { Lesson } from "@courselit/common-models";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useGraphQLFetch } from "./use-graphql-fetch";
 import { AddressContext } from "@components/contexts";
-import { InternalCourse } from "@courselit/common-logic";
+import { InternalCourse } from "@courselit/orm-models";
 
 export type ProductWithAdminProps = Partial<
     Omit<InternalCourse, "paymentPlans"> &
         Pick<Course, "paymentPlans"> & {
-            lessons: Pick<
+            lessons: (Pick<
                 Lesson,
                 "title" | "groupId" | "lessonId" | "type" | "published"
-            > &
-                { id: string }[];
+            > & { id: string })[];
         }
 >;
 

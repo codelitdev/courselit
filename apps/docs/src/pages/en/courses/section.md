@@ -55,22 +55,26 @@ If drip configuration is enabled for a section, a student won't be able to acces
 ### Drip by Date
 
 1. If you want a section to be available to users on a specific date, this is the option you should opt for.
+2. Exact-date sections unlock only when their chosen date and time arrives.
+3. Unlocking an exact-date section does not change the timing of other relative drip sections.
 
 ![Drip by Date](/assets/products/drip-by-date.png)
 
-2. Select the date on which this section will be dripped.
-3. Click `Continue` to save it.
+4. Select the date on which this section will be dripped.
+5. Click `Continue` to save it.
 
 ### Drip After a Certain Number of Days From Last Dripped Content
 
 1. If you want a section to be available to users after a certain number of days have elapsed since the last dripped content, this is the option you should opt for.
+2. Relative-date sections are released in section order. A later relative section waits for the earlier relative section before its own delay begins.
+3. The first relative section counts from the student's enrollment date. After that, each newly released relative section becomes the anchor for the next relative section.
 
 > For the first dripped section, the date of enrollment will be considered the last dripped content date.
 
 ![Drip After a Certain Number of Days Have Elapsed](/assets/products/drip-by-specific-days.png)
 
-2. Select the number of days.
-3. Click `Continue` to save it.
+4. Select the number of days.
+5. Click `Continue` to save it.
 
 ### Notify Users When a Section Has Dripped
 
