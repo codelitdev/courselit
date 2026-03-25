@@ -14,6 +14,7 @@ import {
     removeGroup,
     addGroup,
     updateGroup,
+    moveLesson,
     reorderGroups,
     updateCourseCertificateTemplate,
 } from "./logic";
@@ -103,16 +104,13 @@ export default {
             collapsed: {
                 type: GraphQLBoolean,
             },
-            lessonsOrder: {
-                type: new GraphQLList(GraphQLString),
-            },
             drip: {
                 type: types.dripInputType,
             },
         },
         resolve: async (
             _: unknown,
-            { id, courseId, name, rank, collapsed, lessonsOrder, drip },
+            { id, courseId, name, rank, collapsed, drip },
             context,
         ) =>
             updateGroup({
@@ -121,8 +119,36 @@ export default {
                 name,
                 rank,
                 collapsed,
-                lessonsOrder,
                 drip,
+                ctx: context,
+            }),
+    },
+    moveLesson: {
+        type: types.courseType,
+        args: {
+            courseId: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+            lessonId: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+            destinationGroupId: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+            destinationIndex: {
+                type: new GraphQLNonNull(GraphQLInt),
+            },
+        },
+        resolve: async (
+            _: unknown,
+            { courseId, lessonId, destinationGroupId, destinationIndex },
+            context,
+        ) =>
+            moveLesson({
+                courseId,
+                lessonId,
+                destinationGroupId,
+                destinationIndex,
                 ctx: context,
             }),
     },

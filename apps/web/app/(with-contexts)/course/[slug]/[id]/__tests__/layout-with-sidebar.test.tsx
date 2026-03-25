@@ -214,7 +214,7 @@ describe("generateSideBarItems", () => {
                         status: true,
                         type: Constants.dripType[1].split("-")[0].toUpperCase(),
                         dateInUTC: new Date(
-                            "2026-03-24T00:00:00.000Z",
+                            "2099-03-24T00:00:00.000Z",
                         ).getTime(),
                     },
                 },
@@ -374,7 +374,7 @@ describe("generateSideBarItems", () => {
                         status: true,
                         type: Constants.dripType[1].split("-")[0].toUpperCase(),
                         dateInUTC: new Date(
-                            "2026-03-24T00:00:00.000Z",
+                            "2099-03-24T00:00:00.000Z",
                         ).getTime(),
                     },
                 },
@@ -458,7 +458,7 @@ describe("generateSideBarItems", () => {
         );
 
         expect(items[2].badge?.text).toBe("Mar 22, 2026");
-        expect(items[2].badge?.description).toBe("Available on Mar 22, 2026");
+        expect(items[2].badge?.description).toBe("");
     });
 
     it("uses purchase createdAt as the relative drip anchor when lastDripAt is absent", () => {
@@ -647,5 +647,82 @@ describe("generateSideBarItems", () => {
         );
 
         expect(items[3].badge?.text).toBe("3 days");
+    });
+
+    it("renders reordered lessons under the destination section in sidebar order", () => {
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-2",
+            groups: [
+                {
+                    id: "group-1",
+                    name: "First Section",
+                    lessons: [
+                        {
+                            lessonId: "lesson-1",
+                            title: "Text 1",
+                            requiresEnrollment: false,
+                        },
+                    ],
+                },
+                {
+                    id: "group-2",
+                    name: "Second Section",
+                    lessons: [
+                        {
+                            lessonId: "lesson-2",
+                            title: "Chapter 5 - Text 2",
+                            requiresEnrollment: false,
+                        },
+                        {
+                            lessonId: "lesson-3",
+                            title: "Text 3",
+                            requiresEnrollment: false,
+                        },
+                    ],
+                },
+            ],
+        } as unknown as CourseFrontend;
+
+        const profile = {
+            userId: "user-1",
+            purchases: [
+                {
+                    courseId: "course-1",
+                    accessibleGroups: ["group-1", "group-2"],
+                },
+            ],
+        } as unknown as Profile;
+
+        const items = generateSideBarItems(
+            course,
+            profile,
+            "/course/test-course/course-1",
+        );
+
+        const firstSectionItems = items.find(
+            (item) => item.title === "First Section",
+        )?.items;
+        const secondSectionItems = items.find(
+            (item) => item.title === "Second Section",
+        )?.items;
+
+        expect(firstSectionItems?.map((item) => item.title)).toEqual([
+            "Text 1",
+        ]);
+        expect(secondSectionItems?.map((item) => item.title)).toEqual([
+            "Chapter 5 - Text 2",
+            "Text 3",
+        ]);
     });
 });

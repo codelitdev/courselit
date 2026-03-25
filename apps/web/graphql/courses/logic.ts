@@ -18,7 +18,7 @@ import {
     setupCourse,
     validateCourse,
 } from "./helpers";
-import Lesson from "@/models/Lesson";
+import LessonModel from "@/models/Lesson";
 import GQLContext from "@/models/GQLContext";
 import Filter from "./models/filter";
 import mongoose from "mongoose";
@@ -756,7 +756,7 @@ export const removeGroup = async (
         throw new Error(responses.download_course_last_group_cannot_be_removed);
     }
 
-    const countOfAssociatedLessons = await Lesson.countDocuments({
+    const countOfAssociatedLessons = await LessonModel.countDocuments({
         courseId,
         groupId: group.id,
         domain: ctx.subdomain._id,
@@ -792,7 +792,6 @@ export const updateGroup = async ({
     name,
     rank,
     collapsed,
-    lessonsOrder,
     drip,
     ctx,
 }: {
@@ -801,7 +800,6 @@ export const updateGroup = async ({
     name?: string;
     rank?: number;
     collapsed?: boolean;
-    lessonsOrder?: string[];
     drip?: {
         type?: string;
         status?: boolean;
@@ -833,18 +831,6 @@ export const updateGroup = async ({
 
     if (rank) {
         $set["groups.$.rank"] = rank;
-    }
-
-    if (
-        lessonsOrder &&
-        lessonsOrder.every((lessonId) => course.lessons?.includes(lessonId)) &&
-        lessonsOrder.every((lessonId) =>
-            course.groups
-                ?.find((group) => group.id === id)
-                ?.lessonsOrder.includes(lessonId),
-        )
-    ) {
-        $set["groups.$.lessonsOrder"] = lessonsOrder;
     }
 
     if (typeof collapsed === "boolean") {
@@ -904,6 +890,91 @@ export const updateGroup = async ({
         { $set },
         { new: true },
     );
+};
+
+export const moveLesson = async ({
+    courseId,
+    lessonId,
+    destinationGroupId,
+    destinationIndex,
+    ctx,
+}: {
+    courseId: string;
+    lessonId: string;
+    destinationGroupId: string;
+    destinationIndex: number;
+    ctx: GQLContext;
+}) => {
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
+    const lesson = await LessonModel.findOne({
+        domain: ctx.subdomain._id,
+        lessonId,
+    });
+
+    if (!lesson || lesson.courseId !== course.courseId) {
+        throw new Error(responses.item_not_found);
+    }
+
+    if (!course.lessons?.includes(lessonId)) {
+        throw new Error(responses.invalid_input);
+    }
+
+    const destinationGroup = course.groups?.find(
+        (group) => group.id === destinationGroupId,
+    );
+    if (!destinationGroup) {
+        throw new Error(responses.invalid_input);
+    }
+
+    const normalizedGroups = (course.groups ?? []).map((group) => {
+        const plainGroup =
+            typeof (group as any).toObject === "function"
+                ? (group as any).toObject()
+                : { ...group };
+
+        return {
+            ...plainGroup,
+            lessonsOrder: (plainGroup.lessonsOrder ?? []).filter(
+                (id: string) => id !== lessonId,
+            ),
+        };
+    });
+
+    const destinationGroupIndex = normalizedGroups.findIndex((group: any) => {
+        const groupId = group._id ?? group.id;
+        return groupId?.toString() === destinationGroupId;
+    });
+    if (destinationGroupIndex === -1) {
+        throw new Error(responses.invalid_input);
+    }
+
+    const destinationLessons =
+        normalizedGroups[destinationGroupIndex].lessonsOrder ?? [];
+    normalizedGroups[destinationGroupIndex].lessonsOrder = destinationLessons;
+    const safeDestinationIndex = Math.min(
+        Math.max(destinationIndex, 0),
+        destinationLessons.length,
+    );
+    destinationLessons.splice(safeDestinationIndex, 0, lessonId);
+
+    await CourseModel.updateOne(
+        {
+            domain: ctx.subdomain._id,
+            courseId: course.courseId,
+        },
+        {
+            $set: {
+                groups: normalizedGroups,
+            },
+        },
+    );
+
+    if (lesson.groupId !== destinationGroupId) {
+        lesson.groupId = destinationGroupId;
+        await lesson.save();
+    }
+
+    return await formatCourse(course.courseId, ctx);
 };
 
 const GROUP_RANK_GAP = 1000;
