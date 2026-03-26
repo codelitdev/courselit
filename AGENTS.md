@@ -16,6 +16,7 @@
     - Use **Cursors** (`.cursor()`) to stream data from MongoDB, ensuring the script remains memory-efficient regardless of dataset size.
     - Use **Batching** with `bulkWrite` (e.g., batches of 500) to maximize performance and minimize network roundtrips.
     - Ensure **Idempotency** (safe to re-run) by using upserts or `$setOnInsert` where applicable.
+- When making changes to the structure of the Course, consider how it affects its representation on its public page (`apps/web/app/(with-contexts)/(with-layout)/p/[id]/page.tsx`) and the course viewer (`apps/web/app/(with-contexts)/course/[slug]/[id]/page.tsx`).
 
 ### Workspace map (core modules):
 
@@ -48,6 +49,7 @@
 - Always add or update test when introducing changes to `apps/web/graphql` folder, even if nobody asked.
 - Run `pnpm test` to run the tests.
 - Fix any test or type errors until the whole suite is green.
+- Refrain from creating new files when adding tests in `apps/web/graphql` subdirectories. Re-use `logic.test.ts` files for adding new test suites i.e. describe blocks.
 
 ## PR instructions
 

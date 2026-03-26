@@ -188,6 +188,7 @@ export default function Page() {
                     certificateId
                 },
                 bio,
+                subscribedToUpdates,
                 avatar {
                     mediaId,
                     originalFileName,
@@ -217,7 +218,11 @@ export default function Page() {
         try {
             const response = await fetch.exec();
             if (response.user) {
-                setProfile(response.user);
+                setProfile((currentProfile: Partial<Profile> | null) => ({
+                    ...(currentProfile || {}),
+                    ...response.user,
+                    fetched: true,
+                }));
                 initialDetailsRef.current = {
                     name,
                     bio,

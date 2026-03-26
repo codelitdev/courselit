@@ -585,7 +585,7 @@ export default function SectionPage(props: {
             <Resources
                 links={[
                     {
-                        href: "https://docs.courselit.app/en/products/section/#drip-a-section",
+                        href: "https://docs.courselit.app/en/courses/section#drip-a-section",
                         text: "Drip content",
                     },
                 ]}

@@ -3,7 +3,7 @@ import UserModel from "@models/User";
 import CourseModel from "@models/Course";
 import PageModel from "@models/Page";
 import constants from "@/config/constants";
-import { updateCourse } from "../logic";
+import { getCourse, updateCourse } from "../logic";
 import { deleteMedia, sealMedia } from "@/services/medialit";
 
 jest.mock("@/services/medialit", () => ({
@@ -20,6 +20,10 @@ const UPDATE_COURSE_SUITE_PREFIX = `update-course-${Date.now()}`;
 const id = (suffix: string) => `${UPDATE_COURSE_SUITE_PREFIX}-${suffix}`;
 const email = (suffix: string) =>
     `${suffix}-${UPDATE_COURSE_SUITE_PREFIX}@example.com`;
+const GET_COURSE_SUITE_PREFIX = `get-course-${Date.now()}`;
+const getCourseId = (suffix: string) => `${GET_COURSE_SUITE_PREFIX}-${suffix}`;
+const getCourseEmail = (suffix: string) =>
+    `${suffix}-${GET_COURSE_SUITE_PREFIX}@example.com`;
 
 describe("updateCourse", () => {
     let testDomain: any;
@@ -224,5 +228,91 @@ describe("updateCourse", () => {
         expect(updatedCourse.description).toEqual(
             JSON.stringify(expectedDescription),
         );
+    });
+});
+
+describe("getCourse", () => {
+    let testDomain: any;
+    let adminUser: any;
+
+    beforeAll(async () => {
+        testDomain = await DomainModel.create({
+            name: getCourseId("domain"),
+            email: getCourseEmail("domain"),
+        });
+
+        adminUser = await UserModel.create({
+            domain: testDomain._id,
+            userId: getCourseId("admin-user"),
+            email: getCourseEmail("admin"),
+            name: "Admin User",
+            permissions: [constants.permissions.manageAnyCourse],
+            active: true,
+            unsubscribeToken: getCourseId("unsubscribe-admin"),
+            purchases: [],
+        });
+    });
+
+    beforeEach(async () => {
+        await CourseModel.deleteMany({ domain: testDomain._id });
+    });
+
+    afterAll(async () => {
+        await CourseModel.deleteMany({ domain: testDomain._id });
+        await UserModel.deleteMany({ domain: testDomain._id });
+        await DomainModel.deleteOne({ _id: testDomain._id });
+    });
+
+    it("returns groups sorted by rank", async () => {
+        const groupId1 = getCourseId("group-1");
+        const groupId2 = getCourseId("group-2");
+        const groupId3 = getCourseId("group-3");
+        const course = await CourseModel.create({
+            domain: testDomain._id,
+            courseId: getCourseId("course"),
+            title: getCourseId("course-title"),
+            creatorId: adminUser.userId,
+            groups: [
+                {
+                    _id: groupId2,
+                    name: "Group 2",
+                    rank: 2000,
+                    collapsed: true,
+                    lessonsOrder: [],
+                },
+                {
+                    _id: groupId1,
+                    name: "Group 1",
+                    rank: 1000,
+                    collapsed: true,
+                    lessonsOrder: [],
+                },
+                {
+                    _id: groupId3,
+                    name: "Group 3",
+                    rank: 3000,
+                    collapsed: true,
+                    lessonsOrder: [],
+                },
+            ],
+            lessons: [],
+            type: "course",
+            privacy: "unlisted",
+            costType: "free",
+            cost: 0,
+            slug: getCourseId("course-slug"),
+        });
+
+        const formattedCourse = await getCourse(course.courseId, {
+            subdomain: testDomain,
+            user: adminUser,
+            address: "",
+        });
+
+        expect(formattedCourse?.groups?.map((group: any) => group.id)).toEqual([
+            groupId1,
+            groupId2,
+            groupId3,
+        ]);
     });
 });

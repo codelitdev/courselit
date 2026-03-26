@@ -2,9 +2,7 @@ import { cache } from "react";
 import type {
     CommunityMemberStatus,
     CommunityReportStatus,
-    Course,
     Features,
-    Group,
     Membership,
     MembershipRole,
     Page,
@@ -310,14 +308,6 @@ export const moveMemberUp = (arr: any[], index: number) =>
     swapMembers(arr, index - 1, index);
 export const moveMemberDown = (arr: any[], index: number) =>
     swapMembers(arr, index, index + 1);
-
-export const sortCourseGroups = (course: Course) => {
-    if (!Array.isArray(course.groups)) {
-        return [];
-    }
-
-    return [...course.groups].sort((a: Group, b: Group) => a.rank - b.rank);
-};
 
 export function truncate(str?: string, length?: number) {
     if (!str || !length) {

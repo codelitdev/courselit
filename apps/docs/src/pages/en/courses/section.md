@@ -46,6 +46,18 @@ Here’s how sections look in various parts of the platform.
 
 ![Edit Section Settings](/assets/products/edit-section-settings.png)
 
+## Rearranging Sections
+
+You can move sections up or down as you like. Click the chevron up or down buttons to move a section.
+
+![Move a section](/assets/products/section-reordering.png)
+
+## Moving a Lesson Between Sections
+
+Use the drag-and-drop handles on the left side of a lesson's listing to move it to any section.
+
+![Move a lesson](/assets/products/lesson-reordering.png)
+
 ## Drip a Section
 
 You can release a section on a **specific date** or **after a certain number of days have elapsed since the time a student enrolls**.
@@ -76,6 +88,8 @@ If drip configuration is enabled for a section, a student won't be able to acces
 4. Select the number of days.
 5. Click `Continue` to save it.
 
+> Rearranging a section with drip enabled may affect its drip schedule; use caution.
+
 ### Notify Users When a Section Has Dripped
 
 1. Click on the `Email Notification` checkbox.
@@ -98,7 +112,7 @@ On the course viewer, the customer will see the clock icon against the section n
 
 2. Click `Delete` on the confirmation dialog.
 
-> A section must be empty (i.e., have no lessons attached to it) in order to be deleted.
+> A section must be empty (i.e., have no lessons attached) before it can be deleted. Move any lessons to another section to make it empty.
 
 ## Next Step
 
