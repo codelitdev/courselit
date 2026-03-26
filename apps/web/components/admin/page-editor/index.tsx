@@ -52,7 +52,7 @@ import {
 import { ThemeWithDraftState } from "./theme-editor/theme-with-draft-state";
 import useThemes from "./use-themes";
 import NextThemeSwitcher from "../next-theme-switcher";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/next-theme-provider";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));

@@ -8,6 +8,7 @@ import { headers } from "next/headers";
 import { getSiteInfo, getFullSiteSetup } from "@ui-lib/utils";
 import { getAddressFromHeaders } from "@/app/actions";
 import * as fonts from "@/lib/fonts";
+import { getThemeBootstrapScript } from "@courselit/theme";
 import { generateThemeStyles } from "@/lib/theme-styles";
 import { SITE_SETTINGS_DEFAULT_TITLE } from "@ui-config/strings";
 
@@ -57,6 +58,12 @@ export default async function RootLayout({ children }: RootLayoutProps) {
     return (
         <html suppressHydrationWarning>
             <head>
+                <script
+                    suppressHydrationWarning
+                    dangerouslySetInnerHTML={{
+                        __html: getThemeBootstrapScript(),
+                    }}
+                />
                 <style>{themeStyles}</style>
             </head>
             <body

@@ -7,8 +7,8 @@ import {
     OctagonX,
     TriangleAlert,
 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { Toaster as Sonner } from "sonner";
+import { useTheme } from "@/components/next-theme-provider";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 

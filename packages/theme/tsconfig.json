@@ -1,0 +1,12 @@
+{
+    "extends": "tsconfig/node.json",
+    "exclude": ["dist", "build", "node_modules"],
+    "compilerOptions": {
+        "outDir": "./dist",
+        "lib": ["es2020", "dom"],
+        "types": ["node"],
+        "strict": false,
+        "jsx": "react-jsx"
+    },
+    "include": ["src/**/*"]
+}

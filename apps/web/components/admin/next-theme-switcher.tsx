@@ -1,12 +1,12 @@
 import { Button } from "@components/ui/button";
 import { Sun, Moon } from "lucide-react";
-import { useTheme } from "next-themes";
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
 } from "@components/ui/tooltip";
 import { BTN_TOGGLE_THEME } from "@ui-config/strings";
+import { useTheme } from "@components/next-theme-provider";
 
 export default function NextThemeSwitcher({
     variant = "outline",

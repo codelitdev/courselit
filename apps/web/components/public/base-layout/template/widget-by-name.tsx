@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import widgets from "@/ui-config/widgets";
 import { COMPONENT_MISSING_SUFFIX } from "@/ui-config/strings";
 import WidgetErrorBoundary from "@/components/public/base-layout/template/widget-error-boundary";
-import { useTheme } from "next-themes";
 import { WidgetDefaultSettings, WidgetProps } from "@courselit/common-models";
+import { useTheme } from "@/components/next-theme-provider";
 
 const WidgetByName = ({
     id,
@@ -17,8 +17,7 @@ const WidgetByName = ({
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        // This is the recommended pattern from next-themes to avoid hydration mismatch.
-        // The effect intentionally runs once to trigger a re-render with the correct theme.
+        // Wait until the client has mounted before depending on the resolved theme.
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
     }, []);

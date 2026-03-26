@@ -20,7 +20,7 @@ import {
 import { Toaster, useToast } from "@courselit/components-library";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { Theme } from "@courselit/page-models";
-import { ThemeProvider as NextThemesProvider } from "@components/next-theme-provider";
+import { ThemeProvider } from "@components/next-theme-provider";
 import { defaultState } from "@components/default-state";
 import { getUserProfile } from "./helpers";
 import { auth } from "@/auth";
@@ -92,7 +92,7 @@ function LayoutContent({
                 <SiteInfoContext.Provider value={siteinfo}>
                     <ThemeContext.Provider value={{ theme, setTheme }}>
                         <ServerConfigContext.Provider value={config}>
-                            <NextThemesProvider
+                            <ThemeProvider
                                 attribute="class"
                                 defaultTheme="system"
                                 enableSystem
@@ -105,7 +105,7 @@ function LayoutContent({
                                         {children}
                                     </Suspense>
                                 </ProfileContext.Provider>
-                            </NextThemesProvider>
+                            </ThemeProvider>
                         </ServerConfigContext.Provider>
                     </ThemeContext.Provider>
                 </SiteInfoContext.Provider>
