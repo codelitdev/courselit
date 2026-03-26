@@ -1,4 +1,3 @@
-import { sortCourseGroups } from "@ui-lib/utils";
 import { Course, Group, Lesson } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
 
@@ -92,17 +91,16 @@ export const getProduct = async (
 export function formatCourse(
     post: Course & { lessons: Lesson[]; firstLesson: string; groups: Group[] },
 ): CourseFrontend {
-    const sortedGroups = sortCourseGroups(post as Course);
-
-    for (const group of sortedGroups) {
-        (group as GroupWithLessons).lessons = post.lessons
+    const groupsWithLessons = post.groups.map((group) => ({
+        ...group,
+        lessons: post.lessons
             .filter((lesson: Lesson) => lesson.groupId === group.id)
             .sort(
                 (a: any, b: any) =>
                     group.lessonsOrder?.indexOf(a.lessonId) -
                     group.lessonsOrder?.indexOf(b.lessonId),
-            );
-    }
+            ),
+    }));
 
     return {
         title: post.title,
@@ -113,7 +111,7 @@ export function formatCourse(
         slug: post.slug,
         cost: post.cost,
         courseId: post.courseId,
-        groups: sortedGroups as GroupWithLessons[],
+        groups: groupsWithLessons as GroupWithLessons[],
         tags: post.tags,
         firstLesson: post.firstLesson,
         paymentPlans: post.paymentPlans,

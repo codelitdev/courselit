@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useState } from "react";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +24,7 @@ import DashboardContent from "@components/admin/dashboard-content";
 import { AddressContext } from "@components/contexts";
 import useProduct from "@/hooks/use-product";
 import { truncate } from "@ui-lib/utils";
-import { Constants, UIConstants } from "@courselit/common-models";
+import { Constants, Group, UIConstants } from "@courselit/common-models";
 import { useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import { Plus } from "lucide-react";
@@ -38,25 +38,16 @@ export default function ContentPage() {
         string,
         string
     > | null>(null);
-    const [orderedSections, setOrderedSections] = useState<any[]>([]);
+    const [orderedSections, setOrderedSections] = useState<Group[] | null>(
+        null,
+    );
 
     const params = useParams();
     const productId = params.id as string;
     const address = useContext(AddressContext);
     const { product } = useProduct(productId);
     const { toast } = useToast();
-
-    const sortedProductGroups = useMemo(
-        () =>
-            [...(product?.groups ?? [])].sort(
-                (a, b) => (a.rank ?? 0) - (b.rank ?? 0),
-            ),
-        [product?.groups],
-    );
-
-    useEffect(() => {
-        setOrderedSections(sortedProductGroups);
-    }, [sortedProductGroups]);
+    const resolvedOrderedSections = orderedSections ?? product?.groups ?? [];
 
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
@@ -94,7 +85,9 @@ export default function ContentPage() {
             const response = await fetch.exec();
             if (response.removeGroup?.courseId) {
                 setOrderedSections((prev) =>
-                    prev.filter((section) => section.id !== groupId),
+                    (prev ?? product?.groups ?? []).filter(
+                        (section) => section.id !== groupId,
+                    ),
                 );
                 toast({
                     title: TOAST_TITLE_SUCCESS,
@@ -135,7 +128,7 @@ export default function ContentPage() {
             <ScrollArea className="h-[calc(100vh-180px)]">
                 {product?.courseId ? (
                     <ContentSectionsBoard
-                        orderedSections={orderedSections}
+                        orderedSections={resolvedOrderedSections}
                         setOrderedSections={setOrderedSections}
                         lessons={product.lessons ?? []}
                         courseId={product.courseId}

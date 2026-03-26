@@ -117,7 +117,7 @@ describe("reorderGroups", () => {
             slug: id("course-slug"),
         });
 
-        await reorderGroups({
+        const reorderedCourse = await reorderGroups({
             courseId: course.courseId,
             groupIds: [groupId3, groupId1, groupId2],
             ctx: {
@@ -142,6 +142,14 @@ describe("reorderGroups", () => {
         expect(rankById.get(groupId3)).toBe(1000);
         expect(rankById.get(groupId1)).toBe(2000);
         expect(rankById.get(groupId2)).toBe(3000);
+        expect(
+            (updatedCourse?.groups ?? []).map((group: any) =>
+                group._id.toString(),
+            ),
+        ).toEqual([groupId3, groupId1, groupId2]);
+        expect(
+            (reorderedCourse.groups ?? []).map((group: any) => group.id),
+        ).toEqual([groupId3, groupId1, groupId2]);
     });
 
     it("rejects duplicate group ids", async () => {

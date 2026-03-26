@@ -1,8 +1,8 @@
 import { formatCourse } from "../helpers";
 
 describe("course helpers formatCourse", () => {
-    it("returns groups sorted by rank and lessons sorted by lessonsOrder", () => {
-        const formatted = formatCourse({
+    const makeCourse = () =>
+        ({
             title: "Course",
             description: "{}",
             featuredImage: undefined,
@@ -46,14 +46,22 @@ describe("course helpers formatCourse", () => {
                     groupId: "group-2",
                 },
             ],
-        } as any);
+        }) as any;
+
+    it("preserves group order from the backend response", () => {
+        const formatted = formatCourse(makeCourse());
 
         expect(formatted.groups.map((group) => group.id)).toEqual([
-            "group-1",
             "group-2",
+            "group-1",
         ]);
+    });
+
+    it("sorts lessons within each group by lessonsOrder", () => {
+        const formatted = formatCourse(makeCourse());
+
         expect(
-            formatted.groups[1].lessons.map((lesson) => lesson.lessonId),
+            formatted.groups[0].lessons.map((lesson) => lesson.lessonId),
         ).toEqual(["lesson-3", "lesson-2"]);
     });
 });

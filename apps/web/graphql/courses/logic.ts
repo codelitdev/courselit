@@ -129,12 +129,20 @@ async function formatCourse(
         (course as any).firstLesson = nextLesson;
     }
 
-    const result = {
-        ...course,
-        groups: course!.groups?.map((group: any) => ({
+    const sortedGroups = course!.groups
+        ?.map((group: any) => ({
             ...group,
             id: group._id.toString(),
-        })),
+        }))
+        .sort(
+            (groupA: any, groupB: any) =>
+                (groupA.rank ?? Number.MAX_SAFE_INTEGER) -
+                (groupB.rank ?? Number.MAX_SAFE_INTEGER),
+        );
+
+    const result = {
+        ...course,
+        groups: sortedGroups,
         paymentPlans,
     };
     return result;
@@ -1004,22 +1012,20 @@ export const reorderGroups = async ({
         throw new Error(responses.invalid_input);
     }
 
-    const rankByGroupId = new Map<string, number>();
-    groupIds.forEach((groupId, index) => {
-        rankByGroupId.set(groupId, (index + 1) * GROUP_RANK_GAP);
-    });
-
-    const updatedGroups = (course.groups ?? []).map((group) => {
+    const plainGroupsById = new Map<string, any>();
+    (course.groups ?? []).forEach((group) => {
         const plainGroup =
             typeof (group as any).toObject === "function"
                 ? (group as any).toObject()
                 : { ...group };
 
-        return {
-            ...plainGroup,
-            rank: rankByGroupId.get(group.id) ?? group.rank,
-        };
+        plainGroupsById.set(group.id, plainGroup);
     });
+
+    const updatedGroups = groupIds.map((groupId, index) => ({
+        ...plainGroupsById.get(groupId),
+        rank: (index + 1) * GROUP_RANK_GAP,
+    }));
 
     await CourseModel.updateOne(
         {
