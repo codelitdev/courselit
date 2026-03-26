@@ -1,4 +1,4 @@
-import { MediaSchema } from "@courselit/common-logic";
+import { MediaSchema } from "@courselit/orm-models";
 import { Media } from "@courselit/common-models";
 import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";

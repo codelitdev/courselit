@@ -6,7 +6,7 @@ layout: ../../../layouts/MainLayout.astro
 
 CourseLit uses the concept of a `Lesson`. It is very similar to what we generally see in books, i.e., a large piece of information is divided into smaller chunks called lessons.
 
-Similarly, you can break down your course into `Lessons` and group the lessons into [Sections](/en/products/section).
+Similarly, you can break down your course into `Lessons` and group the lessons into [Sections](/en/courses/section).
 
 ## Sections
 

@@ -11,10 +11,10 @@ import DomainModel, { DomainDocument } from "./model/domain";
 import { Constants, EmailTemplate } from "@courselit/common-models";
 import emailTemplate from "./model/email-template";
 import {
-    AdminSequence,
     InternalMembership,
     InternalUser,
-} from "@courselit/common-logic";
+    AdminSequence,
+} from "@courselit/orm-models";
 
 export async function getDueOngoingSequences(): Promise<OngoingSequence[]> {
     const currentTime = new Date().getTime();
@@ -73,9 +73,14 @@ export async function getTemplate(id: string): Promise<EmailTemplate | null> {
     return (await emailTemplate.find({ templateId: id }).lean()) as any;
 }
 
-export async function getMemberships(entityId: string, entityType: string) {
+export async function getMemberships(
+    entityId: string,
+    entityType: string,
+    domain: mongoose.Types.ObjectId,
+) {
     // @ts-ignore - Mongoose type compatibility issue
     return await MembershipModel.find<InternalMembership>({
+        domain,
         entityId,
         entityType,
         status: Constants.MembershipStatus.ACTIVE,

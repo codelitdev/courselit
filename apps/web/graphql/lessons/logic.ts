@@ -29,7 +29,7 @@ import {
 import LessonEvaluation from "../../models/LessonEvaluation";
 import { checkPermission, extractMediaIDs } from "@courselit/utils";
 import { recordActivity } from "../../lib/record-activity";
-import { InternalCourse } from "@courselit/common-logic";
+import { InternalCourse } from "@courselit/orm-models";
 import CertificateModel from "../../models/Certificate";
 import { error } from "@/services/logger";
 import getDeletedMediaIds from "@/lib/get-deleted-media-ids";

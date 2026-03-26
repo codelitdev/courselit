@@ -1,5 +1,4 @@
 const config = {
-    preset: "@shelf/jest-mongodb",
     setupFilesAfterEnv: ["<rootDir>/setupTests.ts"],
     watchPathIgnorePatterns: ["globalConfig"],
     moduleNameMapper: {

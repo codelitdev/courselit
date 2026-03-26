@@ -55,6 +55,10 @@ function LayoutContent({
                 setProfile(fetchedProfile);
             }
         } catch (err) {
+            setProfile((currentProfile) => ({
+                ...currentProfile,
+                fetched: true,
+            }));
             const message =
                 err instanceof Error ? err.message : "Unknown error occurred";
             toast({
@@ -72,6 +76,10 @@ function LayoutContent({
             });
         }
     }, [address, session, updateUserProfile]);
+
+    if (session && !profile.fetched) {
+        return null;
+    }
 
     return (
         <AddressContext.Provider

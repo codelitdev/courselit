@@ -2,7 +2,7 @@
  * Business logic for managing courses.
  */
 import CourseModel from "@/models/Course";
-import { InternalCourse } from "@courselit/common-logic";
+import { InternalCourse } from "@courselit/orm-models";
 import UserModel from "@/models/User";
 import { Media, User } from "@courselit/common-models";
 import { responses } from "@/config/strings";
@@ -18,7 +18,7 @@ import {
     setupCourse,
     validateCourse,
 } from "./helpers";
-import Lesson from "@/models/Lesson";
+import LessonModel from "@/models/Lesson";
 import GQLContext from "@/models/GQLContext";
 import Filter from "./models/filter";
 import mongoose from "mongoose";
@@ -129,12 +129,20 @@ async function formatCourse(
         (course as any).firstLesson = nextLesson;
     }
 
-    const result = {
-        ...course,
-        groups: course!.groups?.map((group: any) => ({
+    const sortedGroups = course!.groups
+        ?.map((group: any) => ({
             ...group,
             id: group._id.toString(),
-        })),
+        }))
+        .sort(
+            (groupA: any, groupB: any) =>
+                (groupA.rank ?? Number.MAX_SAFE_INTEGER) -
+                (groupB.rank ?? Number.MAX_SAFE_INTEGER),
+        );
+
+    const result = {
+        ...course,
+        groups: sortedGroups,
         paymentPlans,
     };
     return result;
@@ -209,6 +217,22 @@ export const updateCourse = async (
 ) => {
     let course = await getCourseOrThrow(undefined, ctx, courseData.id);
 
+    if (
+        typeof courseData.title === "string" &&
+        courseData.title.trim() &&
+        courseData.title !== course.title
+    ) {
+        const conflictingCourse = await CourseModel.findOne({
+            domain: ctx.subdomain._id,
+            title: courseData.title,
+            courseId: { $ne: course.courseId },
+        }).select("_id");
+
+        if (conflictingCourse) {
+            throw new Error(responses.page_id_already_exists);
+        }
+    }
+
     const mediaIdsMarkedForDeletion: string[] = [];
     if (Object.prototype.hasOwnProperty.call(courseData, "description")) {
         const nextDescription = (courseData.description ?? "") as string;
@@ -260,6 +284,16 @@ export const updateCourse = async (
     if (courseData.slug) {
         const newSlug = validateSlug(courseData.slug);
         if (newSlug !== course.slug) {
+            const conflictingCourse = await CourseModel.findOne({
+                domain: ctx.subdomain._id,
+                slug: newSlug,
+                courseId: { $ne: course.courseId },
+            }).select("_id");
+
+            if (conflictingCourse) {
+                throw new Error(responses.page_id_already_exists);
+            }
+
             try {
                 await PageModel.updateOne(
                     {
@@ -730,7 +764,7 @@ export const removeGroup = async (
         throw new Error(responses.download_course_last_group_cannot_be_removed);
     }
 
-    const countOfAssociatedLessons = await Lesson.countDocuments({
+    const countOfAssociatedLessons = await LessonModel.countDocuments({
         courseId,
         groupId: group.id,
         domain: ctx.subdomain._id,
@@ -766,11 +800,30 @@ export const updateGroup = async ({
     name,
     rank,
     collapsed,
-    lessonsOrder,
     drip,
     ctx,
+}: {
+    id: string;
+    courseId: string;
+    name?: string;
+    rank?: number;
+    collapsed?: boolean;
+    drip?: {
+        type?: string;
+        status?: boolean;
+        delayInMillis?: number;
+        dateInUTC?: number;
+        email?: {
+            content: string;
+            subject: string;
+        };
+    };
+    ctx: GQLContext;
 }) => {
     const course = await getCourseOrThrow(undefined, ctx, courseId);
+    const currentGroup = course.groups?.find((group) => group.id === id);
+    const existingDripType = currentGroup?.drip?.type;
+    const effectiveDripType = drip?.type || existingDripType;
 
     const $set = {};
     if (name) {
@@ -788,37 +841,31 @@ export const updateGroup = async ({
         $set["groups.$.rank"] = rank;
     }
 
-    if (
-        lessonsOrder &&
-        lessonsOrder.every((lessonId) => course.lessons?.includes(lessonId)) &&
-        lessonsOrder.every((lessonId) =>
-            course.groups
-                ?.find((group) => group.id === id)
-                ?.lessonsOrder.includes(lessonId),
-        )
-    ) {
-        $set["groups.$.lessonsOrder"] = lessonsOrder;
-    }
-
     if (typeof collapsed === "boolean") {
         $set["groups.$.collapsed"] = collapsed;
     }
 
     if (drip) {
-        if (drip.status) {
+        const hasDripUpdates = Object.keys(drip).some((key) => key !== "type");
+
+        if (!effectiveDripType && hasDripUpdates) {
+            throw new Error(responses.invalid_input);
+        }
+
+        if (typeof drip.status === "boolean") {
             $set["groups.$.drip.status"] = drip.status;
         }
         if (drip.type) {
             $set["groups.$.drip.type"] = drip.type;
         }
-        if (drip.type === Constants.dripType[0]) {
-            if (drip.delayInMillis) {
+        if (effectiveDripType === Constants.dripType[0]) {
+            if (typeof drip.delayInMillis === "number") {
                 $set["groups.$.drip.delayInMillis"] =
-                    drip.delayInMillis * 86400000;
+                    drip.delayInMillis * constants.relativeDripUnitInMillis;
             }
             $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
         }
-        if (drip.type === Constants.dripType[1]) {
+        if (effectiveDripType === Constants.dripType[1]) {
             $set["groups.$.drip.delayInMillis"] = null;
             if (drip.dateInUTC) {
                 $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
@@ -851,6 +898,148 @@ export const updateGroup = async ({
         { $set },
         { new: true },
     );
+};
+
+export const moveLesson = async ({
+    courseId,
+    lessonId,
+    destinationGroupId,
+    destinationIndex,
+    ctx,
+}: {
+    courseId: string;
+    lessonId: string;
+    destinationGroupId: string;
+    destinationIndex: number;
+    ctx: GQLContext;
+}) => {
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
+    const lesson = await LessonModel.findOne({
+        domain: ctx.subdomain._id,
+        lessonId,
+    });
+
+    if (!lesson || lesson.courseId !== course.courseId) {
+        throw new Error(responses.item_not_found);
+    }
+
+    if (!course.lessons?.includes(lessonId)) {
+        throw new Error(responses.invalid_input);
+    }
+
+    const destinationGroup = course.groups?.find(
+        (group) => group.id === destinationGroupId,
+    );
+    if (!destinationGroup) {
+        throw new Error(responses.invalid_input);
+    }
+
+    const normalizedGroups = (course.groups ?? []).map((group) => {
+        const plainGroup =
+            typeof (group as any).toObject === "function"
+                ? (group as any).toObject()
+                : { ...group };
+
+        return {
+            ...plainGroup,
+            lessonsOrder: (plainGroup.lessonsOrder ?? []).filter(
+                (id: string) => id !== lessonId,
+            ),
+        };
+    });
+
+    const destinationGroupIndex = normalizedGroups.findIndex((group: any) => {
+        const groupId = group._id ?? group.id;
+        return groupId?.toString() === destinationGroupId;
+    });
+    if (destinationGroupIndex === -1) {
+        throw new Error(responses.invalid_input);
+    }
+
+    const destinationLessons =
+        normalizedGroups[destinationGroupIndex].lessonsOrder ?? [];
+    normalizedGroups[destinationGroupIndex].lessonsOrder = destinationLessons;
+    const safeDestinationIndex = Math.min(
+        Math.max(destinationIndex, 0),
+        destinationLessons.length,
+    );
+    destinationLessons.splice(safeDestinationIndex, 0, lessonId);
+
+    await CourseModel.updateOne(
+        {
+            domain: ctx.subdomain._id,
+            courseId: course.courseId,
+        },
+        {
+            $set: {
+                groups: normalizedGroups,
+            },
+        },
+    );
+
+    if (lesson.groupId !== destinationGroupId) {
+        lesson.groupId = destinationGroupId;
+        await lesson.save();
+    }
+
+    return await formatCourse(course.courseId, ctx);
+};
+
+const GROUP_RANK_GAP = 1000;
+
+export const reorderGroups = async ({
+    courseId,
+    groupIds,
+    ctx,
+}: {
+    courseId: string;
+    groupIds: string[];
+    ctx: GQLContext;
+}) => {
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
+    const existingGroupIds = (course.groups ?? []).map((group) => group.id);
+
+    if (existingGroupIds.length !== groupIds.length) {
+        throw new Error(responses.invalid_input);
+    }
+
+    if (new Set(groupIds).size !== groupIds.length) {
+        throw new Error(responses.invalid_input);
+    }
+
+    const existingIdSet = new Set(existingGroupIds);
+    if (!groupIds.every((groupId) => existingIdSet.has(groupId))) {
+        throw new Error(responses.invalid_input);
+    }
+
+    const plainGroupsById = new Map<string, any>();
+    (course.groups ?? []).forEach((group) => {
+        const plainGroup =
+            typeof (group as any).toObject === "function"
+                ? (group as any).toObject()
+                : { ...group };
+
+        plainGroupsById.set(group.id, plainGroup);
+    });
+
+    const updatedGroups = groupIds.map((groupId, index) => ({
+        ...plainGroupsById.get(groupId),
+        rank: (index + 1) * GROUP_RANK_GAP,
+    }));
+
+    await CourseModel.updateOne(
+        {
+            domain: ctx.subdomain._id,
+            courseId: course.courseId,
+        },
+        {
+            $set: {
+                groups: updatedGroups,
+            },
+        },
+    );
+
+    return await formatCourse(course.courseId, ctx);
 };
 
 export const getMembers = async ({

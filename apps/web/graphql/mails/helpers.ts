@@ -1,5 +1,6 @@
 import RuleModel from "@models/Rule";
 import { Email, Rule, Sequence, User } from "@courselit/common-models";
+import { getEmailFrom } from "@courselit/utils";
 import GQLContext from "@models/GQLContext";
 import mongoose from "mongoose";
 import SearchData from "./models/search-data";
@@ -7,11 +8,10 @@ import DownloadLinkModel from "@models/DownloadLink";
 import pug from "pug";
 import digitalDownloadTemplate from "../../templates/download-link";
 import { responses } from "@config/strings";
-import { generateEmailFrom } from "@/lib/utils";
 import { addMailJob } from "@/services/queue";
 import { EmailBlock } from "@courselit/email-editor";
 import UserModel from "@models/User";
-import { InternalCourse } from "@courselit/common-logic";
+import { InternalCourse } from "@courselit/orm-models";
 
 export function areAllEmailIdsValid(
     emailsOrder: string[],
@@ -103,9 +103,9 @@ export async function createTemplateAndSendMail({
         to: [user.email],
         subject: `Thank you for signing up for ${course.title}`,
         body: emailBody,
-        from: generateEmailFrom({
+        from: getEmailFrom({
             name: ctx.subdomain?.settings?.title || ctx.subdomain.name,
-            email: process.env.EMAIL_FROM || ctx.subdomain.email,
+            email: process.env.EMAIL_FROM || "",
         }),
     });
 }

@@ -1,4 +1,4 @@
-import { InternalCourse, CourseSchema } from "@courselit/common-logic";
+import { InternalCourse, CourseSchema } from "@courselit/orm-models";
 import mongoose, { Model } from "mongoose";
 
 const CourseModel =

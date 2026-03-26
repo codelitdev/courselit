@@ -1,5 +1,6 @@
 import { jwtUtils } from "@courselit/utils";
 import { logger } from "../logger";
+import { captureError, getDomainId } from "../observability/posthog";
 
 export const verifyJWTMiddleware = (req, res, next) => {
     try {
@@ -18,6 +19,11 @@ export const verifyJWTMiddleware = (req, res, next) => {
         next();
     } catch (err) {
         logger.error(err);
+        captureError({
+            error: err,
+            source: "middleware.verify_jwt",
+            domainId: getDomainId(),
+        });
         return res.status(500).json({ error: err.message });
     }
 };

@@ -4,7 +4,7 @@ import * as medialitService from "@/services/medialit";
 import { UIConstants as constants } from "@courselit/common-models";
 import { checkPermission } from "@courselit/utils";
 import UserModel from "@models/User";
-import { InternalUser, InternalCourse } from "@courselit/common-logic";
+import { InternalUser, InternalCourse } from "@courselit/orm-models";
 import DomainModel, { Domain } from "@models/Domain";
 import { auth } from "@/auth";
 import CourseModel from "@models/Course";

@@ -14,11 +14,12 @@ import UserModel from "../model/user";
 import EmailDelivery from "../model/email-delivery";
 import * as queries from "../queries";
 import * as mail from "../../mail";
-import { AdminSequence, InternalUser } from "@courselit/common-logic";
-import { jwtUtils } from "@courselit/utils";
+import { InternalUser } from "@courselit/orm-models";
+import { getEmailFrom, jwtUtils } from "@courselit/utils";
 import { getUnsubLink } from "../../utils/get-unsub-link";
 import { getSiteUrl } from "../../utils/get-site-url";
 import { sequenceBounceLimit } from "../../constants";
+import { AdminSequence } from "@courselit/orm-models";
 
 // Mock dependencies
 jest.mock("../../mail");
@@ -77,6 +78,9 @@ jest.mock("liquidjs", () => {
 const mockedSendMail = mail.sendMail as jest.MockedFunction<
     typeof mail.sendMail
 >;
+const mockedGetEmailFrom = getEmailFrom as jest.MockedFunction<
+    typeof getEmailFrom
+>;
 const mockedJwtUtils = jwtUtils as jest.Mocked<typeof jwtUtils>;
 const mockedGetUnsubLink = getUnsubLink as jest.MockedFunction<
     typeof getUnsubLink
@@ -100,6 +104,7 @@ describe("processOngoingSequence", () => {
         process.env.PROTOCOL = "https";
         process.env.DOMAIN = "test.com";
         process.env.NODE_ENV = "test";
+        process.env.EMAIL_FROM = "verified-sender@example.com";
 
         // Create test domain
         testDomain = await (DomainModel.create as any)({
@@ -265,6 +270,9 @@ describe("processOngoingSequence", () => {
         mockedGetUnsubLink.mockReturnValue(
             "https://test.com/api/unsubscribe/unsub-token-123",
         );
+        mockedGetEmailFrom.mockImplementation(
+            ({ name, email }) => `${name} <${email}>`,
+        );
         mockedJwtUtils.generateToken = jest.fn().mockReturnValue("test-token");
         // renderEmailToHtml is not mocked - we test the real email formatting
         mockedSendMail.mockResolvedValue(undefined);
@@ -281,6 +289,20 @@ describe("processOngoingSequence", () => {
             sequenceId: { $ne: TEST_SEQUENCE_ID }, // Keep main test sequence
         });
         jest.clearAllMocks();
+
+        mockedGetSiteUrl.mockReturnValue("https://test.com");
+        mockedGetUnsubLink.mockReturnValue(
+            "https://test.com/api/unsubscribe/unsub-token-123",
+        );
+        mockedGetEmailFrom.mockImplementation(
+            ({ name, email }) => `${name} <${email}>`,
+        );
+        mockedJwtUtils.generateToken = jest.fn().mockReturnValue("test-token");
+        mockedSendMail.mockResolvedValue(undefined);
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
     });
 
     afterAll(async () => {
@@ -466,7 +488,9 @@ describe("processOngoingSequence", () => {
             // Verify email was sent
             expect(mockedSendMail).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    from: expect.stringContaining("queue-creator@example.com"),
+                    from: expect.stringContaining(
+                        "verified-sender@example.com",
+                    ),
                     to: "queue-user@example.com",
                     subject: "First Email",
                     html: expect.any(String),

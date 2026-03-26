@@ -42,6 +42,7 @@ import { FetchBuilder } from "@courselit/utils";
 import Resources from "@components/resources";
 import EmailViewer from "@components/admin/mails/email-viewer";
 import { defaultEmail, Email as EmailContent } from "@courselit/email-editor";
+import constants from "@/config/constants";
 
 const { permissions } = UIConstants;
 
@@ -99,8 +100,11 @@ export default function SectionPage(props: {
                         : false,
                 );
                 setDripType(type);
-                if (group.drip?.delayInMillis) {
-                    setDelay(group.drip?.delayInMillis / 86400000);
+                if (typeof group.drip?.delayInMillis === "number") {
+                    setDelay(
+                        group.drip.delayInMillis /
+                            constants.relativeDripUnitInMillis,
+                    );
                 }
                 if (group.drip?.dateInUTC) {
                     setDate(group.drip?.dateInUTC);
@@ -581,7 +585,7 @@ export default function SectionPage(props: {
             <Resources
                 links={[
                     {
-                        href: "https://docs.courselit.app/en/products/section/#drip-a-section",
+                        href: "https://docs.courselit.app/en/courses/section#drip-a-section",
                         text: "Drip content",
                     },
                 ]}
