@@ -81,7 +81,7 @@ export default function NewBlog() {
                         >
                             {BTN_CONTINUE}
                         </Button>
-                        <Link href={`/dashboard/blogs`} legacyBehavior>
+                        <Link href="/dashboard/blogs">
                             <Button variant="soft">{BUTTON_CANCEL_TEXT}</Button>
                         </Link>
                     </div>

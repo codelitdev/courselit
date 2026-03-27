@@ -20,6 +20,9 @@
     "@courselit/common-logic",
     "@courselit/page-primitives",
     "@courselit/common-models",
-    "@courselit/docs"
+    "@courselit/docs",
+    "@courselit/orm-models",
+    "@courselit/page-models",
+    "@courselit/scripts"
   ]
 }
