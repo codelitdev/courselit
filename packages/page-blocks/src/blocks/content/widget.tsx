@@ -209,7 +209,9 @@ export default function Widget({
             <AccordionItem value={group} key={group}>
                 <AccordionTrigger>
                     <div className="flex grow justify-between mr-2">
-                        <Text1 theme={overiddenTheme}>{group}</Text1>
+                        <Text1 theme={overiddenTheme} className="text-left">
+                            {group}
+                        </Text1>
                         <Badge variant="outline">
                             {`${formattedCourse[group].length} lessons`}
                         </Badge>
