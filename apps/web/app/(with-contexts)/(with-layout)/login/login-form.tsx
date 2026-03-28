@@ -142,6 +142,13 @@ export default function LoginForm({
                         await getUserProfile(address.backend),
                     );
             }
+        } catch (err) {
+            console.error("Error during requestCode:", err);
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: "An unexpected error occurred. Please try again.",
+                variant: "destructive",
+            });
         } finally {
             setLoading(false);
         }

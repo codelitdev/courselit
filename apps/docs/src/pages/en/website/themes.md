@@ -192,14 +192,14 @@ The typography editor lets you customize text styles across your website. These 
 - Header 3: Smaller titles for subsections
 - Header 4: Small titles for minor sections
 - Preheader: Introductory text that appears above headers
-    </details>
+  </details>
 
 <details>
 <summary>Subheaders</summary>
 
 - Subheader 1: Primary subheaders for section introductions
 - Subheader 2: Secondary subheaders for supporting text
-    </details>
+  </details>
 
 <details>
 <summary>Body Text</summary>
@@ -207,7 +207,7 @@ The typography editor lets you customize text styles across your website. These 
 - Text 1: Main body text for content
 - Text 2: Secondary body text for supporting content
 - Caption: Small text for image captions and footnotes
-    </details>
+  </details>
 
 <details>
 <summary>Interactive Elements</summary>
@@ -215,7 +215,7 @@ The typography editor lets you customize text styles across your website. These 
 - Link: Text for clickable links
 - Button: Text for buttons and calls-to-action
 - Input: Text for form fields and search boxes
-    </details>
+  </details>
 
 For each text style, you can customize:
 
@@ -243,7 +243,7 @@ CourseLit provides a carefully curated selection of professional fonts, organize
 - **Mulish**: A geometric sans-serif with a modern feel
 - **Nunito**: A well-balanced font with rounded terminals
 - **Work Sans**: A clean, modern font with a geometric feel
-    </details>
+  </details>
 
 <details>
 <summary>Serif Fonts</summary>
@@ -253,7 +253,7 @@ CourseLit provides a carefully curated selection of professional fonts, organize
 - **Playfair Display**: An elegant serif font for headings
 - **Roboto Slab**: A serif variant of Roboto
 - **Source Serif 4**: A serif font designed for digital reading
-    </details>
+  </details>
 
 <details>
 <summary>Display Fonts</summary>
@@ -264,7 +264,7 @@ CourseLit provides a carefully curated selection of professional fonts, organize
 - **Rubik**: A sans-serif with a geometric feel
 - **Oswald**: A reworking of the classic style
 - **Bebas Neue**: A display font with a strong personality
-    </details>
+  </details>
 
 <details>
 <summary>Modern Fonts</summary>
@@ -272,7 +272,7 @@ CourseLit provides a carefully curated selection of professional fonts, organize
 - **Lato**: A sans-serif font with a warm feel
 - **PT Sans**: A font designed for public use
 - **Quicksand**: A display sans-serif with rounded terminals
-    </details>
+  </details>
 
 Each font is optimized for web use and includes multiple weights for flexibility in design. All fonts support Latin characters and are carefully selected for their readability and professional appearance.
 
@@ -290,7 +290,7 @@ The interactives editor allows you to customize the appearance of interactive el
 - Shadow effects: From None to 2X Large
 - Custom styles: Add your own custom styles using [supported Tailwind classes](#supported-tailwind-classes)
 - Disabled state: How the button looks when it can't be clicked
-    </details>
+  </details>
 
 <details>
 <summary>Link</summary>
@@ -300,7 +300,7 @@ The interactives editor allows you to customize the appearance of interactive el
 - Text shadow: Add depth to your links
 - Custom styles: Add your own custom styles using [supported Tailwind classes](#supported-tailwind-classes)
 - Disabled state: How the link looks when it can't be clicked
-    </details>
+  </details>
 
 <details>
 <summary>Card</summary>
@@ -309,7 +309,7 @@ The interactives editor allows you to customize the appearance of interactive el
 - Border style: Choose from various border styles
 - Shadow effects: Add depth to your cards
 - Custom styles: Add your own custom styles using [supported Tailwind classes](#supported-tailwind-classes)
-    </details>
+  </details>
 
 <details>
 <summary>Input</summary>
@@ -320,7 +320,7 @@ The interactives editor allows you to customize the appearance of interactive el
 - Shadow effects: Add depth to your input fields
 - Custom styles: Add your own custom styles using [supported Tailwind classes](#supported-tailwind-classes)
 - Disabled state: How the input looks when it can't be used
-    </details>
+  </details>
 
 ### 4. Structure
 
@@ -332,14 +332,14 @@ The structure editor lets you customize the layout of your pages, like section p
 <summary>Page</summary>
 
 - Maximum width options: - 2XL (42rem): Compact layout - 3XL (48rem): Standard layout - 4XL (56rem): Wide layout - 5XL (64rem): Extra wide layout - 6XL (72rem): Full width layout
-    </details>
+  </details>
 
 <details>
 <summary>Section</summary>
 
 - Horizontal padding: Space on the left and right sides (None to 9X Large)
 - Vertical padding: Space on the top and bottom (None to 9X Large)
-    </details>
+  </details>
 
 ## Publishing Changes
 
@@ -387,7 +387,7 @@ When adding custom styles to interactive elements, you can use the following Tai
 - `text-6xl`: 6X large text
 - `text-7xl`: 7X large text
 - `text-8xl`: 8X large text
-    </details>
+  </details>
 
 <details>
 <summary>Padding</summary>
@@ -399,7 +399,7 @@ When adding custom styles to interactive elements, you can use the following Tai
 #### Horizontal Padding
 
 - `px-4` to `px-20`: Horizontal padding from 1rem to 5rem
-    </details>
+  </details>
 
 <details>
 <summary>Colors</summary>
@@ -454,7 +454,7 @@ Variants available: `hover`, `disabled`, `dark`
 - `ease-out`: Ease out
 - `ease-in-out`: Ease in and out
 - `ease-linear`: Linear
-    </details>
+  </details>
 
 <details>
 <summary>Transforms</summary>
@@ -481,7 +481,7 @@ Variants available: `hover`, `disabled`, `dark`
 - `scale-110`: 110% scale
 - `scale-125`: 125% scale
 - `scale-150`: 150% scale
-    </details>
+  </details>
 
 <details>
 <summary>Shadows</summary>

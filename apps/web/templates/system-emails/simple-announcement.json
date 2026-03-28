@@ -1,0 +1,19 @@
+{
+    "templateId": "system-1",
+    "title": "Simple Announcement",
+    "content": {
+        "style": {
+            "backgroundColor": "#ffffff",
+            "width": 600
+        },
+        "content": [
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "# Announce something!"
+                }
+            }
+        ],
+        "meta": {}
+    }
+}

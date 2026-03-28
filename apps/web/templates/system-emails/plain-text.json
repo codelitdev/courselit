@@ -1,0 +1,19 @@
+{
+    "templateId": "system-2",
+    "title": "Plain text",
+    "content": {
+        "style": {
+            "backgroundColor": "#ffffff",
+            "width": 600
+        },
+        "content": [
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "Write your email here."
+                }
+            }
+        ],
+        "meta": {}
+    }
+}

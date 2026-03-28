@@ -10,7 +10,9 @@ import {
     PAGE_HEADER_ALL_MAILS,
     BROADCASTS,
     SEQUENCES,
+    TEMPLATES,
     BTN_NEW_SEQUENCE,
+    BTN_NEW_TEMPLATE,
     TOAST_TITLE_ERROR,
 } from "@/ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
@@ -28,16 +30,16 @@ import {
 } from "@courselit/components-library";
 import RequestForm from "./request-form";
 import SequencesList from "./sequences-list";
+import TemplatesList from "./templates-list";
 import { Button } from "@components/ui/button";
 import Link from "next/link";
 
 interface MailsProps {
     address: Address;
-    selectedTab: typeof BROADCASTS | typeof SEQUENCES;
-    loading: boolean;
+    selectedTab: typeof BROADCASTS | typeof SEQUENCES | typeof TEMPLATES;
 }
 
-type MailsTab = typeof BROADCASTS | typeof SEQUENCES;
+type MailsTab = typeof BROADCASTS | typeof SEQUENCES | typeof TEMPLATES;
 
 export default function Mails({ address, selectedTab }: MailsProps) {
     const [siteInfo, setSiteInfo] = useState<Domain>();
@@ -84,13 +86,11 @@ export default function Mails({ address, selectedTab }: MailsProps) {
         getSiteInfo();
     }, []);
 
-    const createSequence = async (type: SequenceType): Promise<void> => {
+    const createEmailTemplate = async (): Promise<void> => {
         const mutation = `
-        mutation createSequence(
-            $type: SequenceType!
-        ) {
-            sequence: createSequence(type: $type) {
-                sequenceId
+        mutation createEmailTemplate($title: String!) {
+            template: createEmailTemplate(title: $title) {
+                templateId
             }
         }
     `;
@@ -99,18 +99,16 @@ export default function Mails({ address, selectedTab }: MailsProps) {
             .setPayload({
                 query: mutation,
                 variables: {
-                    type: type.toUpperCase(),
+                    title: "New template",
                 },
             })
             .setIsGraphQLEndpoint(true)
             .build();
         try {
             const response = await fetch.exec();
-            if (response.sequence && response.sequence.sequenceId) {
+            if (response.template && response.template.templateId) {
                 router.push(
-                    `/dashboard/mails/${
-                        selectedTab === BROADCASTS ? "broadcast" : "sequence"
-                    }/${response.sequence.sequenceId}`,
+                    `/dashboard/mails/template/${response.template.templateId}`,
                 );
             }
         } catch (err) {
@@ -119,16 +117,16 @@ export default function Mails({ address, selectedTab }: MailsProps) {
                 description: err.message,
                 variant: "destructive",
             });
-        } finally {
         }
     };
 
     const onPrimaryButtonClick = (): void => {
         if (selectedTab === BROADCASTS) {
-            createSequence("broadcast");
+            router.push(`/dashboard/mails/new?type=broadcast`);
         } else if (selectedTab === SEQUENCES) {
-            createSequence("sequence");
+            router.push(`/dashboard/mails/new?type=sequence`);
         } else {
+            createEmailTemplate();
         }
     };
 
@@ -195,19 +193,28 @@ export default function Mails({ address, selectedTab }: MailsProps) {
                     <Button onClick={onPrimaryButtonClick}>
                         {selectedTab === BROADCASTS
                             ? BTN_NEW_MAIL
-                            : BTN_NEW_SEQUENCE}
+                            : selectedTab === SEQUENCES
+                              ? BTN_NEW_SEQUENCE
+                              : BTN_NEW_TEMPLATE}
                     </Button>
                 </div>
             </div>
             <Tabbs
-                items={[BROADCASTS, SEQUENCES]}
+                items={[BROADCASTS, SEQUENCES, TEMPLATES]}
                 value={selectedTab}
                 onChange={(tab: MailsTab) => {
                     router.replace(`/dashboard/mails?tab=${tab}`);
                 }}
             >
-                <SequencesList type={Constants.mailTypes[0] as SequenceType} />
-                <SequencesList type={Constants.mailTypes[1] as SequenceType} />
+                <SequencesList
+                    type={Constants.mailTypes[0] as SequenceType}
+                    address={address}
+                />
+                <SequencesList
+                    type={Constants.mailTypes[1] as SequenceType}
+                    address={address}
+                />
+                <TemplatesList address={address} />
             </Tabbs>
         </div>
     );
