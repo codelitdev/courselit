@@ -22,11 +22,13 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Configure CI Git User
         run: |
-          git config --global user.name 'Rajat Saxena'
-          git config --global user.email 'hi@sub.rajatsaxena.dev'
+          git config --global user.name 'CodeLit'
+          git config --global user.email 'hi@codelit.dev'
           git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}
         env:
           GITHUB_PAT: ${{ secrets.PAT }}
@@ -38,6 +40,13 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
 
       - name: Install Packages
         run: pnpm install
