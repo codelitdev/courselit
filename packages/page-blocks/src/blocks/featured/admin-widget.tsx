@@ -2,11 +2,10 @@ import React, { ChangeEvent, useEffect, useState } from "react";
 import type { Theme, ThemeStyle } from "@courselit/page-models";
 import Settings from "./settings";
 import { capitalize, FetchBuilder } from "@courselit/utils";
-import { actionCreators, AppDispatch } from "@courselit/state-management";
 import {
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     Select,
-    TextEditor,
     IconButton,
     Form,
     FormField,
@@ -17,13 +16,12 @@ import {
 } from "@courselit/components-library";
 import { Delete } from "@courselit/icons";
 import { Alignment, Address } from "@courselit/common-models";
+import { Editor } from "@courselit/text-editor";
 
 interface AdminWidgetProps {
     settings: Settings;
     onChange: (...args: any[]) => void;
     address: Address;
-    networkAction: boolean;
-    dispatch: AppDispatch;
     theme: Theme;
 }
 
@@ -31,7 +29,6 @@ export default function AdminWidget({
     settings,
     onChange,
     address,
-    dispatch,
     theme,
 }: AdminWidgetProps): JSX.Element {
     const dummyDescription: Record<string, unknown> = {
@@ -113,7 +110,6 @@ export default function AdminWidget({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
             setProductsLoaded(true);
             if (response.products) {
@@ -121,8 +117,6 @@ export default function AdminWidget({
             }
         } catch (err: any) {
             console.log(err); // eslint-disable-line no-console
-        } finally {
-            dispatch(actionCreators.networkAction(false));
         }
     };
 
@@ -135,8 +129,11 @@ export default function AdminWidget({
     };
 
     return (
-        <div className="flex flex-col gap-4 mb-4">
-            <AdminWidgetPanel title="Header">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["header", "products", "design"]}
+        >
+            <AdminWidgetPanel title="Header" value="header">
                 <Form>
                     <FormField
                         value={title}
@@ -148,7 +145,7 @@ export default function AdminWidget({
                 </Form>
                 <div>
                     <p className="mb-1 font-medium">Description</p>
-                    <TextEditor
+                    <Editor
                         initialContent={description}
                         onChange={(state: any) => setDescription(state)}
                         showToolbar={false}
@@ -171,7 +168,7 @@ export default function AdminWidget({
                 </div>
             )}
             {productsLoaded && (
-                <AdminWidgetPanel title="Products">
+                <AdminWidgetPanel title="Products" value="products">
                     <Select
                         title="Select a product"
                         value={""}
@@ -213,7 +210,7 @@ export default function AdminWidget({
                     </ul>
                 </AdminWidgetPanel>
             )}
-            <AdminWidgetPanel title="Design">
+            <AdminWidgetPanel title="Design" value="design">
                 <MaxWidthSelector
                     value={maxWidth || theme.theme.structure.page.width}
                     onChange={setMaxWidth}
@@ -226,9 +223,9 @@ export default function AdminWidget({
                     onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Advanced">
+            <AdminWidgetPanel title="Advanced" value="advanced">
                 <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
-        </div>
+        </AdminWidgetPanelContainer>
     );
 }

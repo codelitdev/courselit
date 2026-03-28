@@ -1,23 +1,25 @@
 /**
  * Business logic for managing courses.
  */
-import CourseModel, { InternalCourse } from "../../models/Course";
-import UserModel, { User } from "../../models/User";
-import { responses } from "../../config/strings";
+import CourseModel from "@/models/Course";
+import { InternalCourse } from "@courselit/orm-models";
+import UserModel from "@/models/User";
+import { Media, User } from "@courselit/common-models";
+import { responses } from "@/config/strings";
 import {
     checkIfAuthenticated,
     validateOffset,
     checkOwnershipWithoutModel,
-} from "../../lib/graphql";
-import constants from "../../config/constants";
+} from "@/lib/graphql";
+import constants from "@/config/constants";
 import {
     getPaginatedCoursesForAdmin,
     setupBlog,
     setupCourse,
     validateCourse,
 } from "./helpers";
-import Lesson from "../../models/Lesson";
-import GQLContext from "../../models/GQLContext";
+import LessonModel from "@/models/Lesson";
+import GQLContext from "@/models/GQLContext";
 import Filter from "./models/filter";
 import mongoose from "mongoose";
 import {
@@ -26,19 +28,34 @@ import {
     Membership,
     MembershipStatus,
     Progress,
+    PaymentPlan,
+    Course,
 } from "@courselit/common-models";
 import { deleteAllLessons } from "../lessons/logic";
-import { deleteMedia } from "../../services/medialit";
-import PageModel from "../../models/Page";
+import { deleteMedia, sealMedia } from "@/services/medialit";
+import PageModel from "@/models/Page";
 import { getPrevNextCursor } from "../lessons/helpers";
-import { checkPermission } from "@courselit/utils";
-import { error } from "../../services/logger";
-import { getPlans } from "../paymentplans/logic";
+import { checkPermission, extractMediaIDs } from "@courselit/utils";
+import { error } from "@/services/logger";
+import {
+    deleteProductsFromPaymentPlans,
+    getPlans,
+} from "../paymentplans/logic";
 import MembershipModel from "@models/Membership";
 import { getActivities } from "../activities/logic";
 import { ActivityType } from "@courselit/common-models/dist/constants";
 import { verifyMandatoryTags } from "../mails/helpers";
 import { Email } from "@courselit/email-editor";
+import PaymentPlanModel from "@models/PaymentPlan";
+import CertificateTemplateModel, {
+    CertificateTemplate,
+} from "@models/CertificateTemplate";
+import CertificateModel from "@models/Certificate";
+import ActivityModel from "@models/Activity";
+import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
+import { deletePageInternal } from "../pages/logic";
+import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
+import { validateSlug, isDuplicateKeyError } from "../pages/helpers";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -83,35 +100,49 @@ export const getCourseOrThrow = async (
     return course;
 };
 
-async function formatCourse(courseId: string, ctx: GQLContext) {
-    const course: InternalCourse | null = await CourseModel.findOne({
+async function formatCourse(
+    courseId: string,
+    ctx: GQLContext,
+    includeUnpublishedLessons: boolean = false,
+) {
+    const course: InternalCourse | null = (await CourseModel.findOne({
         courseId,
         domain: ctx.subdomain._id,
-    }).lean();
+    }).lean()) as unknown as InternalCourse;
 
     const paymentPlans = await getPlans({
-        planIds: course!.paymentPlans,
+        entityId: course!.courseId,
+        entityType: Constants.MembershipEntityType.COURSE,
         ctx,
     });
 
     if (
-        [Constants.CourseType.COURSE, Constants.CourseType.DOWNLOAD].includes(
-            course.type,
-        )
+        course.type === Constants.CourseType.COURSE ||
+        course.type === Constants.CourseType.DOWNLOAD
     ) {
         const { nextLesson } = await getPrevNextCursor(
             course.courseId,
             ctx.subdomain._id,
+            undefined,
+            !includeUnpublishedLessons,
         );
         (course as any).firstLesson = nextLesson;
     }
 
-    const result = {
-        ...course,
-        groups: course!.groups?.map((group: any) => ({
+    const sortedGroups = course!.groups
+        ?.map((group: any) => ({
             ...group,
             id: group._id.toString(),
-        })),
+        }))
+        .sort(
+            (groupA: any, groupB: any) =>
+                (groupA.rank ?? Number.MAX_SAFE_INTEGER) -
+                (groupB.rank ?? Number.MAX_SAFE_INTEGER),
+        );
+
+    const result = {
+        ...course,
+        groups: sortedGroups,
         paymentPlans,
     };
     return result;
@@ -122,10 +153,10 @@ export const getCourse = async (
     ctx: GQLContext,
     asGuest: boolean = false,
 ) => {
-    const course: InternalCourse | null = await CourseModel.findOne({
+    const course: InternalCourse | null = (await CourseModel.findOne({
         courseId: id,
         domain: ctx.subdomain._id,
-    }).lean();
+    }).lean()) as unknown as InternalCourse | null;
 
     if (!course) {
         throw new Error(responses.item_not_found);
@@ -138,26 +169,15 @@ export const getCourse = async (
             ]) || checkOwnershipWithoutModel(course, ctx);
 
         if (isOwner) {
-            return await formatCourse(course.courseId, ctx);
+            return await formatCourse(course.courseId, ctx, true);
         }
     }
 
     if (course.published) {
-        // if (
-        //     [constants.course, constants.download].includes(
-        //         course.type as
-        //             | typeof constants.course
-        //             | typeof constants.download,
-        //     )
-        // ) {
-        //     const { nextLesson } = await getPrevNextCursor(
-        //         course.courseId,
-        //         ctx.subdomain._id,
-        //     );
-        //     (course as any).firstLesson = nextLesson;
-        // }
-        // course.groups = accessibleGroups;
-        return await formatCourse(course.courseId, ctx);
+        const formattedCourse = await formatCourse(course.courseId, ctx);
+        return asGuest
+            ? { ...formattedCourse, __forcePublishedLessons: true }
+            : formattedCourse;
     } else {
         return null;
     }
@@ -168,7 +188,12 @@ export const createCourse = async (
     ctx: GQLContext,
 ) => {
     checkIfAuthenticated(ctx);
-    if (!checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
+    if (
+        !checkPermission(ctx.user.permissions, [
+            permissions.manageAnyCourse,
+            permissions.manageCourse,
+        ])
+    ) {
         throw new Error(responses.action_not_allowed);
     }
 
@@ -192,8 +217,32 @@ export const updateCourse = async (
 ) => {
     let course = await getCourseOrThrow(undefined, ctx, courseData.id);
 
+    if (
+        typeof courseData.title === "string" &&
+        courseData.title.trim() &&
+        courseData.title !== course.title
+    ) {
+        const conflictingCourse = await CourseModel.findOne({
+            domain: ctx.subdomain._id,
+            title: courseData.title,
+            courseId: { $ne: course.courseId },
+        }).select("_id");
+
+        if (conflictingCourse) {
+            throw new Error(responses.page_id_already_exists);
+        }
+    }
+
+    const mediaIdsMarkedForDeletion: string[] = [];
+    if (Object.prototype.hasOwnProperty.call(courseData, "description")) {
+        const nextDescription = (courseData.description ?? "") as string;
+        mediaIdsMarkedForDeletion.push(
+            ...getDeletedMediaIds(course.description || "", nextDescription),
+        );
+    }
+
     for (const key of Object.keys(courseData)) {
-        if (key === "id") {
+        if (key === "id" || key === "slug") {
             continue;
         }
 
@@ -212,7 +261,65 @@ export const updateCourse = async (
     }
 
     course = await validateCourse(course, ctx);
-    course = await (course as any).save();
+    if (Object.prototype.hasOwnProperty.call(courseData, "description")) {
+        for (const mediaId of mediaIdsMarkedForDeletion) {
+            await deleteMedia(mediaId);
+        }
+        const descriptionWithSealedMedia =
+            await replaceTempMediaWithSealedMediaInProseMirrorDoc(
+                course.description || "",
+            );
+        course.description = JSON.stringify(descriptionWithSealedMedia);
+    }
+    if (
+        Object.prototype.hasOwnProperty.call(courseData, "featuredImage") &&
+        courseData.featuredImage
+    ) {
+        const featuredImage = await sealMedia(courseData.featuredImage.mediaId);
+        if (featuredImage) {
+            course.featuredImage = featuredImage;
+        }
+    }
+    // Handle slug update with Page-first atomicity
+    if (courseData.slug) {
+        const newSlug = validateSlug(courseData.slug);
+        if (newSlug !== course.slug) {
+            const conflictingCourse = await CourseModel.findOne({
+                domain: ctx.subdomain._id,
+                slug: newSlug,
+                courseId: { $ne: course.courseId },
+            }).select("_id");
+
+            if (conflictingCourse) {
+                throw new Error(responses.page_id_already_exists);
+            }
+
+            try {
+                await PageModel.updateOne(
+                    {
+                        domain: ctx.subdomain._id,
+                        pageId: course.pageId,
+                    },
+                    { $set: { pageId: newSlug } },
+                );
+            } catch (err) {
+                if (isDuplicateKeyError(err)) {
+                    throw new Error(responses.page_id_already_exists);
+                }
+                throw err;
+            }
+            course.slug = newSlug;
+            course.pageId = newSlug;
+        }
+    }
+    try {
+        course = await (course as any).save();
+    } catch (err) {
+        if (isDuplicateKeyError(err)) {
+            throw new Error(responses.page_id_already_exists);
+        }
+        throw err;
+    }
     await PageModel.updateOne(
         { entityId: course.courseId, domain: ctx.subdomain._id },
         { $set: { name: course.title } },
@@ -222,6 +329,46 @@ export const updateCourse = async (
 
 export const deleteCourse = async (id: string, ctx: GQLContext) => {
     const course = await getCourseOrThrow(undefined, ctx, id);
+    const certificateTemplate =
+        await CertificateTemplateModel.findOne<CertificateTemplate | null>({
+            domain: ctx.subdomain._id,
+            courseId: course.courseId,
+        });
+    if (certificateTemplate?.signatureImage?.mediaId) {
+        await deleteMedia(certificateTemplate.signatureImage.mediaId);
+    }
+    if (certificateTemplate?.logo?.mediaId) {
+        await deleteMedia(certificateTemplate.logo.mediaId);
+    }
+    await CertificateTemplateModel.deleteOne({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+    });
+    await CertificateModel.deleteMany({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+    });
+    await MembershipModel.deleteMany({
+        domain: ctx.subdomain._id,
+        entityId: course.courseId,
+        entityType: Constants.MembershipEntityType.COURSE,
+    });
+    await PaymentPlanModel.deleteMany({
+        domain: ctx.subdomain._id,
+        entityId: course.courseId,
+        entityType: Constants.MembershipEntityType.COURSE,
+    });
+    await deleteProductsFromPaymentPlans({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+    });
+    await ActivityModel.deleteMany({
+        domain: ctx.subdomain._id,
+        $or: [
+            { entityId: course.courseId },
+            { "metadata.courseId": course.courseId },
+        ],
+    });
     await deleteAllLessons(course.courseId, ctx);
     if (course.featuredImage) {
         try {
@@ -232,10 +379,25 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
             });
         }
     }
-    await PageModel.deleteOne({
-        entityId: course.courseId,
-        domain: ctx.subdomain._id,
-    });
+    if (course.description) {
+        const extractedMediaIds = extractMediaIDs(course.description || "");
+        for (const mediaId of Array.from(extractedMediaIds)) {
+            await deleteMedia(mediaId);
+        }
+    }
+    await UserModel.updateMany(
+        {
+            domain: ctx.subdomain._id,
+        },
+        {
+            $pull: {
+                purchases: {
+                    courseId: course.courseId,
+                },
+            },
+        },
+    );
+    await deletePageInternal(ctx, course.pageId!);
     await CourseModel.deleteOne({
         domain: ctx.subdomain._id,
         courseId: course.courseId,
@@ -274,7 +436,7 @@ export const getCoursesAsAdmin = async ({
         domain: context.subdomain._id,
     };
     if (!checkPermission(user.permissions, [permissions.manageAnyCourse])) {
-        query.creatorId = `${user.userId || user.id}`;
+        query.creatorId = user.userId;
     }
 
     if (filterBy) {
@@ -338,7 +500,6 @@ export const getCourses = async ({
             cost: 1,
             description: 1,
             type: 1,
-            creatorName: 1,
             updatedAt: 1,
             slug: 1,
             featuredImage: 1,
@@ -361,7 +522,6 @@ export const getCourses = async ({
             cost: 1,
             description: 1,
             type: 1,
-            creatorName: 1,
             updatedAt: 1,
             slug: 1,
             featuredImage: 1,
@@ -375,13 +535,12 @@ export const getCourses = async ({
             .limit(itemsPerPage);
     }
 
-    return courses.map((x) => ({
+    return courses.map(async (x) => ({
         id: x.id,
         title: x.title,
         cost: x.cost,
         description: x.description,
         type: x.type,
-        creatorName: x.creatorName,
         updatedAt: x.updatedAt,
         slug: x.slug,
         featuredImage: x.featuredImage,
@@ -399,7 +558,7 @@ const getProductsQuery = (
     ids?: string[],
     publicView: boolean = false,
 ) => {
-    const query: Partial<InternalCourse> = {
+    const query: Record<string, unknown> = {
         domain: ctx.subdomain._id,
     };
 
@@ -502,57 +661,26 @@ export const getProducts = async ({
         const paymentPlans =
             course.type !== constants.blog
                 ? await getPlans({
-                      planIds: course.paymentPlans,
+                      entityId: course.courseId,
+                      entityType: Constants.MembershipEntityType.COURSE,
                       ctx,
                   })
                 : undefined;
-        products.push({
-            title: course.title,
-            slug: course.slug,
-            description: course.description,
-            type: course.type,
-            creatorId: course.creatorId,
-            creatorName: course.creatorName,
-            updatedAt: course.updatedAt,
-            featuredImage: course.featuredImage,
-            courseId: course.courseId,
-            tags: course.tags,
-            privacy: course.privacy,
-            published: course.published,
-            isFeatured: course.isFeatured,
+        const extendedCourse: InternalCourse & {
+            customers?: number;
+            sales: number;
+            paymentPlans?: PaymentPlan[];
+        } = {
+            ...course,
             groups: course.type !== constants.blog ? course.groups : null,
             pageId: course.type !== constants.blog ? course.pageId : undefined,
             customers,
-            sales,
-            paymentPlans,
-            defaultPaymentPlan: course.defaultPaymentPlan,
-        });
-    }
+            sales: sales ?? 0,
+            ...(paymentPlans ? { paymentPlans } : {}),
+        };
 
-    // const products = courses.map(async (course) => ({
-    //     ...course,
-    //     groups: course.type !== constants.blog ? course.groups : null,
-    //     pageId: course.type !== constants.blog ? course.pageId : undefined,
-    //     customers:
-    //         hasManagePerm && course.type !== constants.blog
-    //             ? await (MembershipModel as any).countDocuments({
-    //                   entityId: course.courseId,
-    //                   entityType: Constants.MembershipEntityType.COURSE,
-    //                   domain: ctx.subdomain._id,
-    //               })
-    //             : undefined,
-    //     sales:
-    //         hasManagePerm && course.type !== constants.blog
-    //             ? (
-    //                   await getActivities({
-    //                       entityId: course.courseId,
-    //                       type: ActivityType.PURCHASED,
-    //                       duration: "lifetime",
-    //                       ctx,
-    //                   })
-    //               ).count
-    //             : undefined,
-    // }));
+        products.push(extendedCourse);
+    }
 
     return products;
 };
@@ -600,11 +728,12 @@ export const addGroup = async ({
         throw new Error(responses.existing_group);
     }
 
-    const maximumRank = course.groups?.reduce(
-        (acc: number, value: { rank: number }) =>
-            value.rank > acc ? value.rank : acc,
-        0,
-    );
+    const maximumRank =
+        course.groups?.reduce(
+            (acc: number, value: { rank: number }) =>
+                value.rank > acc ? value.rank : acc,
+            0,
+        ) ?? 0;
 
     await (course.groups as any).push({
         rank: maximumRank + 1000,
@@ -635,7 +764,7 @@ export const removeGroup = async (
         throw new Error(responses.download_course_last_group_cannot_be_removed);
     }
 
-    const countOfAssociatedLessons = await Lesson.countDocuments({
+    const countOfAssociatedLessons = await LessonModel.countDocuments({
         courseId,
         groupId: group.id,
         domain: ctx.subdomain._id,
@@ -671,11 +800,30 @@ export const updateGroup = async ({
     name,
     rank,
     collapsed,
-    lessonsOrder,
     drip,
     ctx,
+}: {
+    id: string;
+    courseId: string;
+    name?: string;
+    rank?: number;
+    collapsed?: boolean;
+    drip?: {
+        type?: string;
+        status?: boolean;
+        delayInMillis?: number;
+        dateInUTC?: number;
+        email?: {
+            content: string;
+            subject: string;
+        };
+    };
+    ctx: GQLContext;
 }) => {
     const course = await getCourseOrThrow(undefined, ctx, courseId);
+    const currentGroup = course.groups?.find((group) => group.id === id);
+    const existingDripType = currentGroup?.drip?.type;
+    const effectiveDripType = drip?.type || existingDripType;
 
     const $set = {};
     if (name) {
@@ -693,37 +841,31 @@ export const updateGroup = async ({
         $set["groups.$.rank"] = rank;
     }
 
-    if (
-        lessonsOrder &&
-        lessonsOrder.every((lessonId) => course.lessons?.includes(lessonId)) &&
-        lessonsOrder.every((lessonId) =>
-            course.groups
-                ?.find((group) => group.id === id)
-                ?.lessonsOrder.includes(lessonId),
-        )
-    ) {
-        $set["groups.$.lessonsOrder"] = lessonsOrder;
-    }
-
     if (typeof collapsed === "boolean") {
         $set["groups.$.collapsed"] = collapsed;
     }
 
     if (drip) {
-        if (drip.status) {
+        const hasDripUpdates = Object.keys(drip).some((key) => key !== "type");
+
+        if (!effectiveDripType && hasDripUpdates) {
+            throw new Error(responses.invalid_input);
+        }
+
+        if (typeof drip.status === "boolean") {
             $set["groups.$.drip.status"] = drip.status;
         }
         if (drip.type) {
             $set["groups.$.drip.type"] = drip.type;
         }
-        if (drip.type === Constants.dripType[0]) {
-            if (drip.delayInMillis) {
+        if (effectiveDripType === Constants.dripType[0]) {
+            if (typeof drip.delayInMillis === "number") {
                 $set["groups.$.drip.delayInMillis"] =
-                    drip.delayInMillis * 86400000;
+                    drip.delayInMillis * constants.relativeDripUnitInMillis;
             }
             $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
         }
-        if (drip.type === Constants.dripType[1]) {
+        if (effectiveDripType === Constants.dripType[1]) {
             $set["groups.$.drip.delayInMillis"] = null;
             if (drip.dateInUTC) {
                 $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
@@ -756,6 +898,148 @@ export const updateGroup = async ({
         { $set },
         { new: true },
     );
+};
+
+export const moveLesson = async ({
+    courseId,
+    lessonId,
+    destinationGroupId,
+    destinationIndex,
+    ctx,
+}: {
+    courseId: string;
+    lessonId: string;
+    destinationGroupId: string;
+    destinationIndex: number;
+    ctx: GQLContext;
+}) => {
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
+    const lesson = await LessonModel.findOne({
+        domain: ctx.subdomain._id,
+        lessonId,
+    });
+
+    if (!lesson || lesson.courseId !== course.courseId) {
+        throw new Error(responses.item_not_found);
+    }
+
+    if (!course.lessons?.includes(lessonId)) {
+        throw new Error(responses.invalid_input);
+    }
+
+    const destinationGroup = course.groups?.find(
+        (group) => group.id === destinationGroupId,
+    );
+    if (!destinationGroup) {
+        throw new Error(responses.invalid_input);
+    }
+
+    const normalizedGroups = (course.groups ?? []).map((group) => {
+        const plainGroup =
+            typeof (group as any).toObject === "function"
+                ? (group as any).toObject()
+                : { ...group };
+
+        return {
+            ...plainGroup,
+            lessonsOrder: (plainGroup.lessonsOrder ?? []).filter(
+                (id: string) => id !== lessonId,
+            ),
+        };
+    });
+
+    const destinationGroupIndex = normalizedGroups.findIndex((group: any) => {
+        const groupId = group._id ?? group.id;
+        return groupId?.toString() === destinationGroupId;
+    });
+    if (destinationGroupIndex === -1) {
+        throw new Error(responses.invalid_input);
+    }
+
+    const destinationLessons =
+        normalizedGroups[destinationGroupIndex].lessonsOrder ?? [];
+    normalizedGroups[destinationGroupIndex].lessonsOrder = destinationLessons;
+    const safeDestinationIndex = Math.min(
+        Math.max(destinationIndex, 0),
+        destinationLessons.length,
+    );
+    destinationLessons.splice(safeDestinationIndex, 0, lessonId);
+
+    await CourseModel.updateOne(
+        {
+            domain: ctx.subdomain._id,
+            courseId: course.courseId,
+        },
+        {
+            $set: {
+                groups: normalizedGroups,
+            },
+        },
+    );
+
+    if (lesson.groupId !== destinationGroupId) {
+        lesson.groupId = destinationGroupId;
+        await lesson.save();
+    }
+
+    return await formatCourse(course.courseId, ctx);
+};
+
+const GROUP_RANK_GAP = 1000;
+
+export const reorderGroups = async ({
+    courseId,
+    groupIds,
+    ctx,
+}: {
+    courseId: string;
+    groupIds: string[];
+    ctx: GQLContext;
+}) => {
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
+    const existingGroupIds = (course.groups ?? []).map((group) => group.id);
+
+    if (existingGroupIds.length !== groupIds.length) {
+        throw new Error(responses.invalid_input);
+    }
+
+    if (new Set(groupIds).size !== groupIds.length) {
+        throw new Error(responses.invalid_input);
+    }
+
+    const existingIdSet = new Set(existingGroupIds);
+    if (!groupIds.every((groupId) => existingIdSet.has(groupId))) {
+        throw new Error(responses.invalid_input);
+    }
+
+    const plainGroupsById = new Map<string, any>();
+    (course.groups ?? []).forEach((group) => {
+        const plainGroup =
+            typeof (group as any).toObject === "function"
+                ? (group as any).toObject()
+                : { ...group };
+
+        plainGroupsById.set(group.id, plainGroup);
+    });
+
+    const updatedGroups = groupIds.map((groupId, index) => ({
+        ...plainGroupsById.get(groupId),
+        rank: (index + 1) * GROUP_RANK_GAP,
+    }));
+
+    await CourseModel.updateOne(
+        {
+            domain: ctx.subdomain._id,
+            courseId: course.courseId,
+        },
+        {
+            $set: {
+                groups: updatedGroups,
+            },
+        },
+    );
+
+    return await formatCourse(course.courseId, ctx);
 };
 
 export const getMembers = async ({
@@ -832,7 +1116,7 @@ export const getStudents = async ({
     ctx,
     text,
 }: {
-    course: InternalCourse;
+    course: Pick<Course, "courseId">;
     ctx: GQLContext;
     text?: string;
 }) => {
@@ -895,4 +1179,82 @@ export const getStudents = async ({
     ]);
 
     return result;
+};
+
+export const getCourseCertificateTemplate = async (
+    courseId: string,
+    ctx: GQLContext,
+) => {
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
+
+    const certificateTemplate = await CertificateTemplateModel.findOne({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+    });
+
+    return certificateTemplate;
+};
+
+export const updateCourseCertificateTemplate = async ({
+    courseId,
+    ctx,
+    title,
+    subtitle,
+    description,
+    signatureImage,
+    signatureName,
+    signatureDesignation,
+    logo,
+}: {
+    courseId: string;
+    ctx: GQLContext;
+    title?: string;
+    subtitle?: string;
+    description?: string;
+    signatureImage?: Media;
+    signatureName?: string;
+    signatureDesignation?: string;
+    logo?: Media;
+}) => {
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
+
+    if (signatureImage) {
+        const sealedImage = await sealMedia(signatureImage.mediaId);
+        if (sealedImage) {
+            signatureImage = sealedImage;
+        }
+    }
+
+    if (logo) {
+        const sealedLogo = await sealMedia(logo.mediaId);
+        if (sealedLogo) {
+            logo = sealedLogo;
+        }
+    }
+
+    const updatedTemplate = await CertificateTemplateModel.findOneAndUpdate(
+        {
+            domain: ctx.subdomain._id,
+            courseId: course.courseId,
+        },
+        {
+            title,
+            subtitle,
+            description,
+            signatureImage,
+            signatureName,
+            signatureDesignation,
+            logo,
+        },
+        { upsert: true, new: true },
+    );
+    return {
+        title: updatedTemplate.title,
+        subtitle: updatedTemplate.subtitle,
+        description: updatedTemplate.description,
+        signatureImage: updatedTemplate.signatureImage,
+        signatureName: updatedTemplate.signatureName,
+        signatureDesignation: updatedTemplate.signatureDesignation,
+        logo: updatedTemplate.logo,
+    };
 };

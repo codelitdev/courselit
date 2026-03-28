@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
     SITE_SETTINGS_TITLE,
     SITE_SETTINGS_SUBTITLE,
@@ -22,15 +22,12 @@ import {
     SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK,
     BUTTON_SAVE,
     SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL,
+    SITE_SETTINGS_PAYMENT_METHOD_RESET_BUTTON,
+    SITE_SETTINGS_PAYMENT_METHOD_RESET_TOOLTIP,
+    SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_TITLE,
+    SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_DESCRIPTION,
+    SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_ACTION,
     SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY,
-    SITE_APIKEYS_SETTING_HEADER,
-    APIKEY_NEW_BUTTON,
-    APIKEY_EXISTING_HEADER,
-    APIKEY_EXISTING_TABLE_HEADER_CREATED,
-    APIKEY_EXISTING_TABLE_HEADER_NAME,
-    APIKEY_REMOVE_BTN,
-    APIKEY_REMOVE_DIALOG_HEADER,
-    APIKYE_REMOVE_DIALOG_DESC,
     SITE_MAILS_HEADER,
     SITE_MAILING_ADDRESS_SETTING_HEADER,
     SITE_MAILING_ADDRESS_SETTING_EXPLANATION,
@@ -48,30 +45,24 @@ import {
     SITE_SETTINGS_LEMONSQUEEZY_SUB_MONTHLY_TEXT,
     SITE_SETTINGS_LEMONSQUEEZY_SUB_YEARLY_TEXT,
     SETTINGS_RESOURCE_PAYMENT,
-    SETTINGS_RESOURCE_API,
+    SITE_MISCELLANEOUS_SETTING_HEADER,
+    BUTTON_CANCEL_TEXT,
 } from "@/ui-config/strings";
 import { FetchBuilder, capitalize } from "@courselit/utils";
 import { decode, encode } from "base-64";
 import { Profile, UIConstants } from "@courselit/common-models";
-import type { SiteInfo, Address, Media } from "@courselit/common-models";
-import { actionCreators } from "@courselit/state-management";
+import type { SiteInfo, Media } from "@courselit/common-models";
 import currencies from "@/data/currencies.json";
 import {
     Select,
+    Tooltip,
     MediaSelector,
     Tabbs,
     Form,
     FormField,
-    Button,
-    Link,
-    Table,
-    TableHead,
-    TableBody,
-    TableRow,
-    Dialog2,
     PageBuilderPropertyHeader,
-    Checkbox,
     useToast,
+    Checkbox,
 } from "@courselit/components-library";
 import { useRouter } from "next/navigation";
 import {
@@ -81,10 +72,24 @@ import {
     CardHeader,
     CardTitle,
 } from "@components/ui/card";
-import { Copy, Info } from "lucide-react";
-import { Label } from "@components/ui/label";
+import { Copy, Info, RotateCcw } from "lucide-react";
 import { Input } from "@components/ui/input";
 import Resources from "@components/resources";
+import { AddressContext } from "@components/contexts";
+import { Button } from "@components/ui/button";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@components/ui/alert-dialog";
+import dynamic from "next/dynamic";
+
+const MiscellaneousTab = dynamic(() => import("./tabs/miscellaneous"));
 
 const {
     PAYMENT_METHOD_PAYPAL,
@@ -92,80 +97,46 @@ const {
     PAYMENT_METHOD_RAZORPAY,
     PAYMENT_METHOD_STRIPE,
     PAYMENT_METHOD_LEMONSQUEEZY,
-    PAYMENT_METHOD_NONE,
     MIMETYPE_IMAGE,
 } = UIConstants;
-
-const { networkAction, newSiteInfoAvailable } = actionCreators;
 
 interface SettingsProps {
     siteinfo: SiteInfo;
     profile: Profile;
-    dispatch: (...args: any[]) => void;
-    address: Address;
-    networkAction: boolean;
-    loading: boolean;
     selectedTab:
         | typeof SITE_SETTINGS_SECTION_GENERAL
         | typeof SITE_SETTINGS_SECTION_PAYMENT
         | typeof SITE_MAILS_HEADER
         | typeof SITE_CUSTOMISATIONS_SETTING_HEADER
-        | typeof SITE_APIKEYS_SETTING_HEADER;
+        | typeof SITE_MISCELLANEOUS_SETTING_HEADER;
 }
 
 const Settings = (props: SettingsProps) => {
     const [settings, setSettings] = useState<Partial<SiteInfo>>({});
     const [newSettings, setNewSettings] = useState<Partial<SiteInfo>>({});
-    const [apikeyPage, setApikeyPage] = useState(1);
-    const [apikeys, setApikeys] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [isResetPaymentMethodDialogOpen, setIsResetPaymentMethodDialogOpen] =
+        useState(false);
     const selectedTab = [
         SITE_SETTINGS_SECTION_GENERAL,
         SITE_SETTINGS_SECTION_PAYMENT,
         SITE_MAILS_HEADER,
         SITE_CUSTOMISATIONS_SETTING_HEADER,
-        SITE_APIKEYS_SETTING_HEADER,
+        SITE_MISCELLANEOUS_SETTING_HEADER,
     ].includes(props.selectedTab)
         ? props.selectedTab
         : SITE_SETTINGS_SECTION_GENERAL;
     const router = useRouter();
+    const address = useContext(AddressContext);
     const { toast } = useToast();
 
     const fetch = new FetchBuilder()
-        .setUrl(`${props.address.backend}/api/graph`)
+        .setUrl(`${address.backend}/api/graph`)
         .setIsGraphQLEndpoint(true);
 
     useEffect(() => {
         loadAdminSettings();
     }, []);
-
-    useEffect(() => {
-        props.dispatch(
-            newSiteInfoAvailable({
-                title: settings.title || "",
-                subtitle: settings.subtitle || "",
-                logo: settings.logo,
-                currencyISOCode: settings.currencyISOCode,
-                paymentMethod: settings.paymentMethod,
-                stripeKey: settings.stripeKey,
-                codeInjectionHead: settings.codeInjectionHead
-                    ? encode(settings.codeInjectionHead)
-                    : "",
-                codeInjectionBody: settings.codeInjectionBody
-                    ? encode(settings.codeInjectionBody)
-                    : "",
-                mailingAddress: settings.mailingAddress || "",
-                hideCourseLitBranding: settings.hideCourseLitBranding ?? false,
-                razorpayKey: settings.razorpayKey,
-                lemonsqueezyStoreId: settings.lemonsqueezyStoreId,
-                lemonsqueezyOneTimeVariantId:
-                    settings.lemonsqueezyOneTimeVariantId,
-                lemonsqueezySubscriptionMonthlyVariantId:
-                    settings.lemonsqueezySubscriptionMonthlyVariantId,
-                lemonsqueezySubscriptionYearlyVariantId:
-                    settings.lemonsqueezySubscriptionYearlyVariantId,
-            }),
-        );
-    }, [settings]);
 
     const loadAdminSettings = async () => {
         const query = `
@@ -209,9 +180,6 @@ const Settings = (props: SettingsProps) => {
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
-            }
-            if (response.apikeys) {
-                setApikeys(response.apikeys);
             }
         } catch (e) {}
     };
@@ -297,6 +265,7 @@ const Settings = (props: SettingsProps) => {
             }`;
 
         try {
+            setLoading(true);
             const fetchRequest = fetch
                 .setPayload({
                     query,
@@ -308,7 +277,6 @@ const Settings = (props: SettingsProps) => {
                     },
                 })
                 .build();
-            props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
@@ -324,7 +292,7 @@ const Settings = (props: SettingsProps) => {
                 variant: "destructive",
             });
         } finally {
-            props.dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -364,6 +332,7 @@ const Settings = (props: SettingsProps) => {
             }`;
 
         try {
+            setLoading(true);
             const fetchRequest = fetch
                 .setPayload({
                     query,
@@ -372,7 +341,6 @@ const Settings = (props: SettingsProps) => {
                     },
                 })
                 .build();
-            props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
@@ -388,7 +356,7 @@ const Settings = (props: SettingsProps) => {
                 variant: "destructive",
             });
         } finally {
-            props.dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -397,15 +365,21 @@ const Settings = (props: SettingsProps) => {
     ) => {
         event.preventDefault();
 
-        if (!newSettings.codeInjectionHead && !newSettings.codeInjectionBody) {
+        if (
+            newSettings.codeInjectionHead === settings.codeInjectionHead &&
+            newSettings.codeInjectionBody === settings.codeInjectionBody
+        ) {
             return;
         }
+
+        const headSnippet = encode(newSettings.codeInjectionHead ?? "");
+        const bodySnippet = encode(newSettings.codeInjectionBody ?? "");
 
         const query = `
         mutation {
             settings: updateSiteInfo(siteData: {
-                codeInjectionHead: "${encode(newSettings.codeInjectionHead)}",
-                codeInjectionBody: "${encode(newSettings.codeInjectionBody)}"
+                codeInjectionHead: "${headSnippet}",
+                codeInjectionBody: "${bodySnippet}"
             }) {
                 settings {
                     title,
@@ -437,8 +411,8 @@ const Settings = (props: SettingsProps) => {
         }`;
 
         try {
+            setLoading(true);
             const fetchRequest = fetch.setPayload(query).build();
-            props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
@@ -454,7 +428,7 @@ const Settings = (props: SettingsProps) => {
                 variant: "destructive",
             });
         } finally {
-            props.dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -502,8 +476,8 @@ const Settings = (props: SettingsProps) => {
         }`;
 
         try {
+            setLoading(true);
             const fetchRequest = fetch.setPayload(query).build();
-            props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
@@ -519,7 +493,7 @@ const Settings = (props: SettingsProps) => {
                 variant: "destructive",
             });
         } finally {
-            props.dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -534,6 +508,14 @@ const Settings = (props: SettingsProps) => {
               }
             : { [e.target.name]: e.target.value };
         setNewSettings(Object.assign({}, newSettings, change));
+    };
+
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({
+            title: TOAST_TITLE_SUCCESS,
+            description: "URL copied to clipboard",
+        });
     };
 
     const handlePaymentSettingsSubmit = async (
@@ -601,6 +583,7 @@ const Settings = (props: SettingsProps) => {
             }`;
 
         try {
+            setLoading(false);
             const fetchRequest = fetch
                 .setPayload({
                     query,
@@ -626,7 +609,6 @@ const Settings = (props: SettingsProps) => {
                     },
                 })
                 .build();
-            props.dispatch(networkAction(true));
             const response = await fetchRequest.exec();
             if (response.settings.settings) {
                 setSettingsState(response.settings.settings);
@@ -642,7 +624,62 @@ const Settings = (props: SettingsProps) => {
                 variant: "destructive",
             });
         } finally {
-            props.dispatch(networkAction(false));
+            setLoading(false);
+        }
+    };
+
+    const handleResetPaymentMethod = async () => {
+        const query = `
+            mutation {
+                settings: resetPaymentMethod {
+                    settings {
+                        title,
+                        subtitle,
+                        logo {
+                            mediaId,
+                            originalFileName,
+                            mimeType,
+                            size,
+                            access,
+                            file,
+                            thumbnail,
+                            caption
+                        },
+                        currencyISOCode,
+                        paymentMethod,
+                        stripeKey,
+                        razorpayKey,
+                        lemonsqueezyStoreId,
+                        lemonsqueezyOneTimeVariantId,
+                        lemonsqueezySubscriptionMonthlyVariantId,
+                        lemonsqueezySubscriptionYearlyVariantId,
+                        codeInjectionHead,
+                        codeInjectionBody,
+                        mailingAddress,
+                        hideCourseLitBranding
+                    }
+                }
+            }`;
+
+        try {
+            setLoading(true);
+            const fetchRequest = fetch.setPayload(query).build();
+            const response = await fetchRequest.exec();
+            if (response.settings.settings) {
+                setSettingsState(response.settings.settings);
+                toast({
+                    title: TOAST_TITLE_SUCCESS,
+                    description: APP_MESSAGE_SETTINGS_SAVED,
+                });
+            }
+        } catch (e: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: e.message,
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -692,47 +729,13 @@ const Settings = (props: SettingsProps) => {
             : settings.lemonsqueezySubscriptionYearlyVariantId,
     });
 
-    const removeApikey = async (keyId: string) => {
-        const query = `
-            mutation {
-                removed: removeApikey(keyId: "${keyId}")
-            }
-        `;
-        try {
-            const fetchRequest = fetch.setPayload(query).build();
-            props.dispatch(networkAction(true));
-            await fetchRequest.exec();
-            setApikeys(
-                apikeys.filter(
-                    (item: Record<string, unknown>) => item.keyId !== keyId,
-                ),
-            );
-        } catch (e: any) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: e.message,
-                variant: "destructive",
-            });
-        } finally {
-            props.dispatch(networkAction(false));
-        }
-    };
-
     const items = [
         SITE_SETTINGS_SECTION_GENERAL,
         SITE_SETTINGS_SECTION_PAYMENT,
         SITE_MAILS_HEADER,
         SITE_CUSTOMISATIONS_SETTING_HEADER,
-        SITE_APIKEYS_SETTING_HEADER,
+        SITE_MISCELLANEOUS_SETTING_HEADER,
     ];
-
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-        toast({
-            title: TOAST_TITLE_SUCCESS,
-            description: "Webhook URL copied to clipboard",
-        });
-    };
 
     return (
         <div>
@@ -778,8 +781,10 @@ const Settings = (props: SettingsProps) => {
                                     }
                                 </p>
                                 <Checkbox
-                                    disabled={props.networkAction}
-                                    checked={newSettings.hideCourseLitBranding}
+                                    disabled={loading}
+                                    checked={Boolean(
+                                        newSettings.hideCourseLitBranding,
+                                    )}
                                     onChange={(value: boolean) => {
                                         setNewSettings(
                                             Object.assign({}, newSettings, {
@@ -810,7 +815,7 @@ const Settings = (props: SettingsProps) => {
                                                 newSettings.hideCourseLitBranding,
                                         }) ||
                                     !newSettings.title ||
-                                    props.networkAction
+                                    loading
                                 }
                             >
                                 {BUTTON_SAVE}
@@ -822,7 +827,7 @@ const Settings = (props: SettingsProps) => {
                         <PageBuilderPropertyHeader label={SITE_SETTINGS_LOGO} />
                         <MediaSelector
                             profile={props.profile}
-                            address={props.address}
+                            address={address}
                             title=""
                             src={newSettings.logo?.thumbnail || ""}
                             srcTitle={newSettings.logo?.originalFileName || ""}
@@ -878,61 +883,116 @@ const Settings = (props: SettingsProps) => {
                                 </p>
                             )}
                         </div>
-                        <Select
-                            title={SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
-                            value={
-                                newSettings.paymentMethod || PAYMENT_METHOD_NONE
-                            }
-                            options={[
-                                {
-                                    label: capitalize(
-                                        PAYMENT_METHOD_STRIPE.toLowerCase(),
-                                    ),
-                                    value: PAYMENT_METHOD_STRIPE,
-                                    disabled: currencies.some(
-                                        (x) =>
-                                            x.isoCode ===
-                                                newSettings.currencyISOCode?.toUpperCase() &&
-                                            !x.stripe,
-                                    ),
-                                },
-                                {
-                                    label: capitalize(
-                                        PAYMENT_METHOD_RAZORPAY.toLowerCase(),
-                                    ),
-                                    value: PAYMENT_METHOD_RAZORPAY,
-                                    disabled: currencies.some(
-                                        (x) =>
-                                            x.isoCode ===
-                                                newSettings.currencyISOCode?.toUpperCase() &&
-                                            !x.razorpay,
-                                    ),
-                                },
-                                {
-                                    label: capitalize(
-                                        PAYMENT_METHOD_LEMONSQUEEZY.toLowerCase(),
-                                    ),
-                                    value: PAYMENT_METHOD_LEMONSQUEEZY,
-                                    disabled: currencies.some(
-                                        (x) =>
-                                            x.isoCode ===
-                                                newSettings.currencyISOCode?.toUpperCase() &&
-                                            !x.lemonsqueezy,
-                                    ),
-                                },
-                            ]}
-                            onChange={(value) =>
-                                setNewSettings(
-                                    Object.assign({}, newSettings, {
-                                        paymentMethod: value,
-                                    }),
-                                )
-                            }
-                            placeholderMessage={
-                                SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL
-                            }
-                            disabled={!newSettings.currencyISOCode}
-                        />
+                        <div className="flex items-end gap-2">
+                            <Select
+                                className="w-full"
+                                title={SITE_ADMIN_SETTINGS_PAYMENT_METHOD}
+                                value={newSettings.paymentMethod || ""}
+                                options={[
+                                    {
+                                        label: capitalize(
+                                            PAYMENT_METHOD_STRIPE.toLowerCase(),
+                                        ),
+                                        value: PAYMENT_METHOD_STRIPE,
+                                        disabled: currencies.some(
+                                            (x) =>
+                                                x.isoCode ===
+                                                    newSettings.currencyISOCode?.toUpperCase() &&
+                                                !x.stripe,
+                                        ),
+                                    },
+                                    {
+                                        label: capitalize(
+                                            PAYMENT_METHOD_RAZORPAY.toLowerCase(),
+                                        ),
+                                        value: PAYMENT_METHOD_RAZORPAY,
+                                        disabled: currencies.some(
+                                            (x) =>
+                                                x.isoCode ===
+                                                    newSettings.currencyISOCode?.toUpperCase() &&
+                                                !x.razorpay,
+                                        ),
+                                    },
+                                    {
+                                        label: capitalize(
+                                            PAYMENT_METHOD_LEMONSQUEEZY.toLowerCase(),
+                                        ),
+                                        value: PAYMENT_METHOD_LEMONSQUEEZY,
+                                        disabled: currencies.some(
+                                            (x) =>
+                                                x.isoCode ===
+                                                    newSettings.currencyISOCode?.toUpperCase() &&
+                                                !x.lemonsqueezy,
+                                        ),
+                                    },
+                                ]}
+                                onChange={(value) =>
+                                    setNewSettings(
+                                        Object.assign({}, newSettings, {
+                                            paymentMethod: value,
+                                        }),
+                                    )
+                                }
+                                disabled={!newSettings.currencyISOCode}
+                                placeholderMessage={
+                                    SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL
+                                }
+                            />
+                            <Tooltip
+                                title={
+                                    SITE_SETTINGS_PAYMENT_METHOD_RESET_TOOLTIP
+                                }
+                                side="top"
+                            >
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    aria-label={
+                                        SITE_SETTINGS_PAYMENT_METHOD_RESET_BUTTON
+                                    }
+                                    disabled={
+                                        loading || !newSettings.paymentMethod
+                                    }
+                                    onClick={() =>
+                                        setIsResetPaymentMethodDialogOpen(true)
+                                    }
+                                >
+                                    <RotateCcw className="h-4 w-4" />
+                                </Button>
+                            </Tooltip>
+                        </div>
+                        <AlertDialog
+                            open={isResetPaymentMethodDialogOpen}
+                            onOpenChange={setIsResetPaymentMethodDialogOpen}
+                        >
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                        {
+                                            SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_TITLE
+                                        }
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        {
+                                            SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_DESCRIPTION
+                                        }
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>
+                                        {BUTTON_CANCEL_TEXT}
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={handleResetPaymentMethod}
+                                    >
+                                        {
+                                            SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_ACTION
+                                        }
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
 
                         {newSettings.paymentMethod ===
                             PAYMENT_METHOD_STRIPE && (
@@ -1101,41 +1161,17 @@ const Settings = (props: SettingsProps) => {
                         </CardHeader>
                         <CardContent className="grid gap-4">
                             <div className="grid gap-2">
-                                <Label>New Payment Plans Webhook</Label>
                                 <div className="flex gap-2">
                                     <Input
                                         readOnly
-                                        value={`${props.address.backend}/api/payment/webhook`}
+                                        value={`${address.backend}/api/payment/webhook`}
                                     />
                                     <Button
                                         variant="outline"
                                         size="icon"
                                         onClick={() =>
                                             copyToClipboard(
-                                                `${props.address.backend}/api/payment/webhook`,
-                                            )
-                                        }
-                                    >
-                                        <Copy className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>
-                                    Old Payment Webhook (Required for products
-                                    but will be phased out soon)
-                                </Label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        readOnly
-                                        value={`${props.address.backend}/api/payment/webhook-old`}
-                                    />
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() =>
-                                            copyToClipboard(
-                                                `${props.address.backend}/api/payment/webhook-old`,
+                                                `${address.backend}/api/payment/webhook`,
                                             )
                                         }
                                     >
@@ -1164,7 +1200,6 @@ const Settings = (props: SettingsProps) => {
                         name="mailingAddress"
                         value={newSettings.mailingAddress || ""}
                         onChange={onChangeData}
-                        multiline
                         rows={5}
                     />
                     <p className="text-xs text-slate-500">
@@ -1175,11 +1210,10 @@ const Settings = (props: SettingsProps) => {
                             type="submit"
                             value={BUTTON_SAVE}
                             color="primary"
-                            variant="outlined"
+                            variant="outline"
                             disabled={
                                 settings.mailingAddress ===
-                                    newSettings.mailingAddress ||
-                                props.networkAction
+                                    newSettings.mailingAddress || loading
                             }
                         >
                             {BUTTON_SAVE}
@@ -1196,7 +1230,6 @@ const Settings = (props: SettingsProps) => {
                         name="codeInjectionHead"
                         value={newSettings.codeInjectionHead || ""}
                         onChange={onChangeData}
-                        multiline
                         rows={10}
                     />
                     <FormField
@@ -1205,7 +1238,6 @@ const Settings = (props: SettingsProps) => {
                         name="codeInjectionBody"
                         value={newSettings.codeInjectionBody || ""}
                         onChange={onChangeData}
-                        multiline
                         rows={10}
                     />
                     <div>
@@ -1213,93 +1245,20 @@ const Settings = (props: SettingsProps) => {
                             type="submit"
                             value={BUTTON_SAVE}
                             color="primary"
-                            variant="outlined"
+                            variant="outline"
                             disabled={
                                 (settings.codeInjectionHead ===
                                     newSettings.codeInjectionHead &&
                                     settings.codeInjectionBody ===
                                         newSettings.codeInjectionBody) ||
-                                props.networkAction
+                                loading
                             }
                         >
                             {BUTTON_SAVE}
                         </Button>
                     </div>
                 </Form>
-                <div className="flex flex-col gap-4 pt-4">
-                    <div className="flex justify-between">
-                        <h2 className="text-lg font-semibold">
-                            {APIKEY_EXISTING_HEADER}
-                        </h2>
-                        <Link href={`/dashboard/settings/apikeys/new`}>
-                            <Button>{APIKEY_NEW_BUTTON}</Button>
-                        </Link>
-                    </div>
-                    <Table aria-label="API keys" className="mb-4">
-                        <TableHead className="border-0 border-b border-slate-200">
-                            <td>{APIKEY_EXISTING_TABLE_HEADER_NAME}</td>
-                            <td>{APIKEY_EXISTING_TABLE_HEADER_CREATED}</td>
-                            <td align="right"> </td>
-                        </TableHead>
-                        <TableBody
-                            loading={props.loading}
-                            endReached={true}
-                            page={apikeyPage}
-                            onPageChange={(value: number) => {
-                                setApikeyPage(value);
-                            }}
-                        >
-                            {apikeys.map(
-                                (
-                                    item: Record<string, unknown>,
-                                    index: number,
-                                ) => (
-                                    <TableRow key={item.name as string}>
-                                        <td className="py-4">{item.name}</td>
-                                        <td>
-                                            {new Date(
-                                                item.createdAt as number,
-                                            ).toLocaleDateString()}
-                                        </td>
-                                        <td align="right">
-                                            <Dialog2
-                                                title={
-                                                    APIKEY_REMOVE_DIALOG_HEADER
-                                                }
-                                                trigger={
-                                                    <Button variant="soft">
-                                                        {APIKEY_REMOVE_BTN}
-                                                    </Button>
-                                                }
-                                                okButton={
-                                                    <Button
-                                                        onClick={() =>
-                                                            removeApikey(
-                                                                item.keyId,
-                                                            )
-                                                        }
-                                                    >
-                                                        {APIKEY_REMOVE_BTN}
-                                                    </Button>
-                                                }
-                                            >
-                                                {APIKYE_REMOVE_DIALOG_DESC}
-                                            </Dialog2>
-                                        </td>
-                                    </TableRow>
-                                ),
-                            )}
-                        </TableBody>
-                    </Table>
-                    <Resources
-                        links={[
-                            {
-                                href: "https://docs.courselit.app/en/developers/introduction",
-                                text: SETTINGS_RESOURCE_API,
-                            },
-                        ]}
-                    />
-                </div>
+                <MiscellaneousTab />
             </Tabbs>
         </div>
     );

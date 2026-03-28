@@ -7,13 +7,14 @@ import {
     GraphQLNonNull,
     GraphQLBoolean,
     GraphQLInt,
+    GraphQLFloat,
 } from "graphql";
 import constants from "../../config/constants";
 import mediaTypes from "../media/types";
 import { getMedia } from "../media/logic";
 import { GraphQLJSONObject } from "graphql-type-json";
 
-const { text, audio, video, pdf, quiz, file, embed } = constants;
+const { text, audio, video, pdf, quiz, file, embed, scorm } = constants;
 
 const DESCRIPTION_REQUIRES_ENROLLMENT =
     "Should the content of this lesson be visible to only enrolled customers.";
@@ -31,6 +32,7 @@ const lessontypeType = new GraphQLEnumType({
         QUIZ: { value: quiz },
         FILE: { value: file },
         EMBED: { value: embed },
+        SCORM: { value: scorm },
     },
 });
 
@@ -49,6 +51,7 @@ const lessonType = new GraphQLObjectType({
             description: DESCRIPTION_REQUIRES_ENROLLMENT,
             type: new GraphQLNonNull(GraphQLBoolean),
         },
+        published: { type: GraphQLBoolean },
         courseId: { type: new GraphQLNonNull(GraphQLID) },
         content: { type: GraphQLJSONObject },
         media: {
@@ -74,6 +77,7 @@ const lessonMetaType = new GraphQLObjectType({
             description: DESCRIPTION_REQUIRES_ENROLLMENT,
             type: new GraphQLNonNull(GraphQLBoolean),
         },
+        published: { type: GraphQLBoolean },
         courseId: { type: new GraphQLNonNull(GraphQLID) },
         groupId: { type: new GraphQLNonNull(GraphQLID) },
     },
@@ -96,6 +100,7 @@ const lessonInputType = new GraphQLInputObjectType({
         // media: { type: mediaTypes.mediaInputType },
         downloadable: { type: GraphQLBoolean },
         groupId: { type: new GraphQLNonNull(GraphQLID) },
+        published: { type: GraphQLBoolean },
     },
 });
 
@@ -114,6 +119,7 @@ const lessonUpdateType = new GraphQLInputObjectType({
             description: DESCRIPTION_REQUIRES_ENROLLMENT,
             type: GraphQLBoolean,
         },
+        published: { type: GraphQLBoolean },
     },
 });
 
@@ -121,7 +127,7 @@ const evaluationResult = new GraphQLObjectType({
     name: "EvaluationResult",
     fields: {
         pass: { type: new GraphQLNonNull(GraphQLBoolean) },
-        score: { type: GraphQLInt },
+        score: { type: GraphQLFloat },
         requiresPassingGrade: { type: new GraphQLNonNull(GraphQLBoolean) },
         passingGrade: { type: GraphQLInt },
     },

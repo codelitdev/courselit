@@ -31,15 +31,13 @@
         "url": "https://github.com/codelitdev/courselit/issues"
     },
     "devDependencies": {
-        "@typescript-eslint/eslint-plugin": "^5.18.0",
-        "@typescript-eslint/parser": "^5.18.0",
+        "@typescript-eslint/eslint-plugin": "^8.46.0",
+        "@typescript-eslint/parser": "^8.46.0",
         "eslint": "^8.12.0",
         "rimraf": "^4.1.1",
         "typescript": "^4.6.0"
     },
     "dependencies": {
-        "redux": "^4.2.1",
-        "redux-thunk": "^2.4.1",
         "@courselit/page-models": "workspace:^",
         "@courselit/email-editor": "workspace:^"
     }

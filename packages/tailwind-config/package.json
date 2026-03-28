@@ -16,6 +16,11 @@
     "bugs": {
         "url": "https://github.com/codelitdev/courselit/issues"
     },
+    "main": "./tailwind.config.ts",
+    "exports": {
+        ".": "./tailwind.config.ts",
+        "./tailwind.config": "./tailwind.config.ts"
+    },
     "dependencies": {
         "tailwindcss-animate": "^1.0.7"
     },

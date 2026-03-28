@@ -1,20 +1,20 @@
 import {
     Alignment,
     Media,
+    TextEditorContent,
     WidgetDefaultSettings,
 } from "@courselit/common-models";
 import { ImageObjectFit } from "@courselit/components-library";
-import { AspectRatio } from "@courselit/components-library";
+import { AspectRatio } from "../../components";
 
 export default interface Settings extends WidgetDefaultSettings {
     title?: string;
-    description?: Record<string, unknown>;
+    description?: TextEditorContent;
     buttonCaption?: string;
     buttonAction?: string;
     media?: Media;
     youtubeLink?: string;
     alignment?: Alignment | "right";
-    style: "card" | "normal";
     mediaRadius?: number;
     secondaryButtonCaption?: string;
     secondaryButtonAction?: string;
@@ -25,4 +25,5 @@ export default interface Settings extends WidgetDefaultSettings {
     playVideoInModal?: boolean;
     aspectRatio?: AspectRatio;
     objectFit?: ImageObjectFit;
+    layout?: "normal" | "card";
 }

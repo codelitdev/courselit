@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import {
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     Select,
-    TextEditor,
-    PageBuilderSlider,
     VerticalPaddingSelector,
     MaxWidthSelector,
 } from "@courselit/components-library";
@@ -12,6 +11,7 @@ import { Address, HorizontalAlignment } from "@courselit/common-models";
 import { fontSize as defaultFontSize } from "./defaults";
 import { CssIdField } from "@courselit/components-library";
 import type { Theme, ThemeStyle } from "@courselit/page-models";
+import { Editor } from "@courselit/text-editor";
 
 export interface AboutWidgetProps {
     onChange: (...args: any[]) => void;
@@ -67,11 +67,14 @@ const AdminWidget = ({
     }, [content, alignment, maxWidth, verticalPadding, cssId, fontSize]);
 
     return (
-        <div className="flex flex-col gap-4 mb-4">
-            <AdminWidgetPanel title="Basic">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["basic", "design"]}
+        >
+            <AdminWidgetPanel title="Basic" value="basic">
                 <div>
                     <p className="mb-1 font-medium">Text</p>
-                    <TextEditor
+                    <Editor
                         initialContent={content}
                         onChange={(state: any) => setContent(state)}
                         showToolbar={false}
@@ -79,7 +82,7 @@ const AdminWidget = ({
                     />
                 </div>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Design">
+            <AdminWidgetPanel title="Design" value="design">
                 <Select
                     title="Alignment"
                     value={alignment}
@@ -92,13 +95,13 @@ const AdminWidget = ({
                         setAlignment(value)
                     }
                 />
-                <PageBuilderSlider
+                {/* <PageBuilderSlider
                     title="Font size"
                     min={1}
                     max={12}
                     value={fontSize}
                     onChange={setFontSize}
-                />
+                /> */}
                 <MaxWidthSelector
                     value={maxWidth || theme.theme.structure.page.width}
                     onChange={setMaxWidth}
@@ -111,10 +114,10 @@ const AdminWidget = ({
                     onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Advanced">
+            <AdminWidgetPanel title="Advanced" value="advanced">
                 <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
-        </div>
+        </AdminWidgetPanelContainer>
     );
 };
 

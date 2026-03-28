@@ -17,15 +17,35 @@ import {
 } from "./helpers";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
-import { deleteMedia } from "../../services/medialit";
+import { deleteMedia, sealMedia } from "../../services/medialit";
 import { recordProgress } from "../users/logic";
-import { Constants, Progress, Quiz } from "@courselit/common-models";
+import {
+    Constants,
+    Progress,
+    Quiz,
+    ScormContent,
+    User,
+} from "@courselit/common-models";
 import LessonEvaluation from "../../models/LessonEvaluation";
-import { checkPermission } from "@courselit/utils";
+import { checkPermission, extractMediaIDs } from "@courselit/utils";
 import { recordActivity } from "../../lib/record-activity";
-import { InternalCourse } from "@courselit/common-logic";
+import { InternalCourse } from "@courselit/orm-models";
+import CertificateModel from "../../models/Certificate";
+import { error } from "@/services/logger";
+import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
+import ActivityModel from "@/models/Activity";
+import UserModel from "../../models/User";
+import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
 
-const { permissions, quiz } = constants;
+const { permissions, quiz, scorm } = constants;
+
+export const canViewUnpublished = (ctx: GQLContext, entity: any): boolean => {
+    return (
+        !!ctx.user &&
+        (checkPermission(ctx.user.permissions, [permissions.manageAnyCourse]) ||
+            checkOwnershipWithoutModel(entity, ctx))
+    );
+};
 
 const getLessonOrThrow = async (
     id: string,
@@ -63,13 +83,21 @@ export const getLesson = async (id: string, ctx: GQLContext) => {
     return await getLessonOrThrow(id, ctx);
 };
 
-export const getLessonDetails = async (id: string, ctx: GQLContext) => {
-    const lesson = await LessonModel.findOne({
+export const getLessonDetails = async (
+    id: string,
+    ctx: GQLContext,
+    courseId?: string,
+) => {
+    const query: any = {
         lessonId: id,
         domain: ctx.subdomain._id,
-    });
+    };
+    if (courseId) {
+        query.courseId = courseId;
+    }
+    const lesson = await LessonModel.findOne(query);
 
-    if (!lesson) {
+    if (!lesson || !lesson.published) {
         throw new Error(responses.item_not_found);
     }
 
@@ -103,6 +131,7 @@ export const getLessonDetails = async (id: string, ctx: GQLContext) => {
         lesson.courseId,
         ctx.subdomain._id,
         lesson.lessonId,
+        true,
     );
     lesson.prevLesson = prevLesson;
     lesson.nextLesson = nextLesson;
@@ -141,20 +170,24 @@ export const createLesson = async (
             domain: ctx.subdomain._id,
             title: lessonData.title,
             type: lessonData.type,
-            content: JSON.parse(lessonData.content),
+            content: await replaceTempMediaWithSealedMediaInProseMirrorDoc(
+                lessonData.content || "",
+            ),
             media: lessonData.media,
             downloadable: lessonData.downloadable,
-            creatorId: ctx.user._id, // TODO: refactor this
+            creatorId: ctx.user.userId,
             courseId: course.courseId,
             groupId: lessonData.groupId,
             requiresEnrollment: lessonData.requiresEnrollment,
+            published: lessonData.published || false,
         });
 
         course.lessons.push(lesson.lessonId);
-        const group = course.groups.find(
-            (group) => group._id === lessonData.groupId,
+        const group = course.groups?.find(
+            (group) =>
+                ((group as any)._id?.toString() ?? "") === lessonData.groupId,
         );
-        group.lessonsOrder.push(lesson.lessonId);
+        group?.lessonsOrder.push(lesson.lessonId);
         await (course as any).save();
 
         return lesson;
@@ -171,23 +204,49 @@ export const updateLesson = async (
         | "media"
         | "downloadable"
         | "requiresEnrollment"
+        | "published"
         | "type"
     > & { id: string; lessonId: string },
     ctx: GQLContext,
 ) => {
     let lesson = await getLessonOrThrow(lessonData.id, ctx);
     lessonData.lessonId = lessonData.id;
-    delete lessonData.id;
+    delete (lessonData as any).id;
 
     lessonData.type = lesson.type;
+    const contentMediaIdsMarkedForDeletion: string[] = [];
+    if (Object.prototype.hasOwnProperty.call(lessonData, "content")) {
+        const nextContent = (lessonData.content ?? "") as string;
+        contentMediaIdsMarkedForDeletion.push(
+            ...getDeletedMediaIds(
+                JSON.stringify(lesson.content || ""),
+                nextContent,
+            ),
+        );
+    }
+
     lessonValidator(lessonData);
 
     for (const key of Object.keys(lessonData)) {
         if (key === "content") {
-            lesson.content = JSON.parse(lessonData.content);
+            lesson.content =
+                lessonData.type === Constants.LessonType.TEXT
+                    ? await replaceTempMediaWithSealedMediaInProseMirrorDoc(
+                          lessonData.content || "",
+                      )
+                    : JSON.parse(lessonData.content);
+        } else if (key === "media" && lessonData.media) {
+            const media = await sealMedia(lessonData.media.mediaId);
+            if (media) {
+                delete media.file;
+                lesson.media = media;
+            }
         } else {
             lesson[key] = lessonData[key];
         }
+    }
+    for (const mediaId of contentMediaIdsMarkedForDeletion) {
+        await deleteMedia(mediaId);
     }
 
     lesson = await (lesson as any).save();
@@ -198,25 +257,66 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
     const lesson = await getLessonOrThrow(id, ctx);
 
     try {
-        // remove from the parent Course's lessons array
-        let course: InternalCourse | null = await CourseModel.findOne({
-            domain: ctx.subdomain._id,
-        }).elemMatch("lessons", { $eq: lesson.lessonId });
-        if (!course) {
+        const cleanupTasks: Promise<any>[] = [];
+
+        if (lesson.media?.mediaId) {
+            cleanupTasks.push(deleteMedia(lesson.media.mediaId));
+        }
+
+        if (lesson.type === Constants.LessonType.TEXT && lesson.content) {
+            const extractedMediaIds = extractMediaIDs(
+                JSON.stringify(lesson.content),
+            );
+            for (const mediaId of Array.from(extractedMediaIds)) {
+                cleanupTasks.push(deleteMedia(mediaId));
+            }
+        }
+
+        if (
+            lesson.type === Constants.LessonType.SCORM &&
+            lesson.content &&
+            (lesson.content as ScormContent).mediaId
+        ) {
+            cleanupTasks.push(
+                deleteMedia((lesson.content as ScormContent).mediaId!),
+            );
+        }
+
+        cleanupTasks.push(
+            LessonEvaluation.deleteMany({
+                domain: ctx.subdomain._id,
+                lessonId: lesson.lessonId,
+            }),
+        );
+        cleanupTasks.push(
+            ActivityModel.deleteMany({
+                domain: ctx.subdomain._id,
+                entityId: lesson.lessonId,
+            }),
+        );
+        cleanupTasks.push(
+            LessonModel.deleteOne({
+                _id: lesson.id,
+                domain: ctx.subdomain._id,
+            }),
+        );
+
+        await Promise.all(cleanupTasks);
+
+        const courseUpdateResult = await CourseModel.updateOne(
+            {
+                domain: ctx.subdomain._id,
+                lessons: lesson.lessonId,
+            },
+            {
+                $pull: { lessons: lesson.lessonId },
+            },
+        );
+
+        if (courseUpdateResult.matchedCount === 0) {
             return false;
         }
 
-        course.lessons.splice(course.lessons.indexOf(lesson.lessonId), 1);
-        await (course as any).save();
-
-        if (lesson.media?.mediaId) {
-            await deleteMedia(lesson.media.mediaId);
-        }
-
-        await LessonModel.deleteOne({
-            _id: lesson._id,
-            domain: ctx.subdomain._id,
-        });
         return true;
     } catch (err: any) {
         throw new Error(err.message);
@@ -226,47 +326,42 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
 export const getAllLessons = async (
     course: InternalCourse,
     ctx: GQLContext,
+    forcePublishedOnly: boolean = false,
 ) => {
-    const lessons = await LessonModel.find(
-        {
-            lessonId: {
-                $in: [...course.lessons],
-            },
-            domain: ctx.subdomain._id,
-        },
-        {
-            id: 1,
-            lessonId: 1,
-            type: 1,
-            title: 1,
-            requiresEnrollment: 1,
-            courseId: 1,
-            groupId: 1,
-        },
-    );
+    const canViewUnpublishedLessons =
+        !forcePublishedOnly && canViewUnpublished(ctx, course);
+
+    const query: Record<string, unknown> = {
+        courseId: course.courseId,
+        domain: ctx.subdomain._id,
+    };
+
+    if (!canViewUnpublishedLessons) {
+        query.published = true;
+    }
+
+    const lessons = await LessonModel.find(query, {
+        id: 1,
+        lessonId: 1,
+        type: 1,
+        title: 1,
+        requiresEnrollment: 1,
+        courseId: 1,
+        groupId: 1,
+        published: 1,
+    });
 
     return lessons;
 };
 
-// TODO: refactor this as it might not be deleting the media
 export const deleteAllLessons = async (courseId: string, ctx: GQLContext) => {
-    const allLessonsWithMedia = await LessonModel.find(
-        {
-            courseId,
-            domain: ctx.subdomain._id,
-            mediaId: { $ne: null },
-        },
-        {
-            mediaId: 1,
-        },
-    );
-    for (let media of allLessonsWithMedia) {
-        await deleteMedia(media.mediaId);
-    }
-    await LessonModel.deleteMany({
-        courseId,
+    const allLessons = await LessonModel.find<Lesson>({
         domain: ctx.subdomain._id,
+        courseId,
     });
+    for (const lesson of allLessons) {
+        await deleteLesson(lesson.lessonId, ctx);
+    }
 };
 
 export const markLessonCompleted = async (
@@ -276,7 +371,7 @@ export const markLessonCompleted = async (
     checkIfAuthenticated(ctx);
 
     const lesson = await LessonModel.findOne<Lesson>({ lessonId });
-    if (!lesson) {
+    if (!lesson || !lesson.published) {
         throw new Error(responses.item_not_found);
     }
 
@@ -290,9 +385,9 @@ export const markLessonCompleted = async (
 
     if (await isPartOfDripGroup(lesson, ctx.subdomain._id)) {
         const groupIsNotInAccessibleGroups =
-            ctx.user.purchases
-                .find((x) => x.courseId === lesson.courseId)
-                .accessibleGroups.indexOf(lesson.groupId) === -1;
+            ctx.user.purchases[enrolledItemIndex].accessibleGroups.indexOf(
+                lesson.groupId,
+            ) === -1;
         if (groupIsNotInAccessibleGroups) {
             throw new Error(responses.drip_not_released);
         }
@@ -310,10 +405,49 @@ export const markLessonCompleted = async (
         }
     }
 
+    // Check SCORM completion status
+    if (lesson.type === scorm) {
+        // Re-fetch user using .lean() to get a plain JS object.
+        const freshUser: any = await UserModel.findById(ctx.user._id).lean();
+        const purchase = freshUser?.purchases?.[enrolledItemIndex];
+        const lessonData = (purchase as any)?.scormData?.lessons?.[lessonId];
+
+        let isCompleted = false;
+
+        if (lessonData?.cmi) {
+            // SCORM 1.2
+            const status12 = lessonData.cmi.core?.lesson_status;
+            // SCORM 2004
+            const completion2004 = lessonData.cmi.completion_status;
+            const success2004 = lessonData.cmi.success_status;
+
+            isCompleted =
+                status12 === "completed" ||
+                status12 === "passed" ||
+                completion2004 === "completed" ||
+                success2004 === "passed";
+
+            // Fallback: Allow completion if user has interacted (saved data exists)
+            if (!isCompleted) {
+                const hasData =
+                    !!lessonData.cmi.suspend_data ||
+                    !!lessonData.cmi.core?.session_time ||
+                    !!lessonData.cmi.core?.exit;
+                if (hasData) {
+                    isCompleted = true;
+                }
+            }
+        }
+
+        if (!isCompleted) {
+            throw new Error("Please complete the SCORM content first");
+        }
+    }
+
     await recordProgress({
         lessonId,
         courseId: lesson.courseId,
-        user: ctx.user,
+        user: ctx.user as unknown as User,
     });
 
     await recordActivity({
@@ -326,29 +460,51 @@ export const markLessonCompleted = async (
         },
     });
 
-    await recordCourseCompleted(lesson.courseId, ctx);
+    await checkAndRecordCourseCompletion(lesson.courseId, ctx);
 
     return true;
 };
 
-const recordCourseCompleted = async (courseId: string, ctx: GQLContext) => {
+const checkAndRecordCourseCompletion = async (
+    courseId: string,
+    ctx: GQLContext,
+) => {
     const course = await CourseModel.findOne({ courseId });
     if (!course) {
         throw new Error(responses.item_not_found);
     }
 
-    const isCourseCompleted = course.lessons.every((lessonId) => {
-        const progress = ctx.user.purchases.find(
-            (progress: Progress) => progress.courseId === courseId,
-        );
-        if (!progress) {
-            return false;
-        }
-        return progress.completedLessons.includes(lessonId);
-    });
+    const publishedLessons = await LessonModel.find(
+        {
+            courseId: course.courseId,
+            domain: ctx.subdomain._id,
+            published: true,
+        },
+        {
+            lessonId: 1,
+        },
+    );
+    const publishedLessonIds = publishedLessons.map(
+        (lesson) => lesson.lessonId,
+    );
+    if (publishedLessonIds.length === 0) {
+        return false;
+    }
+
+    const progress = ctx.user.purchases.find(
+        (purchase: Progress) => purchase.courseId === course.courseId,
+    );
+    if (!progress) {
+        return false;
+    }
+
+    const completedLessons = new Set(progress.completedLessons);
+    const isCourseCompleted = publishedLessonIds.every((lessonId) =>
+        completedLessons.has(lessonId),
+    );
 
     if (!isCourseCompleted) {
-        return;
+        return false;
     }
 
     await recordActivity({
@@ -356,6 +512,58 @@ const recordCourseCompleted = async (courseId: string, ctx: GQLContext) => {
         userId: ctx.user.userId,
         type: Constants.ActivityType.COURSE_COMPLETED,
         entityId: courseId,
+    });
+
+    if (course.certificate) {
+        await issueCertificate(course, ctx);
+    }
+
+    return true;
+};
+
+const issueCertificate = async (
+    course: InternalCourse,
+    ctx: GQLContext,
+): Promise<void> => {
+    const existingCertificate = await CertificateModel.findOne({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+        userId: ctx.user.userId,
+    });
+    if (existingCertificate) {
+        return;
+    }
+
+    const certificate = await CertificateModel.create({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+        userId: ctx.user.userId,
+    });
+
+    const enrolledItemIndex = ctx.user.purchases.findIndex(
+        (progress: Progress) => progress.courseId === course.courseId,
+    );
+
+    if (enrolledItemIndex === -1) {
+        error(
+            `Error in issuing certificate due to course not found in user's purchases`,
+            {
+                courseId: course.courseId,
+                userId: ctx.user.userId,
+            },
+        );
+        return;
+    }
+
+    ctx.user.purchases[enrolledItemIndex].certificateId =
+        certificate.certificateId;
+    await (ctx.user as any).save();
+
+    await recordActivity({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        type: Constants.ActivityType.CERTIFICATE_ISSUED,
+        entityId: course.courseId,
     });
 };
 

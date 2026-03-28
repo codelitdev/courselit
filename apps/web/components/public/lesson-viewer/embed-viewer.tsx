@@ -1,5 +1,6 @@
 import React from "react";
 import { UIConstants } from "@courselit/common-models";
+import { SandboxedEmbed } from "@courselit/page-blocks";
 
 const YouTubeEmbed = ({ content }: { content: string }) => {
     const match = content.match(UIConstants.YOUTUBE_REGEX);
@@ -8,7 +9,7 @@ const YouTubeEmbed = ({ content }: { content: string }) => {
         <div className="aspect-video">
             <iframe
                 className="w-full h-full rounded-lg"
-                src={`https://www.youtube.com/embed/${match![1]}`}
+                src={`https://www.youtube.com/embed/${match ? match[1] : ""}`}
                 title="YouTube video player"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -22,20 +23,24 @@ interface LessonEmbedViewerProps {
 }
 
 const LessonEmbedViewer = ({ content }: LessonEmbedViewerProps) => {
+    const isYouTube =
+        content.value.includes("youtube") || content.value.includes("youtu.be");
+    const hasScript = content.value.includes("<script");
+
     return (
-        <div className="flex flex-col min-h-screen">
-            {content.value.match(UIConstants.YOUTUBE_REGEX) && (
-                <div className="mb-4">
-                    <YouTubeEmbed content={content.value} />
-                </div>
+        <>
+            {isYouTube ? (
+                <YouTubeEmbed content={content.value} />
+            ) : hasScript ? (
+                <SandboxedEmbed content={content.value} />
+            ) : (
+                <div
+                    dangerouslySetInnerHTML={{
+                        __html: content.value,
+                    }}
+                ></div>
             )}
-            <a
-                href={content.value}
-                className="text-sm text-muted-foreground text-center hover:underline"
-            >
-                {content.value}
-            </a>
-        </div>
+        </>
     );
 };
 

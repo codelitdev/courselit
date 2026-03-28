@@ -3,6 +3,7 @@ import type { Address, Media, Profile } from "@courselit/common-models";
 import Settings from "./settings";
 import {
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     MediaSelector,
     Form,
     FormField,
@@ -10,14 +11,16 @@ import {
     PageBuilderSlider,
     CssIdField,
     Checkbox,
-    AspectRatio,
     ImageObjectFit,
     Select,
     MaxWidthSelector,
     VerticalPaddingSelector,
+    Tooltip,
 } from "@courselit/components-library";
+import { AspectRatio } from "../../components";
 import { isVideo } from "@courselit/utils";
 import type { Theme, ThemeStyle } from "@courselit/page-models";
+import { Help } from "@courselit/icons";
 
 interface AdminWidgetProps {
     name: string;
@@ -57,6 +60,9 @@ export default function AdminWidget({
     const [objectFit, setObjectFit] = useState<ImageObjectFit>(
         settings.objectFit || "cover",
     );
+    const [hasBorder, setHasBorder] = useState<boolean>(
+        settings.hasBorder || true,
+    );
 
     const onSettingsChanged = () =>
         onChange({
@@ -69,6 +75,7 @@ export default function AdminWidget({
             playVideoInModal,
             aspectRatio,
             objectFit,
+            hasBorder,
         });
 
     useEffect(() => {
@@ -83,11 +90,15 @@ export default function AdminWidget({
         playVideoInModal,
         aspectRatio,
         objectFit,
+        hasBorder,
     ]);
 
     return (
-        <div className="flex flex-col gap-4 mb-4">
-            <AdminWidgetPanel title="Media">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["media", "design"]}
+        >
+            <AdminWidgetPanel title="Media" value="media">
                 <Form>
                     <FormField
                         label="YouTube/Vimeo Link"
@@ -165,7 +176,7 @@ export default function AdminWidget({
                     </div>
                 )}
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Design">
+            <AdminWidgetPanel title="Design" value="design">
                 <PageBuilderSlider
                     title="Media border radius"
                     value={mediaBorderRadius}
@@ -184,10 +195,22 @@ export default function AdminWidget({
                     }
                     onChange={setVerticalPadding}
                 />
+                <div className="flex justify-between">
+                    <div className="flex grow items-center gap-1">
+                        <p>Border</p>
+                        <Tooltip title="Media will have a border">
+                            <Help />
+                        </Tooltip>
+                    </div>
+                    <Checkbox
+                        checked={hasBorder}
+                        onChange={(value: boolean) => setHasBorder(value)}
+                    />
+                </div>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Advanced">
+            <AdminWidgetPanel title="Advanced" value="advanced">
                 <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
-        </div>
+        </AdminWidgetPanelContainer>
     );
 }

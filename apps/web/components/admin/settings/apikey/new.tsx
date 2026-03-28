@@ -1,12 +1,10 @@
 import { Address } from "@courselit/common-models";
 import {
-    Button,
+    // Button,
     Form,
     FormField,
-    IconButton,
     useToast,
 } from "@courselit/components-library";
-import { AppDispatch } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import {
     APIKEY_NEW_BTN_CAPTION,
@@ -22,18 +20,16 @@ import {
 } from "@ui-config/strings";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { Clipboard } from "@courselit/icons";
+import { Button } from "@components/ui/button";
 
 interface NewApikeyProps {
     address: Address;
-    dispatch?: AppDispatch;
     loading?: boolean;
 }
 
 export default function NewApikey({
     address,
-    dispatch,
     loading = false,
 }: NewApikeyProps) {
     const [name, setName] = useState("");
@@ -72,7 +68,6 @@ export default function NewApikey({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.apikey) {
                 setApikey(response.apikey.key);
@@ -83,8 +78,6 @@ export default function NewApikey({
                 description: err.message,
                 variant: "destructive",
             });
-        } finally {
-            dispatch && dispatch(networkAction(false));
         }
     };
 
@@ -114,13 +107,14 @@ export default function NewApikey({
                         </p>
                         <div className="flex gap-2 mb-4">
                             <FormField name="apikey" value={apikey} disabled />
-                            <IconButton
+                            <Button
                                 className="px-3"
                                 onClick={copyApikey}
-                                variant="soft"
+                                size="icon"
+                                variant="outline"
                             >
                                 <Clipboard fontSize="small" />
-                            </IconButton>
+                            </Button>
                         </div>
                         <Link href={`/dashboard/settings?tab=API%20Keys`}>
                             <Button>{BUTTON_DONE_TEXT}</Button>
@@ -129,11 +123,13 @@ export default function NewApikey({
                 )}
                 {!apikey && (
                     <div className="flex gap-2">
-                        <Button disabled={!name || loading} sx={{ mr: 1 }}>
+                        <Button disabled={!name || loading}>
                             {APIKEY_NEW_BTN_CAPTION}
                         </Button>
                         <Link href={`/dashboard/settings?tab=API%20Keys`}>
-                            <Button variant="soft">{BUTTON_CANCEL_TEXT}</Button>
+                            <Button variant="secondary">
+                                {BUTTON_CANCEL_TEXT}
+                            </Button>
                         </Link>
                     </div>
                 )}
@@ -141,12 +137,3 @@ export default function NewApikey({
         </div>
     );
 }
-
-// const mapStateToProps = (state: AppState) => ({
-//     address: state.address,
-//     networkAction: state.networkAction,
-// });
-
-// const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-// export default connect(mapStateToProps, mapDispatchToProps)(NewApikey);

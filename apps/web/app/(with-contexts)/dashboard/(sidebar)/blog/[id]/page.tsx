@@ -1,11 +1,11 @@
 "use client";
 
 import useCourse from "@components/admin/blogs/editor/course-hook";
-import { Details } from "@components/admin/blogs/editor/details";
-import { Publish } from "@components/admin/blogs/editor/publish";
+import Details from "@components/admin/blogs/editor/details";
+import Publish from "@components/admin/blogs/editor/publish";
 import { deleteProduct } from "@components/admin/blogs/helpers";
 import DashboardContent from "@components/admin/dashboard-content";
-import { AddressContext, ProfileContext } from "@components/contexts";
+import { AddressContext } from "@components/contexts";
 import { UIConstants } from "@courselit/common-models";
 import {
     Link,
@@ -17,6 +17,7 @@ import {
 } from "@courselit/components-library";
 import { MoreVert } from "@courselit/icons";
 import {
+    APP_MESSAGE_COURSE_DELETED,
     DELETE_PRODUCT_POPUP_HEADER,
     DELETE_PRODUCT_POPUP_TEXT,
     EDIT_BLOG,
@@ -24,24 +25,24 @@ import {
     MENU_BLOG_VISIT,
     PAGE_TITLE_404,
     PRODUCT_TABLE_CONTEXT_MENU_DELETE_PRODUCT,
+    TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import { truncate } from "@ui-lib/utils";
-import { Profile } from "next-auth";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useContext, useState } from "react";
+import { useContext, useState, use } from "react";
 
 const breadcrumbs = [
     { label: MANAGE_BLOG_PAGE_HEADING, href: "/dashboard/blogs" },
     { label: EDIT_BLOG, href: "#" },
 ];
 
-export default function Page({ params }: { params: { id: string } }) {
+export default function Page(props: { params: Promise<{ id: string }> }) {
+    const params = use(props.params);
     const { id } = params;
     const searchParams = useSearchParams();
     const [tab, setTab] = useState(searchParams?.get("tab") || "Details");
     const address = useContext(AddressContext);
-    const { profile } = useContext(ProfileContext);
-    const course = useCourse(id, address);
+    const course = useCourse(id);
     const router = useRouter();
     const { toast } = useToast();
 
@@ -91,6 +92,11 @@ export default function Page({ params }: { params: { id: string } }) {
                                                 router.replace(
                                                     `/dashboard/blogs`,
                                                 );
+                                                toast({
+                                                    title: TOAST_TITLE_SUCCESS,
+                                                    description:
+                                                        APP_MESSAGE_COURSE_DELETED,
+                                                });
                                             },
                                             toast,
                                         })
@@ -105,18 +111,10 @@ export default function Page({ params }: { params: { id: string } }) {
                         onChange={setTab}
                     >
                         <div className="pt-4">
-                            <Details
-                                id={id as string}
-                                address={address}
-                                profile={profile as Profile}
-                            />
+                            <Details id={id as string} />
                         </div>
                         <div className="pt-4">
-                            <Publish
-                                id={id}
-                                address={address}
-                                loading={false}
-                            />
+                            <Publish id={id} />
                         </div>
                     </Tabbs>
                 </>

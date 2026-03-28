@@ -18,6 +18,8 @@ import { Fragment, ReactNode, useContext } from "react";
 import LoadingScreen from "./loading-screen";
 import PermissionError from "./permission-error";
 
+import NextThemeSwitcher from "./next-theme-switcher";
+
 export default function DashboardContent({
     breadcrumbs,
     children,
@@ -32,7 +34,7 @@ export default function DashboardContent({
 }) {
     const { profile } = useContext(ProfileContext);
 
-    if (!profile.userId) {
+    if (!profile || !profile.userId) {
         return <LoadingScreen />;
     }
 
@@ -87,7 +89,8 @@ export default function DashboardContent({
                         </Breadcrumb>
                     )}
                 </div>
-                <div className="ml-auto px-3">
+                <div className="ml-auto flex items-center gap-2 px-3">
+                    <NextThemeSwitcher variant="ghost" />
                     <NotificationsViewer />
                 </div>
             </header>

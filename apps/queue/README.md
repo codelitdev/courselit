@@ -21,6 +21,10 @@ The following environment variables are used by the queue service:
 - `EMAIL_PORT` - SMTP server port (default: `587`)
 - `PORT` - HTTP server port (default: `80`)
 - `NODE_ENV` - Environment mode. When set to `production`, emails are actually sent; otherwise they are only logged
+- `POSTHOG_API_KEY` - Enables PostHog error tracking when set
+- `POSTHOG_HOST` - PostHog host URL (default: `https://us.i.posthog.com`)
+- `POSTHOG_ERROR_CAP_PER_SOURCE_PER_MINUTE` - Per-source exception cap (default: `100`)
+- `DEPLOY_ENV` - Deployment environment label used in telemetry (default: `unknown`)
 - `SEQUENCE_BOUNCE_LIMIT` - Maximum number of bounces allowed for email sequences (default: `3`)
 - `PROTOCOL` - Protocol used for generating site URLs (default: `https`)
 - `DOMAIN` - Base domain name for generating site URLs

@@ -15,6 +15,8 @@ import userTypes from "../users/types";
 import { getUser } from "../users/logic";
 import GQLContext from "@models/GQLContext";
 import paymentPlansTypes from "../paymentplans/types";
+import { getPlans } from "../paymentplans/logic";
+import { getCommentsCount } from "./logic";
 
 const communityReportContentType = new GraphQLEnumType({
     name: "CommunityReportContentType",
@@ -41,6 +43,7 @@ const community = new GraphQLObjectType({
     fields: {
         communityId: { type: new GraphQLNonNull(GraphQLString) },
         name: { type: new GraphQLNonNull(GraphQLString) },
+        slug: { type: GraphQLString },
         description: { type: GraphQLJSONObject },
         banner: { type: GraphQLJSONObject },
         enabled: { type: GraphQLBoolean },
@@ -50,6 +53,12 @@ const community = new GraphQLObjectType({
         pageId: { type: new GraphQLNonNull(GraphQLString) },
         paymentPlans: {
             type: new GraphQLList(paymentPlansTypes.paymentPlan),
+            resolve: (community, _, ctx: GQLContext, __) =>
+                getPlans({
+                    entityId: community.communityId,
+                    entityType: Constants.MembershipEntityType.COMMUNITY,
+                    ctx,
+                }),
         },
         defaultPaymentPlan: { type: GraphQLString },
         featuredImage: { type: mediaTypes.mediaType },
@@ -88,7 +97,11 @@ const communityPost = new GraphQLObjectType({
         pinned: { type: new GraphQLNonNull(GraphQLBoolean) },
         media: { type: new GraphQLList(communityPostMedia) },
         likesCount: { type: new GraphQLNonNull(GraphQLInt) },
-        commentsCount: { type: new GraphQLNonNull(GraphQLInt) },
+        commentsCount: {
+            type: new GraphQLNonNull(GraphQLInt),
+            resolve: (post, _, ctx: GQLContext, __) =>
+                getCommentsCount(post, ctx),
+        },
         user: {
             type: userTypes.userType,
             resolve: (post, _, ctx: GQLContext, __) =>

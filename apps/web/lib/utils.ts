@@ -1,3 +1,6 @@
+import { UIConstants } from "@courselit/common-models";
+import { randomInt } from "crypto";
+
 export const capitalize = (s: string) => {
     if (typeof s !== "string") return "";
     return s.charAt(0).toUpperCase() + s.slice(1);
@@ -34,12 +37,22 @@ export const getProtocol = (protocol: string | string[] = "http") => {
     return protocol.includes("https") ? "https" : "http";
 };
 
-export const generateEmailFrom = ({
-    name,
-    email,
-}: {
-    name: string;
-    email: string;
-}) => {
-    return `${name} <${email}>`;
+export const hasPermissionToAccessSetupChecklist = (
+    userPermissions: string[],
+) => {
+    const { permissions } = UIConstants;
+    const REQUIRED_PERMISSIONS_FOR_SETUP_CHECKLIST = [
+        permissions.manageAnyCourse,
+        permissions.manageSettings,
+        permissions.manageSite,
+        permissions.publishCourse,
+    ] as const;
+
+    return REQUIRED_PERMISSIONS_FOR_SETUP_CHECKLIST.every((perm) =>
+        userPermissions.includes(perm),
+    );
 };
+
+export function generateUniquePasscode() {
+    return randomInt(100000, 999999);
+}

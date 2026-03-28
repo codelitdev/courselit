@@ -1,0 +1,81 @@
+import nextJest from "next/jest";
+
+const createJestConfig = nextJest({
+    dir: "./apps/web",
+});
+
+const config = {
+    testEnvironment: "jsdom",
+    setupFilesAfterEnv: ["<rootDir>/setupTests.client.ts"],
+    watchPathIgnorePatterns: ["globalConfig"],
+    testPathIgnorePatterns: [
+        "/node_modules/",
+        "/.next/",
+        // Exclude MongoDB tests - they will be handled by the MongoDB config
+        ".*/graphql/.*/__tests__/.*\\.test\\.(ts|tsx)$",
+        ".*/api/.*/__tests__/.*\\.test\\.(ts|tsx)$",
+    ],
+    // collectCoverage: true,
+    // collectCoverageFrom: [
+    //     '**/*.{js,jsx,ts,tsx}',
+    //     '!**/*.d.ts',
+    //     '!**/node_modules/**',
+    //     '!**/.next/**',
+    //     '!**/coverage/**',
+    //     '!**/jest.config.ts',
+    //     '!**/setupTests.ts',
+    // ],
+    moduleNameMapper: {
+        // Ensure a single React instance is used in tests to avoid
+        // "A React Element from an older version of React was rendered" errors
+        "^react$": "<rootDir>/node_modules/react",
+        "^react-dom$": "<rootDir>/node_modules/react-dom",
+        "^react/jsx-runtime$": "<rootDir>/node_modules/react/jsx-runtime.js",
+        "@courselit/utils": "<rootDir>/../../packages/utils/src",
+        "@courselit/common-logic": "<rootDir>/../../packages/common-logic/src",
+        "@courselit/page-primitives":
+            "<rootDir>/../../packages/page-primitives/src",
+        "@courselit/components-library":
+            "<rootDir>/../../packages/components-library/src",
+        "@courselit/icons": "<rootDir>/../../packages/icons/src",
+        "@courselit/text-editor": "<rootDir>/../../packages/text-editor/src",
+        "@courselit/common-models":
+            "<rootDir>/../../packages/common-models/src",
+        nanoid: "<rootDir>/__mocks__/nanoid.ts",
+        "^slugify$": "<rootDir>/__mocks__/slugify.ts",
+        "^@sindresorhus/slugify$": "<rootDir>/__mocks__/slugify.ts",
+        "@models/(.*)": "<rootDir>/models/$1",
+        "@/auth": "<rootDir>/auth.ts",
+        "@/payments-new": "<rootDir>/payments-new",
+        "@/graphql/(.*)": "<rootDir>/graphql/$1",
+        "@/config/(.*)": "<rootDir>/config/$1",
+        "@/lib/(.*)": "<rootDir>/lib/$1",
+        "@/services/(.*)": "<rootDir>/services/$1",
+        "@/templates/(.*)": "<rootDir>/templates/$1",
+        "@/hooks/(.*)": "<rootDir>/hooks/$1",
+        "@/app/(.*)": "<rootDir>/app/$1",
+        "@ui-lib/(.*)": "<rootDir>/ui-lib/$1",
+        "@config/(.*)": "<rootDir>/config/$1",
+        "@/models/(.*)": "<rootDir>/models/$1",
+        "@components/(.*)": "<rootDir>/components/$1",
+        "@ui-config/(.*)": "<rootDir>/ui-config/$1",
+        "@ui-models/(.*)": "<rootDir>/ui-models/$1",
+        "\\.(css|less|scss|sass)$": "identity-obj-proxy",
+    },
+    transform: {
+        "^.+\\.(ts|tsx)$": [
+            "ts-jest",
+            {
+                tsconfig: {
+                    jsx: "react-jsx",
+                },
+            },
+        ],
+    },
+    testMatch: ["**/__tests__/**/*.(test|spec).(ts|tsx|js)"],
+    moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
+};
+
+const jestConfig = createJestConfig(config as any) as any;
+
+export default jestConfig;

@@ -11,6 +11,7 @@ import {
     addCategory,
     deleteCategory,
     createCommunityPost,
+    updateCommunityPost,
     joinCommunity,
     updateMemberStatus,
     togglePostLike,
@@ -27,7 +28,11 @@ import {
     updateMemberRole,
 } from "./logic";
 import types from "./types";
-import { CommunityMedia, CommunityReportType } from "@courselit/common-models";
+import {
+    CommunityMedia,
+    CommunityReportType,
+    Media,
+} from "@courselit/common-models";
 import mediaTypes from "../media/types";
 
 const mutations = {
@@ -44,6 +49,7 @@ const mutations = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLString) },
             name: { type: GraphQLString },
+            slug: { type: GraphQLString },
             description: { type: GraphQLString },
             enabled: { type: GraphQLBoolean },
             banner: { type: GraphQLString },
@@ -56,6 +62,7 @@ const mutations = {
             {
                 id,
                 name,
+                slug,
                 description,
                 enabled,
                 banner,
@@ -65,6 +72,7 @@ const mutations = {
             }: {
                 id: string;
                 name?: string;
+                slug?: string;
                 description?: string;
                 enabled?: boolean;
                 banner?: string;
@@ -77,6 +85,7 @@ const mutations = {
             updateCommunity({
                 id,
                 name,
+                slug,
                 description,
                 ctx,
                 enabled,
@@ -155,6 +164,45 @@ const mutations = {
         ) =>
             createCommunityPost({
                 communityId,
+                title,
+                content,
+                category,
+                media,
+                ctx,
+            }),
+    },
+    updateCommunityPost: {
+        type: types.communityPost,
+        args: {
+            communityId: { type: new GraphQLNonNull(GraphQLString) },
+            postId: { type: new GraphQLNonNull(GraphQLString) },
+            title: { type: GraphQLString },
+            content: { type: GraphQLString },
+            category: { type: GraphQLString },
+            media: { type: new GraphQLList(types.communityPostInputMedia) },
+        },
+        resolve: async (
+            _: any,
+            {
+                communityId,
+                postId,
+                title,
+                content,
+                category,
+                media,
+            }: {
+                communityId: string;
+                postId: string;
+                title?: string;
+                content?: string;
+                category?: string;
+                media?: CommunityMedia[];
+            },
+            ctx: GQLContext,
+        ) =>
+            updateCommunityPost({
+                communityId,
+                postId,
                 title,
                 content,
                 category,

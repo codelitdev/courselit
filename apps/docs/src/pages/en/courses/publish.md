@@ -8,12 +8,15 @@ When you first create your product, it is in `Draft` state. In order to make it 
 
 ## Steps to publish your product
 
-1. From the `Products` section in the dashboard, select your product to open it in the editing mode.
-2. Go to the `Publish` tab.
+1. From the `Products` section in the dashboard, select your product to open its dashboard.
 
-![Publishing a product](/assets/courses/publishing.png)
+2. Go to the product settings screen by clicking on the `Manage` menu item in the actions menu.
+
+    ![Manage course](/assets/courses/product-manage-menu.png)
 
 3. Click the publish button to toggle the publish status of your product as shown above.
+
+    ![Publishing a product](/assets/courses/publish.png)
 
 ## Stuck somewhere?
 

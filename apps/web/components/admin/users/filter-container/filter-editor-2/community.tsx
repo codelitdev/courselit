@@ -7,32 +7,24 @@ import {
     USER_FILTER_COMMUNITY_DOES_NOT_HAVE,
     USER_FILTER_COMMUNITY_DROPDOWN_LABEL,
 } from "@ui-config/strings";
-import { AppDispatch } from "@courselit/state-management";
 import { DropdownMenuLabel } from "@components/ui/dropdown-menu";
 import {
     Button,
     Form,
     FormSubmit,
     Select,
-    useToast,
 } from "@courselit/components-library";
-import { Address } from "@courselit/common-models";
 import { useCommunities } from "@/hooks/use-communities";
 
 interface ProductFilterEditorProps {
     onApply: (...args: any[]) => any;
-    address: Address;
-    dispatch?: AppDispatch;
 }
 
 export default function CommunityFilterEditor({
     onApply,
-    address,
-    dispatch,
 }: ProductFilterEditorProps) {
     const [condition, setCondition] = useState(USER_FILTER_COMMUNITY_HAS);
     const [value, setValue] = useState("");
-    const { toast } = useToast();
     const { communities } = useCommunities(1, 1_000_000);
 
     const onSubmit = (e: any) => {

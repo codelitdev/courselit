@@ -1,15 +1,7 @@
 import React, { ReactNode } from "react";
-import { connect } from "react-redux";
 import Head from "next/head";
 import Template from "./template";
-import {
-    actionCreators,
-    AppDispatch,
-    AppState,
-} from "@courselit/state-management";
-import type { Media, Typeface, WidgetInstance } from "@courselit/common-models";
-import { useSession } from "next-auth/react";
-import { useEffect } from "react";
+import type { Media, State, WidgetInstance } from "@courselit/common-models";
 import { Theme } from "@courselit/page-models";
 
 interface BaseLayoutProps {
@@ -19,22 +11,18 @@ interface BaseLayoutProps {
     pageData?: Record<string, unknown>;
     children?: ReactNode;
     childrenOnTop?: boolean;
-    typefaces: Typeface[];
-    dispatch: AppDispatch;
     description?: string;
     socialImage?: Media;
     robotsAllowed?: boolean;
-    state: AppState;
+    state: State;
     theme: Theme;
 }
 
-export const BaseLayout = ({
+export default function BaseLayout({
     title,
     siteInfo,
     children,
     layout,
-    typefaces,
-    dispatch,
     pageData = {},
     childrenOnTop = false,
     description,
@@ -42,19 +30,8 @@ export const BaseLayout = ({
     robotsAllowed = true,
     state,
     theme,
-}: BaseLayoutProps) => {
-    const { status } = useSession();
-    state.theme = theme;
-
-    useEffect(() => {
-        if (status === "authenticated") {
-            dispatch(actionCreators.signedIn());
-            dispatch(actionCreators.authChecked());
-        }
-        if (status === "unauthenticated") {
-            dispatch(actionCreators.authChecked());
-        }
-    }, [status]);
+}: BaseLayoutProps) {
+    const stateWithTheme = { ...state, theme };
 
     const siteTitle = title || siteInfo.title;
     const siteDescription = description || siteInfo.subtitle;
@@ -120,24 +97,10 @@ export const BaseLayout = ({
                 layout={layout}
                 childrenOnTop={childrenOnTop}
                 pageData={pageData}
-                state={state}
-                dispatch={dispatch}
+                state={stateWithTheme}
             >
                 {children}
             </Template>
         </>
     );
-};
-
-const mapStateToProps = (state: AppState) => ({
-    networkAction: state.networkAction,
-    siteInfo: state.siteinfo,
-    address: state.address,
-    typefaces: state.typefaces,
-    state: state,
-    theme: state.theme,
-});
-
-const mapDispatchToProps = (dispatch: AppDispatch) => ({ dispatch });
-
-export default connect(mapStateToProps, mapDispatchToProps)(BaseLayout);
+}

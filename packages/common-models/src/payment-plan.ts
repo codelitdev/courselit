@@ -1,4 +1,4 @@
-import { Constants } from ".";
+import { Constants, MembershipEntityType } from ".";
 const { PaymentPlanType: PaymentPlanTypeConst } = Constants;
 
 export type PaymentPlanType =
@@ -8,9 +8,13 @@ export interface PaymentPlan {
     name: string;
     planId: string;
     type: PaymentPlanType;
+    entityId: string;
+    entityType: MembershipEntityType;
     oneTimeAmount?: number;
     emiAmount?: number;
     emiTotalInstallments?: number;
     subscriptionMonthlyAmount?: number;
     subscriptionYearlyAmount?: number;
+    includedProducts?: string[];
+    description?: string;
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 
@@ -99,14 +100,9 @@ const emojis = [
     "🤕",
 ];
 
-export function EmojiPicker({ onEmojiSelect }: EmojiPickerProps) {
+function EmojiPickerComponent({ onEmojiSelect }: EmojiPickerProps) {
     return (
         <div className="w-full space-y-4">
-            {/* <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search emojis" className="pl-8" />
-            </div> */}
-
             <ScrollArea className="h-[300px]">
                 <div className="grid grid-cols-8 gap-2">
                     {emojis.map((emoji) => (
@@ -124,3 +120,5 @@ export function EmojiPicker({ onEmojiSelect }: EmojiPickerProps) {
         </div>
     );
 }
+
+export const EmojiPicker = memo(EmojiPickerComponent);

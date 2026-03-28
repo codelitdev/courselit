@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useContext, useEffect, useState } from "react";
+import { ChangeEvent, useContext, useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +33,7 @@ import {
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import { truncate } from "@ui-lib/utils";
-import useProduct from "../../../../../../../../../hooks/use-product";
+import useProduct from "@/hooks/use-product";
 import { AddressContext } from "@components/contexts";
 import DashboardContent from "@components/admin/dashboard-content";
 import { Constants, DripType, UIConstants } from "@courselit/common-models";
@@ -42,12 +42,14 @@ import { FetchBuilder } from "@courselit/utils";
 import Resources from "@components/resources";
 import EmailViewer from "@components/admin/mails/email-viewer";
 import { defaultEmail, Email as EmailContent } from "@courselit/email-editor";
+import constants from "@/config/constants";
 
-export default function SectionPage({
-    params,
-}: {
-    params: { id: string; section: string };
+const { permissions } = UIConstants;
+
+export default function SectionPage(props: {
+    params: Promise<{ id: string; section: string }>;
 }) {
+    const params = use(props.params);
     const { toast } = useToast();
     const router = useRouter();
     const { id: productId, section: sectionId } = params;
@@ -64,7 +66,7 @@ export default function SectionPage({
     const [emailSubject, setEmailSubject] = useState("");
     const [emailId, setEmailId] = useState("");
     const address = useContext(AddressContext);
-    const { product } = useProduct(productId, address);
+    const { product } = useProduct(productId);
     const [loading, setLoading] = useState(false);
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
@@ -98,8 +100,11 @@ export default function SectionPage({
                         : false,
                 );
                 setDripType(type);
-                if (group.drip?.delayInMillis) {
-                    setDelay(group.drip?.delayInMillis / 86400000);
+                if (typeof group.drip?.delayInMillis === "number") {
+                    setDelay(
+                        group.drip.delayInMillis /
+                            constants.relativeDripUnitInMillis,
+                    );
                 }
                 if (group.drip?.dateInUTC) {
                     setDate(group.drip?.dateInUTC);
@@ -283,7 +288,13 @@ export default function SectionPage({
     };
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[
+                permissions.manageAnyCourse,
+                permissions.manageCourse,
+            ]}
+        >
             <div className="space-y-6">
                 <div>
                     <h1 className="text-4xl font-semibold">
@@ -574,7 +585,7 @@ export default function SectionPage({
             <Resources
                 links={[
                     {
-                        href: "https://docs.courselit.app/en/products/section/#drip-a-section",
+                        href: "https://docs.courselit.app/en/courses/section#drip-a-section",
                         text: "Drip content",
                     },
                 ]}

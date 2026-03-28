@@ -47,6 +47,7 @@ export const SIDEBAR: Sidebar = {
     en: {
         "Getting started": [
             { text: "What is CourseLit", link: "en/introduction" },
+            { text: "Our vision", link: "en/vision" },
             { text: "Features", link: "en/features" },
         ],
         "Online courses": [
@@ -56,8 +57,10 @@ export const SIDEBAR: Sidebar = {
             { text: "Set a price", link: "en/courses/set-a-price-for-product" },
             { text: "Control visibility", link: "en/courses/visibility" },
             { text: "Add content", link: "en/courses/add-content" },
-            { text: "Manage sections", link: "en/products/section" },
+            { text: "Manage sections", link: "en/courses/section" },
             { text: "Invite customers", link: "en/products/invite-customers" },
+            { text: "Certificates", link: "en/courses/certificates" },
+            { text: "Customer reports", link: "en/products/reports" },
         ],
         "Digital downloads": [
             { text: "Introduction", link: "en/downloads/introduction" },
@@ -69,15 +72,15 @@ export const SIDEBAR: Sidebar = {
             { text: "Introduction", link: "en/communities/introduction" },
             { text: "Create a community", link: "en/communities/create" },
             { text: "Manage members", link: "en/communities/manage-members" },
-            { text: "Set a price", link: "en/communities/set-a-price" },
-            {
-                text: "Manage permissions",
-                link: "en/communities/manage-member-permissions",
-            },
             {
                 text: "Manage reported content",
                 link: "en/communities/manage-reported-content",
             },
+            {
+                text: "Unlock additional products",
+                link: "en/communities/grant-access-to-additional-products",
+            },
+            { text: "Delete a community", link: "en/communities/delete" },
         ],
         "Email marketing and automation": [
             { text: "Introduction", link: "en/email-marketing/introduction" },
@@ -100,8 +103,10 @@ export const SIDEBAR: Sidebar = {
         ],
         Website: [
             { text: "Introduction", link: "en/website/introduction" },
-            { text: "Page blocks", link: "en/website/blocks" },
+            { text: "Create a page", link: "en/website/create-page" },
+            { text: "Sales pages", link: "en/website/sales-pages" },
             { text: "Edit page", link: "en/website/edit" },
+            { text: "Page blocks", link: "en/website/blocks" },
             { text: "Themes", link: "en/website/themes" },
         ],
         Blog: [
@@ -113,14 +118,17 @@ export const SIDEBAR: Sidebar = {
             { text: "Create a school", link: "en/schools/create" },
             { text: "Use custom domain", link: "en/schools/add-custom-domain" },
             { text: "Set up payments", link: "en/schools/set-up-payments" },
+            { text: "Single Sign-On", link: "en/schools/sso" },
             { text: "Delete a school", link: "en/schools/delete" },
         ],
         Users: [
             { text: "Introduction", link: "en/users/introduction" },
             { text: "Manage users", link: "en/users/manage" },
+            { text: "Customize notifications", link: "en/users/notifications" },
             { text: "User permissions", link: "en/users/permissions" },
             { text: "Filter users", link: "en/users/filters" },
             { text: "Segment users", link: "en/users/segments" },
+            { text: "Delete a user", link: "en/users/delete" },
         ],
         Developers: [
             { text: "Introduction", link: "en/developers/introduction" },

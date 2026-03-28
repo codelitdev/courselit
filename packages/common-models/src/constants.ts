@@ -36,8 +36,8 @@ export const leads = ["website", "newsletter", "download", "api"] as const;
 export const mailRequestStatus = ["pending", "approved", "rejected"] as const;
 export const pageNames = {
     home: "Home page",
-    terms: "Terms of Service",
-    privacy: "Privacy policy",
+    terms: "Terms of Use",
+    privacy: "Privacy Policy",
     blog: "Blog",
 };
 export const dripType = ["relative-date", "exact-date"] as const;
@@ -103,6 +103,10 @@ export const NotificationEntityAction = {
     COMMUNITY_MEMBERSHIP_REQUESTED: "community:membership:requested",
     COMMUNITY_MEMBERSHIP_GRANTED: "community:membership:granted",
 } as const;
+export const NotificationChannel = {
+    APP: "app",
+    EMAIL: "email",
+} as const;
 export const ProductPriceType = {
     FREE: "free",
     PAID: "paid",
@@ -116,6 +120,7 @@ export const LessonType = {
     FILE: "file",
     EMBED: "embed",
     QUIZ: "quiz",
+    SCORM: "scorm",
 } as const;
 export const ActivityType = {
     ENROLLED: "enrolled",
@@ -134,8 +139,12 @@ export const ActivityType = {
     NEWSLETTER_SUBSCRIBED: "newsletter_subscribed",
     NEWSLETTER_UNSUBSCRIBED: "newsletter_unsubscribed",
     USER_CREATED: "user_created",
+    TAG_ADDED: "tag_added",
+    TAG_REMOVED: "tag_removed",
     COMMUNITY_JOINED: "community_joined",
     COMMUNITY_LEFT: "community_left",
+    COMMUNITY_POST_CREATED: "community_post_created",
+    COMMUNITY_POST_LIKED: "community_post_liked",
     COMMUNITY_COMMENT_CREATED: "community_comment_created",
     COMMUNITY_COMMENT_REPLIED: "community_comment_replied",
     COMMUNITY_COMMENT_LIKED: "community_comment_liked",
@@ -143,6 +152,37 @@ export const ActivityType = {
     COMMUNITY_REPLY_LIKED: "community_reply_liked",
     COMMUNITY_MEMBERSHIP_REQUESTED: "community_membership_requested",
     COMMUNITY_MEMBERSHIP_GRANTED: "community_membership_granted",
+} as const;
+export const ActivityPermissionMap = {
+    [ActivityType.ENROLLED]: "course:manage_any",
+    [ActivityType.PURCHASED]: "course:manage_any",
+    [ActivityType.DOWNLOADED]: "course:manage_any",
+    // [ActivityType.LESSON_STARTED]: "course:manage_any",
+    // [ActivityType.LESSON_COMPLETED]: "course:manage_any",
+    // [ActivityType.COURSE_COMPLETED]: "course:manage_any",
+    // [ActivityType.QUIZ_ATTEMPTED]: "course:manage_any",
+    // [ActivityType.QUIZ_PASSED]: "course:manage_any",
+    // [ActivityType.VIDEO_STARTED]: "course:manage_any",
+    // [ActivityType.VIDEO_FINISHED]: "course:manage_any",
+    // [ActivityType.CERTIFICATE_ISSUED]: "course:manage_any",
+    // [ActivityType.CERTIFICATE_DOWNLOADED]: "course:manage_any",
+    // [ActivityType.REVIEWED]: "course:manage_any",
+    [ActivityType.NEWSLETTER_SUBSCRIBED]: "user:manage",
+    [ActivityType.NEWSLETTER_UNSUBSCRIBED]: "user:manage",
+    [ActivityType.USER_CREATED]: "user:manage",
+    // [ActivityType.TAG_ADDED]: "user:manage",
+    // [ActivityType.TAG_REMOVED]: "user:manage",
+    [ActivityType.COMMUNITY_JOINED]: "community:manage",
+    [ActivityType.COMMUNITY_LEFT]: "community:manage",
+    [ActivityType.COMMUNITY_POST_CREATED]: "",
+    [ActivityType.COMMUNITY_POST_LIKED]: "",
+    [ActivityType.COMMUNITY_COMMENT_CREATED]: "",
+    [ActivityType.COMMUNITY_COMMENT_REPLIED]: "",
+    [ActivityType.COMMUNITY_COMMENT_LIKED]: "",
+    [ActivityType.COMMUNITY_REPLY_CREATED]: "",
+    [ActivityType.COMMUNITY_REPLY_LIKED]: "",
+    [ActivityType.COMMUNITY_MEMBERSHIP_REQUESTED]: "community:manage",
+    [ActivityType.COMMUNITY_MEMBERSHIP_GRANTED]: "",
 } as const;
 export const CourseType = {
     COURSE: "course",
@@ -180,4 +220,19 @@ export const EmailEventAction = {
     OPEN: "open",
     CLICK: "click",
     BOUNCE: "bounce",
+} as const;
+export const LoginProvider = {
+    GOOGLE: "google",
+    FACEBOOK: "facebook",
+    GITHUB: "github",
+    LINKEDIN: "linkedin",
+    TWITTER: "twitter",
+    APPLE: "apple",
+    EMAIL: "email",
+    SSO: "sso",
+} as const;
+export const Features = {
+    SSO: "sso",
+    API: "api",
+    LOG: "log",
 } as const;

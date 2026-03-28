@@ -72,6 +72,7 @@ export const FORM_FIELD_FEATURED_IMAGE = "Featured image";
 export const BTN_DELETE_COURSE = "Delete product";
 export const BTN_EXIT_COURSE = "Exit";
 export const BTN_EXIT_COURSE_TOOLTIP = "Exit course";
+export const BTN_TOGGLE_THEME = "Toggle theme";
 export const BTN_ADD_VIDEO = "Add";
 export const ADD_VIDEO_DIALOG_TITLE = "Embed an online video";
 export const LABEL_NEW_PASSWORD = "New password";
@@ -106,6 +107,7 @@ export const SITE_ADMIN_SETTINGS_PAYPAL_SECRET = "Paypal Secret Key";
 export const SITE_ADMIN_SETTINGS_PAYTM_SECRET = "Paytm Secret Key";
 export const SITE_SETTINGS_SECTION_GENERAL = "Branding";
 export const SITE_SETTINGS_SECTION_PAYMENT = "Payment";
+export const SITE_SETTINGS_SECTION_MAILS = "Mails";
 export const SITE_ADMIN_SETTINGS_PAYMENT_METHOD = "Payment Method";
 export const SITE_SETTINGS_STRIPE_PUBLISHABLE_KEY_TEXT =
     "Stripe Publishable Key";
@@ -118,6 +120,14 @@ export const SITE_SETTINGS_LEMONSQUEEZY_SUB_MONTHLY_TEXT =
 export const SITE_SETTINGS_LEMONSQUEEZY_SUB_YEARLY_TEXT =
     "Subscription (Yearly) variant ID";
 export const SITE_SETTINGS_PAYMENT_METHOD_NONE_LABEL = "None";
+export const SITE_SETTINGS_PAYMENT_METHOD_RESET_BUTTON = "Reset";
+export const SITE_SETTINGS_PAYMENT_METHOD_RESET_TOOLTIP =
+    "Clear the current payment method and keep saved gateway credentials";
+export const SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_TITLE =
+    "Reset payment method?";
+export const SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_DESCRIPTION =
+    "After reset, all paid plans of all products will fail at checkout with an error. Free plans will keep on working.";
+export const SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_ACTION = "Reset";
 export const FREE_COST = "FREE";
 export const SIDEBAR_TEXT_COURSE_ABOUT = "Introduction";
 export const REACT_COMPONENT_CRASHED =
@@ -162,7 +172,8 @@ export const LOGIN_FORM_LABEL =
     "Enter your email to sign in or create an account";
 export const LOGIN_NO_CODE = "Did not get the code?";
 export const BTN_LOGIN_GET_CODE = "Get code";
-export const BTN_LOGIN_CODE_INTIMATION = "Enter the code sent to";
+export const LOGIN_CODE_INTIMATION_MESSAGE =
+    "Enter the code sent to your email";
 export const LOGIN_FORM_DISCLAIMER = "By submitting, you accept the ";
 export const SIGNUP_SECTION_HEADER = "Create an account";
 export const SIGNUP_SECTION_BUTTON = "Join";
@@ -184,6 +195,9 @@ export const DIALOG_SELECT_BUTTON = "Select";
 export const LESSON_PREVIEW = "Preview";
 export const LESSON_PREVIEW_TOOLTIP =
     "This lesson will be freely available to the users.";
+export const LESSON_VISIBILITY = "Visibility";
+export const LESSON_VISIBILITY_TOOLTIP =
+    "When unpublished, this lesson is hidden from enrolled learners.";
 export const DELETE_LESSON_POPUP_HEADER = "Delete lesson";
 export const APP_MESSAGE_COURSE_DELETED = "Product deleted";
 export const APP_MESSAGE_LESSON_DELETED = "Lesson deleted";
@@ -224,6 +238,9 @@ export const MAIL_REQUEST_RECEIVED =
 export const MAIL_REQUEST_FORM_SUBMIT_INITIAL_REQUEST_TEXT = "Request access";
 export const MAIL_REQUEST_FORM_SUBMIT_UPDATE_REQUEST_TEXT = "Update reason";
 export const SITE_CUSTOMISATIONS_SETTING_HEADER = "Code Injection";
+export const SITE_MISCELLANEOUS_SETTING_HEADER = "Miscellaneous";
+export const ALPHA_LABEL = "Alpha";
+export const BETA_LABEL = "Beta";
 export const SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_HEAD =
     "Code Injection in <head>";
 export const SITE_CUSTOMISATIONS_SETTING_CODEINJECTION_BODY =
@@ -266,6 +283,7 @@ export const SUBHEADER_SECTION_PAYMENT_CONFIRMATION_WEBHOOK =
 export const PURCHASE_STATUS_PAGE_HEADER = "Purchase Status";
 export const MAIN_MENU_ITEM_DASHBOARD = "Dashboard";
 export const MAIN_MENU_ITEM_PROFILE = "Profile";
+export const MAIN_MENU_ITEM_NOTIFICATIONS = "Notifications";
 export const LAYOUT_SECTION_MAIN_CONTENT = "Main Content";
 export const LAYOUT_SECTION_FOOTER_LEFT = "Left Section";
 export const LAYOUT_SECTION_FOOTER_RIGHT = "Right Section";
@@ -293,6 +311,17 @@ export const HEADER_YOUR_PROFILE = "Your Profile";
 export const PROFILE_PAGE_MESSAGE_NOT_LOGGED_IN = "to see your profile.";
 export const PROFILE_PAGE_HEADER = "Profile";
 export const MY_CONTENT_HEADER = "My content";
+export const NOTIFICATION_SETTINGS_PAGE_HEADER = "Notifications";
+export const NOTIFICATION_SETTINGS_PAGE_DESCRIPTION =
+    "Manage how you receive notifications for each activity.";
+export const NOTIFICATION_SETTINGS_RESOURCE_TEXT = "Customize notifications";
+export const NOTIFICATION_SETTINGS_COLUMN_ACTIVITY = "Activity";
+export const NOTIFICATION_SETTINGS_EMPTY_STATE =
+    "No notification preferences are available for your account.";
+export const NOTIFICATION_SETTINGS_GROUP_GENERAL = "General";
+export const NOTIFICATION_SETTINGS_GROUP_PRODUCT_MANAGEMENT = "Product";
+export const NOTIFICATION_SETTINGS_GROUP_USER_MANAGEMENT = "User";
+export const NOTIFICATION_SETTINGS_GROUP_COMMUNITY_MANAGEMENT = "Community";
 export const PROFILE_EMAIL_PREFERENCES = "Email preferences";
 export const PROFILE_SECTION_DETAILS = "Personal details";
 export const PROFILE_SECTION_DETAILS_NAME = "Name";
@@ -385,7 +414,8 @@ export const MEDIA_PUBLIC = "Publicly available";
 export const MEDIA_DIRECT_URL = "Direct URL";
 export const MEDIA_URL_COPIED = "Copied to clipboard";
 export const MEDIA_FILE_TYPE = "File type";
-export const UNABLE_TO_LOGOUT = "Logout failed. Try again.";
+export const LOGOUT = "Logout";
+export const LOGOUT_MESSAGE = "Are you sure you want to logout?";
 export const USER_TABLE_HEADER_NAME = "Details";
 export const USER_TABLE_HEADER_STATUS = "Status";
 export const USER_TABLE_HEADER_PRODUCTS = "Products";
@@ -424,18 +454,19 @@ export const DELETE_PRODUCT_POPUP_HEADER = "Delete product";
 export const DELETE_PRODUCT_POPUP_TEXT =
     "This is an irreversible action and all the data and analytics related to this product will be deleted.";
 export const FORM_NEW_PRODUCT_MENU_COURSE_SUBTITLE =
-    "An online course consisting of images, videos, text and more.";
+    "An interactive course consisting of images, videos, text and more.";
 export const FORM_NEW_PRODUCT_MENU_DOWNLOADS_SUBTITLE =
-    "Allow users to download file(s).";
+    "A ZIP file containing images, videos, text and more.";
 export const NEW_SECTION_HEADER = "New Section";
 export const EDIT_SECTION_DRIP = "Drip";
 export const DRIP_SECTION_STATUS = "Enable Drip";
 export const EDIT_SECTION_HEADER = "Edit Section";
 export const DELETE_SECTION_HEADER = "Delete section";
+export const BUTTON_MOVE_SECTION_UP = "Move section up";
+export const BUTTON_MOVE_SECTION_DOWN = "Move section down";
 export const PRICING_HEADER = "Pricing";
 export const PRICING_DROPDOWN = "Pricing model";
 export const PRICING_FREE = Constants.ProductPriceType.FREE;
-export const PRICING_FREE_LABEL = "Free";
 export const PRICING_FREE_SUBTITLE =
     "People can access the content for free. The user needs to be signed in.";
 export const PRICING_EMAIL = Constants.ProductPriceType.EMAIL;
@@ -444,6 +475,11 @@ export const PRICING_EMAIL_SUBTITLE =
     "People will be sent the content over email. The user needs not be signed in.";
 export const PRICING_PAID = Constants.ProductPriceType.PAID;
 export const PRICING_PAID_LABEL = "Paid";
+export const PRICING_FREE_LABEL = "Free";
+export const PAYMENT_PLAN_FREE_LABEL = "Free";
+export const PAYMENT_PLAN_ONETIME_LABEL = "One-time";
+export const PAYMENT_PLAN_SUBSCRIPTION_LABEL = "Subscription";
+export const PAYMENT_PLAN_EMI_LABEL = "EMI";
 export const PRICING_PAID_SUBTITLE =
     "People can access the content after a one time payment. The user needs to be signed in.";
 export const PRICING_PAID_NO_PAYMENT_METHOD =
@@ -491,11 +527,9 @@ export const QUESTION_BUILDER_CORRECT_ANS_TOOLTIP = "Mark as correct answer";
 export const QUESTION_BUILDER_EXPAND_TOOLTIP = "Expand";
 export const QUESTION_BUILDER_COLLAPSE_TOOLTIP = "Collapse";
 export const LESSON_QUIZ_GRADED_TEXT = "This quiz requires a passing grade";
-export const LESSON_QUIZ_PASSING_GRADE_LABEL = "Passing grade";
-export const QUIZ_VIEWER_EVALUATE_BTN = "Check score";
+export const QUIZ_VIEWER_EVALUATE_BTN = "Submit";
 export const QUIZ_VIEWER_EVALUATE_BTN_LOADING = "Checking...";
-export const QUIZ_PASS_MESSAGE = "Pass! You scored";
-export const QUIZ_FAIL_MESSAGE = "Fail! You scored";
+export const QUIZ_SCORE_PREFIX_MESSAGE = "You scored";
 export const COURSE_STUDENT_REPORT_HEADER = "Students";
 export const COURSE_STUDENT_TABLE_HEADER_PROGRESS = "Progress";
 export const COURSE_STUDENT_TABLE_HEADER_DOWNLOAD = "Downloaded";
@@ -565,21 +599,83 @@ export const LESSON_GROUP_DELETED = "Section deleted";
 export const USER_PERMISSION_AREA_SUBTEXT =
     "Control what actions this user can perform in your school.";
 export const APIKEY_NEW_BUTTON = "New API key";
-export const APIKEY_EXISTING_HEADER = "Your API keys";
+export const ADD_SSO_PROVIDER_BUTTON = "New provider";
+export const APIKEY_EXISTING_HEADER = "API keys";
+export const APIKEY_CARD_DESCRIPTION =
+    "Using API keys you can interact with CourseLit API and build custom integrations";
+export const SSO_CARD_DESCRIPTION =
+    "Let your existing users sign into the your school";
+export const SINGLE_SIGN_ON_HEADER = "Single sign-on (SSO)";
+export const LOGIN_METHODS_HEADER = "Login providers";
+export const LOGIN_METHODS_CARD_DESCRIPTION =
+    "Control how your users access the school";
 export const APIKEY_EXISTING_TABLE_HEADER_CREATED = "Created";
 export const APIKEY_EXISTING_TABLE_HEADER_NAME = "Name";
 export const APIKEY_NEW_HEADER = "New API key";
+export const SSO_PROVIDER_HEADER = "SSO Provider";
+export const SSO_PROVIDER_CARD_HEADER = "IDP Configuration";
+export const SSO_PROVIDER_CARD_DESCRIPTION =
+    "Enter the values from your IDP (Okta, Azure AD, OneLogin, etc.)";
+export const SSO_PROVIDER_SP_EMTPY =
+    "Enter your IDP settings to see these settings";
+export const SSO_PROVIDER_SP_ACS_LABEL = "SAML ACS URL";
+export const SSO_PROVIDER_SP_ENTITY_ID_LABEL = "Audience URI (SP Entity ID)";
 export const APIKEY_NEW_LABEL = "Name";
+export const SSO_PROVIDER_DOMAIN_LABEL = "Domain";
+export const SSO_PROVIDER_ENTRY_POINT_LABEL = "Entry point";
+export const SSO_PROVIDER_CERT_LABEL = "Certificate";
+export const SSO_PROVIDER_CALLBACK_URL_LABEL = "Callback URL";
+export const SSO_PROVIDER_IDP_METADATA_LABEL = "IDP Metadata";
+export const SSO_PROVIDER_PROVIDER_ID_LABEL = "Provider ID";
+export const SSO_PROVIDER_SUCCESS_MESSAGE = "SSO provider added successfully";
+export const PROVIDER_RESET_SUCCESS_MESSAGE = "Provider reset successfully";
 export const APIKEY_NEW_BTN_CAPTION = "Create";
 export const APIKEY_NEW_GENERATED_KEY_HEADER = "Your new API key";
 export const APIKEY_NEW_GENERATED_KEY_DESC =
     "Please copy it and store it securely. You won't be able to see it again.";
 export const APIKEY_NEW_GENERATED_KEY_COPIED = "Copied to clipboard";
 export const APIKEY_REMOVE_BTN = "Remove";
+export const SSO_PROVIDER_REMOVE_BTN = "Remove";
 export const APIKEY_REMOVE_DIALOG_HEADER = "Remove API Key";
-export const APIKYE_REMOVE_DIALOG_DESC =
+export const SSO_PROVIDER_REMOVE_DIALOG_HEADER = "Remove SSO Provider";
+export const SSO_PROVIDER_REMOVE_DIALOG_DESC =
+    "Are you sure you want to remove this provider?";
+export const APIKEY_REMOVE_DIALOG_DESC =
     "If you are using this key in your application, removing it will break the integration. There is no going back if you remove it.";
 export const USER_TAGS_SUBHEADER = "Tags";
+export const BTN_DELETE_USER = "Delete user";
+export const USER_DELETE_DIALOG_TITLE = "Delete user?";
+export const USER_DELETE_DIALOG_DESCRIPTION =
+    "This action is irreversible. Products and communities owned by this user will be transferred to you and other data will be deleted.";
+export const USER_DELETE_DIALOG_MIGRATION_HEADING =
+    "What will move to your account";
+export const USER_DELETE_DIALOG_MIGRATION_ITEM_PRODUCTS =
+    "Products, lessons, and pages created by this user will be reassigned to you.";
+export const USER_DELETE_DIALOG_MIGRATION_ITEM_EMAIL =
+    "Email templates, sequences, and deliveries created by this user will be reassigned to you.";
+export const USER_DELETE_DIALOG_MIGRATION_ITEM_AUDIENCE =
+    "Audience assets such as segments, themes, payment plans, and ongoing sequences will be reassigned to you.";
+export const USER_DELETE_DIALOG_MIGRATION_ITEM_COMMUNITY =
+    "Community moderator roles and community pages managed by this user will be reassigned to you.";
+export const USER_DELETE_DIALOG_DELETION_HEADING = "What will be deleted";
+export const USER_DELETE_DIALOG_DELETION_ITEM_COMMUNICATION =
+    "Notifications, mail statuses, lesson evaluations, download links, certificates, and activity logs.";
+export const USER_DELETE_DIALOG_DELETION_ITEM_COMMUNITY =
+    "Community posts, comments, replies, subscriptions, reports, and related likes.";
+export const USER_DELETE_DIALOG_DELETION_ITEM_COMMERCE =
+    "Memberships, invoices, course enrollments, and marketing sequence entries.";
+export const USER_DELETE_DIALOG_DELETION_ITEM_ACCOUNT =
+    "The user's avatar media and account.";
+export const USER_DELETE_CONFIRMATION_LABEL = 'Type "delete" to confirm';
+export const USER_DELETE_CONFIRMATION_PLACEHOLDER = "Type 'delete' to confirm";
+export const USER_DELETE_CONFIRMATION_TOKEN = "delete";
+export const USER_DELETE_ACTION_LOADING = "Deleting...";
+export const APP_MESSAGE_USER_DELETED = "User deleted";
+export const APP_MESSAGE_USER_UPDATED = "User details saved";
+export const USER_DETAILS_SAVE_BUTTON = "Save changes";
+export const USER_DETAILS_SAVE_BUTTON_LOADING = "Saving...";
+export const USER_NAME_PLACEHOLDER = "Enter full name";
+export const USER_EMAIL_PLACEHOLDER = "Enter email address";
 export const PAGES_TABLE_HEADER_NAME = "Name";
 export const PAGES_TABLE_HEADER_ACTIONS = "Actions";
 export const NEW_PAGE_NAME_PLC = "My awesome page";
@@ -594,7 +690,7 @@ export const APP_MESSAGE_MAIL_DELETED = "Mail deleted";
 export const NEW_PAGE_FORM_WARNING =
     "These settings cannot be changed later on, so proceed with caution.";
 export const DASHBOARD_PAGE_HEADER = "Welcome";
-export const UNNAMED_USER = "Unnamed";
+export const UNNAMED_USER = "Stranger";
 export const MAIL_REQUEST_FORM_REASON_FIELD = "Reason";
 export const MAIL_REQUEST_FORM_REASON_PLACEHOLDER =
     "Please be as detailed as possible. This will help us review your application better.";
@@ -615,8 +711,18 @@ export const NEW_COMMUNITY_BUTTON = "New community";
 export const COMMUNITY_FIELD_NAME = "Community name";
 export const COMMUNITY_NEW_BTN_CAPTION = "Create";
 export const COMMUNITY_SETTINGS = "Manage";
+
+// Payment Plan strings
+export const NEW_PAYMENT_PLAN_HEADER = "New Payment Plan";
+export const EDIT_PAYMENT_PLAN_HEADER = "Edit Payment Plan";
+export const PAYMENT_PLANS_HEADER = "Payment Plans";
+export const NEW_PAYMENT_PLAN_DESCRIPTION =
+    "Configure a new payment plan for your";
+export const EDIT_PAYMENT_PLAN_DESCRIPTION = "Update the configuration for";
 export const TOAST_TITLE_SUCCESS = "Success";
 export const TOAST_SEQUENCE_SAVED = "Sequence changes saved successfully";
+export const TOAST_QUIZ_PASS_MESSAGE = "Pass 🎉";
+export const TOAST_QUIZ_FAIL_MESSAGE = "Fail ☠️";
 export const TOAST_TITLE_ERROR = "Error";
 export const TOAST_DESCRIPTION_CHANGES_SAVED = "Changes saved";
 export const DELETED_COMMENT_PLACEHOLDER = "Deleted";
@@ -632,3 +738,21 @@ export const PRODUCT_EMPTY_WARNING =
 export const BLOG_UPDATED_PREFIX = "Updated";
 export const HEADER_HELP = "Help";
 export const CHECKOUT_PAGE_ORDER_SUMMARY = "Order summary";
+export const TEXT_EDITOR_PLACEHOLDER = "Type here...";
+export const BTN_VIEW_CERTIFICATE = "View certificate";
+export const GET_SET_UP = "Get set up";
+export const MANAGE_LINK_TEXT = "Manage";
+export const BLOG_LIST_EMPTY_TITLE = "No Posts Found";
+export const BLOG_LIST_EMPTY_DESCRIPTION_PUBLIC =
+    "The team has not published any posts yet.";
+export const BLOG_LIST_EMPTY_DESCRIPTION_PRIVATE =
+    "You have not published any posts yet.";
+export const PRODUCTS_LIST_EMPTY_TITLE = "No Products Found";
+export const PRODUCTS_LIST_EMPTY_DESCRIPTION_PUBLIC =
+    "The team has not added any products yet.";
+export const PRODUCTS_LIST_EMPTY_DESCRIPTION_PRIVATE =
+    "You have not added any products yet.";
+export const LOGIN_CODE_SENT_MESSAGE =
+    "We have emailed you a one time password.";
+export const LESSON_EMBED_URL_LABEL = "Embed code";
+export const LESSON_CONTENT_LABEL = "Content";

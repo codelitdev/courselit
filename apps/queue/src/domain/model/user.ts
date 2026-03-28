@@ -1,4 +1,7 @@
-import mongoose from "mongoose";
-import { UserSchema } from "@courselit/common-logic";
+import mongoose, { Model } from "mongoose";
+import { UserSchema } from "@courselit/orm-models";
 
-export default mongoose.models.User || mongoose.model("User", UserSchema);
+const UserModel =
+    (mongoose.models.User as Model<any>) || mongoose.model("User", UserSchema);
+
+export default UserModel;

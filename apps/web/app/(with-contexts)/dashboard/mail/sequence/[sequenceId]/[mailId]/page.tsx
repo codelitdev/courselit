@@ -1,4 +1,5 @@
 "use client";
+import { use } from "react";
 
 import { useSearchParams } from "next/navigation";
 import { Button2 } from "@courselit/components-library";
@@ -11,14 +12,13 @@ import {
 import { LogOut } from "lucide-react";
 import Link from "next/link";
 
-export default function EmailEditorPage({
-    params,
-}: {
-    params: {
+export default function EmailEditorPage(props: {
+    params: Promise<{
         sequenceId: string;
         mailId: string;
-    };
+    }>;
 }) {
+    const params = use(props.params);
     const searchParams = useSearchParams();
     const redirectTo = searchParams?.get("redirectTo");
 

@@ -11,16 +11,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-// import {
-//     DropdownMenu,
-//     DropdownMenuContent,
-//     DropdownMenuItem,
-//     DropdownMenuLabel,
-//     DropdownMenuSeparator,
-//     DropdownMenuTrigger,
-// } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, UserPlus, Copy } from "lucide-react";
 import { useParams } from "next/navigation";
 import { capitalize, FetchBuilder } from "@courselit/utils";
@@ -51,6 +42,8 @@ import {
     User,
 } from "@courselit/common-models";
 import { Tooltip, useToast, Badge } from "@courselit/components-library";
+import { UIConstants } from "@courselit/common-models";
+const { permissions } = UIConstants;
 
 type Member = Pick<
     Membership,
@@ -73,7 +66,7 @@ export default function CustomersPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
     const address = useContext(AddressContext);
-    const { product } = useProduct(productId, address);
+    const { product } = useProduct(productId);
     const { toast } = useToast();
 
     const breadcrumbs = [
@@ -92,6 +85,8 @@ export default function CustomersPage() {
                 .includes(searchTerm.toLowerCase()) ||
             member.user.email.toLowerCase().includes(searchTerm.toLowerCase()),
     );
+    const publishedLessons =
+        product?.lessons?.filter((lesson) => lesson.published) || [];
 
     const fetchStudents = async () => {
         setLoading(true);
@@ -144,16 +139,23 @@ export default function CustomersPage() {
             .build();
         try {
             const response = await fetch.exec();
+            const publishedLessonIds = new Set(
+                publishedLessons.map((lesson) => lesson.lessonId),
+            );
+            const publishedLessonsCount = publishedLessonIds.size;
             setMembers(
                 response.members.map((member: any) => ({
                     ...member,
                     progressInPercentage:
                         product?.type?.toLowerCase() ===
                             Constants.CourseType.COURSE &&
-                        product?.lessons?.length! > 0
+                        publishedLessonsCount > 0
                             ? Math.round(
-                                  ((member.completedLessons?.length || 0) /
-                                      (product?.lessons?.length || 0)) *
+                                  ((member.completedLessons || []).filter(
+                                      (lessonId: string) =>
+                                          publishedLessonIds.has(lessonId),
+                                  ).length /
+                                      publishedLessonsCount) *
                                       100,
                               )
                             : undefined,
@@ -179,7 +181,13 @@ export default function CustomersPage() {
     };
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[
+                permissions.manageAnyCourse,
+                permissions.manageCourse,
+            ]}
+        >
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold">Customers</h1>
                 <Link href={`/dashboard/product/${productId}/customer/new`}>
@@ -373,7 +381,7 @@ export default function CustomersPage() {
                                               variant={
                                                   member.status.toLowerCase() ===
                                                   "pending"
-                                                      ? "success"
+                                                      ? "secondary"
                                                       : member.status.toLowerCase() ===
                                                           "active"
                                                         ? "default"
@@ -410,8 +418,7 @@ export default function CustomersPage() {
                                       {product?.type?.toLowerCase() ===
                                       Constants.CourseType.COURSE ? (
                                           <>
-                                              {product?.lessons?.length! >
-                                                  0 && (
+                                              {publishedLessons.length > 0 && (
                                                   <div className="flex items-center space-x-2">
                                                       <div className="w-20 bg-gray-200 rounded-full h-2.5">
                                                           <div
@@ -447,27 +454,22 @@ export default function CustomersPage() {
                                                                       Progress
                                                                   </DialogTitle>
                                                               </DialogHeader>
-                                                              <DialogDescription>
-                                                                  {/* {product?.lessons?.map((lesson: any) => (
-                                                    <div key={lesson.lessonId}>
-                                                        <h3>{lesson.title}</h3>
-                                                    </div>
-                                                ))} */}
-                                                                  {product?.lessons?.map(
+                                                              <DialogDescription className="max-h-[400px] overflow-y-scroll">
+                                                                  {publishedLessons.map(
                                                                       (
                                                                           lesson: any,
                                                                       ) => (
-                                                                          <div
+                                                                          <span
                                                                               key={
                                                                                   lesson.lessonId
                                                                               }
                                                                               className="flex justify-between items-center mb-1"
                                                                           >
-                                                                              <p>
+                                                                              <span>
                                                                                   {
                                                                                       lesson.title
                                                                                   }
-                                                                              </p>
+                                                                              </span>
                                                                               <span>
                                                                                   {member.completedLessons?.includes(
                                                                                       lesson.lessonId,
@@ -477,7 +479,7 @@ export default function CustomersPage() {
                                                                                       <Circle />
                                                                                   )}
                                                                               </span>
-                                                                          </div>
+                                                                          </span>
                                                                       ),
                                                                   )}
                                                               </DialogDescription>

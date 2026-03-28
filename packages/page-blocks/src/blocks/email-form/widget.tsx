@@ -2,7 +2,6 @@ import React from "react";
 import { FormEvent, useState, useEffect } from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
-import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import {
     DEFAULT_BTN_TEXT,
@@ -36,7 +35,6 @@ const Widget = ({
         verticalPadding,
     },
     state,
-    dispatch,
     editing,
     id,
 }: WidgetProps<Settings>): JSX.Element => {
@@ -104,7 +102,6 @@ const Widget = ({
             .build();
 
         try {
-            dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
             if (response.response) {
                 toast({
@@ -122,7 +119,6 @@ const Widget = ({
         } catch (e) {
             console.error(e.message);
         } finally {
-            dispatch(actionCreators.networkAction(false));
             setIsSubmitting(false);
         }
     };

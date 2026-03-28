@@ -416,7 +416,7 @@ export function MembershipList({ id }: { id: string }) {
                                                     variant={
                                                         member.status.toLowerCase() ===
                                                         "pending"
-                                                            ? "success"
+                                                            ? "secondary"
                                                             : member.status.toLowerCase() ===
                                                                 "active"
                                                               ? "default"
@@ -429,7 +429,7 @@ export function MembershipList({ id }: { id: string }) {
                                                         member.status.slice(1)}
                                                 </Badge>
                                                 {member.user.userId !==
-                                                    profile.userId && (
+                                                    profile?.userId && (
                                                     <Tooltip title="Change status">
                                                         <Button
                                                             size="sm"
@@ -455,7 +455,7 @@ export function MembershipList({ id }: { id: string }) {
                                                     {capitalize(member.role)}
                                                 </Badge>
                                                 {member.user.userId !==
-                                                    profile.userId && (
+                                                    profile?.userId && (
                                                     <Tooltip title="Change role">
                                                         <Button
                                                             size="sm"
@@ -500,7 +500,7 @@ export function MembershipList({ id }: { id: string }) {
                                                             variant="outline"
                                                             onClick={() =>
                                                                 handleCopyToClipboard(
-                                                                    member.subscriptionId,
+                                                                    member.subscriptionId!,
                                                                 )
                                                             }
                                                         >

@@ -61,6 +61,9 @@ const progress = new GraphQLObjectType({
         courseId: { type: new GraphQLNonNull(GraphQLString) },
         completedLessons: { type: new GraphQLList(GraphQLString) },
         accessibleGroups: { type: new GraphQLList(GraphQLString) },
+        certificateId: { type: GraphQLString },
+        createdAt: { type: GraphQLString },
+        lastDripAt: { type: GraphQLString },
     },
 });
 
@@ -79,6 +82,7 @@ const entityType = new GraphQLObjectType({
                 getMedia(content.featuredImage),
         },
         type: { type: GraphQLString },
+        certificateId: { type: GraphQLString },
     },
 });
 
@@ -109,7 +113,6 @@ const userType = new GraphQLObjectType({
             type: mediaTypes.mediaType,
             resolve: (user, _, __, ___) => getMedia(user.avatar),
         },
-        invited: { type: GraphQLBoolean },
         content: { type: new GraphQLList(userContent) },
     },
 });
@@ -127,7 +130,6 @@ const userUpdateInput = new GraphQLInputObjectType({
         avatar: {
             type: mediaTypes.mediaInputType,
         },
-        invited: { type: GraphQLBoolean },
     },
 });
 
@@ -199,6 +201,25 @@ const tagWithDetails = new GraphQLObjectType({
     },
 });
 
+const certificateType = new GraphQLObjectType({
+    name: "Certificate",
+    fields: {
+        certificateId: { type: new GraphQLNonNull(GraphQLString) },
+        title: { type: new GraphQLNonNull(GraphQLString) },
+        subtitle: { type: new GraphQLNonNull(GraphQLString) },
+        description: { type: new GraphQLNonNull(GraphQLString) },
+        signatureName: { type: new GraphQLNonNull(GraphQLString) },
+        productTitle: { type: new GraphQLNonNull(GraphQLString) },
+        userName: { type: new GraphQLNonNull(GraphQLString) },
+        createdAt: { type: new GraphQLNonNull(GraphQLString) },
+        productPageId: { type: new GraphQLNonNull(GraphQLString) },
+        signatureImage: { type: mediaTypes.mediaType },
+        signatureDesignation: { type: GraphQLString },
+        logo: { type: mediaTypes.mediaType },
+        userImage: { type: mediaTypes.mediaType },
+    },
+});
+
 const userTypes = {
     filter,
     filterInput,
@@ -214,6 +235,7 @@ const userTypes = {
     membershipStatusType,
     membershipEntityType,
     membershipRoleType,
+    certificateType,
 };
 
 export default userTypes;

@@ -32,7 +32,7 @@ Managing members in your community is essential for maintaining an active and en
 ## Changing Member Role
 
 1. Locate the member whose role you want to change.
-2. Click on the **Circular Arrow Icon** button next to the member's role to cycle through the statuses:
+2. Click on the **Circular Arrow Icon** button next to the member's role to cycle through the roles:
     - **Comment**: The member can like posts and leave comments. In free communities, this is the default role for new members.
     - **Post**: The member can create original posts in addition to commenting and liking. Paid subscribers and auto-joined members start with this role.
     - **Moderate**: The member can moderate the community, with all permissions except deleting the community.

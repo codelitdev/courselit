@@ -9,14 +9,16 @@ import {
 } from "@ui-config/strings";
 import { truncate } from "@ui-lib/utils";
 import { useContext } from "react";
-import useProduct from "../../../../../../../../hooks/use-product";
+import useProduct from "@/hooks/use-product";
 import { useParams } from "next/navigation";
+import { UIConstants } from "@courselit/common-models";
+const { permissions } = UIConstants;
 
 export default function Page() {
     const params = useParams();
-    const productId = params.id as string;
+    const productId = params?.id as string;
     const address = useContext(AddressContext);
-    const { product } = useProduct(productId, address);
+    const { product } = useProduct(productId);
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
         {
@@ -27,11 +29,14 @@ export default function Page() {
     ];
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
-            <NewCustomer
-                courseId={product?.courseId as string}
-                address={address}
-            />
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[
+                permissions.manageAnyCourse,
+                permissions.manageCourse,
+            ]}
+        >
+            <NewCustomer courseId={product?.courseId as string} />
         </DashboardContent>
     );
 }

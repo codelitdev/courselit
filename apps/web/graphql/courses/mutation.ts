@@ -14,8 +14,14 @@ import {
     removeGroup,
     addGroup,
     updateGroup,
+    moveLesson,
+    reorderGroups,
+    updateCourseCertificateTemplate,
 } from "./logic";
+import Filter from "./models/filter";
 import GQLContext from "../../models/GQLContext";
+import mediaTypes from "../media/types";
+import { Media } from "@courselit/common-models";
 
 export default {
     createCourse: {
@@ -27,7 +33,7 @@ export default {
         },
         resolve: async (
             _: unknown,
-            { courseData }: { courseData: Record<string, unknown> },
+            { courseData }: { courseData: { title: string; type: Filter } },
             context: GQLContext,
         ) => createCourse(courseData, context),
     },
@@ -98,16 +104,13 @@ export default {
             collapsed: {
                 type: GraphQLBoolean,
             },
-            lessonsOrder: {
-                type: new GraphQLList(GraphQLString),
-            },
             drip: {
                 type: types.dripInputType,
             },
         },
         resolve: async (
             _: unknown,
-            { id, courseId, name, rank, collapsed, lessonsOrder, drip },
+            { id, courseId, name, rank, collapsed, drip },
             context,
         ) =>
             updateGroup({
@@ -116,9 +119,115 @@ export default {
                 name,
                 rank,
                 collapsed,
-                lessonsOrder,
                 drip,
                 ctx: context,
+            }),
+    },
+    moveLesson: {
+        type: types.courseType,
+        args: {
+            courseId: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+            lessonId: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+            destinationGroupId: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+            destinationIndex: {
+                type: new GraphQLNonNull(GraphQLInt),
+            },
+        },
+        resolve: async (
+            _: unknown,
+            { courseId, lessonId, destinationGroupId, destinationIndex },
+            context,
+        ) =>
+            moveLesson({
+                courseId,
+                lessonId,
+                destinationGroupId,
+                destinationIndex,
+                ctx: context,
+            }),
+    },
+    reorderGroups: {
+        type: types.courseType,
+        args: {
+            courseId: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+            groupIds: {
+                type: new GraphQLNonNull(
+                    new GraphQLList(new GraphQLNonNull(GraphQLString)),
+                ),
+            },
+        },
+        resolve: async (_: unknown, { courseId, groupIds }, context) =>
+            reorderGroups({ courseId, groupIds, ctx: context }),
+    },
+    updateCourseCertificateTemplate: {
+        type: types.certificateTemplateType,
+        args: {
+            courseId: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+            title: {
+                type: GraphQLString,
+            },
+            subtitle: {
+                type: GraphQLString,
+            },
+            description: {
+                type: GraphQLString,
+            },
+            signatureImage: {
+                type: mediaTypes.mediaInputType,
+            },
+            signatureName: {
+                type: GraphQLString,
+            },
+            signatureDesignation: {
+                type: GraphQLString,
+            },
+            logo: {
+                type: mediaTypes.mediaInputType,
+            },
+        },
+        resolve: (
+            _: any,
+            {
+                courseId,
+                title,
+                subtitle,
+                description,
+                signatureImage,
+                signatureName,
+                signatureDesignation,
+                logo,
+            }: {
+                courseId: string;
+                title: string;
+                subtitle: string;
+                description: string;
+                signatureImage: Media;
+                signatureName: string;
+                signatureDesignation: string;
+                logo: Media;
+            },
+            context: GQLContext,
+        ) =>
+            updateCourseCertificateTemplate({
+                courseId,
+                ctx: context,
+                title,
+                subtitle,
+                description,
+                signatureImage,
+                signatureName,
+                signatureDesignation,
+                logo,
             }),
     },
 };

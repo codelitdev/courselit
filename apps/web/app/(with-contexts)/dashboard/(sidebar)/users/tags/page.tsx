@@ -29,7 +29,13 @@ export default function Page() {
     const address = useContext(AddressContext);
     const { profile } = useContext(ProfileContext);
 
-    if (!checkPermission(profile.permissions!, [permissions.manageUsers])) {
+    if (!profile) {
+        return <LoadingScreen />;
+    }
+
+    if (
+        !checkPermission(profile.permissions ?? [], [permissions.manageUsers])
+    ) {
         return <LoadingScreen />;
     }
 

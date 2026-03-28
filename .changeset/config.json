@@ -9,7 +9,6 @@
   "updateInternalDependencies": "patch",
   "ignore": [
     "@courselit/web",
-    "@courselit/state-management",
     "@courselit/utils",
     "@courselit/queue",
     "@courselit/icons",
@@ -21,6 +20,9 @@
     "@courselit/common-logic",
     "@courselit/page-primitives",
     "@courselit/common-models",
-    "@courselit/docs"
+    "@courselit/docs",
+    "@courselit/orm-models",
+    "@courselit/page-models",
+    "@courselit/scripts"
   ]
 }

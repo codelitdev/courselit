@@ -56,7 +56,7 @@ class Fetch {
                 window.location.href =
                     options && options.redirectToOnUnAuth
                         ? `/login?redirect=${options.redirectToOnUnAuth}`
-                        : "/logout";
+                        : "/";
             }
             return {};
         }

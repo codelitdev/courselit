@@ -1,24 +1,39 @@
 import { responses } from "../../config/strings";
+import DomainModel from "@models/Domain";
 import { checkIfAuthenticated } from "../../lib/graphql";
 import GQLContext from "../../models/GQLContext";
 import PageModel, { Page } from "../../models/Page";
 import {
     copySharedWidgetsToDomain,
+    generateUniquePageId,
     getPageResponse,
     initSharedWidgets,
+    isDuplicateKeyError,
 } from "./helpers";
 import constants from "../../config/constants";
 import Course from "../../models/Course";
-import { checkPermission } from "@courselit/utils";
+import { checkPermission, extractMediaIDs } from "@courselit/utils";
 import { Media, User, Constants } from "@courselit/common-models";
 import { Domain } from "../../models/Domain";
 import { homePageTemplate } from "./page-templates";
 import { publishTheme } from "../themes/logic";
+import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
+import { deleteMedia, sealMedia } from "@/services/medialit";
+import CommunityModel from "@models/Community";
+import { replaceTempMediaWithSealedMediaInPageLayout } from "@/lib/replace-temp-media-with-sealed-media-in-page-layout";
 const { product, site, blogPage, communityPage, permissions, defaultPages } =
     constants;
 const { pageNames } = Constants;
 
-export async function getPage({ id, ctx }: { id?: string; ctx: GQLContext }) {
+export async function getPage({
+    id,
+    ctx,
+    justWidgets = false,
+}: {
+    id?: string;
+    ctx: GQLContext;
+    justWidgets?: boolean;
+}) {
     await initSharedWidgets(ctx);
     if (!id) {
         return {
@@ -80,8 +95,23 @@ export async function getPage({ id, ctx }: { id?: string; ctx: GQLContext }) {
         if (!page) return;
 
         if (page.type === product) {
-            const course = await Course.findOne({ courseId: page.entityId });
-            if (!course.published) {
+            const course = await Course.findOne({
+                courseId: page.entityId,
+                domain: ctx.subdomain._id,
+                published: true,
+            });
+            if (!course) {
+                return;
+            }
+        }
+
+        if (page.type === communityPage) {
+            const community = await CommunityModel.findOne({
+                domain: ctx.subdomain._id,
+                communityId: page.entityId,
+                enabled: true,
+            });
+            if (!community) {
                 return;
             }
         }
@@ -104,7 +134,7 @@ export const updatePage = async ({
     layout?: string;
     title?: string;
     description?: string;
-    socialImage?: Media;
+    socialImage?: Media | null;
     robotsAllowed?: boolean;
 }): Promise<Partial<Page> | null> => {
     checkIfAuthenticated(ctx);
@@ -120,6 +150,16 @@ export const updatePage = async ({
         return null;
     }
 
+    const deletedMediaIds = getDeletedMediaIds(
+        JSON.stringify(page.draftLayout || ""),
+        inputLayout || "",
+    );
+    const publishedLayoutMediaIds = extractMediaIDs(
+        JSON.stringify(page.layout ?? []),
+    );
+    if (page.socialImage?.mediaId) {
+        publishedLayoutMediaIds.add(page.socialImage?.mediaId);
+    }
     if (inputLayout) {
         try {
             let layout;
@@ -137,22 +177,13 @@ export const updatePage = async ({
             } catch (err) {
                 throw new Error(`${responses.invalid_layout}: ${err.message}`);
             }
-            // for (let widget of layout) {
-            //     if (widget.shared && widget.widgetId) {
-            //         ctx.subdomain.draftSharedWidgets[widget.name] =
-            //             Object.assign(
-            //                 {},
-            //                 ctx.subdomain.draftSharedWidgets[widget.name],
-            //                 widget,
-            //             );
-            //         widget.settings = undefined;
-            //     }
-            // }
-            // (ctx.subdomain as any).markModified("draftSharedWidgets");
-            // await (ctx.subdomain as any).save();
             const layoutWithSharedWidgetsSettings =
                 await copySharedWidgetsToDomain(layout, ctx.subdomain);
-            page.draftLayout = layoutWithSharedWidgetsSettings;
+            const draftLayoutWithSealedMedia =
+                await replaceTempMediaWithSealedMediaInPageLayout(
+                    layoutWithSharedWidgetsSettings,
+                );
+            page.draftLayout = draftLayoutWithSealedMedia;
         } catch (err: any) {
             throw new Error(err.message);
         }
@@ -164,10 +195,34 @@ export const updatePage = async ({
         page.draftDescription = description;
     }
     if (typeof socialImage !== "undefined") {
-        page.draftSocialImage = socialImage;
+        const previousDraftSocialImageId = page.draftSocialImage?.mediaId;
+
+        if (socialImage === null) {
+            page.draftSocialImage = null;
+        } else if (socialImage.mediaId) {
+            const sealedMedia = await sealMedia(socialImage.mediaId);
+            page.draftSocialImage = sealedMedia;
+        }
+
+        if (previousDraftSocialImageId) {
+            deletedMediaIds.push(previousDraftSocialImageId);
+        }
     }
     if (typeof robotsAllowed === "boolean") {
         page.draftRobotsAllowed = robotsAllowed;
+    }
+
+    const deletableMediaIds = Array.from(deletedMediaIds).filter(
+        (mediaId) => !publishedLayoutMediaIds.has(mediaId),
+    );
+
+    for (const mediaId of deletableMediaIds) {
+        try {
+            await deleteMedia(mediaId);
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.log(`Error while deleting media`, mediaId);
+        }
     }
 
     try {
@@ -200,33 +255,65 @@ export const publish = async (
         return null;
     }
 
+    // 1. Identify all media currently in PUBLISHED state (to be potentially deleted)
+    const currentPublishedMedia = extractMediaIDs(
+        JSON.stringify(page.layout || []),
+    );
+    if (page.socialImage?.mediaId) {
+        currentPublishedMedia.add(page.socialImage.mediaId);
+    }
+
+    // 2. Identify all media in NEW PUBLISHED state (from draft)
+    const nextPublishedMedia = extractMediaIDs(
+        JSON.stringify(page.draftLayout || []),
+    );
+    if (page.draftSocialImage?.mediaId) {
+        nextPublishedMedia.add(page.draftSocialImage.mediaId);
+    }
+
+    // 3. Delete (Current - Next)
+    const mediaToDelete = Array.from(currentPublishedMedia).filter(
+        (id) => !nextPublishedMedia.has(id),
+    );
+
     if (page.draftLayout.length) {
         page.layout = page.draftLayout;
-        page.draftLayout = [];
+        // page.draftLayout = [];
     }
     if (page.draftTitle) {
         page.title = page.draftTitle;
-        page.draftTitle = undefined;
+        // page.draftTitle = undefined;
     }
     if (page.draftDescription) {
         page.description = page.draftDescription;
-        page.draftDescription = undefined;
+        // page.draftDescription = undefined;
     }
     if (page.draftRobotsAllowed) {
         page.robotsAllowed = page.draftRobotsAllowed;
-        page.draftRobotsAllowed = undefined;
+        // page.draftRobotsAllowed = undefined;
     }
-    page.socialImage = page.draftSocialImage;
-
-    ctx.subdomain.typefaces = ctx.subdomain.draftTypefaces;
-    ctx.subdomain.sharedWidgets = ctx.subdomain.draftSharedWidgets;
-    // ctx.subdomain.draftSharedWidgets = {};
+    if (page.draftSocialImage === null) {
+        page.socialImage = undefined;
+    } else if (typeof page.draftSocialImage !== "undefined") {
+        page.socialImage = page.draftSocialImage;
+    }
 
     if (ctx.subdomain.themeId) {
         await publishTheme(ctx.subdomain.themeId, ctx);
     }
 
-    await (ctx.subdomain as any).save();
+    await DomainModel.findOneAndUpdate(
+        { _id: ctx.subdomain._id },
+        {
+            $set: {
+                typefaces: ctx.subdomain.draftTypefaces,
+                sharedWidgets: ctx.subdomain.draftSharedWidgets,
+            },
+        },
+    );
+    for (const mediaId of mediaToDelete) {
+        await deleteMedia(mediaId);
+    }
     await (page as any).save();
 
     return getPageResponse(page!, ctx);
@@ -265,91 +352,91 @@ export const getPages = async (
 };
 
 export const initMandatoryPages = async (domain: Domain, user: User) => {
-    await PageModel.insertMany<Page>([
+    await PageModel.bulkWrite([
         {
-            domain: domain._id,
-            pageId: defaultPages[0],
-            type: site,
-            creatorId: user.userId,
-            name: pageNames.home,
-            entityId: domain.name,
-            layout: [
-                {
-                    name: "header",
-                    deleteable: false,
-                    shared: true,
+            updateOne: {
+                filter: { domain: domain._id, pageId: defaultPages[0] },
+                update: {
+                    $setOnInsert: {
+                        domain: domain._id,
+                        pageId: defaultPages[0],
+                        type: site,
+                        creatorId: user.userId,
+                        name: pageNames.home,
+                        entityId: domain.name,
+                        layout: [
+                            { name: "header", deleteable: false, shared: true },
+                            ...homePageTemplate,
+                            { name: "footer", deleteable: false, shared: true },
+                        ],
+                        draftLayout: [],
+                    },
                 },
-                ...homePageTemplate,
-                {
-                    name: "footer",
-                    deleteable: false,
-                    shared: true,
-                },
-            ],
-            draftLayout: [],
+                upsert: true,
+            },
         },
         {
-            domain: domain._id,
-            pageId: defaultPages[2],
-            type: site,
-            creatorId: user.userId,
-            name: pageNames.privacy,
-            entityId: domain.name,
-            layout: [
-                {
-                    name: "header",
-                    deleteable: false,
-                    shared: true,
+            updateOne: {
+                filter: { domain: domain._id, pageId: defaultPages[2] },
+                update: {
+                    $setOnInsert: {
+                        domain: domain._id,
+                        pageId: defaultPages[2],
+                        type: site,
+                        creatorId: user.userId,
+                        name: pageNames.privacy,
+                        entityId: domain.name,
+                        layout: [
+                            { name: "header", deleteable: false, shared: true },
+                            { name: "footer", deleteable: false, shared: true },
+                        ],
+                        draftLayout: [],
+                    },
                 },
-                {
-                    name: "footer",
-                    deleteable: false,
-                    shared: true,
-                },
-            ],
-            draftLayout: [],
+                upsert: true,
+            },
         },
         {
-            domain: domain._id,
-            pageId: defaultPages[1],
-            type: site,
-            creatorId: user.userId,
-            name: pageNames.terms,
-            entityId: domain.name,
-            layout: [
-                {
-                    name: "header",
-                    deleteable: false,
-                    shared: true,
+            updateOne: {
+                filter: { domain: domain._id, pageId: defaultPages[1] },
+                update: {
+                    $setOnInsert: {
+                        domain: domain._id,
+                        pageId: defaultPages[1],
+                        type: site,
+                        creatorId: user.userId,
+                        name: pageNames.terms,
+                        entityId: domain.name,
+                        layout: [
+                            { name: "header", deleteable: false, shared: true },
+                            { name: "footer", deleteable: false, shared: true },
+                        ],
+                        draftLayout: [],
+                    },
                 },
-                {
-                    name: "footer",
-                    deleteable: false,
-                    shared: true,
-                },
-            ],
-            draftLayout: [],
+                upsert: true,
+            },
         },
         {
-            domain: domain._id,
-            pageId: defaultPages[3],
-            type: blogPage,
-            creatorId: user.userId,
-            name: pageNames.blog,
-            entityId: domain.name,
-            layout: [
-                {
-                    name: "header",
-                    deleteable: false,
-                    shared: true,
+            updateOne: {
+                filter: { domain: domain._id, pageId: defaultPages[3] },
+                update: {
+                    $setOnInsert: {
+                        domain: domain._id,
+                        pageId: defaultPages[3],
+                        type: blogPage,
+                        creatorId: user.userId,
+                        name: pageNames.blog,
+                        entityId: domain.name,
+                        layout: [
+                            { name: "header", deleteable: false, shared: true },
+                            { name: "footer", deleteable: false, shared: true },
+                        ],
+                        draftLayout: [],
+                    },
                 },
-                {
-                    name: "footer",
-                    deleteable: false,
-                    shared: true,
-                },
-            ],
-            draftLayout: [],
+                upsert: true,
+            },
         },
     ]);
 };
@@ -368,39 +455,42 @@ export const createPage = async ({
         throw new Error(responses.action_not_allowed);
     }
 
-    const existingPage = await PageModel.findOne({
-        domain: ctx.subdomain._id,
+    const uniquePageId = await generateUniquePageId(
+        ctx.subdomain._id,
         pageId,
-        type: site,
-    });
+        false,
+    );
 
-    if (existingPage) {
-        throw new Error(responses.page_exists);
+    try {
+        const page: Page = await PageModel.create({
+            domain: ctx.subdomain._id,
+            pageId: uniquePageId,
+            type: site,
+            creatorId: ctx.user.userId,
+            name,
+            entityId: ctx.subdomain.name,
+            deleteable: true,
+            layout: [
+                {
+                    name: "header",
+                    deleteable: false,
+                    shared: true,
+                },
+                {
+                    name: "footer",
+                    deleteable: false,
+                    shared: true,
+                },
+            ],
+        });
+
+        return page;
+    } catch (err) {
+        if (isDuplicateKeyError(err)) {
+            throw new Error(responses.page_id_already_exists);
+        }
+        throw err;
     }
-
-    const page: Page = await PageModel.create({
-        domain: ctx.subdomain._id,
-        pageId,
-        type: site,
-        creatorId: ctx.user.userId,
-        name,
-        entityId: ctx.subdomain.name,
-        deleteable: true,
-        layout: [
-            {
-                name: "header",
-                deleteable: false,
-                shared: true,
-            },
-            {
-                name: "footer",
-                deleteable: false,
-                shared: true,
-            },
-        ],
-    });
-
-    return page;
 };
 
 export const deletePage = async (
@@ -416,11 +506,76 @@ export const deletePage = async (
         throw new Error(responses.action_not_allowed);
     }
 
+    await deletePageInternal(ctx, id);
+
+    return true;
+};
+
+export const deletePageInternal = async (ctx: GQLContext, id: string) => {
+    const page = (await PageModel.findOne({
+        domain: ctx.subdomain._id,
+        pageId: id,
+    }).lean()) as unknown as Page;
+
+    if (!page) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const mediaToBeDeleted = extractMediaIDs(JSON.stringify(page));
+    for (const mediaId of Array.from(mediaToBeDeleted)) {
+        await deleteMedia(mediaId);
+    }
+
     await PageModel.deleteOne({
         domain: ctx.subdomain._id,
         deleteable: true,
         pageId: id,
     });
+};
 
-    return true;
+export const deleteBlock = async ({
+    context: ctx,
+    pageId,
+    blockId,
+}: {
+    context: GQLContext;
+    pageId: string;
+    blockId: string;
+}) => {
+    checkIfAuthenticated(ctx);
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
+        throw new Error(responses.action_not_allowed);
+    }
+    const page: Page | null = await PageModel.findOne({
+        pageId,
+        domain: ctx.subdomain._id,
+    });
+
+    if (!page) {
+        return null;
+    }
+
+    const block = page.draftLayout.find(
+        (block: any) => block.widgetId === blockId,
+    );
+    if (!block) {
+        return null;
+    }
+
+    const deletedMediaIds = extractMediaIDs(JSON.stringify(block));
+    const publishedLayoutMediaIds = extractMediaIDs(
+        JSON.stringify(page.layout ?? []),
+    );
+    const deletableMediaIds = Array.from(deletedMediaIds).filter(
+        (mediaId) => !publishedLayoutMediaIds.has(mediaId),
+    );
+    for (const mediaId of deletableMediaIds) {
+        await deleteMedia(mediaId);
+    }
+
+    page.draftLayout = page.draftLayout.filter(
+        (block: any) => block.widgetId !== blockId,
+    );
+    await (page as any).save();
+    return getPageResponse(page!, ctx);
 };

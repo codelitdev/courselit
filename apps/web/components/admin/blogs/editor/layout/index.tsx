@@ -19,7 +19,7 @@ export default function BlogEditorLayout({
     children,
     address,
 }: BlogEditorLayoutProps) {
-    const course = useCourse(id, address);
+    const course = useCourse(id);
     const breadcrumbs = [
         { text: "Blogs", url: "/dashboard/blogs" },
         {
@@ -30,11 +30,7 @@ export default function BlogEditorLayout({
 
     return (
         <div className="flex flex-col gap-4">
-            <BlogHeader
-                id={id as string}
-                breadcrumbs={breadcrumbs}
-                address={address}
-            />
+            <BlogHeader id={id as string} breadcrumbs={breadcrumbs} />
             {course && children}
         </div>
     );

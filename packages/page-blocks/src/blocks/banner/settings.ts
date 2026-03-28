@@ -1,4 +1,4 @@
-import { Alignment } from "@courselit/common-models";
+import { Alignment, TextEditorContent } from "@courselit/common-models";
 import { WidgetDefaultSettings } from "@courselit/common-models";
 
 export default interface Settings extends WidgetDefaultSettings {
@@ -9,7 +9,7 @@ export default interface Settings extends WidgetDefaultSettings {
     buttonAction?: string;
     alignment?: "top" | "bottom" | "left" | "right";
     textAlignment?: Alignment;
-    successMessage?: Record<string, unknown>;
+    successMessage?: TextEditorContent;
     failureMessage?: string;
     editingViewShowSuccess: "1" | "0";
     mediaRadius?: number;

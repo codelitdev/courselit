@@ -19,5 +19,5 @@
             "react": ["./node_modules/@types/react"]
         }
     },
-    "include": ["src/**/*"]
+    "include": ["src/**/*", "additional.d.ts"]
 }

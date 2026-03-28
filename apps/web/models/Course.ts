@@ -1,4 +1,9 @@
-import mongoose from "mongoose";
-import { CourseSchema } from "@courselit/common-logic";
+import { InternalCourse, CourseSchema } from "@courselit/orm-models";
+import mongoose, { Model } from "mongoose";
 
-export default mongoose.models.Course || mongoose.model("Course", CourseSchema);
+const CourseModel =
+    (mongoose.models.Course as Model<InternalCourse> | undefined) ||
+    mongoose.model<InternalCourse>("Course", CourseSchema);
+
+export type { InternalCourse };
+export default CourseModel;

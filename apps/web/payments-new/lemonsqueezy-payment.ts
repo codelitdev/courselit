@@ -11,7 +11,7 @@ import MembershipModel from "@models/Membership";
 import PaymentPlanModel from "@models/PaymentPlan";
 import Invoice from "@models/Invoice";
 import { error } from "@/services/logger";
-import { InternalMembership } from "@courselit/common-logic";
+import { InternalMembership } from "@courselit/orm-models";
 
 const LEMON_SQUEEZY_API_VERSION = "2023-06-30";
 const LEMON_SQUEEZY_BASE_URL = "https://api.lemonsqueezy.com/v1";

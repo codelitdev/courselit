@@ -5,9 +5,7 @@ import {
     Typeface,
     WidgetInstance,
 } from "@courselit/common-models";
-import type { Address, Media, Profile } from "@courselit/common-models";
-import type { AppDispatch, AppState } from "@courselit/state-management";
-import { networkAction } from "@courselit/state-management/dist/action-creators";
+import type { Address, Media, Profile, State } from "@courselit/common-models";
 import { debounce, FetchBuilder, generateUniqueId } from "@courselit/utils";
 import {
     EDIT_PAGE_BUTTON_DONE,
@@ -18,17 +16,17 @@ import {
     EDIT_PAGE_BUTTON_VIEW,
     EDIT_PAGE_BUTTON_THEME,
     EDIT_PAGE_ADD_WIDGET_TITLE,
-} from "../../../ui-config/strings";
+} from "@/ui-config/strings";
 import { useRouter } from "next/navigation";
 import {
     generateFontString,
     moveMemberUp,
     moveMemberDown,
-} from "../../../ui-lib/utils";
+} from "@/ui-lib/utils";
 import Template from "../../public/base-layout/template";
 import dynamic from "next/dynamic";
 import Head from "next/head";
-import widgets from "../../../ui-config/widgets";
+import widgets from "@/ui-config/widgets";
 import { Sync, CheckCircled } from "@courselit/icons";
 import { Button2, Skeleton, useToast } from "@courselit/components-library";
 import SeoEditor from "./seo-editor";
@@ -53,12 +51,11 @@ import {
 } from "@/components/ui/select";
 import { ThemeWithDraftState } from "./theme-editor/theme-with-draft-state";
 import useThemes from "./use-themes";
-import NextThemeSwitcher from "./next-theme-switcher";
+import NextThemeSwitcher from "../next-theme-switcher";
 import { useTheme } from "next-themes";
 
 const EditWidget = dynamic(() => import("./edit-widget"));
 const AddWidget = dynamic(() => import("./add-widget"));
-// const FontsList = dynamic(() => import("./fonts-list"));
 const ThemeEditor = dynamic(() => import("./theme-editor/index"));
 
 const DEBOUNCE_TIME = 500;
@@ -67,11 +64,10 @@ interface PageEditorProps {
     id: string;
     address: Address;
     profile: Profile;
-    dispatch?: AppDispatch;
     siteInfo: SiteInfo;
     typefaces: Typeface[];
     redirectTo?: string;
-    state: AppState;
+    state: State;
 }
 
 type LeftPaneContent =
@@ -86,7 +82,6 @@ export default function PageEditor({
     id,
     address,
     profile,
-    dispatch,
     redirectTo,
     state,
 }: PageEditorProps) {
@@ -95,7 +90,7 @@ export default function PageEditor({
             Page & {
                 draftTitle?: string;
                 draftDescription?: string;
-                draftSocialImage?: Media;
+                draftSocialImage?: Media | null;
                 draftRobotsAllowed?: boolean;
             }
         >
@@ -103,7 +98,7 @@ export default function PageEditor({
     const [layout, setLayout] = useState<Partial<WidgetInstance>[]>([]);
     const [selectedWidget, setSelectedWidget] = useState<string>();
     const [selectedWidgetIndex, setSelectedWidgetIndex] = useState<number>(-1);
-    const [draftTypefaces, setDraftTypefaces] = useState([]);
+    const [draftTypefaces, setDraftTypefaces] = useState<Typeface[]>([]);
     const [leftPaneContent, setLeftPaneContent] =
         useState<LeftPaneContent>("none");
     const [primaryFontFamily, setPrimaryFontFamily] =
@@ -130,12 +125,16 @@ export default function PageEditor({
 
     const fontString = generateFontString(draftTypefaces);
 
+    const fetcher = new FetchBuilder()
+        .setUrl(`${address.backend}/api/graph`)
+        .setIsGraphQLEndpoint(true);
+
     useEffect(() => {
         loadDraftTypefaces();
         loadPage();
 
         loadPages();
-    }, [address.backend, dispatch]);
+    }, [address.backend]);
 
     async function loadPages() {
         setLoadingPages(true);
@@ -149,13 +148,9 @@ export default function PageEditor({
                     }
                 }
             `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
+        const fetch = fetcher.setPayload(query).build();
         try {
-            dispatch && dispatch(networkAction(true));
+            setLoadingPages(true);
             const response = await fetch.exec();
             if (response.pages) {
                 setPages(response.pages);
@@ -168,7 +163,6 @@ export default function PageEditor({
             });
         } finally {
             setLoadingPages(false);
-            dispatch && dispatch(networkAction(false));
         }
     }
 
@@ -298,13 +292,9 @@ export default function PageEditor({
             }
         }
         `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
+        const fetch = fetcher.setPayload(query).build();
         try {
-            dispatch && dispatch(networkAction(true));
+            setLoading(true);
             const response = await fetch.exec();
             if (response.site.draftTypefaces) {
                 setDraftTypefaces(response.site.draftTypefaces);
@@ -316,7 +306,7 @@ export default function PageEditor({
                 variant: "destructive",
             });
         } finally {
-            dispatch && dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -334,13 +324,9 @@ export default function PageEditor({
         refreshLayout?: boolean;
         variables?: Record<string, unknown>;
     }) => {
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload({ query, variables })
-            .setIsGraphQLEndpoint(true)
-            .build();
+        const fetch = fetcher.setPayload({ query, variables }).build();
         try {
-            dispatch && dispatch(networkAction(true));
+            setLoading(true);
             const response = await fetch.exec();
             if (response.page) {
                 const pageBeingEdited = response.page;
@@ -365,7 +351,7 @@ export default function PageEditor({
                 variant: "destructive",
             });
         } finally {
-            dispatch && dispatch(networkAction(false));
+            setLoading(false);
         }
     };
 
@@ -474,13 +460,36 @@ export default function PageEditor({
     };
 
     const deleteWidget = async (widgetId: string) => {
-        const widgetIndex = layout.findIndex(
-            (widget) => widget.widgetId === widgetId,
-        );
-        layout.splice(widgetIndex, 1);
-        setLayout(layout);
-        onClose();
-        await savePage({ pageId: page.pageId!, layout });
+        const mutation = `
+            mutation ($pageId: String!, $blockId: String!) {
+                page: deleteBlock(pageId: $pageId, blockId: $blockId) {
+                    pageId,
+                    draftLayout,
+                }
+            }
+        `;
+        try {
+            const fetch = fetcher
+                .setPayload({
+                    query: mutation,
+                    variables: { pageId: page.pageId!, blockId: widgetId },
+                })
+                .build();
+            const response = await fetch.exec();
+            if (response.page) {
+                // setPage(response.page);
+                setLayout(response.page.draftLayout);
+                onClose();
+            }
+        } catch (err: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
     const addWidget = async (name: string) => {
@@ -497,7 +506,6 @@ export default function PageEditor({
             },
         });
         setLayout(layout);
-        //setShowWidgetSelector(false);
         onItemClick(widgetId);
         setLeftPaneContent("editor");
         await savePage({ pageId: page.pageId!, layout: [...layout] });
@@ -508,69 +516,39 @@ export default function PageEditor({
         setLeftPaneContent("none");
     };
 
-    const editWidget = useMemo(
-        () =>
-            page &&
-            layout?.find((x) => x.widgetId === selectedWidget) && (
-                <EditWidget
-                    widget={layout.find((x) => x.widgetId === selectedWidget)}
-                    pageData={page.pageData || {}}
-                    onChange={onWidgetSettingsChanged}
-                    onClose={onClose}
-                    onDelete={deleteWidget}
-                    state={state as AppState}
-                    dispatch={dispatch || (() => {})}
-                    key={selectedWidget}
-                />
-            ),
-        [selectedWidget],
+    const selectedWidgetInstance = useMemo(
+        () => layout.find((x) => x.widgetId === selectedWidget),
+        [layout, selectedWidget],
     );
 
-    // const saveDraftTypefaces = async (fontName: string) => {
-    //     const newTypefaces: Typeface[] = structuredClone(draftTypefaces);
-    //     const defaultSection = newTypefaces.filter(
-    //         (x) => x.section === "default",
-    //     )[0];
-    //     defaultSection.typeface = fontName;
+    const hasEditableSelectedWidget = isEditableWidget(selectedWidgetInstance);
 
-    //     const query = `
-    //         mutation {
-    //             site: updateDraftTypefaces(
-    //                 typefaces: ${getGraphQLQueryStringFromObject(newTypefaces)}
-    //             ) {
-    //                 draftTypefaces {
-    //                     section,
-    //                     typeface,
-    //                     fontWeights,
-    //                     fontSize,
-    //                     lineHeight,
-    //                     letterSpacing,
-    //                     case
-    //                 },
-    //             }
-    //         }
-    //     `;
-    //     const fetch = new FetchBuilder()
-    //         .setUrl(`${address.backend}/api/graph`)
-    //         .setPayload(query)
-    //         .setIsGraphQLEndpoint(true)
-    //         .build();
-    //     try {
-    //         dispatch && dispatch(networkAction(true));
-    //         const response = await fetch.exec();
-    //         if (response.site) {
-    //             setDraftTypefaces(response.site.draftTypefaces);
-    //         }
-    //     } catch (err: any) {
-    //         toast({
-    //             title: TOAST_TITLE_ERROR,
-    //             description: err.message,
-    //             variant: "destructive",
-    //         });
-    //     } finally {
-    //         dispatch && dispatch(networkAction(false));
-    //     }
-    // };
+    const editWidget = useMemo(() => {
+        if (!page || !selectedWidget || !hasEditableSelectedWidget) {
+            return null;
+        }
+
+        return (
+            <EditWidget
+                widget={selectedWidgetInstance}
+                pageData={page.pageData || {}}
+                onChange={onWidgetSettingsChanged}
+                onClose={onClose}
+                onDelete={deleteWidget}
+                state={state}
+                key={selectedWidget}
+            />
+        );
+    }, [
+        page,
+        selectedWidget,
+        hasEditableSelectedWidget,
+        selectedWidgetInstance,
+        onWidgetSettingsChanged,
+        onClose,
+        deleteWidget,
+        state,
+    ]);
 
     const onAddWidgetBelow = (index: number) => {
         setSelectedWidgetIndex(index);
@@ -585,21 +563,14 @@ export default function PageEditor({
 
     const activeSidePaneContent = (
         <>
-            {leftPaneContent === "widgets" && (
+            {leftPaneContent === "widgets" && page.type && (
                 <AddWidget
-                    pageType={page.type?.toLowerCase()}
+                    pageType={page.type}
                     onSelection={addWidget}
                     onClose={(e) => setLeftPaneContent("none")}
                 />
             )}
             {leftPaneContent === "editor" && editWidget}
-            {/* {leftPaneContent === "fonts" && (
-                <FontsList
-                    draftTypefaces={draftTypefaces}
-                    onClose={onClose}
-                    saveDraftTypefaces={saveDraftTypefaces}
-                />
-            )} */}
             {leftPaneContent === "theme" && (
                 <ThemeEditor
                     onThemeChange={(theme) => {
@@ -623,7 +594,11 @@ export default function PageEditor({
                               ? page.robotsAllowed
                               : true
                     }
-                    socialImage={page.draftSocialImage || {}}
+                    socialImage={
+                        page.draftSocialImage !== undefined
+                            ? page.draftSocialImage
+                            : (page.socialImage ?? null)
+                    }
                     onClose={(e) => setLeftPaneContent("none")}
                     onSave={({
                         title,
@@ -633,7 +608,7 @@ export default function PageEditor({
                     }: {
                         title: string;
                         description: string;
-                        socialImage: Media | {};
+                        socialImage: Media | null;
                         robotsAllowed: boolean;
                     }) =>
                         savePage({
@@ -769,6 +744,7 @@ export default function PageEditor({
                                     onClick={onPublish}
                                     size="sm"
                                     className="gap-2 whitespace-nowrap"
+                                    disabled={loading}
                                 >
                                     <ArrowUpFromLine className="h-4 w-4" />
                                     {EDIT_PAGE_BUTTON_UPDATE}
@@ -822,31 +798,6 @@ export default function PageEditor({
                     </header>
                 </div>
                 <div className="flex w-full h-[calc(100vh-56px)] mt-14 gap-4 p-4 bg-muted/10">
-                    {leftPaneContent !== "none" && (
-                        <div className="w-[300px] rounded-xl border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm flex flex-col overflow-hidden">
-                            <PanelHeader
-                                title={
-                                    leftPaneContent === "widgets"
-                                        ? EDIT_PAGE_ADD_WIDGET_TITLE
-                                        : leftPaneContent === "editor"
-                                          ? "Edit Widget"
-                                          : leftPaneContent === "fonts"
-                                            ? "Fonts"
-                                            : leftPaneContent === "theme"
-                                              ? "Theme"
-                                              : leftPaneContent === "seo"
-                                                ? "SEO"
-                                                : ""
-                                }
-                                onClose={onClose}
-                            />
-                            <ScrollArea className="h-[calc(100%-56px)]">
-                                <div className="py-2 space-y-4">
-                                    {activeSidePaneContent}
-                                </div>
-                            </ScrollArea>
-                        </div>
-                    )}
                     <div
                         className={cn(
                             "rounded-xl border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm",
@@ -878,12 +829,36 @@ export default function PageEditor({
                                                     draftTheme.theme,
                                             },
                                         })}
-                                        dispatch={dispatch}
                                     />
                                 )}
                             </div>
                         </ScrollArea>
                     </div>
+                    {leftPaneContent !== "none" && (
+                        <div className="w-[300px] rounded-xl border bg-background/98 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-sm flex flex-col overflow-hidden">
+                            <PanelHeader
+                                title={
+                                    leftPaneContent === "widgets"
+                                        ? EDIT_PAGE_ADD_WIDGET_TITLE
+                                        : leftPaneContent === "editor"
+                                          ? "Edit Block"
+                                          : leftPaneContent === "fonts"
+                                            ? "Fonts"
+                                            : leftPaneContent === "theme"
+                                              ? "Theme"
+                                              : leftPaneContent === "seo"
+                                                ? "SEO"
+                                                : ""
+                                }
+                                onClose={onClose}
+                            />
+                            <ScrollArea className="h-[calc(100%-56px)]">
+                                <div className="py-2 space-y-4">
+                                    {activeSidePaneContent}
+                                </div>
+                            </ScrollArea>
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -893,9 +868,20 @@ export default function PageEditor({
         <div className="flex flex-col gap-4 p-4">
             <Skeleton className="w-full h-16" />
             <div className="flex gap-4">
-                <Skeleton className="w-1/4 h-90" />
                 <Skeleton className="w-3/4 h-screen" />
+                <Skeleton className="w-1/4 h-90" />
             </div>
         </div>
+    );
+}
+
+function isEditableWidget(
+    widget: Partial<WidgetInstance> | undefined,
+): widget is WidgetInstance {
+    return (
+        !!widget &&
+        typeof widget.name === "string" &&
+        typeof widget.widgetId === "string" &&
+        typeof widget.deleteable === "boolean"
     );
 }

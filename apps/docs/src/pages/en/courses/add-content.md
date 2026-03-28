@@ -4,13 +4,19 @@ description: Add content to your course
 layout: ../../../layouts/MainLayout.astro
 ---
 
-CourseLit uses a concept called `Lesson`. It is very similar to what we generally see in books i.e. A large piece of information divides into smaller chunks called lessons.
+CourseLit uses the concept of a `Lesson`. It is very similar to what we generally see in books, i.e., a large piece of information is divided into smaller chunks called lessons.
 
-Similarly, you can break down you course into `Lessons` and group the lessons into [Sections](/en/products/section).
+Similarly, you can break down your course into `Lessons` and group the lessons into [Sections](/en/courses/section).
+
+## Sections
+
+Sections are used to group lessons.
+
+![Sections](/assets/courses/sections.png)
 
 ## Lessons
 
-CourseLit supports eight types of lessons, which are as follows.
+A lesson is a container for the actual learning material. CourseLit supports multiple types of lessons, which are as follows.
 
 1. Text
 
@@ -26,15 +32,17 @@ CourseLit supports eight types of lessons, which are as follows.
 
 4. PDF
 
-    For sharing premade resources.
+    For sharing PDF files. The file will be embedded in the lesson.
 
-5. Embed
+5. File
 
-    For sharing external links like YouTube videos etc.
+    For sharing binary files like a zip file containing an assignment with the students.
 
-6. File
+6. Embed
 
-    For sharing binary files like a zip file containing an assingment with the students.
+    For embedding HTML or iframe based content.
+
+    See the [guide to add an embed](/en/lessons/embed).
 
 7. Quiz
 
@@ -42,23 +50,45 @@ CourseLit supports eight types of lessons, which are as follows.
 
     See the [guide to add a quiz](/en/lessons/add-quiz).
 
-### Steps to add a new lesson
+8. SCORM
 
-1. From the `Products` section in the dashboard, select your product to open it in the editing mode.
-2. Go to the `Content` tab.
+    For sharing SCORM packages.
 
-![Add content](/assets/courses/add-content.png)
+    See the [guide to add a SCORM package](/en/lessons/scorm).
 
-3. Click on the `New Lesson` button as shown above.
-4. On the `New Lesson` screen, add relevant details as shown below.
+## Steps to add a new lesson
 
-![Lesson settings](/assets/courses/lesson-settings.png)
+1. From the `Products` section in the dashboard, select your product to open its dashboard.
 
-> For text lesson, you will be presented with a text box and for video/audio/file lesson you will be presented with a file selector option. 5. If you want to allow free access to the the lesson despite the pricing of the product, flip the `Preview` switch on (as specified as #4 in the above screenshot).
+2. Click on the `Edit content` button to open the `Content` section.
 
-This can be used as a great way to provide a sneak peak into your course.
+3. On the `Content` section, click on the `Add lesson` button to create a new lesson.
 
-6. Click `Save`.
+    ![Add lesson to section](/assets/courses/add-lesson-to-section.png)
+
+4. On the `New Lesson` screen, `Text` lesson type is selected by default. Switch the lesson type to the one you want to use.
+
+    Add the title and content of the lesson. Click `Save lesson`.
+
+    ![Add lesson](/assets/courses/add-lesson.png)
+
+5. Optionally, toggle the `Preview` switch to allow free access to the lesson regardless of the enrollment status of the user.
+
+    This can be a great way to provide a sneak peek into your course.
+
+6. Click `Save lesson`.
+
+## Preview lessons
+
+By default, lessons are visible only to learners after enrollment. To offer a lesson to potential learners without requiring enrollment, toggle the `Preview` switch as shown.
+
+![Preview lesson](/assets/lessons/preview.png)
+
+## Control lesson visibility
+
+By default, lessons are unpublished i.e., not visible to learners. To publish a lesson, toggle the `Publish` switch as shown.
+
+![Publish lesson](/assets/lessons/visibility.png)
 
 ## Stuck somewhere?
 

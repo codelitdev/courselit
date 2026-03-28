@@ -1,21 +1,29 @@
 import React, { useEffect, useState } from "react";
 import Settings, { Item } from "../settings";
 import ItemEditor from "./item-editor";
-import { Address, Alignment } from "@courselit/common-models";
+import {
+    Address,
+    Alignment,
+    TextEditorContent,
+} from "@courselit/common-models";
 import {
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     Select,
-    TextEditor,
     Form,
     FormField,
     CssIdField,
     Checkbox,
     VerticalPaddingSelector,
     MaxWidthSelector,
+    Button,
+    Button2,
 } from "@courselit/components-library";
 import { columns as defaultColumns } from "../defaults";
 import { PageBuilderSlider } from "@courselit/components-library";
 import { Theme, ThemeStyle } from "@courselit/page-models";
+import { PencilIcon } from "lucide-react";
+import { Editor } from "@courselit/text-editor";
 
 export interface AdminWidgetProps {
     settings: Settings;
@@ -51,7 +59,7 @@ export default function AdminWidget({
             },
         ],
     };
-    const dummyItemDescription: Record<string, unknown> = {
+    const dummyItemDescription: TextEditorContent = {
         type: "doc",
         content: [
             {
@@ -183,8 +191,11 @@ export default function AdminWidget({
     }
 
     return (
-        <div className="flex flex-col gap-4 mb-4">
-            <AdminWidgetPanel title="Header">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["header", "plans", "design"]}
+        >
+            <AdminWidgetPanel title="Header" value="header">
                 <Form className="flex flex-col gap-4">
                     <FormField
                         label="Title"
@@ -193,7 +204,7 @@ export default function AdminWidget({
                     />
                     <div className="mb-4">
                         <p className="mb-1 font-medium">Description</p>
-                        <TextEditor
+                        <Editor
                             initialContent={description}
                             onChange={(state: any) => setDescription(state)}
                             showToolbar={false}
@@ -231,7 +242,36 @@ export default function AdminWidget({
                     )}
                 </Form>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Design">
+            <AdminWidgetPanel title="Plans" value="plans">
+                <div className="flex flex-col gap-4">
+                    {items.map((item: Item, index: number) => (
+                        <div
+                            key={index}
+                            className="flex flex-col gap-2 p-2 border rounded"
+                        >
+                            <div className="flex justify-between items-center">
+                                <h3 className="font-medium">
+                                    {item.title || "Untitled"}
+                                </h3>
+                                <Button2
+                                    size="icon"
+                                    variant="outline"
+                                    onClick={() => {
+                                        setItemBeingEditedIndex(index);
+                                        hideActionButtons(true, {});
+                                    }}
+                                >
+                                    <PencilIcon className="w-4 h-4" />
+                                </Button2>
+                            </div>
+                        </div>
+                    ))}
+                    <Button component="button" onClick={addNewItem}>
+                        Add new plan
+                    </Button>
+                </div>
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Design" value="design">
                 <Select
                     title="Header alignment"
                     value={headerAlignment}
@@ -260,9 +300,9 @@ export default function AdminWidget({
                     onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Advanced">
+            <AdminWidgetPanel title="Advanced" value="advanced">
                 <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
-        </div>
+        </AdminWidgetPanelContainer>
     );
 }

@@ -28,10 +28,12 @@ export function SortableItem({
     id,
     Renderer,
     rendererProps,
+    disabled = false,
 }: {
-    id: number;
+    id: number | string;
     Renderer: any;
     rendererProps: Record<string, unknown>;
+    disabled?: boolean;
 }) {
     const {
         attributes,
@@ -40,7 +42,7 @@ export function SortableItem({
         transform,
         transition,
         isDragging,
-    } = useSortable({ id: id });
+    } = useSortable({ id: id, disabled });
 
     const style = {
         transition,
@@ -53,12 +55,17 @@ export function SortableItem({
             ref={setNodeRef}
             style={style}
             className={clsx(
-                "flex flex-col text-black",
+                "flex flex-col text-foreground",
                 isDragging && "opacity-50",
             )}
         >
             <div className="flex items-center gap-5">
-                <button className="border" {...listeners}>
+                <button
+                    data-testid="drag-handle"
+                    className="border border-border text-muted-foreground hover:text-foreground hover:bg-muted p-1 rounded transition-colors"
+                    disabled={disabled}
+                    {...(disabled ? {} : listeners)}
+                >
                     <DragHandle />
                 </button>
                 <Renderer {...rendererProps} />
@@ -71,10 +78,12 @@ const DragAndDrop = ({
     items,
     onChange,
     Renderer,
+    disabled = false,
 }: {
     items: any;
     onChange: any;
     Renderer: any;
+    disabled?: boolean;
 }) => {
     const [data, setData] = useState(items);
 
@@ -98,12 +107,16 @@ const DragAndDrop = ({
         }),
     );
 
-    const findPositionOfItems = (id: number) =>
-        data.findIndex((item: { id: number }) => item.id === id);
+    const findPositionOfItems = (id: number | string) =>
+        data.findIndex((item: { id: number | string }) => item.id === id);
 
     const handleDragEnd = (event: { active: any; over: any }) => {
+        if (disabled) {
+            return;
+        }
         const { active, over } = event;
 
+        if (!over) return;
         if (active.id === over.id) return;
         setData((data: any) => {
             const originalPos = findPositionOfItems(active.id);
@@ -134,6 +147,7 @@ const DragAndDrop = ({
                         id={item.id}
                         rendererProps={item}
                         Renderer={Renderer}
+                        disabled={disabled}
                     />
                 ))}
             </SortableContext>

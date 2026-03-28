@@ -59,6 +59,7 @@ const siteType = new GraphQLObjectType({
         codeInjectionBody: { type: GraphQLString },
         mailingAddress: { type: GraphQLString },
         hideCourseLitBranding: { type: GraphQLBoolean },
+        logins: { type: new GraphQLList(GraphQLString) },
     },
 });
 
@@ -153,6 +154,23 @@ const apikeyUpdateInput = new GraphQLInputObjectType({
     },
 });
 
+const ssoProviderType = new GraphQLObjectType({
+    name: "SSOProvider",
+    fields: {
+        providerId: { type: new GraphQLNonNull(GraphQLString) },
+        domain: { type: new GraphQLNonNull(GraphQLString) },
+    },
+});
+
+const ssoProviderSettingsType = new GraphQLObjectType({
+    name: "SSOProviderSettings",
+    fields: {
+        idpMetadata: { type: new GraphQLNonNull(GraphQLString) },
+        entryPoint: { type: new GraphQLNonNull(GraphQLString) },
+        cert: { type: new GraphQLNonNull(GraphQLString) },
+    },
+});
+
 const types = {
     siteUpdateType,
     sitePaymentUpdateType,
@@ -161,6 +179,8 @@ const types = {
     apikeyType,
     apikeyUpdateInput,
     newApikeyType,
+    ssoProviderType,
+    ssoProviderSettingsType,
 };
 
 export default types;

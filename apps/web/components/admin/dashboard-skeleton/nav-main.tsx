@@ -18,6 +18,8 @@ import {
     SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
+import { Chip } from "@courselit/components-library";
+import { BETA_LABEL } from "@ui-config/strings";
 
 export function NavMain({
     items,
@@ -52,11 +54,7 @@ export function NavMain({
                                     <SidebarMenuButton tooltip={item.title}>
                                         {item.icon && <item.icon />}
                                         <span>{item.title}</span>
-                                        {item.beta && (
-                                            <span className="ml-2 rounded bg-gray-200 px-1 py-0.5 text-xs font-medium text-gray-700">
-                                                Beta
-                                            </span>
-                                        )}
+                                        {item.beta && <Chip>{BETA_LABEL}</Chip>}
                                         <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                                     </SidebarMenuButton>
                                 </CollapsibleTrigger>
@@ -94,11 +92,7 @@ export function NavMain({
                                 <Link href={item.url}>
                                     {item.icon && <item.icon />}
                                     <span>{item.title}</span>
-                                    {item.beta && (
-                                        <span className="ml-2 rounded bg-gray-200 px-1 py-0.5 text-xs font-medium text-gray-700">
-                                            Beta
-                                        </span>
-                                    )}
+                                    {item.beta && <Chip>{BETA_LABEL}</Chip>}
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>

@@ -1,27 +1,14 @@
-import { getPaymentMethod } from "../../payments";
 import { internal, responses } from "../../config/strings";
 import GQLContext from "../../models/GQLContext";
-import CourseModel, { InternalCourse } from "../../models/Course";
+import CourseModel from "../../models/Course";
 import constants from "../../config/constants";
-import { Progress } from "../../models/Progress";
-import { User } from "../../models/User";
 import Page from "../../models/Page";
-import slugify from "slugify";
+import { slugify } from "@courselit/utils";
 import { addGroup } from "./logic";
-import { Constants, Course } from "@courselit/common-models";
+import { Constants, Course, Progress, User } from "@courselit/common-models";
 import { getPlans } from "../paymentplans/logic";
-
-const validatePaymentMethod = async (domain: string) => {
-    try {
-        await getPaymentMethod(domain);
-    } catch (err: any) {
-        if (err.message === responses.update_payment_method) {
-            throw err;
-        } else {
-            throw new Error(responses.internal_error);
-        }
-    }
-};
+import { InternalCourse } from "@courselit/orm-models";
+import { generateUniquePageId, isDuplicateKeyError } from "../pages/helpers";
 
 export const validateCourse = async (
     courseData: InternalCourse,
@@ -60,8 +47,15 @@ export const validateCourse = async (
         courseData.type === Constants.CourseType.COURSE ||
         courseData.type === Constants.CourseType.DOWNLOAD
     ) {
-        if (courseData.published && courseData.paymentPlans.length === 0) {
-            throw new Error(responses.payment_plan_required);
+        if (courseData.published) {
+            const existingPaymentPlans = await getPlans({
+                entityId: courseData.courseId,
+                entityType: Constants.MembershipEntityType.COURSE,
+                ctx,
+            });
+            if (existingPaymentPlans.length === 0) {
+                throw new Error(responses.payment_plan_required);
+            }
         }
 
         if (
@@ -69,7 +63,8 @@ export const validateCourse = async (
             courseData.leadMagnet
         ) {
             const paymentPlans = await getPlans({
-                planIds: courseData.paymentPlans,
+                entityId: courseData.courseId,
+                entityType: Constants.MembershipEntityType.COURSE,
                 ctx,
             });
             if (
@@ -82,6 +77,13 @@ export const validateCourse = async (
                 throw new Error(responses.lead_magnet_invalid_settings);
             }
         }
+    }
+
+    if (
+        courseData.certificate &&
+        courseData.type !== Constants.CourseType.COURSE
+    ) {
+        throw new Error(responses.certificate_invalid_settings);
     }
 
     return courseData;
@@ -137,9 +139,12 @@ export const calculatePercentageCompletion = (user: User, course: Course) => {
         (item: Progress) => item.courseId === course.courseId,
     )[0];
 
-    if (!purchasedCourse.completedLessons.length) return 0;
+    const totalLessons = course.lessons?.length ?? 0;
+    if (!purchasedCourse.completedLessons.length || !totalLessons) {
+        return 0;
+    }
 
-    return purchasedCourse.completedLessons.length / course.lessons.length;
+    return purchasedCourse.completedLessons.length / totalLessons;
 };
 
 export const setupCourse = async ({
@@ -151,25 +156,36 @@ export const setupCourse = async ({
     type: "course" | "download";
     ctx: GQLContext;
 }) => {
-    const page = await Page.create({
-        domain: ctx.subdomain._id,
-        name: title,
-        creatorId: ctx.user.userId,
-        pageId: slugify(title.toLowerCase()),
-    });
+    const pageId = await generateUniquePageId(ctx.subdomain._id, title);
 
-    const course = await CourseModel.create({
-        domain: ctx.subdomain._id,
-        title: title,
-        cost: 0,
-        costType: constants.costFree,
-        privacy: constants.unlisted,
-        creatorId: ctx.user.userId,
-        creatorName: ctx.user.name,
-        slug: slugify(title.toLowerCase()),
-        type: type,
-        pageId: page.pageId,
-    });
+    let page;
+    let course;
+    try {
+        page = await Page.create({
+            domain: ctx.subdomain._id,
+            name: title,
+            creatorId: ctx.user.userId,
+            pageId,
+        });
+
+        course = await CourseModel.create({
+            domain: ctx.subdomain._id,
+            title: title,
+            cost: 0,
+            costType: constants.costFree,
+            privacy: constants.unlisted,
+            creatorId: ctx.user.userId,
+            slug: pageId,
+            type: type,
+            pageId,
+        });
+    } catch (err) {
+        if (isDuplicateKeyError(err)) {
+            throw new Error(responses.page_id_already_exists);
+        }
+        throw err;
+    }
+
     await addGroup({
         id: course.courseId,
         name: internal.default_group_name,
@@ -190,19 +206,25 @@ export const setupBlog = async ({
     title: string;
     ctx: GQLContext;
 }) => {
-    const course = await CourseModel.create({
-        domain: ctx.subdomain._id,
-        title: title,
-        cost: 0,
-        costType: constants.costFree,
-        privacy: constants.unlisted,
-        creatorId: ctx.user.userId,
-        creatorName: ctx.user.name,
-        slug: slugify(title.toLowerCase()),
-        type: constants.blog,
-    });
+    try {
+        const course = await CourseModel.create({
+            domain: ctx.subdomain._id,
+            title: title,
+            cost: 0,
+            costType: constants.costFree,
+            privacy: constants.unlisted,
+            creatorId: ctx.user.userId,
+            slug: slugify(title),
+            type: constants.blog,
+        });
 
-    return course;
+        return course;
+    } catch (err) {
+        if (isDuplicateKeyError(err)) {
+            throw new Error(responses.page_id_already_exists);
+        }
+        throw err;
+    }
 };
 
 const getInitialLayout = (type: "course" | "download") => {

@@ -2,7 +2,7 @@ version: "3"
 
 services:
     app:
-        image: codelit/courselit-app:latest
+        image: codelit/courselit-app
         environment:
             - NODE_ENV=production
 
@@ -16,8 +16,6 @@ services:
             # You can use the following command to generate a secure random string.
             # openssl rand -base64 32
             - AUTH_SECRET=som3_rand0m_String
-            # This prevents the "Host must be trusted" error in next-auth
-            - AUTH_TRUST_HOST=true
 
             # In production, replace the following with the connection string of a cloud
             # hosted instance of MongoDB.
@@ -35,6 +33,10 @@ services:
             # CourseLit configures a super admin user when it boots up for the very first time
             # The email that you provide here will become the identifier for that super admin.
             - SUPER_ADMIN_EMAIL=${SUPER_ADMIN_EMAIL?'SUPER_ADMIN_EMAIL environment variable is not defined'}
+
+            # SCORM cache directory.
+            # Optionally, mount a volume to this directory to persist the cache.
+            - CACHE_DIR=/tmp
 
             # For long running tasks like sending emails etc., the queue service can be
             # enabled. For using the queue service, uncomment the following line and the
@@ -57,7 +59,7 @@ services:
             # checking the logs for the API key.
             # - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
             # - MEDIALIT_SERVER=http://medialit
-            #
+            # 
             # Google reCAPTCHA v3 is used to prevent abuse of the login functionality.
             # Uncomment the following lines to use reCAPTCHA.
             # - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
@@ -147,7 +149,7 @@ services:
     #         - CLOUD_SECRET=${CLOUD_SECRET?'CLOUD_SECRET is required'}
     #         - CLOUD_BUCKET_NAME=${CLOUD_BUCKET_NAME?'CLOUD_BUCKET_NAME is required'}
     #         - CLOUD_PREFIX=${CLOUD_PREFIX?'CLOUD_PREFIX is required'}
-    #         - S3_ENDPOINT=${S3_ENDPOINT?'S3_ENDPOINT is required'}
+    #         - CDN_ENDPOINT=${CDN_ENDPOINT?'CDN_ENDPOINT is required'}
 
     #         # Temporary file directory for uploads transformations
     #         - TEMP_FILE_DIR_FOR_UPLOADS=/tmp
@@ -155,8 +157,7 @@ services:
     #         - ENABLE_TRUST_PROXY=${ENABLE_TRUST_PROXY}
 
     #         # CloudFront configuration
-    #         - USE_CLOUDFRONT=${USE_CLOUDFRONT} 
-    #         - CLOUDFRONT_ENDPOINT=${CLOUDFRONT_ENDPOINT} 
+    #         - ACCESS_PRIVATE_BUCKET_VIA_CLOUDFRONT=${ACCESS_PRIVATE_BUCKET_VIA_CLOUDFRONT} 
     #         - CLOUDFRONT_KEY_PAIR_ID=${CLOUDFRONT_KEY_PAIR_ID} 
     #         - CLOUDFRONT_PRIVATE_KEY=${CLOUDFRONT_PRIVATE_KEY}
     #         - CDN_MAX_AGE=${CDN_MAX_AGE}

@@ -61,7 +61,10 @@ export default function EmailFilterEditor({ onApply }: EmailFilterEditorProps) {
                 name="value"
                 value={value}
                 label=""
-                onChange={(event: FormEvent) => setValue(event.target.value)}
+                onChange={(event: FormEvent<HTMLInputElement>) => {
+                    const target = event.target as HTMLInputElement;
+                    setValue(target.value);
+                }}
             />
             <div className="flex justify-between">
                 <FormSubmit

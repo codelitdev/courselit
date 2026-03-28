@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { Item } from "../settings";
 import {
-    TextEditor,
     Button,
     Form,
     FormField,
     Tooltip,
-    AdminWidgetPanel,
+    AlertDescription,
+    Alert,
 } from "@courselit/components-library";
 import { Address, Auth, Profile } from "@courselit/common-models";
-import { AppDispatch } from "@courselit/state-management";
+import { AlertCircle } from "lucide-react";
+import { Editor } from "@courselit/text-editor";
 
 interface ItemProps {
     item: Item;
@@ -17,7 +18,6 @@ interface ItemProps {
     onChange: (newItemData: Item) => void;
     onDelete: () => void;
     address: Address;
-    dispatch: AppDispatch;
     auth: Auth;
     profile: Profile;
 }
@@ -30,6 +30,7 @@ export default function ItemEditor({
 }: ItemProps): JSX.Element {
     const [title, setTitle] = useState(item.title);
     const [description, setDescription] = useState(item.description);
+    const [deleteConfirmation, setDeleteConfirmation] = useState(false);
 
     const itemChanged = () =>
         onChange({
@@ -39,39 +40,49 @@ export default function ItemEditor({
 
     return (
         <div className="flex flex-col">
-            <Form>
-                <AdminWidgetPanel title="Edit item">
-                    <FormField
-                        label="Title"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+            <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="w-4 h-4" />
+                <AlertDescription>
+                    Changes will be visible upon clicking Done button
+                </AlertDescription>
+            </Alert>
+            <Form onSubmit={(e) => e.preventDefault()}>
+                <FormField
+                    label="Title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                />
+                <div>
+                    <p className="mb-1 font-medium">Description</p>
+                    <Editor
+                        initialContent={description}
+                        onChange={(state: any) => setDescription(state)}
+                        showToolbar={false}
+                        url={address.backend}
                     />
-                    <div>
-                        <p className="mb-1 font-medium">Description</p>
-                        <TextEditor
-                            initialContent={description}
-                            onChange={(state: any) => setDescription(state)}
-                            showToolbar={false}
-                            url={address.backend}
-                        />
-                    </div>
-                    <div className="flex justify-between">
-                        <Tooltip title="Delete">
-                            <Button
-                                component="button"
-                                onClick={onDelete}
-                                variant="soft"
-                            >
-                                Delete
-                            </Button>
-                        </Tooltip>
-                        <Tooltip title="Go back">
-                            <Button component="button" onClick={itemChanged}>
-                                Done
-                            </Button>
-                        </Tooltip>
-                    </div>
-                </AdminWidgetPanel>
+                </div>
+                <div className="flex justify-between">
+                    <Tooltip title="Delete">
+                        <Button
+                            component="button"
+                            onClick={() => {
+                                if (deleteConfirmation) {
+                                    onDelete();
+                                } else {
+                                    setDeleteConfirmation(true);
+                                }
+                            }}
+                            variant="soft"
+                        >
+                            {deleteConfirmation ? "Sure?" : "Delete"}
+                        </Button>
+                    </Tooltip>
+                    <Tooltip title="Go back">
+                        <Button component="button" onClick={itemChanged}>
+                            Done
+                        </Button>
+                    </Tooltip>
+                </div>
             </Form>
         </div>
     );

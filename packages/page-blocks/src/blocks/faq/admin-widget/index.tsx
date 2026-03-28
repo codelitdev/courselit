@@ -1,26 +1,35 @@
 import React, { useEffect, useState } from "react";
 import Settings, { Item } from "../settings";
 import ItemEditor from "./item-editor";
-import { Address, Auth, Profile, Alignment } from "@courselit/common-models";
+import {
+    Address,
+    Auth,
+    Profile,
+    Alignment,
+    TextEditorContent,
+} from "@courselit/common-models";
 import { Theme, ThemeStyle } from "@courselit/page-models";
-import { AppDispatch } from "@courselit/state-management";
 import {
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     Select,
-    TextEditor,
     Button,
     Form,
     FormField,
     CssIdField,
     MaxWidthSelector,
     VerticalPaddingSelector,
+    DragAndDrop,
+    IconButton,
 } from "@courselit/components-library";
+import { Edit } from "@courselit/icons";
+import { generateUniqueId } from "@courselit/utils";
+import { Editor } from "@courselit/text-editor";
 
 export interface AdminWidgetProps {
     settings: Settings;
     onChange: (...args: any[]) => void;
     address: Address;
-    dispatch: AppDispatch;
     auth: Auth;
     profile: Profile;
     hideActionButtons: (
@@ -36,12 +45,11 @@ export default function AdminWidget({
     onChange,
     auth,
     profile,
-    dispatch,
     address,
     hideActionButtons,
     preservedStateAcrossRerender,
     theme,
-}: AdminWidgetProps): JSX.Element {
+}: AdminWidgetProps) {
     const dummyDescription: Record<string, unknown> = {
         type: "doc",
         content: [
@@ -56,7 +64,7 @@ export default function AdminWidget({
             },
         ],
     };
-    const dummyItemDescription: Record<string, unknown> = {
+    const dummyItemDescription: TextEditorContent = {
         type: "doc",
         content: [
             {
@@ -84,7 +92,8 @@ export default function AdminWidget({
     const [headerAlignment, setHeaderAlignment] = useState<Alignment>(
         settings.headerAlignment || "center",
     );
-    const [itemBeingEditedIndex, setItemBeingEditedIndex] = useState(-1);
+    const [itemBeingEditedIndex, setItemBeingEditedIndex] =
+        useState<number>(-1);
     const [maxWidth, setMaxWidth] = useState<
         ThemeStyle["structure"]["page"]["width"]
     >(settings.maxWidth);
@@ -92,6 +101,7 @@ export default function AdminWidget({
         ThemeStyle["structure"]["section"]["padding"]["y"]
     >(settings.verticalPadding);
     const [cssId, setCssId] = useState(settings.cssId);
+    const [layout, setLayout] = useState(settings.layout || "vertical");
 
     const onSettingsChanged = () =>
         onChange({
@@ -102,6 +112,8 @@ export default function AdminWidget({
             maxWidth,
             verticalPadding,
             cssId,
+            itemBeingEditedIndex,
+            layout,
         });
 
     useEffect(() => {
@@ -114,6 +126,8 @@ export default function AdminWidget({
         maxWidth,
         verticalPadding,
         cssId,
+        itemBeingEditedIndex,
+        layout,
     ]);
 
     const onItemChange = (newItemData: Item) => {
@@ -152,15 +166,17 @@ export default function AdminWidget({
                 onDelete={onDelete}
                 auth={auth}
                 profile={profile}
-                dispatch={dispatch}
                 address={address}
             />
         );
     }
 
     return (
-        <div className="flex flex-col gap-4 mb-4">
-            <AdminWidgetPanel title="Header">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["header", "items", "design"]}
+        >
+            <AdminWidgetPanel title="Header" value="header">
                 <Form>
                     <FormField
                         label="Title"
@@ -169,7 +185,7 @@ export default function AdminWidget({
                     />
                     <div>
                         <p className="mb-1 font-medium">Description</p>
-                        <TextEditor
+                        <Editor
                             initialContent={description}
                             onChange={(state: any) => setDescription(state)}
                             showToolbar={false}
@@ -178,29 +194,44 @@ export default function AdminWidget({
                     </div>
                 </Form>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Items">
-                <ul className="flex flex-col gap-2">
-                    {items.map((item: Item, index: number) => (
-                        <li
-                            key={item.title}
-                            onClick={() => {
-                                hideActionButtons(true, {
-                                    selectedItem: index,
-                                });
-                            }}
-                            className="p-1 border border-transparent hover:border-slate-300 rounded"
-                        >
-                            {item.title}
-                        </li>
-                    ))}
-                </ul>
+            <AdminWidgetPanel title="Items" value="items">
+                <DragAndDrop
+                    items={items.map((item: Item) => ({
+                        item,
+                        id: generateUniqueId(),
+                    }))}
+                    Renderer={({ item }) => (
+                        <div className="flex justify-between items-center w-full">
+                            <p>{item.title}</p>
+                            <IconButton
+                                variant="soft"
+                                onClick={() => {
+                                    hideActionButtons(true, {
+                                        selectedItem: items.findIndex(
+                                            (i) => i.title === item.title,
+                                        ),
+                                    });
+                                }}
+                            >
+                                <Edit />
+                            </IconButton>
+                        </div>
+                    )}
+                    onChange={(newItems: { item: Item }[]) => {
+                        const itemsInNewOrder: Item[] = [];
+                        for (const item of newItems) {
+                            itemsInNewOrder.push(Object.assign({}, item.item));
+                        }
+                        setItems(itemsInNewOrder);
+                    }}
+                />
                 <div>
                     <Button component="button" onClick={addNewItem}>
                         Add new item
                     </Button>
                 </div>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Design">
+            <AdminWidgetPanel title="Design" value="design">
                 <Select
                     title="Header alignment"
                     value={headerAlignment}
@@ -209,6 +240,17 @@ export default function AdminWidget({
                         { label: "Center", value: "center" },
                     ]}
                     onChange={(value: Alignment) => setHeaderAlignment(value)}
+                />
+                <Select
+                    title="Layout"
+                    value={layout}
+                    options={[
+                        { label: "Horizontal", value: "horizontal" },
+                        { label: "Vertical", value: "vertical" },
+                    ]}
+                    onChange={(value: "horizontal" | "vertical") =>
+                        setLayout(value)
+                    }
                 />
                 <MaxWidthSelector
                     value={maxWidth || theme.theme.structure.page.width}
@@ -222,9 +264,9 @@ export default function AdminWidget({
                     onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Advanced">
+            <AdminWidgetPanel title="Advanced" value="advanced">
                 <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
-        </div>
+        </AdminWidgetPanelContainer>
     );
 }

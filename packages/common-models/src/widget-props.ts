@@ -13,7 +13,6 @@ export default interface WidgetProps<T extends WidgetDefaultSettings> {
         [x: string]: unknown;
     };
     state: State;
-    dispatch: any;
     settings: T;
     editing: boolean;
     toggleTheme: () => void;

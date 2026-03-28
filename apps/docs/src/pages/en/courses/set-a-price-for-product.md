@@ -1,36 +1,40 @@
 ---
-title: Set a price of your product
-description: Set a price of your product
+title: Set a price for your product
+description: Set a price for your product
 layout: ../../../layouts/MainLayout.astro
 ---
 
-CourseLit makes it easy for you to earn a living by sharing your knowledge. CourseLit offers two types of pricing strategies.
+CourseLit products support the following pricing strategies.
 
 1. Free
-2. Paid
+2. One-time
+3. Subscription
+4. EMI
 
-## Set up a free course
+## Set up a pricing plan
 
-Free is the default pricing strategy. When you first create the course, the pricing is set to free.
+> Before you set a pricing plan, make sure you have updated your payment gateway credentials in the `Settings > Payment` section; otherwise, only the `Free` option will be available.
 
-You don't have to do anything.
+A pricing plan is necessary to make a product live. Following is how you set up a pricing plan.
 
-## Set up a paid course
+1. From the `Actions` menu, select `Manage` to open the product settings.
 
-**In order to get paid for your offerings, you first need to [setup payments](). Currently, CourseLit offers [Stripe](https://stripe.com) integration.**
+    ![Manage product](/assets/courses/product-manage-menu.png)
 
-### Steps
+2. In the `Pricing` section, click on the `New Plan` card to go to the plan creation section.
 
-1. From the `Products` section in the dashboard, select your product to open it in the editing mode.
-2. Go to the `Pricing` tab.
+    ![Add pricing plan card](/assets/courses/pricing-add-plan-card.png)
 
-![Pricing dropdown](/assets/courses/paid-dropdown.png)
+3. In the **New Payment Plan** screen, fill in the details of the plan and choose a pricing scheme. The four available options are:
 
-3. Set the price and click `Save`.
+    - **Free**: Offer a free option.
+    - **One-time**: Offer a one-time payment option.
+    - **Subscription**: Offer a monthly (or yearly) subscription plan.
+    - **EMI**: Offer a plan with multiple installments.
 
-![Set the price](/assets/courses/set-price.png)
+    ![Pricing plan screen](/assets/courses/pricing-plan-screen.png)
 
-4. That's it! Your course is a paid one now. You can visit its sales page to see how it looks to your audience.
+    Follow the steps as per the numbering in the screenshot to create a plan and go back to the `Manage` screen.
 
 ## Stuck somewhere?
 

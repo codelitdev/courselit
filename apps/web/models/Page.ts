@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import WidgetSchema from "./Widget";
+import { WidgetSchema } from "./Widget";
 import constants from "../config/constants";
 import {
     WidgetInstance,
@@ -16,7 +16,7 @@ export interface Page extends PublicPage {
     creatorId: string;
     draftTitle?: string;
     draftDescription?: string;
-    draftSocialImage?: Media;
+    draftSocialImage?: Media | null;
     draftRobotsAllowed?: boolean;
 }
 

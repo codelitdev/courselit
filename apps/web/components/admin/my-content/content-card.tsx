@@ -7,7 +7,7 @@ import {
     ContentCardHeader,
 } from "@courselit/components-library";
 import { Constants } from "@courselit/common-models";
-import { Download } from "lucide-react";
+import { BadgeCheck, Download } from "lucide-react";
 import { BookOpen } from "lucide-react";
 import { capitalize } from "@courselit/utils";
 import { Badge } from "@components/ui/badge";
@@ -39,15 +39,25 @@ export function MyContentCard({ item }: ContentCardProps) {
             />
             <ContentCardContent>
                 <ContentCardHeader>{item.entity.title}</ContentCardHeader>
-                {entityType.toLowerCase() === Constants.CourseType.COURSE && (
-                    <Badge variant="secondary">
-                        {entity.type === Constants.CourseType.COURSE ? (
-                            <BookOpen className="h-4 w-4 mr-1" />
-                        ) : (
-                            <Download className="h-4 w-4 mr-1" />
+                {entityType.toLowerCase() === Constants.CourseType.COURSE ? (
+                    <div className="flex justify-between">
+                        <Badge variant="secondary">
+                            {entity.type === Constants.CourseType.COURSE ? (
+                                <BookOpen className="h-4 w-4 mr-1" />
+                            ) : (
+                                <Download className="h-4 w-4 mr-1" />
+                            )}
+                            {capitalize(entity.type)}
+                        </Badge>
+                        {entity.certificateId && (
+                            <p className="flex items-center text-sm text-muted-foreground">
+                                <BadgeCheck className="h-4 w-4 mr-1" />
+                                Certificate
+                            </p>
                         )}
-                        {capitalize(entity.type)}
-                    </Badge>
+                    </div>
+                ) : (
+                    ""
                 )}
                 {entityType.toLowerCase() === Constants.CourseType.COURSE &&
                 entity.type === Constants.CourseType.COURSE &&
@@ -59,7 +69,9 @@ export function MyContentCard({ item }: ContentCardProps) {
                             <span>{`${Math.round(progress)}%`}</span>
                         </p>
                     </div>
-                ) : null}
+                ) : (
+                    ""
+                )}
             </ContentCardContent>
         </ContentCard>
     );

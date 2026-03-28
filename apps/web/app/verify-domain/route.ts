@@ -1,47 +1,27 @@
 import DomainModel, { Domain } from "../../models/Domain";
 import { responses } from "../../config/strings";
-import constants from "../../config/constants";
+import constants from "@/config/constants";
 import { isDateInFuture } from "../../lib/utils";
 import { createUser } from "../../graphql/users/logic";
 import { headers } from "next/headers";
 import connectToDatabase from "../../services/db";
 import { warn } from "@/services/logger";
+import SubscriberModel, { Subscriber } from "@models/Subscriber";
+import { Constants } from "@courselit/common-models";
+import { cacheDomainByName, invalidateDomainCache } from "@/lib/domain-cache";
+import { resolveDomainFromHost } from "./resolve-domain";
 
 const { domainNameForSingleTenancy, schoolNameForSingleTenancy } = constants;
-
-const getDomainBasedOnSubdomain = async (
-    subdomain: string,
-): Promise<Domain | null> => {
-    return await DomainModel.findOne({ name: subdomain, deleted: false });
-};
-
-const getDomainBasedOnCustomDomain = async (
-    customDomain: string,
-): Promise<Domain | null> => {
-    return await DomainModel.findOne({ customDomain, deleted: false });
-};
-
-const getDomain = async (hostName: string): Promise<Domain | null> => {
-    const isProduction = process.env.NODE_ENV === "production";
-    const isSubdomain = hostName.endsWith(`.${process.env.DOMAIN}`);
-
-    if (isProduction && (hostName === process.env.DOMAIN || !isSubdomain)) {
-        return getDomainBasedOnCustomDomain(hostName);
-    }
-
-    const [subdomain] = hostName?.split(".");
-    return getDomainBasedOnSubdomain(subdomain);
-};
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-    const headerList = headers();
+    const headerList = await headers();
     let domain: Domain | null;
 
     await connectToDatabase();
 
-    if (process.env.MULTITENANT === "true") {
+    if (constants.multitenant) {
         const host = headerList.get("host");
 
         if (!host) {
@@ -55,7 +35,11 @@ export async function GET(req: Request) {
             );
         }
 
-        domain = await getDomain(host);
+        domain = await resolveDomainFromHost({
+            multitenant: constants.multitenant,
+            host,
+            domainNameForSingleTenancy,
+        });
 
         if (!domain) {
             return Response.json(
@@ -106,17 +90,20 @@ export async function GET(req: Request) {
 
             const currentDate = new Date();
             const dateAfter24Hours = new Date(currentDate.getTime() + 86400000);
-            // domain.checkSubscriptionStatusAfter = dateAfter24Hours;
-            // await (domain as any).save({ timestamps: true });
             await DomainModel.findOneAndUpdate(
                 { _id: domain!._id },
                 { $set: { checkSubscriptionStatusAfter: dateAfter24Hours } },
                 { upsert: false },
             );
+            invalidateDomainCache(domain.name);
         }
+
+        cacheDomainByName(domain);
     } else {
-        domain = await DomainModel.findOne({
-            name: domainNameForSingleTenancy,
+        domain = await resolveDomainFromHost({
+            multitenant: constants.multitenant,
+            host: headerList.get("host"),
+            domainNameForSingleTenancy,
         });
 
         if (!domain) {
@@ -144,7 +131,13 @@ export async function GET(req: Request) {
                     },
                     settings: {
                         title: schoolNameForSingleTenancy,
+                        logins: [Constants.LoginProvider.EMAIL],
                     },
+                    features: [
+                        Constants.Features.SSO,
+                        Constants.Features.API,
+                        Constants.Features.LOG,
+                    ],
                 },
                 {
                     upsert: true,
@@ -152,6 +145,8 @@ export async function GET(req: Request) {
                 },
             );
         }
+
+        cacheDomainByName(domain!);
     }
 
     if (domain!.firstRun) {
@@ -160,12 +155,16 @@ export async function GET(req: Request) {
                 domain: domain!,
                 email: domain!.email,
                 superAdmin: true,
+                name: constants.multitenant
+                    ? await getSubscriberName(domain!.email)
+                    : "",
             });
             await DomainModel.findOneAndUpdate(
                 { _id: domain!._id },
                 { $set: { firstRun: false } },
                 { upsert: false },
             );
+            invalidateDomainCache(domain!.name);
         } catch (err) {
             warn(`Error in creating user: ${err.message}`, {
                 domain: domain?.name,
@@ -175,9 +174,25 @@ export async function GET(req: Request) {
         }
     }
 
-    return Response.json({
+    const payload = {
         success: true,
         domain: domain!.name,
+        domainId: domain!._id.toString(),
         logo: domain!.settings?.logo?.file,
-    });
+        domainEmail: domain!.email,
+        domainTitle: domain!.settings?.title,
+        hideCourseLitBranding: domain!.settings?.hideCourseLitBranding,
+        ssoTrustedDomain: domain!.settings?.ssoTrustedDomain,
+    };
+
+    return Response.json(payload);
+}
+
+async function getSubscriberName(email: string): Promise<string | undefined> {
+    const subscriber = (await SubscriberModel.findOne(
+        { email },
+        { name: 1, _id: 0 },
+    ).lean()) as unknown as Subscriber;
+
+    return subscriber ? subscriber.name : "";
 }

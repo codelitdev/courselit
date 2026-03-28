@@ -13,7 +13,6 @@ export interface InternalCommunityPost
         | "category"
         | "media"
         | "pinned"
-        | "commentsCount"
         | "deleted"
     > {
     domain: mongoose.Types.ObjectId;
@@ -39,7 +38,6 @@ const CommunityPostSchema = new mongoose.Schema<InternalCommunityPost>(
         category: String,
         media: [CommunityMediaSchema],
         pinned: { type: Boolean, default: false },
-        commentsCount: { type: Number, default: 0, min: 0 },
         likes: [String],
         deleted: { type: Boolean, default: false },
     },

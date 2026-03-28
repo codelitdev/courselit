@@ -7,7 +7,7 @@ import {
     TypefacesContext,
 } from "@components/contexts";
 import { ProfileContext } from "@components/contexts";
-import { BaseLayout } from "@components/public/base-layout";
+import BaseLayout from "@components/public/base-layout";
 import { Profile } from "@courselit/common-models";
 
 export default function ClientSidePage({
@@ -40,16 +40,14 @@ export default function ClientSidePage({
             layout={layoutWithoutHeaderFooter}
             title={page.title || page.pageData?.title}
             pageData={page.pageData}
-            typefaces={typefaces}
             siteInfo={siteinfo}
-            dispatch={() => {}}
             theme={theme}
             state={{
                 config: config,
                 siteinfo,
                 address,
                 profile: profile as Profile,
-                auth: profile.email
+                auth: profile?.email
                     ? {
                           guest: false,
                           checked: true,

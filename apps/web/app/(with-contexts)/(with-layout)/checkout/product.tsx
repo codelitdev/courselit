@@ -2,12 +2,14 @@
 
 import { AddressContext } from "@components/contexts";
 import Checkout, { Product } from "@components/public/payments/checkout";
-import { Constants, PaymentPlan } from "@courselit/common-models";
+import { Constants, PaymentPlan, Course } from "@courselit/common-models";
+import type { MembershipEntityType } from "@courselit/common-models";
 import { useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useContext, useEffect, useState } from "react";
+import type { SSOProvider } from "../login/page";
 
 const { MembershipEntityType } = Constants;
 
@@ -20,6 +22,55 @@ export default function ProductCheckout() {
 
     const [product, setProduct] = useState<Product | null>(null);
     const [paymentPlans, setPaymentPlans] = useState<PaymentPlan[]>([]);
+    const [includedProducts, setIncludedProducts] = useState<Course[]>([]);
+    const [ssoProvider, setSSOProvider] = useState<SSOProvider | undefined>();
+
+    const getIncludedProducts = useCallback(async () => {
+        const query = `
+            query ($entityId: String!, $entityType: MembershipEntityType!) {
+                includedProducts: getIncludedProducts(entityId: $entityId, entityType: $entityType) {
+                    courseId
+                    title
+                    slug
+                    featuredImage {
+                        thumbnail
+                        file
+                    }
+                }
+            }
+        `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload({
+                query,
+                variables: {
+                    entityId,
+                    entityType: (entityType === MembershipEntityType.COURSE
+                        ? MembershipEntityType.COURSE
+                        : MembershipEntityType.COMMUNITY
+                    ).toUpperCase(),
+                },
+            })
+            .setIsGraphQLEndpoint(true)
+            .build();
+        try {
+            const response = await fetch.exec();
+            if (response.includedProducts) {
+                setIncludedProducts([...response.includedProducts]);
+            } else {
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: "Course not found",
+                });
+            }
+        } catch (err: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+            });
+        } finally {
+        }
+    }, [address.backend, entityId, entityType, toast]);
 
     const getProduct = useCallback(async () => {
         const query = `
@@ -41,8 +92,14 @@ export default function ProductCheckout() {
                         emiTotalInstallments
                         subscriptionMonthlyAmount
                         subscriptionYearlyAmount
+                        description
+                        includedProducts
                     }
                     defaultPaymentPlan
+                }
+                ssoProvider: getSSOProvider {
+                    providerId
+                    domain
                 }
             }
         `;
@@ -60,6 +117,7 @@ export default function ProductCheckout() {
                     slug: response.course.slug,
                     featuredImage: response.course.featuredImage?.file,
                     type: MembershipEntityType.COURSE,
+                    defaultPaymentPlanId: response.course.defaultPaymentPlan,
                 });
                 setPaymentPlans([...response.course.paymentPlans]);
             } else {
@@ -67,6 +125,9 @@ export default function ProductCheckout() {
                     title: TOAST_TITLE_ERROR,
                     description: "Course not found",
                 });
+            }
+            if (response.ssoProvider) {
+                setSSOProvider(response.ssoProvider);
             }
         } catch (err: any) {
             toast({
@@ -92,6 +153,8 @@ export default function ProductCheckout() {
                         emiTotalInstallments
                         subscriptionMonthlyAmount
                         subscriptionYearlyAmount
+                        description
+                        includedProducts
                     }
                     featuredImage {
                         thumbnail
@@ -99,6 +162,11 @@ export default function ProductCheckout() {
                     }
                     autoAcceptMembers
                     joiningReasonText
+                    defaultPaymentPlan
+                }
+                ssoProvider: getSSOProvider {
+                    providerId
+                    domain
                 }
             }
         `;
@@ -117,6 +185,7 @@ export default function ProductCheckout() {
                     featuredImage: response.community.featuredImage?.file,
                     joiningReasonText: response.community.joiningReasonText,
                     autoAcceptMembers: response.community.autoAcceptMembers,
+                    defaultPaymentPlanId: response.community.defaultPaymentPlan,
                 });
                 setPaymentPlans([...response.community.paymentPlans]);
             } else {
@@ -124,6 +193,9 @@ export default function ProductCheckout() {
                     title: TOAST_TITLE_ERROR,
                     description: "Community not found",
                 });
+            }
+            if (response.ssoProvider) {
+                setSSOProvider(response.ssoProvider);
             }
         } catch (err: any) {
             toast({
@@ -144,9 +216,24 @@ export default function ProductCheckout() {
         }
     }, [entityId, entityType, getProduct, getCommunity]);
 
+    useEffect(() => {
+        if (paymentPlans.length > 0) {
+            getIncludedProducts();
+        }
+    }, [paymentPlans, getIncludedProducts]);
+
     if (!product) {
         return null;
     }
 
-    return <Checkout product={product} paymentPlans={paymentPlans} />;
+    return (
+        <Checkout
+            product={product}
+            paymentPlans={paymentPlans}
+            includedProducts={includedProducts}
+            ssoProvider={ssoProvider}
+            type={entityType as MembershipEntityType | undefined}
+            id={entityId as string | undefined}
+        />
+    );
 }

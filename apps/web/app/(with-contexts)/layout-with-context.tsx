@@ -1,21 +1,31 @@
 "use client";
 
-import { ReactNode, useEffect, useState, Suspense } from "react";
-import { SiteInfo, ServerConfig } from "@courselit/common-models";
-import { FetchBuilder } from "@courselit/utils";
+import {
+    ReactNode,
+    useEffect,
+    useState,
+    Suspense,
+    useCallback,
+    startTransition,
+} from "react";
+import { SiteInfo, ServerConfig, Features } from "@courselit/common-models";
 import {
     AddressContext,
     ProfileContext,
     SiteInfoContext,
     ServerConfigContext,
     ThemeContext,
+    FeaturesContext,
 } from "@components/contexts";
 import { Toaster, useToast } from "@courselit/components-library";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
-import { Session } from "next-auth";
 import { Theme } from "@courselit/page-models";
 import { ThemeProvider as NextThemesProvider } from "@components/next-theme-provider";
 import { defaultState } from "@components/default-state";
+import { getUserProfile } from "./helpers";
+import { auth } from "@/auth";
+
+type BetterAuthSession = Awaited<ReturnType<typeof auth.api.getSession>> | null;
 
 function LayoutContent({
     address,
@@ -24,69 +34,52 @@ function LayoutContent({
     theme: initialTheme,
     config,
     session,
+    features,
 }: {
     address: string;
     children: ReactNode;
     siteinfo: SiteInfo;
     theme: Theme;
     config: ServerConfig;
-    session: Session | null;
+    session: BetterAuthSession;
+    features: Features[];
 }) {
     const [profile, setProfile] = useState(defaultState.profile);
     const [theme, setTheme] = useState(initialTheme);
     const { toast } = useToast();
 
-    useEffect(() => {
-        const getUserProfile = async () => {
-            const query = `
-            { profile: getUser {
-                name,
-                id,
-                email,
-                userId,
-                bio,
-                permissions,
-                purchases {
-                    courseId,
-                    completedLessons,
-                    accessibleGroups
-                }
-                avatar {
-                        mediaId,
-                        originalFileName,
-                        mimeType,
-                        size,
-                        access,
-                        file,
-                        thumbnail,
-                        caption
-                    },
-                }
+    const updateUserProfile = useCallback(async () => {
+        try {
+            const fetchedProfile = await getUserProfile(address);
+            if (fetchedProfile) {
+                setProfile(fetchedProfile);
             }
-            `;
-            const fetch = new FetchBuilder()
-                .setUrl(`${address}/api/graph`)
-                .setPayload(query)
-                .setIsGraphQLEndpoint(true)
-                .build();
-            try {
-                const response = await fetch.exec();
-                if (response.profile) {
-                    setProfile(response.profile);
-                }
-            } catch (err) {
-                toast({
-                    title: TOAST_TITLE_ERROR,
-                    description: err.message,
-                    variant: "destructive",
-                });
-            }
-        };
-
-        if (address && session) {
-            getUserProfile();
+        } catch (err) {
+            setProfile((currentProfile) => ({
+                ...currentProfile,
+                fetched: true,
+            }));
+            const message =
+                err instanceof Error ? err.message : "Unknown error occurred";
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: message,
+                variant: "destructive",
+            });
         }
-    }, [address, session]);
+    }, [address, toast]);
+
+    useEffect(() => {
+        if (address && session) {
+            startTransition(() => {
+                void updateUserProfile();
+            });
+        }
+    }, [address, session, updateUserProfile]);
+
+    if (session && !profile.fetched) {
+        return null;
+    }
 
     return (
         <AddressContext.Provider
@@ -95,25 +88,29 @@ function LayoutContent({
                 frontend: address,
             }}
         >
-            <SiteInfoContext.Provider value={siteinfo}>
-                <ThemeContext.Provider value={{ theme, setTheme }}>
-                    <ServerConfigContext.Provider value={config}>
-                        <NextThemesProvider
-                            attribute="class"
-                            defaultTheme="system"
-                            enableSystem
-                            disableTransitionOnChange
-                        >
-                            <ProfileContext.Provider
-                                value={{ profile, setProfile }}
+            <FeaturesContext.Provider value={features}>
+                <SiteInfoContext.Provider value={siteinfo}>
+                    <ThemeContext.Provider value={{ theme, setTheme }}>
+                        <ServerConfigContext.Provider value={config}>
+                            <NextThemesProvider
+                                attribute="class"
+                                defaultTheme="system"
+                                enableSystem
+                                disableTransitionOnChange
                             >
-                                <Suspense fallback={null}>{children}</Suspense>
-                            </ProfileContext.Provider>
-                        </NextThemesProvider>
-                    </ServerConfigContext.Provider>
-                </ThemeContext.Provider>
-            </SiteInfoContext.Provider>
-            <Toaster />
+                                <ProfileContext.Provider
+                                    value={{ profile, setProfile }}
+                                >
+                                    <Suspense fallback={null}>
+                                        {children}
+                                    </Suspense>
+                                </ProfileContext.Provider>
+                            </NextThemesProvider>
+                        </ServerConfigContext.Provider>
+                    </ThemeContext.Provider>
+                </SiteInfoContext.Provider>
+                <Toaster />
+            </FeaturesContext.Provider>
         </AddressContext.Provider>
     );
 }
@@ -124,8 +121,8 @@ export default function Layout(props: {
     siteinfo: SiteInfo;
     theme: Theme;
     config: ServerConfig;
-    session: Session | null;
-    // profile: Partial<Profile> | null;
+    session: BetterAuthSession;
+    features: Features[];
 }) {
     return (
         <Suspense fallback={null}>
@@ -133,7 +130,3 @@ export default function Layout(props: {
         </Suspense>
     );
 }
-
-// function formatHSL(hsl: HSL): string {
-//     return `${hsl[0]} ${hsl[1]}% ${hsl[2]}%`;
-// }

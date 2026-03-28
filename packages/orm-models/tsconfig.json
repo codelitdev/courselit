@@ -1,0 +1,22 @@
+{
+    "extends": "tsconfig/node.json",
+    "exclude": ["dist", "build", "node_modules"],
+    "compilerOptions": {
+        "outDir": "./dist",
+        "lib": ["es2017", "dom"],
+        "strict": true,
+        "module": "esnext",
+        "moduleResolution": "node",
+        "target": "es2017",
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "noImplicitAny": false
+    },
+    "include": ["src/**/*", "additional.d.ts"]
+}

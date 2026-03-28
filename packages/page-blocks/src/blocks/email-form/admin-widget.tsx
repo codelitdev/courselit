@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import type { Address } from "@courselit/common-models";
-import { AppDispatch } from "@courselit/state-management";
 import type Settings from "./settings";
 import {
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     Select,
     Form,
     FormField,
@@ -24,15 +24,12 @@ interface AdminWidgetProps {
     settings: Settings;
     onChange: (...args: any[]) => void;
     address: Address;
-    networkAction: boolean;
-    dispatch: AppDispatch;
     theme: Theme;
 }
 
 export default function AdminWidget({
     settings,
     onChange,
-    theme,
 }: AdminWidgetProps): JSX.Element {
     const [title, setTitle] = useState(settings.title);
     const [subtitle, setSubtitle] = useState(settings.subtitle);
@@ -77,8 +74,11 @@ export default function AdminWidget({
     ]);
 
     return (
-        <div className="flex flex-col gap-4 mb-4">
-            <AdminWidgetPanel title="Basic">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["basic", "call-to-action", "design"]}
+        >
+            <AdminWidgetPanel title="Basic" value="basic">
                 <Form>
                     <FormField
                         label="Title"
@@ -105,7 +105,7 @@ export default function AdminWidget({
                     />
                 </Form>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Call to action">
+            <AdminWidgetPanel title="Call to action" value="call-to-action">
                 <Form
                     onSubmit={(e) => {
                         e.preventDefault();
@@ -119,7 +119,7 @@ export default function AdminWidget({
                     />
                 </Form>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Design">
+            <AdminWidgetPanel title="Design" value="design">
                 <Select
                     value={alignment}
                     title="Alignment"
@@ -138,9 +138,9 @@ export default function AdminWidget({
                     onChange={setVerticalPadding}
                 />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Advanced">
+            <AdminWidgetPanel title="Advanced" value="advanced">
                 <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
-        </div>
+        </AdminWidgetPanelContainer>
     );
 }

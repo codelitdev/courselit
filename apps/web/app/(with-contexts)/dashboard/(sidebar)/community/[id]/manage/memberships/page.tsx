@@ -6,13 +6,12 @@ import {
     COMMUNITY_SETTINGS,
 } from "@ui-config/strings";
 
-export default function Page({
-    params,
-}: {
-    params: {
+export default async function Page(props: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }) {
+    const params = await props.params;
     const { id } = params;
     const breadcrumbs = [
         {

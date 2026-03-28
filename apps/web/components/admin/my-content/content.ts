@@ -16,6 +16,7 @@ export interface Entity {
     type:
         | typeof Constants.CourseType.COURSE
         | typeof Constants.CourseType.DOWNLOAD;
+    certificateId?: string;
 }
 
 export interface ContentItem {

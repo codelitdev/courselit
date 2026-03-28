@@ -29,7 +29,7 @@ export default function SeoEditor({
 }: {
     title: string;
     description: string;
-    socialImage: Media | {};
+    socialImage: Media | null;
     robotsAllowed: boolean;
     profile: Profile;
     address: Address;
@@ -40,7 +40,7 @@ export default function SeoEditor({
     const [innerDescription, setInnerDescription] = useState(description);
     const [innerRobotsAllowed, setInnerRobotsAllowed] = useState(robotsAllowed);
     const [innerSocialImage, setInnerSocialImage] =
-        useState<Partial<Media>>(socialImage);
+        useState<Partial<Media> | null>(socialImage ?? null);
 
     const onSubmit = (e: FormEvent<HTMLButtonElement>) => {
         e.preventDefault();
@@ -48,9 +48,10 @@ export default function SeoEditor({
         onSave({
             title: name,
             description: innerDescription,
-            socialImage: Object.keys(innerSocialImage).length
-                ? innerSocialImage
-                : null,
+            socialImage:
+                innerSocialImage && Object.keys(innerSocialImage).length
+                    ? (innerSocialImage as Media)
+                    : null,
             robotsAllowed: innerRobotsAllowed,
         });
     };
@@ -102,12 +103,8 @@ export default function SeoEditor({
                 <MediaSelector
                     title={SEO_FORM_SOCIAL_IMAGE_LABEL}
                     tooltip={SEO_FORM_SOCIAL_IMAGE_TOOLTIP}
-                    src={(innerSocialImage && innerSocialImage.thumbnail) || ""}
-                    srcTitle={
-                        (innerSocialImage &&
-                            innerSocialImage.originalFileName) ||
-                        ""
-                    }
+                    src={innerSocialImage?.thumbnail || ""}
+                    srcTitle={innerSocialImage?.originalFileName || ""}
                     profile={profile}
                     address={address}
                     onSelection={(media: Media) => {
@@ -117,12 +114,12 @@ export default function SeoEditor({
                         }
                     }}
                     onRemove={() => {
-                        setInnerSocialImage({});
+                        setInnerSocialImage(null);
                         onSave({ socialImage: null });
                     }}
                     strings={{}}
                     access="public"
-                    mediaId={innerSocialImage && innerSocialImage.mediaId}
+                    mediaId={innerSocialImage?.mediaId}
                     type="page"
                 />
             </div>

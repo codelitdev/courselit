@@ -2,27 +2,30 @@
 
 import DashboardContent from "@components/admin/dashboard-content";
 import LoadingScreen from "@components/admin/loading-screen";
-import { Pages } from "@components/admin/pages";
-import { AddressContext, ProfileContext } from "@components/contexts";
+import { ProfileContext } from "@components/contexts";
 import { UIConstants } from "@courselit/common-models";
-import { checkPermission } from "@courselit/utils";
 import { MANAGE_PAGES_PAGE_HEADING } from "@ui-config/strings";
+import dynamic from "next/dynamic";
 import { useContext } from "react";
 const { permissions } = UIConstants;
+
+const Pages = dynamic(() => import("@components/admin/pages"));
 
 const breadcrumbs = [{ label: MANAGE_PAGES_PAGE_HEADING, href: "#" }];
 
 export default function Page() {
-    const address = useContext(AddressContext);
     const { profile } = useContext(ProfileContext);
 
-    if (!checkPermission(profile.permissions!, [permissions.manageSite])) {
+    if (!profile) {
         return <LoadingScreen />;
     }
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
-            <Pages address={address} loading={false} dispatch={() => {}} />
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[permissions.manageSite]}
+        >
+            <Pages />
         </DashboardContent>
     );
 }

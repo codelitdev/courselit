@@ -1,5 +1,4 @@
 import * as React from "react";
-import { type LucideIcon } from "lucide-react";
 
 import {
     SidebarGroup,
@@ -17,7 +16,7 @@ export function NavSecondary({
     items: {
         title: string;
         url: string;
-        icon: LucideIcon;
+        icon: any;
         isActive?: boolean;
     }[];
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
@@ -34,7 +33,7 @@ export function NavSecondary({
                                 tooltip={item.title}
                             >
                                 <Link href={item.url}>
-                                    <item.icon />
+                                    {item.icon}
                                     <span>{item.title}</span>
                                 </Link>
                             </SidebarMenuButton>

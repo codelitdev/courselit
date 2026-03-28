@@ -1,6 +1,10 @@
 import GQLContext from "@models/GQLContext";
-import { GraphQLInt, GraphQLString } from "graphql";
-import { getNotification, getNotifications } from "./logic";
+import { GraphQLInt, GraphQLList, GraphQLString } from "graphql";
+import {
+    getNotification,
+    getNotificationPreferences,
+    getNotifications,
+} from "./logic";
 import types from "./types";
 
 const queries = {
@@ -32,6 +36,11 @@ const queries = {
             { page, limit }: { page?: number; limit?: number },
             ctx: GQLContext,
         ) => getNotifications({ ctx, page, limit }),
+    },
+    getNotificationPreferences: {
+        type: new GraphQLList(types.notificationPreference),
+        resolve: (_: any, __: any, ctx: GQLContext) =>
+            getNotificationPreferences({ ctx }),
     },
 };
 

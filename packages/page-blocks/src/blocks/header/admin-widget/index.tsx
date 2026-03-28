@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import Settings, { Link } from "../settings";
+import Settings, { Layout, Link } from "../settings";
 import LinkEditor from "./link-editor";
 import {
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     Select,
     Checkbox,
     Tooltip,
@@ -56,6 +57,10 @@ export default function AdminWidget({
     const [showGithubStars, setShowGithubStars] = useState<boolean | undefined>(
         settings.showGithubStars || false,
     );
+    const [layout, setLayout] = useState<Layout>(settings.layout || "fixed");
+    const [backdropBlur, setBackdropBlur] = useState<boolean | undefined>(
+        settings.backdropBlur || false,
+    );
 
     useEffect(() => {
         onChange({
@@ -67,6 +72,8 @@ export default function AdminWidget({
             maxWidth,
             githubRepo,
             showGithubStars,
+            layout,
+            backdropBlur,
         });
     }, [
         links,
@@ -77,6 +84,8 @@ export default function AdminWidget({
         maxWidth,
         githubRepo,
         showGithubStars,
+        layout,
+        backdropBlur,
     ]);
 
     const onLinkChanged = (index: number, link: Link) => {
@@ -99,8 +108,11 @@ export default function AdminWidget({
     };
 
     return (
-        <div className="flex flex-col gap-4 mb-4">
-            <AdminWidgetPanel title="Links">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["links", "github-repo", "design"]}
+        >
+            <AdminWidgetPanel title="Links" value="links">
                 <DragAndDrop
                     items={links.map((link: Link, index: number) => ({
                         link,
@@ -127,7 +139,7 @@ export default function AdminWidget({
                 </div>
             </AdminWidgetPanel>
 
-            <AdminWidgetPanel title="Github Repo">
+            <AdminWidgetPanel title="Github Repo" value="github-repo">
                 <Form>
                     <FormField
                         label="Github Repo"
@@ -146,7 +158,16 @@ export default function AdminWidget({
                     />
                 </div>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Design">
+            <AdminWidgetPanel title="Design" value="design">
+                <Select
+                    title="Layout"
+                    value={layout}
+                    options={[
+                        { label: "Fixed", value: "fixed" },
+                        { label: "Floating", value: "floating" },
+                    ]}
+                    onChange={(value: Layout) => setLayout(value)}
+                />
                 <Select
                     title="Link font weight"
                     value={linkFontWeight}
@@ -182,8 +203,20 @@ export default function AdminWidget({
                     value={maxWidth || theme.theme.structure.page.width}
                     onChange={setMaxWidth}
                 />
+                <div className="flex justify-between">
+                    <div className="flex grow items-center gap-1">
+                        <p>Backdrop blur</p>
+                        <Tooltip title="Makes the background translucent">
+                            <Help />
+                        </Tooltip>
+                    </div>
+                    <Checkbox
+                        checked={backdropBlur}
+                        onChange={(value: boolean) => setBackdropBlur(value)}
+                    />
+                </div>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Other settings">
+            <AdminWidgetPanel title="Other settings" value="other-settings">
                 <div className="flex justify-between">
                     <div className="flex grow items-center gap-1">
                         <p>Show login button</p>
@@ -199,6 +232,6 @@ export default function AdminWidget({
                     />
                 </div>
             </AdminWidgetPanel>
-        </div>
+        </AdminWidgetPanelContainer>
     );
 }

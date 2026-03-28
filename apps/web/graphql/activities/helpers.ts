@@ -1,8 +1,9 @@
 import constants from "../../config/constants";
-import CourseModel, { Course } from "../../models/Course";
+import CourseModel from "../../models/Course";
 import GQLContext from "../../models/GQLContext";
 import { Page } from "../../models/Page";
 import { Domain } from "@models/Domain";
+import { Course } from "@courselit/common-models";
 
 const { analyticsDurations } = constants;
 

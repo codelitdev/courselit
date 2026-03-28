@@ -22,10 +22,10 @@ COPY packages/page-models /app/packages/page-models
 COPY packages/email-editor /app/packages/email-editor
 COPY packages/common-models /app/packages/common-models
 COPY packages/common-logic /app/packages/common-logic
+COPY packages/orm-models /app/packages/orm-models
 COPY packages/page-primitives /app/packages/page-primitives
 COPY packages/page-blocks /app/packages/page-blocks
 COPY packages/components-library /app/packages/components-library
-COPY packages/state-management /app/packages/state-management
 COPY packages/text-editor /app/packages/text-editor
 COPY packages/utils /app/packages/utils
 COPY apps/web /app/apps/web

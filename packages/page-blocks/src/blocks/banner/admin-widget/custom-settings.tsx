@@ -2,9 +2,9 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import Settings from "../settings";
 import {
-    TextEditor,
     Select,
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     Form,
     FormField,
     VerticalPaddingSelector,
@@ -19,6 +19,8 @@ import {
 } from "@courselit/common-models";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "../constants";
 import { ThemeStyle } from "@courselit/page-models";
+import { Editor } from "@courselit/text-editor";
+import { TextEditorContent } from "@courselit/common-models";
 
 interface CustomSettingsProps {
     name: string;
@@ -115,128 +117,123 @@ export default function CustomSettings({
     ]);
 
     return (
-        <div className="flex flex-col">
-            <div className="mb-4">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["basic", "call-to-action", "design"]}
+        >
+            <AdminWidgetPanel title="Basic" value="basic">
                 <Form
                     onSubmit={(e: React.FormEvent) => {
                         e.preventDefault();
                     }}
                 >
-                    <AdminWidgetPanel title="Basic">
-                        <FormField
-                            value={title}
-                            label="Custom title"
-                            onChange={(e) => setTitle(e.target.value)}
+                    <FormField
+                        value={title}
+                        label="Custom title"
+                        onChange={(e) => setTitle(e.target.value)}
+                    />
+                    <div>
+                        <p className="mb-1 font-medium">Custom description</p>
+                        <Editor
+                            initialContent={description}
+                            onChange={(state: any) => setDescription(state)}
+                            showToolbar={false}
+                            url={address.backend}
                         />
-                        <div>
-                            <p className="mb-1 font-medium">
-                                Custom description
-                            </p>
-                            <TextEditor
-                                initialContent={description}
-                                onChange={(state: any) => setDescription(state)}
-                                showToolbar={false}
-                                url={address.backend}
-                            />
-                        </div>
-                    </AdminWidgetPanel>
+                    </div>
                 </Form>
-            </div>
-            <div className="mb-4">
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Call to action" value="call-to-action">
                 <Form>
-                    <AdminWidgetPanel title="Call to action">
+                    <FormField
+                        value={buttonCaption}
+                        label="Button caption"
+                        onChange={(e) => setButtonCaption(e.target.value)}
+                    />
+                    {type === "site" && (
                         <FormField
-                            value={buttonCaption}
-                            label="Button caption"
-                            onChange={(e) => setButtonCaption(e.target.value)}
+                            value={buttonAction}
+                            label="Button Action (URL)"
+                            onChange={(e) => setButtonAction(e.target.value)}
                         />
-                        {type === "site" && (
+                    )}
+                    {isLeadMagnet && (
+                        <>
+                            <div>
+                                <p className="mb-1 font-medium">
+                                    Success message
+                                </p>
+                                <Editor
+                                    initialContent={
+                                        successMessage as unknown as TextEditorContent
+                                    }
+                                    onChange={(state: any) =>
+                                        setSuccessMessage(state)
+                                    }
+                                    showToolbar={false}
+                                    url={address.backend}
+                                />
+                            </div>
                             <FormField
-                                value={buttonAction}
-                                label="Button Action (URL)"
+                                label="Failure message"
+                                value={failureMessage}
+                                placeholder={DEFAULT_FAILURE_MESSAGE}
                                 onChange={(e) =>
-                                    setButtonAction(e.target.value)
+                                    setFailureMessage(e.target.value)
                                 }
                             />
-                        )}
-                        {isLeadMagnet && (
-                            <>
-                                <div>
-                                    <p className="mb-1 font-medium">
-                                        Success message
-                                    </p>
-                                    <TextEditor
-                                        initialContent={successMessage}
-                                        onChange={(state: any) =>
-                                            setSuccessMessage(state)
-                                        }
-                                        showToolbar={false}
-                                        url={address.backend}
-                                    />
-                                </div>
-                                <FormField
-                                    label="Failure message"
-                                    value={failureMessage}
-                                    placeholder={DEFAULT_FAILURE_MESSAGE}
-                                    onChange={(e) =>
-                                        setFailureMessage(e.target.value)
-                                    }
-                                />
-                                <Select
-                                    title="Editing view"
-                                    value={editingViewShowSuccess}
-                                    options={[
-                                        { label: "Before submit", value: "0" },
-                                        { label: "After submit", value: "1" },
-                                    ]}
-                                    onChange={(value: "1" | "0") =>
-                                        setEditingViewShowSuccess(value)
-                                    }
-                                />
-                            </>
-                        )}
-                    </AdminWidgetPanel>
+                            <Select
+                                title="Editing view"
+                                value={editingViewShowSuccess}
+                                options={[
+                                    { label: "Before submit", value: "0" },
+                                    { label: "After submit", value: "1" },
+                                ]}
+                                onChange={(value: "1" | "0") =>
+                                    setEditingViewShowSuccess(value)
+                                }
+                            />
+                        </>
+                    )}
                 </Form>
-            </div>
-            <div className="mb-4">
-                <AdminWidgetPanel title="Design">
-                    <Select
-                        title="Text content position"
-                        value={alignment}
-                        options={[
-                            { label: "Top", value: "top" },
-                            { label: "Bottom", value: "bottom" },
-                            { label: "Left", value: "left" },
-                            { label: "Right", value: "right" },
-                        ]}
-                        onChange={(
-                            value: "top" | "bottom" | "left" | "right",
-                        ) => setAlignment(value)}
-                    />
-                    <Select
-                        title="Text alignment"
-                        value={textAlignment}
-                        options={[
-                            { label: "Left", value: "left" },
-                            { label: "Center", value: "center" },
-                            { label: "Right", value: "right" },
-                        ]}
-                        onChange={(value: Alignment) => setTextAlignment(value)}
-                    />
-                    <MaxWidthSelector value={maxWidth} onChange={setMaxWidth} />
-                    <VerticalPaddingSelector
-                        value={verticalPadding}
-                        onChange={setVerticalPadding}
-                    />
-                    <PageBuilderSlider
-                        title="Media border radius"
-                        value={mediaBorderRadius}
-                        min={0}
-                        max={8}
-                        onChange={setMediaBorderRadius}
-                    />
-                </AdminWidgetPanel>
-            </div>
-        </div>
+            </AdminWidgetPanel>
+            <AdminWidgetPanel title="Design" value="design">
+                <Select
+                    title="Text content position"
+                    value={alignment}
+                    options={[
+                        { label: "Top", value: "top" },
+                        { label: "Bottom", value: "bottom" },
+                        { label: "Left", value: "left" },
+                        { label: "Right", value: "right" },
+                    ]}
+                    onChange={(value: "top" | "bottom" | "left" | "right") =>
+                        setAlignment(value)
+                    }
+                />
+                <Select
+                    title="Text alignment"
+                    value={textAlignment}
+                    options={[
+                        { label: "Left", value: "left" },
+                        { label: "Center", value: "center" },
+                        { label: "Right", value: "right" },
+                    ]}
+                    onChange={(value: Alignment) => setTextAlignment(value)}
+                />
+                <MaxWidthSelector value={maxWidth} onChange={setMaxWidth} />
+                <VerticalPaddingSelector
+                    value={verticalPadding}
+                    onChange={setVerticalPadding}
+                />
+                <PageBuilderSlider
+                    title="Media border radius"
+                    value={mediaBorderRadius}
+                    min={0}
+                    max={8}
+                    onChange={setMediaBorderRadius}
+                />
+            </AdminWidgetPanel>
+        </AdminWidgetPanelContainer>
     );
 }

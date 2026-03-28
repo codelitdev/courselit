@@ -1,27 +1,19 @@
-import { auth } from "@/auth";
-import { SessionProvider } from "next-auth/react";
 import HomepageLayout from "./home-page-layout";
 import { headers } from "next/headers";
-import { getAddressFromHeaders, getFullSiteSetup } from "@ui-lib/utils";
+import { getFullSiteSetup } from "@ui-lib/utils";
+import { getAddressFromHeaders } from "@/app/actions";
 
 export default async function Layout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const address = getAddressFromHeaders(headers);
-    const [siteInfo, session] = await Promise.all([
-        getFullSiteSetup(address),
-        auth(),
-    ]);
+    const address = await getAddressFromHeaders(headers);
+    const siteInfo = await getFullSiteSetup(address);
 
     if (!siteInfo) {
         return null;
     }
 
-    return (
-        <SessionProvider session={session}>
-            <HomepageLayout siteInfo={siteInfo}>{children}</HomepageLayout>
-        </SessionProvider>
-    );
+    return <HomepageLayout siteInfo={siteInfo}>{children}</HomepageLayout>;
 }

@@ -1,13 +1,15 @@
 import { useContext, useEffect, useState } from "react";
 import { AddressContext } from "@components/contexts";
 import { FetchBuilder } from "@courselit/utils";
-import { Community } from "@courselit/common-models";
+import { Community, PaymentPlan } from "@courselit/common-models";
 
 export const useCommunity = (id?: string | null) => {
     const [community, setCommunity] = useState<
         | (Community & {
               banner: any;
               joiningReasonText: string;
+              paymentPlans?: PaymentPlan[];
+              defaultPaymentPlan?: string;
           })
         | null
     >(null);
@@ -26,6 +28,7 @@ export const useCommunity = (id?: string | null) => {
                 community: getCommunity(id: $id) {
                     communityId
                     name
+                    slug
                     description
                     enabled
                     banner
@@ -37,11 +40,14 @@ export const useCommunity = (id?: string | null) => {
                         planId
                         name
                         type
+                        entityId
+                        entityType
                         oneTimeAmount
                         emiAmount
                         emiTotalInstallments
                         subscriptionMonthlyAmount
                         subscriptionYearlyAmount
+                        includedProducts
                     }
                     defaultPaymentPlan
                     featuredImage {
@@ -73,6 +79,11 @@ export const useCommunity = (id?: string | null) => {
                 }
             } catch (err: any) {
                 setError(err.message);
+                // toast({
+                //     title: TOAST_TITLE_ERROR,
+                //     description: err.message,
+                //     variant: "destructive",
+                // });
             } finally {
                 setLoaded(true);
             }

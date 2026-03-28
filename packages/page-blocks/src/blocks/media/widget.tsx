@@ -1,7 +1,8 @@
 import React from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
-import { Image, VideoWithPreview } from "@courselit/components-library";
+import { Image } from "@courselit/components-library";
+import { VideoWithPreview } from "../../components";
 import { isVideo } from "@courselit/utils";
 import { Section } from "@courselit/page-primitives";
 import { ThemeStyle } from "@courselit/page-models";
@@ -30,6 +31,7 @@ export default function Widget({
         objectFit,
         maxWidth,
         verticalPadding,
+        hasBorder = true,
     },
     state: { theme },
 }: WidgetProps<Settings>) {
@@ -44,49 +46,34 @@ export default function Widget({
     return (
         <Section theme={overiddenTheme} id={cssId}>
             <div className={`flex flex-col gap-4`}>
-                {hasHeroGraphic && (
-                    <div>
-                        <div
-                            className={clsx(
-                                "w-full text-center overflow-hidden border",
-                                twRoundedMap[mediaRadius],
-                            )}
-                            style={{
-                                width: "100%",
-                            }}
-                        >
-                            {isVideo(youtubeLink, media) ? (
-                                <VideoWithPreview
-                                    videoUrl={youtubeLink || media?.file || ""}
-                                    aspectRatio={aspectRatio}
-                                    title={media?.caption || ""}
-                                    thumbnailUrl={media?.thumbnail || ""}
-                                    modal={playVideoInModal}
-                                />
-                            ) : (
-                                <Image
-                                    src={media?.file || ""}
-                                    alt={media?.caption || ""}
-                                    borderRadius={mediaRadius}
-                                    objectFit={objectFit}
-                                />
-                            )}
-                        </div>
-                    </div>
-                )}
-                {!hasHeroGraphic && (
-                    <div
-                        className={clsx(
-                            "w-full text-center overflow-hidden border",
-                            twRoundedMap[mediaRadius],
-                        )}
-                        style={{
-                            width: "100%",
-                        }}
-                    >
-                        <Image src="" borderRadius={0} />
-                    </div>
-                )}
+                <div
+                    className={clsx(
+                        "w-full text-center overflow-hidden",
+                        hasBorder &&
+                            overiddenTheme.interactives.card.border.width,
+                        twRoundedMap[mediaRadius],
+                    )}
+                    style={{
+                        width: "100%",
+                    }}
+                >
+                    {isVideo(youtubeLink, media) ? (
+                        <VideoWithPreview
+                            videoUrl={youtubeLink || media?.file || ""}
+                            aspectRatio={aspectRatio}
+                            title={media?.caption || ""}
+                            thumbnailUrl={media?.thumbnail || ""}
+                            modal={playVideoInModal}
+                        />
+                    ) : (
+                        <Image
+                            src={media?.file || ""}
+                            alt={media?.caption || ""}
+                            borderRadius={mediaRadius}
+                            objectFit={objectFit}
+                        />
+                    )}
+                </div>
             </div>
         </Section>
     );

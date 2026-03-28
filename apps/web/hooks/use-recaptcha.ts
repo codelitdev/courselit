@@ -1,6 +1,18 @@
 import { useCallback, useContext } from "react";
 import { ServerConfigContext } from "@components/contexts";
 
+declare global {
+    interface Window {
+        grecaptcha?: {
+            ready(callback: () => void): void;
+            execute(
+                siteKey: string,
+                options: { action: string },
+            ): Promise<string>;
+        };
+    }
+}
+
 /**
  * Custom hook for Google reCAPTCHA v3.
  * It uses ServerConfigContext to get the reCAPTCHA site key.
@@ -20,34 +32,33 @@ export const useRecaptcha = () => {
                 return null;
             }
 
-            if (
-                typeof window !== "undefined" &&
-                window.grecaptcha &&
-                window.grecaptcha.ready
-            ) {
-                return new Promise((resolve) => {
-                    window.grecaptcha.ready(async () => {
-                        if (!recaptchaSiteKey) {
-                            // Double check, though already checked above
-                            console.error(
-                                "reCAPTCHA site key became unavailable before execution.",
+            if (typeof window !== "undefined") {
+                const grecaptcha = window.grecaptcha;
+                if (grecaptcha && grecaptcha.ready) {
+                    return new Promise((resolve) => {
+                        grecaptcha.ready(async () => {
+                            if (!recaptchaSiteKey) {
+                                // Double check, though already checked above
+                                console.error(
+                                    "reCAPTCHA site key became unavailable before execution.",
+                                );
+                                resolve(null);
+                                return;
+                            }
+                            const token = await grecaptcha.execute(
+                                recaptchaSiteKey,
+                                { action },
                             );
-                            resolve(null);
-                            return;
-                        }
-                        const token = await window.grecaptcha.execute(
-                            recaptchaSiteKey,
-                            { action },
-                        );
-                        resolve(token);
+                            resolve(token);
+                        });
                     });
-                });
-            } else {
-                console.error(
-                    "reCAPTCHA (window.grecaptcha) not available. Ensure the script is loaded.",
-                );
-                return null;
+                }
             }
+
+            console.error(
+                "reCAPTCHA (window.grecaptcha) not available. Ensure the script is loaded.",
+            );
+            return null;
         },
         [recaptchaSiteKey], // Dependency array includes recaptchaSiteKey
     );

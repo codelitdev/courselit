@@ -1,16 +1,25 @@
-import UserModel, { User } from "../../models/User";
-import { responses } from "../../config/strings";
-import {
-    makeModelTextSearchable,
-    checkIfAuthenticated,
-} from "../../lib/graphql";
-import constants from "../../config/constants";
-import GQLContext from "../../models/GQLContext";
-const { permissions } = constants;
+"use server";
+
+import UserModel from "@models/User";
+import { responses } from "@/config/strings";
+import { makeModelTextSearchable, checkIfAuthenticated } from "@/lib/graphql";
+import constants from "@/config/constants";
+import GQLContext from "@/models/GQLContext";
 import { initMandatoryPages } from "../pages/logic";
-import { Domain } from "../../models/Domain";
-import { checkPermission } from "@courselit/utils";
-import UserSegmentModel, { UserSegment } from "../../models/UserSegment";
+import { Domain } from "@models/Domain";
+import {
+    checkPermission,
+    generateUniqueId,
+    getEmailFrom,
+    getPlanPrice,
+} from "@courselit/utils";
+import UserSegmentModel from "@models/UserSegment";
+import {
+    InternalCourse,
+    InternalUser,
+    UserSegment,
+} from "@courselit/orm-models";
+import { Course, UIConstants, User } from "@courselit/common-models";
 import mongoose from "mongoose";
 import {
     Constants,
@@ -18,18 +27,20 @@ import {
     Membership,
     MembershipEntityType,
     MembershipStatus,
+    PaymentPlan,
     Progress,
     UserFilterWithAggregator,
+    type Event,
 } from "@courselit/common-models";
-import { recordActivity } from "../../lib/record-activity";
-import { triggerSequences } from "../../lib/trigger-sequences";
+import { recordActivity } from "@/lib/record-activity";
+import { triggerSequences } from "@/lib/trigger-sequences";
 import { getCourseOrThrow } from "../courses/logic";
 import pug from "pug";
 import courseEnrollTemplate from "@/templates/course-enroll";
-import { generateEmailFrom } from "@/lib/utils";
 import MembershipModel from "@models/Membership";
 import CommunityModel from "@models/Community";
 import CourseModel from "@models/Course";
+import LessonModel from "@models/Lesson";
 import { addMailJob } from "@/services/queue";
 import { getPaymentMethodFromSettings } from "@/payments-new";
 import { checkForInvalidPermissions } from "@/lib/check-invalid-permissions";
@@ -38,12 +49,24 @@ import {
     createInternalPaymentPlan,
     getInternalPaymentPlan,
 } from "../paymentplans/logic";
+import { convertFiltersToDBConditions } from "@courselit/common-logic";
+import { InternalMembership } from "@courselit/orm-models";
+import CertificateModel from "@models/Certificate";
+import CertificateTemplateModel, {
+    CertificateTemplate,
+} from "@models/CertificateTemplate";
 import {
-    convertFiltersToDBConditions,
-    InternalMembership,
-} from "@courselit/common-logic";
+    validateUserDeletion,
+    migrateBusinessEntities,
+    cleanupPersonalData,
+} from "./helpers";
+const { permissions } = UIConstants;
+import { ObjectId } from "mongodb";
+import { sealMedia } from "@/services/medialit";
+import { seedNotificationPreferencesForUser } from "../notifications/logic";
+import { sanitizeEmail } from "@/lib/sanitize-email";
 
-const removeAdminFieldsFromUserObject = (user: User) => ({
+const removeAdminFieldsFromUserObject = (user: any) => ({
     id: user._id,
     name: user.name,
     userId: user.userId,
@@ -52,9 +75,11 @@ const removeAdminFieldsFromUserObject = (user: User) => ({
     avatar: user.avatar,
 });
 
-export const getUser = async (userId = null, ctx: GQLContext) => {
-    let user: User | undefined | null;
-    user = ctx.user;
+export const getUser = async (
+    userId: string | null = null,
+    ctx: GQLContext,
+) => {
+    let user: any = ctx.user;
 
     if (userId) {
         user = await UserModel.findOne({ userId, domain: ctx.subdomain._id });
@@ -98,7 +123,7 @@ export const updateUser = async (userData: UserData, ctx: GQLContext) => {
     const hasPermissionToManageUser = checkPermission(ctx.user.permissions, [
         permissions.manageUsers,
     ]);
-    const isModifyingSelf = id === ctx.user._id.toString();
+    const isModifyingSelf = id === ctx.user.userId;
     const restrictedKeys = ["permissions", "active"];
 
     if (
@@ -108,7 +133,10 @@ export const updateUser = async (userData: UserData, ctx: GQLContext) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    let user = await UserModel.findOne({ _id: id, domain: ctx.subdomain._id });
+    let user = await UserModel.findOne({
+        userId: id,
+        domain: ctx.subdomain._id,
+    });
     if (!user) throw new Error(responses.item_not_found);
 
     for (const key of keys.filter((key) => key !== "id")) {
@@ -121,10 +149,23 @@ export const updateUser = async (userData: UserData, ctx: GQLContext) => {
 
     validateUserProperties(user);
 
+    if (Object.prototype.hasOwnProperty.call(userData, "avatar")) {
+        user.avatar = userData.avatar?.mediaId
+            ? await sealMedia(userData.avatar.mediaId)
+            : undefined;
+    }
+
     user = await user.save();
 
-    if (userData.name) {
-        await updateCoursesForCreatorName(user.userId || user.id, user.name);
+    if (Object.prototype.hasOwnProperty.call(userData, "subscribedToUpdates")) {
+        recordActivity({
+            domain: ctx.subdomain._id,
+            userId: user.userId,
+            type: userData.subscribedToUpdates
+                ? Constants.ActivityType.NEWSLETTER_SUBSCRIBED
+                : Constants.ActivityType.NEWSLETTER_UNSUBSCRIBED,
+            entityId: user.userId,
+        });
     }
 
     return user;
@@ -146,7 +187,7 @@ export const inviteCustomer = async (
         throw new Error(responses.cannot_invite_to_unpublished_product);
     }
 
-    const sanitizedEmail = (email as string).toLowerCase();
+    const sanitizedEmail = sanitizeEmail(email);
     let user = await UserModel.findOne({
         email: sanitizedEmail,
         domain: ctx.subdomain._id,
@@ -156,19 +197,17 @@ export const inviteCustomer = async (
             domain: ctx.subdomain!,
             email: sanitizedEmail,
             subscribedToUpdates: true,
-            invited: true,
         });
     }
 
     if (tags.length) {
         user = await updateUser(
-            { id: user._id, tags: [...user.tags, ...tags] },
+            { id: user.userId, tags: [...user.tags, ...tags] },
             ctx,
         );
     }
 
     const paymentPlan = await getInternalPaymentPlan(ctx);
-
     const membership = await getMembership({
         domainId: ctx.subdomain._id,
         userId: user.userId,
@@ -195,9 +234,9 @@ export const inviteCustomer = async (
             to: [user.email],
             subject: `You have been invited to ${course.title}`,
             body: emailBody,
-            from: generateEmailFrom({
+            from: getEmailFrom({
                 name: ctx.subdomain?.settings?.title || ctx.subdomain.name,
-                email: process.env.EMAIL_FROM || ctx.subdomain.email,
+                email: process.env.EMAIL_FROM || "",
             }),
         });
     } catch (error) {
@@ -208,15 +247,42 @@ export const inviteCustomer = async (
     return user;
 };
 
-const updateCoursesForCreatorName = async (creatorId, creatorName) => {
-    await CourseModel.updateMany(
-        {
-            creatorId,
-        },
-        {
-            creatorName,
-        },
-    );
+export const deleteUser = async (
+    userId: string,
+    ctx: GQLContext,
+): Promise<boolean> => {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const userToDelete = await UserModel.findOne<InternalUser>({
+        domain: ctx.subdomain._id,
+        userId,
+    });
+
+    if (!userToDelete) {
+        throw new Error(responses.user_not_found);
+    }
+
+    if (userToDelete.userId === ctx.user.userId) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const deleterUser =
+        (await UserModel.findOne<InternalUser>({
+            domain: ctx.subdomain._id,
+            userId: ctx.user.userId,
+        })) || (ctx.user as InternalUser);
+
+    await validateUserDeletion(userToDelete, ctx);
+
+    await migrateBusinessEntities(userToDelete, deleterUser, ctx);
+
+    await cleanupPersonalData(userToDelete, ctx);
+
+    return true;
 };
 
 interface GetUsersParams {
@@ -318,7 +384,6 @@ export async function createUser({
     lead,
     superAdmin = false,
     subscribedToUpdates = true,
-    invited,
     permissions = [],
 }: {
     domain: Domain;
@@ -331,7 +396,6 @@ export async function createUser({
         | typeof constants.leadDownload;
     superAdmin?: boolean;
     subscribedToUpdates?: boolean;
-    invited?: boolean;
     permissions?: string[];
 }): Promise<User> {
     if (permissions.length) {
@@ -344,7 +408,7 @@ export async function createUser({
             $setOnInsert: {
                 domain: domain._id,
                 name,
-                email: email.toLowerCase(),
+                email: sanitizeEmail(email),
                 active: true,
                 purchases: [],
                 permissions: superAdmin
@@ -365,7 +429,6 @@ export async function createUser({
                       ],
                 lead: lead || constants.leadWebsite,
                 subscribedToUpdates,
-                invited,
             },
         },
         { upsert: true, new: true, includeResultMetadata: true },
@@ -375,32 +438,84 @@ export async function createUser({
     const isNewUser = !rawResult.lastErrorObject!.updatedExisting;
 
     if (isNewUser) {
+        await seedNotificationPreferencesForUser({
+            domain: domain._id,
+            userId: createdUser.userId,
+        });
+
         if (superAdmin) {
             await initMandatoryPages(domain, createdUser);
             await createInternalPaymentPlan(domain, createdUser.userId);
         }
 
-        await recordActivity({
-            domain: domain._id,
-            userId: createdUser.userId,
-            type: "user_created",
-        });
-
-        if (createdUser.subscribedToUpdates) {
-            await triggerSequences({
-                user: createdUser,
-                event: Constants.EventType.SUBSCRIBER_ADDED,
-            });
-
-            await recordActivity({
-                domain: domain!._id,
-                userId: createdUser.userId,
-                type: "newsletter_subscribed",
-            });
-        }
+        await recordActivityAndTriggerSequences(createdUser, domain);
     }
 
     return createdUser;
+}
+
+export async function updateUserAfterCreationViaAuth(
+    id: string,
+    domain: Domain,
+) {
+    const updatedUser = await UserModel.findOneAndUpdate(
+        {
+            _id: new ObjectId(id),
+            domain: domain._id,
+        },
+        {
+            $set: {
+                domain: domain._id,
+                userId: generateUniqueId(),
+                active: true,
+                purchases: [],
+                permissions: [
+                    constants.permissions.enrollInCourse,
+                    constants.permissions.manageMedia,
+                ],
+                lead: constants.leadWebsite,
+                subscribedToUpdates: true,
+                tags: [],
+                unsubscribeToken: generateUniqueId(),
+            },
+        },
+        { new: true },
+    );
+
+    if (updatedUser) {
+        await seedNotificationPreferencesForUser({
+            domain: domain._id,
+            userId: updatedUser.userId,
+        });
+    }
+
+    await recordActivityAndTriggerSequences(updatedUser, domain);
+}
+
+async function recordActivityAndTriggerSequences(
+    user: InternalUser,
+    domain: Domain,
+) {
+    await recordActivity({
+        domain: domain._id,
+        userId: user.userId,
+        type: Constants.ActivityType.USER_CREATED,
+        entityId: user.userId,
+    });
+
+    if (user.subscribedToUpdates) {
+        await triggerSequences({
+            user: user,
+            event: Constants.EventType.SUBSCRIBER_ADDED,
+        });
+
+        await recordActivity({
+            domain: domain!._id,
+            userId: user.userId,
+            type: Constants.ActivityType.NEWSLETTER_SUBSCRIBED,
+            entityId: user.userId,
+        });
+    }
 }
 
 export async function getSegments(ctx: GQLContext): Promise<UserSegment[]> {
@@ -626,12 +741,43 @@ async function getUserContentInternal(ctx: GQLContext, user: User) {
 
     for (const membership of memberships) {
         if (membership.entityType === Constants.MembershipEntityType.COURSE) {
+            const distinctCourse = content.some(
+                (item: any) =>
+                    item.entityType === Constants.MembershipEntityType.COURSE &&
+                    item.entity.id === membership.entityId,
+            );
+
+            if (distinctCourse) {
+                continue;
+            }
+
             const course = await CourseModel.findOne({
                 courseId: membership.entityId,
                 domain: ctx.subdomain._id,
             });
 
             if (course) {
+                const publishedLessonIds = new Set(
+                    (
+                        await LessonModel.find(
+                            {
+                                domain: ctx.subdomain._id,
+                                courseId: course.courseId,
+                                published: true,
+                            },
+                            {
+                                lessonId: 1,
+                            },
+                        )
+                    ).map((lesson) => lesson.lessonId),
+                );
+                const completedPublishedLessons = (
+                    user.purchases.find(
+                        (progress: Progress) =>
+                            progress.courseId === course.courseId,
+                    )?.completedLessons || []
+                ).filter((lessonId) => publishedLessonIds.has(lessonId));
+
                 content.push({
                     entityType: Constants.MembershipEntityType.COURSE,
                     entity: {
@@ -639,12 +785,13 @@ async function getUserContentInternal(ctx: GQLContext, user: User) {
                         title: course.title,
                         slug: course.slug,
                         type: course.type,
-                        totalLessons: course.lessons.length,
-                        completedLessonsCount: user.purchases.find(
+                        totalLessons: publishedLessonIds.size,
+                        completedLessonsCount: completedPublishedLessons.length,
+                        featuredImage: course.featuredImage,
+                        certificateId: user.purchases.find(
                             (progress: Progress) =>
                                 progress.courseId === course.courseId,
-                        )?.completedLessons.length,
-                        featuredImage: course.featuredImage,
+                        )?.certificateId,
                     },
                 });
             }
@@ -707,9 +854,9 @@ export const hasActiveSubscription = async (
         ctx.subdomain.settings,
         member.subscriptionMethod,
     );
-    const isSubscriptionActive = await paymentMethod.validateSubscription(
-        member.subscriptionId,
-    );
+    const isSubscriptionActive = paymentMethod
+        ? await paymentMethod.validateSubscription(member.subscriptionId)
+        : false;
 
     return isSubscriptionActive;
 };
@@ -747,4 +894,176 @@ export const getMembership = async ({
         }));
 
     return membership;
+};
+
+export async function runPostMembershipTasks({
+    domain,
+    membership,
+    paymentPlan,
+}: {
+    domain: mongoose.Types.ObjectId;
+    membership: Membership;
+    paymentPlan: PaymentPlan;
+}) {
+    const user = await UserModel.findOne<InternalUser>({
+        userId: membership.userId,
+    });
+    if (!user) {
+        return;
+    }
+
+    let event: Event | undefined = undefined;
+    if (
+        paymentPlan.type !== Constants.PaymentPlanType.FREE &&
+        !membership.isIncludedInPlan
+    ) {
+        await recordActivity({
+            domain,
+            userId: user.userId,
+            type: constants.activityTypes[1],
+            entityId: membership.entityId,
+            metadata: {
+                cost: getPlanPrice(paymentPlan).amount,
+                purchaseId: membership.sessionId,
+            },
+        });
+    }
+    if (membership.entityType === Constants.MembershipEntityType.COMMUNITY) {
+        await recordActivity({
+            domain,
+            userId: user.userId,
+            type: constants.activityTypes[15],
+            entityId: membership.entityId,
+        });
+
+        event = Constants.EventType.COMMUNITY_JOINED as unknown as Event;
+    }
+    if (membership.entityType === Constants.MembershipEntityType.COURSE) {
+        const product = await CourseModel.findOne<InternalCourse>({
+            courseId: membership.entityId,
+        });
+        if (product) {
+            await addProductToUser({
+                user,
+                product,
+            });
+        }
+        await recordActivity({
+            domain,
+            userId: user.userId,
+            type: constants.activityTypes[0],
+            entityId: membership.entityId,
+            metadata: {
+                isIncludedInPlan: true,
+                paymentPlanId: paymentPlan.planId,
+            },
+        });
+
+        event = Constants.EventType.PRODUCT_PURCHASED as unknown as Event;
+    }
+
+    if (event) {
+        await triggerSequences({ user, event, data: membership.entityId });
+    }
+}
+
+async function addProductToUser({
+    user,
+    product,
+}: {
+    user: User | InternalUser;
+    product: InternalCourse;
+}) {
+    if (
+        !user.purchases.some(
+            (purchase: Progress) => purchase.courseId === product.courseId,
+        )
+    ) {
+        user.purchases.push({
+            courseId: product.courseId,
+            completedLessons: [],
+            accessibleGroups: [],
+        });
+        await (user as any).save();
+    }
+}
+
+export const getCertificate = async (
+    certificateId: string,
+    ctx: GQLContext,
+    courseId?: string,
+) => {
+    if (certificateId === "demo" && !courseId) {
+        throw new Error(responses.certificate_demo_course_id_required);
+    }
+
+    return await getCertificateInternal(certificateId, ctx.subdomain, courseId);
+};
+
+export const getCertificateInternal = async (
+    certificateId: string,
+    domain: Domain,
+    courseId?: string,
+) => {
+    const certificate =
+        certificateId !== "demo"
+            ? await CertificateModel.findOne({
+                  domain: domain._id,
+                  certificateId,
+              })
+            : {
+                  certificateId: "demo",
+                  createdAt: new Date(),
+              };
+
+    if (!certificate) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const user =
+        certificateId !== "demo"
+            ? ((await UserModel.findOne({
+                  domain: domain._id,
+                  userId: certificate.userId,
+              }).lean()) as unknown as User)
+            : {
+                  name: "John Doe",
+                  email: "john.doe@example.com",
+                  avatar: null,
+              };
+
+    const course = (await CourseModel.findOne({
+        domain: domain._id,
+        courseId: certificateId !== "demo" ? certificate.courseId : courseId,
+    }).lean()) as unknown as Course;
+
+    if (!course) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const creator = (await UserModel.findOne({
+        domain: domain._id,
+        userId: course.creatorId,
+    }).lean()) as unknown as User;
+
+    const template = (await CertificateTemplateModel.findOne({
+        domain: domain._id,
+        courseId: course.courseId,
+    }).lean()) as unknown as CertificateTemplate;
+
+    return {
+        certificateId: certificate.certificateId,
+        title: template?.title || "Certificate of Completion",
+        subtitle: template?.subtitle || "This certificate is awarded to",
+        description: template?.description || "for completing the course.",
+        signatureImage: template?.signatureImage || null,
+        signatureName: template?.signatureName || creator?.name,
+        signatureDesignation: template?.signatureDesignation || null,
+        logo: template?.logo || domain.settings?.logo || null,
+        productTitle: course?.title,
+        userName: user?.name || user?.email,
+        createdAt: certificate.createdAt,
+        userImage: user?.avatar || null,
+        productPageId: course?.pageId || null,
+    };
 };

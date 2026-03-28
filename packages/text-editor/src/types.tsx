@@ -1,11 +1,11 @@
-import type { CreateEditorStateProps } from "remirror";
-import type { RemirrorProps } from "@remirror/react";
+import type { JSONContent, Extensions } from "@tiptap/core";
+
+export type EditorJSONContent = JSONContent;
+export type EditorExtensions = Extensions;
 
 export interface ReactEditorProps {
-    stringHandler?: CreateEditorStateProps["stringHandler"];
-    initialContent?: RemirrorProps["initialContent"];
-    editable?: RemirrorProps["editable"];
-    autoFocus?: RemirrorProps["autoFocus"];
-    hooks?: RemirrorProps["hooks"];
+    initialContent?: JSONContent | string | null;
+    editable?: boolean;
+    autoFocus?: boolean;
     placeholder?: string;
 }

@@ -10,6 +10,7 @@ import {
     useRef,
     useMemo,
     useContext,
+    use,
 } from "react";
 import type { Email as EmailContent } from "@courselit/email-editor";
 import { useToast } from "@courselit/components-library";
@@ -48,21 +49,20 @@ const defaultEmailContent = {
     ],
 } as EmailContent;
 
-export default function EmailEditorPage({
-    params,
-}: {
-    params: {
+export default function EmailEditorPage(props: {
+    params: Promise<{
         productId: string;
         sectionId: string;
-    };
+    }>;
 }) {
+    const params = use(props.params);
     const { productId, sectionId } = params;
     const [email, setEmail] = useState<EmailContent | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const { toast } = useToast();
 
     const address = useContext(AddressContext);
-    const { product, loaded: productLoaded } = useProduct(productId, address);
+    const { product, loaded: productLoaded } = useProduct(productId);
     const [section, setSection] = useState<Group | null>(null);
 
     // Refs to track initial values and prevent saving during load
@@ -88,92 +88,6 @@ export default function EmailEditorPage({
             }
         }
     }, [product]);
-
-    // const updateGroup = async () => {
-    //     const query = `
-    //     mutation updateGroup($id: ID!, $courseId: String!, $name: String, $drip: DripInput) {
-    //         course: updateGroup(
-    //             id: $id,
-    //             courseId: $courseId,
-    //             name: $name,
-    //             drip: $drip
-    //         ) {
-    //             courseId,
-    //             groups {
-    //                 id,
-    //                 name,
-    //                 rank,
-    //                 collapsed,
-    //                 drip {
-    //                     type,
-    //                     status,
-    //                     delayInMillis,
-    //                     dateInUTC,
-    //                     email {
-    //                         content {
-    //                             content {
-    //                                 blockType,
-    //                                 settings
-    //                             },
-    //                             style,
-    //                             meta
-    //                         },
-    //                         subject
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     `;
-    //     const fetch = new FetchBuilder()
-    //         .setUrl(`${address.backend}/api/graph`)
-    //         .setPayload({
-    //             query,
-    //             variables: {
-    //                 id: sectionId,
-    //                 courseId: product?.courseId,
-    //                 name: sectionName,
-    //                 drip: dripType
-    //                     ? {
-    //                           status: enableDrip,
-    //                           type: dripType.toUpperCase().split("-")[0],
-    //                           delayInMillis: delay,
-    //                           dateInUTC: date,
-    //                           email: notifyUsers
-    //                               ? {
-    //                                     subject: emailSubject,
-    //                                     content: JSON.stringify(emailContent),
-    //                                 }
-    //                               : undefined,
-    //                       }
-    //                     : undefined,
-    //             },
-    //         })
-    //         .setIsGraphQLEndpoint(true)
-    //         .build();
-    //     console.log(query)
-    //     try {
-    //         setLoading(true);
-    //         const response = await fetch.exec();
-    //         if (response.course) {
-    //             // router.replace(
-    //             //     `/dashboard/product/${productId}/content`,
-    //             // );
-    //             toast({
-    //                 title: TOAST_TITLE_SUCCESS,
-    //                 description: TOAST_DESCRIPTION_CHANGES_SAVED,
-    //             });
-    //         }
-    //     } catch (err: any) {
-    //         // toast({
-    //         //     title: TOAST_TITLE_ERROR,
-    //         //     description: err.message,
-    //         //     variant: "destructive",
-    //         // });
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
 
     // Debounced save function
     const saveEmail = useCallback(

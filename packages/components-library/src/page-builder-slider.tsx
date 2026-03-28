@@ -1,5 +1,6 @@
 import { Help } from "@courselit/icons";
 import { Slider } from "./components/ui/slider";
+import { Input } from "./components/ui/input";
 import Tooltip from "./tooltip";
 import { X } from "lucide-react";
 import IconButton from "./icon-button";
@@ -13,6 +14,7 @@ export default function PageBuilderSlider({
     tooltip,
     className,
     allowsReset = false,
+    unit = "px",
 }: {
     title: string;
     min: number;
@@ -22,6 +24,7 @@ export default function PageBuilderSlider({
     tooltip?: string;
     className?: string;
     allowsReset?: boolean;
+    unit?: string;
 }) {
     return (
         <div className={`flex flex-col gap-2 ${className}`}>
@@ -34,10 +37,32 @@ export default function PageBuilderSlider({
                         </Tooltip>
                     )}
                 </div>
-                <div className="flex gap-2">
-                    <p className="text-xs bg-gray-100 p-1 rounded border">
-                        {value}
-                    </p>
+                <div className="flex gap-2 items-center">
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
+                            <Input
+                                type="number"
+                                inputMode="numeric"
+                                min={min}
+                                max={max}
+                                value={Number.isFinite(value) ? value : 0}
+                                onChange={(e) => {
+                                    const raw = e.currentTarget.value;
+                                    const parsed = Number(raw);
+                                    if (Number.isNaN(parsed)) return;
+                                    const clamped = Math.min(
+                                        Math.max(parsed, min),
+                                        max,
+                                    );
+                                    onChange(clamped);
+                                }}
+                                className="h-7 w-16 rounded-md border border-input bg-background px-2 py-1 text-xs text-center"
+                            />
+                            <span className="text-xs text-muted-foreground">
+                                {unit}
+                            </span>
+                        </div>
+                    </div>
                     {allowsReset && (
                         <Tooltip title="Reset">
                             <IconButton

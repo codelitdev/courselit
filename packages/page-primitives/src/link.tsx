@@ -23,7 +23,7 @@ export const Link: React.FC<LinkProps> = ({
     const linkStyles = theme?.interactives?.link;
     const classes = cn(
         // Base styles
-        "font-medium",
+        "font-medium cursor-pointer",
         // Theme typography
         typographyStyles?.fontFamily,
         typographyStyles?.fontSize,

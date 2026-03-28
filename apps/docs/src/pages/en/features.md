@@ -53,6 +53,14 @@ Send broadcasts and email sequences to your audience.
         </p>
         </a>
     </section>
+    <section class="card">
+        <a href="/en/schools/set-up-payments">
+        <header>Payment Gateway Integration</header>
+        <p>
+Integrate your own payment gateway, such as Stripe, and keep 100% of your earnings.
+        </p>
+        </a>
+    </section>
 </div>
 
 ### Other noteworthy features
@@ -64,10 +72,6 @@ Effortlessly track your students' progress, control platform access, and more.
 ##### Powerful user management
 
 Invite your entire team and control their access with our intuitive permission editor.
-
-##### Payment integration
-
-Start getting paid directly with ease—integrate your own [Stripe](https://stripe.com) or [Razorpay](https://razorpay.com) account in just a few clicks!
 
 ##### Third Party Integrations
 
@@ -83,4 +87,4 @@ Read and modify the source code to build your own variations.
 
 ## Stuck somewhere?
 
-We are always here for you. Come chat with us in our <a href="https://discord.com/invite/GR4bQsN" target="_blank">Discord</a> channel or send a tweet at <a href="https://twitter.com/courselit" target="_blank">@CourseLit</a>.
+We are always here for you. Come chat with us in our <a href="https://discord.com/invite/GR4bQsN" target="_blank">Discord</a> channel or send a tweet at <a href="https://x.com/courselit" target="_blank">@CourseLit</a>.

@@ -132,7 +132,9 @@ export default function UsersHub() {
     }, [address.backend, page, rowsPerPage, filters, filtersAggregator]);
 
     useEffect(() => {
-        loadUsers();
+        if (checkPermission(profile?.permissions!, [permissions.manageUsers])) {
+            loadUsers();
+        }
     }, [loadUsers]);
 
     const onFilterChange = useCallback(({ filters, aggregator, segmentId }) => {
@@ -141,12 +143,15 @@ export default function UsersHub() {
         setPage(1);
     }, []);
 
-    if (!checkPermission(profile.permissions!, [permissions.manageUsers])) {
+    if (!profile) {
         return <LoadingScreen />;
     }
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[permissions.manageUsers]}
+        >
             <div className="flex justify-between items-center">
                 <h1 className="text-4xl font-semibold mb-4">
                     {USERS_MANAGER_PAGE_HEADING}
@@ -154,10 +159,7 @@ export default function UsersHub() {
             </div>
             <div className="w-full mt-4 space-y-8">
                 <div className="mb-4">
-                    <FilterContainer
-                        address={address}
-                        onChange={onFilterChange}
-                    />
+                    <FilterContainer onChange={onFilterChange} />
                 </div>
                 <Table>
                     <TableHeader>
@@ -271,7 +273,7 @@ export default function UsersHub() {
                                       </TableCell>
                                       <TableCell>
                                           {
-                                              user.content.filter(
+                                              (user.content ?? []).filter(
                                                   (content) =>
                                                       content.entityType.toLowerCase() ===
                                                       MembershipEntityType.COURSE,
@@ -280,7 +282,7 @@ export default function UsersHub() {
                                       </TableCell>
                                       <TableCell>
                                           {
-                                              user.content.filter(
+                                              (user.content ?? []).filter(
                                                   (content) =>
                                                       content.entityType.toLowerCase() ===
                                                       MembershipEntityType.COMMUNITY,

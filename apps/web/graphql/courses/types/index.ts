@@ -23,6 +23,8 @@ import { getUser } from "../../users/logic";
 const { lessonMetaType } = lessonTypes;
 const { course, download, blog, costPaid, costEmail, costFree } = constants;
 import sequenceTypes from "../../mails/types";
+import { getPlans } from "@/graphql/paymentplans/logic";
+import GQLContext from "@/models/GQLContext";
 
 const courseStatusType = new GraphQLEnumType({
     name: "CoursePrivacyType",
@@ -129,7 +131,6 @@ const courseType = new GraphQLObjectType({
         type: { type: new GraphQLNonNull(courseTypeFilters) },
         tags: { type: new GraphQLList(GraphQLString) },
         creatorId: { type: new GraphQLNonNull(GraphQLString) },
-        creatorName: { type: GraphQLString },
         user: {
             type: userTypes.userType,
             resolve: async (course, args, context, info) => {
@@ -139,7 +140,11 @@ const courseType = new GraphQLObjectType({
         lessons: {
             type: new GraphQLList(lessonMetaType),
             resolve: (course, args, context, info) =>
-                getAllLessons(course, context),
+                getAllLessons(
+                    course,
+                    context,
+                    Boolean((course as any).__forcePublishedLessons),
+                ),
         },
         updatedAt: { type: new GraphQLNonNull(GraphQLString) },
         slug: { type: new GraphQLNonNull(GraphQLString) },
@@ -154,10 +159,17 @@ const courseType = new GraphQLObjectType({
         firstLesson: { type: GraphQLString },
         paymentPlans: {
             type: new GraphQLList(paymentPlansTypes.paymentPlan),
+            resolve: (course, _, ctx: GQLContext, __) =>
+                getPlans({
+                    entityId: course.courseId,
+                    entityType: Constants.MembershipEntityType.COURSE,
+                    ctx,
+                }),
         },
         defaultPaymentPlan: { type: GraphQLString },
         sales: { type: GraphQLFloat },
         customers: { type: GraphQLInt },
+        certificate: { type: GraphQLBoolean },
     },
 });
 
@@ -174,6 +186,7 @@ const courseUpdateInput = new GraphQLInputObjectType({
     fields: {
         id: { type: new GraphQLNonNull(GraphQLString) },
         title: { type: GraphQLString },
+        slug: { type: GraphQLString },
         costType: { type: courseCostType },
         cost: { type: GraphQLFloat },
         published: { type: GraphQLBoolean },
@@ -182,6 +195,7 @@ const courseUpdateInput = new GraphQLInputObjectType({
         description: { type: GraphQLString },
         featuredImage: { type: mediaTypes.mediaInputType },
         leadMagnet: { type: GraphQLBoolean },
+        certificate: { type: GraphQLBoolean },
     },
 });
 
@@ -210,7 +224,6 @@ const postType = new GraphQLObjectType({
         id: { type: new GraphQLNonNull(GraphQLID) },
         title: { type: new GraphQLNonNull(GraphQLString) },
         description: { type: new GraphQLNonNull(GraphQLString) },
-        creatorName: { type: GraphQLString },
         updatedAt: { type: new GraphQLNonNull(GraphQLString) },
         slug: { type: new GraphQLNonNull(GraphQLString) },
         courseId: { type: new GraphQLNonNull(GraphQLString) },
@@ -232,7 +245,6 @@ const publicCoursesType = new GraphQLObjectType({
         cost: { type: new GraphQLNonNull(GraphQLFloat) },
         description: { type: GraphQLString },
         type: { type: new GraphQLNonNull(courseTypeFilters) },
-        creatorName: { type: GraphQLString },
         updatedAt: { type: new GraphQLNonNull(GraphQLString) },
         slug: { type: new GraphQLNonNull(GraphQLString) },
         featuredImage: {
@@ -258,6 +270,19 @@ const enrolledCourses = new GraphQLObjectType({
     },
 });
 
+const certificateTemplateType = new GraphQLObjectType({
+    name: "CertificateTemplate",
+    fields: {
+        title: { type: GraphQLString },
+        subtitle: { type: GraphQLString },
+        description: { type: GraphQLString },
+        signatureImage: { type: mediaTypes.mediaType },
+        signatureName: { type: GraphQLString },
+        signatureDesignation: { type: GraphQLString },
+        logo: { type: mediaTypes.mediaType },
+    },
+});
+
 export default {
     courseType,
     courseStatusType,
@@ -270,4 +295,5 @@ export default {
     reports,
     dripType,
     dripInputType,
+    certificateTemplateType,
 };

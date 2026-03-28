@@ -1,20 +1,20 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Pencil, Check, X, Loader2 } from "lucide-react";
-import {
-    TextEditor,
-    TextEditorEmptyDoc,
-    TextRenderer,
-    useToast,
-} from "@courselit/components-library";
+import { useToast } from "@courselit/components-library";
+import { TextRenderer } from "@courselit/page-blocks";
 import { isTextEditorNonEmpty } from "@ui-lib/utils";
-import { TOAST_TITLE_SUCCESS } from "@ui-config/strings";
+import { BUTTON_SAVING, TOAST_TITLE_SUCCESS } from "@ui-config/strings";
+import { AddressContext } from "@components/contexts";
+import type { TextEditorContent } from "@courselit/common-models";
+import { Editor, emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
+import WidgetErrorBoundary from "@components/public/base-layout/template/widget-error-boundary";
 
 interface BannerComponentProps {
     canEdit: boolean;
-    initialBannerText: Record<string, unknown>;
-    onSaveBanner: (text: Record<string, unknown>) => Promise<void>;
+    initialBannerText?: TextEditorContent;
+    onSaveBanner: (text: TextEditorContent) => Promise<void>;
 }
 
 export default function Banner({
@@ -22,13 +22,17 @@ export default function Banner({
     initialBannerText,
     onSaveBanner,
 }: BannerComponentProps) {
-    const [bannerText, setBannerText] = useState(
-        initialBannerText || TextEditorEmptyDoc,
-    );
+    const initialContent: TextEditorContent =
+        initialBannerText ||
+        (TextEditorEmptyDoc as unknown as TextEditorContent);
+    const [bannerText, setBannerText] =
+        useState<TextEditorContent>(initialContent);
     const [isEditing, setIsEditing] = useState(false);
-    const [editedBannerText, setEditedBannerText] = useState(bannerText);
+    const [editedBannerText, setEditedBannerText] =
+        useState<TextEditorContent>(initialContent);
     const [isSaving, setIsSaving] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const address = useContext(AddressContext);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -59,7 +63,12 @@ export default function Banner({
         setIsEditing(false);
     };
 
-    if (!canEdit && !isTextEditorNonEmpty(initialBannerText)) {
+    const hasExistingBanner = isTextEditorNonEmpty(
+        initialBannerText ||
+            (TextEditorEmptyDoc as unknown as TextEditorContent),
+    );
+
+    if (!canEdit && !hasExistingBanner) {
         return null;
     }
 
@@ -70,7 +79,9 @@ export default function Banner({
                     <>
                         <AlertDescription>
                             {isTextEditorNonEmpty(bannerText) ? (
-                                <TextRenderer json={bannerText} />
+                                <WidgetErrorBoundary widgetName="text-editor">
+                                    <TextRenderer json={bannerText} />
+                                </WidgetErrorBoundary>
                             ) : (
                                 canEdit && (
                                     <div className="flex items-center space-x-2 text-muted-foreground">
@@ -98,10 +109,13 @@ export default function Banner({
                     </>
                 ) : (
                     <div className="space-y-2">
-                        <TextEditor
+                        <Editor
                             showToolbar={false}
                             initialContent={editedBannerText}
-                            onChange={(value) => setEditedBannerText(value)}
+                            onChange={(value) =>
+                                setEditedBannerText(value as TextEditorContent)
+                            }
+                            url={address.backend}
                         />
                         <div className="flex justify-end space-x-2">
                             <Button
@@ -121,7 +135,7 @@ export default function Banner({
                                 {isSaving ? (
                                     <>
                                         <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                                        Saving...
+                                        {BUTTON_SAVING}
                                     </>
                                 ) : (
                                     <>

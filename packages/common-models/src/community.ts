@@ -1,11 +1,11 @@
 import { Media } from "./media";
-import { PaymentPlan } from "./payment-plan";
 import { TextEditorContent } from "./text-editor-content";
 
 export interface Community {
     communityId: string;
     name: string;
-    description: Record<string, unknown>;
+    slug: string;
+    description: TextEditorContent;
     banner: TextEditorContent | null;
     categories: string[];
     enabled: boolean;
@@ -13,7 +13,6 @@ export interface Community {
     pageId: string;
     products: string[];
     autoAcceptMembers: boolean;
-    paymentPlans: PaymentPlan[];
     defaultPaymentPlan?: string;
     featuredImage?: Media;
     membersCount: number;

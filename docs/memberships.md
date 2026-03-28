@@ -62,7 +62,9 @@ This document provides a comprehensive overview of the payment lifecycle for mem
     - The membership remains or transitions to `ACTIVE`.
     - **EMI-specific check**: If the number of `PAID` invoices matches the payment plan’s installments, the subscription is automatically canceled. The membership remains `ACTIVE`.
 
-## Mermaid Diagram: Full Payment Lifecycle
+## Diagrams
+
+### Payment flow
 
 ```mermaid
 sequenceDiagram
@@ -78,4 +80,35 @@ sequenceDiagram
     PaymentGateway-->>Backend: Send payment success webhook
     Backend->>Backend: Update Invoice (PAID), Membership (ACTIVE)
     Backend->>User: Grant access to resource
+```
+
+## Membership flow
+
+```mermaid
+graph TD
+    A[User Joins Community] --> B{Payment Plan Type}
+    B -->|FREE| C{Auto Accept Members?}
+    B -->|PAID| D[Payment Processing]
+
+    C -->|Yes| E[Activate Membership: ACTIVE]
+    C -->|No| F[Activate Membership: PENDING]
+
+    D --> G[Payment Success<br/>Webhook]
+    G --> E
+
+    E --> M[Membership active]
+    F --> J{Memberhips approved}
+
+    J --> |Yes| M
+    J --> |No| Y
+
+    I -->|Yes| Q[Add memberships for included products, Generate notifications, Run triggers]
+    I -->|No| O[No Course Access]
+    M --> I{Plan has included products?}
+
+    O --> X[End]
+    Q --> X
+
+    Y[Admin Rejects Member] --> Z[Delete existing included membership]
+    Z --> X
 ```

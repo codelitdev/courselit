@@ -46,7 +46,9 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const session = await auth();
+        const session = await auth.api.getSession({
+            headers: req.headers,
+        });
         const user = await getUser(session, domain._id);
 
         if (!user) {
@@ -67,7 +69,16 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        if (!(entity.paymentPlans as unknown as string[]).includes(planId)) {
+        // Verify the payment plan belongs to this entity
+        const planExists = await PaymentPlanModel.exists({
+            domain: domain._id,
+            planId: planId,
+            entityId: id,
+            entityType: type,
+            archived: false,
+        });
+
+        if (!planExists) {
             return Response.json(
                 { message: "Invalid payment plan" },
                 { status: 404 },

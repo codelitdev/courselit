@@ -82,3 +82,43 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* Video protection styles - works without JavaScript */
+@layer utilities {
+    video {
+        /* Disable right-click context menu */
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        /* Disable drag and drop */
+        -webkit-user-drag: none;
+        -khtml-user-drag: none;
+        -moz-user-drag: none;
+        -o-user-drag: none;
+        user-drag: none;
+        /* Disable highlighting */
+        -webkit-tap-highlight-color: transparent;
+        /* Disable outline */
+        outline: none;
+    }
+
+    audio {
+        /* Same protection for audio elements */
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-user-drag: none;
+        -khtml-user-drag: none;
+        -moz-user-drag: none;
+        -o-user-drag: none;
+        user-drag: none;
+        -webkit-tap-highlight-color: transparent;
+        outline: none;
+    }
+}

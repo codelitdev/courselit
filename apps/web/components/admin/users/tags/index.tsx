@@ -8,7 +8,6 @@ import {
     TableRow,
     useToast,
 } from "@courselit/components-library";
-import { AppDispatch } from "@courselit/state-management";
 import {
     BTN_NEW_TAG,
     DELETE_TAG_POPUP_DESC,
@@ -25,17 +24,13 @@ import {
 } from "@ui-config/strings";
 import { useCallback } from "react";
 import { useEffect } from "react";
-import { actionCreators } from "@courselit/state-management";
 import { FetchBuilder } from "@courselit/utils";
 import { Address } from "@courselit/common-models";
 import { useState } from "react";
 import { MoreVert } from "@courselit/icons";
-import { usePathname } from "next/navigation";
-const { networkAction } = actionCreators;
 
 interface TagsProps {
     address: Address;
-    dispatch?: AppDispatch;
 }
 
 interface TagWithDetails {
@@ -43,10 +38,9 @@ interface TagWithDetails {
     count: number;
 }
 
-export default function Tags({ address, dispatch }: TagsProps) {
+export default function Tags({ address }: TagsProps) {
     const [tags, setTags] = useState<TagWithDetails[]>([]);
     const [loading, setLoading] = useState(false);
-    const path = usePathname();
     const { toast } = useToast();
 
     const getTags = useCallback(async () => {
@@ -65,7 +59,6 @@ export default function Tags({ address, dispatch }: TagsProps) {
             .build();
         try {
             setLoading(true);
-            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.tags) {
                 setTags(response.tags);
@@ -73,9 +66,8 @@ export default function Tags({ address, dispatch }: TagsProps) {
         } catch (err) {
         } finally {
             setLoading(false);
-            dispatch && dispatch(networkAction(false));
         }
-    }, [address.backend, dispatch]);
+    }, [address.backend]);
 
     useEffect(() => {
         getTags();
@@ -101,7 +93,6 @@ export default function Tags({ address, dispatch }: TagsProps) {
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.tags) {
                 setTags(response.tags);
@@ -113,7 +104,6 @@ export default function Tags({ address, dispatch }: TagsProps) {
                 variant: "destructive",
             });
         } finally {
-            dispatch && dispatch(networkAction(false));
         }
     };
 
@@ -137,7 +127,6 @@ export default function Tags({ address, dispatch }: TagsProps) {
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch && dispatch(networkAction(true));
             const response = await fetch.exec();
             if (response.tags) {
                 setTags(response.tags);
@@ -149,7 +138,6 @@ export default function Tags({ address, dispatch }: TagsProps) {
                 variant: "destructive",
             });
         } finally {
-            dispatch && dispatch(networkAction(false));
         }
     };
 

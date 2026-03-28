@@ -30,6 +30,7 @@ export default function CommentSection({
     const [post, setPost] = useState<CommunityPost>();
     const { profile } = useContext(ProfileContext);
     const { toast } = useToast();
+    const [isPosting, setIsPosting] = useState(false);
 
     const scrollToBottom = () => {
         commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -106,6 +107,7 @@ export default function CommentSection({
                             mediaId
                             file
                             thumbnail
+                            size
                         }
                     }
                     likesCount
@@ -182,6 +184,7 @@ export default function CommentSection({
                             mediaId
                             file
                             thumbnail
+                            size
                         }
                     }
                     likesCount
@@ -221,6 +224,7 @@ export default function CommentSection({
             .setIsGraphQLEndpoint(true)
             .build();
 
+        setIsPosting(true);
         try {
             const response = await fetch.exec();
             if (response.comment) {
@@ -244,6 +248,8 @@ export default function CommentSection({
                 title: "Error",
                 description: err.message,
             });
+        } finally {
+            setIsPosting(false);
         }
     };
 
@@ -274,6 +280,7 @@ export default function CommentSection({
                             mediaId
                             file
                             thumbnail
+                            size
                         }
                     }
                     likesCount
@@ -360,6 +367,7 @@ export default function CommentSection({
                             mediaId
                             file
                             thumbnail
+                            size
                         }
                     }
                     likesCount
@@ -513,6 +521,7 @@ export default function CommentSection({
                             mediaId
                             file
                             thumbnail
+                            size
                         }
                     }
                     likesCount
@@ -585,7 +594,7 @@ export default function CommentSection({
 
     return (
         <div className="flex flex-col gap-4">
-            <div className="space-y-4 max-h-[300px] overflow-y-auto">
+            <div className="space-y-4 overflow-y-auto">
                 {comments.map((comment) => (
                     <Comment
                         communityId={communityId}
@@ -607,11 +616,12 @@ export default function CommentSection({
                             )
                         }
                         onDelete={handleDeleteComment}
+                        isPosting={isPosting}
                     />
                 ))}
                 <div ref={commentsEndRef} />
             </div>
-            {!profile.name && (
+            {!profile?.name && (
                 <div className="text-center text-gray-500">
                     Complete your{" "}
                     <span className="underline">
@@ -620,14 +630,16 @@ export default function CommentSection({
                     to join this community or post here
                 </div>
             )}
-            {profile.name && (
+            {profile?.name && (
                 <div className="flex flex-col gap-2">
                     <Textarea
                         placeholder="Add a comment..."
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
                     />
-                    <Button onClick={handlePostComment}>Post Comment</Button>
+                    <Button onClick={handlePostComment} disabled={isPosting}>
+                        {isPosting ? "Posting..." : "Post Comment"}
+                    </Button>
                 </div>
             )}
         </div>

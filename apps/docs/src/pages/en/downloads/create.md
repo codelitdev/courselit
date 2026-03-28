@@ -52,7 +52,11 @@ Now that we have added some content to the course, it's time to publish. By defa
 
 11. To share your digital download with your audience, simply copy the URL and share it. When your users click on the `Buy now` button, they will be redirected to the login screen so that they can add the course into their accounts.
 
-[Check out the guide on how to track stats for your digital download](/en/downloads/reports)
+## Control file visibility
+
+By default, files are unpublished i.e., it will not be included in the ZIP download. To included it in the ZIP file, toggle the `Publish` switch as shown.
+
+![Publish file](/assets/downloads/visibility.png)
 
 ## Stuck somewhere?
 

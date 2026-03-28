@@ -239,11 +239,13 @@ table {
 tr:nth-of-type(odd) {
     background: var(--theme-bg-hover);
 }
+
 th {
     background: var(--color-black);
     color: var(--theme-color);
     font-weight: bold;
 }
+
 td,
 th {
     padding: 6px;
@@ -279,6 +281,8 @@ blockquote {
 
 img {
     max-width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--theme-divider);
 }
 
 .flex {
@@ -322,16 +326,20 @@ h2.heading {
     border-left-color: var(--theme-accent);
     color: var(--theme-accent);
 }
+
 .heading-link:focus-within {
     color: var(--theme-text-light);
     border-left-color: hsla(var(--color-gray-40), 1);
 }
+
 .heading-link svg {
     opacity: 0.6;
 }
+
 .heading-link:hover svg {
     opacity: 0.8;
 }
+
 .heading-link a {
     display: inline-flex;
     gap: 0.5em;
@@ -342,6 +350,7 @@ h2.heading {
 .heading-link.depth-3 {
     padding-left: 2rem;
 }
+
 .heading-link.depth-4 {
     padding-left: 3rem;
 }

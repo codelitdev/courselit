@@ -5,13 +5,10 @@ import { UIConstants } from "@courselit/common-models";
 const { permissions } = UIConstants;
 
 export default {
-    domainNameForSingleTenancy: "main",
+    multitenant: process.env.MULTITENANT === "true",
+    domainNameForSingleTenancy:
+        process.env.DOMAIN_NAME_FOR_SINGLE_TENANCY || "main",
     schoolNameForSingleTenancy: "My school",
-    dbConnectionString:
-        process.env.DB_CONNECTION_STRING ||
-        `mongodb://localhost/${
-            process.env.NODE_ENV === "test" ? "test" : "app"
-        }`,
 
     // product types
     course: "course",
@@ -26,6 +23,7 @@ export default {
     quiz: "quiz",
     file: "file",
     embed: "embed",
+    scorm: "scorm",
 
     // media access type
     publicMedia: "public",
@@ -105,10 +103,22 @@ export default {
 
     // durations
     analyticsDurations: ["1d", "7d", "30d", "90d", "1y", "lifetime"],
+    relativeDripUnitInMillis: process.env.NEXT_PUBLIC_RELATIVE_DRIP_UNIT_MS
+        ? +process.env.NEXT_PUBLIC_RELATIVE_DRIP_UNIT_MS
+        : 86_400_000,
 
     // mails
     minMailingAddressLength: 10,
 
     // payment plan
     internalPaymentPlanName: "Internal Payment Plan",
+
+    // scorm configuration
+    cacheEnabled: !!process.env.CACHE_DIR,
+    scormCacheDir: process.env.CACHE_DIR
+        ? `${process.env.CACHE_DIR}/scorm`
+        : "",
+    scormPackageSizeLimit: process.env.SCORM_PACKAGE_SIZE_LIMIT
+        ? +process.env.SCORM_PACKAGE_SIZE_LIMIT
+        : 300 * 1024 * 1024, // 300MB
 } as const;

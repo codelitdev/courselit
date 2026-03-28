@@ -11,15 +11,13 @@ You can invite customers to your published products. This comes in handy in cert
 
 ## Invite a customer
 
-1. Go to the `Products` lobby and click on the three dots menu of the product you want to invite a customer to.
+1. From the `Products` section in the dashboard, select your product to open its dashboard.
 
-    ![Invite customer menu item](/assets/products/invite-customer-context-menu.png)
-
-2. Click on the `Invite a customer` menu item from the three dots menu.
+2. Click on the `Invite a customer` menu item in the actions menu.
 
     ![Invite customer menu item selected](/assets/products/invite-customer-context-menu-invite.png)
 
-3. On the subsequent screen, add the email of the customer.
+3. On the following screen, enter the customer's email address.
 
     ![Invite customer screen](/assets/products/invite-customer-screen.png)
 
@@ -35,13 +33,13 @@ You can invite customers to your published products. This comes in handy in cert
 
 7. You can invite more users by repeating the same process.
 
-## Invited customer's experience
+## The invited customer's experience
 
 The invited customer will receive an email stating they have been added to a product and can log in to access it.
 
 ![Invited customer's email](/assets/products/invite-customer-email.png)
 
-Once logged in, they will see the products they have been added to in the `My Content` area. To access it, they can click on the `My Content` option from the `Session` button on the home page of the school.
+Once logged in, they will see the products they have been added to in the `My Content` area. To access this area, they can click on the `My Content` option from the `Session` button on the school's home page.
 
 ![Invited customer's My Content area](/assets/products/invite-customer-my-content.png)
 

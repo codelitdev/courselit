@@ -2,7 +2,8 @@ import React from "react";
 import { useState } from "react";
 import { WidgetProps } from "@courselit/common-models";
 import Settings from "./settings";
-import { Link, TextRenderer } from "@courselit/components-library";
+import { Link } from "@courselit/components-library";
+import { TextRenderer } from "../../components";
 import { columns as defaultColumns } from "./defaults";
 import {
     Button,
@@ -71,7 +72,10 @@ export default function Widget({
                             }`}
                         >
                             <Subheader1 theme={overiddenTheme} component="span">
-                                <TextRenderer json={description} />
+                                <TextRenderer
+                                    json={description}
+                                    theme={overiddenTheme}
+                                />
                             </Subheader1>
                         </div>
                     )}
@@ -138,6 +142,7 @@ export default function Widget({
                                         >
                                             <TextRenderer
                                                 json={item.description}
+                                                theme={overiddenTheme}
                                             />
                                         </Text1>
                                         <div className="grow">

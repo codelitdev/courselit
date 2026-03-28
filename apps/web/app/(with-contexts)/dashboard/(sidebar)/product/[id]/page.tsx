@@ -41,6 +41,7 @@ import {
     PRODUCT_EMPTY_WARNING,
     PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER,
     PRODUCT_UNPUBLISHED_WARNING,
+    MANAGE_LINK_TEXT,
     TOAST_TITLE_SUCCESS,
     VIEW_PAGE_MENU_ITEM,
 } from "@ui-config/strings";
@@ -53,10 +54,11 @@ import { truncate } from "@ui-lib/utils";
 import MetricCard from "./metric-card";
 import { useToast, Tooltip as TooltipCL } from "@courselit/components-library";
 import { useActivities } from "@/hooks/use-activities";
-import { Constants } from "@courselit/common-models";
+import { Constants, UIConstants } from "@courselit/common-models";
 import Resources from "@components/resources";
 import { TIME_RANGES } from "@ui-config/constants";
 import SalesCard from "../../overview/sales-card";
+const { permissions } = UIConstants;
 
 const { ActivityType } = Constants;
 
@@ -66,7 +68,7 @@ export default function DashboardPage() {
     const [timeRange, setTimeRange] = useState("7d");
     // const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const address = useContext(AddressContext);
-    const { product, loaded: productLoaded } = useProduct(productId, address);
+    const { product, loaded: productLoaded } = useProduct(productId);
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
         {
@@ -97,7 +99,13 @@ export default function DashboardPage() {
     };
 
     return (
-        <DashboardContent breadcrumbs={breadcrumbs}>
+        <DashboardContent
+            breadcrumbs={breadcrumbs}
+            permissions={[
+                permissions.manageAnyCourse,
+                permissions.manageCourse,
+            ]}
+        >
             {!product?.published && (
                 <div className="bg-red-400 p-2 mb-4 text-sm text-white rounded-md">
                     {PRODUCT_UNPUBLISHED_WARNING}{" "}
@@ -105,7 +113,7 @@ export default function DashboardPage() {
                         href={`/dashboard/product/${productId}/manage#publish`}
                         className="underline"
                     >
-                        Manage
+                        {MANAGE_LINK_TEXT}
                     </Link>
                 </div>
             )}

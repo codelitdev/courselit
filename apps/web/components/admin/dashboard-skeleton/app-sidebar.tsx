@@ -32,16 +32,26 @@ import { ProfileContext, SiteInfoContext } from "@components/contexts";
 import { checkPermission } from "@courselit/utils";
 import { Profile, UIConstants } from "@courselit/common-models";
 import {
+    GET_SET_UP,
     MY_CONTENT_HEADER,
     SIDEBAR_MENU_BLOGS,
     SIDEBAR_MENU_MAILS,
     SIDEBAR_MENU_PAGES,
     SIDEBAR_MENU_SETTINGS,
     SIDEBAR_MENU_USERS,
+    SITE_CUSTOMISATIONS_SETTING_HEADER,
+    SITE_MISCELLANEOUS_SETTING_HEADER,
+    SITE_SETTINGS_SECTION_GENERAL,
+    SITE_SETTINGS_SECTION_MAILS,
+    SITE_SETTINGS_SECTION_PAYMENT,
 } from "@ui-config/strings";
 import { NavSecondary } from "./nav-secondary";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ComponentProps, useContext } from "react";
+import { ComponentProps, useContext, useEffect, useState } from "react";
+import { CircularProgress } from "@components/circular-progress";
+import { hasPermissionToAccessSetupChecklist } from "@/lib/utils";
+import { ADMIN_PERMISSIONS } from "@ui-config/constants";
+import { getSetupChecklist } from "@/app/(with-contexts)/dashboard/(sidebar)/action";
 const { permissions } = UIConstants;
 
 export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
@@ -50,9 +60,36 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
     const path = usePathname();
     const searchParams = useSearchParams();
     const tab = searchParams?.get("tab");
+    const [checklist, setChecklist] = useState<string[]>([]);
+    const [totalChecklistItems, setTotalChecklistItems] = useState<number>(0);
+
+    useEffect(() => {
+        const loadChecklist = async () => {
+            try {
+                const setupChecklist = await getSetupChecklist();
+                if (!setupChecklist) {
+                    return;
+                }
+                setChecklist(setupChecklist.checklist);
+                setTotalChecklistItems(setupChecklist.total);
+            } catch (error) {}
+        };
+
+        if (
+            profile &&
+            profile.userId &&
+            hasPermissionToAccessSetupChecklist(profile.permissions!)
+        ) {
+            loadChecklist();
+        }
+    }, [profile]);
+
+    if (!profile) {
+        return null;
+    }
 
     const { navMainItems, navProjectItems, navSecondaryItems } =
-        getSidebarItems(profile, path, tab);
+        getSidebarItems({ profile, path, tab, checklist, totalChecklistItems });
 
     return (
         <Sidebar collapsible="icon" {...props}>
@@ -61,18 +98,14 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
                             <Link href="/">
-                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground overflow-hidden">
                                     <Image
                                         borderRadius={1}
                                         src={siteInfo.logo?.file || ""}
-                                        width="w-[16px]"
-                                        height="h-[16px]"
                                         alt="logo"
+                                        className="w-full h-full object-cover"
                                     />
                                 </div>
-                                {/* <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                                    <Command className="size-4" />
-                                </div> */}
                                 <div className="grid flex-1 text-left text-sm leading-tight">
                                     <span className="truncate font-semibold">
                                         {siteInfo.title}
@@ -96,7 +129,19 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
     );
 }
 
-function getSidebarItems(profile: Partial<Profile>, path, tab) {
+function getSidebarItems({
+    profile,
+    checklist = [],
+    totalChecklistItems = 0,
+    path,
+    tab,
+}: {
+    profile: Partial<Profile>;
+    checklist: string[];
+    totalChecklistItems: number;
+    path?: string | null;
+    tab?: string | null;
+}) {
     const navMainItems: any[] = [];
 
     if (
@@ -110,7 +155,6 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
             url: "/dashboard/overview",
             icon: Target,
             isActive: path === "/dashboard/overview",
-            // items: [],
         });
         navMainItems.push({
             title: "Products",
@@ -118,7 +162,7 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
             icon: Box,
             isActive:
                 path === "/dashboard/products" ||
-                path.startsWith("/dashboard/product"),
+                path?.startsWith("/dashboard/product"),
             items: [],
         });
     }
@@ -139,7 +183,7 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
             icon: Text,
             isActive:
                 path === "/dashboard/blogs" ||
-                path.startsWith("/dashboard/blog"),
+                path?.startsWith("/dashboard/blog"),
             items: [],
         });
     }
@@ -150,7 +194,7 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
             icon: Globe,
             isActive:
                 path === "/dashboard/pages" ||
-                path.startsWith("/dashboard/page"),
+                path?.startsWith("/dashboard/page"),
             items: [],
         });
     }
@@ -179,8 +223,8 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
             url: "#",
             icon: Mail,
             isActive:
-                path.startsWith("/dashboard/mails") ||
-                path.startsWith("/dashboard/mail"),
+                path?.startsWith("/dashboard/mails") ||
+                path?.startsWith("/dashboard/mail"),
             items: [
                 {
                     title: "Broadcasts",
@@ -202,35 +246,39 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
     if (profile.permissions!.includes(permissions.manageSettings)) {
         const items = [
             {
-                title: "Branding",
-                url: "/dashboard/settings?tab=Branding",
-                isActive:
-                    `${path}?tab=${tab}` === "/dashboard/settings?tab=Branding",
-            },
-            {
-                title: "Payment",
-                url: "/dashboard/settings?tab=Payment",
-                isActive:
-                    `${path}?tab=${tab}` === "/dashboard/settings?tab=Payment",
-            },
-            {
-                title: "Mails",
-                url: "/dashboard/settings?tab=Mails",
-                isActive:
-                    `${path}?tab=${tab}` === "/dashboard/settings?tab=Mails",
-            },
-            {
-                title: "Code injection",
-                url: "/dashboard/settings?tab=Code%20Injection",
+                title: SITE_SETTINGS_SECTION_GENERAL,
+                url: `/dashboard/settings?tab=${SITE_SETTINGS_SECTION_GENERAL}`,
                 isActive:
                     `${path}?tab=${tab}` ===
-                    "/dashboard/settings?tab=Code Injection",
+                    `/dashboard/settings?tab=${SITE_SETTINGS_SECTION_GENERAL}`,
             },
             {
-                title: "API Keys",
-                url: "/dashboard/settings?tab=API%20Keys",
+                title: SITE_SETTINGS_SECTION_PAYMENT,
+                url: `/dashboard/settings?tab=${SITE_SETTINGS_SECTION_PAYMENT}`,
                 isActive:
-                    `${path}?tab=${tab}` === "/dashboard/settings?tab=API Keys",
+                    `${path}?tab=${tab}` ===
+                    `/dashboard/settings?tab=${SITE_SETTINGS_SECTION_PAYMENT}`,
+            },
+            {
+                title: SITE_SETTINGS_SECTION_MAILS,
+                url: `/dashboard/settings?tab=${SITE_SETTINGS_SECTION_MAILS}`,
+                isActive:
+                    `${path}?tab=${tab}` ===
+                    `/dashboard/settings?tab=${SITE_SETTINGS_SECTION_MAILS}`,
+            },
+            {
+                title: SITE_CUSTOMISATIONS_SETTING_HEADER,
+                url: `/dashboard/settings?tab=${encodeURIComponent(SITE_CUSTOMISATIONS_SETTING_HEADER)}`,
+                isActive:
+                    `${path}?tab=${tab}` ===
+                    `/dashboard/settings?tab=${SITE_CUSTOMISATIONS_SETTING_HEADER}`,
+            },
+            {
+                title: SITE_MISCELLANEOUS_SETTING_HEADER,
+                url: `/dashboard/settings?tab=${SITE_MISCELLANEOUS_SETTING_HEADER}`,
+                isActive:
+                    `${path}?tab=${tab}` ===
+                    `/dashboard/settings?tab=${SITE_MISCELLANEOUS_SETTING_HEADER}`,
             },
         ];
         navMainItems.push({
@@ -242,14 +290,36 @@ function getSidebarItems(profile: Partial<Profile>, path, tab) {
         });
     }
 
-    const navSecondaryItems = [
-        {
+    const navSecondaryItems: any[] = [];
+    if (
+        profile &&
+        profile.permissions &&
+        checkPermission(profile.permissions, ADMIN_PERMISSIONS)
+    ) {
+        if (totalChecklistItems && checklist.length) {
+            navSecondaryItems.push({
+                title: GET_SET_UP,
+                url: "/dashboard/get-set-up",
+                icon: (
+                    <CircularProgress
+                        strokeWidth={4}
+                        value={
+                            ((totalChecklistItems - checklist.length) /
+                                totalChecklistItems) *
+                            100
+                        }
+                    />
+                ),
+                isActive: path === "/dashboard/get-set-up",
+            });
+        }
+        navSecondaryItems.push({
             title: "Support",
             url: "/dashboard/support",
-            icon: LifeBuoy,
+            icon: <LifeBuoy />,
             isActive: path === "/dashboard/support",
-        },
-    ];
+        });
+    }
     const navProjectItems = [
         {
             name: MY_CONTENT_HEADER,

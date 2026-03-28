@@ -15,15 +15,21 @@ env:
 jobs:
   publish-packages:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      pull-requests: write
     steps:
       - name: checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Configure CI Git User
         run: |
-          git config --global user.name 'Rajat Saxena'
-          git config --global user.email 'hi@sub.rajatsaxena.dev'
-          git remote set-url origin https://$GITHUB_ACTOR:$GITHUB_PAT@github.com/codelitdev/courselit
+          git config --global user.name 'CodeLit'
+          git config --global user.email 'hi@codelit.dev'
+          git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}
         env:
           GITHUB_PAT: ${{ secrets.PAT }}
 
@@ -33,19 +39,17 @@ jobs:
           git pull origin ${{ github.ref_name }}
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          version: 8
+          node-version: 24
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
 
       - name: Install Packages
         run: pnpm install
-
-      - name: Authenticate with Registry
-        run: |
-          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
-          pnpm whoami
-        env:
-          NPM_TOKEN: ${{ secrets.NPM }}
 
       - name: Create and publish versions
         id: changesets
@@ -56,7 +60,6 @@ jobs:
           publish: pnpm ci:publish 
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
-          NPM_TOKEN: ${{ secrets.NPM }}
 
       - name: Echo changeset output
         run: echo "${{ steps.changesets.outputs.hasChangesets }}"

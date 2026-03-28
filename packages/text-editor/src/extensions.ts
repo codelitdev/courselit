@@ -1,145 +1,97 @@
+import StarterKit from "@tiptap/starter-kit";
+import Placeholder from "@tiptap/extension-placeholder";
+import Link from "@tiptap/extension-link";
 import {
-    BulletListExtension,
-    DocExtension,
-    DropCursorExtension,
-    HeadingExtension,
-    ImageAttributes,
-    ImageExtension,
-    LinkExtension,
-    OrderedListExtension,
-    ParagraphExtension,
-    PlaceholderExtension,
-    TaskListExtension,
-    TextExtension,
-    BlockquoteExtension,
-    HardBreakExtension,
-    BoldExtension,
-    ItalicExtension,
-    GapCursorExtension,
-    HorizontalRuleExtension,
-    StrikeExtension,
-    UnderlineExtension,
-    CodeExtension,
-    BidiExtension,
-    CodeBlockExtension,
-    TrailingNodeExtension,
-    IframeExtension,
-    ShortcutsExtension,
-} from "remirror/extensions";
-import { CodeMirrorExtension } from "@remirror/extension-codemirror6";
-import { TableExtension } from "@remirror/extension-react-tables";
-import { oneDark } from "@codemirror/theme-one-dark";
-import { basicSetup } from "codemirror";
-import { DelayedPromiseCreator, ErrorConstant, invariant } from "remirror";
-import { FetchBuilder } from "@courselit/utils";
-import { Media } from "@courselit/common-models";
+    Table,
+    TableCell,
+    TableHeader,
+    TableRow,
+} from "@tiptap/extension-table";
+import Image from "@tiptap/extension-image";
+import Dropcursor from "@tiptap/extension-dropcursor";
+import Gapcursor from "@tiptap/extension-gapcursor";
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import Heading from "@tiptap/extension-heading";
+import Highlight from "@tiptap/extension-highlight";
+import { lowlight } from "lowlight";
+import javascript from "highlight.js/lib/languages/javascript";
+import typescript from "highlight.js/lib/languages/typescript";
+import json from "highlight.js/lib/languages/json";
+import css from "highlight.js/lib/languages/css";
+import xml from "highlight.js/lib/languages/xml";
+import type { Extensions } from "@tiptap/core";
+import { createId } from "./create-id";
+import { CodeMirrorNode } from "./components/custom-code-mirror";
 
-// const wysiwygPresetArrayWithoutImageExtension = wysiwygPreset().filter(
-//     (extension) => extension instanceof ImageExtension !== true,
-// );
+lowlight.registerLanguage("javascript", javascript);
+lowlight.registerLanguage("typescript", typescript);
+lowlight.registerLanguage("json", json);
+lowlight.registerLanguage("css", css);
+lowlight.registerLanguage("html", xml);
 
-type SetProgress = (progress: number) => void;
-
-interface FileWithProgress {
-    file: File;
-    progress: SetProgress;
+interface ExtensionOptions {
+    placeholder?: string;
 }
 
-async function getPresignedUrl(url: string) {
-    const fetch = new FetchBuilder()
-        .setUrl(`${url}/api/media/presigned`)
-        .setIsGraphQLEndpoint(false)
-        .build();
-    const response = await fetch.exec();
-    return response.url;
-}
-
-function getUploadHandler(url: string) {
-    return function uploadFileToMediaLit(
-        files: FileWithProgress[],
-    ): DelayedPromiseCreator<ImageAttributes>[] {
-        invariant(files.length > 0, {
-            code: ErrorConstant.EXTENSION,
-            message:
-                "The upload handler was applied for the image extension without any valid files",
-        });
-
-        let completed = 0;
-        const promises: DelayedPromiseCreator<ImageAttributes>[] = [];
-
-        for (const { file, progress } of files) {
-            promises.push(
-                () =>
-                    new Promise<ImageAttributes>((resolve, reject) => {
-                        getPresignedUrl(url)
-                            .then((presignedUrl) => {
-                                const fD = new FormData();
-                                fD.append("caption", file.name);
-                                fD.append("access", "public");
-                                fD.append("file", file);
-
-                                return fetch(presignedUrl, {
-                                    method: "POST",
-                                    body: fD,
-                                });
-                            })
-                            .then((data) => data.json())
-                            .then((data: Media) => {
-                                completed += 1;
-                                progress(completed / files.length);
-                                resolve({
-                                    src: data.file,
-                                    fileName: data.originalFileName,
-                                });
-                            })
-                            .catch((err) => reject(err));
-                    }),
-            );
-        }
-        return promises;
-    };
-}
-
-export const getExtensions = (placeholder, url) => () => [
-    new DocExtension({}),
-    new TextExtension(),
-    new ParagraphExtension(),
-    new HeadingExtension({}),
-    new BulletListExtension({}),
-    new LinkExtension({}),
-    new OrderedListExtension(),
-    new PlaceholderExtension({ placeholder }),
-    new TableExtension(),
-    new TaskListExtension(),
-    new ImageExtension({
-        enableResizing: true,
-        uploadHandler: getUploadHandler(url),
+export const createExtensions = ({
+    placeholder,
+}: ExtensionOptions = {}): Extensions => [
+    StarterKit.configure({
+        codeBlock: false,
     }),
-    new DropCursorExtension(),
-    new CodeMirrorExtension({
-        extensions: [basicSetup, oneDark],
+    Placeholder.configure({
+        placeholder: placeholder || "Write something…",
     }),
-    new BlockquoteExtension(),
-    new HardBreakExtension(),
-    new BoldExtension(null),
-    new ItalicExtension(),
-    new HardBreakExtension(),
-    new GapCursorExtension(),
-    new HardBreakExtension(),
-    new HorizontalRuleExtension(),
-    new StrikeExtension(),
-    new UnderlineExtension(),
-    new BlockquoteExtension(),
-    new CodeExtension(),
-    new BidiExtension(null),
-    new CodeBlockExtension(null),
-    new DropCursorExtension(),
-    new HeadingExtension(null),
-    new TrailingNodeExtension(),
-    new IframeExtension({ enableResizing: false }),
-    new BulletListExtension({}),
-    new OrderedListExtension(),
-    new TaskListExtension(),
-    new ShortcutsExtension(),
-    //    ...wysiwygPresetArrayWithoutImageExtension,
+    Link.configure({
+        openOnClick: false,
+        autolink: true,
+        linkOnPaste: true,
+    }),
+    Table.configure({
+        resizable: true,
+    }),
+    TableRow,
+    TableHeader,
+    TableCell,
+    Image.configure({
+        allowBase64: false,
+        HTMLAttributes: {
+            class: "max-w-full h-auto rounded-md",
+        },
+        resize: {
+            enabled: true,
+            directions: ["top", "bottom", "left", "right"],
+            alwaysPreserveAspectRatio: true,
+        },
+    }),
+    Dropcursor.configure({
+        color: "hsl(var(--foreground))",
+        width: 2,
+    }),
+    Gapcursor,
+    CodeBlockLowlight.configure({
+        lowlight,
+    }),
+    Heading.extend({
+        renderHTML({ node, HTMLAttributes }) {
+            const level = this.options.levels.includes(node.attrs.level)
+                ? node.attrs.level
+                : this.options.levels[0];
+            const id =
+                typeof node.textContent === "string"
+                    ? createId(node.textContent)
+                    : undefined;
+
+            return [
+                `h${level}`,
+                {
+                    ...HTMLAttributes,
+                    id,
+                },
+                0,
+            ];
+        },
+    }),
+    Highlight,
+    CodeMirrorNode,
 ];

@@ -12,7 +12,7 @@ export default async function connectToDatabase(): Promise<MongoClient> {
     };
 
     const dbConnection = await mongoose.connect(
-        process.env.DB_CONNECTION_STRING || "",
+        process.env.DB_CONNECTION_STRING || "mongodb://localhost:27017",
         options,
     );
     return dbConnection.connection.getClient() as unknown as MongoClient;

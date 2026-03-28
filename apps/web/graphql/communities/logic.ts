@@ -1,4 +1,8 @@
-import { checkPermission, generateUniqueId, slugify } from "@courselit/utils";
+import {
+    checkPermission,
+    extractMediaIDs,
+    generateUniqueId,
+} from "@courselit/utils";
 import CommunityModel, { InternalCommunity } from "@models/Community";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
@@ -16,6 +20,8 @@ import {
     CommunityReportType,
     CommunityReportStatus,
     MembershipRole,
+    PaymentPlan,
+    CommunityMediaTypes,
 } from "@courselit/common-models";
 import CommunityPostModel from "@models/CommunityPost";
 import {
@@ -26,8 +32,18 @@ import {
 import CommunityCommentModel from "@models/CommunityComment";
 import PageModel from "@models/Page";
 import PaymentPlanModel from "@models/PaymentPlan";
+import {
+    generateUniquePageId,
+    isDuplicateKeyError,
+    validateSlug,
+} from "../pages/helpers";
 import MembershipModel from "@models/Membership";
-import { getPlans } from "../paymentplans/logic";
+import {
+    addIncludedProductsMemberships,
+    deleteMembershipsActivatedViaPaymentPlan,
+    getInternalPaymentPlan,
+    getPlans,
+} from "../paymentplans/logic";
 import { getPaymentMethodFromSettings } from "@/payments-new";
 import CommunityReportModel, {
     InternalCommunityReport,
@@ -44,11 +60,17 @@ import {
     toggleContentVisibility,
 } from "./helpers";
 import { error } from "@/services/logger";
-import NotificationModel from "@models/Notification";
-import { addNotification } from "@/services/queue";
 import { hasActiveSubscription } from "../users/logic";
 import { internal } from "@config/strings";
 import { hasCommunityPermission as hasPermission } from "@ui-lib/utils";
+import ActivityModel from "@models/Activity";
+import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
+import { deleteMedia, sealMedia } from "@/services/medialit";
+import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
+import InvoiceModel from "@models/Invoice";
+import { InternalMembership } from "@courselit/orm-models";
+import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
+import { recordActivity } from "@/lib/record-activity";
 
 const { permissions, communityPage } = constants;
 
@@ -77,40 +99,50 @@ export async function createCommunity({
 
     const communityId = generateUniqueId();
 
-    const pageId = `${slugify(name.toLowerCase())}-${communityId.substring(0, 5)}`;
+    const pageId = await generateUniquePageId(ctx.subdomain._id, name);
 
-    await PageModel.create({
-        domain: ctx.subdomain._id,
-        pageId,
-        type: communityPage,
-        creatorId: ctx.user.userId,
-        name,
-        entityId: communityId,
-        layout: [
-            {
-                name: "header",
-                deleteable: false,
-                shared: true,
-            },
-            {
-                name: "banner",
-            },
-            {
-                name: "footer",
-                deleteable: false,
-                shared: true,
-            },
-        ],
-        title: name,
-    });
+    let community;
+    try {
+        await PageModel.create({
+            domain: ctx.subdomain._id,
+            pageId,
+            type: communityPage,
+            creatorId: ctx.user.userId,
+            name,
+            entityId: communityId,
+            layout: [
+                {
+                    name: "header",
+                    deleteable: false,
+                    shared: true,
+                },
+                {
+                    name: "banner",
+                },
+                {
+                    name: "footer",
+                    deleteable: false,
+                    shared: true,
+                },
+            ],
+            title: name,
+        });
 
-    const community = await CommunityModel.create<Community>({
-        domain: ctx.subdomain._id,
-        communityId,
-        name,
-        pageId,
-    });
+        community = await CommunityModel.create({
+            domain: ctx.subdomain._id,
+            communityId,
+            name,
+            slug: pageId,
+            pageId,
+        });
+    } catch (err) {
+        if (isDuplicateKeyError(err)) {
+            throw new Error(responses.page_id_already_exists);
+        }
+        throw err;
+    }
 
+    const paymentPlan = await getInternalPaymentPlan(ctx);
     await MembershipModel.create({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
@@ -119,6 +151,7 @@ export async function createCommunity({
         status: Constants.MembershipStatus.ACTIVE,
         joiningReason: internal.joining_reason_creator,
         role: Constants.MembershipRole.MODERATE,
+        paymentPlanId: paymentPlan.planId,
     });
 
     return community;
@@ -194,7 +227,8 @@ export async function getCommunities({
         products: community.products,
         joiningReasonText: community.joiningReasonText,
         paymentPlans: await getPlans({
-            planIds: community.paymentPlans,
+            entityId: community.communityId,
+            entityType: Constants.MembershipEntityType.COMMUNITY,
             ctx,
         }),
         defaultPaymentPlan: community.defaultPaymentPlan,
@@ -234,6 +268,7 @@ export async function getCommunitiesCount({
 export async function updateCommunity({
     id,
     name,
+    slug,
     description,
     ctx,
     enabled,
@@ -244,19 +279,16 @@ export async function updateCommunity({
 }: {
     id: string;
     name?: string;
+    slug?: string;
     description?: string;
     ctx: GQLContext;
     enabled?: boolean;
     banner?: string;
     autoAcceptMembers?: boolean;
     joiningReasonText?: string;
-    featuredImage: Media;
+    featuredImage?: Media;
 }): Promise<Community> {
     checkIfAuthenticated(ctx);
-
-    // if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-    //     throw new Error(responses.action_not_allowed);
-    // }
 
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, id),
@@ -276,12 +308,75 @@ export async function updateCommunity({
         community.name = name;
     }
 
-    if (description) {
-        community.description = JSON.parse(description);
+    if (slug) {
+        const newSlug = validateSlug(slug);
+        if (newSlug !== community.slug) {
+            const conflictingCommunity =
+                await CommunityModel.findOne<InternalCommunity>({
+                    domain: ctx.subdomain._id,
+                    slug: newSlug,
+                    communityId: { $ne: community.communityId },
+                }).select("_id");
+
+            if (conflictingCommunity) {
+                throw new Error(responses.page_id_already_exists);
+            }
+
+            // Page-first atomicity: update Page record first (hard unique constraint)
+            try {
+                await PageModel.updateOne(
+                    {
+                        domain: ctx.subdomain._id,
+                        pageId: community.pageId,
+                    },
+                    { $set: { pageId: newSlug } },
+                );
+            } catch (err) {
+                if (isDuplicateKeyError(err)) {
+                    throw new Error(responses.page_id_already_exists);
+                }
+                throw err;
+            }
+            community.slug = newSlug;
+            community.pageId = newSlug;
+        }
     }
 
-    if (banner) {
-        community.banner = JSON.parse(banner);
+    const descriptionMediaIdsMarkedForDeletion: string[] = [];
+    const bannerMediaIdsMarkedForDeletion: string[] = [];
+
+    if (typeof description !== "undefined") {
+        const nextDescription = (description ?? "") as string;
+        descriptionMediaIdsMarkedForDeletion.push(
+            ...getDeletedMediaIds(
+                JSON.stringify(community.description || ""),
+                nextDescription,
+            ),
+        );
+
+        if (nextDescription) {
+            community.description =
+                await replaceTempMediaWithSealedMediaInProseMirrorDoc(
+                    nextDescription,
+                );
+        }
+    }
+
+    if (typeof banner !== "undefined") {
+        const nextBanner = (banner ?? "") as string;
+        bannerMediaIdsMarkedForDeletion.push(
+            ...getDeletedMediaIds(
+                JSON.stringify(community.banner || ""),
+                nextBanner,
+            ),
+        );
+
+        if (nextBanner) {
+            community.banner =
+                await replaceTempMediaWithSealedMediaInProseMirrorDoc(
+                    nextBanner,
+                );
+        }
     }
 
     if (autoAcceptMembers !== undefined) {
@@ -293,11 +388,14 @@ export async function updateCommunity({
     }
 
     if (featuredImage !== undefined) {
-        community.featuredImage = featuredImage;
+        community.featuredImage = featuredImage?.mediaId
+            ? await sealMedia(featuredImage.mediaId)
+            : undefined;
     }
 
     const plans = await getPlans({
-        planIds: community.paymentPlans,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
         ctx,
     });
     if (enabled !== undefined) {
@@ -311,6 +409,12 @@ export async function updateCommunity({
                 throw new Error(responses.default_payment_plan_required);
             }
         }
+    }
+
+    for (const mediaId of descriptionMediaIdsMarkedForDeletion.concat(
+        bannerMediaIdsMarkedForDeletion,
+    )) {
+        await deleteMedia(mediaId);
     }
 
     await (community as any).save();
@@ -427,12 +531,20 @@ export async function joinCommunity({
         throw new Error(responses.item_not_found);
     }
 
-    if (community.paymentPlans.length === 0) {
+    const communityPaymentPlans = await getPlans({
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+        ctx,
+    });
+
+    if (communityPaymentPlans.length === 0) {
         throw new Error(responses.community_has_no_payment_plans);
     }
 
     const freePaymentPlanOfCommunity = await PaymentPlanModel.findOne({
-        planId: { $in: community.paymentPlans },
+        domain: ctx.subdomain._id,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
         type: Constants.PaymentPlanType.FREE,
         archived: false,
     });
@@ -483,14 +595,14 @@ export async function joinCommunity({
             role: Constants.MembershipRole.MODERATE,
         });
 
-        addNotification({
-            domain: ctx.subdomain._id.toString(),
-            entityId: community.communityId,
-            entityAction:
-                Constants.NotificationEntityAction
-                    .COMMUNITY_MEMBERSHIP_REQUESTED,
-            forUserIds: communityManagers.map((m) => m.userId),
+        await recordActivity({
+            domain: ctx.subdomain._id,
             userId: ctx.user.userId,
+            type: Constants.ActivityType.COMMUNITY_MEMBERSHIP_REQUESTED,
+            entityId: community.communityId,
+            metadata: {
+                forUserIds: communityManagers.map((m) => m.userId),
+            },
         });
     }
 
@@ -545,6 +657,14 @@ export async function createCommunityPost({
         throw new Error(responses.invalid_category);
     }
 
+    if (media?.length) {
+        for (const med of media) {
+            if (med.media?.mediaId) {
+                med.media = await sealMedia(med.media.mediaId);
+            }
+        }
+    }
+
     const post = await CommunityPostModel.create({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
@@ -569,14 +689,17 @@ export async function createCommunityPost({
             status: Constants.MembershipStatus.ACTIVE,
         }).lean();
 
-        await addNotification({
-            domain: ctx.subdomain._id.toString(),
-            entityId: post.postId,
-            entityAction: Constants.NotificationEntityAction.COMMUNITY_POSTED,
-            forUserIds: members
-                .map((m) => m.userId)
-                .filter((id) => id !== ctx.user.userId),
+        await recordActivity({
+            domain: ctx.subdomain._id,
             userId: ctx.user.userId,
+            type: Constants.ActivityType.COMMUNITY_POST_CREATED,
+            entityId: post.postId,
+            metadata: {
+                communityId: community.communityId,
+                forUserIds: members
+                    .map((m) => m.userId)
+                    .filter((id) => id !== ctx.user.userId),
+            },
         });
     } catch (err) {
         error(
@@ -589,7 +712,110 @@ export async function createCommunityPost({
         );
     }
 
-    return formatPost(post, ctx.user);
+    return formatPost(post, ctx.user.userId);
+}
+
+export async function updateCommunityPost({
+    communityId,
+    postId,
+    title,
+    content,
+    category,
+    media,
+    ctx,
+}: {
+    communityId: string;
+    postId: string;
+    title?: string;
+    content?: string;
+    category?: string;
+    media?: CommunityMedia[];
+    ctx: GQLContext;
+}): Promise<PublicPost> {
+    checkIfAuthenticated(ctx);
+
+    const community = await CommunityModel.findOne<InternalCommunity>(
+        getCommunityQuery(ctx, communityId),
+    );
+
+    if (!community) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const member = await getMembership(ctx, communityId);
+
+    if (!member || !hasPermission(member, Constants.MembershipRole.POST)) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const post = await CommunityPostModel.findOne({
+        domain: ctx.subdomain._id,
+        communityId,
+        postId,
+        deleted: false,
+    });
+
+    if (!post) {
+        throw new Error(responses.item_not_found);
+    }
+
+    if (post.userId !== ctx.user.userId) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    if (category && !community.categories.includes(category)) {
+        throw new Error(responses.invalid_category);
+    }
+
+    if (title !== undefined) post.title = title;
+    if (content !== undefined) post.content = content;
+    if (category !== undefined) post.category = category;
+
+    let removedMediaIds: string[] = [];
+
+    if (media !== undefined) {
+        const oldMediaIds = (post.media || [])
+            .map((m: any) => m.media?.mediaId)
+            .filter(Boolean);
+        const newMediaIds = media.map((m) => m.media?.mediaId).filter(Boolean);
+
+        removedMediaIds = oldMediaIds.filter(
+            (id: string) => !newMediaIds.includes(id),
+        );
+
+        const oldMediaList = post.media || [];
+
+        for (const med of media) {
+            if (med.media?.mediaId && med.media.mediaId !== "none") {
+                if (!oldMediaIds.includes(med.media.mediaId)) {
+                    med.media = await sealMedia(med.media.mediaId);
+                } else {
+                    const oldMedItem = oldMediaList.find(
+                        (m: any) => m.media?.mediaId === med.media?.mediaId,
+                    );
+                    if (oldMedItem && oldMedItem.media && med.media) {
+                        med.media = oldMedItem.media;
+                    }
+                }
+            }
+        }
+
+        post.media = media;
+    }
+
+    await post.save();
+
+    for (const mediaId of removedMediaIds) {
+        if (mediaId && mediaId !== "none") {
+            try {
+                await deleteMedia(mediaId);
+            } catch (err: any) {
+                error(err.message, { stack: err.stack });
+            }
+        }
+    }
+
+    return formatPost(post, ctx.user.userId);
 }
 
 export async function deleteCommunityPost({
@@ -616,11 +842,8 @@ export async function deleteCommunityPost({
         communityId,
         postId,
     };
-    // if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-    //     query["userId"] = ctx.user.userId;
-    // }
     const member = await getMembership(ctx, communityId);
-    if (!hasPermission(member!, Constants.MembershipRole.MODERATE)) {
+    if (!member || !hasPermission(member, Constants.MembershipRole.MODERATE)) {
         query["userId"] = ctx.user.userId;
     }
 
@@ -630,8 +853,30 @@ export async function deleteCommunityPost({
         throw new Error(responses.item_not_found);
     }
 
-    post.deleted = true;
-    await (post as any).save();
+    if (post.media?.length) {
+        for (const media of post.media) {
+            const mediaId = media.media?.mediaId;
+            if (mediaId) {
+                try {
+                    await deleteMedia(mediaId);
+                } catch (err: any) {
+                    error(err.message, { stack: err.stack });
+                }
+            }
+        }
+    }
+
+    await CommunityCommentModel.deleteMany({
+        domain: ctx.subdomain._id,
+        communityId,
+        postId,
+    });
+
+    await CommunityPostModel.deleteOne({
+        domain: ctx.subdomain._id,
+        communityId,
+        postId,
+    });
 
     return post;
 }
@@ -669,7 +914,7 @@ export async function getPost({
         return null;
     }
 
-    return formatPost(post, ctx.user);
+    return formatPost(post, ctx.user.userId);
 }
 
 function getCommunityQuery(ctx: GQLContext, communityId: string) {
@@ -737,7 +982,7 @@ export async function getPosts({
         posts.unshift(...pinnedPosts);
     }
 
-    return posts.map(async (post) => formatPost(post, ctx.user));
+    return posts.map(async (post) => formatPost(post, ctx.user.userId));
 }
 
 export async function getPostsCount({
@@ -881,11 +1126,12 @@ export async function getMembers({
 }
 
 async function formatCommunity(
-    community: InternalCommunity,
+    community: Community,
     ctx: GQLContext,
 ): Promise<Community & Pick<InternalCommunity, "autoAcceptMembers">> {
     return {
         name: community.name,
+        slug: community.slug,
         communityId: community.communityId,
         banner: community.banner,
         enabled: community.enabled,
@@ -895,10 +1141,6 @@ async function formatCommunity(
         pageId: community.pageId,
         products: community.products,
         joiningReasonText: community.joiningReasonText,
-        paymentPlans: await getPlans({
-            planIds: community.paymentPlans,
-            ctx,
-        }),
         defaultPaymentPlan: community.defaultPaymentPlan,
         featuredImage: community.featuredImage,
         membersCount: await getMembersCount({
@@ -945,10 +1187,6 @@ export async function updateMemberStatus({
     rejectionReason?: string;
 }): Promise<Membership> {
     checkIfAuthenticated(ctx);
-
-    // if (!checkPermission(ctx.user.permissions, [permissions.manageCommunity])) {
-    //     throw new Error(responses.action_not_allowed);
-    // }
 
     if (ctx.user.userId === userId) {
         throw new Error(responses.action_not_allowed);
@@ -1005,20 +1243,42 @@ export async function updateMemberStatus({
             );
         }
         targetMember.rejectionReason = rejectionReason;
+
+        if (targetMember.paymentPlanId) {
+            await deleteMembershipsActivatedViaPaymentPlan({
+                domain: ctx.subdomain._id,
+                userId: targetMember.userId,
+                paymentPlanId: targetMember.paymentPlanId,
+            });
+        }
     }
 
     targetMember.status = nextStatus;
 
     if (targetMember.status === Constants.MembershipStatus.ACTIVE) {
         targetMember.rejectionReason = undefined;
+        const paymentPlan = (await PaymentPlanModel.findOne({
+            domain: ctx.subdomain._id,
+            planId: targetMember.paymentPlanId,
+        })) as PaymentPlan;
 
-        await addNotification({
-            domain: ctx.subdomain._id.toString(),
-            entityId: community.communityId,
-            entityAction:
-                Constants.NotificationEntityAction.COMMUNITY_MEMBERSHIP_GRANTED,
-            forUserIds: [userId],
+        if (targetMember.paymentPlanId) {
+            await addIncludedProductsMemberships({
+                domain: ctx.subdomain._id,
+                userId: targetMember.userId,
+                paymentPlan,
+                sessionId: targetMember.sessionId,
+            });
+        }
+
+        await recordActivity({
+            domain: ctx.subdomain._id,
             userId: ctx.user.userId,
+            type: Constants.ActivityType.COMMUNITY_MEMBERSHIP_GRANTED,
+            entityId: community.communityId,
+            metadata: {
+                forUserIds: [userId],
+            },
         });
     }
 
@@ -1152,27 +1412,19 @@ export async function togglePostLike({
     await post.save();
 
     if (liked && post.userId !== ctx.user.userId) {
-        const existingNotification = await NotificationModel.findOne({
+        await recordActivity({
             domain: ctx.subdomain._id,
-            entityId: post.postId,
-            entityAction:
-                Constants.NotificationEntityAction.COMMUNITY_POST_LIKED,
-            forUserId: post.userId,
             userId: ctx.user.userId,
-        });
-        if (!existingNotification) {
-            await addNotification({
-                domain: ctx.subdomain._id.toString(),
-                entityId: post.postId,
-                entityAction:
-                    Constants.NotificationEntityAction.COMMUNITY_POST_LIKED,
+            type: Constants.ActivityType.COMMUNITY_POST_LIKED,
+            entityId: post.postId,
+            metadata: {
+                communityId: community.communityId,
                 forUserIds: [post.userId],
-                userId: ctx.user.userId,
-            });
-        }
+            },
+        });
     }
 
-    return formatPost(post, ctx.user);
+    return formatPost(post, ctx.user.userId);
 }
 
 export async function togglePinned({
@@ -1219,7 +1471,7 @@ export async function togglePinned({
 
     await post.save();
 
-    return formatPost(post, ctx.user);
+    return formatPost(post, ctx.user.userId);
 }
 
 type PublicComment = Omit<CommunityComment, "user" | "likes"> & {
@@ -1245,12 +1497,6 @@ export async function postComment({
 }): Promise<PublicComment> {
     checkIfAuthenticated(ctx);
 
-    // if (
-    //     !checkPermission(ctx.user.permissions, [permissions.commentInCommunity])
-    // ) {
-    //     throw new Error(responses.action_not_allowed);
-    // }
-
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
     );
@@ -1259,12 +1505,12 @@ export async function postComment({
         throw new Error(responses.item_not_found);
     }
 
-    const post = await CommunityPostModel.findOne({
+    const post = (await CommunityPostModel.findOne({
         domain: ctx.subdomain._id,
         communityId,
         postId,
         deleted: false,
-    });
+    }).lean()) as unknown as CommunityPost;
 
     if (!post) {
         throw new Error(responses.item_not_found);
@@ -1308,13 +1554,18 @@ export async function postComment({
             userId: ctx.user.userId,
         });
 
-        await addNotification({
-            domain: ctx.subdomain._id.toString(),
-            entityId: replyId,
-            entityAction: Constants.NotificationEntityAction.COMMUNITY_REPLIED,
-            forUserIds: postSubscribers.map((s) => s.userId),
+        await recordActivity({
+            domain: ctx.subdomain._id,
             userId: ctx.user.userId,
-            entityTargetId: comment.commentId,
+            type: Constants.ActivityType.COMMUNITY_REPLY_CREATED,
+            entityId: replyId,
+            metadata: {
+                communityId: community.communityId,
+                postId: post.postId,
+                commentId: comment.commentId,
+                entityTargetId: comment.commentId,
+                forUserIds: postSubscribers.map((s) => s.userId),
+            },
         });
     } else {
         comment = await CommunityCommentModel.create({
@@ -1332,18 +1583,18 @@ export async function postComment({
             userId: ctx.user.userId,
         });
 
-        await addNotification({
-            domain: ctx.subdomain._id.toString(),
-            entityId: post.postId,
-            entityAction:
-                Constants.NotificationEntityAction.COMMUNITY_COMMENTED,
-            forUserIds: postSubscribers.map((s) => s.userId),
+        await recordActivity({
+            domain: ctx.subdomain._id,
             userId: ctx.user.userId,
+            type: Constants.ActivityType.COMMUNITY_COMMENT_CREATED,
+            entityId: comment.commentId,
+            metadata: {
+                communityId: community.communityId,
+                postId: post.postId,
+                forUserIds: postSubscribers.map((s) => s.userId),
+            },
         });
     }
-
-    post.commentsCount = post.commentsCount + 1;
-    await post.save();
 
     await addPostSubscription({
         domain: ctx.subdomain._id,
@@ -1351,7 +1602,7 @@ export async function postComment({
         postId: post.postId,
     });
 
-    return formatComment(comment, ctx.user);
+    return formatComment(comment, ctx.user.userId);
 }
 
 export async function getComments({
@@ -1395,7 +1646,7 @@ export async function getComments({
         },
     );
 
-    return comments.map((comment) => formatComment(comment, ctx.user));
+    return comments.map((comment) => formatComment(comment, ctx.user.userId));
 }
 
 export async function toggleCommentLike({
@@ -1448,27 +1699,20 @@ export async function toggleCommentLike({
     await comment.save();
 
     if (liked && comment.userId !== ctx.user.userId) {
-        const existingNotification = await NotificationModel.findOne({
+        await recordActivity({
             domain: ctx.subdomain._id,
-            entityId: comment.commentId,
-            entityAction:
-                Constants.NotificationEntityAction.COMMUNITY_COMMENT_LIKED,
-            forUserId: comment.userId,
             userId: ctx.user.userId,
-        });
-        if (!existingNotification) {
-            await addNotification({
-                domain: ctx.subdomain._id.toString(),
-                entityId: comment.commentId,
-                entityAction:
-                    Constants.NotificationEntityAction.COMMUNITY_COMMENT_LIKED,
+            type: Constants.ActivityType.COMMUNITY_COMMENT_LIKED,
+            entityId: comment.commentId,
+            metadata: {
+                communityId: community.communityId,
+                postId,
                 forUserIds: [comment.userId],
-                userId: ctx.user.userId,
-            });
-        }
+            },
+        });
     }
 
-    return formatComment(comment, ctx.user);
+    return formatComment(comment, ctx.user.userId);
 }
 
 export async function toggleCommentReplyLike({
@@ -1529,28 +1773,22 @@ export async function toggleCommentReplyLike({
     await comment.save();
 
     if (liked && reply.userId !== ctx.user.userId) {
-        const existingNotification = await NotificationModel.findOne({
+        await recordActivity({
             domain: ctx.subdomain._id,
-            entityId: reply.replyId,
-            entityAction:
-                Constants.NotificationEntityAction.COMMUNITY_REPLY_LIKED,
-            forUserId: reply.userId,
             userId: ctx.user.userId,
-        });
-        if (!existingNotification) {
-            await addNotification({
-                domain: ctx.subdomain._id.toString(),
-                entityId: reply.replyId,
-                entityAction:
-                    Constants.NotificationEntityAction.COMMUNITY_REPLY_LIKED,
-                forUserIds: [reply.userId],
-                userId: ctx.user.userId,
+            type: Constants.ActivityType.COMMUNITY_REPLY_LIKED,
+            entityId: reply.replyId,
+            metadata: {
+                communityId: community.communityId,
+                postId,
+                commentId: comment.commentId,
                 entityTargetId: comment.commentId,
-            });
-        }
+                forUserIds: [reply.userId],
+            },
+        });
     }
 
-    return formatComment(comment, ctx.user);
+    return formatComment(comment, ctx.user.userId);
 }
 
 export async function deleteComment({
@@ -1611,17 +1849,11 @@ export async function deleteComment({
             );
             if (!comment.replies[replyIndex].deleted) {
                 comment.replies[replyIndex].deleted = true;
-                if (post.commentsCount > 0) {
-                    post.commentsCount = post.commentsCount - 1;
-                }
             }
         } else {
             comment.replies = comment.replies.filter(
                 (r) => r.replyId !== replyId,
             );
-            if (post.commentsCount > 0) {
-                post.commentsCount = post.commentsCount - 1;
-            }
         }
         await comment.save();
     } else {
@@ -1629,9 +1861,6 @@ export async function deleteComment({
             if (!comment.deleted) {
                 comment.deleted = true;
                 await comment.save();
-                if (post.commentsCount > 0) {
-                    post.commentsCount = post.commentsCount - 1;
-                }
             }
         } else {
             await comment.deleteOne({
@@ -1640,16 +1869,13 @@ export async function deleteComment({
                 postId,
                 commentId,
             });
-            if (post.commentsCount > 0) {
-                post.commentsCount = post.commentsCount - 1;
-            }
             comment = null;
         }
     }
 
-    await post.save();
+    // await post.save();
 
-    return comment ? formatComment(comment, ctx.user) : null;
+    return comment ? formatComment(comment, ctx.user.userId) : null;
 }
 
 export async function leaveCommunity({
@@ -1711,7 +1937,32 @@ export async function leaveCommunity({
         await paymentMethod?.cancel(member.subscriptionId);
     }
 
+    if (member.paymentPlanId) {
+        await deleteMembershipsActivatedViaPaymentPlan({
+            domain: ctx.subdomain._id,
+            userId: member.userId,
+            paymentPlanId: member.paymentPlanId,
+        });
+    }
+
     await member.deleteOne();
+
+    const communityManagers: Membership[] = await MembershipModel.find({
+        domain: ctx.subdomain._id,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+        role: Constants.MembershipRole.MODERATE,
+    });
+
+    await recordActivity({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        type: Constants.ActivityType.COMMUNITY_LEFT,
+        entityId: community.communityId,
+        metadata: {
+            forUserIds: communityManagers.map((m) => m.userId),
+        },
+    });
 
     return true;
 }
@@ -1729,36 +1980,209 @@ export async function deleteCommunity({
         throw new Error(responses.action_not_allowed);
     }
 
-    const community = await CommunityModel.findOne<InternalCommunity>(
+    const community = (await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, id),
-    );
+    ).lean()) as unknown as Community;
 
     if (!community) {
         throw new Error(responses.item_not_found);
     }
 
-    await PageModel.updateOne(
-        {
-            domain: ctx.subdomain._id,
-            pageId: community.pageId,
-            entityId: community.communityId,
-        },
-        {
-            deleted: true,
-        },
-    );
+    await CommunityReportModel.deleteMany({
+        domain: ctx.subdomain._id,
+        communityId: community.communityId,
+    });
+    await deleteCommunityPostsSubscriptions(community, ctx);
+    await deleteCommunityPosts(ctx, "community", community.communityId);
+    await deleteMemberships(community, ctx);
 
-    await CommunityModel.updateOne(
-        {
-            domain: ctx.subdomain._id,
-            communityId: id,
-        },
-        {
-            deleted: true,
-        },
-    );
+    await PageModel.deleteOne({
+        domain: ctx.subdomain._id,
+        pageId: community.pageId,
+        entityId: community.communityId,
+    });
+
+    const mediaToBeDeleted = extractMediaIDs(JSON.stringify(community));
+    for (const mediaId of Array.from(mediaToBeDeleted)) {
+        await deleteMedia(mediaId);
+    }
+    await CommunityModel.deleteOne({
+        domain: ctx.subdomain._id,
+        communityId: id,
+    });
 
     return await formatCommunity(community, ctx);
+}
+
+export async function deleteCommunityPosts(
+    ctx: GQLContext,
+    by: "community" | "user",
+    id: string,
+) {
+    const query =
+        by === "community"
+            ? {
+                  domain: ctx.subdomain._id,
+                  communityId: id,
+              }
+            : {
+                  domain: ctx.subdomain._id,
+                  userId: id,
+              };
+    await CommunityCommentModel.deleteMany(query);
+    const mediaTypesToDelete = [
+        CommunityMediaTypes.IMAGE,
+        CommunityMediaTypes.VIDEO,
+        CommunityMediaTypes.GIF,
+        CommunityMediaTypes.PDF,
+    ];
+    const postsWithMedia = await CommunityPostModel.aggregate<{
+        media: CommunityMedia[];
+    }>([
+        {
+            $match: {
+                ...query,
+                "media.type": { $in: mediaTypesToDelete },
+            },
+        },
+        {
+            $project: {
+                media: {
+                    $filter: {
+                        input: "$media",
+                        as: "media",
+                        cond: {
+                            $and: [
+                                {
+                                    $in: ["$$media.type", mediaTypesToDelete],
+                                },
+                                { $ifNull: ["$$media.media.mediaId", false] },
+                            ],
+                        },
+                    },
+                },
+            },
+        },
+    ]);
+    for (const post of postsWithMedia) {
+        for (const media of post.media) {
+            const mediaId = media.media?.mediaId;
+            if (mediaId) {
+                await deleteMedia(mediaId);
+            }
+        }
+    }
+    await CommunityPostModel.deleteMany(query);
+}
+
+async function deleteCommunityPostsSubscriptions(
+    community: Community,
+    ctx: GQLContext,
+) {
+    const subscriberAggregation = await CommunityPostModel.aggregate([
+        {
+            $match: {
+                domain: ctx.subdomain._id,
+                communityId: community.communityId,
+            },
+        },
+        {
+            $lookup: {
+                from: CommunityPostSubscriberModel.collection.name,
+                localField: "postId",
+                foreignField: "postId",
+                as: "subscribers",
+            },
+        },
+        { $unwind: "$subscribers" },
+        {
+            $group: {
+                _id: null,
+                subscriberIds: { $addToSet: "$subscribers._id" },
+            },
+        },
+        {
+            $project: {
+                _id: 0,
+                subscriberIds: 1,
+            },
+        },
+    ]);
+    const subscriberIds = subscriberAggregation[0]?.subscriberIds ?? [];
+    if (subscriberIds.length > 0) {
+        await CommunityPostSubscriberModel.deleteMany({
+            _id: { $in: subscriberIds },
+        });
+    }
+}
+
+async function deleteMemberships(community: Community, ctx: GQLContext) {
+    const paymentPlans = await PaymentPlanModel.find({
+        domain: ctx.subdomain._id,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+    });
+
+    for (const paymentPlan of paymentPlans) {
+        // Delete included products memberships
+        if (
+            paymentPlan.includedProducts &&
+            paymentPlan.includedProducts.length > 0
+        ) {
+            await ActivityModel.deleteMany({
+                domain: ctx.subdomain._id,
+                type: constants.activityTypes[0],
+                "metadata.isIncludedInPlan": true,
+                "metadata.paymentPlanId": paymentPlan.planId,
+            });
+            await MembershipModel.deleteMany({
+                domain: ctx.subdomain._id,
+                paymentPlanId: paymentPlan.planId,
+                entityType: Constants.MembershipEntityType.COURSE,
+                isIncludedInPlan: true,
+            });
+        }
+        const memberships = await MembershipModel.find({
+            domain: ctx.subdomain._id,
+            paymentPlanId: paymentPlan.planId,
+        });
+        await cancelAndDeleteMemberships(memberships, ctx);
+        await paymentPlan.deleteOne();
+    }
+
+    // delete memberships joined via internal payment plan
+    const paymentPlan = await getInternalPaymentPlan(ctx);
+    await MembershipModel.deleteMany({
+        domain: ctx.subdomain._id,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+        paymentPlanId: paymentPlan.planId,
+    });
+}
+
+export async function cancelAndDeleteMemberships(
+    memberships: InternalMembership[],
+    ctx: GQLContext,
+) {
+    for (const membership of memberships) {
+        // Cancel active subscriptions
+        if (membership.subscriptionId) {
+            const paymentMethod = await getPaymentMethodFromSettings(
+                ctx.subdomain.settings,
+                membership.subscriptionMethod,
+            );
+            await paymentMethod?.cancel(membership.subscriptionId);
+        }
+
+        // Delete associated invoices
+        await InvoiceModel.deleteMany({
+            domain: ctx.subdomain._id,
+            membershipId: membership.membershipId,
+        });
+
+        // Delete membership
+        await membership.deleteOne();
+    }
 }
 
 export async function reportCommunityContent({
@@ -2010,4 +2434,28 @@ export async function updateCommunityReportStatus({
     }
 
     return formatCommunityReport(report, ctx);
+}
+
+export async function getCommentsCount(
+    post: CommunityPost,
+    ctx: GQLContext,
+): Promise<number> {
+    let commentsCount = 0;
+
+    const comments = (await CommunityCommentModel.find({
+        domain: ctx.subdomain._id,
+        postId: post.postId,
+    }).lean()) as unknown as CommunityComment[];
+    for (const comment of comments) {
+        if (!comment.deleted) {
+            commentsCount += 1;
+        }
+        for (const reply of comment.replies) {
+            if (!reply.deleted) {
+                commentsCount += 1;
+            }
+        }
+    }
+
+    return commentsCount;
 }

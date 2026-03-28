@@ -1,13 +1,17 @@
 import { FormEvent, useState } from "react";
-import { Constants, Media, WidgetProps } from "@courselit/common-models";
+import {
+    Constants,
+    Media,
+    TextEditorContent,
+    WidgetProps,
+} from "@courselit/common-models";
 import {
     Image,
-    TextRenderer,
     Link,
     useToast,
     getSymbolFromCurrency,
 } from "@courselit/components-library";
-import { actionCreators } from "@courselit/state-management";
+import { TextRenderer } from "../../components";
 import { FetchBuilder, getPlanPrice } from "@courselit/utils";
 import { DEFAULT_FAILURE_MESSAGE, DEFAULT_SUCCESS_MESSAGE } from "./constants";
 import Settings from "./settings";
@@ -44,7 +48,7 @@ function isEmptyDoc(description) {
             content: [
                 {
                     type: "paragraph",
-                    attrs: { dir: null, ignoreBidiAutoUpdate: null },
+                    attrs: { dir: null },
                 },
             ],
         }) === JSON.stringify(description)
@@ -69,7 +73,6 @@ export default function Widget({
     },
     state,
     pageData: product,
-    dispatch,
     editing,
 }: WidgetProps<Settings>): JSX.Element {
     const { theme } = state;
@@ -83,7 +86,7 @@ export default function Widget({
     const [success, setSuccess] = useState(false);
     const { toast } = useToast();
     const type = product.pageType;
-    const defaultSuccessMessage: Record<string, unknown> = {
+    const defaultSuccessMessage: TextEditorContent = {
         type: "doc",
         content: [
             {
@@ -153,7 +156,6 @@ export default function Widget({
             .build();
 
         try {
-            dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
             if (response.response) {
                 setEmail("");
@@ -165,8 +167,6 @@ export default function Widget({
                 description: failureMessage || DEFAULT_FAILURE_MESSAGE,
                 variant: "destructive",
             });
-        } finally {
-            dispatch(actionCreators.networkAction(false));
         }
     };
 
@@ -249,7 +249,10 @@ export default function Widget({
                                     theme={overiddenTheme}
                                     component="span"
                                 >
-                                    <TextRenderer json={finalDescription} />
+                                    <TextRenderer
+                                        json={finalDescription}
+                                        theme={overiddenTheme}
+                                    />
                                 </Subheader1>
                             </div>
                         )}
@@ -264,6 +267,7 @@ export default function Widget({
                                                     successMessage ||
                                                     defaultSuccessMessage
                                                 }
+                                                theme={overiddenTheme}
                                             />
                                         </Subheader1>
                                     )}

@@ -1,5 +1,8 @@
 import * as React from "react";
-import { IconProps } from "@radix-ui/react-icons/dist/types";
+
+type IconProps = React.ComponentPropsWithoutRef<"svg"> & {
+    color?: string;
+};
 
 export const FacebookIcon = React.forwardRef<SVGSVGElement, IconProps>(
     ({ color = "currentColor", ...props }, forwardedRef) => {

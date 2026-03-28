@@ -1,12 +1,17 @@
 import mongoose from "mongoose";
 import { checkIfAuthenticated } from "../../lib/graphql";
 import type GQLContext from "../../models/GQLContext";
-import { Link } from "../../models/Link";
+import type { Link } from "@courselit/common-models";
 import DomainModel, { Domain } from "../../models/Domain";
 import { responses } from "../../config/strings";
 import constants from "../../config/constants";
 import { checkPermission } from "@courselit/utils";
 const { permissions } = constants;
+
+type DomainWithLinks = Domain &
+    mongoose.Document & {
+        links?: mongoose.Types.DocumentArray<any>;
+    };
 
 export const saveLink = async (
     linkData: Omit<Link, "domain">,
@@ -18,7 +23,9 @@ export const saveLink = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    const domain: Domain | null = await DomainModel.findById(ctx.subdomain._id);
+    const domain = (await DomainModel.findById(
+        ctx.subdomain._id,
+    )) as DomainWithLinks | null;
     if (!domain) {
         return null;
     }
@@ -38,7 +45,7 @@ export const saveLink = async (
         await domain.save();
     } else {
         if (!domain.links) {
-            domain.links = [];
+            domain.links = [] as any;
         }
         // create a new record
         (domain.links as any).push({
@@ -63,12 +70,14 @@ export const deleteLink = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    const domain: Domain | null = await DomainModel.findById(ctx.subdomain._id);
+    const domain = (await DomainModel.findById(
+        ctx.subdomain._id,
+    )) as DomainWithLinks | null;
     if (!domain) {
         return null;
     }
 
-    domain.links.id(id).remove();
+    domain.links?.id(id)?.remove();
     await domain.save();
 
     return domain;

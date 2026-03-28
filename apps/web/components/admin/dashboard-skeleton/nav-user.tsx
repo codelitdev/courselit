@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronsUpDown, LogOut, UserPen } from "lucide-react";
+import { Bell, ChevronsUpDown, LogOut, UserPen } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -20,18 +20,26 @@ import {
 } from "@/components/ui/sidebar";
 import { useContext } from "react";
 import { ProfileContext } from "@components/contexts";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Chip } from "@courselit/components-library";
+import {
+    BETA_LABEL,
+    LOGOUT,
+    MAIN_MENU_ITEM_NOTIFICATIONS,
+    MAIN_MENU_ITEM_PROFILE,
+} from "@ui-config/strings";
 
 export function NavUser() {
     const { isMobile } = useSidebar();
     const { profile: user } = useContext(ProfileContext);
+    if (!user) {
+        return null;
+    }
     const alias = user.name
         ?.split(" ")
         .slice(0, 2)
         .map((x) => x[0]?.toUpperCase())
         .join("");
-    const router = useRouter();
 
     return (
         <SidebarMenu>
@@ -94,7 +102,16 @@ export function NavUser() {
                             <Link href={"/dashboard/profile"}>
                                 <DropdownMenuItem>
                                     <UserPen />
-                                    Profile
+                                    {MAIN_MENU_ITEM_PROFILE}
+                                </DropdownMenuItem>
+                            </Link>
+                            <Link href={"/dashboard/notifications"}>
+                                <DropdownMenuItem>
+                                    <div className="flex items-center gap-2">
+                                        <Bell />
+                                        {MAIN_MENU_ITEM_NOTIFICATIONS}
+                                    </div>
+                                    <Chip>{BETA_LABEL}</Chip>
                                 </DropdownMenuItem>
                             </Link>
                         </DropdownMenuGroup>
@@ -117,7 +134,7 @@ export function NavUser() {
                         <Link href={"/logout"}>
                             <DropdownMenuItem>
                                 <LogOut />
-                                Log out
+                                {LOGOUT}
                             </DropdownMenuItem>
                         </Link>
                     </DropdownMenuContent>

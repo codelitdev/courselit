@@ -9,11 +9,9 @@ import {
 } from "@courselit/common-models";
 import Settings from "./settings";
 import { FetchBuilder } from "@courselit/utils";
-import { actionCreators } from "@courselit/state-management";
 import {
     Link,
     LessonIcon,
-    TextRenderer,
     Skeleton,
     useToast,
     Badge,
@@ -22,10 +20,10 @@ import {
     AccordionTrigger,
     AccordionContent,
 } from "@courselit/components-library";
+import { TextRenderer } from "../../components";
 import {
     Header1,
     Text1,
-    Caption,
     Subheader1,
     Section,
 } from "@courselit/page-primitives";
@@ -44,9 +42,9 @@ export default function Widget({
         cssId,
         maxWidth,
         verticalPadding,
+        openByDefault = false,
     },
     state,
-    dispatch,
     pageData: product,
 }: WidgetProps<Settings>): JSX.Element {
     const { theme } = state;
@@ -114,7 +112,6 @@ export default function Widget({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch(actionCreators.networkAction(true));
             const response = await fetch.exec();
             if (response.course) {
                 setCourse(response.course);
@@ -125,8 +122,6 @@ export default function Widget({
                 description: err.message,
                 variant: "destructive",
             });
-        } finally {
-            dispatch(actionCreators.networkAction(false));
         }
     };
 
@@ -168,7 +163,10 @@ export default function Widget({
                             }`}
                         >
                             <Subheader1 theme={overiddenTheme} component="span">
-                                <TextRenderer json={description} />
+                                <TextRenderer
+                                    json={description}
+                                    theme={overiddenTheme}
+                                />
                             </Subheader1>
                         </div>
                     )}
@@ -182,58 +180,70 @@ export default function Widget({
                                     <Skeleton className="h-6 w-[100px] rounded-[300px]" />
                                     <Skeleton className="h-6 w-6" />
                                 </div>
-                                <hr className="w-full" />
+                                <hr className="w-full border-border" />
                             </div>
                         ))}
                     </div>
                 )}
-                <Accordion type="single" collapsible>
-                    {Object.keys(formattedCourse).map((group, index) => (
-                        <AccordionItem
-                            value={group}
-                            key={index}
-                            // className="border-b-0"
+                {course &&
+                    Object.keys(formattedCourse).length > 0 &&
+                    (openByDefault ? (
+                        <Accordion
+                            key={`open-${Object.keys(formattedCourse).length}`}
+                            type="multiple"
+                            defaultValue={Object.keys(formattedCourse)}
                         >
-                            <AccordionTrigger>
-                                <div className="flex grow justify-between mr-2">
-                                    <Text1 theme={overiddenTheme}>
-                                        {group}
-                                    </Text1>
-                                    <Badge>
-                                        <Caption
-                                            theme={overiddenTheme}
-                                            className="leading-none"
-                                        >
-                                            {`${formattedCourse[group].length} lessons`}
-                                        </Caption>
-                                    </Badge>
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                                {formattedCourse[group].map(
-                                    (lesson: Lesson) => (
-                                        <div
-                                            key={lesson.lessonId}
-                                            className="flex items-center gap-2 py-2 px-2 hover:bg-gray-100 rounded"
-                                        >
-                                            <LessonIcon
-                                                type={lesson.type as LessonType}
-                                            />
-                                            <Link
-                                                href={`/course/${course.slug}/${course.courseId}/${lesson.lessonId}`}
-                                            >
-                                                <Text1 theme={overiddenTheme}>
-                                                    {lesson.title}
-                                                </Text1>
-                                            </Link>
-                                        </div>
-                                    ),
-                                )}
-                            </AccordionContent>
-                        </AccordionItem>
+                            {renderItems()}
+                        </Accordion>
+                    ) : (
+                        <Accordion type="single" collapsible>
+                            {renderItems()}
+                        </Accordion>
                     ))}
-                </Accordion>
             </div>
         </Section>
     );
+
+    function renderItems() {
+        return Object.keys(formattedCourse).map((group) => (
+            <AccordionItem value={group} key={group}>
+                <AccordionTrigger>
+                    <div className="flex grow justify-between mr-2">
+                        <Text1 theme={overiddenTheme} className="text-left">
+                            {group}
+                        </Text1>
+                        <Badge variant="outline">
+                            {`${formattedCourse[group].length} lessons`}
+                        </Badge>
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                    {formattedCourse[group].map((lesson: Lesson) => (
+                        <Link
+                            key={lesson.lessonId}
+                            href={`/course/${course!.slug}/${
+                                course!.courseId
+                            }/${lesson.lessonId}`}
+                        >
+                            <div className="flex justify-between items-center gap-2 py-2 px-2 hover:bg-muted rounded transition-colors">
+                                <span className="flex items-center gap-2">
+                                    <LessonIcon
+                                        type={lesson.type as LessonType}
+                                    />
+
+                                    <Text1 theme={overiddenTheme}>
+                                        {lesson.title}
+                                    </Text1>
+                                </span>
+
+                                {!lesson.requiresEnrollment && (
+                                    <Badge variant="outline">Preview</Badge>
+                                )}
+                            </div>
+                        </Link>
+                    ))}
+                </AccordionContent>
+            </AccordionItem>
+        ));
+    }
 }

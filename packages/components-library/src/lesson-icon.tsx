@@ -9,6 +9,7 @@ import {
     Link,
     Quiz,
     QuestionMark,
+    Scorm,
 } from "@courselit/icons";
 
 export default function LessonIcon({ type }: { type: LessonType }) {
@@ -27,6 +28,8 @@ export default function LessonIcon({ type }: { type: LessonType }) {
             return <File />;
         case "embed":
             return <Link />;
+        case "scorm":
+            return <Scorm />;
         default:
             return <QuestionMark />;
     }

@@ -5,6 +5,7 @@ import {
     Constants,
     Membership,
     PaymentPlan,
+    TextEditorContent,
     UIConstants,
 } from "@courselit/common-models";
 import { FormEvent, Fragment, useContext, useState } from "react";
@@ -14,13 +15,14 @@ import {
     FormField,
     getSymbolFromCurrency,
     Link,
-    TextRenderer,
     useToast,
 } from "@courselit/components-library";
+import { TextRenderer } from "@courselit/page-blocks";
 import {
     AddressContext,
     ProfileContext,
     SiteInfoContext,
+    ThemeContext,
 } from "@components/contexts";
 import {
     Dialog,
@@ -33,15 +35,16 @@ import {
 } from "@components/ui/dialog";
 import { COMMUNITY_SETTINGS, TOAST_TITLE_SUCCESS } from "@ui-config/strings";
 import { Share2 } from "lucide-react";
+import WidgetErrorBoundary from "@components/public/base-layout/template/widget-error-boundary";
 const { permissions } = UIConstants;
 
 interface CommunityInfoProps {
     id: string;
     name: string;
-    description: Record<string, unknown>;
+    description: TextEditorContent;
     image: string;
     memberCount: number;
-    paymentPlan: PaymentPlan;
+    paymentPlan?: PaymentPlan;
     joiningReasonText?: string;
     pageId: string;
     onJoin: (joiningReason?: string) => void;
@@ -65,13 +68,16 @@ export function CommunityInfo({
     const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
     const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
     const [joiningReason, setJoiningReason] = useState("");
-    const { amount, period } = getPlanPrice(paymentPlan);
+    const { amount, period } = paymentPlan
+        ? getPlanPrice(paymentPlan)
+        : { amount: 0, period: "" };
     const address = useContext(AddressContext);
     const siteinfo = useContext(SiteInfoContext);
     const { profile } = useContext(ProfileContext);
     const currencySymbol =
         getSymbolFromCurrency(siteinfo.currencyISOCode || "USD") || "$";
     const { toast } = useToast();
+    const { theme } = useContext(ThemeContext);
 
     const handleJoinSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -99,7 +105,7 @@ export function CommunityInfo({
         <Card>
             <CardHeader className="flex justify-between items-center w-full">
                 <CardTitle className="w-full">
-                    <div class="flex justify-between items-center w-full">
+                    <div className="flex justify-between items-center w-full">
                         <p>{name}</p>
                         <Button
                             variant="ghost"
@@ -119,7 +125,14 @@ export function CommunityInfo({
                 />
                 <div className="space-y-2">
                     <div className="text-sm text-muted-foreground">
-                        {description && <TextRenderer json={description} />}
+                        {description && (
+                            <WidgetErrorBoundary widgetName="text-editor">
+                                <TextRenderer
+                                    json={description}
+                                    theme={theme.theme}
+                                />
+                            </WidgetErrorBoundary>
+                        )}
                     </div>
                     <p className="text-sm">
                         <strong>{memberCount.toLocaleString()}</strong> members
@@ -199,9 +212,9 @@ export function CommunityInfo({
                                             Are you sure you want to leave this
                                             community? <br></br> <br></br>
                                             You’ll lose access to all community
-                                            content and discussions, and any
-                                            ongoing subscription will be
-                                            canceled.
+                                            content, discussions and included
+                                            products. Ongoing subscription will
+                                            also be canceled, if any.
                                         </DialogDescription>
                                     </DialogHeader>
                                     <DialogFooter>

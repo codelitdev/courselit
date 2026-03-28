@@ -6,11 +6,6 @@ import {
     SequenceType,
 } from "@courselit/common-models";
 import {
-    AppDispatch,
-    AppState,
-    actionCreators,
-} from "@courselit/state-management";
-import {
     BTN_NEW_MAIL,
     PAGE_HEADER_ALL_MAILS,
     BROADCASTS,
@@ -19,10 +14,9 @@ import {
     BTN_NEW_SEQUENCE,
     BTN_NEW_TEMPLATE,
     TOAST_TITLE_ERROR,
-} from "../../../ui-config/strings";
+} from "@/ui-config/strings";
 import { FetchBuilder } from "@courselit/utils";
 import { useRouter } from "next/navigation";
-import { ThunkDispatch } from "redux-thunk";
 import {
     // Button,
     Tabbs,
@@ -34,28 +28,20 @@ import {
     CardTitle,
     useToast,
 } from "@courselit/components-library";
-import { AnyAction } from "redux";
 import RequestForm from "./request-form";
 import SequencesList from "./sequences-list";
 import TemplatesList from "./templates-list";
-const { networkAction } = actionCreators;
 import { Button } from "@components/ui/button";
+import Link from "next/link";
 
 interface MailsProps {
     address: Address;
     selectedTab: typeof BROADCASTS | typeof SEQUENCES | typeof TEMPLATES;
-    dispatch?: AppDispatch;
-    loading: boolean;
 }
 
 type MailsTab = typeof BROADCASTS | typeof SEQUENCES | typeof TEMPLATES;
 
-export default function Mails({
-    address,
-    dispatch,
-    selectedTab,
-    loading,
-}: MailsProps) {
+export default function Mails({ address, selectedTab }: MailsProps) {
     const [siteInfo, setSiteInfo] = useState<Domain>();
     const router = useRouter();
     const { toast } = useToast();
@@ -84,7 +70,6 @@ export default function Mails({
             const fetcher = fetch.setPayload({ query }).build();
 
             try {
-                dispatch && dispatch(networkAction(true));
                 const response = await fetcher.exec();
                 if (response.siteInfo) {
                     setSiteInfo(response.siteInfo);
@@ -95,60 +80,11 @@ export default function Mails({
                     description: e.message,
                     variant: "destructive",
                 });
-            } finally {
-                dispatch && dispatch(networkAction(false));
             }
         };
 
         getSiteInfo();
     }, []);
-
-    const createSequence = async (type: SequenceType): Promise<void> => {
-        const mutation = `
-        mutation createSequence(
-            $type: SequenceType!
-        ) {
-            sequence: createSequence(type: $type) {
-                sequenceId
-            }
-        }
-    `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload({
-                query: mutation,
-                variables: {
-                    type: type.toUpperCase(),
-                },
-            })
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            dispatch &&
-                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                    networkAction(true),
-                );
-            const response = await fetch.exec();
-            if (response.sequence && response.sequence.sequenceId) {
-                router.push(
-                    `/dashboard/mails/${
-                        selectedTab === BROADCASTS ? "broadcast" : "sequence"
-                    }/${response.sequence.sequenceId}`,
-                );
-            }
-        } catch (err) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: err.message,
-                variant: "destructive",
-            });
-        } finally {
-            dispatch &&
-                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                    networkAction(false),
-                );
-        }
-    };
 
     const createEmailTemplate = async (): Promise<void> => {
         const mutation = `
@@ -169,10 +105,6 @@ export default function Mails({
             .setIsGraphQLEndpoint(true)
             .build();
         try {
-            dispatch &&
-                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                    networkAction(true),
-                );
             const response = await fetch.exec();
             if (response.template && response.template.templateId) {
                 router.push(
@@ -185,11 +117,6 @@ export default function Mails({
                 description: err.message,
                 variant: "destructive",
             });
-        } finally {
-            dispatch &&
-                (dispatch as ThunkDispatch<AppState, null, AnyAction>)(
-                    networkAction(false),
-                );
         }
     };
 
@@ -229,12 +156,9 @@ export default function Mails({
                         </CardHeader>
                         <CardFooter>
                             <div className="w-[120px]">
-                                <Button
-                                    component="link"
-                                    href={`/dashboard/settings?tab=Mails`}
-                                >
-                                    Go to settings
-                                </Button>
+                                <Link href={`/dashboard/settings?tab=Mails`}>
+                                    <Button>Go to settings</Button>
+                                </Link>
                             </div>
                         </CardFooter>
                     </Card>
@@ -250,7 +174,7 @@ export default function Mails({
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <RequestForm address={address} />
+                            <RequestForm />
                         </CardContent>
                     </Card>
                 )}
@@ -270,8 +194,8 @@ export default function Mails({
                         {selectedTab === BROADCASTS
                             ? BTN_NEW_MAIL
                             : selectedTab === SEQUENCES
-                            ? BTN_NEW_SEQUENCE
-                            : BTN_NEW_TEMPLATE}
+                              ? BTN_NEW_SEQUENCE
+                              : BTN_NEW_TEMPLATE}
                     </Button>
                 </div>
             </div>
@@ -285,20 +209,12 @@ export default function Mails({
                 <SequencesList
                     type={Constants.mailTypes[0] as SequenceType}
                     address={address}
-                    loading={loading}
-                    dispatch={dispatch}
                 />
                 <SequencesList
                     type={Constants.mailTypes[1] as SequenceType}
                     address={address}
-                    loading={loading}
-                    dispatch={dispatch}
                 />
-                <TemplatesList
-                    address={address}
-                    loading={loading}
-                    dispatch={dispatch}
-                />
+                <TemplatesList address={address} />
             </Tabbs>
         </div>
     );

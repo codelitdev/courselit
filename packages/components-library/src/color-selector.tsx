@@ -32,6 +32,7 @@ interface ColorSelectorProps
     tooltip?: string;
     className?: string;
     allowReset?: boolean;
+    description?: string;
 }
 
 export default function ColorSelector({
@@ -43,6 +44,7 @@ export default function ColorSelector({
     size,
     className,
     allowReset = true,
+    description,
 }: ColorSelectorProps) {
     const [localValue, setLocalValue] = React.useState(value);
 
@@ -76,12 +78,19 @@ export default function ColorSelector({
         <div
             className={cn(colorSelectorVariants({ variant, size, className }))}
         >
-            <div className="flex grow items-center gap-1">
-                <p className="text-sm font-medium leading-none">{title}</p>
-                {tooltip && (
-                    <Tooltip title={tooltip}>
-                        <Help className="h-4 w-4 text-muted-foreground" />
-                    </Tooltip>
+            <div className="flex grow flex-col gap-1">
+                <div className="flex items-center gap-1">
+                    <p className="text-sm font-medium leading-none">{title}</p>
+                    {tooltip && (
+                        <Tooltip title={tooltip}>
+                            <Help className="h-4 w-4 text-muted-foreground" />
+                        </Tooltip>
+                    )}
+                </div>
+                {description && (
+                    <p className="text-xs text-muted-foreground">
+                        {description}
+                    </p>
                 )}
             </div>
             <div className="flex items-center gap-2">

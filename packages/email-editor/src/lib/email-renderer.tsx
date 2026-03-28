@@ -12,6 +12,22 @@ export interface UtmParams {
     campaign: string;
 }
 
+function stringifyUnknownError(err: unknown): string {
+    if (err instanceof Error) {
+        return err.message;
+    }
+
+    if (typeof err === "string") {
+        return err;
+    }
+
+    try {
+        return JSON.stringify(err);
+    } catch {
+        return String(err);
+    }
+}
+
 function appendUtmParams(url: string, utm: UtmParams): string {
     try {
         const urlObj = new URL(url);
@@ -102,7 +118,11 @@ export function EmailTemplate({
                         overflow: "hidden",
                     }}
                 >
-                    {email.content.map((block) => renderBlock(block))}
+                    {email.content.map((block, index) => (
+                        <React.Fragment key={block.id || index}>
+                            {renderBlock(block)}
+                        </React.Fragment>
+                    ))}
                 </Container>
             </Body>
         </Html>
@@ -134,9 +154,16 @@ export async function renderEmailToHtml({
                 blockRegistry={blockRegistry}
             />
         );
-        const html = await pretty(await render(template));
-        return html;
+        const renderedHtml = await render(template);
+
+        try {
+            return await pretty(renderedHtml);
+        } catch {
+            // Pretty-printing is optional. If formatting fails in a given
+            // runtime, return the valid rendered markup instead of an error page.
+            return renderedHtml;
+        }
     } catch (err) {
-        return `<h1>Error: ${err instanceof Error ? err.message : "Unknown error"}</h1>`;
+        return `<h1>Error: ${stringifyUnknownError(err)}</h1>`;
     }
 }

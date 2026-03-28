@@ -1,4 +1,9 @@
-import { GraphQLList, GraphQLNonNull, GraphQLString } from "graphql";
+import {
+    GraphQLBoolean,
+    GraphQLList,
+    GraphQLNonNull,
+    GraphQLString,
+} from "graphql";
 import types from "./types";
 import {
     updateUser,
@@ -7,6 +12,7 @@ import {
     addTags,
     deleteTag,
     untagUsers,
+    deleteUser,
 } from "./logic";
 
 const mutations = {
@@ -75,6 +81,16 @@ const mutations = {
         },
         resolve: async (_: any, { name }: { name: string }, context: any) =>
             untagUsers(name, context),
+    },
+    deleteUser: {
+        type: new GraphQLNonNull(GraphQLBoolean),
+        args: {
+            userId: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+        },
+        resolve: async (_: any, { userId }: { userId: string }, context: any) =>
+            deleteUser(userId, context),
     },
 };
 

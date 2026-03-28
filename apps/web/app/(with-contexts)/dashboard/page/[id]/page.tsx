@@ -11,9 +11,10 @@ import {
 } from "@components/contexts";
 import { Profile } from "@courselit/common-models";
 import { useSearchParams } from "next/navigation";
-import { useContext } from "react";
+import { useContext, use } from "react";
 
-export default function Page({ params }: { params: { id: string } }) {
+export default function Page(props: { params: Promise<{ id: string }> }) {
+    const params = use(props.params);
     const { id } = params;
     const searchParams = useSearchParams();
     const redirectTo = searchParams?.get("redirectTo");
@@ -43,7 +44,7 @@ export default function Page({ params }: { params: { id: string } }) {
                 siteinfo: siteInfo,
                 address: address,
                 profile: profile as Profile,
-                auth: profile.email
+                auth: profile!.email
                     ? {
                           guest: false,
                           checked: true,
@@ -71,7 +72,6 @@ export default function Page({ params }: { params: { id: string } }) {
                     action: null,
                 },
             }}
-            dispatch={() => {}}
         />
     );
 }

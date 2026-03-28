@@ -1,4 +1,4 @@
-import sharedConfig from "tailwind-config/tailwind.config";
+import sharedConfig from "tailwind-config";
 
 const config = {
     presets: [sharedConfig],

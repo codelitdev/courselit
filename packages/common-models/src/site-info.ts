@@ -1,3 +1,4 @@
+import { LoginProvider } from "./login-provider";
 import { Media } from "./media";
 import { PaymentMethod } from "./payment-method";
 
@@ -25,4 +26,6 @@ export default interface SiteInfo {
     lemonsqueezySubscriptionMonthlyVariantId?: string;
     lemonsqueezySubscriptionYearlyVariantId?: string;
     lemonsqueezyWebhookSecret?: string;
+    logins?: LoginProvider[];
+    ssoTrustedDomain?: string;
 }

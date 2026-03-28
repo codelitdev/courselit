@@ -8,7 +8,7 @@ import ActivityModel, { Activity } from "../../models/Activity";
 import { calculatePastDate } from "./helpers";
 import { ActivityType } from "@courselit/common-models";
 
-interface Activities {
+export interface Activities {
     count: number;
     points?: { date: Date; count: number }[];
     growth?: number;

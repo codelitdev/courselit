@@ -2,23 +2,28 @@ import LayoutWithContext from "./layout-with-context";
 import React from "react";
 import { auth } from "@/auth";
 import { headers } from "next/headers";
-import { getAddressFromHeaders, getFullSiteSetup } from "@ui-lib/utils";
+import { getFullSiteSetup } from "@ui-lib/utils";
+import { getAddressFromHeaders } from "@/app/actions";
 import { defaultState } from "@components/default-state";
 import { decode } from "base-64";
 import { ServerConfig, SiteInfo } from "@courselit/common-models";
+import constants from "@config/constants";
 
 export default async function Layout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const address = getAddressFromHeaders(headers);
-    const session = await auth();
+    const address = await getAddressFromHeaders(headers);
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
 
     const siteSetup = await getFullSiteSetup(address);
     const config: ServerConfig = {
         turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || "",
         queueServer: process.env.QUEUE_SERVER || "",
+        cacheEnabled: constants.cacheEnabled,
         recaptchaSiteKey: process.env.RECAPTCHA_SITE_KEY || "",
     };
 
@@ -29,6 +34,7 @@ export default async function Layout({
             theme={siteSetup?.theme || defaultState.theme}
             config={config}
             session={session}
+            features={siteSetup?.features || defaultState.features}
         >
             {children}
         </LayoutWithContext>
@@ -58,4 +64,5 @@ const formatSiteInfo = (siteinfo?: SiteInfo) => ({
     razorpayKey: siteinfo?.razorpayKey || defaultState.siteinfo.razorpayKey,
     lemonsqueezyKey:
         siteinfo?.lemonsqueezyKey || defaultState.siteinfo.lemonsqueezyKey,
+    logins: siteinfo?.logins || defaultState.siteinfo.logins,
 });

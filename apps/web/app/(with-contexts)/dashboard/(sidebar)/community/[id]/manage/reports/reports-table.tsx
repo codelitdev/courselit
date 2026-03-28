@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useEffect, useContext } from "react";
+import {
+    useState,
+    useEffect,
+    useContext,
+    useMemo,
+    useCallback,
+    startTransition,
+} from "react";
 import {
     Table,
     TableBody,
@@ -43,21 +50,15 @@ export function ReportsTable({ communityId }: { communityId: string }) {
     const address = useContext(AddressContext);
     const { toast } = useToast();
 
-    const fetch = new FetchBuilder()
-        .setUrl(`${address.backend}/api/graph`)
-        .setIsGraphQLEndpoint(true);
+    const fetch = useMemo(
+        () =>
+            new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setIsGraphQLEndpoint(true),
+        [address.backend],
+    );
 
-    useEffect(() => {
-        loadReports();
-    }, [page]);
-
-    useEffect(() => {
-        setPage(1);
-        setTotalReports(0);
-        loadReports();
-    }, [filter]);
-
-    const loadReports = async () => {
+    const loadReports = useCallback(async () => {
         const query = `
             query ($communityId: String!, $page: Int, $limit: Int, $status: CommunityReportStatusType) {
                 reports: getCommunityReports(communityId: $communityId, page: $page, limit: $limit, status: $status) {
@@ -105,7 +106,20 @@ export function ReportsTable({ communityId }: { communityId: string }) {
                 description: e.message,
             });
         }
-    };
+    }, [communityId, fetch, filter, page, toast]);
+
+    useEffect(() => {
+        startTransition(() => {
+            void loadReports();
+        });
+    }, [loadReports]);
+
+    useEffect(() => {
+        startTransition(() => {
+            setPage(1);
+            setTotalReports(0);
+        });
+    }, [filter]);
 
     const handleStatusChange = (report: CommunityReport) => {
         const nextStatus = getNextStatusForCommunityReport(
@@ -256,7 +270,10 @@ export function ReportsTable({ communityId }: { communityId: string }) {
                         </TableHeader>
                         <TableBody>
                             {reports.map((report) => (
-                                <TableRow key={report.id} className="border-b">
+                                <TableRow
+                                    key={report.reportId}
+                                    className="border-b"
+                                >
                                     <TableCell className="text-sm text-gray-600 max-w-[200px] truncate">
                                         {report.content.content}
                                     </TableCell>

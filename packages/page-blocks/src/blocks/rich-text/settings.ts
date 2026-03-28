@@ -1,10 +1,11 @@
 import type {
     HorizontalAlignment,
+    TextEditorContent,
     WidgetDefaultSettings,
 } from "@courselit/common-models";
 
 export default interface Settings extends WidgetDefaultSettings {
-    text: Record<string, unknown>;
+    text: TextEditorContent;
     alignment: HorizontalAlignment;
     cssId?: string;
     fontSize?: number;

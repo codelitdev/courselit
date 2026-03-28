@@ -11,6 +11,7 @@ import {
     Subheader1,
 } from "@courselit/page-primitives";
 import Link from "next/link";
+import { UNNAMED_USER } from "@ui-config/strings";
 
 export function BlogContentCard({ product }: { product: Course }) {
     const { theme: uiTheme } = useContext(ThemeContext);
@@ -50,7 +51,10 @@ export function BlogContentCard({ product }: { product: Course }) {
                                 height="h-8"
                             />
                             <Subheader1 theme={theme}>
-                                {truncate(product.user?.name || "Unnamed", 20)}
+                                {truncate(
+                                    product.user?.name || UNNAMED_USER,
+                                    20,
+                                )}
                             </Subheader1>
                         </div>
                     </div>

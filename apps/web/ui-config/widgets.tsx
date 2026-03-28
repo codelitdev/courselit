@@ -12,12 +12,14 @@ import {
     FAQ,
     Pricing,
     Media,
+    Marquee,
+    Embed,
 } from "@courselit/page-blocks";
 
 function loadWidgets(): Record<string, any> {
     const widgets: Record<string, Widget> = {};
 
-    // Add common widgets to CourseLit
+    // Adding page blocks to CourseLit
     widgets[RichText.metadata.name] = RichText;
     widgets[Featured.metadata.name] = Featured;
     widgets[Banner.metadata.name] = Banner;
@@ -27,14 +29,11 @@ function loadWidgets(): Record<string, any> {
     widgets[FAQ.metadata.name] = FAQ;
     widgets[Pricing.metadata.name] = Pricing;
     widgets[Media.metadata.name] = Media;
+    widgets[Marquee.metadata.name] = Marquee;
+    widgets[Embed.metadata.name] = Embed;
+    widgets[EmailForm.metadata.name] = EmailForm;
     widgets[Footer.metadata.name] = Object.assign({}, Footer, { shared: true });
     widgets[Header.metadata.name] = Object.assign({}, Header, { shared: true });
-    widgets[EmailForm.metadata.name] = Object.assign({}, EmailForm, {
-        shared: true,
-    });
-
-    // Additional widgets are added here
-    // widgets[buttondown.metadata.name] = buttondown;
 
     return widgets;
 }

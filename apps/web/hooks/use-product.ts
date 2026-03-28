@@ -1,34 +1,35 @@
-import { Address, Course } from "@courselit/common-models";
+import { Course } from "@courselit/common-models";
 import { Lesson } from "@courselit/common-models";
-import { useToast } from "@courselit/components-library";
-import { TOAST_TITLE_ERROR } from "@ui-config/strings";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useGraphQLFetch } from "./use-graphql-fetch";
+import { AddressContext } from "@components/contexts";
+import { InternalCourse } from "@courselit/orm-models";
 
 export type ProductWithAdminProps = Partial<
-    Omit<Course, "paymentPlans"> &
+    Omit<InternalCourse, "paymentPlans"> &
         Pick<Course, "paymentPlans"> & {
-            lessons: Pick<Lesson, "title" | "groupId" | "lessonId" | "type"> &
-                { id: string }[];
+            lessons: (Pick<
+                Lesson,
+                "title" | "groupId" | "lessonId" | "type" | "published"
+            > & { id: string })[];
         }
 >;
 
-export default function useProduct(
-    id: string,
-    address: Address,
-): { product: ProductWithAdminProps | undefined | null; loaded: boolean } {
+export default function useProduct(id?: string | null): {
+    product: ProductWithAdminProps | undefined | null;
+    loaded: boolean;
+    error: any;
+} {
     const [product, setProduct] = useState<
         ProductWithAdminProps | undefined | null
     >();
-    const { toast } = useToast();
     const [loaded, setLoaded] = useState(false);
-    const [hasError, setHasError] = useState(false);
+    const [error, setError] = useState<any>(null);
+    const address = useContext(AddressContext);
     const fetch = useGraphQLFetch();
 
     const loadProduct = useCallback(
         async (courseId: string) => {
-            if (hasError) return;
-
             const query = `
             query {
                 course: getCourse(id: "${courseId}") {
@@ -42,6 +43,7 @@ export default function useProduct(
                         groupId,
                         lessonId,
                         type
+                        published
                     },
                     groups {
                         id,
@@ -70,7 +72,6 @@ export default function useProduct(
                     courseId,
                     cost,
                     costType,
-                    creatorName,
                     featuredImage {
                         mediaId,
                         originalFileName,
@@ -94,9 +95,13 @@ export default function useProduct(
                         emiTotalInstallments
                         subscriptionMonthlyAmount
                         subscriptionYearlyAmount
+                        entityId
+                        entityType
+                        includedProducts
                     }
                     leadMagnet
                     defaultPaymentPlan
+                    certificate
                 }
             }
         `;
@@ -105,29 +110,25 @@ export default function useProduct(
                 const response = await fetchInstance.exec();
                 if (response.course) {
                     setProduct(response.course);
+                    setError(null);
                 } else {
                     setProduct(null);
                 }
             } catch (err: any) {
-                setHasError(true);
+                setError(err);
                 setProduct(null);
-                toast({
-                    title: TOAST_TITLE_ERROR,
-                    description: err.message,
-                    variant: "destructive",
-                });
             } finally {
                 setLoaded(true);
             }
         },
-        [fetch, hasError],
+        [fetch],
     );
 
     useEffect(() => {
-        if (id && address && !hasError) {
+        if (id && address) {
             loadProduct(id);
         }
-    }, [id, address, loadProduct, hasError]);
+    }, [id, address, loadProduct]);
 
-    return { product, loaded };
+    return { product, loaded, error };
 }

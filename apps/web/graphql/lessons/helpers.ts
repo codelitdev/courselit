@@ -9,7 +9,7 @@ const { text, audio, video, pdf, embed, quiz, file } = constants;
 
 type LessonValidatorProps = Pick<
     LessonWithStringContent,
-    "content" | "type" | "media"
+    "content" | "type" | "media" | "requiresEnrollment"
 >;
 
 export const lessonValidator = (lessonData: LessonValidatorProps) => {
@@ -20,7 +20,9 @@ export const lessonValidator = (lessonData: LessonValidatorProps) => {
 export function validateTextContent(lessonData: LessonValidatorProps) {
     const content = lessonData.content ? JSON.parse(lessonData.content) : null;
 
-    if ([text, embed].includes(lessonData.type)) {
+    const isTextOrEmbed = lessonData.type === text || lessonData.type === embed;
+
+    if (isTextOrEmbed) {
         if (
             lessonData.type === text &&
             content &&
@@ -36,6 +38,16 @@ export function validateTextContent(lessonData: LessonValidatorProps) {
     }
 
     if (lessonData.type === quiz) {
+        if (
+            Object.prototype.hasOwnProperty.call(
+                lessonData,
+                "requiresEnrollment",
+            ) &&
+            !lessonData.requiresEnrollment
+        ) {
+            throw new Error(responses.quiz_cannot_be_previewed);
+        }
+
         if (content && content.questions) {
             validateQuizContent(content.questions);
         }
@@ -75,25 +87,25 @@ type GroupLessonItem = Pick<Lesson, "lessonId" | "groupId">;
 export const getGroupedLessons = async (
     courseId: string,
     domainId: mongoose.Types.ObjectId,
+    publishedOnly: boolean = false,
 ): Promise<GroupLessonItem[]> => {
     const course = await CourseModel.findOne({
         courseId: courseId,
         domain: domainId,
     });
-    const allLessons = await LessonModel.find<GroupLessonItem>(
-        {
-            lessonId: {
-                $in: [...course.lessons],
-            },
-            domain: domainId,
-        },
-        {
-            lessonId: 1,
-            groupId: 1,
-        },
-    );
-    const lessonsInSequentialOrder = [];
-    for (let group of course.groups.sort(
+    const lessonsQuery: Record<string, unknown> = {
+        courseId: courseId,
+        domain: domainId,
+    };
+    if (publishedOnly) {
+        lessonsQuery.published = true;
+    }
+    const allLessons = await LessonModel.find<GroupLessonItem>(lessonsQuery, {
+        lessonId: 1,
+        groupId: 1,
+    });
+    const lessonsInSequentialOrder: GroupLessonItem[] = [];
+    for (let group of (course?.groups ?? []).sort(
         (a: Group, b: Group) => a.rank - b.rank,
     )) {
         lessonsInSequentialOrder.push(
@@ -115,10 +127,12 @@ export const getPrevNextCursor = async (
     courseId: string,
     domainId: mongoose.Types.ObjectId,
     lessonId?: string,
+    publishedOnly: boolean = false,
 ) => {
     const lessonsInSequentialOrder = await getGroupedLessons(
         courseId,
         domainId,
+        publishedOnly,
     );
     const indexOfCurrentLesson = lessonId
         ? lessonsInSequentialOrder.findIndex(
@@ -192,8 +206,12 @@ export async function isPartOfDripGroup(
     if (!course) {
         throw new Error(responses.item_not_found);
     }
-    const group = course.groups.find((group) => group._id === lesson.groupId);
-    if (group.drip && group.drip.status) {
+    const group = (course.groups ?? []).find((group) => {
+        const groupId =
+            (group as { _id?: string; id?: string })._id ?? group.id;
+        return groupId === lesson.groupId;
+    });
+    if (group?.drip && group.drip.status) {
         return true;
     }
 
@@ -201,8 +219,13 @@ export async function isPartOfDripGroup(
 }
 
 export function removeCorrectAnswersProp(lesson: Lesson) {
-    if (lesson.content && lesson.content.questions) {
-        for (let question of lesson.content.questions as any[]) {
+    if (lesson.content && (lesson.content as Quiz).questions) {
+        for (let question of (lesson.content as Quiz).questions as any[]) {
+            question.type =
+                question.options.filter((option: any) => option.correctAnswer)
+                    .length > 1
+                    ? "multiple"
+                    : "single";
             question.options = question.options.map((option: any) => ({
                 text: option.text,
             }));

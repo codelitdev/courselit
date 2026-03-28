@@ -1,6 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback, useContext } from "react";
+import {
+    useState,
+    useEffect,
+    useCallback,
+    useContext,
+    memo,
+    useMemo,
+    useRef,
+} from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search } from "lucide-react";
@@ -11,38 +19,64 @@ interface GifSelectorProps {
     onGifSelect: (gifUrl: string) => void;
 }
 
-export function GifSelector({ onGifSelect }: GifSelectorProps) {
+function GifSelectorComponent({ onGifSelect }: GifSelectorProps) {
     const [search, setSearch] = useState("");
     const [gifs, setGifs] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const address = useContext(AddressContext);
+    const requestSeqRef = useRef(0);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
-    const fetchGifs = async (searchTerm: string) => {
-        setLoading(true);
-        try {
-            const endpoint = searchTerm
-                ? `${address.backend}/api/gifs/search?q=${encodeURIComponent(searchTerm)}`
-                : `${address.backend}/api/gifs/trending`;
+    const fetchGifs = useCallback(
+        async (searchTerm: string) => {
+            const requestId = ++requestSeqRef.current;
+            abortControllerRef.current?.abort();
+            const controller = new AbortController();
+            abortControllerRef.current = controller;
+            setLoading(true);
 
-            const response = await fetch(endpoint);
-            const data = await response.json();
-            setGifs(data.data.map((gif: any) => gif.images.fixed_height.url));
-        } catch (error) {
-            console.error("Error fetching GIFs:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+            try {
+                const endpoint = searchTerm
+                    ? `${address.backend}/api/gifs/search?q=${encodeURIComponent(searchTerm)}`
+                    : `${address.backend}/api/gifs/trending`;
 
-    const debouncedFetchGifs = useCallback(
-        debounce((searchTerm: string) => fetchGifs(searchTerm), 300),
-        [],
+                const response = await fetch(endpoint, {
+                    signal: controller.signal,
+                });
+                const data = await response.json();
+                if (requestId === requestSeqRef.current) {
+                    setGifs(
+                        data.data.map(
+                            (gif: any) => gif.images.fixed_height.url,
+                        ),
+                    );
+                }
+            } catch (error) {
+                if ((error as Error).name !== "AbortError") {
+                    console.error("Error fetching GIFs:", error);
+                }
+            } finally {
+                if (requestId === requestSeqRef.current) {
+                    setLoading(false);
+                }
+            }
+        },
+        [address.backend],
+    );
+
+    const debouncedFetchGifs = useMemo(
+        () =>
+            debounce((searchTerm: string) => {
+                void fetchGifs(searchTerm);
+            }, 300),
+        [fetchGifs],
     );
 
     useEffect(() => {
         debouncedFetchGifs(search);
         return () => {
             debouncedFetchGifs.cancel();
+            abortControllerRef.current?.abort();
         };
     }, [search, debouncedFetchGifs]);
 
@@ -84,3 +118,5 @@ export function GifSelector({ onGifSelect }: GifSelectorProps) {
         </div>
     );
 }
+
+export const GifSelector = memo(GifSelectorComponent);

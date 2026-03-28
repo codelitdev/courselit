@@ -1,7 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, useContext, useCallback } from "react";
-import { CreatePostDialog } from "./create-post-dialog";
+import {
+    useState,
+    useEffect,
+    useRef,
+    useContext,
+    useCallback,
+    useMemo,
+} from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,32 +23,43 @@ import {
     MoreVertical,
     Trash,
     FlagTriangleRight,
+    Maximize2,
+    ArrowLeft,
+    Download,
 } from "lucide-react";
 import {
     Dialog,
     DialogContent,
-    DialogTrigger,
     DialogTitle,
     DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog";
 import { Comment as CommentType } from "./mock-data";
 import { useRouter } from "next/navigation";
-import { capitalize, FetchBuilder } from "@courselit/utils";
+import { capitalize, FetchBuilder, truncate } from "@courselit/utils";
 import { AddressContext, ProfileContext } from "@components/contexts";
-import { PaginatedTable, useToast } from "@courselit/components-library";
+import {
+    PaginatedTable,
+    useToast,
+    useMediaLit,
+} from "@courselit/components-library";
 import {
     CommunityMedia,
     CommunityPost,
     Constants,
     Media,
+    TextEditorContent,
 } from "@courselit/common-models";
 import LoadingSkeleton from "./loading-skeleton";
 import { formattedLocaleDate, hasCommunityPermission } from "@ui-lib/utils";
 import { MediaItem } from "./media-item";
 import Image from "next/image";
 import MembershipStatus from "./membership-status";
-import { TOAST_TITLE_ERROR, TOAST_TITLE_SUCCESS } from "@ui-config/strings";
+import {
+    MANAGE_LINK_TEXT,
+    TOAST_TITLE_ERROR,
+    TOAST_TITLE_SUCCESS,
+} from "@ui-config/strings";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -57,6 +74,10 @@ import NotFound from "@components/admin/not-found";
 import { CommunityInfo } from "./info";
 import Banner from "./banner";
 import { Textarea } from "@/components/ui/textarea";
+import Link from "next/link";
+import dynamic from "next/dynamic";
+
+const CreatePostDialog = dynamic(() => import("./create-post-dialog"));
 
 const itemsPerPage = 10;
 
@@ -70,20 +91,27 @@ export function CommunityForum({
     const router = useRouter();
     const [showAllCategories, setShowAllCategories] = useState(false);
     const [posts, setPosts] = useState<CommunityPost[]>([]);
-    const [newComments, setNewComments] = useState<{
-        [postId: string]: string;
-    }>({});
+    const [openPostId, setOpenPostId] = useState<string | null>(null);
+    const openPost = useMemo(
+        () => posts.find((p) => p.postId === openPostId) || null,
+        [posts, openPostId],
+    );
     const commentsEndRef = useRef<HTMLDivElement>(null);
     const address = useContext(AddressContext);
     const { toast } = useToast();
     const [categories, setCategories] = useState<string[]>(["All"]);
+    const postCategories = useMemo(
+        () => categories.filter((x) => x !== "All"),
+        [categories],
+    );
+    const [fullscreenMedia, setFullscreenMedia] =
+        useState<CommunityMedia | null>(null);
     const [page, setPage] = useState(1);
     const [totalPosts, setTotalPosts] = useState(0);
     const [postToDelete, setPostToDelete] = useState<CommunityPost | null>(
         null,
     );
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-    const [comments, setComments] = useState<CommentType[]>([]);
     const { community, loaded, setCommunity } = useCommunity(id);
     const { membership, setMembership } = useMembership(id);
     const { profile } = useContext(ProfileContext);
@@ -92,7 +120,16 @@ export function CommunityForum({
     const [postToReport, setPostToReport] = useState<CommunityPost | null>(
         null,
     );
+    const [postToEdit, setPostToEdit] = useState<CommunityPost | null>(null);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [refreshCommunityStatus, setRefreshCommunityStatus] = useState(0);
+    const { isUploading, uploadProgress, uploadFile } = useMediaLit({
+        signatureEndpoint: `${address.backend}/api/media/presigned`,
+        access: "public",
+    });
+    const [fileBeingUploadedNumber, setFileBeingUploadedNumber] = useState(0);
+
+    const formatTimestamp = (value?: string) => formattedLocaleDate(value);
 
     useEffect(() => {
         if (membership) {
@@ -152,6 +189,7 @@ export function CommunityForum({
                             file
                             thumbnail
                             originalFileName
+                            size
                         }
                     }
                     likesCount
@@ -329,19 +367,6 @@ export function CommunityForum({
         }
     };
 
-    const handleCommentLike = (postId: number, commentId: number) => {
-        setPosts((prevPosts) =>
-            prevPosts.map((post) =>
-                post.postId === postId
-                    ? {
-                          ...post,
-                          comments: likeComment(post.comments, commentId),
-                      }
-                    : post,
-            ),
-        );
-    };
-
     const likeComment = (
         comments: CommentType[],
         commentId: number,
@@ -359,27 +384,6 @@ export function CommunityForum({
                       ...comment,
                       replies: likeComment(comment.replies, commentId),
                   },
-        );
-    };
-
-    const handleCommentReply = (
-        postId: number,
-        parentCommentId: number,
-        content: string,
-    ) => {
-        setPosts((prevPosts) =>
-            prevPosts.map((post) =>
-                post.postId === postId
-                    ? {
-                          ...post,
-                          comments: addReplyToComment(
-                              post.comments,
-                              parentCommentId,
-                              content,
-                          ),
-                      }
-                    : post,
-            ),
         );
     };
 
@@ -417,74 +421,68 @@ export function CommunityForum({
         );
     };
 
-    const handleNewCommentChange = (postId: string, content: string) => {
-        setNewComments((prev) => ({ ...prev, [postId]: content }));
-    };
+    const createPost = useCallback(
+        async (
+            newPost: Pick<CommunityPost, "title" | "content" | "category"> & {
+                media: MediaItem[];
+                postId?: string;
+            },
+        ) => {
+            try {
+                if (newPost.media.length > 0) {
+                    newPost.media = await uploadAttachments(newPost.media);
+                }
 
-    const handlePostComment = (postId: string) => {
-        const content = newComments[postId];
-        if (content && content.trim()) {
-            setPosts((prevPosts) =>
-                prevPosts.map((post) =>
-                    post.postId === postId
-                        ? {
-                              ...post,
-                              comments: [
-                                  ...comments,
-                                  {
-                                      id: Date.now(),
-                                      author: "Current User",
-                                      avatar: "/placeholder.svg",
-                                      content: content.trim(),
-                                      likes: 0,
-                                      hasLiked: false,
-                                      time: "Just now",
-                                      replies: [],
-                                  },
-                              ],
-                          }
-                        : post,
-                ),
-            );
-            setNewComments((prev) => ({ ...prev, [postId]: "" }));
-        }
-    };
-
-    const getPresignedUrl = async () => {
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/media/presigned`)
-            .setIsGraphQLEndpoint(false)
-            .build();
-        const response = await fetch.exec();
-        return response.url;
-    };
-
-    // const removeFile = async (mediaId: string) => {
-    //     try {
-    //         const fetch = new FetchBuilder()
-    //             .setUrl(`${address.backend}/api/media/${mediaId}`)
-    //             .setHttpMethod("DELETE")
-    //             .setIsGraphQLEndpoint(false)
-    //             .build();
-    //         const response = await fetch.exec();
-    //         if (response.message !== "success") {
-    //             throw new Error(response.message);
-    //         }
-    //     } catch (err: any) {
-    //         console.error("Error in removing file", err.message);
-    //     }
-    // };
-
-    const createPost = async (
-        newPost: Pick<CommunityPost, "title" | "content" | "category"> & {
-            media: MediaItem[];
-        },
-    ) => {
-        try {
-            if (newPost.media.length > 0) {
-                newPost.media = await uploadAttachments(newPost.media);
-            }
-            const mutation = `
+                const effectivePostId =
+                    newPost.postId ||
+                    (isEditModalOpen ? postToEdit?.postId : undefined);
+                const isEdit = !!effectivePostId;
+                const mutation = isEdit
+                    ? `
+                mutation ($communityId: String!, $postId: String!, $title: String, $content: String, $category: String, $media: [CommunityPostInputMedia]) {
+                    post: updateCommunityPost(
+                        communityId: $communityId,
+                        postId: $postId,
+                        title: $title,
+                        content: $content,
+                        category: $category,
+                        media: $media
+                    ) {
+                        communityId
+                        postId
+                        title
+                        content
+                        category
+                        media {
+                            type
+                            title
+                            url
+                            media {
+                                mediaId
+                                file
+                                thumbnail
+                                originalFileName
+                                size
+                            }
+                        }
+                        likesCount
+                        commentsCount
+                        updatedAt
+                        hasLiked
+                        user {
+                            userId
+                            name
+                            avatar {
+                                mediaId
+                                file
+                                thumbnail
+                            }
+                        }
+                        pinned
+                    }
+                }
+            `
+                    : `
                 mutation ($id: String!, $title: String!, $content: String!, $category: String!, $media: [CommunityPostInputMedia]) {
                     post: createCommunityPost(
                         id: $id,
@@ -507,6 +505,7 @@ export function CommunityForum({
                                 file
                                 thumbnail
                                 originalFileName
+                                size
                             }
                         }
                         likesCount
@@ -527,88 +526,100 @@ export function CommunityForum({
                 }
             `;
 
-            const fetch = new FetchBuilder()
-                .setUrl(`${address.backend}/api/graph`)
-                .setPayload({
-                    query: mutation,
-                    variables: {
-                        id: community?.communityId,
-                        content: newPost.content,
-                        category: newPost.category,
-                        title: newPost.title,
-                        media: newPost.media.map((m) => ({
-                            type: m.type,
-                            title: m.title,
-                            url: m.url,
-                            media: m.media,
-                        })),
-                    },
-                })
-                .setIsGraphQLEndpoint(true)
-                .build();
-            const response = await fetch.exec();
-            if (response.post) {
-                setPosts((prevPosts) => [response.post, ...prevPosts]);
-            } else {
+                const fetch = new FetchBuilder()
+                    .setUrl(`${address.backend}/api/graph`)
+                    .setPayload(
+                        isEdit
+                            ? {
+                                  query: mutation,
+                                  variables: {
+                                      communityId: community?.communityId,
+                                      postId: effectivePostId,
+                                      content: newPost.content,
+                                      category: newPost.category,
+                                      title: newPost.title,
+                                      media: newPost.media.map((m) => ({
+                                          type: m.type,
+                                          title: m.title,
+                                          url: m.url,
+                                          media: m.media,
+                                      })),
+                                  },
+                              }
+                            : {
+                                  query: mutation,
+                                  variables: {
+                                      id: community?.communityId,
+                                      content: newPost.content,
+                                      category: newPost.category,
+                                      title: newPost.title,
+                                      media: newPost.media.map((m) => ({
+                                          type: m.type,
+                                          title: m.title,
+                                          url: m.url,
+                                          media: m.media,
+                                      })),
+                                  },
+                              },
+                    )
+                    .setIsGraphQLEndpoint(true)
+                    .build();
+                const response = await fetch.exec();
+                if (response.post) {
+                    if (isEdit) {
+                        setPosts((prevPosts) =>
+                            prevPosts.map((p) =>
+                                p.postId === response.post.postId
+                                    ? response.post
+                                    : p,
+                            ),
+                        );
+                        setIsEditModalOpen(false);
+                        setPostToEdit(null);
+                    } else {
+                        setPosts((prevPosts) => [response.post, ...prevPosts]);
+                    }
+                } else {
+                    toast({
+                        title: "Error",
+                        description: isEdit
+                            ? "Failed to update post"
+                            : "Failed to add post",
+                    });
+                }
+            } catch (err: any) {
                 toast({
-                    title: "Error",
-                    description: "Failed to add post",
+                    title: TOAST_TITLE_ERROR,
+                    description: err.message,
+                    variant: "destructive",
                 });
+            } finally {
+                setFileBeingUploadedNumber(0);
             }
-        } catch (err: any) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: err.message,
-                variant: "destructive",
-            });
-        }
-    };
+        },
+        [
+            address.backend,
+            community?.communityId,
+            isEditModalOpen,
+            postToEdit?.postId,
+        ],
+    );
 
     const uploadAttachments = async (media: MediaItem[]) => {
-        for (const m of media) {
+        for (const i in media) {
+            const m = media[i];
             if (m.file) {
-                const uploadedMedia = await uploadFile(m.file);
+                setFileBeingUploadedNumber(+i + 1);
+                // TODO: Add file size limit
+                const uploadedMedia = (await uploadFile(
+                    m.file,
+                )) as unknown as Media;
                 m.media = uploadedMedia;
                 m.file = undefined;
                 m.url = undefined;
             }
         }
         return media;
-    };
-
-    const uploadFile = async (file: File) => {
-        try {
-            const presignedUrl = await getPresignedUrl();
-            const media = await uploadToServer(presignedUrl, file);
-            return media;
-        } catch (err) {
-            throw new Error(`Media upload: ${err.message}`);
-        }
-    };
-
-    const uploadToServer = async (
-        presignedUrl: string,
-        file: File,
-    ): Promise<Media> => {
-        const fD = new FormData();
-        fD.append("caption", file.name);
-        fD.append("access", "public");
-        fD.append("file", file);
-
-        const res = await fetch(presignedUrl, {
-            method: "POST",
-            body: fD,
-        });
-        if (res.status === 200) {
-            const media = await res.json();
-            if (media) {
-                delete media.group;
-            }
-            return media;
-        } else {
-            const resp = await res.json();
-            throw new Error(resp.error);
-        }
     };
 
     const renderMediaPreview = (
@@ -622,18 +633,34 @@ export function CommunityForum({
         switch (media.type) {
             case "image":
                 if (media.media) {
+                    const imgSrc =
+                        (options && options.renderActualFile) ||
+                        media.media?.file?.endsWith(".gif")
+                            ? media.media.file!
+                            : media.media.thumbnail;
                     return (
-                        <Image
-                            src={
-                                options && options.renderActualFile
-                                    ? media.media.file!
-                                    : media.media.thumbnail
-                            }
-                            alt="Post media"
-                            className="w-48 h-48 object-cover rounded-md"
-                            width={96}
-                            height={96}
-                        />
+                        <div className="relative group">
+                            <Image
+                                src={imgSrc}
+                                alt="Post media"
+                                className="w-48 h-48 object-cover rounded-md"
+                                width={96}
+                                height={96}
+                            />
+                            {options?.renderActualFile && media.media.file && (
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setFullscreenMedia(media);
+                                    }}
+                                    className="absolute top-2 right-2 rounded-md bg-black/60 text-white p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80"
+                                    aria-label="View full screen"
+                                >
+                                    <Maximize2 className="h-4 w-4" />
+                                </button>
+                            )}
+                        </div>
                     );
                 } else {
                     return null;
@@ -654,6 +681,8 @@ export function CommunityForum({
                             poster={media.media.thumbnail}
                             className="h-48 aspect-video object-cover rounded-md"
                             controls
+                            controlsList="nodownload"
+                            onContextMenu={(e) => e.preventDefault()}
                         >
                             Your browser does not support the video tag.
                         </video>
@@ -674,6 +703,9 @@ export function CommunityForum({
                             allowFullScreen
                         ></iframe>
                     );
+                }
+                if (!media.url) {
+                    return null;
                 }
                 return (
                     <div className="relative w-full aspect-video">
@@ -703,10 +735,40 @@ export function CommunityForum({
                 if (options && options.renderActualFile) {
                     // embed pdf
                     return (
-                        <iframe
-                            src={media.media?.file}
-                            className="w-full h-48"
-                        ></iframe>
+                        <div
+                            className="relative group w-full h-48"
+                            onContextMenu={(e) => e.preventDefault()}
+                        >
+                            <div className="absolute inset-0 z-10" />
+                            <iframe
+                                src={`${media.media?.file}#toolbar=0&view=FitH`}
+                                className="w-full h-full pointer-events-none"
+                                onContextMenu={(e) => e.preventDefault()}
+                            ></iframe>
+                            <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                                {media.media?.mediaId && (
+                                    <a
+                                        href={`/api/media/${encodeURIComponent(media.media.mediaId)}`}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="rounded-md bg-black/60 text-white p-1.5 hover:bg-black/80"
+                                        aria-label="Download"
+                                    >
+                                        <Download className="h-4 w-4" />
+                                    </a>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setFullscreenMedia(media);
+                                    }}
+                                    className="rounded-md bg-black/60 text-white p-1.5 hover:bg-black/80"
+                                    aria-label="View full screen"
+                                >
+                                    <Maximize2 className="h-4 w-4" />
+                                </button>
+                            </div>
+                        </div>
                     );
                 }
                 return (
@@ -781,7 +843,7 @@ export function CommunityForum({
         }
     };
 
-    const updateBanner = async (json: Record<string, unknown>) => {
+    const updateBanner = async (json: TextEditorContent) => {
         const query = `
             mutation UpdateCommunity(
                 $id: String!
@@ -832,7 +894,9 @@ export function CommunityForum({
                     query,
                     variables: {
                         id,
-                        banner: JSON.stringify(json),
+                        banner: JSON.stringify(
+                            json as unknown as Record<string, unknown>,
+                        ),
                     },
                 })
                 .setIsGraphQLEndpoint(true)
@@ -914,7 +978,7 @@ export function CommunityForum({
         }
     };
 
-    if (!loaded) {
+    if (!loaded || !profile) {
         return <LoadingSkeleton />;
     }
 
@@ -1030,7 +1094,13 @@ export function CommunityForum({
             {!community?.enabled && (
                 <div className="bg-red-400 p-2 mb-4 text-sm text-white rounded-md">
                     This community is not enabled. It is not visible to your
-                    audience (including moderators).
+                    audience (including moderators). {""}
+                    <Link
+                        href={`/dashboard/community/${id}/manage`}
+                        className="underline"
+                    >
+                        {MANAGE_LINK_TEXT}
+                    </Link>
                 </div>
             )}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -1043,10 +1113,13 @@ export function CommunityForum({
                             Constants.MembershipRole.POST,
                         ) ? (
                             <CreatePostDialog
-                                categories={categories.filter(
-                                    (x) => x !== "All",
-                                )}
-                                onPostCreated={createPost}
+                                categories={postCategories}
+                                createPost={createPost}
+                                isFileUploading={isUploading}
+                                fileUploadProgress={uploadProgress}
+                                fileBeingUploadedNumber={
+                                    fileBeingUploadedNumber
+                                }
                             />
                         ) : null
                     ) : (
@@ -1055,7 +1128,7 @@ export function CommunityForum({
                             membership={membership}
                             joiningReasonText={community?.joiningReasonText}
                             key={refreshCommunityStatus}
-                            paymentPlan={community?.paymentPlans.find(
+                            paymentPlan={community?.paymentPlans?.find(
                                 (plan) =>
                                     plan.planId ===
                                     community?.defaultPaymentPlan,
@@ -1069,7 +1142,7 @@ export function CommunityForum({
                                 key={category}
                                 variant={
                                     category === activeCategory
-                                        ? "primary"
+                                        ? "default"
                                         : "outline"
                                 }
                                 size="sm"
@@ -1098,7 +1171,9 @@ export function CommunityForum({
                                   )
                                 : false
                         }
-                        initialBannerText={community?.banner}
+                        initialBannerText={
+                            community?.banner as TextEditorContent | undefined
+                        }
                         onSaveBanner={updateBanner}
                     />
 
@@ -1110,388 +1185,133 @@ export function CommunityForum({
                         <div className="flex flex-col gap-4 mb-4">
                             {posts.length > 0 ? (
                                 posts.map((post) => (
-                                    <Dialog key={post.postId}>
-                                        <DialogTrigger asChild>
-                                            <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
-                                                <CardHeader className="flex flex-row items-start space-y-0 gap-4">
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2 mb-2">
-                                                            <Avatar className="h-10 w-10 flex-shrink-0">
-                                                                <AvatarImage
-                                                                    src={
-                                                                        post
-                                                                            .user
-                                                                            .avatar
-                                                                            ?.thumbnail ||
-                                                                        "/courselit_backdrop_square.webp"
-                                                                    }
-                                                                    alt={`${post.user.name}'s avatar`}
-                                                                />
-                                                                <AvatarFallback>
-                                                                    {post.user
-                                                                        .name &&
-                                                                        post.user.name
-                                                                            .split(
-                                                                                " ",
-                                                                            )
-                                                                            .map(
-                                                                                (
-                                                                                    n,
-                                                                                ) =>
-                                                                                    n[0],
-                                                                            )
-                                                                            .join(
-                                                                                "",
-                                                                            )}
-                                                                </AvatarFallback>
-                                                            </Avatar>
-                                                            <div className="min-w-0 flex-1">
-                                                                <div className="truncate text-sm">
-                                                                    {post.user
-                                                                        .name ||
-                                                                        post
-                                                                            .user
-                                                                            .email}
-                                                                </div>
-                                                                <div className="text-xs text-muted-foreground">
-                                                                    {formattedLocaleDate(
-                                                                        post.updatedAt,
-                                                                    )}{" "}
-                                                                    •{" "}
-                                                                    {capitalize(
-                                                                        post.category,
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    {membership &&
-                                                        hasCommunityPermission(
-                                                            membership,
-                                                            Constants
-                                                                .MembershipRole
-                                                                .MODERATE,
-                                                        ) && (
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className={`flex-shrink-0 rounded-full ${post.pinned ? "bg-accent" : ""}`}
-                                                                onClick={(e) =>
-                                                                    togglePin(
-                                                                        post.postId,
-                                                                        e,
-                                                                    )
-                                                                }
-                                                            >
-                                                                <Pin className="h-4 w-4" />
-                                                                <span className="sr-only">
-                                                                    Pin post
-                                                                </span>
-                                                            </Button>
-                                                        )}
-                                                </CardHeader>
-                                                <CardContent>
-                                                    <p className="text-base mb-4 font-semibold line-clamp-3">
-                                                        {post.title}
-                                                    </p>
-                                                    <p className="text-sm mb-4 line-clamp-3">
-                                                        {post.content}
-                                                    </p>
-                                                    {post.media && (
-                                                        <div className="flex gap-2 overflow-x-auto">
-                                                            {post.media.map(
-                                                                (media) => (
-                                                                    <div
-                                                                        className="flex-shrink-0"
-                                                                        key={
-                                                                            media.title
-                                                                        }
-                                                                    >
-                                                                        {renderMediaPreview(
-                                                                            media,
-                                                                        )}
-                                                                    </div>
-                                                                ),
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </CardContent>
-                                                <CardFooter>
-                                                    <div className="flex items-center gap-4">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className={`text-muted-foreground ${post.hasLiked ? "bg-accent" : ""}`}
-                                                            onClick={(e) =>
-                                                                handleLike(
-                                                                    post.postId,
-                                                                    e,
-                                                                )
+                                    <Card
+                                        key={post.postId}
+                                        className="cursor-pointer hover:bg-accent/50 transition-colors"
+                                        onClick={() =>
+                                            setOpenPostId(post.postId)
+                                        }
+                                    >
+                                        <CardHeader className="flex flex-row items-start space-y-0 gap-4">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <Avatar className="h-10 w-10 flex-shrink-0">
+                                                        <AvatarImage
+                                                            src={
+                                                                post.user.avatar
+                                                                    ?.file ||
+                                                                "/courselit_backdrop_square.webp"
                                                             }
-                                                        >
-                                                            <ThumbsUp className="h-4 w-4 mr-2" />
-                                                            {post.likesCount}
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="text-muted-foreground"
-                                                        >
-                                                            <MessageSquare className="h-4 w-4 mr-2" />
-                                                            {post.commentsCount}
-                                                        </Button>
-                                                    </div>
-                                                </CardFooter>
-                                            </Card>
-                                        </DialogTrigger>
-                                        <DialogContent
-                                            className="sm:max-w-[600px] w-full overflow-y-auto max-h-[calc(100vh-4rem)] my-8"
-                                            aria-describedby={undefined}
-                                        >
-                                            <VisuallyHidden>
-                                                <DialogTitle>
-                                                    Post&apos; content
-                                                </DialogTitle>
-                                            </VisuallyHidden>
-                                            <div className="grid gap-4">
-                                                <div className="flex items-center gap-2 justify-between">
-                                                    <div className="flex items-center gap-2">
-                                                        <Avatar className="h-10 w-10">
-                                                            <AvatarImage
-                                                                src={
-                                                                    post.user
-                                                                        .avatar
-                                                                        ?.thumbnail ||
-                                                                    "/courselit_backdrop_square.webp"
-                                                                }
-                                                                alt={`${post.user.name}'s avatar`}
-                                                            />
-                                                            <AvatarFallback>
-                                                                {post.user
-                                                                    .name &&
-                                                                    post.user.name
-                                                                        .split(
-                                                                            " ",
-                                                                        )
-                                                                        .map(
-                                                                            (
-                                                                                n,
-                                                                            ) =>
-                                                                                n[0],
-                                                                        )
-                                                                        .join(
-                                                                            "",
-                                                                        )}
-                                                            </AvatarFallback>
-                                                        </Avatar>
-                                                        <div>
-                                                            <div className="font-semibold">
-                                                                {post.user
-                                                                    .name ||
-                                                                    post.user
-                                                                        .email}
-                                                            </div>
-                                                            <div className="text-sm text-muted-foreground">
-                                                                {formattedLocaleDate(
-                                                                    post.updatedAt,
-                                                                )}{" "}
-                                                                •{" "}
-                                                                {post.category}
-                                                            </div>
+                                                            alt={`${post.user.name}'s avatar`}
+                                                        />
+                                                        <AvatarFallback>
+                                                            {post.user.name &&
+                                                                post.user.name
+                                                                    .split(" ")
+                                                                    .map(
+                                                                        (n) =>
+                                                                            n[0],
+                                                                    )
+                                                                    .join("")}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="truncate text-sm">
+                                                            {post.user.name ||
+                                                                post.user.email}
+                                                        </div>
+                                                        <div className="text-xs text-muted-foreground">
+                                                            {formatTimestamp(
+                                                                post.updatedAt,
+                                                            )}{" "}
+                                                            •{" "}
+                                                            {capitalize(
+                                                                post.category,
+                                                            )}
                                                         </div>
                                                     </div>
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger
-                                                            asChild
-                                                        >
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                className="h-8 w-8 p-0"
-                                                            >
-                                                                <span className="sr-only">
-                                                                    Open menu
-                                                                </span>
-                                                                <MoreVertical className="h-4 w-4" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            {membership &&
-                                                                hasCommunityPermission(
-                                                                    membership,
-                                                                    Constants
-                                                                        .MembershipRole
-                                                                        .MODERATE,
-                                                                ) && (
-                                                                    <DropdownMenuItem
-                                                                        onClick={() =>
-                                                                            togglePin(
-                                                                                post.postId,
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <Pin className="h-4 w-4" />
-                                                                        {post.pinned
-                                                                            ? "Unpin"
-                                                                            : "Pin"}
-                                                                    </DropdownMenuItem>
-                                                                )}
-                                                            {profile.userId !==
-                                                                post.user
-                                                                    .userId && (
-                                                                <DropdownMenuItem
-                                                                    onClick={() =>
-                                                                        handleReportPost(
-                                                                            post,
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <FlagTriangleRight className="h-4 w-4" />{" "}
-                                                                    Report
-                                                                </DropdownMenuItem>
-                                                            )}
-                                                            {((membership &&
-                                                                hasCommunityPermission(
-                                                                    membership,
-                                                                    Constants
-                                                                        .MembershipRole
-                                                                        .MODERATE,
-                                                                )) ||
-                                                                post.user
-                                                                    .userId ===
-                                                                    profile.userId) && (
-                                                                <DropdownMenuItem
-                                                                    onClick={() =>
-                                                                        handleDeletePost(
-                                                                            post,
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <Trash className="h-4 w-4" />
-                                                                    Delete
-                                                                </DropdownMenuItem>
-                                                            )}
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
                                                 </div>
-                                                <div>
-                                                    <p className="text-base mb-4 font-semibold line-clamp-3">
-                                                        {post.title}
-                                                    </p>
-                                                    <p className="text-sm mb-4 line-clamp-3">
-                                                        {post.content}
-                                                    </p>
-                                                </div>
-                                                {post.media && (
-                                                    <div className="flex gap-2 overflow-x-auto">
-                                                        {post.media.map(
-                                                            (media) => (
-                                                                <div
-                                                                    className="flex-shrink-0"
-                                                                    key={
-                                                                        media.title
-                                                                    }
-                                                                >
-                                                                    {renderMediaPreview(
-                                                                        media,
-                                                                        {
-                                                                            renderActualFile:
-                                                                                true,
-                                                                        },
-                                                                    )}
-                                                                </div>
-                                                            ),
-                                                        )}
-                                                    </div>
-                                                )}
-                                                <div className="flex items-center gap-4">
+                                            </div>
+                                            {membership &&
+                                                hasCommunityPermission(
+                                                    membership,
+                                                    Constants.MembershipRole
+                                                        .MODERATE,
+                                                ) && (
                                                     <Button
                                                         variant="ghost"
-                                                        size="sm"
-                                                        className={`text-muted-foreground ${post.hasLiked ? "bg-accent" : ""}`}
-                                                        onClick={() =>
-                                                            handleLike(
+                                                        size="icon"
+                                                        className={`flex-shrink-0 rounded-full ${post.pinned ? "bg-accent" : ""}`}
+                                                        onClick={(e) =>
+                                                            togglePin(
                                                                 post.postId,
+                                                                e,
                                                             )
                                                         }
                                                     >
-                                                        <ThumbsUp className="h-4 w-4 mr-2" />
-                                                        {post.likesCount}
+                                                        <Pin className="h-4 w-4" />
+                                                        <span className="sr-only">
+                                                            Pin post
+                                                        </span>
                                                     </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="text-muted-foreground"
-                                                    >
-                                                        <MessageSquare className="h-4 w-4 mr-2" />
-                                                        {post.commentsCount}
-                                                    </Button>
+                                                )}
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-base mb-4 font-semibold line-clamp-3">
+                                                {post.title}
+                                            </p>
+                                            <p className="text-sm mb-4 whitespace-pre-wrap">
+                                                {truncate(post.content, 500)}
+                                            </p>
+                                            {post.media && (
+                                                <div className="flex gap-2 overflow-x-auto">
+                                                    {post.media.map(
+                                                        (media, index) => (
+                                                            <div
+                                                                className="flex-shrink-0"
+                                                                key={
+                                                                    media.media
+                                                                        ?.mediaId ||
+                                                                    media.url ||
+                                                                    `${media.type}:${media.title || "untitled"}:${index}`
+                                                                }
+                                                            >
+                                                                {renderMediaPreview(
+                                                                    media,
+                                                                )}
+                                                            </div>
+                                                        ),
+                                                    )}
                                                 </div>
-                                                {/* 
-                                    <div className="space-y-4 max-h-[300px] overflow-y-auto">
-                                        {post.comments.map((comment) => (
-                                            <Comment
-                                                key={comment.id}
-                                                comment={comment}
-                                                onLike={(commentId) =>
-                                                    handleCommentLike(
-                                                        post.id,
-                                                        commentId,
-                                                    )
-                                                }
-                                                onReply={(commentId, content) =>
-                                                    handleCommentReply(
-                                                        post.id,
-                                                        commentId,
-                                                        content,
-                                                    )
-                                                }
-                                            />
-                                        ))}
-                                        <div ref={commentsEndRef} />
-                                    </div>
-                                    <Textarea
-                                        placeholder="Add a comment..."
-                                        value={newComments[post.postId] || ""}
-                                        onChange={(e) =>
-                                            handleNewCommentChange(
-                                                post.postId,
-                                                e.target.value,
-                                            )
-                                        }
-                                    />
-                                    <Button
-                                        onClick={() => handlePostComment(post.postId)}
-                                    >
-                                        Post Comment
-                                    </Button>
-*/}
-                                                <CommentSection
-                                                    membership={membership}
-                                                    postId={post.postId}
-                                                    communityId={id!}
-                                                    onPostUpdated={(
-                                                        postId: string,
-                                                        count: number,
-                                                    ) => {
-                                                        setPosts((prevPosts) =>
-                                                            prevPosts.map(
-                                                                (p) =>
-                                                                    p.postId ===
-                                                                    postId
-                                                                        ? {
-                                                                              ...p,
-                                                                              commentsCount:
-                                                                                  count,
-                                                                          }
-                                                                        : p,
-                                                            ),
-                                                        );
-                                                    }}
-                                                />
+                                            )}
+                                        </CardContent>
+                                        <CardFooter>
+                                            <div className="flex items-center gap-4">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className={`text-muted-foreground ${post.hasLiked ? "bg-accent" : ""}`}
+                                                    onClick={(e) =>
+                                                        handleLike(
+                                                            post.postId,
+                                                            e,
+                                                        )
+                                                    }
+                                                >
+                                                    <ThumbsUp className="h-4 w-4 mr-2" />
+                                                    {post.likesCount}
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-muted-foreground"
+                                                >
+                                                    <MessageSquare className="h-4 w-4 mr-2" />
+                                                    {post.commentsCount}
+                                                </Button>
                                             </div>
-                                        </DialogContent>
-                                    </Dialog>
+                                        </CardFooter>
+                                    </Card>
                                 ))
                             ) : (
                                 <div className="text-center py-8">
@@ -1563,6 +1383,275 @@ export function CommunityForum({
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
+                    <CreatePostDialog
+                        postId={postToEdit?.postId}
+                        title={postToEdit?.title}
+                        content={postToEdit?.content}
+                        category={postToEdit?.category}
+                        media={postToEdit?.media}
+                        categories={postCategories}
+                        createPost={createPost}
+                        isFileUploading={isUploading}
+                        fileUploadProgress={uploadProgress}
+                        fileBeingUploadedNumber={fileBeingUploadedNumber}
+                        isOpen={isEditModalOpen}
+                        hideTrigger={true}
+                        onOpenChange={(open) => {
+                            setIsEditModalOpen(open);
+                            if (!open) {
+                                setPostToEdit(null);
+                            }
+                        }}
+                    />
+                    <Dialog
+                        open={!!openPost}
+                        onOpenChange={(open) => {
+                            if (!open) {
+                                setOpenPostId(null);
+                                setFullscreenMedia(null);
+                            }
+                        }}
+                    >
+                        <DialogContent
+                            className="sm:max-w-4xl w-full overflow-y-auto max-h-[90vh] my-8"
+                            aria-describedby={undefined}
+                        >
+                            <VisuallyHidden>
+                                <DialogTitle>Post&apos; content</DialogTitle>
+                            </VisuallyHidden>
+                            {openPost && fullscreenMedia ? (
+                                <div className="flex flex-col items-center gap-4 w-full">
+                                    <div className="flex w-full justify-start">
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setFullscreenMedia(null)
+                                            }
+                                            className="rounded-md bg-muted text-muted-foreground p-1.5 hover:bg-accent transition-colors"
+                                            aria-label="Back to post"
+                                        >
+                                            <ArrowLeft className="h-5 w-5" />
+                                        </button>
+                                    </div>
+                                    {fullscreenMedia.type === "pdf" ? (
+                                        <div className="w-full h-[70vh] relative">
+                                            <iframe
+                                                src={`${fullscreenMedia.media?.file}#toolbar=0&view=FitH`}
+                                                className="w-full h-full rounded-md"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <img
+                                            src={fullscreenMedia.media?.file}
+                                            alt="Full size preview"
+                                            className="max-w-full max-h-[65vh] object-contain rounded-md"
+                                        />
+                                    )}
+                                </div>
+                            ) : openPost ? (
+                                <div className="grid gap-4">
+                                    <div className="flex items-center gap-2 justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Avatar className="h-10 w-10">
+                                                <AvatarImage
+                                                    src={
+                                                        openPost.user.avatar
+                                                            ?.file ||
+                                                        "/courselit_backdrop_square.webp"
+                                                    }
+                                                    alt={`${openPost.user.name}'s avatar`}
+                                                />
+                                                <AvatarFallback>
+                                                    {openPost.user.name &&
+                                                        openPost.user.name
+                                                            .split(" ")
+                                                            .map((n) => n[0])
+                                                            .join("")}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <div className="font-semibold">
+                                                    {openPost.user.name ||
+                                                        openPost.user.email}
+                                                </div>
+                                                <div className="text-sm text-muted-foreground">
+                                                    {formatTimestamp(
+                                                        openPost.updatedAt,
+                                                    )}{" "}
+                                                    • {openPost.category}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0"
+                                                >
+                                                    <span className="sr-only">
+                                                        Open menu
+                                                    </span>
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                {membership &&
+                                                    hasCommunityPermission(
+                                                        membership,
+                                                        Constants.MembershipRole
+                                                            .MODERATE,
+                                                    ) && (
+                                                        <DropdownMenuItem
+                                                            className="cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                                                            onClick={() =>
+                                                                togglePin(
+                                                                    openPost.postId,
+                                                                )
+                                                            }
+                                                        >
+                                                            <Pin className="h-4 w-4" />
+                                                            {openPost.pinned
+                                                                ? "Unpin"
+                                                                : "Pin"}
+                                                        </DropdownMenuItem>
+                                                    )}
+                                                {profile.userId !==
+                                                    openPost.user.userId && (
+                                                    <DropdownMenuItem
+                                                        className="cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                                                        onClick={() =>
+                                                            handleReportPost(
+                                                                openPost,
+                                                            )
+                                                        }
+                                                    >
+                                                        <FlagTriangleRight className="h-4 w-4" />{" "}
+                                                        Report
+                                                    </DropdownMenuItem>
+                                                )}
+                                                {profile.userId ===
+                                                    openPost.user.userId && (
+                                                    <DropdownMenuItem
+                                                        className="cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                                                        onClick={() => {
+                                                            setOpenPostId(null);
+                                                            setPostToEdit(
+                                                                openPost,
+                                                            );
+                                                            setIsEditModalOpen(
+                                                                true,
+                                                            );
+                                                        }}
+                                                    >
+                                                        <MessageSquare className="h-4 w-4" />
+                                                        Edit
+                                                    </DropdownMenuItem>
+                                                )}
+                                                {((membership &&
+                                                    hasCommunityPermission(
+                                                        membership,
+                                                        Constants.MembershipRole
+                                                            .MODERATE,
+                                                    )) ||
+                                                    openPost.user.userId ===
+                                                        profile.userId) && (
+                                                    <DropdownMenuItem
+                                                        className="cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                                                        onClick={() =>
+                                                            handleDeletePost(
+                                                                openPost,
+                                                            )
+                                                        }
+                                                    >
+                                                        <Trash className="h-4 w-4" />
+                                                        Delete
+                                                    </DropdownMenuItem>
+                                                )}
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+                                    <div>
+                                        <p className="text-base mb-4 font-semibold">
+                                            {openPost.title}
+                                        </p>
+                                        <p className="text-sm mb-4 whitespace-pre-wrap">
+                                            {openPost.content}
+                                        </p>
+                                    </div>
+                                    {openPost.media && (
+                                        <div className="flex gap-2 overflow-x-auto">
+                                            {openPost.media.map(
+                                                (media, index) => (
+                                                    <div
+                                                        className="flex-shrink-0"
+                                                        key={
+                                                            media.media
+                                                                ?.mediaId ||
+                                                            media.url ||
+                                                            `${media.type}:${media.title || "untitled"}:${index}`
+                                                        }
+                                                    >
+                                                        {renderMediaPreview(
+                                                            media,
+                                                            {
+                                                                renderActualFile:
+                                                                    true,
+                                                            },
+                                                        )}
+                                                    </div>
+                                                ),
+                                            )}
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-4">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className={`text-muted-foreground ${openPost.hasLiked ? "bg-accent" : ""}`}
+                                            onClick={() =>
+                                                handleLike(openPost.postId)
+                                            }
+                                        >
+                                            <ThumbsUp className="h-4 w-4 mr-2" />
+                                            {openPost.likesCount}
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-muted-foreground"
+                                        >
+                                            <MessageSquare className="h-4 w-4 mr-2" />
+                                            {openPost.commentsCount}
+                                        </Button>
+                                    </div>
+                                    {membership && (
+                                        <CommentSection
+                                            membership={membership}
+                                            postId={openPost.postId}
+                                            communityId={id!}
+                                            onPostUpdated={(
+                                                postId: string,
+                                                count: number,
+                                            ) => {
+                                                setPosts((prevPosts) =>
+                                                    prevPosts.map((p) =>
+                                                        p.postId === postId
+                                                            ? {
+                                                                  ...p,
+                                                                  commentsCount:
+                                                                      count,
+                                                              }
+                                                            : p,
+                                                    ),
+                                                );
+                                            }}
+                                        />
+                                    )}
+                                </div>
+                            ) : null}
+                        </DialogContent>
+                    </Dialog>
                 </div>
                 <div className="lg:col-start-3 lg:row-start-1">
                     {community && (
@@ -1576,13 +1665,11 @@ export function CommunityForum({
                             }
                             memberCount={community?.membersCount}
                             membership={membership}
-                            paymentPlan={
-                                community?.paymentPlans.find(
-                                    (plan) =>
-                                        plan.planId ===
-                                        community?.defaultPaymentPlan,
-                                )!
-                            }
+                            paymentPlan={community?.paymentPlans?.find(
+                                (plan) =>
+                                    plan.planId ===
+                                    community?.defaultPaymentPlan,
+                            )}
                             joiningReasonText={community?.joiningReasonText}
                             pageId={community?.pageId}
                             onJoin={handleJoin}

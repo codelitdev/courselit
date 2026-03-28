@@ -1,10 +1,71 @@
 import { Constants } from "@courselit/common-models";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
-import { Page } from "../../models/Page";
+import PageModel, { Page } from "../../models/Page";
 import { getCommunity } from "../communities/logic";
 import { getCourse } from "../courses/logic";
-import { generateUniqueId } from "@courselit/utils";
+import { generateUniqueId, slugify } from "@courselit/utils";
+import { getPlans } from "../paymentplans/logic";
+import mongoose from "mongoose";
+import { responses } from "../../config/strings";
+
+const MAX_SLUG_ATTEMPTS = 100;
+const MAX_SLUG_LENGTH = 200;
+
+/**
+ * Validates and slugifies a raw string input.
+ * Throws if the result is empty or exceeds max length.
+ */
+export function validateSlug(raw: string): string {
+    const slugged = slugify(raw);
+    if (!slugged) throw new Error(responses.invalid_input);
+    if (slugged.length > MAX_SLUG_LENGTH)
+        throw new Error(responses.invalid_input);
+    return slugged;
+}
+
+/**
+ * Generates a unique pageId by slugifying the base.
+ *
+ * When `useSuffixOnCollision` is true (default), appends numeric
+ * suffixes (-1, -2, …) on collision. When false, throws
+ * `page_id_already_exists` on the first collision — useful for
+ * user-created pages where the slug is chosen deliberately.
+ *
+ * Callers should wrap Page creation in try-catch for isDuplicateKeyError
+ * to handle TOCTOU race conditions.
+ */
+export async function generateUniquePageId(
+    domainId: mongoose.Types.ObjectId,
+    baseSlug: string,
+    useSuffixOnCollision: boolean = true,
+): Promise<string> {
+    const base = validateSlug(baseSlug);
+
+    let candidate = base;
+    let suffix = 0;
+
+    while (suffix < MAX_SLUG_ATTEMPTS) {
+        const existing = await PageModel.findOne({
+            domain: domainId,
+            pageId: candidate,
+        });
+        if (!existing) return candidate;
+        if (!useSuffixOnCollision) {
+            throw new Error(responses.page_id_already_exists);
+        }
+        suffix++;
+        candidate = `${base}-${suffix}`;
+    }
+    throw new Error(responses.internal_error);
+}
+
+/**
+ * Detects MongoDB duplicate key errors (code 11000).
+ */
+export function isDuplicateKeyError(err: any): boolean {
+    return err?.code === 11000;
+}
 
 export async function getPageResponse(
     page: Page,
@@ -35,7 +96,13 @@ export async function getPageResponse(
                     courseId: course.courseId,
                     leadMagnet: course.leadMagnet,
                     defaultPaymentPlan: course.defaultPaymentPlan,
-                    paymentPlans: course.paymentPlans.map((p) => ({
+                    paymentPlans: (
+                        await getPlans({
+                            entityId: course.courseId,
+                            entityType: Constants.MembershipEntityType.COURSE,
+                            ctx,
+                        })
+                    ).map((p) => ({
                         emiAmount: p.emiAmount,
                         emiTotalInstallments: p.emiTotalInstallments,
                         subscriptionMonthlyAmount: p.subscriptionMonthlyAmount,
@@ -60,7 +127,16 @@ export async function getPageResponse(
                     description: community.description,
                     communityId: community.communityId,
                     defaultPaymentPlan: community.defaultPaymentPlan,
-                    paymentPlans: community.paymentPlans.map((p) => ({
+                    membersCount: community.membersCount,
+                    featuredImage: community.featuredImage,
+                    paymentPlans: (
+                        await getPlans({
+                            entityId: community.communityId,
+                            entityType:
+                                Constants.MembershipEntityType.COMMUNITY,
+                            ctx,
+                        })
+                    ).map((p) => ({
                         emiAmount: p.emiAmount,
                         emiTotalInstallments: p.emiTotalInstallments,
                         subscriptionMonthlyAmount: p.subscriptionMonthlyAmount,
@@ -70,19 +146,10 @@ export async function getPageResponse(
                         name: p.name,
                         planId: p.planId,
                     })),
-                    membersCount: community.membersCount,
-                    featuredImage: community.featuredImage,
                 };
             }
             break;
     }
-    // const pageData =
-    //     page.type.toLowerCase() === constants.product
-    //         ? await getCourse(
-    //               page.entityId!,
-    //               ctx.subdomain._id as unknown as string,
-    //           )
-    //         : {};
 
     const sharedWidgetsToDraftSharedWidgets = (widget) =>
         widget.shared
@@ -156,6 +223,9 @@ export async function getPageResponse(
 //     );
 // }
 
+// TODO: Figure out a better way to update ctx.subdomain.sharedWidgets
+// currently this function is getting called multiple times as the version 0
+// of the subdomain is not getting replaces in ctx
 export async function initSharedWidgets(ctx: GQLContext) {
     let subdomainChanged = false;
     if (!ctx.subdomain.sharedWidgets.header) {
@@ -204,8 +274,8 @@ export async function initSharedWidgets(ctx: GQLContext) {
                     {
                         name: "Legal",
                         links: [
-                            { label: "Terms of use", href: "/p/terms" },
-                            { label: "Privacy policy", href: "/p/privacy" },
+                            { label: "Terms of Use", href: "/p/terms" },
+                            { label: "Privacy Policy", href: "/p/privacy" },
                         ],
                     },
                 ],
@@ -238,7 +308,9 @@ export async function initSharedWidgets(ctx: GQLContext) {
     // }
     if (subdomainChanged) {
         (ctx.subdomain as any).markModified("sharedWidgets");
-        await (ctx.subdomain as any).save();
+        try {
+            await (ctx.subdomain as any).save();
+        } catch (e) {}
     }
 }
 

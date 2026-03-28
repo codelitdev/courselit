@@ -9,5 +9,7 @@ export { default as getGraphQLQueryStringFromObject } from "./get-graphql-query-
 export { default as slugify } from "@sindresorhus/slugify";
 export { default as jwtUtils } from "./jwt-utils";
 export { getPlanPrice } from "./get-plan-price";
+export { getEmailFrom } from "./get-email-from";
 export { truncate } from "./truncate";
 export { isVideo } from "./is-video";
+export { extractMediaIDs } from "./extract-media-ids";

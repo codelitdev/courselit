@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { captureError, getDomainId } from "./observability/posthog";
 
 export const connectToDatabase = async () => {
     const dbUri = process.env.DB_CONNECTION_STRING;
@@ -9,6 +10,11 @@ export const connectToDatabase = async () => {
 
     mongoose.connection.on("error", (err) => {
         console.error("Mongoose connection error:", err);
+        captureError({
+            error: err,
+            source: "db.error_handler",
+            domainId: getDomainId(),
+        });
     });
 
     mongoose.connection.on("disconnected", () => {
@@ -24,6 +30,11 @@ const connect = async (dbUri: string) => {
         await mongoose.connect(dbUri, {});
     } catch (error) {
         console.error("Database connection failed:", error);
+        captureError({
+            error,
+            source: "db.connect",
+            domainId: getDomainId(),
+        });
         process.exit(1);
     }
 };

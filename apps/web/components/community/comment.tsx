@@ -35,18 +35,23 @@ import { DELETED_COMMENT_PLACEHOLDER } from "@ui-config/strings";
 import { useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 
+type CommentOrReply =
+    | CommunityComment
+    | (CommunityCommentReply & { commentId: string });
+
 interface CommentProps {
     communityId: string;
-    comment: CommunityComment | (CommunityCommentReply & { commentId: string });
+    comment: CommentOrReply;
     onLike: (commentId: string, replyId?: string) => void;
     onReply: (
         commentId: string,
         content: string,
         parentReplyId?: string,
     ) => void;
-    onDelete: (comment: CommunityComment | CommunityCommentReply) => void;
+    onDelete: (comment: CommentOrReply) => void;
     depth?: number;
     membership: Pick<Membership, "status" | "role" | "rejectionReason">;
+    isPosting?: boolean;
 }
 
 export function Comment({
@@ -57,25 +62,22 @@ export function Comment({
     onDelete,
     membership,
     depth = 0,
+    isPosting = false,
 }: CommentProps) {
     const [isReplying, setIsReplying] = useState(false);
     const [replyContent, setReplyContent] = useState("");
-    const [commentToDelete, setCommentToDelete] = useState<
-        CommunityComment | CommunityCommentReply | null
-    >(null);
+    const [commentToDelete, setCommentToDelete] =
+        useState<CommentOrReply | null>(null);
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [showReportConfirmation, setShowReportConfirmation] = useState(false);
     const [reportReason, setReportReason] = useState("");
-    const [commentToReport, setCommentToReport] = useState<
-        CommunityComment | CommunityCommentReply | null
-    >(null);
+    const [commentToReport, setCommentToReport] =
+        useState<CommentOrReply | null>(null);
     const { profile } = useContext(ProfileContext);
     const address = useContext(AddressContext);
     const { toast } = useToast();
 
-    const handleDeletePost = (
-        comment: CommunityComment | CommunityCommentReply,
-    ) => {
+    const handleDeletePost = (comment: CommentOrReply) => {
         setCommentToDelete(comment);
         setShowDeleteConfirmation(true);
     };
@@ -88,9 +90,7 @@ export function Comment({
         }
     };
 
-    const handleReportPost = (
-        comment: CommunityComment | CommunityCommentReply,
-    ) => {
+    const handleReportPost = (comment: CommentOrReply) => {
         setCommentToReport(comment);
         setShowReportConfirmation(true);
     };
@@ -238,7 +238,7 @@ export function Comment({
                             </DropdownMenu>
                         )}
                     </div>
-                    <p className="text-sm mt-1">
+                    <p className="text-sm mt-1 whitespace-pre-wrap">
                         {comment.deleted ? (
                             <span className="italic text-gray-500">
                                 {DELETED_COMMENT_PLACEHOLDER}
@@ -269,7 +269,7 @@ export function Comment({
                     </div>
                 </div>
             </div>
-            {isReplying && profile.name && (
+            {isReplying && profile?.name && (
                 <div className="mt-2 space-y-2 p-1">
                     <Textarea
                         placeholder="Write a reply..."
@@ -302,6 +302,7 @@ export function Comment({
                                     setIsReplying(false);
                                 }
                             }}
+                            disabled={isPosting}
                         >
                             Reply
                         </Button>
@@ -322,6 +323,7 @@ export function Comment({
                         onDelete={onDelete}
                         membership={membership}
                         depth={depth + 1}
+                        isPosting={isPosting}
                     />
                 ))}
             <Dialog

@@ -5,13 +5,13 @@ import type {
     Media,
     Profile,
 } from "@courselit/common-models";
-import { Theme, ThemeStyle } from "@courselit/page-models";
+import { Theme, ThemeStyle, SectionBackground } from "@courselit/page-models";
 import Settings from "./settings";
 import {
     AdminWidgetPanel,
+    AdminWidgetPanelContainer,
     MediaSelector,
     Select,
-    TextEditor,
     Form,
     FormField,
     Accordion,
@@ -21,14 +21,15 @@ import {
     PageBuilderSlider,
     PageBuilderPropertyHeader,
     CssIdField,
-    AspectRatio,
     ImageObjectFit,
     Checkbox,
     VerticalPaddingSelector,
     MaxWidthSelector,
+    SectionBackgroundPanel,
 } from "@courselit/components-library";
-
+import { AspectRatio } from "../../components";
 import { isVideo } from "@courselit/utils";
+import { Editor } from "@courselit/text-editor";
 
 interface AdminWidgetProps {
     name: string;
@@ -74,7 +75,6 @@ export default function AdminWidget({
     const [alignment, setAlignment] = useState(settings.alignment || "left");
 
     const [media, setMedia] = useState<Partial<Media>>(settings.media || {});
-    const [style, setStyle] = useState(settings.style || "normal");
     const [secondaryButtonAction, setSecondaryButtonAction] = useState(
         settings.secondaryButtonAction,
     );
@@ -106,6 +106,13 @@ export default function AdminWidget({
     const [maxWidth, setMaxWidth] = useState<
         ThemeStyle["structure"]["page"]["width"]
     >(settings.maxWidth);
+    const [background, setBackground] = useState<SectionBackground>(
+        settings.background,
+    );
+    const [layout, setLayout] = useState<"normal" | "card">(
+        settings.layout || "normal",
+    );
+    const hasHeroGraphic = youtubeLink || (media && media.mediaId);
 
     const onSettingsChanged = () =>
         onChange({
@@ -116,7 +123,6 @@ export default function AdminWidget({
             youtubeLink,
             media,
             alignment,
-            style,
             mediaRadius: mediaBorderRadius,
             verticalPadding,
             secondaryButtonAction,
@@ -129,6 +135,8 @@ export default function AdminWidget({
             aspectRatio,
             objectFit,
             maxWidth,
+            background,
+            layout,
         });
 
     useEffect(() => {
@@ -140,7 +148,6 @@ export default function AdminWidget({
         buttonCaption,
         youtubeLink,
         alignment,
-        style,
         media,
         mediaBorderRadius,
         verticalPadding,
@@ -154,11 +161,16 @@ export default function AdminWidget({
         aspectRatio,
         objectFit,
         maxWidth,
+        background,
+        layout,
     ]);
 
     return (
-        <div className="flex flex-col gap-4 mb-4">
-            <AdminWidgetPanel title="Basic">
+        <AdminWidgetPanelContainer
+            type="multiple"
+            defaultValue={["basic", "media", "calls-to-action", "design"]}
+        >
+            <AdminWidgetPanel title="Basic" value="basic">
                 <Form>
                     <FormField
                         label="Title"
@@ -168,7 +180,7 @@ export default function AdminWidget({
                 </Form>
                 <div>
                     <p className="mb-1 font-medium">Description</p>
-                    <TextEditor
+                    <Editor
                         initialContent={description}
                         onChange={(state: any) => setDescription(state)}
                         showToolbar={false}
@@ -176,7 +188,7 @@ export default function AdminWidget({
                     />
                 </div>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Media">
+            <AdminWidgetPanel title="Media" value="media">
                 <Form>
                     <FormField
                         label="YouTube/Vimeo Link"
@@ -259,7 +271,7 @@ export default function AdminWidget({
                     onChange={(value: AspectRatio) => setAspectRatio(value)}
                 />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Calls to action">
+            <AdminWidgetPanel title="Calls to action" value="calls-to-action">
                 <Accordion type="single" collapsible>
                     <AccordionItem value="primary">
                         <AccordionTrigger>Primary button</AccordionTrigger>
@@ -307,26 +319,28 @@ export default function AdminWidget({
                     </AccordionItem>
                 </Accordion>
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Design">
+            <AdminWidgetPanel title="Design" value="design">
+                {hasHeroGraphic && (
+                    <Select
+                        title="Media alignment"
+                        value={alignment}
+                        options={[
+                            { label: "Left", value: "left" },
+                            { label: "Right", value: "right" },
+                        ]}
+                        onChange={(value: Alignment | "right") =>
+                            setAlignment(value)
+                        }
+                    />
+                )}
                 <Select
-                    title="Style"
-                    value={style}
+                    title="Layout"
+                    value={layout}
                     options={[
                         { label: "Normal", value: "normal" },
-                        { label: "Card", value: "card" },
+                        { label: "Card", value: "center" },
                     ]}
-                    onChange={(value: "card" | "normal") => setStyle(value)}
-                />
-                <Select
-                    title="Alignment"
-                    value={alignment}
-                    options={[
-                        { label: "Left", value: "left" },
-                        { label: "Right", value: "right" },
-                    ]}
-                    onChange={(value: Alignment | "right") =>
-                        setAlignment(value)
-                    }
+                    onChange={(value: "normal" | "card") => setLayout(value)}
                 />
                 <Select
                     title="Content alignment"
@@ -345,13 +359,13 @@ export default function AdminWidget({
                     min={3}
                     max={8}
                 />
-                <PageBuilderSlider
+                {/* <PageBuilderSlider
                     title="Description font size"
                     value={descriptionFontSize}
                     onChange={setDescriptionFontSize}
                     min={0}
                     max={6}
-                />
+                /> */}
                 <PageBuilderSlider
                     title="Media border radius"
                     value={mediaBorderRadius}
@@ -370,10 +384,16 @@ export default function AdminWidget({
                     }
                     onChange={setVerticalPadding}
                 />
+                <SectionBackgroundPanel
+                    value={background}
+                    onChange={setBackground}
+                    profile={profile}
+                    address={address}
+                />
             </AdminWidgetPanel>
-            <AdminWidgetPanel title="Advanced">
+            <AdminWidgetPanel title="Advanced" value="advanced">
                 <CssIdField value={cssId} onChange={setCssId} />
             </AdminWidgetPanel>
-        </div>
+        </AdminWidgetPanelContainer>
     );
 }

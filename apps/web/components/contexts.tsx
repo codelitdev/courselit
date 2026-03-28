@@ -21,4 +21,6 @@ export const ThemeContext = createContext<{
     setTheme: any;
 }>({ theme: defaultState.theme, setTheme: undefined });
 
+export const FeaturesContext = createContext(defaultState.features);
+
 // export const PageContext = createContext(defaultState.page);

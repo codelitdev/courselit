@@ -1,77 +1,139 @@
-import NextAuth from "next-auth";
-import { z } from "zod";
-import { authConfig } from "./auth.config";
-import CredentialsProvider from "next-auth/providers/credentials";
-import VerificationToken from "@models/VerificationToken";
-import User from "@models/User";
-import { createUser } from "./graphql/users/logic";
-import { hashCode } from "@ui-lib/utils";
+import { APIError, betterAuth } from "better-auth";
+import { customSession, emailOTP } from "better-auth/plugins";
+import { MongoClient } from "mongodb";
 import DomainModel, { Domain } from "@models/Domain";
-import { error } from "./services/logger";
+import { getEmailFrom } from "@courselit/utils";
+import { addMailJob } from "@/services/queue";
+import pug from "pug";
+import MagicCodeEmailTemplate from "@/templates/magic-code-email";
+import { responses } from "@/config/strings";
+import { mongodbAdapter } from "@/ba-multitenant-adapter";
+import { updateUserAfterCreationViaAuth } from "./graphql/users/logic";
+import UserModel from "@models/User";
+import { getBackendAddress } from "./app/actions";
+import { sso } from "@better-auth/sso";
 
-export const { auth, signIn, signOut, handlers } = NextAuth({
-    ...authConfig,
-    providers: [
-        CredentialsProvider({
-            name: "Email",
-            credentials: {},
-            async authorize(credentials, req) {
-                const domain = await DomainModel.findOne<Domain>({
-                    name: req.headers.get("domain"),
+const client = new MongoClient(
+    process.env.DB_CONNECTION_STRING || "mongodb://localhost:27017",
+);
+const db = client.db();
+
+const config: any = {
+    appName: "CourseLit",
+    secret: process.env.AUTH_SECRET,
+    account: {
+        accountLinking: {
+            enabled: true,
+            trustedProviders: ["sso", "email-otp"],
+        },
+    },
+    advanced: {
+        cookiePrefix: "courselit",
+    },
+    database: mongodbAdapter(db, {
+        client,
+        usePlural: true,
+    }),
+    plugins: [
+        emailOTP({
+            overrideDefaultEmailVerification: true,
+            storeOTP: "hashed",
+            async sendVerificationOTP({ email, otp, type }, ctx) {
+                const emailBody = pug.render(MagicCodeEmailTemplate, {
+                    code: otp,
+                    hideCourseLitBranding: ctx!.headers?.get(
+                        "hidecourselitbranding",
+                    )
+                        ? ctx!.headers?.get("hidecourselitbranding") === "true"
+                        : false,
                 });
-                if (!domain) {
-                    throw new Error("Domain not found");
-                }
-                const parsedCredentials = z
-                    .object({
-                        email: z.string().email(),
-                        code: z.string().min(6),
-                    })
-                    .safeParse(credentials);
-                if (!parsedCredentials.success) {
-                    return null;
-                }
 
-                const { email, code } = parsedCredentials.data;
-                const sanitizedEmail = email.toLowerCase();
-
-                const verificationToken =
-                    await VerificationToken.findOneAndDelete({
-                        email: sanitizedEmail,
-                        domain: domain.name,
-                        code: hashCode(+code),
-                        timestamp: { $gt: Date.now() },
-                    });
-                if (!verificationToken) {
-                    error(`Invalid code`, {
-                        email: sanitizedEmail,
-                    });
-                    return null;
-                }
-
-                let user = await User.findOne({
-                    domain: domain._id,
-                    email: sanitizedEmail,
+                await addMailJob({
+                    to: [email],
+                    subject: `${responses.sign_in_mail_prefix} ${ctx!.headers?.get("host")}`,
+                    body: emailBody,
+                    from: getEmailFrom({
+                        name:
+                            ctx!.headers?.get("domaintitle") ||
+                            ctx!.headers?.get("domain") ||
+                            "",
+                        email: process.env.EMAIL_FROM || "",
+                    }),
                 });
-                if (user && user.invited) {
-                    user.invited = false;
-                    await user.save();
-                }
-                if (!user) {
-                    user = await createUser({
-                        domain,
-                        email: sanitizedEmail,
-                    });
-                }
-                if (!user.active) {
-                    return null;
-                }
-                return {
-                    id: user.userId,
-                    email: sanitizedEmail,
-                    name: user.name,
-                };
+            },
+        }),
+        customSession(async ({ user, session }, ctx) => {
+            return {
+                user: {
+                    ...user,
+                    userId: (
+                        (await UserModel.findOne({ _id: user.id })
+                            .select("userId")
+                            .lean()) as unknown as any
+                    )?.userId,
+                },
+                session: {
+                    ...session,
+                    domainId: ctx.headers?.get("domainId"),
+                },
+            };
+        }),
+        sso({
+            saml: {
+                enableInResponseToValidation: true,
+                requestTTL: 10 * 60 * 1000, // 10 minutes
+                clockSkew: 5 * 60 * 1000, // 5 minutes
+                requireTimestamps: true,
+            },
+            fields: {
+                domain: "domain_string",
             },
         }),
     ],
-});
+    databaseHooks: {
+        user: {
+            create: {
+                after: async (user, ctx) => {
+                    const domainName = ctx!.headers?.get("domain");
+                    const domain = (await DomainModel.findOne<Domain>({
+                        name: domainName,
+                    }).lean()) as unknown as Domain;
+                    if (!domain) {
+                        throw new APIError("NOT_FOUND", {
+                            message: "Domain not found",
+                        });
+                    }
+
+                    await updateUserAfterCreationViaAuth(user.id, domain);
+                },
+            },
+        },
+    },
+    trustedOrigins: async (request: Request) => {
+        const origins: string[] = [await getBackendAddress(request.headers)];
+        if (request.headers.get("ssotrusteddomain")) {
+            origins.push(request.headers.get("ssotrusteddomain")!);
+        }
+        return origins;
+    },
+};
+
+if (process.env.SESSION_COOKIE_CACHE_MAX_AGE) {
+    if (parseInt(process.env.SESSION_COOKIE_CACHE_MAX_AGE) > 0) {
+        config.session = {
+            cookieCache: {
+                enabled: true,
+                maxAge: parseInt(process.env.SESSION_COOKIE_CACHE_MAX_AGE) * 60,
+            },
+        };
+    }
+} else {
+    config.session = {
+        cookieCache: {
+            enabled: true,
+            maxAge: 5 * 60, // 5 minutes
+        },
+    };
+}
+
+export const auth = betterAuth(config);

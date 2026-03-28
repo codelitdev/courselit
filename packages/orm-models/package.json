@@ -1,0 +1,51 @@
+{
+    "name": "@courselit/orm-models",
+    "version": "0.0.1",
+    "description": "Common ORM models for CourseLit",
+    "author": "Team CourseLit <hi@codelit.dev>",
+    "homepage": "https://github.com/codelitdev/courselit#readme",
+    "private": true,
+    "license": "MIT",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/codelitdev/courselit.git"
+    },
+    "scripts": {
+        "test": "echo \"Error: run tests from root\" && exit 1",
+        "clean": "rimraf dist/",
+        "prepublishOnly": "pnpm run build",
+        "build": "tsup",
+        "tsc:build": "tsc",
+        "dev": "tsup --watch",
+        "check-types": "tsc --noEmit"
+    },
+    "bugs": {
+        "url": "https://github.com/codelitdev/courselit/issues"
+    },
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^8.46.0",
+        "@typescript-eslint/parser": "^8.46.0",
+        "tsconfig": "workspace:^",
+        "eslint": "^8.12.0",
+        "rimraf": "^4.1.1",
+        "tsup": "6.6.0",
+        "typescript": "^4.9.5"
+    },
+    "dependencies": {
+        "@courselit/common-models": "workspace:^",
+        "@courselit/utils": "workspace:^",
+        "@courselit/email-editor": "workspace:^",
+        "@courselit/page-models": "workspace:^",
+        "mongoose": "^8.13.1"
+    }
+}

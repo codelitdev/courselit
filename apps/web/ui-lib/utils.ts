@@ -1,12 +1,11 @@
+import { cache } from "react";
 import type {
     CommunityMemberStatus,
     CommunityReportStatus,
-    Course,
-    Group,
+    Features,
     Membership,
     MembershipRole,
     Page,
-    PaymentPlan,
     Profile,
     SiteInfo,
     TextEditorContent,
@@ -14,25 +13,35 @@ import type {
 } from "@courselit/common-models";
 import { checkPermission, FetchBuilder } from "@courselit/utils";
 import { Constants, UIConstants } from "@courselit/common-models";
-import { createHash, randomInt } from "crypto";
-import { getProtocol } from "../lib/utils";
-import { headers as headersType } from "next/headers";
 import { Theme } from "@courselit/page-models";
+export { getPlanPrice } from "@courselit/utils";
 const { permissions } = UIConstants;
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export const formattedLocaleDate = (
-    epochString?: Date | number,
+    epochString?: Date | number | string,
     monthFormat?: "short" | "long",
-) =>
-    epochString
-        ? new Date(Number(epochString)).toLocaleString("en-US", {
+) => {
+    if (!epochString) return "";
+
+    let time: number;
+    if (typeof epochString === "string") {
+        time = /^\d+$/.test(epochString)
+            ? parseInt(epochString, 10)
+            : new Date(epochString).getTime();
+    } else {
+        time = Number(epochString);
+    }
+
+    return isNaN(time)
+        ? ""
+        : new Date(time).toLocaleString("en-US", {
               year: "numeric",
               month: monthFormat || "short",
               day: "numeric",
-          })
-        : "";
+          });
+};
 
 export const formulateCourseUrl = (course: any, backend = "") =>
     `${backend}/${course.isBlog ? "post" : "course"}/${course.courseId}/${
@@ -45,14 +54,6 @@ export const getAddress = (host: string) => {
         backend: host,
         frontend: `http://${host}`,
     };
-};
-
-export const getBackendAddress = (
-    headers: Record<string, unknown>,
-): `${string}://${string}` => {
-    return `${getProtocol(
-        headers["x-forwarded-proto"] as string | string[] | undefined,
-    )}://${headers.host}`;
 };
 
 const extractDomainFromURL = (host: string) => {
@@ -70,7 +71,7 @@ export const canAccessDashboard = (profile: Profile) => {
 };
 
 export const constructThumbnailUrlFromFileUrl = (url: string) =>
-    url ? url.replace(url.split("/").pop(), "thumb.webp") : null;
+    url ? url.replace(/[^/]+$/, "thumb.webp") : null;
 
 type FrontEndPage = Pick<
     Page,
@@ -83,12 +84,10 @@ type FrontEndPage = Pick<
     | "socialImage"
     | "robotsAllowed"
 >;
-export const getPage = async (
-    backend: string,
-    id?: string,
-): Promise<FrontEndPage | null> => {
-    const query = id
-        ? `
+export const getPage = cache(
+    async (backend: string, id?: string): Promise<FrontEndPage | null> => {
+        const query = id
+            ? `
     query {
         page: getPage(id: "${id}") {
             type,
@@ -106,7 +105,7 @@ export const getPage = async (
         }
     }
     `
-        : `
+            : `
     query {
         page: getPage {
             type,
@@ -122,24 +121,24 @@ export const getPage = async (
         }
     }
     `;
-    try {
-        const fetch = new FetchBuilder()
-            .setUrl(`${backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
-        const response = await fetch.exec();
-        return response.page;
-    } catch (e: any) {
-        console.log("getPage", e.message); // eslint-disable-line no-console
-    }
-    return null;
-};
+        try {
+            const fetch = new FetchBuilder()
+                .setUrl(`${backend}/api/graph`)
+                .setPayload(query)
+                .setIsGraphQLEndpoint(true)
+                .build();
+            const response = await fetch.exec();
+            return response.page;
+        } catch (e: any) {
+            console.log("getPage", e.message); // eslint-disable-line no-console
+        }
+        return null;
+    },
+);
 
-export const getSiteInfo = async (
-    backend: string,
-): Promise<SiteInfo | undefined> => {
-    const query = `
+export const getSiteInfo = cache(
+    async (backend: string): Promise<SiteInfo | undefined> => {
+        const query = `
         query { 
             site: getSiteInfo {
                 settings {
@@ -161,35 +160,39 @@ export const getSiteInfo = async (
                     lemonsqueezyOneTimeVariantId,
                     lemonsqueezySubscriptionMonthlyVariantId,
                     lemonsqueezySubscriptionYearlyVariantId,
+                    logins,
                 },
             }
         }
     `;
-    try {
-        const fetch = new FetchBuilder()
-            .setUrl(`${backend}/api/graph`)
-            .setPayload(query)
-            .setIsGraphQLEndpoint(true)
-            .build();
-        const response = await fetch.exec();
-        return response.site.settings;
-    } catch (e: any) {
-        console.log("getSiteInfo", e.message); // eslint-disable-line no-console
-    }
-};
+        try {
+            const fetch = new FetchBuilder()
+                .setUrl(`${backend}/api/graph`)
+                .setPayload(query)
+                .setIsGraphQLEndpoint(true)
+                .build();
+            const response = await fetch.exec();
+            return response.site.settings;
+        } catch (e: any) {
+            console.log("getSiteInfo", e.message); // eslint-disable-line no-console
+        }
+    },
+);
 
-export const getFullSiteSetup = async (
-    backend: string,
-    id?: string,
-): Promise<
-    | {
-          settings: SiteInfo;
-          theme: Theme;
-          page: FrontEndPage;
-      }
-    | undefined
-> => {
-    const query = `
+export const getFullSiteSetup = cache(
+    async (
+        backend: string,
+        id?: string,
+    ): Promise<
+        | {
+              settings: SiteInfo;
+              theme: Theme;
+              page: FrontEndPage;
+              features: Features[];
+          }
+        | undefined
+    > => {
+        const query = `
         query ($id: String) { 
             theme: getTheme {
                 themeId
@@ -215,83 +218,41 @@ export const getFullSiteSetup = async (
                 },
                 robotsAllowed,
             }
+            features: getFeatures
         }
         `;
-    const fetch = new FetchBuilder()
-        .setUrl(`${backend}/api/graph`)
-        .setPayload({ query, variables: { id } })
-        .setIsGraphQLEndpoint(true)
-        .build();
+        const fetch = new FetchBuilder()
+            .setUrl(`${backend}/api/graph`)
+            .setPayload({ query, variables: { id } })
+            .setIsGraphQLEndpoint(true)
+            .build();
 
-    const settings = await getSiteInfo(backend);
-    if (!settings) {
-        return undefined;
-    }
-
-    try {
-        const response = await fetch.exec();
-        const transformedTheme: Theme = {
-            id: response.theme.themeId,
-            name: response.theme.name,
-            theme: response.theme.theme,
-        };
-        return {
-            settings,
-            theme: transformedTheme,
-            page: response.page,
-        };
-    } catch (e: any) {
-        console.log("getSiteInfo", e.message); // eslint-disable-line no-console
-        return undefined;
-    }
-};
-
-export const getProfile = async (
-    backend: string,
-): Promise<Partial<Profile> | null> => {
-    const query = `
-        { profile: getUser {
-            name,
-            id,
-            email,
-            userId,
-            bio,
-            permissions,
-            purchases {
-                courseId,
-                completedLessons,
-                accessibleGroups
-            }
-            avatar {
-                    mediaId,
-                    originalFileName,
-                    mimeType,
-                    size,
-                    access,
-                    file,
-                    thumbnail,
-                    caption
-                },
-            }
+        const settings = await getSiteInfo(backend);
+        if (!settings) {
+            return undefined;
         }
-        `;
-    const fetch = new FetchBuilder()
-        .setUrl(`${backend}/api/graph`)
-        .setPayload(query)
-        .setIsGraphQLEndpoint(true)
-        .build();
 
-    try {
-        const response = await fetch.exec();
-        return response.profile;
-    } catch (e: any) {
-        console.log("getProfile", e.message); // eslint-disable-line no-console
-        return null;
-    }
-};
+        try {
+            const response = await fetch.exec();
+            const transformedTheme: Theme = {
+                id: response.theme.themeId,
+                name: response.theme.name,
+                theme: response.theme.theme,
+            };
+            return {
+                settings,
+                theme: transformedTheme,
+                page: response.page,
+                features: response.features,
+            };
+        } catch (e: any) {
+            console.log("getSiteInfo", e.message); // eslint-disable-line no-console
+            return undefined;
+        }
+    },
+);
 
 export const isEnrolled = (courseId: string, profile: Profile) =>
-    profile.fetched &&
     profile.purchases.some((purchase: any) => purchase.courseId === courseId);
 
 export const isLessonCompleted = ({
@@ -313,7 +274,7 @@ export const isLessonCompleted = ({
 };
 
 export const generateFontString = (typefaces: Typeface[]): string => {
-    const fontStringPieces = [];
+    const fontStringPieces: string[] = [];
 
     for (const typeface of typefaces) {
         if (typeface.typeface !== "Roboto") {
@@ -347,21 +308,6 @@ export const moveMemberUp = (arr: any[], index: number) =>
     swapMembers(arr, index - 1, index);
 export const moveMemberDown = (arr: any[], index: number) =>
     swapMembers(arr, index, index + 1);
-
-export function generateUniquePasscode() {
-    return randomInt(100000, 999999);
-}
-
-// Inspired from: https://github.com/nextauthjs/next-auth/blob/c4ad77b86762b7fd2e6362d8bf26c5953846774a/packages/next-auth/src/core/lib/utils.ts#L16
-export function hashCode(code: number) {
-    return createHash("sha256")
-        .update(`${code}${process.env.AUTH_SECRET}`)
-        .digest("hex");
-}
-
-export const sortCourseGroups = (course: Course) => {
-    return course.groups.sort((a: Group, b: Group) => a.rank - b.rank);
-};
 
 export function truncate(str?: string, length?: number) {
     if (!str || !length) {
@@ -399,38 +345,38 @@ export function getNextRoleForCommunityMember(role: MembershipRole) {
     return roleCycle[(index + 1) % roleCycle.length];
 }
 
-export function getPlanPrice(plan: PaymentPlan): {
-    amount: number;
-    period: string;
-} {
-    if (!plan) {
-        return { amount: 0, period: "" };
-    }
-    switch (plan.type) {
-        case Constants.PaymentPlanType.FREE:
-            return { amount: 0, period: "" };
-        case Constants.PaymentPlanType.ONE_TIME:
-            return { amount: plan.oneTimeAmount || 0, period: "" };
-        case Constants.PaymentPlanType.SUBSCRIPTION:
-            if (plan.subscriptionYearlyAmount) {
-                return {
-                    amount: plan.subscriptionYearlyAmount,
-                    period: "/yr",
-                };
-            }
-            return {
-                amount: plan.subscriptionMonthlyAmount || 0,
-                period: "/mo",
-            };
-        case Constants.PaymentPlanType.EMI:
-            return {
-                amount: plan.emiAmount || 0,
-                period: "/mo",
-            };
-        default:
-            return { amount: 0, period: "" };
-    }
-}
+// export function getPlanPrice(plan: PaymentPlan): {
+//     amount: number;
+//     period: string;
+// } {
+//     if (!plan) {
+//         return { amount: 0, period: "" };
+//     }
+//     switch (plan.type) {
+//         case Constants.PaymentPlanType.FREE:
+//             return { amount: 0, period: "" };
+//         case Constants.PaymentPlanType.ONE_TIME:
+//             return { amount: plan.oneTimeAmount || 0, period: "" };
+//         case Constants.PaymentPlanType.SUBSCRIPTION:
+//             if (plan.subscriptionYearlyAmount) {
+//                 return {
+//                     amount: plan.subscriptionYearlyAmount,
+//                     period: "/yr",
+//                 };
+//             }
+//             return {
+//                 amount: plan.subscriptionMonthlyAmount || 0,
+//                 period: "/mo",
+//             };
+//         case Constants.PaymentPlanType.EMI:
+//             return {
+//                 amount: plan.emiAmount || 0,
+//                 period: "/mo",
+//             };
+//         default:
+//             return { amount: 0, period: "" };
+//     }
+// }
 
 export function hasCommunityPermission(
     member: Pick<Membership, "role">,
@@ -447,13 +393,4 @@ export function hasCommunityPermission(
     const requiredRoleIndex = roleHierarchy.indexOf(requiredRole);
 
     return memberRoleIndex >= requiredRoleIndex;
-}
-
-export function getAddressFromHeaders(headers: typeof headersType) {
-    const headersList = headers();
-    const address = getBackendAddress({
-        "x-forwarded-proto": headersList.get("x-forwarded-proto"),
-        host: headersList.get("host"),
-    });
-    return address;
 }

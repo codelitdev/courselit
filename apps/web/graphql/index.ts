@@ -3,7 +3,6 @@ const graphql = require("graphql");
 import users from "./users";
 import settings from "./settings";
 import menus from "./menus";
-import widgets from "./widgets";
 import courses from "./courses";
 import lessons from "./lessons";
 import pages from "./pages";
@@ -23,7 +22,6 @@ const schema = new graphql.GraphQLSchema({
             ...courses.queries,
             ...settings.queries,
             ...menus.queries,
-            ...widgets.queries,
             ...pages.queries,
             ...mails.queries,
             ...activities.queries,
@@ -41,7 +39,6 @@ const schema = new graphql.GraphQLSchema({
             ...courses.mutations,
             ...settings.mutations,
             ...menus.mutations,
-            ...widgets.mutations,
             ...pages.mutations,
             ...mails.mutations,
             ...activities.mutations,
