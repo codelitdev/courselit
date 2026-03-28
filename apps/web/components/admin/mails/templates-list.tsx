@@ -1,17 +1,11 @@
 "use client";
 
-import {
-    Address,
-    EmailTemplate,
-} from "@courselit/common-models";
+import { Address, EmailTemplate } from "@courselit/common-models";
 import { Link, useToast } from "@courselit/components-library";
 import { AppDispatch } from "@courselit/state-management";
 import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
-import {
-    TOAST_TITLE_ERROR,
-    MAIL_TABLE_HEADER_TITLE,
-} from "@ui-config/strings";
+import { TOAST_TITLE_ERROR, MAIL_TABLE_HEADER_TITLE } from "@ui-config/strings";
 import { useEffect, useState } from "react";
 import {
     Table,
@@ -29,11 +23,7 @@ interface TemplatesListProps {
     dispatch?: AppDispatch;
 }
 
-const TemplatesList = ({
-    address,
-    dispatch,
-    loading,
-}: TemplatesListProps) => {
+const TemplatesList = ({ address, dispatch, loading }: TemplatesListProps) => {
     const [templates, setTemplates] = useState<EmailTemplate[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();

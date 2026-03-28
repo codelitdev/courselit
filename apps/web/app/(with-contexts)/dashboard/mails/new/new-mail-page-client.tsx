@@ -1,24 +1,13 @@
 "use client";
 
-import {
-    Address,
-    EmailTemplate,
-    SequenceType,
-} from "@courselit/common-models";
+import { EmailTemplate, SequenceType } from "@courselit/common-models";
 import { useToast } from "@courselit/components-library";
-import { AppDispatch, AppState } from "@courselit/state-management";
+import { AppState } from "@courselit/state-management";
 import { networkAction } from "@courselit/state-management/dist/action-creators";
 import { FetchBuilder } from "@courselit/utils";
-import {
-    TOAST_TITLE_ERROR,
-} from "@ui-config/strings";
+import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { useEffect, useState } from "react";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ThunkDispatch } from "redux-thunk";
 import { AnyAction } from "redux";
