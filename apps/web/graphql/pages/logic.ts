@@ -18,12 +18,9 @@ import { Domain } from "../../models/Domain";
 import { homePageTemplate } from "./page-templates";
 import { publishTheme } from "../themes/logic";
 import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
-import { deleteMedia } from "@/services/medialit";
+import { deleteMedia, sealMedia } from "@/services/medialit";
 import CommunityModel from "@models/Community";
-import {
-    replaceTempMediaWithSealedMediaInPageLayout,
-    safeSealMedia,
-} from "@/lib/replace-temp-media-with-sealed-media-in-page-layout";
+import { replaceTempMediaWithSealedMediaInPageLayout } from "@/lib/replace-temp-media-with-sealed-media-in-page-layout";
 const { product, site, blogPage, communityPage, permissions, defaultPages } =
     constants;
 const { pageNames } = Constants;
@@ -137,7 +134,7 @@ export const updatePage = async ({
     layout?: string;
     title?: string;
     description?: string;
-    socialImage?: Media;
+    socialImage?: Media | null;
     robotsAllowed?: boolean;
 }): Promise<Partial<Page> | null> => {
     checkIfAuthenticated(ctx);
@@ -197,15 +194,18 @@ export const updatePage = async ({
     if (description) {
         page.draftDescription = description;
     }
-    if (typeof socialImage !== "undefined" && socialImage?.mediaId) {
-        if (page.draftSocialImage?.mediaId) {
-            deletedMediaIds.push(page.draftSocialImage.mediaId);
+    if (typeof socialImage !== "undefined") {
+        const previousDraftSocialImageId = page.draftSocialImage?.mediaId;
+
+        if (socialImage === null) {
+            page.draftSocialImage = null;
+        } else if (socialImage.mediaId) {
+            const sealedMedia = await sealMedia(socialImage.mediaId);
+            page.draftSocialImage = sealedMedia;
         }
-        if (socialImage?.mediaId) {
-            const sealedMedia = await safeSealMedia(socialImage.mediaId);
-            if (sealedMedia) {
-                page.draftSocialImage = sealedMedia;
-            }
+
+        if (previousDraftSocialImageId) {
+            deletedMediaIds.push(previousDraftSocialImageId);
         }
     }
     if (typeof robotsAllowed === "boolean") {
@@ -292,7 +292,11 @@ export const publish = async (
         page.robotsAllowed = page.draftRobotsAllowed;
         // page.draftRobotsAllowed = undefined;
     }
-    page.socialImage = page.draftSocialImage;
+    if (page.draftSocialImage === null) {
+        page.socialImage = undefined;
+    } else if (typeof page.draftSocialImage !== "undefined") {
+        page.socialImage = page.draftSocialImage;
+    }
 
     if (ctx.subdomain.themeId) {
         await publishTheme(ctx.subdomain.themeId, ctx);

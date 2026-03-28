@@ -40,7 +40,7 @@ const mutations = {
                 layout?: string;
                 title?: string;
                 description?: string;
-                socialImage?: Media;
+                socialImage?: Media | null;
                 robotsAllowed?: boolean;
             },
             context: GQLContext,

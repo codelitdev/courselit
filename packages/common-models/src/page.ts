@@ -18,6 +18,6 @@ export default interface Page {
     robotsAllowed?: boolean;
     draftTitle?: string;
     draftDescription?: string;
-    draftSocialImage?: Media;
+    draftSocialImage?: Media | null;
     draftRobotsAllowed?: boolean;
 }
