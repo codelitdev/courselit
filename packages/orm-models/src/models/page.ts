@@ -17,7 +17,7 @@ export interface InternalPage extends PublicPage {
     creatorId: string;
     draftTitle?: string;
     draftDescription?: string;
-    draftSocialImage?: Media;
+    draftSocialImage?: Media | null;
     draftRobotsAllowed?: boolean;
 }
 

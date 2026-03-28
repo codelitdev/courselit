@@ -8,7 +8,7 @@ import PageModel, { Page } from "@/models/Page";
 import Course from "@/models/Course";
 import CommunityModel from "@/models/Community";
 import constants from "@/config/constants";
-import { deleteMedia } from "@/services/medialit";
+import { deleteMedia, sealMedia } from "@/services/medialit";
 import GQLContext from "@/models/GQLContext";
 import { responses } from "@/config/strings";
 
@@ -844,6 +844,92 @@ describe("Media cleanup", () => {
             expect(deleteMedia).not.toHaveBeenCalledWith(media1);
         });
 
+        it("sets draftSocialImage to null when socialImage is null", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "update-clears-draft-social-image",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Update Clears Draft Social Image",
+                layout: [],
+                draftLayout: [],
+                draftSocialImage: mediaObj1,
+            });
+
+            await updatePage({
+                context: ctx,
+                pageId: page.pageId,
+                socialImage: null,
+            });
+
+            const refreshedPage = await PageModel.findOne({
+                _id: page._id,
+            });
+
+            expect(refreshedPage?.draftSocialImage).toBeNull();
+            expect(deleteMedia).toHaveBeenCalledWith(media1);
+        });
+
+        it("does NOT delete the cleared draftSocialImage if published socialImage still uses it", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "update-clears-draft-but-protects-published-social",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Update Clears Draft But Protects Published Social",
+                layout: [],
+                draftLayout: [],
+                socialImage: mediaObj1,
+                draftSocialImage: mediaObj1,
+            });
+
+            await updatePage({
+                context: ctx,
+                pageId: page.pageId,
+                socialImage: null,
+            });
+
+            const refreshedPage = await PageModel.findOne({
+                _id: page._id,
+            });
+
+            expect(refreshedPage?.draftSocialImage).toBeNull();
+            expect(deleteMedia).not.toHaveBeenCalledWith(media1);
+        });
+
+        it("does not delete the existing draftSocialImage when sealing the new social image fails", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "update-social-image-seal-failure",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Update Social Image Seal Failure",
+                layout: [],
+                draftLayout: [],
+                draftSocialImage: mediaObj1,
+            });
+
+            (sealMedia as jest.Mock).mockRejectedValueOnce(
+                new Error("seal failed"),
+            );
+
+            await expect(
+                updatePage({
+                    context: ctx,
+                    pageId: page.pageId,
+                    socialImage: mediaObj2 as any,
+                }),
+            ).rejects.toThrow("seal failed");
+
+            expect(deleteMedia).not.toHaveBeenCalledWith(media1);
+
+            const refreshedPage = await PageModel.findOne({
+                _id: page._id,
+            });
+
+            expect(refreshedPage?.draftSocialImage?.mediaId).toBe(media1);
+        });
+
         it("handles multiple media in a single widget", async () => {
             const page = await PageModel.create({
                 domain: ctx.subdomain._id,
@@ -1089,6 +1175,29 @@ describe("Media cleanup", () => {
             await publish(page.pageId, ctx);
 
             expect(deleteMedia).not.toHaveBeenCalledWith(media1);
+        });
+
+        it("clears published socialImage when draftSocialImage is null", async () => {
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "publish-clears-social-image",
+                type: constants.site,
+                creatorId: "creator-1",
+                name: "Publish Clears Social Image",
+                layout: [],
+                draftLayout: [],
+                socialImage: mediaObj1,
+                draftSocialImage: null,
+            });
+
+            await publish(page.pageId, ctx);
+
+            const refreshedPage = await PageModel.findOne({
+                _id: page._id,
+            });
+
+            expect(refreshedPage?.socialImage).toBeUndefined();
+            expect(deleteMedia).toHaveBeenCalledWith(media1);
         });
 
         it("handles publishing with empty draftLayout - media is deleted", async () => {

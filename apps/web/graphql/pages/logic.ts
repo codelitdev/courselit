@@ -134,7 +134,7 @@ export const updatePage = async ({
     layout?: string;
     title?: string;
     description?: string;
-    socialImage?: Media;
+    socialImage?: Media | null;
     robotsAllowed?: boolean;
 }): Promise<Partial<Page> | null> => {
     checkIfAuthenticated(ctx);
@@ -194,13 +194,19 @@ export const updatePage = async ({
     if (description) {
         page.draftDescription = description;
     }
-    if (typeof socialImage !== "undefined" && socialImage?.mediaId) {
-        if (page.draftSocialImage?.mediaId) {
-            deletedMediaIds.push(page.draftSocialImage.mediaId);
+    if (typeof socialImage !== "undefined") {
+        const previousDraftSocialImageId = page.draftSocialImage?.mediaId;
+
+        if (socialImage === null) {
+            page.draftSocialImage = null;
+        } else if (socialImage.mediaId) {
+            const sealedMedia = await sealMedia(socialImage.mediaId);
+            page.draftSocialImage = sealedMedia;
         }
-        page.draftSocialImage = socialImage?.mediaId
-            ? await sealMedia(socialImage.mediaId)
-            : undefined;
+
+        if (previousDraftSocialImageId) {
+            deletedMediaIds.push(previousDraftSocialImageId);
+        }
     }
     if (typeof robotsAllowed === "boolean") {
         page.draftRobotsAllowed = robotsAllowed;
@@ -211,7 +217,12 @@ export const updatePage = async ({
     );
 
     for (const mediaId of deletableMediaIds) {
-        await deleteMedia(mediaId);
+        try {
+            await deleteMedia(mediaId);
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.log(`Error while deleting media`, mediaId);
+        }
     }
 
     try {
@@ -281,7 +292,11 @@ export const publish = async (
         page.robotsAllowed = page.draftRobotsAllowed;
         // page.draftRobotsAllowed = undefined;
     }
-    page.socialImage = page.draftSocialImage;
+    if (page.draftSocialImage === null) {
+        page.socialImage = undefined;
+    } else if (typeof page.draftSocialImage !== "undefined") {
+        page.socialImage = page.draftSocialImage;
+    }
 
     if (ctx.subdomain.themeId) {
         await publishTheme(ctx.subdomain.themeId, ctx);

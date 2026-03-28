@@ -16,7 +16,7 @@ export interface Page extends PublicPage {
     creatorId: string;
     draftTitle?: string;
     draftDescription?: string;
-    draftSocialImage?: Media;
+    draftSocialImage?: Media | null;
     draftRobotsAllowed?: boolean;
 }
 

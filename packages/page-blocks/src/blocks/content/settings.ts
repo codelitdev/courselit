@@ -8,5 +8,6 @@ export default interface Settings extends WidgetDefaultSettings {
     title: string;
     description: TextEditorContent;
     headerAlignment: Alignment;
+    openByDefault?: boolean;
     cssId?: string;
 }

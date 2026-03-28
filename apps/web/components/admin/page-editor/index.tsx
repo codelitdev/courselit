@@ -90,7 +90,7 @@ export default function PageEditor({
             Page & {
                 draftTitle?: string;
                 draftDescription?: string;
-                draftSocialImage?: Media;
+                draftSocialImage?: Media | null;
                 draftRobotsAllowed?: boolean;
             }
         >
@@ -595,7 +595,9 @@ export default function PageEditor({
                               : true
                     }
                     socialImage={
-                        page.draftSocialImage ?? page.socialImage ?? null
+                        page.draftSocialImage !== undefined
+                            ? page.draftSocialImage
+                            : (page.socialImage ?? null)
                     }
                     onClose={(e) => setLeftPaneContent("none")}
                     onSave={({

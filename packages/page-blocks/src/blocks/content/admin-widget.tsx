@@ -11,9 +11,12 @@ import {
     CssIdField,
     MaxWidthSelector,
     VerticalPaddingSelector,
+    Tooltip,
+    Checkbox,
 } from "@courselit/components-library";
 import { Theme, ThemeStyle } from "@courselit/page-models";
 import { Editor } from "@courselit/text-editor";
+import { Help } from "@courselit/icons";
 
 interface AdminWidgetProps {
     settings: Settings;
@@ -39,6 +42,9 @@ export default function AdminWidget({
         ThemeStyle["structure"]["section"]["padding"]["y"]
     >(settings.verticalPadding);
     const [cssId, setCssId] = useState(settings.cssId);
+    const [openByDefault, setOpenByDefault] = useState(
+        settings.openByDefault || false,
+    );
 
     useEffect(() => {
         onChange({
@@ -47,9 +53,18 @@ export default function AdminWidget({
             headerAlignment,
             maxWidth,
             verticalPadding,
+            openByDefault,
             cssId,
         });
-    }, [title, description, headerAlignment, maxWidth, verticalPadding, cssId]);
+    }, [
+        title,
+        description,
+        headerAlignment,
+        maxWidth,
+        verticalPadding,
+        openByDefault,
+        cssId,
+    ]);
 
     return (
         <AdminWidgetPanelContainer
@@ -89,6 +104,18 @@ export default function AdminWidget({
                     value={verticalPadding}
                     onChange={setVerticalPadding}
                 />
+                <div className="flex justify-between">
+                    <div className="flex grow items-center gap-1">
+                        <p>Open by default</p>
+                        <Tooltip title="All the sections will be expanded by default">
+                            <Help />
+                        </Tooltip>
+                    </div>
+                    <Checkbox
+                        checked={openByDefault}
+                        onChange={(value: boolean) => setOpenByDefault(value)}
+                    />
+                </div>
             </AdminWidgetPanel>
             <AdminWidgetPanel title="Advanced" value="advanced">
                 <CssIdField value={cssId} onChange={setCssId} />

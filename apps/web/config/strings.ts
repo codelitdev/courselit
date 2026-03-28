@@ -139,6 +139,7 @@ export const responses = {
     certificate_invalid_settings: "Certificate can only be enabled for courses",
     sso_provider_already_exists:
         "A SSO provider with the same provider ID already exists",
+    quiz_cannot_be_previewed: "Quiz cannot be previewed",
 
     // api responses
     digital_download_no_files:

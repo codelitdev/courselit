@@ -99,7 +99,10 @@ export default function Widget({
                                     value={`${item.title}-${index}`}
                                 >
                                     <AccordionTrigger>
-                                        <Text1 theme={overiddenTheme}>
+                                        <Text1
+                                            theme={overiddenTheme}
+                                            className="text-left"
+                                        >
                                             {item.title}
                                         </Text1>
                                     </AccordionTrigger>
