@@ -18,9 +18,10 @@ jobs:
     steps:
       - name: Ensure commenter is allowed
         if: |
-          github.event.comment.author_association != 'OWNER'
+          github.event.comment.author_association != 'OWNER' &&
+          github.event.comment.author_association != 'MEMBER'
         run: |
-          echo "Only OWNER can trigger releases."
+          echo "Only OWNER or MEMBER can trigger releases."
           exit 1
 
       - name: Validate PR merged to main and parse version
