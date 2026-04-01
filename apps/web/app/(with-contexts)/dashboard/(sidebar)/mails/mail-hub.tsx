@@ -28,7 +28,7 @@ export default function MailHub() {
             breadcrumbs={breadcrumbs}
             permissions={[permissions.manageUsers]}
         >
-            <Mails selectedTab={tab as any} address={address} loading={false} />
+            <Mails selectedTab={tab as any} address={address} />
         </DashboardContent>
     );
 }

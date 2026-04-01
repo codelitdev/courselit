@@ -32,8 +32,10 @@ import { ProfileContext, SiteInfoContext } from "@components/contexts";
 import { checkPermission } from "@courselit/utils";
 import { Profile, UIConstants } from "@courselit/common-models";
 import {
+    BROADCASTS,
     GET_SET_UP,
     MY_CONTENT_HEADER,
+    SEQUENCES,
     SIDEBAR_MENU_BLOGS,
     SIDEBAR_MENU_MAILS,
     SIDEBAR_MENU_PAGES,
@@ -44,6 +46,7 @@ import {
     SITE_SETTINGS_SECTION_GENERAL,
     SITE_SETTINGS_SECTION_MAILS,
     SITE_SETTINGS_SECTION_PAYMENT,
+    TEMPLATES,
 } from "@ui-config/strings";
 import { NavSecondary } from "./nav-secondary";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -227,18 +230,25 @@ function getSidebarItems({
                 path?.startsWith("/dashboard/mail"),
             items: [
                 {
-                    title: "Broadcasts",
-                    url: "/dashboard/mails?tab=Broadcasts",
+                    title: BROADCASTS,
+                    url: `/dashboard/mails?tab=${BROADCASTS}`,
                     isActive:
                         `${path}?tab=${tab}` ===
-                        "/dashboard/mails?tab=Broadcasts",
+                        `/dashboard/mails?tab=${BROADCASTS}`,
                 },
                 {
-                    title: "Sequences",
-                    url: "/dashboard/mails?tab=Sequences",
+                    title: SEQUENCES,
+                    url: `/dashboard/mails?tab=${SEQUENCES}`,
                     isActive:
                         `${path}?tab=${tab}` ===
-                        "/dashboard/mails?tab=Sequences",
+                        `/dashboard/mails?tab=${SEQUENCES}`,
+                },
+                {
+                    title: TEMPLATES,
+                    url: `/dashboard/mails?tab=${TEMPLATES}`,
+                    isActive:
+                        `${path}?tab=${tab}` ===
+                        `/dashboard/mails?tab=${TEMPLATES}`,
                 },
             ],
         });

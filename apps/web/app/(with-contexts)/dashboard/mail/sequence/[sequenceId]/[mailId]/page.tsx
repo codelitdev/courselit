@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
+import { EMAIL_EDITOR_EMAIL_EDIT_HEADER } from "@ui-config/strings";
 
 export default function EmailEditorPage(props: {
     params: Promise<{
@@ -43,7 +44,7 @@ const EditorLayout = ({
                     <div className="flex items-center gap-3">
                         <div className="w-[220px]">
                             <div className="h-10 flex items-center px-3 rounded-md text-sm text-muted-foreground">
-                                Email Editor
+                                {EMAIL_EDITOR_EMAIL_EDIT_HEADER}
                             </div>
                         </div>
                     </div>

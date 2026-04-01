@@ -3,7 +3,7 @@
 import { EmailEditor } from "@courselit/email-editor";
 import "@courselit/email-editor/styles.css";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, use } from "react";
 import type { Email as EmailContent } from "@courselit/email-editor";
 import { useToast } from "@courselit/components-library";
 import { debounce } from "@courselit/utils";
@@ -14,10 +14,11 @@ import { EmailTemplate } from "@courselit/common-models";
 export default function EmailTemplateEditorPage({
     params,
 }: {
-    params: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }) {
+    const { id } = use(params);
     const [email, setEmail] = useState<EmailContent | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const { toast } = useToast();
@@ -55,7 +56,7 @@ export default function EmailTemplateEditorPage({
                 .setPayload({
                     query,
                     variables: {
-                        templateId: params.id,
+                        templateId: id,
                     },
                 })
                 .build()
@@ -73,7 +74,7 @@ export default function EmailTemplateEditorPage({
         } finally {
             setLoading(false);
         }
-    }, [params.id, fetch]);
+    }, [id, fetch]);
 
     useEffect(() => {
         loadTemplate();
@@ -92,32 +93,32 @@ export default function EmailTemplateEditorPage({
             setIsSaving(true);
 
             const mutation = `
-        mutation UpdateEmailTemplate(
-            $templateId: String!,
-            $content: String,
-        ) {
-            template: updateEmailTemplate(
-                templateId: $templateId,
-                content: $content,
+            mutation UpdateEmailTemplate(
+                $templateId: String!,
+                $content: String,
             ) {
-                templateId
-                title
-                content {
+                template: updateEmailTemplate(
+                    templateId: $templateId,
+                    content: $content,
+                ) {
+                    templateId
+                    title
                     content {
-                        blockType
-                        settings
+                        content {
+                            blockType
+                            settings
+                        }
+                        style
+                        meta
                     }
-                    style
-                    meta
                 }
-            }
-        }`;
+            }`;
 
             const fetcher = fetch
                 .setPayload({
                     query: mutation,
                     variables: {
-                        templateId: params.id,
+                        templateId: id,
                         content: JSON.stringify(emailContent),
                     },
                 })
@@ -139,7 +140,7 @@ export default function EmailTemplateEditorPage({
                 setIsSaving(false);
             }
         },
-        [params.id, fetch, toast],
+        [id, fetch, toast],
     );
 
     const debouncedSave = useMemo(() => debounce(saveEmail, 1000), [saveEmail]);

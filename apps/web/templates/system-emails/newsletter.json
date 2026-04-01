@@ -1,0 +1,208 @@
+{
+    "templateId": "system-4",
+    "title": "Newsletter",
+    "content": {
+        "style": {
+            "colors": {
+                "background": "#f8fafc",
+                "foreground": "#0f172a",
+                "border": "#dbe4ee",
+                "accent": "#0f766e",
+                "accentForeground": "#ffffff"
+            },
+            "typography": {
+                "header": {
+                    "fontFamily": "Arial, sans-serif",
+                    "letterSpacing": "-0.2px",
+                    "textTransform": "none",
+                    "textDecoration": "none"
+                },
+                "text": {
+                    "fontFamily": "Arial, sans-serif",
+                    "fontSize": "16px",
+                    "lineHeight": "1.7",
+                    "letterSpacing": "0px",
+                    "textTransform": "none",
+                    "textDecoration": "none"
+                },
+                "link": {
+                    "fontFamily": "Arial, sans-serif",
+                    "fontSize": "14px",
+                    "lineHeight": "1.5",
+                    "letterSpacing": "0.2px",
+                    "textTransform": "uppercase",
+                    "textDecoration": "none"
+                }
+            },
+            "interactives": {
+                "button": {
+                    "padding": {
+                        "x": "20px",
+                        "y": "11px"
+                    },
+                    "border": {
+                        "width": "0px",
+                        "radius": "8px",
+                        "style": "solid"
+                    }
+                },
+                "link": {
+                    "padding": {
+                        "x": "0px",
+                        "y": "0px"
+                    }
+                }
+            },
+            "structure": {
+                "page": {
+                    "background": "#ffffff",
+                    "foreground": "#0f172a",
+                    "width": "640px",
+                    "marginY": "24px",
+                    "borderWidth": "1px",
+                    "borderStyle": "solid",
+                    "borderRadius": "20px"
+                },
+                "section": {
+                    "padding": {
+                        "x": "32px",
+                        "y": "18px"
+                    }
+                }
+            }
+        },
+        "meta": {
+            "previewText": "A clean, editorial newsletter for recurring updates and curated stories."
+        },
+        "content": [
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "WEEKLY NEWSLETTER",
+                    "alignment": "left",
+                    "fontFamily": "Arial, sans-serif",
+                    "fontSize": "12px",
+                    "foregroundColor": "#0f766e",
+                    "paddingTop": "6px",
+                    "paddingBottom": "0px"
+                }
+            },
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "# What happened this week",
+                    "alignment": "left",
+                    "fontFamily": "Arial, sans-serif",
+                    "fontSize": "26px",
+                    "foregroundColor": "#0f172a",
+                    "paddingTop": "10px",
+                    "paddingBottom": "10px"
+                }
+            },
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "Use this for curated updates, editorial roundups, key announcements, and useful links your audience will want to save.",
+                    "alignment": "left",
+                    "fontFamily": "Arial, sans-serif",
+                    "fontSize": "17px",
+                    "lineHeight": "1.7",
+                    "foregroundColor": "#475569",
+                    "paddingTop": "0px",
+                    "paddingBottom": "14px"
+                }
+            },
+            {
+                "blockType": "separator",
+                "settings": {
+                    "color": "#dbe4ee",
+                    "thickness": "1px",
+                    "style": "solid",
+                    "paddingTop": "0px",
+                    "paddingBottom": "14px"
+                }
+            },
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "## Featured update\n\nShare the biggest story or insight first. A short explanation plus one strong CTA is usually enough.",
+                    "alignment": "left",
+                    "fontFamily": "Arial, sans-serif",
+                    "fontSize": "16px",
+                    "lineHeight": "1.7",
+                    "foregroundColor": "#0f172a",
+                    "paddingTop": "0px",
+                    "paddingBottom": "8px"
+                }
+            },
+            {
+                "blockType": "link",
+                "settings": {
+                    "text": "Read the feature",
+                    "url": "#",
+                    "alignment": "left",
+                    "isButton": true,
+                    "buttonColor": "#0f766e",
+                    "buttonTextColor": "#ffffff",
+                    "buttonBorderRadius": "8px",
+                    "buttonPaddingX": "20px",
+                    "buttonPaddingY": "11px",
+                    "buttonBorderWidth": "0px",
+                    "buttonBorderStyle": "solid",
+                    "buttonBorderColor": "#0f766e",
+                    "paddingTop": "4px",
+                    "paddingBottom": "16px"
+                }
+            },
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "## Also inside\n\n- A quick tip or takeaway.\n- One resource worth sharing.\n- A subtle CTA to your offer or archive.",
+                    "alignment": "left",
+                    "fontFamily": "Arial, sans-serif",
+                    "fontSize": "16px",
+                    "lineHeight": "1.7",
+                    "foregroundColor": "#0f172a",
+                    "paddingTop": "0px",
+                    "paddingBottom": "8px"
+                }
+            },
+            {
+                "blockType": "link",
+                "settings": {
+                    "text": "Browse past issues",
+                    "url": "#",
+                    "alignment": "left",
+                    "isButton": false,
+                    "textColor": "#0f766e",
+                    "fontSize": "14px",
+                    "textDecoration": "none",
+                    "paddingTop": "0px",
+                    "paddingBottom": "0px"
+                }
+            },
+            {
+                "blockType": "separator",
+                "settings": {
+                    "color": "#dbe4ee",
+                    "thickness": "1px",
+                    "style": "solid",
+                    "paddingTop": "18px",
+                    "paddingBottom": "10px"
+                }
+            },
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "{{address}}\n\n[Unsubscribe]({{unsubscribe_link}})",
+                    "alignment": "center",
+                    "fontFamily": "Arial, sans-serif",
+                    "fontSize": "12px",
+                    "foregroundColor": "#64748b",
+                    "paddingTop": "0px",
+                    "paddingBottom": "0px"
+                }
+            }
+        ]
+    }
+}

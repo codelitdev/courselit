@@ -48,33 +48,37 @@ const mutations = {
         type: types.sequence,
         args: {
             type: { type: new GraphQLNonNull(types.sequenceType) },
-            title: { type: GraphQLString },
-            content: { type: GraphQLString },
+            templateId: { type: new GraphQLNonNull(GraphQLString) },
         },
         resolve: async (
             _: any,
             {
                 type,
-                title,
-                content,
+                templateId,
             }: {
                 type: (typeof Constants.mailTypes)[number];
-                title?: string;
-                content?: string;
+                templateId: string;
             },
             context: GQLContext,
-        ) => createSequence(context, type, title, content),
+        ) => createSequence(context, type, templateId),
     },
     addMailToSequence: {
         type: types.sequence,
         args: {
             sequenceId: { type: new GraphQLNonNull(GraphQLString) },
+            templateId: { type: new GraphQLNonNull(GraphQLString) },
         },
         resolve: async (
             _: any,
-            { sequenceId }: { sequenceId: string },
+            {
+                sequenceId,
+                templateId,
+            }: {
+                sequenceId: string;
+                templateId: string;
+            },
             context: GQLContext,
-        ) => addMailToSequence(context, sequenceId),
+        ) => addMailToSequence(context, sequenceId, templateId),
     },
     deleteMailFromSequence: {
         type: types.sequence,
@@ -339,13 +343,13 @@ const mutations = {
     createEmailTemplate: {
         type: types.emailTemplate,
         args: {
-            title: { type: new GraphQLNonNull(GraphQLString) },
+            templateId: { type: new GraphQLNonNull(GraphQLString) },
         },
         resolve: async (
             _: any,
-            { title }: { title: string },
+            { templateId }: { templateId: string },
             context: GQLContext,
-        ) => createEmailTemplate({ title, context }),
+        ) => createEmailTemplate({ templateId, context }),
     },
 
     updateEmailTemplate: {

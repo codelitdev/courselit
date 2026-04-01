@@ -10,7 +10,7 @@ export async function generateMetadata(
     };
 }
 
-export default function DripEmailEditorLayout({
+export default function EmailLayout({
     children,
 }: {
     children: React.ReactNode;

@@ -86,47 +86,15 @@ export default function Mails({ address, selectedTab }: MailsProps) {
         getSiteInfo();
     }, []);
 
-    const createEmailTemplate = async (): Promise<void> => {
-        const mutation = `
-        mutation createEmailTemplate($title: String!) {
-            template: createEmailTemplate(title: $title) {
-                templateId
-            }
-        }
-    `;
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload({
-                query: mutation,
-                variables: {
-                    title: "New template",
-                },
-            })
-            .setIsGraphQLEndpoint(true)
-            .build();
-        try {
-            const response = await fetch.exec();
-            if (response.template && response.template.templateId) {
-                router.push(
-                    `/dashboard/mails/template/${response.template.templateId}`,
-                );
-            }
-        } catch (err) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: err.message,
-                variant: "destructive",
-            });
-        }
-    };
-
     const onPrimaryButtonClick = (): void => {
         if (selectedTab === BROADCASTS) {
-            router.push(`/dashboard/mails/new?type=broadcast`);
+            router.push(
+                `/dashboard/mails/new?type=broadcast&source=broadcasts`,
+            );
         } else if (selectedTab === SEQUENCES) {
-            router.push(`/dashboard/mails/new?type=sequence`);
+            router.push(`/dashboard/mails/new?type=sequence&source=sequences`);
         } else {
-            createEmailTemplate();
+            router.push(`/dashboard/mails/new?type=template&source=templates`);
         }
     };
 
@@ -206,14 +174,8 @@ export default function Mails({ address, selectedTab }: MailsProps) {
                     router.replace(`/dashboard/mails?tab=${tab}`);
                 }}
             >
-                <SequencesList
-                    type={Constants.mailTypes[0] as SequenceType}
-                    address={address}
-                />
-                <SequencesList
-                    type={Constants.mailTypes[1] as SequenceType}
-                    address={address}
-                />
+                <SequencesList type={Constants.mailTypes[0] as SequenceType} />
+                <SequencesList type={Constants.mailTypes[1] as SequenceType} />
                 <TemplatesList address={address} />
             </Tabbs>
         </div>
