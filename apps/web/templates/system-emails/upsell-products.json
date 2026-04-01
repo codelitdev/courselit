@@ -1,0 +1,198 @@
+{
+    "templateId": "system-3",
+    "title": "Upsell products",
+    "content": {
+        "style": {
+            "colors": {
+                "background": "#f8fafc",
+                "foreground": "#0f172a",
+                "border": "#dbe4ee",
+                "accent": "#7c3aed",
+                "accentForeground": "#ffffff"
+            },
+            "typography": {
+                "header": {
+                    "fontFamily": "Helvetica, sans-serif",
+                    "letterSpacing": "-0.3px",
+                    "textTransform": "none",
+                    "textDecoration": "none"
+                },
+                "text": {
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "16px",
+                    "lineHeight": "1.7",
+                    "letterSpacing": "0px",
+                    "textTransform": "none",
+                    "textDecoration": "none"
+                },
+                "link": {
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "14px",
+                    "lineHeight": "1.5",
+                    "letterSpacing": "0.3px",
+                    "textTransform": "uppercase",
+                    "textDecoration": "none"
+                }
+            },
+            "interactives": {
+                "button": {
+                    "padding": {
+                        "x": "22px",
+                        "y": "12px"
+                    },
+                    "border": {
+                        "width": "0px",
+                        "radius": "999px",
+                        "style": "solid"
+                    }
+                },
+                "link": {
+                    "padding": {
+                        "x": "0px",
+                        "y": "0px"
+                    }
+                }
+            },
+            "structure": {
+                "page": {
+                    "background": "#ffffff",
+                    "foreground": "#0f172a",
+                    "width": "640px",
+                    "marginY": "24px",
+                    "borderWidth": "1px",
+                    "borderStyle": "solid",
+                    "borderRadius": "20px"
+                },
+                "section": {
+                    "padding": {
+                        "x": "32px",
+                        "y": "18px"
+                    }
+                }
+            }
+        },
+        "meta": {
+            "previewText": "A polished upsell email to spotlight related products and premium offers."
+        },
+        "content": [
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "RECOMMENDED FOR YOU",
+                    "alignment": "center",
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "12px",
+                    "foregroundColor": "#7c3aed",
+                    "backgroundColor": "#f5f3ff",
+                    "paddingTop": "8px",
+                    "paddingBottom": "8px"
+                }
+            },
+            {
+                "blockType": "image",
+                "settings": {
+                    "src": "https://upload.wikimedia.org/wikipedia/commons/d/d5/Slack_icon_2019.svg",
+                    "alt": "Slack logo",
+                    "alignment": "center",
+                    "width": "56px",
+                    "maxWidth": "100%",
+                    "paddingTop": "12px",
+                    "paddingBottom": "4px"
+                }
+            },
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "# Products your customers are ready to buy next",
+                    "alignment": "left",
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "26px",
+                    "foregroundColor": "#0f172a",
+                    "paddingTop": "8px",
+                    "paddingBottom": "10px"
+                }
+            },
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "Use this for upgrades, bundles, complementary offers, limited-time incentives, and premium add-ons that naturally follow an initial purchase.",
+                    "alignment": "left",
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "17px",
+                    "lineHeight": "1.7",
+                    "foregroundColor": "#475569",
+                    "paddingTop": "0px",
+                    "paddingBottom": "10px"
+                }
+            },
+            {
+                "blockType": "link",
+                "settings": {
+                    "text": "View recommended products",
+                    "url": "#",
+                    "alignment": "left",
+                    "isButton": true,
+                    "buttonColor": "#7c3aed",
+                    "buttonTextColor": "#ffffff",
+                    "buttonBorderRadius": "999px",
+                    "buttonPaddingX": "22px",
+                    "buttonPaddingY": "12px",
+                    "buttonBorderWidth": "0px",
+                    "buttonBorderStyle": "solid",
+                    "buttonBorderColor": "#7c3aed",
+                    "paddingTop": "6px",
+                    "paddingBottom": "16px"
+                }
+            },
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "## Why this converts\n\n- Relevant add-on recommendation.\n- Clear next step.\n- A premium but simple visual treatment.\n- Plenty of room for benefits, pricing, or testimonials.",
+                    "alignment": "left",
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "16px",
+                    "lineHeight": "1.7",
+                    "foregroundColor": "#0f172a",
+                    "paddingTop": "0px",
+                    "paddingBottom": "8px"
+                }
+            },
+            {
+                "blockType": "link",
+                "settings": {
+                    "text": "See pricing",
+                    "url": "#",
+                    "alignment": "left",
+                    "isButton": false,
+                    "textColor": "#7c3aed",
+                    "fontSize": "14px",
+                    "textDecoration": "none",
+                    "paddingTop": "0px",
+                    "paddingBottom": "0px"
+                }
+            },
+            {
+                "blockType": "separator",
+                "settings": {
+                    "color": "#e9d5ff",
+                    "thickness": "1px",
+                    "style": "solid",
+                    "paddingTop": "18px",
+                    "paddingBottom": "10px"
+                }
+            },
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "{{address}}\n\n[Unsubscribe]({{unsubscribe_link}})",
+                    "alignment": "center",
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "12px",
+                    "foregroundColor": "#64748b",
+                    "paddingTop": "0px",
+                    "paddingBottom": "0px"
+                }
+            }
+        ]
+    }
+}

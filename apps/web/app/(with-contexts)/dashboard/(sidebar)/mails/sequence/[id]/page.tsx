@@ -1,7 +1,6 @@
 "use client";
 
 import DashboardContent from "@components/admin/dashboard-content";
-import { AddressContext } from "@components/contexts";
 import {
     DELETE_EMAIL_DIALOG_HEADER,
     PAGE_HEADER_EDIT_SEQUENCE,
@@ -10,7 +9,7 @@ import {
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
-import { useContext, useState, useEffect, useCallback, use } from "react";
+import { useState, useEffect, useCallback, use } from "react";
 import { Tabbs, useToast } from "@courselit/components-library";
 import EmailAnalytics from "@components/admin/mails/email-analytics";
 import { useSequence } from "@/hooks/use-sequence";
@@ -29,6 +28,7 @@ import {
     Badge,
 } from "@courselit/components-library";
 import { Community, Course } from "@courselit/common-models";
+import { useRouter } from "next/navigation";
 import {
     COMPOSE_SEQUENCE_ENTRANCE_CONDITION,
     COMPOSE_SEQUENCE_ENTRANCE_CONDITION_DATA,
@@ -55,7 +55,7 @@ export default function Page(props: {
     }>;
 }) {
     const params = use(props.params);
-    const address = useContext(AddressContext);
+    const router = useRouter();
     const { id } = params;
     const { sequence, loading, loadSequence } = useSequence();
     const [activeTab, setActiveTab] = useState("Compose");
@@ -182,35 +182,11 @@ export default function Page(props: {
         }
     }, [triggerType]);
 
-    const addMailToSequence = useCallback(async () => {
-        const query = `
-            mutation AddMailToSequence($sequenceId: String!) {
-                sequence: addMailToSequence(sequenceId: $sequenceId) {
-                    sequenceId,
-                }
-            }`;
-
-        const fetcher = fetch
-            .setPayload({ query, variables: { sequenceId: id } })
-            .build();
-
-        try {
-            const response = await fetcher.exec();
-            if (response.sequence) {
-                await loadSequence(id);
-                toast({
-                    title: TOAST_TITLE_SUCCESS,
-                    description: "New email added to sequence",
-                });
-            }
-        } catch (e: any) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: e.message,
-                variant: "destructive",
-            });
-        }
-    }, [fetch, id, loadSequence, toast]);
+    const addMailToSequence = useCallback(() => {
+        router.push(
+            `/dashboard/mails/new?type=sequence&sequenceId=${id}&mode=add-to-sequence`,
+        );
+    }, [id, router]);
 
     const updateSequence = useCallback(async () => {
         const query = `

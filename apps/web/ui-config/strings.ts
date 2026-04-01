@@ -539,6 +539,8 @@ export const COURSE_STUDENT_SEARCH_BY_TEXT = "Search student";
 export const COURSE_STUDENT_NO_RECORDS = "No student found";
 export const QUESTION_BUILDER_DELETE_TOOLTIP = "Delete question";
 export const PAGE_HEADER_EDIT_MAIL = "Compose mail";
+export const PAGE_HEADER_EDIT_TEMPLATE = "Template";
+export const PAGE_HEADER_MANAGE = "Manage";
 export const PAGE_HEADER_EDIT_SEQUENCE = "Sequence details";
 export const BTN_SEND = "Send";
 export const DIALOG_SEND_HEADER = "Send mail";
@@ -573,6 +575,41 @@ export const PAGE_PLACEHOLDER_MAIL = "Your mails will show up here";
 export const BTN_NEW_MAIL = "New broadcast";
 export const BTN_NEW_SEQUENCE = "New sequence";
 export const BTN_NEW_TEMPLATE = "New template";
+export const PAGE_HEADER_CHOOSE_TEMPLATE = "Choose a template";
+export const BTN_EDIT_TEMPLATE = "Edit template";
+export const BTN_DELETE_TEMPLATE = "Delete template";
+export const TEMPLATE_NAME_LABEL = "Template name";
+export const TEMPLATE_NAME_PLACEHOLDER = "Untitled template";
+export const TEMPLATE_SETTINGS_DESCRIPTION =
+    "Update the template name here. Use the preview below to open the editor when you want to change the content.";
+export const TEMPLATE_MANAGE_DESCRIPTION = "Manage your template settings";
+export const TEMPLATE_PREVIEW_HEADER = "Template preview";
+export const TEMPLATE_PREVIEW_DESCRIPTION =
+    "Review your template content and open the editor when you want to make changes.";
+export const MAIL_TEMPLATE_CHOOSER_HEADING = "Choose a template";
+export const MAIL_TEMPLATE_CHOOSER_DESCRIPTION =
+    "Start from a polished layout and customize it in the editor.";
+export const MAIL_TEMPLATE_CHOOSER_SYSTEM_SECTION = "System";
+export const MAIL_TEMPLATE_CHOOSER_SYSTEM_DESCRIPTION =
+    "Built-in starters for common email styles and use cases.";
+export const MAIL_TEMPLATE_CHOOSER_CUSTOM_SECTION = "My templates";
+export const MAIL_TEMPLATE_CHOOSER_CUSTOM_DESCRIPTION =
+    "Your saved templates, ready to reuse.";
+export const TEMPLATES_EMPTY_STATE_TITLE = "No templates yet";
+export const TEMPLATES_EMPTY_STATE_DESCRIPTION =
+    "Start with a system template and customize it to build your own reusable library.";
+export const TEMPLATES_EMPTY_STATE_CTA = "Create from template";
+export const TEMPLATE_CHOOSER_CUSTOM_EMPTY_STATE_TITLE =
+    "No saved templates yet";
+export const TEMPLATE_CHOOSER_CUSTOM_EMPTY_STATE_DESCRIPTION =
+    "Create one from a system template above and it will show up here for reuse.";
+export const MAIL_TEMPLATE_CHOOSER_BADGE_SYSTEM = "Starter";
+export const MAIL_TEMPLATE_CHOOSER_BADGE_CUSTOM = "Custom";
+export const DELETE_TEMPLATE_DIALOG_HEADER = "Delete template";
+export const DELETE_TEMPLATE_DIALOG_DESCRIPTION =
+    "This will permanently delete the template. This action cannot be undone.";
+export const TOAST_TEMPLATE_SAVED = "Template updated";
+export const TOAST_TEMPLATE_DELETED = "Template deleted";
 export const MAIL_TABLE_HEADER_SUBJECT = "Subject";
 export const MAIL_TABLE_HEADER_TITLE = "Title";
 export const MAIL_TABLE_HEADER_RECEPIENTS = "No. of recipients";
@@ -756,3 +793,5 @@ export const LOGIN_CODE_SENT_MESSAGE =
     "We have emailed you a one time password.";
 export const LESSON_EMBED_URL_LABEL = "Embed code";
 export const LESSON_CONTENT_LABEL = "Content";
+export const EMAIL_EDITOR_EMAIL_EDIT_HEADER = "Editing email";
+export const EMAIL_EDITOR_TEMPLATE_EDIT_HEADER = "Editing template";

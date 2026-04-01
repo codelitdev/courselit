@@ -19,6 +19,7 @@ import {
     getSubscribersCount,
     getEmailTemplate,
     getEmailTemplates,
+    getSystemEmailTemplates,
 } from "./logic";
 import GQLContext from "../../models/GQLContext";
 import { SequenceType } from "@courselit/common-models";
@@ -151,7 +152,6 @@ const queries = {
             context: GQLContext,
         ) => getSubscribersCount({ ctx: context, sequenceId }),
     },
-
     getEmailTemplate: {
         type: types.emailTemplate,
         args: {
@@ -163,11 +163,15 @@ const queries = {
             context: GQLContext,
         ) => getEmailTemplate({ templateId, context }),
     },
-
     getEmailTemplates: {
         type: new GraphQLList(types.emailTemplate),
         resolve: (_: any, {}: {}, context: GQLContext) =>
             getEmailTemplates({ context }),
+    },
+    getSystemEmailTemplates: {
+        type: new GraphQLList(types.emailTemplate),
+        resolve: (_: any, {}: {}, context: GQLContext) =>
+            getSystemEmailTemplates({ context }),
     },
 };
 

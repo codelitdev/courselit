@@ -17,6 +17,7 @@ export default function EmailViewer({
     useEffect(() => {
         if (content) {
             startTransition(() => {
+                setRenderedHTML(null);
                 setIsLoading(true);
                 setError(null);
             });
