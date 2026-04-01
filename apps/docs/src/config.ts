@@ -97,6 +97,10 @@ export const SIDEBAR: Sidebar = {
                 link: "en/email-marketing/sequences",
             },
             {
+                text: "Templates",
+                link: "en/email-marketing/templates",
+            },
+            {
                 text: "Analytics",
                 link: "en/email-marketing/analytics",
             },

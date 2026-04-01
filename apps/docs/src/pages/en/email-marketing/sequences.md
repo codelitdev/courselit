@@ -1,5 +1,5 @@
 ---
-title: Email sequences
+title: Sequences
 description: Send email sequences to your audience
 layout: ../../../layouts/MainLayout.astro
 ---
@@ -26,34 +26,36 @@ Here, you will see all the sequences you have configured.
 
 You will be redirected to the sequence compose screen. The active tab will be `Compose`.
 
-2. Let's get acquainted with the interface.
+2. You will see a template selection screen. Click the template you'd like to use as a starting point. After selecting it, You will be redirected to the sequence management screen. The active tab will be `Compose`.
+
+3. Let's get acquainted with the interface.
 
 In the following image, we have marked all the sections. To see the description of a section, note its number in the screenshot and find its description below.
 
-    -   1. **Sequence Name**: The internal name of the sequence.
-    -   2. **From**: The sender's name that is displayed in the emails sent.
-    -   3. **Entrance Condition**: The condition that triggers this sequence for a user. You can pick from the following conditions:
-        - `Tag added`
-        - `Tag removed`
-        - `Product purchased`
-        - `Subscriber added`
-        - `Community joined`
-        - `Community left`
-    -   4. **Entrance Condition Data**: The exact tag or product that triggers the sequence. This field is only relevant in the context of the `Entrance Condition` field.
-    -   5. **Save**: A button to save your changes to the sequence.
-    -   6. **Start/Pause**: A button to start or pause the sequence. Once paused, the sequence won't be triggered for subsequent events in the system.
-    -   7. **Email Row**: Shows an overview of one of the emails in the sequence.
-    -   8. **New Email Button**: A button to add a new email to the sequence.
+![Sequence Compose](/assets/emails/compose-sequence.png)
 
-    ![Sequence Compose](/assets/emails/compose-sequence.png)
+-   1. **Sequence Name**: The internal name of the sequence.
+-   2. **From**: The sender's name that is displayed in the emails sent.
+-   3. **Entrance Condition**: The condition that triggers this sequence for a user. You can pick from the following conditions:
+    - `Tag added`
+    - `Tag removed`
+    - `Product purchased`
+    - `Subscriber added`
+    - `Community joined`
+    - `Community left`
+-   4. **Entrance Condition Data**: The exact tag or product that triggers the sequence. This field is only relevant in the context of the `Entrance Condition` field.
+-   5. **Save**: A button to save your changes to the sequence.
+-   6. **Start/Pause**: A button to start or pause the sequence. Once paused, the sequence won't be triggered for subsequent events in the system.
+-   7. **Email Row**: Shows an overview of one of the emails in the sequence.
+-   8. **New Email Button**: A button to add a new email to the sequence.
 
-3. Fill in the details for `Sequence Name`, `From`, `Entrance Condition`, and `Entrance Condition Data` (if applicable), then hit `Save`.
+4. Fill in the details for `Sequence Name`, `From`, `Entrance Condition`, and `Entrance Condition Data` (if applicable), then hit `Save`.
 
-4. Start adding emails to this sequence. When you create a new sequence, an empty email is added to it by default.
+5. Start adding emails to this sequence. When you create a new sequence, an empty email is added to it by default.
 
     ![Sequence add email](/assets/emails/compose-sequence-add-email.jpeg)
 
-5. Let's understand what information an email row shows:
+6. Let's understand what information an email row shows:
 
     ![Sequence email row](/assets/emails/compose-sequence-email-row.jpeg)
 
@@ -64,9 +66,9 @@ In the following image, we have marked all the sections. To see the description 
 
     > The default email has `0 days` as the delay, which means the email will be sent immediately after the user enters the sequence, as it is the first email in the sequence.
 
-6. To edit an email, click on the subject. This will open the email compose screen as shown below.
+7. To edit an email, click on the subject. This will open the email compose screen as shown below.
 
-7. Let's get acquainted with the email compose interface:
+8. Let's get acquainted with the email compose interface:
 
     -   1. **Delay**: The delay (in days) between this email and the previous one.
     -   2. **Subject**: The email's subject.
@@ -78,8 +80,8 @@ In the following image, we have marked all the sections. To see the description 
 
     ![Sequence's Email Compose](/assets/emails/compose-sequence-email.png)
 
-8. Edit the email's subject and status, then hit `Save`.
-9. Edit the email's content by clicking on the mail edit button. Upon clicking the **Mail Edit** button, a full-page email editor will open where you can edit the email.
+9. Edit the email's subject and status, then hit `Save`.
+10. Edit the email's content by clicking on the mail edit button. Upon clicking the **Mail Edit** button, a full-page email editor will open where you can edit the email.
 
     > When done, simply press the exit button. All changes are auto-saved.
 
@@ -92,18 +94,19 @@ In the following image, we have marked all the sections. To see the description 
     -   3. **Settings Pane**: The settings pane for the email and the selected block.
     -   4. **Exit Button**: The email editor exit button.
 
-10. To go back to the sequence settings, click on the `Compose sequence` breadcrumb as shown below.
+11. To go back to the sequence settings, click on the `Compose sequence` breadcrumb as shown below.
 
     ![Go Back to Sequence Settings](/assets/emails/back-to-sequence-breadcrumb.png)
 
-11. Add more emails to the sequence by clicking on the `New email` button.
-12. Keep editing your sequence until you think it's perfect. Once you are satisfied with your sequence, hit the `Start` button to begin sending this sequence to users.
+12. Add more emails to the sequence by clicking on the `New email` button.
+13. Keep editing your sequence until you think it's perfect. Once you are satisfied with your sequence, hit the `Start` button to begin sending this sequence to users.
 
 ## Next Steps
 
 Now that you understand how to create email sequences, you can also see:
 
 - [Send one-off broadcasts](/en/email-marketing/broadcasts)
+- [Create re-usable templates](/en/email-marketing/templates)
 - [Track your email performance with analytics](/en/email-marketing/analytics)
 
 ## Stuck Somewhere?
