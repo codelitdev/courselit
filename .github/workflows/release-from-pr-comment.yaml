@@ -1,0 +1,80 @@
+name: Release From PR Comment
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  release:
+    if: |
+      github.event.issue.pull_request &&
+      github.event.action == 'created' &&
+      startsWith(github.event.comment.body, '/release ')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+      issues: read
+    steps:
+      - name: Ensure commenter is allowed
+        if: |
+          github.event.comment.author_association != 'OWNER'
+        run: |
+          echo "Only OWNER can trigger releases."
+          exit 1
+
+      - name: Validate PR merged to main and parse version
+        id: guard
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.issue.number;
+            const comment = context.payload.comment.body.trim();
+            const match = comment.match(/^\/release\s+(\d+\.\d+\.\d+)$/);
+            if (!match) {
+              core.setFailed("Invalid command. Use: /release <major.minor.patch>");
+              return;
+            }
+            const version = match[1];
+            const pr = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: prNumber,
+            });
+            if (!pr.data.merged) {
+              core.setFailed("PR is not merged.");
+              return;
+            }
+            if (pr.data.base.ref !== "main") {
+              core.setFailed("PR was not merged into main.");
+              return;
+            }
+            core.setOutput("version", version);
+
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23.x
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Run release script
+        env:
+          VERSION: ${{ steps.guard.outputs.version }}
+        run: |
+          pnpm release "$VERSION"
