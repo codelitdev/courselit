@@ -1,0 +1,104 @@
+{
+    "templateId": "system-5",
+    "title": "Blank",
+    "content": {
+        "style": {
+            "colors": {
+                "background": "#ffffff",
+                "foreground": "#111827",
+                "border": "#ffffff",
+                "accent": "#2563eb",
+                "accentForeground": "#ffffff"
+            },
+            "typography": {
+                "header": {
+                    "fontFamily": "Helvetica, sans-serif",
+                    "letterSpacing": "0px",
+                    "textTransform": "none",
+                    "textDecoration": "none"
+                },
+                "text": {
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "16px",
+                    "lineHeight": "1.7",
+                    "letterSpacing": "0px",
+                    "textTransform": "none",
+                    "textDecoration": "none"
+                },
+                "link": {
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "14px",
+                    "lineHeight": "1.5",
+                    "letterSpacing": "0px",
+                    "textTransform": "none",
+                    "textDecoration": "none"
+                }
+            },
+            "interactives": {
+                "button": {
+                    "padding": {
+                        "x": "20px",
+                        "y": "10px"
+                    },
+                    "border": {
+                        "width": "0px",
+                        "radius": "8px",
+                        "style": "solid"
+                    }
+                },
+                "link": {
+                    "padding": {
+                        "x": "0px",
+                        "y": "0px"
+                    }
+                }
+            },
+            "structure": {
+                "page": {
+                    "background": "#ffffff",
+                    "foreground": "#111827",
+                    "width": "640px",
+                    "marginY": "24px",
+                    "borderWidth": "0px",
+                    "borderStyle": "solid",
+                    "borderRadius": "0px"
+                },
+                "section": {
+                    "padding": {
+                        "x": "32px",
+                        "y": "18px"
+                    }
+                }
+            }
+        },
+        "meta": {
+            "previewText": "A blank starter template with only content and unsubscribe placeholders."
+        },
+        "content": [
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "# Start writing here\n\nAdd your message, links, and call to action.",
+                    "alignment": "left",
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "16px",
+                    "foregroundColor": "#111827",
+                    "paddingTop": "12px",
+                    "paddingBottom": "12px"
+                }
+            },
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "{{address}}\n\n[Unsubscribe]({{unsubscribe_link}})",
+                    "alignment": "center",
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "12px",
+                    "foregroundColor": "#64748b",
+                    "paddingTop": "8px",
+                    "paddingBottom": "0px"
+                }
+            }
+        ]
+    }
+}

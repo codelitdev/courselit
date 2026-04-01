@@ -1,0 +1,207 @@
+{
+    "templateId": "system-1",
+    "title": "Announcement",
+    "content": {
+        "style": {
+            "colors": {
+                "background": "#fdf2f8",
+                "foreground": "#111827",
+                "border": "#fbcfe8",
+                "accent": "#db2777",
+                "accentForeground": "#ffffff"
+            },
+            "typography": {
+                "header": {
+                    "fontFamily": "Helvetica, sans-serif",
+                    "letterSpacing": "-0.4px",
+                    "textTransform": "none",
+                    "textDecoration": "none"
+                },
+                "text": {
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "16px",
+                    "lineHeight": "1.7",
+                    "letterSpacing": "0px",
+                    "textTransform": "none",
+                    "textDecoration": "none"
+                },
+                "link": {
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "14px",
+                    "lineHeight": "1.5",
+                    "letterSpacing": "0.3px",
+                    "textTransform": "uppercase",
+                    "textDecoration": "none"
+                }
+            },
+            "interactives": {
+                "button": {
+                    "padding": {
+                        "x": "22px",
+                        "y": "12px"
+                    },
+                    "border": {
+                        "width": "0px",
+                        "radius": "999px",
+                        "style": "solid"
+                    }
+                },
+                "link": {
+                    "padding": {
+                        "x": "0px",
+                        "y": "0px"
+                    }
+                }
+            },
+            "structure": {
+                "page": {
+                    "background": "#ffffff",
+                    "foreground": "#111827",
+                    "width": "640px",
+                    "marginY": "24px",
+                    "borderWidth": "1px",
+                    "borderStyle": "solid",
+                    "borderRadius": "24px"
+                },
+                "section": {
+                    "padding": {
+                        "x": "32px",
+                        "y": "20px"
+                    }
+                }
+            }
+        },
+        "meta": {
+            "previewText": "A polished announcement template for launches, updates, and key news."
+        },
+        "content": [
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "JUST ANNOUNCED",
+                    "alignment": "center",
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "12px",
+                    "foregroundColor": "#db2777",
+                    "paddingTop": "6px",
+                    "paddingBottom": "4px"
+                }
+            },
+            {
+                "blockType": "image",
+                "settings": {
+                    "src": "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=1200",
+                    "alt": "Team collaborating in an office",
+                    "alignment": "center",
+                    "width": "100%",
+                    "maxWidth": "100%",
+                    "paddingTop": "8px",
+                    "paddingBottom": "12px"
+                }
+            },
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "# Make your next announcement feel premium",
+                    "alignment": "left",
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "26px",
+                    "foregroundColor": "#111827",
+                    "paddingTop": "8px",
+                    "paddingBottom": "10px"
+                }
+            },
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "This layout is designed for launches, waitlist openings, seasonal updates, and event drops where the headline and CTA need to carry the message clearly.",
+                    "alignment": "left",
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "17px",
+                    "lineHeight": "1.7",
+                    "foregroundColor": "#475569",
+                    "paddingTop": "0px",
+                    "paddingBottom": "10px"
+                }
+            },
+            {
+                "blockType": "link",
+                "settings": {
+                    "text": "Claim your spot",
+                    "url": "#",
+                    "alignment": "left",
+                    "isButton": true,
+                    "buttonColor": "#db2777",
+                    "buttonTextColor": "#ffffff",
+                    "buttonBorderRadius": "999px",
+                    "buttonPaddingX": "22px",
+                    "buttonPaddingY": "12px",
+                    "buttonBorderWidth": "0px",
+                    "buttonBorderStyle": "solid",
+                    "buttonBorderColor": "#db2777",
+                    "paddingTop": "6px",
+                    "paddingBottom": "16px"
+                }
+            },
+            {
+                "blockType": "separator",
+                "settings": {
+                    "color": "#fbcfe8",
+                    "thickness": "1px",
+                    "style": "solid",
+                    "paddingTop": "0px",
+                    "paddingBottom": "14px"
+                }
+            },
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "## Why this template works\n\n- Fast visual hierarchy.\n- Clean body copy.\n- Strong CTA treatment.\n- Enough polish to feel current without being overdesigned.",
+                    "alignment": "left",
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "16px",
+                    "lineHeight": "1.7",
+                    "foregroundColor": "#111827",
+                    "paddingTop": "0px",
+                    "paddingBottom": "8px"
+                }
+            },
+            {
+                "blockType": "link",
+                "settings": {
+                    "text": "Learn more",
+                    "url": "#",
+                    "alignment": "left",
+                    "isButton": false,
+                    "textColor": "#db2777",
+                    "fontSize": "14px",
+                    "textDecoration": "none",
+                    "paddingTop": "0px",
+                    "paddingBottom": "0px"
+                }
+            },
+            {
+                "blockType": "separator",
+                "settings": {
+                    "color": "#fce7f3",
+                    "thickness": "1px",
+                    "style": "solid",
+                    "paddingTop": "18px",
+                    "paddingBottom": "10px"
+                }
+            },
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "{{address}}\n\n[Unsubscribe]({{unsubscribe_link}})",
+                    "alignment": "center",
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "12px",
+                    "foregroundColor": "#64748b",
+                    "paddingTop": "0px",
+                    "paddingBottom": "0px"
+                }
+            }
+        ]
+    }
+}

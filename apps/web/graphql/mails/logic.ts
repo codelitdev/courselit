@@ -1,6 +1,8 @@
 import constants from "@config/constants";
+import { promises as fs } from "fs";
 import GQLContext from "@models/GQLContext";
 import UserModel from "@models/User";
+import path from "path";
 import { error } from "../../services/logger";
 import { createUser, getMembership } from "../users/logic";
 import {
@@ -29,13 +31,90 @@ import { AdminSequence, InternalCourse } from "@courselit/orm-models";
 import { User } from "@courselit/common-models";
 import EmailDeliveryModel from "@models/EmailDelivery";
 import EmailEventModel from "@models/EmailEvent";
+import EmailTemplateModel from "@models/EmailTemplate";
 import { defaultEmail } from "./default-email";
 import { sanitizeEmail } from "@/lib/sanitize-email";
+import { isDuplicateKeyError } from "../pages/helpers";
 
 const { permissions } = constants;
 
 const isDateInFuture = (timestamp?: number) =>
     typeof timestamp === "number" && timestamp > Date.now();
+
+type EmailTemplateContent = typeof defaultEmail;
+
+type SystemEmailTemplate = {
+    templateId: string;
+    title: string;
+    content: EmailTemplateContent;
+};
+
+async function getSystemTemplateEntries(): Promise<SystemEmailTemplate[]> {
+    const templatesDir = await getSystemTemplatesDir();
+    const realTemplatesDir = await fs.realpath(templatesDir);
+    const filenames = await fs.readdir(templatesDir);
+
+    const templates = filenames
+        .filter((filename) => path.extname(filename) === ".json")
+        .map(async (filename) => {
+            const filePath = path.join(templatesDir, filename);
+            const stats = await fs.lstat(filePath);
+            if (!stats.isFile() || stats.isSymbolicLink()) {
+                throw new Error(`Invalid template file: ${filename}`);
+            }
+
+            const realFilePath = await fs.realpath(filePath);
+            if (
+                realFilePath !== path.join(realTemplatesDir, filename) ||
+                !realFilePath.startsWith(`${realTemplatesDir}${path.sep}`)
+            ) {
+                throw new Error(`Template path escapes directory: ${filename}`);
+            }
+
+            const fileContents = await fs.readFile(realFilePath, "utf8");
+            return JSON.parse(fileContents) as SystemEmailTemplate;
+        });
+
+    return Promise.all(templates);
+}
+
+async function getSystemTemplatesDir() {
+    const candidates = [
+        path.join(process.cwd(), "templates/system-emails"),
+        path.join(process.cwd(), "apps/web/templates/system-emails"),
+    ];
+
+    for (const candidate of candidates) {
+        try {
+            await fs.access(candidate);
+            return candidate;
+        } catch {}
+    }
+
+    throw new Error("System email templates directory not found");
+}
+
+async function getTemplate({
+    templateId,
+    ctx,
+}: {
+    templateId: string;
+    ctx: GQLContext;
+}) {
+    const systemTemplates = await getSystemTemplateEntries();
+    const systemTemplate = systemTemplates.find(
+        (template) => template.templateId === templateId,
+    );
+
+    if (systemTemplate) {
+        return systemTemplate;
+    }
+
+    return EmailTemplateModel.findOne({
+        templateId,
+        domain: ctx.subdomain._id,
+    });
+}
 
 export async function createSubscription(
     name: string,
@@ -95,6 +174,7 @@ const defaultEmailContent = {
 export async function createSequence(
     ctx: GQLContext,
     type: (typeof Constants.mailTypes)[number],
+    templateId: string,
 ): Promise<(Sequence & { creatorId: string }) | null> {
     checkIfAuthenticated(ctx);
 
@@ -103,21 +183,27 @@ export async function createSequence(
     }
 
     try {
+        const template = await getTemplate({ templateId, ctx });
+        if (!template) {
+            throw new Error(responses.item_not_found);
+        }
+
         const emailId = generateUniqueId();
         const sequenceObj: Partial<AdminSequence> = {
             domain: ctx.subdomain._id,
             type,
             status: Constants.sequenceStatus[0],
-            title: internal.default_email_sequence_name,
+            title: template.title || internal.default_email_sequence_name,
             creatorId: ctx.user.userId,
             emails: [
                 {
                     emailId,
-                    content: defaultEmailContent,
+                    content: template.content || defaultEmailContent,
                     subject:
-                        type === "broadcast"
+                        template.title ||
+                        (type === "broadcast"
                             ? internal.default_email_broadcast_subject
-                            : internal.default_email_sequence_subject,
+                            : internal.default_email_sequence_subject),
                     delayInMillis: 0,
                     published: false,
                 },
@@ -644,6 +730,7 @@ export async function deleteMailFromSequence({
 export async function addMailToSequence(
     ctx: GQLContext,
     sequenceId: string,
+    templateId: string,
 ): Promise<AdminSequence | null> {
     checkIfAuthenticated(ctx);
 
@@ -664,11 +751,10 @@ export async function addMailToSequence(
         throw new Error(responses.action_not_allowed);
     }
 
-    // const lastEmail = sequence.emails.find(
-    //     (email) =>
-    //         email.emailId ===
-    //         sequence.emailsOrder[sequence.emailsOrder.length - 1],
-    // );
+    const template = await getTemplate({ templateId, ctx });
+    if (!template) {
+        throw new Error(responses.item_not_found);
+    }
 
     const emailId = generateUniqueId();
     const oneDayInMillis = +(
@@ -676,8 +762,8 @@ export async function addMailToSequence(
     );
     const email = {
         emailId,
-        content: defaultEmailContent,
-        subject: internal.default_email_sequence_subject,
+        content: template.content || defaultEmailContent,
+        subject: template.title || internal.default_email_sequence_subject,
         delayInMillis: oneDayInMillis,
     };
 
@@ -1015,4 +1101,216 @@ export async function getSubscribersCount({
     });
 
     return count;
+}
+
+export async function createEmailTemplate({
+    templateId,
+    context,
+}: {
+    templateId: string;
+    context: GQLContext;
+}) {
+    checkIfAuthenticated(context);
+
+    if (!checkPermission(context.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const sourceTemplate = await getTemplate({
+        templateId,
+        ctx: context,
+    });
+    if (!sourceTemplate) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const uniqueTitle = await getUniqueEmailTemplateTitle(
+        context.subdomain._id,
+        sourceTemplate.title,
+    );
+    const newTemplateId = generateUniqueId();
+
+    const template = new EmailTemplateModel({
+        domain: context.subdomain._id,
+        templateId: newTemplateId,
+        title: uniqueTitle,
+        creatorId: context.user.userId,
+        content: sourceTemplate.content || defaultEmailContent,
+    });
+
+    try {
+        await template.save();
+    } catch (err: any) {
+        if (isDuplicateKeyError(err)) {
+            throw new Error(responses.email_template_already_exists);
+        }
+
+        throw err;
+    }
+
+    return template;
+}
+
+async function getUniqueEmailTemplateTitle(
+    domainId: string | { toString(): string },
+    baseTitle: string,
+) {
+    const existingTemplates = await EmailTemplateModel.find({
+        domain: domainId,
+        title: {
+            $regex: new RegExp(
+                `^${escapeRegExp(baseTitle)}(?:\\s(\\d+))?$`,
+                "i",
+            ),
+        },
+    })
+        .select("title")
+        .lean();
+
+    const titles = new Set(existingTemplates.map((template) => template.title));
+
+    if (!titles.has(baseTitle)) {
+        return baseTitle;
+    }
+
+    let suffix = 2;
+
+    while (titles.has(`${baseTitle} ${suffix}`)) {
+        suffix += 1;
+    }
+
+    return `${baseTitle} ${suffix}`;
+}
+
+function escapeRegExp(value: string) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export async function updateEmailTemplate({
+    templateId,
+    title,
+    content,
+    context,
+}: {
+    templateId: string;
+    title?: string;
+    content?: string;
+    context: GQLContext;
+}) {
+    checkIfAuthenticated(context);
+
+    if (!checkPermission(context.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const template = await EmailTemplateModel.findOne({
+        templateId,
+        domain: context.subdomain._id,
+    });
+
+    if (!template) {
+        throw new Error(responses.item_not_found);
+    }
+
+    if (title) {
+        const existingTemplate = await EmailTemplateModel.findOne({
+            domain: context.subdomain._id,
+            title,
+            templateId: { $ne: templateId },
+        })
+            .select("_id")
+            .lean();
+        if (existingTemplate) {
+            throw new Error(responses.email_template_already_exists);
+        }
+        template.title = title;
+    }
+
+    if (content) {
+        template.content = JSON.parse(content);
+    }
+
+    try {
+        await template.save();
+    } catch (err: any) {
+        if (isDuplicateKeyError(err)) {
+            throw new Error(responses.email_template_already_exists);
+        }
+
+        throw err;
+    }
+
+    return template;
+}
+
+export async function deleteEmailTemplate({
+    templateId,
+    context,
+}: {
+    templateId: string;
+    context: GQLContext;
+}) {
+    checkIfAuthenticated(context);
+
+    if (!checkPermission(context.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    await EmailTemplateModel.deleteOne({
+        templateId,
+        domain: context.subdomain._id,
+    });
+
+    return true;
+}
+
+export async function getEmailTemplate({
+    templateId,
+    context,
+}: {
+    templateId: string;
+    context: GQLContext;
+}) {
+    checkIfAuthenticated(context);
+
+    if (!checkPermission(context.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const template = await EmailTemplateModel.findOne({
+        templateId,
+        domain: context.subdomain._id,
+    });
+
+    return template;
+}
+
+export async function getEmailTemplates({ context }: { context: GQLContext }) {
+    checkIfAuthenticated(context);
+
+    if (!checkPermission(context.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const templates = await EmailTemplateModel.find({
+        domain: context.subdomain._id,
+    }).sort({ createdAt: -1, _id: -1 });
+
+    return templates;
+}
+
+export async function getSystemEmailTemplates({
+    context,
+}: {
+    context: GQLContext;
+}) {
+    checkIfAuthenticated(context);
+
+    if (!checkPermission(context.user.permissions, [permissions.manageUsers])) {
+        throw new Error(responses.action_not_allowed);
+    }
+
+    const templates = await getSystemTemplateEntries();
+
+    return templates;
 }

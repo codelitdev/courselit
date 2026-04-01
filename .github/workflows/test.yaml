@@ -26,7 +26,6 @@ jobs:
           pnpm --filter @courselit/common-models build
           pnpm --filter @courselit/utils build
           pnpm --filter @courselit/text-editor build
-          pnpm --filter @courselit/state-management build
           pnpm --filter @courselit/components-library build
           pnpm --filter @courselit/page-primitives build
           pnpm --filter @courselit/page-blocks build

@@ -17,7 +17,7 @@ CourseLit offers a wide range of page blocks so that you can build all sorts of 
 ### [Header](#header)
 
 <details>
-<summary>Expand to see Header block details</summary>
+   <summary>Expand to see Header block details</summary>
 
 > This is a [shared block](#shared-blocks). All published changes to this block impact all pages on your website.
 
@@ -35,13 +35,13 @@ You will also see the newly added link on the header itself.
 
 3. Click on the pencil icon against the newly added link to edit it as shown above.
 4. Change the label (displayed as text on the header block) and the URL (where the user should be taken upon clicking the label on the header) and click `Done` to save.
-   ![Header edit link](/assets/pages/header-edit-link.png)
-    </details>
+![Header edit link](/assets/pages/header-edit-link.png)
+   </details>
 
 ### [Rich Text](#rich-text)
 
 <details>
-<summary>Expand to see Rich Text block details</summary>
+   <summary>Expand to see Rich Text block details</summary>
 
 The rich text block uses the same text editor available elsewhere on the platform. It supports all functionality that does not require a toolbar, as the toolbar is hidden in this block.
 
@@ -68,13 +68,13 @@ The rich text block uses the same text editor available elsewhere on the platfor
 1. Select the text.
 2. Click on the floating `link` icon to reveal a text input.
 3. In the popup text input, enter the URL as shown below and press <kbd>Enter</kbd>.
-   ![Create a hyperlink in rich text block](/assets/pages/courselit-text-editor-create-links.gif)
-    </details>
+![Create a hyperlink in rich text block](/assets/pages/courselit-text-editor-create-links.gif)
+   </details>
 
 ### [Hero](#hero)
 
 <details>
-<summary>Expand to see Hero block details</summary>
+   <summary>Expand to see Hero block details</summary>
 
 A hero section of a web page is the section that immediately appears on screen, just under the header. The hero block helps you put the information front and center.
 
@@ -93,14 +93,14 @@ Following is how it looks on a page.
 
 3. In the button text field, add the text that will be visible on the button.
 4. In the button action, enter the URL the user should be taken to upon clicking.
-   a. If the URL is from your own school, use its relative form, i.e., `/courses`.
-   b. If the URL is from some external website, use the absolute (complete) URL, i.e., `https://website.com/courses`.
-    </details>
+a. If the URL is from your own school, use its relative form, i.e., `/courses`.
+b. If the URL is from some external website, use the absolute (complete) URL, i.e., `https://website.com/courses`.
+   </details>
 
 ### [Grid](#grid)
 
 <details>
-<summary>Expand to see Grid block details</summary>
+   <summary>Expand to see Grid block details</summary>
 
 A grid block comes in handy when you want to show some sort of list, for example, features list or advantages, etc. The list gets displayed in the grid format as shown below.
 
@@ -138,14 +138,14 @@ A grid block comes in handy when you want to show some sort of list, for example
 
 3. In the button text field, add the text that will be visible on the button.
 4. In the button action, enter the URL the user should be taken to upon clicking.
-   a. If the URL is from your own school, use its relative form, i.e., `/courses`.
-   b. If the URL is from some external website, use the absolute (complete) URL, i.e., `https://website.com/courses`.
-    </details>
+a. If the URL is from your own school, use its relative form, i.e., `/courses`.
+b. If the URL is from some external website, use the absolute (complete) URL, i.e., `https://website.com/courses`.
+   </details>
 
 ### [Featured](#featured)
 
 <details>
-<summary>Expand to see Featured block details</summary>
+   <summary>Expand to see Featured block details</summary>
 
 If you want to show your other products on a page, the featured widget is the one to use.
 
@@ -166,7 +166,7 @@ Following is how it looks on a page.
 ### [Curriculum](#curriculum)
 
 <details>
-<summary>Expand to see Curriculum block details</summary>
+   <summary>Expand to see Curriculum block details</summary>
 
 > This block can only be added to the products' sales pages.
 
@@ -187,7 +187,7 @@ Your audience can directly click on the lessons to see them in the course viewer
 ### [Banner](#banner)
 
 <details>
-<summary>Expand to see Banner block details</summary>
+   <summary>Expand to see Banner block details</summary>
 
 The banner block is the default block that shows the basic information about the page, i.e., on a sales page it shows the product's details like its title, description, featured image, and pricing, and on the homepage it shows your school's details like its name and subtitle.
 
@@ -229,7 +229,7 @@ Now, whenever your users enter their emails and press submit, they will see the 
 ### [Newsletter signup](#newsletter-signup)
 
 <details>
-<summary>Expand to see Newsletter signup block details</summary>
+   <summary>Expand to see Newsletter signup block details</summary>
 
 Having a mailing list to sell directly to is a dream of every business, big or small. That's why CourseLit offers a dedicated block that lets you capture emails. It is also a [shared block](/en/pages/blocks#shared-page-blocks).
 
@@ -253,7 +253,7 @@ Following is an animation that shows the entire flow.
 ### [Embed](#embed)
 
 <details>
-<summary>Expand to see Embed block details</summary>
+   <summary>Expand to see Embed block details</summary>
 
 Embedding content from other websites is a common requirement. CourseLit offers a dedicated block that lets you embed content from other websites.
 
@@ -299,7 +299,7 @@ Here is [Cal.com](https://cal.com/)'s embed looks on a page.
 ### [Footer](#footer)
 
 <details>
-<summary>Expand to see Footer block details</summary>
+   <summary>Expand to see Footer block details</summary>
 
 > This is a [shared block](#shared-blocks). All published changes to this block impact all pages on your website.
 
@@ -322,7 +322,7 @@ In the `Design` panel, you can customize:
 - Maximum width
 - Vertical padding
 - Social media links (Facebook, Twitter, Instagram, LinkedIn, YouTube, Discord, GitHub)
-  </details>
+      </details>
 
 ## [Shared blocks](#shared-blocks)
 

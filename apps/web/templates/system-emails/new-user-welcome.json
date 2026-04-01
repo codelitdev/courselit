@@ -1,0 +1,183 @@
+{
+    "templateId": "system-2",
+    "title": "New user welcome",
+    "content": {
+        "style": {
+            "colors": {
+                "background": "#f8fafc",
+                "foreground": "#111827",
+                "border": "#dbe4ee",
+                "accent": "#2563eb",
+                "accentForeground": "#ffffff"
+            },
+            "typography": {
+                "header": {
+                    "fontFamily": "Helvetica, sans-serif",
+                    "letterSpacing": "-0.2px",
+                    "textTransform": "none",
+                    "textDecoration": "none"
+                },
+                "text": {
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "16px",
+                    "lineHeight": "1.7",
+                    "letterSpacing": "0px",
+                    "textTransform": "none",
+                    "textDecoration": "none"
+                },
+                "link": {
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "14px",
+                    "lineHeight": "1.5",
+                    "letterSpacing": "0.2px",
+                    "textTransform": "uppercase",
+                    "textDecoration": "none"
+                }
+            },
+            "interactives": {
+                "button": {
+                    "padding": {
+                        "x": "22px",
+                        "y": "12px"
+                    },
+                    "border": {
+                        "width": "0px",
+                        "radius": "999px",
+                        "style": "solid"
+                    }
+                },
+                "link": {
+                    "padding": {
+                        "x": "0px",
+                        "y": "0px"
+                    }
+                }
+            },
+            "structure": {
+                "page": {
+                    "background": "#ffffff",
+                    "foreground": "#111827",
+                    "width": "640px",
+                    "marginY": "24px",
+                    "borderWidth": "1px",
+                    "borderStyle": "solid",
+                    "borderRadius": "20px"
+                },
+                "section": {
+                    "padding": {
+                        "x": "32px",
+                        "y": "18px"
+                    }
+                }
+            }
+        },
+        "meta": {
+            "previewText": "A friendly welcome email for onboarding new users and subscribers."
+        },
+        "content": [
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "WELCOME",
+                    "alignment": "center",
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "12px",
+                    "foregroundColor": "#2563eb",
+                    "paddingTop": "8px",
+                    "paddingBottom": "0px"
+                }
+            },
+            {
+                "blockType": "image",
+                "settings": {
+                    "src": "https://upload.wikimedia.org/wikipedia/commons/d/d5/Slack_icon_2019.svg",
+                    "alt": "Slack logo",
+                    "alignment": "center",
+                    "width": "48px",
+                    "maxWidth": "100%",
+                    "paddingTop": "10px",
+                    "paddingBottom": "6px"
+                }
+            },
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "# Welcome aboard",
+                    "alignment": "left",
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "26px",
+                    "foregroundColor": "#111827",
+                    "paddingTop": "6px",
+                    "paddingBottom": "10px"
+                }
+            },
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "Thanks for joining us. This template works well for onboarding, first-touch education, getting-started checklists, and setting expectations for what comes next.",
+                    "alignment": "left",
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "17px",
+                    "lineHeight": "1.7",
+                    "foregroundColor": "#475569",
+                    "paddingTop": "0px",
+                    "paddingBottom": "10px"
+                }
+            },
+            {
+                "blockType": "link",
+                "settings": {
+                    "text": "Get started",
+                    "url": "#",
+                    "alignment": "left",
+                    "isButton": true,
+                    "buttonColor": "#2563eb",
+                    "buttonTextColor": "#ffffff",
+                    "buttonBorderRadius": "999px",
+                    "buttonPaddingX": "22px",
+                    "buttonPaddingY": "12px",
+                    "buttonBorderWidth": "0px",
+                    "buttonBorderStyle": "solid",
+                    "buttonBorderColor": "#2563eb",
+                    "paddingTop": "6px",
+                    "paddingBottom": "16px"
+                }
+            },
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "## What to do next\n\n- Complete your profile or setup.\n- Explore your dashboard or core feature.\n- Save this email for quick access later.",
+                    "alignment": "left",
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "16px",
+                    "lineHeight": "1.7",
+                    "foregroundColor": "#111827",
+                    "paddingTop": "0px",
+                    "paddingBottom": "8px"
+                }
+            },
+            {
+                "blockType": "separator",
+                "settings": {
+                    "color": "#dbe4ee",
+                    "thickness": "1px",
+                    "style": "solid",
+                    "paddingTop": "12px",
+                    "paddingBottom": "10px"
+                }
+            },
+            {
+                "blockType": "text",
+                "settings": {
+                    "content": "{{address}}\n\n[Unsubscribe]({{unsubscribe_link}})",
+                    "alignment": "center",
+                    "fontFamily": "Helvetica, sans-serif",
+                    "fontSize": "12px",
+                    "foregroundColor": "#64748b",
+                    "paddingTop": "0px",
+                    "paddingBottom": "0px"
+                }
+            }
+        ]
+    }
+}

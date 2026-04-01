@@ -1,8 +1,8 @@
 "use client";
-import { use } from "react";
 
 import { useSearchParams } from "next/navigation";
 import { Button2 } from "@courselit/components-library";
+import { use } from "react";
 import {
     Tooltip,
     TooltipContent,
@@ -11,25 +11,27 @@ import {
 } from "@/components/ui/tooltip";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
-import { EMAIL_EDITOR_EMAIL_EDIT_HEADER } from "@ui-config/strings";
+import { EMAIL_EDITOR_TEMPLATE_EDIT_HEADER } from "@ui-config/strings";
 
-export default function EmailEditorPage(props: {
+export default function EmailTemplateEditorPage({
+    params,
+}: {
     params: Promise<{
-        sequenceId: string;
-        mailId: string;
+        id: string;
     }>;
 }) {
-    const params = use(props.params);
+    const { id } = use(params);
     const searchParams = useSearchParams();
     const redirectTo = searchParams?.get("redirectTo");
 
     return (
         <EditorLayout
-            src={`/dashboard/mail/sequence/${params.sequenceId}/${params.mailId}/internal`}
-            redirectTo={redirectTo || "/dashboard/mails?tab=Broadcasts"}
+            src={`/dashboard/mail/template/${id}/internal`}
+            redirectTo={redirectTo || `/dashboard/mails/template/${id}`}
         />
     );
 }
+
 const EditorLayout = ({
     src,
     redirectTo,
@@ -44,7 +46,7 @@ const EditorLayout = ({
                     <div className="flex items-center gap-3">
                         <div className="w-[220px]">
                             <div className="h-10 flex items-center px-3 rounded-md text-sm text-muted-foreground">
-                                {EMAIL_EDITOR_EMAIL_EDIT_HEADER}
+                                {EMAIL_EDITOR_TEMPLATE_EDIT_HEADER}
                             </div>
                         </div>
                     </div>

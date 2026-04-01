@@ -20,7 +20,9 @@ From the `Dashboard`, go to `Mails` to land on the `Broadcasts` hub. Here, you w
 
 1. Click the `New broadcast` button on the right, in the `Broadcasts` hub.
 
-2. Let's get acquainted with the interface. In the following image, we have marked all the sections. To see the description of a section, note its number in the screenshot and find its description below.
+2. You will see a template selection screen. Click the template you'd like to use as a starting point. After selecting it, You will be redirected to the broadcast management screen. The active tab will be `Compose`.
+
+3. Let's get acquainted with the interface. In the following image, we have marked all the sections. To see the description of a section, note its number in the screenshot and find its description below.
 
     -   1. **User Filters**: To select the users.
     -   2. **Total Selected Users**: The total number of selected users as per the applied filters.
@@ -33,7 +35,7 @@ From the `Dashboard`, go to `Mails` to land on the `Broadcasts` hub. Here, you w
 
     ![Broadcast Compose](/assets/emails/compose-broadcast.png)
 
-3. Upon clicking the **Mail Edit** button, a full-page email editor will open where you can edit the email.
+4. Upon clicking the **Mail Edit** button, a full-page email editor will open where you can edit the email.
 
     > When done, simply press the exit button. All changes are auto-saved.
 
@@ -46,7 +48,7 @@ From the `Dashboard`, go to `Mails` to land on the `Broadcasts` hub. Here, you w
     -   3. **Settings Pane**: The settings pane for the email and the selected block.
     -   4. **Exit Button**: The email editor exit button.
 
-4. If you are not yet ready to send the email or schedule it, you can simply go back to the Broadcasts hub by clicking on the `Broadcasts` breadcrumb (located at the top of the page).
+5. If you are not yet ready to send the email or schedule it, you can simply go back to the Broadcasts hub by clicking on the `Broadcasts` breadcrumb (located at the top of the page).
 
 ## Send Immediately
 
@@ -71,6 +73,7 @@ Once an email is scheduled, you will see the time it will be sent at the bottom,
 Now that you understand how to send broadcasts, you can also see:
 
 - [Set up automated email sequences](/en/email-marketing/sequences)
+- [Create re-usable templates](/en/email-marketing/templates)
 - [Track your email performance with analytics](/en/email-marketing/analytics)
 
 ## Stuck Somewhere?

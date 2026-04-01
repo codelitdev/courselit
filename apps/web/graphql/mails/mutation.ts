@@ -23,6 +23,9 @@ import {
     pauseSequence,
     updateMailRequest,
     deleteMailFromSequence,
+    createEmailTemplate,
+    updateEmailTemplate,
+    deleteEmailTemplate,
 } from "./logic";
 import types from "./types";
 import { Constants } from "@courselit/common-models";
@@ -45,23 +48,37 @@ const mutations = {
         type: types.sequence,
         args: {
             type: { type: new GraphQLNonNull(types.sequenceType) },
+            templateId: { type: new GraphQLNonNull(GraphQLString) },
         },
         resolve: async (
             _: any,
-            { type }: { type: (typeof Constants.mailTypes)[number] },
+            {
+                type,
+                templateId,
+            }: {
+                type: (typeof Constants.mailTypes)[number];
+                templateId: string;
+            },
             context: GQLContext,
-        ) => createSequence(context, type),
+        ) => createSequence(context, type, templateId),
     },
     addMailToSequence: {
         type: types.sequence,
         args: {
             sequenceId: { type: new GraphQLNonNull(GraphQLString) },
+            templateId: { type: new GraphQLNonNull(GraphQLString) },
         },
         resolve: async (
             _: any,
-            { sequenceId }: { sequenceId: string },
+            {
+                sequenceId,
+                templateId,
+            }: {
+                sequenceId: string;
+                templateId: string;
+            },
             context: GQLContext,
-        ) => addMailToSequence(context, sequenceId),
+        ) => addMailToSequence(context, sequenceId, templateId),
     },
     deleteMailFromSequence: {
         type: types.sequence,
@@ -321,6 +338,58 @@ const mutations = {
             { reason }: { reason: string },
             context: GQLContext,
         ) => updateMailRequest(context, reason),
+    },
+
+    createEmailTemplate: {
+        type: types.emailTemplate,
+        args: {
+            templateId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (
+            _: any,
+            { templateId }: { templateId: string },
+            context: GQLContext,
+        ) => createEmailTemplate({ templateId, context }),
+    },
+
+    updateEmailTemplate: {
+        type: types.emailTemplate,
+        args: {
+            templateId: { type: new GraphQLNonNull(GraphQLString) },
+            title: { type: GraphQLString },
+            content: { type: GraphQLString },
+        },
+        resolve: async (
+            _: any,
+            {
+                templateId,
+                title,
+                content,
+            }: {
+                templateId: string;
+                title?: string;
+                content?: string;
+            },
+            context: GQLContext,
+        ) =>
+            updateEmailTemplate({
+                templateId,
+                title,
+                content,
+                context,
+            }),
+    },
+
+    deleteEmailTemplate: {
+        type: GraphQLBoolean,
+        args: {
+            templateId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (
+            _: any,
+            { templateId }: { templateId: string },
+            context: GQLContext,
+        ) => deleteEmailTemplate({ templateId, context }),
     },
 };
 export default mutations;
