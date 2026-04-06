@@ -131,6 +131,302 @@ To self host, follow the following steps.
 
 6.  That's it! You now have a fully functioning LMS powered by CourseLit and MediaLit.
 
+## Kubernetes
+
+```
+Note: For the purpose of this documentation, the following are assumed:
+- A Kubernetes cluster (e.g Talos) is created
+- Reverse Proxy (e.g Traefik) installed and working in the cluster
+- Storage Provider with valid StorageClass installed
+- CNPG Operator installed
+```
+
+### MongoDB (CNPG + FerretDB)
+
+FerretDB is an alternative to MongoDB Operator, where FerretDB acts as an proxy that converts MongoDB protocols to SQL and uses PostgresQL with DocumentDB extension as a database engine. ([Source](https://github.com/ferretdb/ferretdb)) 
+
+CNPG Operator is used create PostgresSQL databases.
+
+**Note:** FerretDB uses the same credentials of PostgresSQL for MongoDB.
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cnpg
+stringData:
+  username: admin # username for postgresSQL and MongoDB
+  password: password # password for postgresSQL and MongoDB
+```
+
+```yaml
+# Creating PostgresSQL database
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: courselit
+spec:
+  imageName: ghcr.io/ferretdb/postgres-documentdb:17-0.106.0-ferretdb-2.5.0
+  postgresUID: 999
+  postgresGID: 999
+  enableSuperuserAccess: true
+  instances: 2
+  primaryUpdateStrategy: unsupervised
+  storage:
+    size: 4Gi
+    storageClass: longhorn # replace with your storageclass
+  managed:
+    roles:
+      - name: admin
+        ensure: present
+        login: true
+        superuser: true
+        passwordSecret:
+          name: cnpg
+  bootstrap:
+    initdb:
+      postInitSQL:
+        - 'CREATE EXTENSION IF NOT EXISTS documentdb CASCADE;'
+  postgresql:
+    shared_preload_libraries:
+      - pg_cron
+      - pg_documentdb_core
+      - pg_documentdb
+    parameters:
+      cron.database_name: 'postgres'
+```
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: courselit-mongo-secret
+stringData:
+  FERRETDB_POSTGRESQL_URL: postgres://admin:password@courselit-rw.svc.cluster.local:5432/postgres # replace "admin" and "password" with the credentials used when creating PostgresSQL database
+```
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: courselit-ferret
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: courselit-ferret
+  template:
+    metadata:
+      labels:
+        app: courselit-ferret
+    spec:
+      containers:
+        - name: courselit-ferret
+          image: ghcr.io/ferretdb/ferretdb:2.5.0
+          ports:
+            - containerPort: 27017
+          envFrom:  
+            - secretRef:
+                name: courselit-mongo-secret
+```
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: courselit-ferret
+spec:
+  selector:
+    app: courselit-ferret
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
+```
+
+### ConfigMap
+
+To learn how to configure an AWS S3 bucket for MediaLit, click [here](https://github.com/codelitdev/medialit?tab=readme-ov-file#setting-up-correct-access-on-aws-s3-bucket).
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: courselit-cm
+data:
+  NODE_ENV: production
+  PORT: "80"
+  CACHE_DIR: /tmp
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: medialit-cm
+data:
+  EMAIL: admin@example.com
+  CLOUD_ENDPOINT: aws_s3_endpoint
+  CLOUD_ENDPOINT_PUBLIC: aws_s3_endpoint
+  S3_ENDPOINT: s3_cdn_endpoint
+  CLOUD_REGION: aws_s3_region
+  CLOUD_BUCKET_NAME: aws_s3_bucket_name
+  CLOUD_PUBLIC_BUCKET_NAME: courselit-public
+  CDN_ENDPOINT: aws_s3_endpoint
+  CLOUD_PREFIX: medialit
+  TEMP_FILE_DIR_FOR_UPLOADS: /tmp
+```
+
+### Secrets
+
+**Note:** Make use of External Secrets Operator to keep secrets out of the cluster.
+
+`MEDIALIT_APIKEY` & `MEDIALIT_SERVER` should be populated after MediaLit pod is created for the first time.
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: courselit-secret
+stringData:
+  AUTH_SECRET: <random string> # openssl rand -hex 32
+  DB_CONNECTION_STRING: mongodb://admin:password@courselit-ferret-svc.svc.cluster.local/medialit?authSource=admin # replace "admin" and "password" with the credential used when creating CNPG postgres database
+  # MEDIALIT_API_KEY: <api key from medialit> # update after MediaLit generate API key when running for the first time
+  # MEDIALIT_SERVER: https://medialit.example.com # update after retrieving MediaLit API key
+  SUPER_ADMIN_EMAIL: admin@example.com
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: medialit-secret.yaml
+stringData:
+  CLOUD_KEY: <aws_s3_key>
+  CLOUD_SECRET: <aws_s3_secret>
+  DB_CONNECTION_STRING: mongodb://admin:password@courselit-ferret-svc.svc.cluster.local/medialit?authSource=admin # replace "admin" and "password" with the credential used when creating CNPG postgres database
+```
+
+### Deployment
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: courselit
+spec:
+  selector:
+    matchLabels:
+      app: courselit
+  template:
+    metadata:
+      labels:
+        app: courselit
+    spec:
+      containers:
+      - name: courselit
+        image: codelit/courselit-app:v0.73.9
+        ports:
+        - containerPort: 80
+        envFrom:
+          - configMapRef:
+              name: courselit-cm
+          - secretRef:
+              name: courselit-secret
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medialit
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  selector:
+    matchLabels:
+      app: medialit
+  template:
+    metadata:
+      labels:
+        app: medialit
+    spec:
+      containers:
+      - name: medialit
+        image: codelit/medialit:v0.3.1
+        ports:
+        - containerPort: 80
+        envFrom:
+          - secretRef:
+              name: medialit-secret
+          - configMapRef:
+              name: medialit-cm
+```
+
+### Service
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: courselit
+spec:
+  selector:
+    app: courselit
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: medialit
+spec:
+  selector:
+    app: medialit
+  ports:
+  - port: 80
+    targetPort: 80
+```
+
+### Ingress
+
+Below example uses Traefik IngressRoute for reverse proxy.
+
+```yaml
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: courselit
+spec:
+  entryPoints: 
+    - websecure
+  routes:
+    - match: Host(`courselit.example.com`) 
+      kind: Rule
+      services:
+      - name: courselit
+        port: 80
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: medialit
+spec:
+  entryPoints: 
+    - websecure
+  routes:
+    - match: Host(`medialit.example.com`) 
+      kind: Rule
+      services:
+      - name: medialit
+        port: 80
+
+```
+
+### MediaLit API Key
+
+After all the manifests are created and running, retrieve the API key of MediaLit from the pod:
+```shell
+kubectl get pod
+kubectl logs <medialit-pod-name>
+```
+
+Update the MEDIALIT_APIKEY and MEDIALIT_SERVER in `courselit-secret` and restart courselit deployment.
+
+
 ## Hosted version
 
 If this is too technical for you to handle, CourseLit's hosted version is available at [CourseLit.app](https://courselit.app).
