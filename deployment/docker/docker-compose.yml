@@ -20,6 +20,8 @@ services:
             # In production, replace the following with the connection string of a cloud
             # hosted instance of MongoDB.
             - DB_CONNECTION_STRING=mongodb://root:example@mongo/courselit?authSource=admin
+            # Disable DB transactions for standalone mongo in compose (opt-out)
+            - DB_TRANSACTIONS=false
 
             # CourseLit uses Magic links to provide login functionality. Hence, it requires
             # access to the mail sending facility.

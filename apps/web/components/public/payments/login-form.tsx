@@ -29,8 +29,9 @@ import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { Constants, MembershipEntityType } from "@courselit/common-models";
 import { useRecaptcha } from "@/hooks/use-recaptcha";
-import type { SSOProvider } from "@/app/(with-contexts)/(with-layout)/login/page";
+import type { RuntimeLoginProvider } from "@/lib/login-providers";
 import RecaptchaScriptLoader from "@components/recaptcha-script-loader";
+import ExternalLoginButton from "@/components/auth/external-login-button";
 
 const loginFormSchema = z.object({
     email: z.string().email("Invalid email address"),
@@ -41,14 +42,14 @@ type LoginStep = "email" | "otp" | "complete";
 
 interface LoginFormProps {
     onLoginComplete: (email: string, name: string) => void;
-    ssoProvider?: SSOProvider;
+    loginProviders?: RuntimeLoginProvider[];
     type?: MembershipEntityType;
     id?: string;
 }
 
 export function LoginForm({
     onLoginComplete,
-    ssoProvider,
+    loginProviders = [],
     type,
     id,
 }: LoginFormProps) {
@@ -314,21 +315,20 @@ export function LoginForm({
                     </form>
                 </FormProvider>
             )}
-            {siteinfo.logins?.includes(Constants.LoginProvider.SSO) &&
-                ssoProvider && (
-                    <Button
-                        variant="outline"
-                        onClick={async () => {
-                            await authClient.signIn.sso({
-                                providerId: ssoProvider.providerId,
-                                callbackURL: `/checkout?type=${type}&id=${id}`,
-                            });
-                        }}
-                        className="w-full"
-                    >
-                        Login with SSO
-                    </Button>
-                )}
+            {loginProviders.map((provider) => (
+                <ExternalLoginButton
+                    key={provider.key}
+                    provider={provider}
+                    theme={theme.theme}
+                    className="w-full"
+                    onClick={async () => {
+                        await authClient.signIn.sso({
+                            providerId: provider.providerId,
+                            callbackURL: `/checkout?type=${type}&id=${id}`,
+                        });
+                    }}
+                />
+            ))}
             <Caption theme={theme.theme} className="text-center">
                 {LOGIN_FORM_DISCLAIMER}
                 <Link href="/p/terms">

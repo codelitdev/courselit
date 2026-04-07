@@ -7,7 +7,7 @@ import {
     CardFooter,
 } from "@components/ui/card";
 import { Checkbox } from "@components/ui/checkbox";
-import { Constants, LoginProvider } from "@courselit/common-models";
+import { Constants, Features, LoginProvider } from "@courselit/common-models";
 import {
     ALPHA_LABEL,
     APIKEY_CARD_DESCRIPTION,
@@ -18,6 +18,7 @@ import {
     APIKEY_REMOVE_BTN,
     APIKEY_REMOVE_DIALOG_DESC,
     APIKEY_REMOVE_DIALOG_HEADER,
+    BETA_LABEL,
     LOGIN_METHODS_CARD_DESCRIPTION,
     LOGIN_METHODS_HEADER,
     TOAST_TITLE_ERROR,
@@ -28,7 +29,7 @@ import {
     FeaturesContext,
     SiteInfoContext,
 } from "@components/contexts";
-import { capitalize, FetchBuilder } from "@courselit/utils";
+import { FetchBuilder } from "@courselit/utils";
 import {
     Chip,
     useToast,
@@ -41,6 +42,7 @@ import {
 import { Button } from "@components/ui/button";
 import { CogIcon, Key, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { LOGIN_PROVIDER_REGISTRY } from "@/lib/login-providers";
 
 type ApiKeyListItem = {
     name: string;
@@ -165,24 +167,20 @@ export default function MiscellaneousTab() {
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-col gap-3">
-                        {[
-                            Constants.LoginProvider.EMAIL,
-                            Constants.LoginProvider.SSO,
-                        ].map((provider) => (
+                        {LOGIN_PROVIDER_REGISTRY.map((provider) => (
                             <div
                                 className="group flex items-center justify-between gap-4 rounded-lg border border-border bg-muted/30 px-4 py-3.5 transition-all duration-200 hover:bg-muted/60 hover:shadow-sm"
-                                key={provider}
+                                key={provider.key}
                             >
                                 <div className="flex items-center gap-3 flex-1">
                                     <Checkbox
                                         disabled={
                                             loading ||
-                                            (provider ===
-                                                Constants.LoginProvider.SSO &&
+                                            (!!provider.featureFlag &&
                                                 !features.includes(
-                                                    Constants.Features.SSO,
+                                                    provider.featureFlag as Features,
                                                 )) ||
-                                            (provider ===
+                                            (provider.key ===
                                                 Constants.LoginProvider.EMAIL &&
                                                 logins.length === 1 &&
                                                 logins.includes(
@@ -190,46 +188,44 @@ export default function MiscellaneousTab() {
                                                         .EMAIL,
                                                 ))
                                         }
-                                        checked={logins.includes(provider)}
+                                        checked={logins.includes(provider.key)}
                                         onCheckedChange={(value: boolean) => {
                                             toggleLoginProvider(
-                                                provider,
+                                                provider.key,
                                                 value,
                                             );
                                         }}
                                     />
                                     <div className="flex items-center gap-2 flex-1">
                                         <span className="font-medium text-foreground">
-                                            {provider ===
-                                            Constants.LoginProvider.SSO
-                                                ? provider.toUpperCase()
-                                                : capitalize(provider)}
+                                            {provider.label}
                                         </span>
-                                        {provider ===
+                                        {provider.key ===
                                             Constants.LoginProvider.SSO && (
                                             <>
-                                                {!features.includes(
-                                                    Constants.Features.SSO,
-                                                ) && <Chip>Upgrade</Chip>}
-                                                {<Chip>{ALPHA_LABEL}</Chip>}
+                                                {!!provider.featureFlag &&
+                                                    !features.includes(
+                                                        provider.featureFlag as Features,
+                                                    ) && <Chip>Upgrade</Chip>}
+                                                {<Chip>{BETA_LABEL}</Chip>}
                                             </>
+                                        )}
+                                        {provider.key ===
+                                            Constants.LoginProvider.GOOGLE && (
+                                            <Chip>{ALPHA_LABEL}</Chip>
                                         )}
                                     </div>
                                 </div>
-                                {provider !== Constants.LoginProvider.EMAIL && (
-                                    <Link
-                                        href={`/dashboard/settings/login-provider/${provider}`}
-                                    >
+                                {provider.settingsRoute && (
+                                    <Link href={provider.settingsRoute}>
                                         <Button
                                             size="icon"
                                             variant="ghost"
                                             className="h-8 w-8"
                                             disabled={
-                                                provider ===
-                                                    Constants.LoginProvider
-                                                        .SSO &&
+                                                !!provider.featureFlag &&
                                                 !features.includes(
-                                                    Constants.Features.SSO,
+                                                    provider.featureFlag as Features,
                                                 )
                                             }
                                         >

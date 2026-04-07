@@ -26,6 +26,7 @@ import clsx from "clsx";
 import { ThemeStyle } from "@courselit/page-models";
 import { Moon, Sun } from "lucide-react";
 import { useGithubStars } from "./use-github-stars";
+import { usePathname } from "next/navigation";
 
 export default function Widget({
     state,
@@ -39,10 +40,16 @@ export default function Widget({
         settings.maxWidth || theme.theme.structure.page.width;
     overiddenTheme.structure.section.padding.y = "py-4";
     const [isClient, setIsClient] = useState(false);
+    const [userMenuKey, setUserMenuKey] = useState(0);
+    const pathname = usePathname();
 
     useEffect(() => {
         setIsClient(true);
     }, []);
+
+    useEffect(() => {
+        setUserMenuKey((current) => current + 1);
+    }, [pathname]);
 
     const linkClasses = "flex w-full";
     const linkAlignment = settings.linkAlignment || defaultLinkAlignment;
@@ -61,6 +68,7 @@ export default function Widget({
     const cardBorderWidth =
         overiddenTheme?.interactives?.card?.border?.width?.split("-")[1];
     const isLayoutFixed = settings.layout === "fixed" || !settings.layout;
+    const closeUserMenu = () => setUserMenuKey((current) => current + 1);
 
     const mainContent = (
         <div className={`flex justify-between items-center w-full`}>
@@ -162,6 +170,7 @@ export default function Widget({
                 {settings.showLoginControl && (
                     <div className="lg:!block hidden">
                         <Menu
+                            key={userMenuKey}
                             trigger={
                                 <Button2
                                     variant="ghost"
@@ -174,10 +183,11 @@ export default function Widget({
                             }
                         >
                             {!state.auth.guest && (
-                                <MenuItem2>
+                                <MenuItem2 onSelect={closeUserMenu}>
                                     <AppLink
                                         href={"/dashboard"}
                                         className={linkClasses}
+                                        onClick={closeUserMenu}
                                     >
                                         <PrimitiveLink
                                             theme={overiddenTheme}
@@ -188,12 +198,13 @@ export default function Widget({
                                     </AppLink>
                                 </MenuItem2>
                             )}
-                            <MenuItem2>
+                            <MenuItem2 onSelect={closeUserMenu}>
                                 <AppLink
                                     href={
                                         state.auth.guest ? "/login" : "/logout"
                                     }
                                     className={linkClasses}
+                                    onClick={closeUserMenu}
                                 >
                                     <PrimitiveLink
                                         theme={overiddenTheme}

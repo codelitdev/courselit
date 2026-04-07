@@ -646,6 +646,11 @@ export const SINGLE_SIGN_ON_HEADER = "Single sign-on (SSO)";
 export const LOGIN_METHODS_HEADER = "Login providers";
 export const LOGIN_METHODS_CARD_DESCRIPTION =
     "Control how your users access the school";
+export const LOGIN_PROVIDER_EMAIL_LABEL = "Email";
+export const LOGIN_PROVIDER_GOOGLE_LABEL = "Google";
+export const LOGIN_PROVIDER_SSO_LABEL = "SAML SSO";
+export const LOGIN_PROVIDER_GOOGLE_BUTTON = "Continue with Google";
+export const LOGIN_PROVIDER_SSO_BUTTON = "Continue with SSO";
 export const APIKEY_EXISTING_TABLE_HEADER_CREATED = "Created";
 export const APIKEY_EXISTING_TABLE_HEADER_NAME = "Name";
 export const APIKEY_NEW_HEADER = "New API key";
@@ -665,6 +670,24 @@ export const SSO_PROVIDER_CALLBACK_URL_LABEL = "Callback URL";
 export const SSO_PROVIDER_IDP_METADATA_LABEL = "IDP Metadata";
 export const SSO_PROVIDER_PROVIDER_ID_LABEL = "Provider ID";
 export const SSO_PROVIDER_SUCCESS_MESSAGE = "SSO provider added successfully";
+export const GOOGLE_PROVIDER_HEADER = "Google";
+export const GOOGLE_PROVIDER_CARD_HEADER = "Google App Configuration";
+export const GOOGLE_PROVIDER_CARD_DESCRIPTION =
+    "Enter the values from your Google Cloud OAuth application";
+export const GOOGLE_PROVIDER_SETTINGS_HEADER = "School Settings";
+export const GOOGLE_PROVIDER_SETTINGS_DESCRIPTION =
+    "Use these values while configuring your Google OAuth application";
+export const GOOGLE_PROVIDER_CLIENT_ID_LABEL = "Client ID";
+export const GOOGLE_PROVIDER_CLIENT_SECRET_LABEL = "Client secret";
+export const GOOGLE_PROVIDER_REDIRECT_URI_LABEL = "Authorized redirect URI";
+export const GOOGLE_PROVIDER_ORIGIN_LABEL = "Authorized JavaScript origin";
+export const GOOGLE_PROVIDER_SUCCESS_MESSAGE =
+    "Google provider saved successfully";
+export const GOOGLE_PROVIDER_REMOVE_DIALOG_HEADER = "Remove Google Provider";
+export const GOOGLE_PROVIDER_SECRET_HELPER =
+    "Leave blank to keep the current client secret.";
+export const GOOGLE_PROVIDER_SECRET_SAVED = "A client secret is already saved.";
+export const URL_COPIED_TO_CLIPBOARD = "URL copied to clipboard";
 export const PROVIDER_RESET_SUCCESS_MESSAGE = "Provider reset successfully";
 export const APIKEY_NEW_BTN_CAPTION = "Create";
 export const APIKEY_NEW_GENERATED_KEY_HEADER = "Your new API key";
@@ -795,3 +818,4 @@ export const LESSON_EMBED_URL_LABEL = "Embed code";
 export const LESSON_CONTENT_LABEL = "Content";
 export const EMAIL_EDITOR_EMAIL_EDIT_HEADER = "Editing email";
 export const EMAIL_EDITOR_TEMPLATE_EDIT_HEADER = "Editing template";
+export const LOGIN_FORM_PERSONAL_INFORMATION_LABEL = "Personal Information";

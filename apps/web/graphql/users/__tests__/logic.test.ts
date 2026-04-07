@@ -2,7 +2,19 @@
  * @jest-environment node
  */
 
-import { getCertificate } from "../logic";
+jest.mock("../../notifications/logic", () => ({
+    seedNotificationPreferencesForUser: jest.fn(),
+}));
+
+jest.mock("@/lib/record-activity", () => ({
+    recordActivity: jest.fn(),
+}));
+
+jest.mock("@/lib/trigger-sequences", () => ({
+    triggerSequences: jest.fn(),
+}));
+
+import { finalizeUserCreation, getCertificate } from "../logic";
 import CertificateModel from "@models/Certificate";
 import UserModel from "@models/User";
 import CourseModel from "@models/Course";
@@ -12,6 +24,105 @@ import Domain from "@models/Domain";
 import PageModel from "@models/Page";
 import MembershipModel from "@models/Membership";
 import CommunityModel from "@models/Community";
+import { Constants } from "@courselit/common-models";
+import { seedNotificationPreferencesForUser } from "../../notifications/logic";
+import { recordActivity } from "@/lib/record-activity";
+import { triggerSequences } from "@/lib/trigger-sequences";
+
+const seedNotificationPreferencesForUserMock =
+    seedNotificationPreferencesForUser as jest.Mock;
+const recordActivityMock = recordActivity as jest.Mock;
+const triggerSequencesMock = triggerSequences as jest.Mock;
+
+describe("finalizeUserCreation", () => {
+    const domainId = "domain-123" as any;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it("should seed notification preferences and record user creation", async () => {
+        const user = {
+            userId: "user-123",
+            subscribedToUpdates: false,
+            domain: domainId,
+        } as any;
+
+        await finalizeUserCreation(user);
+
+        expect(seedNotificationPreferencesForUserMock).toHaveBeenCalledWith({
+            domain: domainId,
+            userId: user.userId,
+        });
+        expect(recordActivityMock).toHaveBeenCalledTimes(1);
+        expect(recordActivityMock).toHaveBeenCalledWith({
+            domain: domainId,
+            userId: user.userId,
+            type: Constants.ActivityType.USER_CREATED,
+            entityId: user.userId,
+        });
+        expect(triggerSequencesMock).not.toHaveBeenCalled();
+    });
+
+    it("should trigger newsletter side effects for subscribed users", async () => {
+        const user = {
+            userId: "user-123",
+            subscribedToUpdates: true,
+            domain: domainId,
+        } as any;
+
+        await finalizeUserCreation(user);
+
+        expect(triggerSequencesMock).toHaveBeenCalledWith({
+            user,
+            event: Constants.EventType.SUBSCRIBER_ADDED,
+        });
+        expect(recordActivityMock).toHaveBeenCalledTimes(2);
+        expect(recordActivityMock).toHaveBeenNthCalledWith(2, {
+            domain: domainId,
+            userId: user.userId,
+            type: Constants.ActivityType.NEWSLETTER_SUBSCRIBED,
+            entityId: user.userId,
+        });
+    });
+
+    it("should use explicit domain override when user domain is unavailable", async () => {
+        const user = {
+            userId: "user-123",
+            subscribedToUpdates: false,
+        } as any;
+
+        await finalizeUserCreation(user, domainId);
+
+        expect(seedNotificationPreferencesForUserMock).toHaveBeenCalledWith({
+            domain: domainId,
+            userId: user.userId,
+        });
+        expect(recordActivityMock).toHaveBeenCalledWith({
+            domain: domainId,
+            userId: user.userId,
+            type: Constants.ActivityType.USER_CREATED,
+            entityId: user.userId,
+        });
+    });
+
+    it("should pass the explicit domain override to sequence triggering", async () => {
+        const user = {
+            userId: "user-123",
+            subscribedToUpdates: true,
+        } as any;
+
+        await finalizeUserCreation(user, domainId);
+
+        expect(triggerSequencesMock).toHaveBeenCalledWith({
+            user: {
+                ...user,
+                domain: domainId,
+            },
+            event: Constants.EventType.SUBSCRIBER_ADDED,
+        });
+    });
+});
 
 describe("Certificate generation", () => {
     let mockCtx: any;

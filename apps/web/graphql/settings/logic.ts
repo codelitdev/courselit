@@ -12,6 +12,7 @@ import DomainModel, { Domain } from "../../models/Domain";
 import { checkPermission } from "@courselit/utils";
 import {
     Constants,
+    Features,
     LoginProvider,
     Media,
     Typeface,
@@ -19,8 +20,98 @@ import {
 import ApikeyModel, { ApiKey } from "@models/ApiKey";
 import SSOProviderModel from "@models/SSOProvider";
 import { sealMedia } from "@/services/medialit";
+import {
+    getLoginProviderDefinition,
+    LOGIN_PROVIDER_REGISTRY,
+    RuntimeLoginProvider,
+} from "@/lib/login-providers";
+import { invalidateDomainCache } from "@/lib/domain-cache";
 
 const { permissions } = constants;
+
+const GOOGLE_PROVIDER_ID = getLoginProviderDefinition(
+    Constants.LoginProvider.GOOGLE,
+)?.providerId;
+const SAML_PROVIDER_ID = getLoginProviderDefinition(
+    Constants.LoginProvider.SSO,
+)?.providerId;
+
+if (!GOOGLE_PROVIDER_ID || !SAML_PROVIDER_ID) {
+    throw new Error("Login provider registry is missing required provider IDs");
+}
+
+type StoredOIDCConfig = {
+    clientId?: string;
+    clientSecret?: string;
+    scopes?: string[];
+    pkce?: boolean;
+    mapping?: Record<string, unknown>;
+};
+
+const buildGoogleOIDCConfig = ({
+    clientId,
+    clientSecret,
+}: {
+    clientId: string;
+    clientSecret: string;
+}) => ({
+    clientId,
+    clientSecret,
+    scopes: ["openid", "email", "profile"],
+    pkce: true,
+    mapping: {
+        id: "sub",
+        email: "email",
+        emailVerified: "email_verified",
+        name: "name",
+        image: "picture",
+    },
+});
+
+const parseOIDCConfig = (oidcConfig?: string): StoredOIDCConfig => {
+    if (!oidcConfig) {
+        return {};
+    }
+
+    return JSON.parse(oidcConfig) as StoredOIDCConfig;
+};
+
+const isSAMLProviderConfigured = (samlConfig?: string) => {
+    const parsed = JSON.parse(samlConfig || "{}");
+    return !!(parsed.entryPoint && parsed.cert && parsed.idpMetadata?.metadata);
+};
+
+const isGoogleProviderConfigured = (oidcConfig?: string) => {
+    const parsed = parseOIDCConfig(oidcConfig);
+    return !!(parsed.clientId && parsed.clientSecret);
+};
+
+const isExternalProviderConfigured = ({
+    provider,
+    oidcConfig,
+    samlConfig,
+}: {
+    provider: LoginProvider;
+    oidcConfig?: string;
+    samlConfig?: string;
+}) => {
+    switch (provider) {
+        case Constants.LoginProvider.GOOGLE:
+            return isGoogleProviderConfigured(oidcConfig);
+        case Constants.LoginProvider.SSO:
+            return isSAMLProviderConfigured(samlConfig);
+        default:
+            return false;
+    }
+};
+
+const assertCanManageSettings = (ctx: GQLContext) => {
+    checkIfAuthenticated(ctx);
+
+    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
+        throw new Error(responses.action_not_allowed);
+    }
+};
 
 export const getSiteInfo = async (ctx: GQLContext) => {
     const exclusionProjection: Record<string, 0> = {
@@ -272,11 +363,7 @@ export const updateSSOProvider = async ({
     backend: string;
     context: GQLContext;
 }) => {
-    checkIfAuthenticated(ctx);
-
-    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
-        throw new Error(responses.action_not_allowed);
-    }
+    assertCanManageSettings(ctx);
 
     if (!ctx.subdomain.features?.includes(Constants.Features.SSO)) {
         throw new Error(responses.action_not_allowed);
@@ -287,22 +374,28 @@ export const updateSSOProvider = async ({
     }
 
     const backendUrl = new URL(backend);
+    const spEntityId = `${backendUrl.origin}/api/auth/sso/saml2/sp/metadata?providerId=${SAML_PROVIDER_ID}`;
 
     try {
         const ssoProvider = await SSOProviderModel.findOneAndUpdate(
             {
                 domain: ctx.subdomain._id,
+                providerId: SAML_PROVIDER_ID,
             },
             {
-                providerId: "sso",
+                providerId: SAML_PROVIDER_ID,
+                issuer: spEntityId,
                 samlConfig: JSON.stringify({
+                    issuer: spEntityId,
                     entryPoint,
                     cert,
-                    callbackUrl: `${backendUrl.origin}/api/auth/sso/saml2/callback/sso`,
+                    callbackUrl: `${backendUrl.origin}/api/auth/sso/saml2/sp/acs/${SAML_PROVIDER_ID}`,
                     idpMetadata: {
                         metadata: idpMetadata,
                     },
-                    spMetadata: {},
+                    spMetadata: {
+                        entityID: spEntityId,
+                    },
                 }),
                 domain_string: backendUrl.hostname,
                 domain: ctx.subdomain._id,
@@ -316,6 +409,7 @@ export const updateSSOProvider = async ({
         ctx.subdomain.settings.ssoTrustedDomain = new URL(entryPoint).origin;
         (ctx.subdomain as any).markModified("settings");
         await (ctx.subdomain as any).save();
+        invalidateDomainCache(ctx.subdomain.name);
 
         return ssoProvider;
     } catch (error: any) {
@@ -324,11 +418,7 @@ export const updateSSOProvider = async ({
 };
 
 export const getSSOProviderSettings = async (ctx: GQLContext) => {
-    checkIfAuthenticated(ctx);
-
-    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
-        throw new Error(responses.action_not_allowed);
-    }
+    assertCanManageSettings(ctx);
 
     if (!ctx.subdomain.features?.includes(Constants.Features.SSO)) {
         throw new Error(responses.action_not_allowed);
@@ -336,6 +426,7 @@ export const getSSOProviderSettings = async (ctx: GQLContext) => {
 
     const ssoProvider = await SSOProviderModel.findOne({
         domain: ctx.subdomain._id,
+        providerId: SAML_PROVIDER_ID,
     });
 
     if (!ssoProvider) {
@@ -359,6 +450,7 @@ export const getSSOProvider = async (ctx: GQLContext) => {
     const ssoProvider = await SSOProviderModel.findOne(
         {
             domain: ctx.subdomain._id,
+            providerId: SAML_PROVIDER_ID,
         },
         {
             providerId: 1,
@@ -376,18 +468,147 @@ export const getSSOProvider = async (ctx: GQLContext) => {
     };
 };
 
-export const removeSSOProvider = async (ctx: GQLContext) => {
-    checkIfAuthenticated(ctx);
+export const getGoogleProviderSettings = async (ctx: GQLContext) => {
+    assertCanManageSettings(ctx);
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
-        throw new Error(responses.action_not_allowed);
+    const googleProvider = await SSOProviderModel.findOne({
+        domain: ctx.subdomain._id,
+        providerId: GOOGLE_PROVIDER_ID,
+    });
+
+    if (!googleProvider) {
+        return null;
     }
+
+    const oidcConfig = parseOIDCConfig(googleProvider.oidcConfig);
+
+    return {
+        clientId: oidcConfig.clientId || "",
+        hasClientSecret: !!oidcConfig.clientSecret,
+    };
+};
+
+export const updateGoogleProvider = async ({
+    clientId,
+    clientSecret,
+    backend,
+    context: ctx,
+}: {
+    clientId: string;
+    clientSecret?: string;
+    backend: string;
+    context: GQLContext;
+}) => {
+    assertCanManageSettings(ctx);
+
+    if (!clientId || !backend) {
+        throw new Error(responses.provider_invalid_configuration);
+    }
+
+    const existingProvider = await SSOProviderModel.findOne({
+        domain: ctx.subdomain._id,
+        providerId: GOOGLE_PROVIDER_ID,
+    });
+    const existingConfig = parseOIDCConfig(existingProvider?.oidcConfig);
+    const resolvedClientSecret = clientSecret || existingConfig.clientSecret;
+
+    if (!resolvedClientSecret) {
+        throw new Error(responses.provider_invalid_configuration);
+    }
+
+    const backendUrl = new URL(backend);
+
+    const googleProvider = await SSOProviderModel.findOneAndUpdate(
+        {
+            domain: ctx.subdomain._id,
+            providerId: GOOGLE_PROVIDER_ID,
+        },
+        {
+            providerId: GOOGLE_PROVIDER_ID,
+            issuer: "https://accounts.google.com",
+            oidcConfig: JSON.stringify(
+                buildGoogleOIDCConfig({
+                    clientId,
+                    clientSecret: resolvedClientSecret,
+                }),
+            ),
+            domain_string: backendUrl.hostname,
+            domain: ctx.subdomain._id,
+        },
+        {
+            upsert: true,
+            new: true,
+        },
+    );
+
+    invalidateDomainCache(ctx.subdomain.name);
+
+    return googleProvider;
+};
+
+export const getExternalLoginProviders = async (ctx: GQLContext) => {
+    const enabledProviders = new Set(
+        ctx.subdomain.settings.logins || [Constants.LoginProvider.EMAIL],
+    );
+    const externalDefinitions = LOGIN_PROVIDER_REGISTRY.filter(
+        (item) => !!item.providerId,
+    );
+
+    const configuredProviders = await SSOProviderModel.find({
+        domain: ctx.subdomain._id,
+        providerId: {
+            $in: externalDefinitions
+                .map((item) => item.providerId)
+                .filter(Boolean),
+        },
+    }).lean();
+    const providerMap = new Map(
+        configuredProviders.map((provider) => [provider.providerId, provider]),
+    );
+
+    return externalDefinitions
+        .filter((definition) => enabledProviders.has(definition.key))
+        .filter(
+            (definition) =>
+                !definition.featureFlag ||
+                ctx.subdomain.features?.includes(
+                    definition.featureFlag as Features,
+                ),
+        )
+        .filter((definition) => {
+            const provider = providerMap.get(definition.providerId!);
+
+            return (
+                !!provider &&
+                isExternalProviderConfigured({
+                    provider: definition.key,
+                    oidcConfig: provider.oidcConfig,
+                    samlConfig: provider.samlConfig,
+                })
+            );
+        })
+        .map(
+            (definition): RuntimeLoginProvider => ({
+                key: definition.key,
+                providerId: definition.providerId!,
+                label: definition.label,
+                buttonText: definition.buttonText!,
+                authType: definition.authType!,
+            }),
+        );
+};
+
+export const removeSSOProvider = async (ctx: GQLContext) => {
+    assertCanManageSettings(ctx);
 
     if (!ctx.subdomain.features?.includes(Constants.Features.SSO)) {
         throw new Error(responses.action_not_allowed);
     }
 
-    await SSOProviderModel.deleteMany({ domain: ctx.subdomain._id });
+    await SSOProviderModel.deleteOne({
+        domain: ctx.subdomain._id,
+        providerId: SAML_PROVIDER_ID,
+    });
 
     await toggleLoginProvider({
         provider: Constants.LoginProvider.SSO,
@@ -398,6 +619,24 @@ export const removeSSOProvider = async (ctx: GQLContext) => {
     ctx.subdomain.settings.ssoTrustedDomain = undefined;
     (ctx.subdomain as any).markModified("settings");
     await (ctx.subdomain as any).save();
+    invalidateDomainCache(ctx.subdomain.name);
+
+    return true;
+};
+
+export const removeGoogleProvider = async (ctx: GQLContext) => {
+    assertCanManageSettings(ctx);
+
+    await SSOProviderModel.deleteOne({
+        domain: ctx.subdomain._id,
+        providerId: GOOGLE_PROVIDER_ID,
+    });
+
+    await toggleLoginProvider({
+        provider: Constants.LoginProvider.GOOGLE,
+        value: false,
+        ctx,
+    });
 
     return true;
 };
@@ -419,11 +658,7 @@ export const toggleLoginProvider = async ({
     value: boolean;
     ctx: GQLContext;
 }) => {
-    checkIfAuthenticated(ctx);
-
-    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
-        throw new Error(responses.action_not_allowed);
-    }
+    assertCanManageSettings(ctx);
 
     switch (provider) {
         case Constants.LoginProvider.EMAIL:
@@ -443,17 +678,47 @@ export const toggleLoginProvider = async ({
                 provider: Constants.LoginProvider.EMAIL,
             });
             break;
+        case Constants.LoginProvider.GOOGLE:
+            if (value) {
+                const googleProvider = await SSOProviderModel.findOne({
+                    domain: ctx.subdomain._id,
+                    providerId: GOOGLE_PROVIDER_ID,
+                });
+
+                if (
+                    !googleProvider ||
+                    !isExternalProviderConfigured({
+                        provider,
+                        oidcConfig: googleProvider.oidcConfig,
+                    })
+                ) {
+                    throw new Error(responses.provider_not_configured);
+                }
+            }
+            await saveLoginProvider({
+                ctx,
+                value,
+                provider: Constants.LoginProvider.GOOGLE,
+            });
+            break;
         case Constants.LoginProvider.SSO:
             if (value) {
                 if (!ctx.subdomain.features?.includes(Constants.Features.SSO)) {
                     throw new Error(responses.action_not_allowed);
                 }
 
-                const ssoProviders = await SSOProviderModel.find({
+                const ssoProvider = await SSOProviderModel.findOne({
                     domain: ctx.subdomain._id,
+                    providerId: SAML_PROVIDER_ID,
                 });
 
-                if (ssoProviders.length === 0) {
+                if (
+                    !ssoProvider ||
+                    !isExternalProviderConfigured({
+                        provider,
+                        samlConfig: ssoProvider.samlConfig,
+                    })
+                ) {
                     throw new Error(responses.provider_not_configured);
                 }
             }

@@ -1,38 +1,157 @@
 import { APIError, betterAuth } from "better-auth";
 import { customSession, emailOTP } from "better-auth/plugins";
 import { MongoClient } from "mongodb";
-import DomainModel, { Domain } from "@models/Domain";
-import { getEmailFrom } from "@courselit/utils";
+import { InternalUser } from "@courselit/orm-models";
+import { generateUniqueId, getEmailFrom } from "@courselit/utils";
 import { addMailJob } from "@/services/queue";
 import pug from "pug";
 import MagicCodeEmailTemplate from "@/templates/magic-code-email";
 import { responses } from "@/config/strings";
 import { mongodbAdapter } from "@/ba-multitenant-adapter";
-import { updateUserAfterCreationViaAuth } from "./graphql/users/logic";
-import UserModel from "@models/User";
 import { getBackendAddress } from "./app/actions";
 import { sso } from "@better-auth/sso";
+import constants from "@/config/constants";
+import { finalizeUserCreation } from "./graphql/users/logic";
+import { sanitizeEmail } from "./lib/sanitize-email";
+import DomainModel, { Domain } from "@models/Domain";
+import UserModel from "@models/User";
+import { als } from "./async-local-storage";
 
 const client = new MongoClient(
     process.env.DB_CONNECTION_STRING || "mongodb://localhost:27017",
 );
 const db = client.db();
 
+const toDomainId = (value: unknown) => {
+    if (typeof value === "string" && value) {
+        return value;
+    }
+
+    if (
+        value &&
+        typeof value === "object" &&
+        "toString" in value &&
+        typeof value.toString === "function"
+    ) {
+        const serialized = value.toString();
+        return serialized ? serialized : undefined;
+    }
+
+    return undefined;
+};
+
+const getAuthDomain = async ({
+    user,
+    ctx,
+}: {
+    user?: Record<string, unknown>;
+    ctx?: { headers?: Headers };
+}): Promise<Domain> => {
+    const domainId =
+        toDomainId(user?.domain) ||
+        ctx?.headers?.get("domainId") ||
+        als.getStore()?.get("domainId");
+    const domainName =
+        ctx?.headers?.get("domain") || als.getStore()?.get("domain");
+
+    const domain = (domainId
+        ? await DomainModel.findById(domainId).lean()
+        : await DomainModel.findOne<Domain>({
+              name: domainName,
+          }).lean()) as unknown as Domain;
+
+    if (!domain) {
+        throw new APIError("NOT_FOUND", {
+            message: "Domain not found",
+        });
+    }
+
+    return domain;
+};
+
+const getSessionUserId = async (
+    user: Partial<InternalUser> & { id?: string },
+) => {
+    if (user.userId) {
+        return user.userId;
+    }
+
+    if (!user.id) {
+        return undefined;
+    }
+
+    const authUser = await UserModel.findOne({ _id: user.id })
+        .select("userId")
+        .lean();
+
+    return (authUser as { userId?: string } | null)?.userId;
+};
+
 const config: any = {
     appName: "CourseLit",
     secret: process.env.AUTH_SECRET,
+    user: {
+        additionalFields: {
+            userId: {
+                type: "string",
+                required: false,
+            },
+            active: {
+                type: "boolean",
+                required: false,
+            },
+            purchases: {
+                type: "json",
+                required: false,
+            },
+            permissions: {
+                type: "string[]",
+                required: false,
+            },
+            lead: {
+                type: "string",
+                required: false,
+            },
+            subscribedToUpdates: {
+                type: "boolean",
+                required: false,
+            },
+            tags: {
+                type: "string[]",
+                required: false,
+            },
+            unsubscribeToken: {
+                type: "string",
+                required: false,
+            },
+        },
+    },
     account: {
+        storeStateStrategy: "cookie",
         accountLinking: {
             enabled: true,
-            trustedProviders: ["sso", "email-otp"],
+            trustedProviders: ["sso", "google"],
         },
     },
     advanced: {
         cookiePrefix: "courselit",
+        cookies: {
+            relay_state: {
+                attributes: {
+                    sameSite: "none",
+                    secure: true,
+                },
+            },
+        },
     },
     database: mongodbAdapter(db, {
         client,
         usePlural: true,
+        // Enable transactions by default; set DB_TRANSACTIONS=false to opt out.
+        transaction:
+            process.env.DB_TRANSACTIONS === undefined
+                ? true
+                : process.env.DB_TRANSACTIONS.toLowerCase() !== "false",
     }),
     plugins: [
         emailOTP({
@@ -66,11 +185,9 @@ const config: any = {
             return {
                 user: {
                     ...user,
-                    userId: (
-                        (await UserModel.findOne({ _id: user.id })
-                            .select("userId")
-                            .lean()) as unknown as any
-                    )?.userId,
+                    userId: await getSessionUserId(
+                        user as Partial<InternalUser> & { id?: string },
+                    ),
                 },
                 session: {
                     ...session,
@@ -93,24 +210,50 @@ const config: any = {
     databaseHooks: {
         user: {
             create: {
+                before: async (user) => {
+                    return {
+                        data: {
+                            email: sanitizeEmail(user.email),
+                            active: true,
+                            userId: generateUniqueId(),
+                            purchases: [],
+                            permissions: [
+                                constants.permissions.enrollInCourse,
+                                constants.permissions.manageMedia,
+                            ],
+                            lead: constants.leadWebsite,
+                            subscribedToUpdates: true,
+                            tags: [],
+                            unsubscribeToken: generateUniqueId(),
+                        },
+                    };
+                },
                 after: async (user, ctx) => {
-                    const domainName = ctx!.headers?.get("domain");
-                    const domain = (await DomainModel.findOne<Domain>({
-                        name: domainName,
-                    }).lean()) as unknown as Domain;
-                    if (!domain) {
-                        throw new APIError("NOT_FOUND", {
-                            message: "Domain not found",
-                        });
-                    }
-
-                    await updateUserAfterCreationViaAuth(user.id, domain);
+                    const domain = await getAuthDomain({
+                        user: user as Record<string, unknown>,
+                        ctx,
+                    });
+                    await finalizeUserCreation(
+                        user as InternalUser,
+                        domain._id.toString(),
+                    );
                 },
             },
         },
     },
-    trustedOrigins: async (request: Request) => {
-        const origins: string[] = [await getBackendAddress(request.headers)];
+    trustedOrigins: async (request?: Request) => {
+        // Better Auth may invoke this during initialization/auth.api calls without a request.
+        if (!request) {
+            return [];
+        }
+
+        const origins: string[] = [
+            await getBackendAddress(request.headers),
+            "https://accounts.google.com",
+            "https://oauth2.googleapis.com",
+            "https://openidconnect.googleapis.com",
+            "https://www.googleapis.com",
+        ];
         if (request.headers.get("ssotrusteddomain")) {
             origins.push(request.headers.get("ssotrusteddomain")!);
         }

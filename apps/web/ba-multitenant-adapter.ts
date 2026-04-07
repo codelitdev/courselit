@@ -313,9 +313,14 @@ export const mongodbAdapter = (
 
             return {
                 async create({ model, data: values }) {
-                    (values as any).domain = new ObjectId(
-                        als.getStore()?.get("domainId") ?? "",
-                    );
+                    const domainId = als.getStore()?.get("domainId");
+                    if (!domainId) {
+                        throw new Error(
+                            `Missing tenant context while creating ${model}`,
+                        );
+                    }
+
+                    (values as any).domain = new ObjectId(domainId);
                     const res = await db
                         .collection(model)
                         .insertOne(values, { session });
@@ -714,6 +719,20 @@ export const mongodbAdapter = (
                     const oid = new ObjectId();
                     return oid;
                 }
+
+                if (
+                    (fieldAttributes.type === "json" ||
+                        fieldAttributes.type === "string[]" ||
+                        fieldAttributes.type === "number[]") &&
+                    typeof data === "string"
+                ) {
+                    try {
+                        return JSON.parse(data);
+                    } catch {
+                        return data;
+                    }
+                }
+
                 return data;
             },
             customTransformOutput({ data, field, fieldAttributes }) {
@@ -734,6 +753,20 @@ export const mongodbAdapter = (
                     }
                     return data;
                 }
+
+                if (
+                    (fieldAttributes.type === "json" ||
+                        fieldAttributes.type === "string[]" ||
+                        fieldAttributes.type === "number[]") &&
+                    typeof data === "string"
+                ) {
+                    try {
+                        return JSON.parse(data);
+                    } catch {
+                        return data;
+                    }
+                }
+
                 return data;
             },
             customIdGenerator() {
