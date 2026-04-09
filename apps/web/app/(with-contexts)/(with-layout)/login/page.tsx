@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { getAddressFromHeaders } from "@/app/actions";
 import { FetchBuilder } from "@courselit/utils";
 import { error } from "@/services/logger";
+import type { RuntimeLoginProvider } from "@/lib/login-providers";
 
 export default async function LoginPage({
     searchParams,
@@ -26,24 +27,22 @@ export default async function LoginPage({
     return (
         <LoginForm
             redirectTo={redirectTo}
-            ssoProvider={await getSSOProvider(address)}
+            loginProviders={await getExternalLoginProviders(address)}
         />
     );
 }
 
-export type SSOProvider = {
-    providerId: string;
-    domain: string;
-};
-
-export const getSSOProvider = async (
+export const getExternalLoginProviders = async (
     backend: string,
-): Promise<SSOProvider | undefined> => {
+): Promise<RuntimeLoginProvider[]> => {
     const query = `
         query { 
-            ssoProvider: getSSOProvider {
+            loginProviders: getExternalLoginProviders {
+                key
                 providerId
-                domain
+                label
+                buttonText
+                authType
             }
         }
         `;
@@ -55,10 +54,11 @@ export const getSSOProvider = async (
 
     try {
         const response = await fetch.exec();
-        return response.ssoProvider;
+        return response.loginProviders || [];
     } catch (e: any) {
-        error(`Error in fetching SSO provider`, {
+        error(`Error in fetching login providers`, {
             stack: e.stack,
         });
+        return [];
     }
 };

@@ -18,6 +18,7 @@
     - Use **Batching** with `bulkWrite` (e.g., batches of 500) to maximize performance and minimize network roundtrips.
     - Ensure **Idempotency** (safe to re-run) by using upserts or `$setOnInsert` where applicable.
 - When making changes to the structure of the Course, consider how it affects its representation on its public page (`apps/web/app/(with-contexts)/(with-layout)/p/[id]/page.tsx`) and the course viewer (`apps/web/app/(with-contexts)/course/[slug]/[id]/page.tsx`).
+- `apps/web` is a multi-tenant app.
 
 ### Workspace map (core modules):
 

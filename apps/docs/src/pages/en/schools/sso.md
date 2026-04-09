@@ -76,7 +76,19 @@ To use this feature on [courseLit.app](https://courselit.app), you need to be on
     ![Okta IdP metadata](/assets/schools/idp/okta/saml-signing-certificates.png)
 
 9. Enter the values obtained in the `IDP Configuration` panel.
-10. The Okta IdP is now configured.
+10. The Okta IdP is now configured. Test the integration.
+
+### Microsoft Entra ID
+
+1. Go to `Azure` portal, search for `Enterprise applications` and click on it to go to the apps.
+2. Click `New application` to create a new app.
+3. In the `Browse Microsoft Entra App Gallery` screen, click `Create your own application`. In the settings pane, enter the app's name and click `Create`.
+4. After the application is created, select `Set up single sign on` and choose `SAML` as the single sign-on method.
+5. In the SAML setup screen, click the pencil icon in the `Basic SAML Configuration` card and enter CourseLit's `Audience URI (SP Entity ID)` in `Identifier (Entity ID)` and the `SAML ACS URL` in `Reply URL (Assertion Consumer Service URL)`.
+6. Next, obtain the IdP details from the `SAML Certificates` pane (on the same page). Click the pencil icon to open the settings pane, download the PEM certificate and the Federated certificate XML, and paste them into CourseLit's `Certificate` and `IDP Metadata` fields respectively.
+   ![Microsoft Entra ID's certificates](/assets/schools/idp/entra-id/sso-entra-idp-cert-and-metadata.png)
+7. Obtain the `Login URL` from the same screen and enter it into CourseLit's `Entry point` field.
+8. The Entra IdP is now configured — test the integration.
 
 ## Customer's experience
 

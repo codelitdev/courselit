@@ -37,16 +37,15 @@ import { Constants, Profile } from "@courselit/common-models";
 import { getUserProfile } from "../../helpers";
 import { ADMIN_PERMISSIONS } from "@ui-config/constants";
 import { authClient } from "@/lib/auth-client";
+import type { RuntimeLoginProvider } from "@/lib/login-providers";
+import ExternalLoginButton from "@/components/auth/external-login-button";
 
 export default function LoginForm({
     redirectTo,
-    ssoProvider,
+    loginProviders = [],
 }: {
     redirectTo?: string;
-    ssoProvider?: {
-        providerId: string;
-        domain: string;
-    };
+    loginProviders?: RuntimeLoginProvider[];
 }) {
     const { theme } = useContext(ThemeContext);
     const [showCode, setShowCode] = useState(false);
@@ -312,23 +311,20 @@ export default function LoginForm({
                                 )}
                             </>
                         )}
-                        {siteinfo.logins?.includes(
-                            Constants.LoginProvider.SSO,
-                        ) &&
-                            ssoProvider && (
-                                <Button
-                                    variant="outline"
-                                    onClick={async () => {
-                                        await authClient.signIn.sso({
-                                            providerId: ssoProvider.providerId,
-                                            callbackURL: "/dashboard",
-                                        });
-                                    }}
-                                    className="w-full lg:w-[360px] mx-auto"
-                                >
-                                    Login with SSO
-                                </Button>
-                            )}
+                        {loginProviders.map((provider) => (
+                            <ExternalLoginButton
+                                key={provider.key}
+                                provider={provider}
+                                theme={theme.theme}
+                                className="w-full lg:w-[360px] mx-auto"
+                                onClick={async () => {
+                                    await authClient.signIn.sso({
+                                        providerId: provider.providerId,
+                                        callbackURL: "/dashboard",
+                                    });
+                                }}
+                            />
+                        ))}
                         <Caption theme={theme.theme} className="text-center">
                             {LOGIN_FORM_DISCLAIMER}
                             <Link href="/p/terms">

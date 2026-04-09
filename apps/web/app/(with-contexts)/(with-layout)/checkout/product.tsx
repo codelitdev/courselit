@@ -9,7 +9,7 @@ import { FetchBuilder } from "@courselit/utils";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useContext, useEffect, useState } from "react";
-import type { SSOProvider } from "../login/page";
+import type { RuntimeLoginProvider } from "@/lib/login-providers";
 
 const { MembershipEntityType } = Constants;
 
@@ -23,7 +23,9 @@ export default function ProductCheckout() {
     const [product, setProduct] = useState<Product | null>(null);
     const [paymentPlans, setPaymentPlans] = useState<PaymentPlan[]>([]);
     const [includedProducts, setIncludedProducts] = useState<Course[]>([]);
-    const [ssoProvider, setSSOProvider] = useState<SSOProvider | undefined>();
+    const [loginProviders, setLoginProviders] = useState<
+        RuntimeLoginProvider[]
+    >([]);
 
     const getIncludedProducts = useCallback(async () => {
         const query = `
@@ -97,9 +99,12 @@ export default function ProductCheckout() {
                     }
                     defaultPaymentPlan
                 }
-                ssoProvider: getSSOProvider {
+                loginProviders: getExternalLoginProviders {
+                    key
                     providerId
-                    domain
+                    label
+                    buttonText
+                    authType
                 }
             }
         `;
@@ -126,9 +131,7 @@ export default function ProductCheckout() {
                     description: "Course not found",
                 });
             }
-            if (response.ssoProvider) {
-                setSSOProvider(response.ssoProvider);
-            }
+            setLoginProviders(response.loginProviders || []);
         } catch (err: any) {
             toast({
                 title: TOAST_TITLE_ERROR,
@@ -164,9 +167,12 @@ export default function ProductCheckout() {
                     joiningReasonText
                     defaultPaymentPlan
                 }
-                ssoProvider: getSSOProvider {
+                loginProviders: getExternalLoginProviders {
+                    key
                     providerId
-                    domain
+                    label
+                    buttonText
+                    authType
                 }
             }
         `;
@@ -194,9 +200,7 @@ export default function ProductCheckout() {
                     description: "Community not found",
                 });
             }
-            if (response.ssoProvider) {
-                setSSOProvider(response.ssoProvider);
-            }
+            setLoginProviders(response.loginProviders || []);
         } catch (err: any) {
             toast({
                 title: TOAST_TITLE_ERROR,
@@ -231,7 +235,7 @@ export default function ProductCheckout() {
             product={product}
             paymentPlans={paymentPlans}
             includedProducts={includedProducts}
-            ssoProvider={ssoProvider}
+            loginProviders={loginProviders}
             type={entityType as MembershipEntityType | undefined}
             id={entityId as string | undefined}
         />

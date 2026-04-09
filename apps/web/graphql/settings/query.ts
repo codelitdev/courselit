@@ -1,8 +1,9 @@
 import types from "./types";
 import {
     getApikeys,
+    getExternalLoginProviders,
     getFeatures,
-    // getLoginProviders,
+    getGoogleProviderSettings,
     getSiteInfo,
     getSSOProvider,
     getSSOProviderSettings,
@@ -25,22 +26,26 @@ const queries = {
         resolve: (_: any, {}: any, context: GQLContext) =>
             getSSOProvider(context),
     },
+    getGoogleProviderSettings: {
+        type: types.googleProviderSettingsType,
+        resolve: (_: any, {}: any, context: GQLContext) =>
+            getGoogleProviderSettings(context),
+    },
     getSSOProviderSettings: {
         type: types.ssoProviderSettingsType,
         resolve: (_: any, {}: any, context: GQLContext) =>
             getSSOProviderSettings(context),
+    },
+    getExternalLoginProviders: {
+        type: new GraphQLList(types.loginProviderType),
+        resolve: (_: any, {}: any, context: GQLContext) =>
+            getExternalLoginProviders(context),
     },
     getFeatures: {
         type: new GraphQLList(GraphQLString),
         args: {},
         resolve: (_: any, {}: any, context: GQLContext) => getFeatures(context),
     },
-    // getLoginProviders: {
-    //     type: new GraphQLList(GraphQLString),
-    //     args: {},
-    //     resolve: (_: any, { }: any, context: GQLContext) =>
-    //         getLoginProviders(context),
-    // },
 };
 
 export default queries;

@@ -7,12 +7,7 @@ import constants from "@/config/constants";
 import GQLContext from "@/models/GQLContext";
 import { initMandatoryPages } from "../pages/logic";
 import { Domain } from "@models/Domain";
-import {
-    checkPermission,
-    generateUniqueId,
-    getEmailFrom,
-    getPlanPrice,
-} from "@courselit/utils";
+import { checkPermission, getEmailFrom, getPlanPrice } from "@courselit/utils";
 import UserSegmentModel from "@models/UserSegment";
 import {
     InternalCourse,
@@ -61,7 +56,6 @@ import {
     cleanupPersonalData,
 } from "./helpers";
 const { permissions } = UIConstants;
-import { ObjectId } from "mongodb";
 import { sealMedia } from "@/services/medialit";
 import { seedNotificationPreferencesForUser } from "../notifications/logic";
 import { sanitizeEmail } from "@/lib/sanitize-email";
@@ -438,66 +432,31 @@ export async function createUser({
     const isNewUser = !rawResult.lastErrorObject!.updatedExisting;
 
     if (isNewUser) {
-        await seedNotificationPreferencesForUser({
-            domain: domain._id,
-            userId: createdUser.userId,
-        });
-
         if (superAdmin) {
             await initMandatoryPages(domain, createdUser);
             await createInternalPaymentPlan(domain, createdUser.userId);
         }
 
-        await recordActivityAndTriggerSequences(createdUser, domain);
+        await finalizeUserCreation(createdUser);
     }
 
     return createdUser;
 }
 
-export async function updateUserAfterCreationViaAuth(
-    id: string,
-    domain: Domain,
-) {
-    const updatedUser = await UserModel.findOneAndUpdate(
-        {
-            _id: new ObjectId(id),
-            domain: domain._id,
-        },
-        {
-            $set: {
-                domain: domain._id,
-                userId: generateUniqueId(),
-                active: true,
-                purchases: [],
-                permissions: [
-                    constants.permissions.enrollInCourse,
-                    constants.permissions.manageMedia,
-                ],
-                lead: constants.leadWebsite,
-                subscribedToUpdates: true,
-                tags: [],
-                unsubscribeToken: generateUniqueId(),
-            },
-        },
-        { new: true },
-    );
-
-    if (updatedUser) {
-        await seedNotificationPreferencesForUser({
-            domain: domain._id,
-            userId: updatedUser.userId,
-        });
-    }
-
-    await recordActivityAndTriggerSequences(updatedUser, domain);
-}
-
-async function recordActivityAndTriggerSequences(
+export async function finalizeUserCreation(
     user: InternalUser,
-    domain: Domain,
+    domainOverride?: mongoose.Types.ObjectId | string,
 ) {
+    const domain = domainOverride || user.domain;
+    const userWithDomain = { ...user, domain } as InternalUser;
+
+    await seedNotificationPreferencesForUser({
+        domain: domain as mongoose.Types.ObjectId,
+        userId: user.userId,
+    });
+
     await recordActivity({
-        domain: domain._id,
+        domain: domain as mongoose.Types.ObjectId,
         userId: user.userId,
         type: Constants.ActivityType.USER_CREATED,
         entityId: user.userId,
@@ -505,12 +464,12 @@ async function recordActivityAndTriggerSequences(
 
     if (user.subscribedToUpdates) {
         await triggerSequences({
-            user: user,
+            user: userWithDomain,
             event: Constants.EventType.SUBSCRIBER_ADDED,
         });
 
         await recordActivity({
-            domain: domain!._id,
+            domain: domain as mongoose.Types.ObjectId,
             userId: user.userId,
             type: Constants.ActivityType.NEWSLETTER_SUBSCRIBED,
             entityId: user.userId,

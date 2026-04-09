@@ -12,8 +12,10 @@ import {
     updateDraftTypefaces,
     removeApikey,
     addApikey,
+    removeGoogleProvider,
     removeSSOProvider,
     toggleLoginProvider,
+    updateGoogleProvider,
     updateSSOProvider,
 } from "./logic";
 import { LoginProvider, Typeface } from "@courselit/common-models";
@@ -110,10 +112,42 @@ const mutations = {
                 context,
             }),
     },
+    updateGoogleProvider: {
+        type: types.ssoProviderType,
+        args: {
+            clientId: { type: new GraphQLNonNull(GraphQLString) },
+            clientSecret: { type: GraphQLString },
+            backend: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (
+            _: any,
+            {
+                clientId,
+                clientSecret,
+                backend,
+            }: {
+                clientId: string;
+                clientSecret?: string;
+                backend: string;
+            },
+            context: any,
+        ) =>
+            updateGoogleProvider({
+                clientId,
+                clientSecret,
+                backend,
+                context,
+            }),
+    },
     removeSSOProvider: {
         type: new GraphQLNonNull(GraphQLBoolean),
         resolve: async (_: any, __: any, context: any) =>
             removeSSOProvider(context),
+    },
+    removeGoogleProvider: {
+        type: new GraphQLNonNull(GraphQLBoolean),
+        resolve: async (_: any, __: any, context: any) =>
+            removeGoogleProvider(context),
     },
     toggleLoginProvider: {
         type: new GraphQLNonNull(new GraphQLList(GraphQLString)),

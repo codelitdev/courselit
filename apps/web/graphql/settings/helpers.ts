@@ -9,6 +9,7 @@ import {
     UIConstants,
 } from "@courselit/common-models";
 import GQLContext from "@models/GQLContext";
+import { invalidateDomainCache } from "@/lib/domain-cache";
 
 const currencyISOCodes = currencies.map((currency) =>
     currency.isoCode?.toLowerCase(),
@@ -129,4 +130,5 @@ export async function saveLoginProvider({
     }
     ctx.subdomain.settings.logins = logins;
     await (ctx.subdomain as any).save();
+    invalidateDomainCache(ctx.subdomain.name);
 }

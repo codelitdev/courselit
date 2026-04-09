@@ -4,6 +4,15 @@ import { auth } from "./auth";
 
 export async function proxy(request: NextRequest) {
     const requestHeaders = request.headers;
+    const forwardedProto = request.headers.get("x-forwarded-proto");
+
+    if (!forwardedProto && request.nextUrl.protocol) {
+        requestHeaders.set(
+            "x-forwarded-proto",
+            request.nextUrl.protocol.replace(":", ""),
+        );
+    }
+
     const backend = await getBackendAddress(requestHeaders);
 
     if (request.nextUrl.pathname === "/healthy") {

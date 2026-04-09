@@ -36,7 +36,8 @@ import Script from "next/script";
 import { Button, Header3, Text1 } from "@courselit/page-primitives";
 import { PaymentPlanCard } from "./payment-plan-card";
 import { MobileOrderSummary, DesktopOrderSummary } from "./order-summary";
-import { SSOProvider } from "@/app/(with-contexts)/(with-layout)/login/page";
+import type { RuntimeLoginProvider } from "@/lib/login-providers";
+import { LOGIN_FORM_PERSONAL_INFORMATION_LABEL } from "@ui-config/strings";
 const { PaymentPlanType: paymentPlanType } = Constants;
 
 export interface Product {
@@ -55,7 +56,7 @@ export interface CheckoutScreenProps {
     product: Product;
     paymentPlans: PaymentPlan[];
     includedProducts: Course[];
-    ssoProvider?: SSOProvider;
+    loginProviders?: RuntimeLoginProvider[];
     type?: MembershipEntityType;
     id?: string;
 }
@@ -69,7 +70,7 @@ export default function Checkout({
     product,
     paymentPlans,
     includedProducts,
-    ssoProvider,
+    loginProviders = [],
     type,
     id,
 }: CheckoutScreenProps) {
@@ -397,14 +398,14 @@ export default function Checkout({
                             <>
                                 <div className="space-y-4">
                                     <Header3 theme={theme.theme}>
-                                        Personal Information
+                                        {LOGIN_FORM_PERSONAL_INFORMATION_LABEL}
                                     </Header3>
                                     {!isLoggedIn ? (
                                         <LoginForm
                                             onLoginComplete={
                                                 handleLoginComplete
                                             }
-                                            ssoProvider={ssoProvider}
+                                            loginProviders={loginProviders}
                                             type={type}
                                             id={id}
                                         />

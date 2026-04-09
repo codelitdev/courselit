@@ -171,6 +171,25 @@ const ssoProviderSettingsType = new GraphQLObjectType({
     },
 });
 
+const googleProviderSettingsType = new GraphQLObjectType({
+    name: "GoogleProviderSettings",
+    fields: {
+        clientId: { type: new GraphQLNonNull(GraphQLString) },
+        hasClientSecret: { type: new GraphQLNonNull(GraphQLBoolean) },
+    },
+});
+
+const loginProviderType = new GraphQLObjectType({
+    name: "LoginProviderDescriptor",
+    fields: {
+        key: { type: new GraphQLNonNull(GraphQLString) },
+        providerId: { type: new GraphQLNonNull(GraphQLString) },
+        label: { type: new GraphQLNonNull(GraphQLString) },
+        buttonText: { type: new GraphQLNonNull(GraphQLString) },
+        authType: { type: new GraphQLNonNull(GraphQLString) },
+    },
+});
+
 const types = {
     siteUpdateType,
     sitePaymentUpdateType,
@@ -181,6 +200,8 @@ const types = {
     newApikeyType,
     ssoProviderType,
     ssoProviderSettingsType,
+    googleProviderSettingsType,
+    loginProviderType,
 };
 
 export default types;
