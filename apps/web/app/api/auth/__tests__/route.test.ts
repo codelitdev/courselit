@@ -2,6 +2,10 @@
  * @jest-environment node
  */
 
+const mockGetAuth = jest.fn(() => ({}));
+const mockHandlerGet = jest.fn();
+const mockHandlerPost = jest.fn();
+
 jest.mock("@/app/actions", () => ({
     getBackendAddress: jest.fn(),
 }));
@@ -18,17 +22,19 @@ jest.mock(
 
 jest.mock("@/auth", () => ({
     auth: {},
+    getAuth: mockGetAuth,
 }));
 
 jest.mock("better-auth/next-js", () => ({
     toNextJsHandler: () => ({
-        GET: jest.fn(),
-        POST: jest.fn(),
+        GET: mockHandlerGet,
+        POST: mockHandlerPost,
     }),
 }));
 
 import { getBackendAddress } from "@/app/actions";
-import { rewriteAuthRequestOrigin } from "../[...all]/route";
+import { getAuth } from "@/auth";
+import { POST, rewriteAuthRequestOrigin } from "../[...all]/route";
 
 describe("Auth Route Origin Rewrite", () => {
     beforeEach(() => {
@@ -108,6 +114,35 @@ describe("Auth Route Origin Rewrite", () => {
                 providerId: "google",
                 callbackURL: "/checkout?id=123",
             }),
+        );
+    });
+
+    it("creates request-scoped auth handlers per rewritten origin", async () => {
+        (getBackendAddress as jest.Mock).mockResolvedValue(
+            "https://domain1.clqa.site",
+        );
+        mockHandlerPost.mockResolvedValue(new Response(null, { status: 200 }));
+
+        const req = new Request("https://0.0.0.0:3000/api/auth/sign-in/sso", {
+            method: "POST",
+            headers: {
+                host: "domain1.clqa.site",
+                domain: "domain1",
+                domainId: "domain-id-1",
+            },
+            body: JSON.stringify({
+                providerId: "google",
+                callbackURL: "/dashboard",
+            }),
+        });
+
+        await POST(req);
+
+        expect(getAuth).toHaveBeenCalledWith("https://domain1.clqa.site");
+        expect(mockHandlerPost).toHaveBeenCalledTimes(1);
+        const rewrittenRequest = mockHandlerPost.mock.calls[0][0] as Request;
+        expect(rewrittenRequest.url).toBe(
+            "https://domain1.clqa.site/api/auth/sign-in/sso",
         );
     });
 });

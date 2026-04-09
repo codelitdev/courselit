@@ -87,9 +87,34 @@ const getSessionUserId = async (
     return (authUser as { userId?: string } | null)?.userId;
 };
 
-const config: any = {
+const getSessionConfig = () => {
+    if (process.env.SESSION_COOKIE_CACHE_MAX_AGE) {
+        const configuredMaxAge = parseInt(
+            process.env.SESSION_COOKIE_CACHE_MAX_AGE,
+        );
+
+        if (configuredMaxAge > 0) {
+            return {
+                cookieCache: {
+                    enabled: true,
+                    maxAge: configuredMaxAge * 60,
+                },
+            };
+        }
+    }
+
+    return {
+        cookieCache: {
+            enabled: true,
+            maxAge: 5 * 60, // 5 minutes
+        },
+    };
+};
+
+const createAuthConfig = (baseURL = ""): any => ({
     appName: "CourseLit",
     secret: process.env.AUTH_SECRET,
+    ...(baseURL ? { baseURL } : {}),
     user: {
         additionalFields: {
             userId: {
@@ -259,24 +284,17 @@ const config: any = {
         }
         return origins;
     },
+    session: getSessionConfig(),
+});
+
+const authInstances = new Map<string, ReturnType<typeof betterAuth>>();
+
+export const getAuth = (baseURL = "") => {
+    if (!authInstances.has(baseURL)) {
+        authInstances.set(baseURL, betterAuth(createAuthConfig(baseURL)));
+    }
+
+    return authInstances.get(baseURL)!;
 };
 
-if (process.env.SESSION_COOKIE_CACHE_MAX_AGE) {
-    if (parseInt(process.env.SESSION_COOKIE_CACHE_MAX_AGE) > 0) {
-        config.session = {
-            cookieCache: {
-                enabled: true,
-                maxAge: parseInt(process.env.SESSION_COOKIE_CACHE_MAX_AGE) * 60,
-            },
-        };
-    }
-} else {
-    config.session = {
-        cookieCache: {
-            enabled: true,
-            maxAge: 5 * 60, // 5 minutes
-        },
-    };
-}
-
-export const auth = betterAuth(config);
+export const auth = getAuth();

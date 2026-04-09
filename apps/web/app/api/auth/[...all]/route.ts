@@ -1,10 +1,11 @@
 import { als } from "@/async-local-storage";
 import { getBackendAddress } from "@/app/actions";
-import { auth } from "@/auth";
+import { getAuth } from "@/auth";
 import { toNextJsHandler } from "better-auth/next-js";
 
-const handlers = toNextJsHandler(auth);
+const getHandlers = (baseURL: string) => toNextJsHandler(getAuth(baseURL));
 
+// This is needed to prevent creating URLs like https://0.0.0.0:3000/api/auth/sign-in/sso
 export const rewriteAuthRequestOrigin = async (req: Request) => {
     const publicOrigin = await getBackendAddress(req.headers);
     const currentUrl = new URL(req.url);
@@ -23,6 +24,7 @@ export const rewriteAuthRequestOrigin = async (req: Request) => {
 
 export const POST = async (req: Request) => {
     const rewrittenReq = await rewriteAuthRequestOrigin(req);
+    const handlers = getHandlers(new URL(rewrittenReq.url).origin);
     const map = new Map();
     map.set("domain", req.headers.get("domain"));
     map.set("domainId", req.headers.get("domainId"));
@@ -31,6 +33,7 @@ export const POST = async (req: Request) => {
 
 export const GET = async (req: Request) => {
     const rewrittenReq = await rewriteAuthRequestOrigin(req);
+    const handlers = getHandlers(new URL(rewrittenReq.url).origin);
     const map = new Map();
     map.set("domain", req.headers.get("domain"));
     map.set("domainId", req.headers.get("domainId"));
