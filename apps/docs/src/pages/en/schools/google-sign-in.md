@@ -19,7 +19,7 @@ Using Google sign-in, you can let customers authenticate with their Google accou
     - **Authorized redirect URI**: Usually `https://<school-url>/api/auth/sso/callback/google`
     - **Authorized JavaScript origin**: Usually `https://<school-url>`
 
-4. Open the [Google Cloud Console](https://console.cloud.google.com/) and create or select the project you want to use.
+4. Open the <a href="https://console.cloud.google.com/auth" target="_blank">Google Cloud Console</a> and create or select the project you want to use.
 
 5. If prompted, configure the OAuth consent screen first:
 
@@ -27,7 +27,9 @@ Using Google sign-in, you can let customers authenticate with their Google accou
     - Add the app name, support email, and authorized domain details requested by Google.
     - If your app is in testing mode, add the Google accounts you want to use as test users.
 
-6. In Google Cloud Console, go to `APIs & Services` -> `Credentials` and click `Create Credentials` -> `OAuth client ID`.
+6. In Google Auth Platform, go to `Clients`. Click on `Create client`.
+
+    ![Google Auth app](/assets/schools/google-project-create-client.png)
 
 7. Select `Web application` as the application type.
 
@@ -43,6 +45,8 @@ Using Google sign-in, you can let customers authenticate with their Google accou
 11. Click `Save`.
 
 12. Go back to the `Login providers` screen and enable the Google provider.
+
+![CourseLit google login provider](/assets/schools/google-login-checkbox.png)
 
 ## Customer's experience
 
