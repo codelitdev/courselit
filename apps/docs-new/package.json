@@ -3,12 +3,13 @@
     "version": "0.0.0",
     "private": true,
     "scripts": {
-        "build": "next build --webpack",
+        "build": "next build --webpack && node scripts/sync-content.mjs",
         "dev": "next dev --turbo",
         "start": "next start",
         "postinstall": "fumadocs-mdx"
     },
     "dependencies": {
+        "@orama/core": "^1.2.19",
         "fumadocs-core": "16.7.1",
         "fumadocs-mdx": "14.2.10",
         "fumadocs-openapi": "^10.4.1",
