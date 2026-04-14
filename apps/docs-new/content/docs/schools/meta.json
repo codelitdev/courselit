@@ -1,13 +1,13 @@
 {
-  "title": "School",
-  "icon": "ShieldCheck",
-  "pages": [
-    "introduction",
-    "create",
-    "add-custom-domain",
-    "set-up-payments",
-    "sso",
-    "google-sign-in",
-    "delete"
-  ]
+    "title": "School",
+    "icon": "ShieldCheck",
+    "pages": [
+        "introduction",
+        "create",
+        "add-custom-domain",
+        "set-up-payments",
+        "sso",
+        "google-sign-in",
+        "delete"
+    ]
 }

@@ -10,7 +10,7 @@ const tempFile = path.join(outputDir, `openapi.${process.pid}.tmp`);
 
 await mkdir(outputDir, { recursive: true });
 await writeFile(tempFile, `${JSON.stringify(openapiSpec, null, 2)}\n`, {
-  mode: 0o600,
+    mode: 0o600,
 });
 await rename(tempFile, outputFile);
 

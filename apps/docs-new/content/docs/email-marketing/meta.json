@@ -1,12 +1,12 @@
 {
-  "title": "Email marketing and automation",
-  "icon": "Mail",
-  "pages": [
-    "introduction",
-    "mail-access-request",
-    "broadcasts",
-    "sequences",
-    "templates",
-    "analytics"
-  ]
+    "title": "Email marketing and automation",
+    "icon": "Mail",
+    "pages": [
+        "introduction",
+        "mail-access-request",
+        "broadcasts",
+        "sequences",
+        "templates",
+        "analytics"
+    ]
 }

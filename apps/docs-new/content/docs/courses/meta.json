@@ -1,16 +1,16 @@
 {
-  "title": "Online courses",
-  "icon": "BookOpen",
-  "pages": [
-    "introduction",
-    "create",
-    "publish",
-    "set-a-price-for-product",
-    "visibility",
-    "add-content",
-    "section",
-    "invite-customers",
-    "certificates",
-    "reports"
-  ]
+    "title": "Online courses",
+    "icon": "BookOpen",
+    "pages": [
+        "introduction",
+        "create",
+        "publish",
+        "set-a-price-for-product",
+        "visibility",
+        "add-content",
+        "section",
+        "invite-customers",
+        "certificates",
+        "reports"
+    ]
 }

@@ -1,13 +1,13 @@
 {
-  "title": "Users",
-  "icon": "User",
-  "pages": [
-    "introduction",
-    "manage",
-    "notifications",
-    "permissions",
-    "filters",
-    "segments",
-    "delete"
-  ]
+    "title": "Users",
+    "icon": "User",
+    "pages": [
+        "introduction",
+        "manage",
+        "notifications",
+        "permissions",
+        "filters",
+        "segments",
+        "delete"
+    ]
 }
