@@ -1,0 +1,203 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+@import "fumadocs-openapi/css/preset.css";
+
+.chip {
+    background: color-mix(in oklab, var(--color-fd-primary) 14%, transparent);
+    border-radius: 9999px;
+    color: var(--color-fd-primary);
+    display: inline-flex;
+    font-size: 0.75rem;
+    margin-left: 0.4rem;
+    padding: 0.1rem 0.5rem;
+    vertical-align: middle;
+}
+
+/* ── Unified doc-card system ── */
+
+.doc-card-grid {
+    align-items: stretch;
+    display: grid;
+    gap: 1rem;
+    margin: 1.5rem 0 2rem;
+}
+
+/* Column presets */
+.doc-card-grid--4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+.doc-card-grid--3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 1024px) {
+    .doc-card-grid--4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .doc-card-grid--3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .doc-card-grid--4,
+    .doc-card-grid--3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* The card */
+.doc-card {
+    --card-accent: 100 116 139;
+    background: color-mix(
+        in srgb,
+        var(--color-fd-card) 97%,
+        rgb(var(--card-accent))
+    );
+    border: 1px solid var(--color-fd-border);
+    border-radius: 1.5rem;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    padding: 1.35rem;
+    position: relative;
+    text-decoration: none;
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+/* Grid-pattern overlay */
+.doc-card::before {
+    background-image:
+        linear-gradient(
+            color-mix(in srgb, rgb(var(--card-accent)) 18%, transparent) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            color-mix(in srgb, rgb(var(--card-accent)) 18%, transparent) 1px,
+            transparent 1px
+        );
+    background-size: 20px 20px;
+    content: "";
+    inset: 0;
+    mask-image: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.55),
+        rgba(0, 0, 0, 0.03)
+    );
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.55),
+        rgba(0, 0, 0, 0.03)
+    );
+    pointer-events: none;
+    position: absolute;
+}
+
+.doc-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+.doc-card:hover {
+    border-color: color-mix(
+        in srgb,
+        var(--color-fd-border) 40%,
+        rgb(var(--card-accent))
+    );
+    box-shadow: 0 4px 24px
+        color-mix(in srgb, transparent 88%, rgb(var(--card-accent)));
+    transform: translateY(-2px);
+}
+
+/* Icon badge */
+.doc-card-badge {
+    align-items: center;
+    background: color-mix(
+        in srgb,
+        var(--color-fd-card) 80%,
+        rgb(var(--card-accent))
+    );
+    border: 1px solid
+        color-mix(in srgb, var(--color-fd-border) 50%, rgb(var(--card-accent)));
+    border-radius: 0.875rem;
+    color: rgb(var(--card-accent));
+    display: inline-flex;
+    flex-shrink: 0;
+    height: 2.75rem;
+    justify-content: center;
+    transition: transform 0.2s ease;
+    width: 2.75rem;
+}
+
+.doc-card:hover .doc-card-badge {
+    transform: scale(1.04);
+}
+
+/* Typography */
+.doc-card h3 {
+    color: var(--color-fd-foreground);
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    margin: 0.75rem 0 0.45rem;
+}
+
+.doc-card p {
+    color: var(--color-fd-muted-foreground);
+    flex-grow: 1;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Accent palette */
+.doc-card[data-accent="blue"] {
+    --card-accent: 96 165 250;
+}
+.doc-card[data-accent="purple"] {
+    --card-accent: 168 85 247;
+}
+.doc-card[data-accent="pink"] {
+    --card-accent: 236 72 153;
+}
+.doc-card[data-accent="teal"] {
+    --card-accent: 20 184 166;
+}
+.doc-card[data-accent="amber"] {
+    --card-accent: 245 158 11;
+}
+.doc-card[data-accent="indigo"] {
+    --card-accent: 129 140 248;
+}
+.doc-card[data-accent="rose"] {
+    --card-accent: 244 63 94;
+}
+.doc-card[data-accent="orange"] {
+    --card-accent: 249 115 22;
+}
+.doc-card[data-accent="fuchsia"] {
+    --card-accent: 217 70 239;
+}
+.doc-card[data-accent="cyan"] {
+    --card-accent: 6 182 212;
+}
+.doc-card[data-accent="slate"] {
+    --card-accent: 100 116 139;
+}
+.doc-card[data-accent="violet"] {
+    --card-accent: 139 92 246;
+}
+.doc-card[data-accent="green"] {
+    --card-accent: 34 197 94;
+}
+.doc-card[data-accent="sky"] {
+    --card-accent: 14 165 233;
+}

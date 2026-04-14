@@ -3,6 +3,8 @@
     "version": "0.73.10",
     "private": true,
     "scripts": {
+        "openapi:generate": "node ./openapi/generate-openapi.mjs",
+        "prebuild": "pnpm run openapi:generate",
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
@@ -99,6 +101,7 @@
         "slugify": "^1.6.5",
         "sonner": "^2.0.7",
         "stripe": "^17.5.0",
+        "swagger-ui-react": "^5.28.1",
         "tailwind-merge": "^2.5.4",
         "tailwindcss-animate": "^1.0.7",
         "xml2js": "^0.6.2",

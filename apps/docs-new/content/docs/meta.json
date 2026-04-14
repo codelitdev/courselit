@@ -1,0 +1,18 @@
+{
+  "title": "CourseLit Docs",
+  "pages": [
+    "index",
+    "getting-started",
+    "courses",
+    "downloads",
+    "communities",
+    "email-marketing",
+    "website",
+    "blog",
+    "schools",
+    "users",
+    "developers",
+    "self-hosting",
+    "api-reference"
+  ]
+}

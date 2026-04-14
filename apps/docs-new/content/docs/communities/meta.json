@@ -1,0 +1,12 @@
+{
+  "title": "Communities",
+  "icon": "UsersRound",
+  "pages": [
+    "introduction",
+    "create",
+    "manage-members",
+    "manage-reported-content",
+    "grant-access-to-additional-products",
+    "delete"
+  ]
+}
