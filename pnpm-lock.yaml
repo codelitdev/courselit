@@ -611,9 +611,6 @@ importers:
       '@courselit/utils':
         specifier: workspace:^
         version: link:../utils
-      '@types/jsonwebtoken':
-        specifier: ^9.0.10
-        version: 9.0.10
       jsonwebtoken:
         specifier: ^9.0.3
         version: 9.0.3
@@ -621,6 +618,9 @@ importers:
         specifier: ^8.13.1
         version: 8.14.0(@aws-sdk/credential-providers@3.797.0)(socks@2.8.4)
     devDependencies:
+      '@types/jsonwebtoken':
+        specifier: ^9.0.10
+        version: 9.0.10
       '@types/node':
         specifier: ^25.6.0
         version: 25.6.0
