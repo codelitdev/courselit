@@ -49,11 +49,16 @@ jobs:
       - name: Build docs site
         env:
           NEXT_PUBLIC_BASE_PATH: ${{ steps.pages.outputs.base_path }}
-          NEXT_PUBLIC_ORAMA_DATASOURCE_ID: "bd757e41-d4a8-43c2-9b7d-40d88bdcfb7a"
           NEXT_PUBLIC_ORAMA_PROJECT_ID: "f3d9449b-526d-4f63-a44c-b1e3f0916086"
           NEXT_PUBLIC_ORAMA_API_KEY: "c1_lixizm9uo-hnVzvlPbb9QJOyUoqHQDuQWIUCpLbhCCejzSV4Ztf-WAbP2Vq"
-          ORAMA_PRIVATE_API_KEY: ${{ secrets.ORAMA_PRIVATE_API_KEY }}
         run: pnpm --filter @courselit/docs-new build
+
+      - name: Sync Orama search index
+        env:
+          NEXT_PUBLIC_ORAMA_DATASOURCE_ID: "bd757e41-d4a8-43c2-9b7d-40d88bdcfb7a"
+          NEXT_PUBLIC_ORAMA_PROJECT_ID: "f3d9449b-526d-4f63-a44c-b1e3f0916086"
+          ORAMA_PRIVATE_API_KEY: ${{ secrets.ORAMA_PRIVATE_API_KEY }}
+        run: pnpm --filter @courselit/docs-new search:sync
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

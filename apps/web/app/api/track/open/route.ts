@@ -5,7 +5,7 @@ import UserModel from "@models/User";
 import SequenceModel from "@models/Sequence";
 import { Constants, Sequence, User } from "@courselit/common-models";
 import { error } from "@/services/logger";
-import { jwtUtils } from "@courselit/utils";
+import { jwtUtils } from "@courselit/common-logic";
 
 export const dynamic = "force-dynamic";
 

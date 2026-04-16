@@ -9,31 +9,38 @@ const requiredEnvVars = [
     "ORAMA_PRIVATE_API_KEY",
 ];
 
-const missingEnvVars = requiredEnvVars.filter((key) => !process.env[key]);
-
-if (missingEnvVars.length > 0) {
-    throw new Error(
-        `[orama] Missing required env vars: ${missingEnvVars.join(", ")}`,
-    );
-}
-
 const filePath = path.join(".next", "server", "app", "static.json.body");
 
 async function main() {
-    const orama = new OramaCloud({
-        projectId: process.env.NEXT_PUBLIC_ORAMA_PROJECT_ID,
-        apiKey: process.env.ORAMA_PRIVATE_API_KEY,
-    });
+    const missingEnvVars = requiredEnvVars.filter((key) => !process.env[key]);
 
-    const content = await fs.readFile(filePath, "utf8");
-    const records = JSON.parse(content);
+    if (missingEnvVars.length > 0) {
+        console.warn(
+            `[orama] Skipping sync because required env vars are missing: ${missingEnvVars.join(", ")}`,
+        );
+        return;
+    }
 
-    await sync(orama, {
-        index: process.env.NEXT_PUBLIC_ORAMA_DATASOURCE_ID,
-        documents: records,
-    });
+    try {
+        const orama = new OramaCloud({
+            projectId: process.env.NEXT_PUBLIC_ORAMA_PROJECT_ID,
+            apiKey: process.env.ORAMA_PRIVATE_API_KEY,
+        });
 
-    console.log(`[orama] search updated: ${records.length} records`);
+        const content = await fs.readFile(filePath, "utf8");
+        const records = JSON.parse(content);
+
+        await sync(orama, {
+            index: process.env.NEXT_PUBLIC_ORAMA_DATASOURCE_ID,
+            documents: records,
+        });
+
+        console.log(`[orama] search updated: ${records.length} records`);
+    } catch (error) {
+        const message =
+            error instanceof Error ? error.message : "Unknown error";
+        console.warn(`[orama] Sync failed, skipping: ${message}`);
+    }
 }
 
 void main();
