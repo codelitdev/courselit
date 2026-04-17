@@ -49,6 +49,7 @@ jobs:
       - name: Build docs site
         env:
           NEXT_PUBLIC_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          POSTHOG_KEY: ${{ secrets.POSTHOG_KEY }}
           NEXT_PUBLIC_ORAMA_PROJECT_ID: ${{ secrets.ORAMA_PROJECT_ID }} 
           NEXT_PUBLIC_ORAMA_API_KEY: ${{ secrets.ORAMA_API_KEY }}
         run: pnpm --filter @courselit/docs-new build
