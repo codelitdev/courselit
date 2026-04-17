@@ -40,6 +40,8 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -49,7 +51,7 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Install Packages
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Create and publish versions
         id: changesets
