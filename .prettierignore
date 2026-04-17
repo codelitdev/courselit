@@ -3,3 +3,7 @@
 
 # Ignore build files
 dist/
+**/dist/
+out/_next/
+**/out/
+**/out/_next/
