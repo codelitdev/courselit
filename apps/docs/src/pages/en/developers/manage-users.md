@@ -52,8 +52,6 @@ Here are the possible values for the `permissions` array:
 - `site:manage`
 - `setting:manage`
 - `user:manage`
-- `community:post`
-- `community:comment`
 - `community:manage`
 
 ### Response
@@ -74,7 +72,7 @@ curl -X POST https://yourdomain.com/api/user \
   "apikey": "your-api-key",
   "email": "user@example.com",
   "name": "User Name",
-  "permissions": ["community:post", "community:comment"],
+  "permissions": ["course:manage", "community:manage"],
   "subscribedToUpdates": true
 }'
 ```

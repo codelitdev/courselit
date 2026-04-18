@@ -7,8 +7,6 @@ const permissions = [
     "site:manage",
     "setting:manage",
     "user:manage",
-    "community:post",
-    "community:comment",
     "community:manage",
 ];
 
@@ -26,16 +24,11 @@ export const userApiOpenApi = {
                 tags: ["Users"],
                 summary: "Create a user",
                 description:
-                    "Creates a user in the current school. Provide the school domain in the `domain` header and authenticate with `x-api-key`. The legacy `apikey` field in the request body is still accepted for backward compatibility.",
+                    "Creates a user in the current school. Call this endpoint on the school domain, for example `https://school.courselit.app/api/user`, and authenticate with `x-api-key`. The legacy `apikey` field in the request body is still accepted for backward compatibility.",
                 operationId: "createUser",
                 security: [
                     {
                         ApiKeyAuth: [],
-                    },
-                ],
-                parameters: [
-                    {
-                        $ref: "#/components/parameters/DomainHeader",
                     },
                 ],
                 requestBody: {
@@ -51,7 +44,7 @@ export const userApiOpenApi = {
                                     value: {
                                         email: "student@example.com",
                                         name: "Student Example",
-                                        permissions: ["community:post"],
+                                        permissions: ["community:manage"],
                                         subscribedToUpdates: true,
                                     },
                                 },
@@ -163,16 +156,11 @@ export const userApiOpenApi = {
                 tags: ["Users"],
                 summary: "Update a user",
                 description:
-                    "Updates a user in the current school. Provide the school domain in the `domain` header and authenticate with `x-api-key`. The legacy `apikey` field in the request body is still accepted for backward compatibility.",
+                    "Updates a user in the current school. Call this endpoint on the school domain, for example `https://school.courselit.app/api/user`, and authenticate with `x-api-key`. CourseLit proxy infrastructure resolves the school and injects the internal `domain` header automatically. The legacy `apikey` field in the request body is still accepted for backward compatibility.",
                 operationId: "updateUser",
                 security: [
                     {
                         ApiKeyAuth: [],
-                    },
-                ],
-                parameters: [
-                    {
-                        $ref: "#/components/parameters/DomainHeader",
                     },
                 ],
                 requestBody: {
@@ -294,19 +282,6 @@ export const userApiOpenApi = {
         },
     },
     components: {
-        parameters: {
-            DomainHeader: {
-                name: "domain",
-                in: "header",
-                required: true,
-                description:
-                    "The CourseLit school domain that owns the API key and target user.",
-                schema: {
-                    type: "string",
-                    example: "school.example.com",
-                },
-            },
-        },
         schemas: {
             CreateUserRequest: {
                 type: "object",

@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createOpenAPI } from "fumadocs-openapi/server";
@@ -9,5 +10,19 @@ const openapiSpecPath = path.resolve(
 );
 
 export const openapi = createOpenAPI({
-    input: [openapiSpecPath],
+    input: () => {
+        const spec = JSON.parse(fs.readFileSync(openapiSpecPath, "utf8"));
+
+        return {
+            [openapiSpecPath]: {
+                ...spec,
+                servers: [
+                    {
+                        url: "https://school.courselit.app",
+                        description: "CourseLit school origin",
+                    },
+                ],
+            },
+        };
+    },
 });

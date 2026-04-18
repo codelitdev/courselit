@@ -1,6 +1,8 @@
 import { userApiOpenApi } from "../app/api/user/openapi.mjs";
 
-const routeSpecs = [userApiOpenApi];
+const routeSpecs = [
+    userApiOpenApi,
+];
 
 function mergeOpenApiFragments(fragments) {
     return fragments.reduce(
