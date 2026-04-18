@@ -14,6 +14,7 @@ jest.mock("@/lib/trigger-sequences", () => ({
     triggerSequences: jest.fn(),
 }));
 
+import mongoose from "mongoose";
 import { finalizeUserCreation, getCertificate } from "../logic";
 import CertificateModel from "@models/Certificate";
 import UserModel from "@models/User";
@@ -35,7 +36,7 @@ const recordActivityMock = recordActivity as jest.Mock;
 const triggerSequencesMock = triggerSequences as jest.Mock;
 
 describe("finalizeUserCreation", () => {
-    const domainId = "domain-123" as any;
+    const domainId = new mongoose.Types.ObjectId();
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -92,7 +93,7 @@ describe("finalizeUserCreation", () => {
             subscribedToUpdates: false,
         } as any;
 
-        await finalizeUserCreation(user, domainId);
+        await finalizeUserCreation(user, domainId.toString());
 
         expect(seedNotificationPreferencesForUserMock).toHaveBeenCalledWith({
             domain: domainId,
@@ -112,11 +113,33 @@ describe("finalizeUserCreation", () => {
             subscribedToUpdates: true,
         } as any;
 
-        await finalizeUserCreation(user, domainId);
+        await finalizeUserCreation(user, domainId.toString());
 
         expect(triggerSequencesMock).toHaveBeenCalledWith({
             user: {
                 ...user,
+                domain: domainId,
+            },
+            event: Constants.EventType.SUBSCRIBER_ADDED,
+        });
+    });
+
+    it("should handle mongoose document users with explicit domain override", async () => {
+        const user = Object.create(mongoose.Document.prototype) as any;
+        user.userId = "user-123";
+        user.subscribedToUpdates = true;
+        user.toObject = jest.fn().mockReturnValue({
+            userId: "user-123",
+            subscribedToUpdates: true,
+        });
+
+        await finalizeUserCreation(user, domainId);
+
+        expect(user.toObject).toHaveBeenCalled();
+        expect(triggerSequencesMock).toHaveBeenCalledWith({
+            user: {
+                userId: "user-123",
+                subscribedToUpdates: true,
                 domain: domainId,
             },
             event: Constants.EventType.SUBSCRIBER_ADDED,
