@@ -5,7 +5,7 @@ description: Learn how to integrate with your CourseLit school using the API
 
 ## Introduction
 
-CourseLit provides a powerful API that allows you to manage your school programmatically. This guide will help you understand how to integrate with the CourseLit API.
+CourseLit provides an API that allows you to manage your school programmatically. Start here to understand how to authenticate and prepare your integration.
 
 You can also explore the interactive [API Reference](/api-reference).
 
@@ -22,68 +22,13 @@ To interact with the CourseLit API, you need an API key. Follow these steps to o
 
 1. Log in to your CourseLit admin account.
 2. Navigate to the dashboard.
-3. Go to the `Settings > API Keys` section and generate a new API key.
+3. Go to the `Settings > Miscellaneous > API Keys` section and generate a new API key.
 
 ## Setting Up the Environment
 
-You need to set up your environment variables to store your CourseLit server URL and API key securely. Here is an example of how to do it in JavaScript:
+Store your CourseLit server URL and API key securely in environment variables used by your application.
 
-```javascript
-const courselitServer = process.env.COURSELIT_SERVER;
-const courselitApikey = process.env.COURSELIT_APIKEY;
-
-export async function createUser({ email }) {
-    if (!courselitServer || !courselitApikey) {
-        return;
-    }
-
-    const endPoint = `${courselitServer}/api/user`;
-
-    const response = await fetch(endPoint, {
-        method: "POST",
-        headers: {
-            "content-type": "application/json",
-        },
-        body: JSON.stringify({
-            email,
-            apikey: courselitApikey,
-        }),
-    });
-
-    let responseBody = await response.json();
-
-    if (response.ok && !responseBody.error) {
-        return response;
-    } else {
-        throw new Error(
-            `${responseBody.error}, ${response.status}, ${response.statusText}, ${endPoint}`,
-        );
-    }
-}
-```
-
-### Explanation
-
-1. **courselitServer**: This should be set to your CourseLit school's URL.
-2. **courselitApikey**: This should be set to the API key you generated from the dashboard.
-
-## Example Usage
-
-Here is an example of how to use the `createUser` function:
-
-```javascript
-import { createUser } from "./path-to-your-function";
-
-const email = "user@example.com";
-
-createUser({ email })
-    .then((response) => {
-        console.log("User created successfully:", response);
-    })
-    .catch((error) => {
-        console.error("Error creating user:", error);
-    });
-```
+For endpoint details, request and response schemas, and example requests, use the [API Reference](/api-reference).
 
 ## Need Help?
 

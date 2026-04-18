@@ -11,8 +11,8 @@
         "blog",
         "schools",
         "users",
-        "developers",
         "self-hosting",
+        "developers",
         "api-reference"
     ]
 }

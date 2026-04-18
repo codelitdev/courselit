@@ -21,7 +21,7 @@ To interact with the CourseLit API, you need an API key. Follow these steps to o
 
 1. Log in to your CourseLit admin account.
 2. Navigate to the dashboard.
-3. Go to the `Settings > API Keys` section and generate a new API key.
+3. Go to the `Settings > Miscellaneous > API Keys` section and generate a new API key.
 
 ## Setting Up the Environment
 
