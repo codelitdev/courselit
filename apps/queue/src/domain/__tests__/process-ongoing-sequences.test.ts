@@ -728,7 +728,7 @@ describe("processOngoingSequence", () => {
     describe("Mail rendering", () => {
         it("should render email content with Liquid templates", async () => {
             // Create a sequence with Liquid template variables in the email content
-            const sequenceWithTemplates = (await (SequenceModel.create as any)({
+            await (SequenceModel.create as any)({
                 domain: testDomain._id,
                 sequenceId: "sequence-templates",
                 creatorId: TEST_CREATOR_ID,
@@ -795,7 +795,7 @@ describe("processOngoingSequence", () => {
                         failed: [],
                     },
                 },
-            })) as any;
+            });
 
             const ongoingSeq = await OngoingSequenceModel.create({
                 domain: testDomain._id,
