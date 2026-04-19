@@ -2,7 +2,7 @@ name: Deploy new documentation to GitHub Pages
 
 on:
   push:
-    branches: ["**"]
+    branches: [ main ]
     paths:
       - "apps/docs-new/**"
       - "apps/web/openapi/**"
