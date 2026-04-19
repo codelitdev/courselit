@@ -11,7 +11,10 @@ export async function validateDomainAndApiKey(req: NextRequest) {
     }
 
     const body = await req.json();
-    const apikey = body.apikey;
+    const apikey =
+        req.headers.get("x-api-key") ??
+        req.headers.get("X-API-Key") ??
+        body.apikey;
     if (!apikey) {
         return { error: { message: "Bad request", status: 400 } };
     }

@@ -24,6 +24,13 @@ nextConfig.settings = {
 
 module.exports = defineConfig([
     {
+        ignores: [
+            "apps/docs-new/.next/**",
+            "apps/docs-new/out/**",
+            "apps/docs-new/.source/**",
+        ],
+    },
+    {
         languageOptions: {
             globals: {
                 ...globals.node,
@@ -45,6 +52,12 @@ module.exports = defineConfig([
 
             "unused-imports/no-unused-imports": "error",
             "@typescript-eslint/ban-ts-comment": "off",
+        },
+    },
+    {
+        files: ["apps/docs-new/scripts/**/*.mjs"],
+        rules: {
+            "no-console": "off",
         },
     },
     nextConfig,

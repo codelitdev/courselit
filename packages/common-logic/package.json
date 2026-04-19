@@ -33,19 +33,22 @@
         "url": "https://github.com/codelitdev/courselit/issues"
     },
     "devDependencies": {
+        "@types/jsonwebtoken": "^9.0.10",
+        "@types/node": "^25.6.0",
         "@typescript-eslint/eslint-plugin": "^8.46.0",
         "@typescript-eslint/parser": "^8.46.0",
-        "tsconfig": "workspace:^",
         "eslint": "^8.12.0",
         "rimraf": "^4.1.1",
+        "tsconfig": "workspace:^",
         "tsup": "6.6.0",
         "typescript": "^4.9.5"
     },
     "dependencies": {
-        "@courselit/orm-models": "workspace:^",
         "@courselit/common-models": "workspace:^",
-        "@courselit/utils": "workspace:^",
         "@courselit/email-editor": "workspace:^",
+        "@courselit/orm-models": "workspace:^",
+        "@courselit/utils": "workspace:^",
+        "jsonwebtoken": "^9.0.3",
         "mongoose": "^8.13.1"
     }
 }

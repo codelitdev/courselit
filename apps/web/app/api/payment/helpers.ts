@@ -7,8 +7,6 @@ import {
 } from "@courselit/common-models";
 import CommunityModel from "@models/Community";
 import mongoose from "mongoose";
-import { addIncludedProductsMemberships } from "@/graphql/paymentplans/logic";
-import { runPostMembershipTasks } from "@/graphql/users/logic";
 
 export async function activateMembership(
     domain: Domain & { _id: mongoose.Types.ObjectId },
@@ -45,6 +43,9 @@ export async function activateMembership(
             paymentPlan.includedProducts &&
             paymentPlan.includedProducts.length > 0
         ) {
+            const { addIncludedProductsMemberships } = await import(
+                "@/graphql/paymentplans/logic"
+            );
             await addIncludedProductsMemberships({
                 domain: domain._id,
                 userId: membership.userId,
@@ -59,6 +60,9 @@ export async function activateMembership(
     await (membership as any).save();
 
     if (paymentPlan) {
+        const { runPostMembershipTasks } = await import(
+            "@/graphql/users/logic"
+        );
         await runPostMembershipTasks({
             domain: domain._id,
             membership,

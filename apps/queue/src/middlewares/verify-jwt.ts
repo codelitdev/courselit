@@ -1,4 +1,4 @@
-import { jwtUtils } from "@courselit/utils";
+import { jwtUtils } from "@courselit/common-logic";
 import { logger } from "../logger";
 import { captureError, getDomainId } from "../observability/posthog";
 

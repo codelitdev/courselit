@@ -5,7 +5,7 @@ import UserModel from "@models/User";
 import SequenceModel from "@models/Sequence";
 import { Constants, Sequence, User } from "@courselit/common-models";
 import { error } from "@/services/logger";
-import { jwtUtils } from "@courselit/utils";
+import { jwtUtils } from "@courselit/common-logic";
 
 export const dynamic = "force-dynamic";
 
@@ -53,14 +53,11 @@ export async function GET(req: NextRequest) {
             throw new Error(`Domain not found: ${domainName}`);
         }
 
-        const { searchParams } = new URL(req.url);
-        const d = searchParams.get("d");
-        if (!d) {
-            throw new Error("Missing data query parameter");
-        }
-
         const jwtSecret = getJwtSecret();
-        const payload = jwtUtils.verifyToken(d, jwtSecret);
+        const payload = jwtUtils.verifyToken(
+            req.nextUrl.searchParams.get("d") || "",
+            jwtSecret,
+        );
         const { userId, sequenceId, emailId } = payload as any;
         if (!userId || !sequenceId || !emailId) {
             throw new Error(

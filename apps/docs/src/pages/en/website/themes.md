@@ -35,45 +35,30 @@ System themes are pre-built themes that come with CourseLit. These themes are pr
 
 Currently, CourseLit offers the following system themes:
 
-<details>
-<summary>Classic (Default)</summary>
+### Classic (Default)
 
 A clean, professional theme with balanced typography and subtle colors
 ![Classic Theme Preview](/assets/pages/themes/classic-theme.png)
 
-</details>
-
-<details>
-<summary>Learning</summary>
+### Learning
 
 Optimized for educational content with enhanced readability
 ![Learning Theme Preview](/assets/pages/themes/learning-theme.png)
 
-</details>
-
-<details>
-<summary>Neobrutalism</summary>
+### Neobrutalism
 
 A bold, modern theme with strong typography and vibrant colors
 ![Neobrutalism Theme Preview](/assets/pages/themes/neo-brutalism-theme.png)
 
-</details>
-
-<details>
-<summary>Editorial</summary>
+### Editorial
 
 A sophisticated theme inspired by editorial design
 ![Editorial Theme Preview](/assets/pages/themes/editorial-theme.png)
 
-</details>
-
-<details>
-<summary>Midnight</summary>
+### Midnight
 
 A dark-focused theme with high contrast and dramatic elements
 ![Midnight Theme Preview](/assets/pages/themes/midnight-theme.png)
-
-</details>
 
 Each system theme can be used as-is or customized to match your brand identity.
 
@@ -116,65 +101,53 @@ The theme editor offers several categories of customization options:
 
 The color editor allows you to customize various aspects of your theme's color scheme:
 
-<details>
-<summary>Primary Colors</summary>
+#### Primary Colors
+
 Your main brand colors used for important actions and key elements
-</details>
 
-<details>
-<summary>Secondary Colors</summary>
+#### Secondary Colors
+
 Supporting colors that complement your primary colors
-</details>
 
-<details>
-<summary>Accent Colors</summary>
+#### Accent Colors
+
 Highlight colors for special elements and calls-to-action
-</details>
 
-<details>
-<summary>Base Colors</summary>
+#### Base Colors
+
 Fundamental colors for your website's background and text
-</details>
 
-<details>
-<summary>Card Colors</summary>
+#### Card Colors
+
 Colors for card components and content boxes
-</details>
 
-<details>
-<summary>Popover Colors</summary>
+#### Popover Colors
+
 Colors for floating menus and tooltips
-</details>
 
-<details>
-<summary>Muted Colors</summary>
+#### Muted Colors
+
 Subtle colors for less prominent elements
-</details>
 
-<details>
-<summary>Border & Input Colors</summary>
+#### Border & Input Colors
+
 Colors for borders and form fields
-</details>
 
-<details>
-<summary>Destructive Colors</summary>
+#### Destructive Colors
+
 Colors for error states and warning messages
-</details>
 
-<details>
-<summary>Chart Colors</summary>
+#### Chart Colors
+
 Colors for data visualization and graphs
-</details>
 
-<details>
-<summary>Sidebar Colors</summary>
+#### Sidebar Colors
+
 Colors for the navigation sidebar
-</details>
 
-<details>
-<summary>Shadow Styles</summary>
+#### Shadow Styles
+
 Customize shadow effects for depth and elevation
-</details>
 
 > **For Developers**: These settings correspond 1-to-1 to ShadCN's [CSS variables](https://ui.shadcn.com/docs/theming).
 
@@ -184,38 +157,30 @@ Customize shadow effects for depth and elevation
 
 The typography editor lets you customize text styles across your website. These are organized into categories:
 
-<details>
-<summary>Headers</summary>
+#### Headers
 
 - Header 1: Large titles for main page headings
 - Header 2: Medium titles for major sections
 - Header 3: Smaller titles for subsections
 - Header 4: Small titles for minor sections
 - Preheader: Introductory text that appears above headers
-      </details>
 
-<details>
-<summary>Subheaders</summary>
+#### Subheaders
 
 - Subheader 1: Primary subheaders for section introductions
 - Subheader 2: Secondary subheaders for supporting text
-      </details>
 
-<details>
-<summary>Body Text</summary>
+#### Body Text
 
 - Text 1: Main body text for content
 - Text 2: Secondary body text for supporting content
 - Caption: Small text for image captions and footnotes
-      </details>
 
-<details>
-<summary>Interactive Elements</summary>
+#### Interactive Elements
 
 - Link: Text for clickable links
 - Button: Text for buttons and calls-to-action
 - Input: Text for form fields and search boxes
-      </details>
 
 For each text style, you can customize:
 
@@ -232,8 +197,7 @@ For each text style, you can customize:
 
 CourseLit provides a carefully curated selection of professional fonts, organized into categories:
 
-<details>
-<summary>Sans Serif Fonts</summary>
+#### Sans Serif Fonts
 
 - **Inter**: A modern, clean font perfect for digital interfaces
 - **Open Sans**: A highly readable font designed for screen use
@@ -243,20 +207,16 @@ CourseLit provides a carefully curated selection of professional fonts, organize
 - **Mulish**: A geometric sans-serif with a modern feel
 - **Nunito**: A well-balanced font with rounded terminals
 - **Work Sans**: A clean, modern font with a geometric feel
-      </details>
 
-<details>
-<summary>Serif Fonts</summary>
+#### Serif Fonts
 
 - **Merriweather**: A serif font designed for comfortable reading
 - **Alegreya**: A serif font with a calligraphic feel
 - **Playfair Display**: An elegant serif font for headings
 - **Roboto Slab**: A serif variant of Roboto
 - **Source Serif 4**: A serif font designed for digital reading
-      </details>
 
-<details>
-<summary>Display Fonts</summary>
+#### Display Fonts
 
 - **Montserrat**: A geometric sans-serif with a modern feel
 - **Poppins**: A geometric sans-serif with a unique character
@@ -264,15 +224,12 @@ CourseLit provides a carefully curated selection of professional fonts, organize
 - **Rubik**: A sans-serif with a geometric feel
 - **Oswald**: A reworking of the classic style
 - **Bebas Neue**: A display font with a strong personality
-      </details>
 
-<details>
-<summary>Modern Fonts</summary>
+#### Modern Fonts
 
 - **Lato**: A sans-serif font with a warm feel
 - **PT Sans**: A font designed for public use
 - **Quicksand**: A display sans-serif with rounded terminals
-      </details>
 
 Each font is optimized for web use and includes multiple weights for flexibility in design. All fonts support Latin characters and are carefully selected for their readability and professional appearance.
 
@@ -282,37 +239,30 @@ Each font is optimized for web use and includes multiple weights for flexibility
 
 The interactives editor allows you to customize the appearance of interactive elements:
 
-<details>
-<summary>Button</summary>
+#### Button
 
 - Padding: Space around the button text (None to 9X Large)
 - Border style: Choose from None, Solid, Dashed, Dotted, Double, or Hidden
 - Shadow effects: From None to 2X Large
 - Custom styles: Add your own custom styles using [supported Tailwind classes](#supported-tailwind-classes)
 - Disabled state: How the button looks when it can't be clicked
-      </details>
 
-<details>
-<summary>Link</summary>
+#### Link
 
 - Padding: Space around the link text
 - Border style: Choose from various border styles
 - Text shadow: Add depth to your links
 - Custom styles: Add your own custom styles using [supported Tailwind classes](#supported-tailwind-classes)
 - Disabled state: How the link looks when it can't be clicked
-      </details>
 
-<details>
-<summary>Card</summary>
+#### Card
 
 - Padding: Space around the card content
 - Border style: Choose from various border styles
 - Shadow effects: Add depth to your cards
 - Custom styles: Add your own custom styles using [supported Tailwind classes](#supported-tailwind-classes)
-      </details>
 
-<details>
-<summary>Input</summary>
+#### Input
 
 - Border radius: Round the corners (None to Full)
 - Padding: Space inside the input field
@@ -320,7 +270,6 @@ The interactives editor allows you to customize the appearance of interactive el
 - Shadow effects: Add depth to your input fields
 - Custom styles: Add your own custom styles using [supported Tailwind classes](#supported-tailwind-classes)
 - Disabled state: How the input looks when it can't be used
-      </details>
 
 ### 4. Structure
 
@@ -328,18 +277,14 @@ The interactives editor allows you to customize the appearance of interactive el
 
 The structure editor lets you customize the layout of your pages, like section paddings and maximum page width.
 
-<details>
-<summary>Page</summary>
+#### Page
 
 - Maximum width options: - 2XL (42rem): Compact layout - 3XL (48rem): Standard layout - 4XL (56rem): Wide layout - 5XL (64rem): Extra wide layout - 6XL (72rem): Full width layout
-      </details>
 
-<details>
-<summary>Section</summary>
+#### Section
 
 - Horizontal padding: Space on the left and right sides (None to 9X Large)
 - Vertical padding: Space on the top and bottom (None to 9X Large)
-      </details>
 
 ## Publishing Changes
 
@@ -371,8 +316,7 @@ Note: Switching themes will affect your entire website's appearance. Make sure t
 
 When adding custom styles to interactive elements, you can use the following Tailwind classes:
 
-<details>
-<summary>Typography</summary>
+### Typography
 
 #### Font Sizes
 
@@ -387,10 +331,8 @@ When adding custom styles to interactive elements, you can use the following Tai
 - `text-6xl`: 6X large text
 - `text-7xl`: 7X large text
 - `text-8xl`: 8X large text
-      </details>
 
-<details>
-<summary>Padding</summary>
+### Padding
 
 #### Vertical Padding
 
@@ -399,10 +341,8 @@ When adding custom styles to interactive elements, you can use the following Tai
 #### Horizontal Padding
 
 - `px-4` to `px-20`: Horizontal padding from 1rem to 5rem
-      </details>
 
-<details>
-<summary>Colors</summary>
+### Colors
 
 #### Background Colors
 
@@ -422,10 +362,7 @@ When adding custom styles to interactive elements, you can use the following Tai
 
 Variants available: `hover`, `disabled`, `dark`
 
-</details>
-
-<details>
-<summary>Transitions</summary>
+### Transitions
 
 #### Transition Properties
 
@@ -454,10 +391,8 @@ Variants available: `hover`, `disabled`, `dark`
 - `ease-out`: Ease out
 - `ease-in-out`: Ease in and out
 - `ease-linear`: Linear
-      </details>
 
-<details>
-<summary>Transforms</summary>
+### Transforms
 
 #### Translate X
 
@@ -481,10 +416,8 @@ Variants available: `hover`, `disabled`, `dark`
 - `scale-110`: 110% scale
 - `scale-125`: 125% scale
 - `scale-150`: 150% scale
-      </details>
 
-<details>
-<summary>Shadows</summary>
+### Shadows
 
 - `shadow-sm`: Small shadow
 - `shadow-md`: Medium shadow
@@ -496,10 +429,7 @@ Variants available: `hover`, `disabled`, `dark`
 
 Variants available: `hover`, `dark`
 
-</details>
-
-<details>
-<summary>Borders</summary>
+### Borders
 
 - `border-solid`: Solid border
 - `border-dashed`: Dashed border
@@ -509,19 +439,13 @@ Variants available: `hover`, `dark`
 
 Variants available: `hover`
 
-</details>
-
-<details>
-<summary>Text Decoration</summary>
+### Text Decoration
 
 - `underline`: Underline text
 
 Variants available: `hover`
 
-</details>
-
-<details>
-<summary>Layout</summary>
+### Layout
 
 #### Maximum Width
 
@@ -532,8 +456,6 @@ Variants available: `hover`
 - `max-w-6xl`: 72rem
 
 Variants available: `lg`
-
-</details>
 
 > Note: All `hover` variants are available for interactive elements. `dark` mode variants are available for colors and shadows.
 

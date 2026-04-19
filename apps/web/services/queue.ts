@@ -1,5 +1,5 @@
 import { ActivityType } from "@courselit/common-models";
-import { jwtUtils } from "@courselit/utils";
+import { jwtUtils } from "@courselit/common-logic";
 import { error } from "./logger";
 import nodemailer from "nodemailer";
 import { responses } from "@/config/strings";

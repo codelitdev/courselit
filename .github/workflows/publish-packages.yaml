@@ -49,7 +49,7 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Install Packages
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Create and publish versions
         id: changesets

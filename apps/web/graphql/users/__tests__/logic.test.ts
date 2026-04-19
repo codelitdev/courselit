@@ -14,6 +14,7 @@ jest.mock("@/lib/trigger-sequences", () => ({
     triggerSequences: jest.fn(),
 }));
 
+import mongoose from "mongoose";
 import { finalizeUserCreation, getCertificate } from "../logic";
 import CertificateModel from "@models/Certificate";
 import UserModel from "@models/User";
@@ -35,7 +36,7 @@ const recordActivityMock = recordActivity as jest.Mock;
 const triggerSequencesMock = triggerSequences as jest.Mock;
 
 describe("finalizeUserCreation", () => {
-    const domainId = "domain-123" as any;
+    const domainId = new mongoose.Types.ObjectId();
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -92,7 +93,7 @@ describe("finalizeUserCreation", () => {
             subscribedToUpdates: false,
         } as any;
 
-        await finalizeUserCreation(user, domainId);
+        await finalizeUserCreation(user, domainId.toString());
 
         expect(seedNotificationPreferencesForUserMock).toHaveBeenCalledWith({
             domain: domainId,
@@ -112,11 +113,33 @@ describe("finalizeUserCreation", () => {
             subscribedToUpdates: true,
         } as any;
 
-        await finalizeUserCreation(user, domainId);
+        await finalizeUserCreation(user, domainId.toString());
 
         expect(triggerSequencesMock).toHaveBeenCalledWith({
             user: {
                 ...user,
+                domain: domainId,
+            },
+            event: Constants.EventType.SUBSCRIBER_ADDED,
+        });
+    });
+
+    it("should handle mongoose document users with explicit domain override", async () => {
+        const user = Object.create(mongoose.Document.prototype) as any;
+        user.userId = "user-123";
+        user.subscribedToUpdates = true;
+        user.toObject = jest.fn().mockReturnValue({
+            userId: "user-123",
+            subscribedToUpdates: true,
+        });
+
+        await finalizeUserCreation(user, domainId);
+
+        expect(user.toObject).toHaveBeenCalled();
+        expect(triggerSequencesMock).toHaveBeenCalledWith({
+            user: {
+                userId: "user-123",
+                subscribedToUpdates: true,
                 domain: domainId,
             },
             event: Constants.EventType.SUBSCRIBER_ADDED,
@@ -186,7 +209,7 @@ describe("Certificate generation", () => {
 
     it("should generate demo certificate when courseId is provided", async () => {
         // Create a test course
-        const testCourse = await CourseModel.create({
+        await CourseModel.create({
             courseId: "course-123",
             title: "Test Course",
             creatorId: "creator-123",
@@ -220,7 +243,7 @@ describe("Certificate generation", () => {
 
     it("should generate certificate with complete data", async () => {
         // Create test data
-        const testUser = await UserModel.create({
+        await UserModel.create({
             userId: "user-123",
             name: "John Doe",
             email: "john@example.com",
@@ -236,7 +259,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-123",
         });
 
-        const testCreator = await UserModel.create({
+        await UserModel.create({
             userId: "creator-123",
             name: "Jane Smith",
             email: "jane@example.com",
@@ -244,7 +267,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-creator",
         });
 
-        const testCourse = await CourseModel.create({
+        await CourseModel.create({
             courseId: "course-123",
             title: "Advanced Course",
             creatorId: "creator-123",
@@ -257,7 +280,7 @@ describe("Certificate generation", () => {
             slug: "advanced-course",
         });
 
-        const testTemplate = await CertificateTemplateModel.create({
+        await CertificateTemplateModel.create({
             templateId: "template-123",
             title: "Custom Certificate Title",
             subtitle: "Custom subtitle",
@@ -284,7 +307,7 @@ describe("Certificate generation", () => {
             domain: testDomain._id,
         });
 
-        const testCertificate = await CertificateModel.create({
+        await CertificateModel.create({
             certificateId: "cert-123",
             userId: "user-123",
             courseId: "course-123",
@@ -320,7 +343,7 @@ describe("Certificate generation", () => {
 
     it("should throw error when course is not found", async () => {
         // Create a certificate but no corresponding course
-        const testUser = await UserModel.create({
+        await UserModel.create({
             userId: "user-123",
             name: "John Doe",
             email: "john@example.com",
@@ -328,7 +351,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-user",
         });
 
-        const testCertificate = await CertificateModel.create({
+        await CertificateModel.create({
             certificateId: "cert-123",
             userId: "user-123",
             courseId: "nonexistent-course",
@@ -343,7 +366,7 @@ describe("Certificate generation", () => {
 
     it("should use fallback values when template is missing", async () => {
         // Create test data without template
-        const testUser = await UserModel.create({
+        await UserModel.create({
             userId: "user-123",
             name: "John Doe",
             email: "john@example.com",
@@ -352,7 +375,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-user",
         });
 
-        const testCreator = await UserModel.create({
+        await UserModel.create({
             userId: "creator-123",
             name: "Jane Smith",
             email: "jane@example.com",
@@ -360,7 +383,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-creator",
         });
 
-        const testCourse = await CourseModel.create({
+        await CourseModel.create({
             courseId: "course-123",
             title: "Test Course",
             creatorId: "creator-123",
@@ -373,7 +396,7 @@ describe("Certificate generation", () => {
             slug: "test-course-2",
         });
 
-        const testCertificate = await CertificateModel.create({
+        await CertificateModel.create({
             certificateId: "cert-123",
             userId: "user-123",
             courseId: "course-123",
@@ -402,7 +425,7 @@ describe("Certificate generation", () => {
 
     it("should use fallback values when template has partial data", async () => {
         // Create test data with partial template
-        const testUser = await UserModel.create({
+        await UserModel.create({
             userId: "user-123",
             name: "John Doe",
             email: "john@example.com",
@@ -411,7 +434,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-user",
         });
 
-        const testCreator = await UserModel.create({
+        await UserModel.create({
             userId: "creator-123",
             name: "Jane Smith",
             email: "jane@example.com",
@@ -419,7 +442,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-creator",
         });
 
-        const testCourse = await CourseModel.create({
+        await CourseModel.create({
             courseId: "course-123",
             title: "Test Course",
             creatorId: "creator-123",
@@ -432,7 +455,7 @@ describe("Certificate generation", () => {
             slug: "test-course-2",
         });
 
-        const testTemplate = await CertificateTemplateModel.create({
+        await CertificateTemplateModel.create({
             templateId: "template-partial-123",
             title: "Custom Title",
             subtitle: "Custom subtitle",
@@ -443,7 +466,7 @@ describe("Certificate generation", () => {
             domain: testDomain._id,
         });
 
-        const testCertificate = await CertificateModel.create({
+        await CertificateModel.create({
             certificateId: "cert-123",
             userId: "user-123",
             courseId: "course-123",
@@ -474,7 +497,7 @@ describe("Certificate generation", () => {
 
     it("should use user email as fallback when user name is missing", async () => {
         // Create test data with user having no name
-        const testUser = await UserModel.create({
+        await UserModel.create({
             userId: "user-123",
             name: null,
             email: "john@example.com",
@@ -483,7 +506,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-user",
         });
 
-        const testCreator = await UserModel.create({
+        await UserModel.create({
             userId: "creator-123",
             name: "Jane Smith",
             email: "jane@example.com",
@@ -491,7 +514,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-creator",
         });
 
-        const testCourse = await CourseModel.create({
+        await CourseModel.create({
             courseId: "course-123",
             title: "Test Course",
             creatorId: "creator-123",
@@ -504,7 +527,7 @@ describe("Certificate generation", () => {
             slug: "test-course-2",
         });
 
-        const testCertificate = await CertificateModel.create({
+        await CertificateModel.create({
             certificateId: "cert-123",
             userId: "user-123",
             courseId: "course-123",
@@ -519,7 +542,7 @@ describe("Certificate generation", () => {
 
     it("should use creator name as fallback when template signatureName is missing", async () => {
         // Create test data with template missing signatureName
-        const testUser = await UserModel.create({
+        await UserModel.create({
             userId: "user-123",
             name: "John Doe",
             email: "john@example.com",
@@ -528,7 +551,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-user",
         });
 
-        const testCreator = await UserModel.create({
+        await UserModel.create({
             userId: "creator-123",
             name: "Jane Smith",
             email: "jane@example.com",
@@ -536,7 +559,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-creator",
         });
 
-        const testCourse = await CourseModel.create({
+        await CourseModel.create({
             courseId: "course-123",
             title: "Test Course",
             creatorId: "creator-123",
@@ -549,7 +572,7 @@ describe("Certificate generation", () => {
             slug: "test-course-2",
         });
 
-        const testTemplate = await CertificateTemplateModel.create({
+        await CertificateTemplateModel.create({
             templateId: "template-no-signature-123",
             title: "Custom Title",
             subtitle: "Custom subtitle",
@@ -559,7 +582,7 @@ describe("Certificate generation", () => {
             domain: testDomain._id,
         });
 
-        const testCertificate = await CertificateModel.create({
+        await CertificateModel.create({
             certificateId: "cert-123",
             userId: "user-123",
             courseId: "course-123",
@@ -574,7 +597,7 @@ describe("Certificate generation", () => {
 
     it("should use domain logo as fallback when template logo is missing", async () => {
         // Create test data with template missing logo
-        const testUser = await UserModel.create({
+        await UserModel.create({
             userId: "user-123",
             name: "John Doe",
             email: "john@example.com",
@@ -583,7 +606,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-user",
         });
 
-        const testCreator = await UserModel.create({
+        await UserModel.create({
             userId: "creator-123",
             name: "Jane Smith",
             email: "jane@example.com",
@@ -591,7 +614,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-creator",
         });
 
-        const testCourse = await CourseModel.create({
+        await CourseModel.create({
             courseId: "course-123",
             title: "Test Course",
             creatorId: "creator-123",
@@ -604,7 +627,7 @@ describe("Certificate generation", () => {
             slug: "test-course-2",
         });
 
-        const testTemplate = await CertificateTemplateModel.create({
+        await CertificateTemplateModel.create({
             templateId: "template-no-logo-123",
             title: "Custom Title",
             subtitle: "Custom subtitle",
@@ -615,7 +638,7 @@ describe("Certificate generation", () => {
             domain: testDomain._id,
         });
 
-        const testCertificate = await CertificateModel.create({
+        await CertificateModel.create({
             certificateId: "cert-123",
             userId: "user-123",
             courseId: "course-123",
@@ -648,7 +671,7 @@ describe("Certificate generation", () => {
         } as any;
 
         // Create test data
-        const testUser = await UserModel.create({
+        await UserModel.create({
             userId: "user-123",
             name: "John Doe",
             email: "john@example.com",
@@ -657,7 +680,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-user",
         });
 
-        const testCreator = await UserModel.create({
+        await UserModel.create({
             userId: "creator-123",
             name: "Jane Smith",
             email: "jane@example.com",
@@ -665,7 +688,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-creator",
         });
 
-        const testCourse = await CourseModel.create({
+        await CourseModel.create({
             courseId: "course-123",
             title: "Test Course",
             creatorId: "creator-123",
@@ -678,7 +701,7 @@ describe("Certificate generation", () => {
             slug: "test-course-no-logo",
         });
 
-        const testTemplate = await CertificateTemplateModel.create({
+        await CertificateTemplateModel.create({
             templateId: "template-no-logo-domain-123",
             title: "Custom Title",
             subtitle: "Custom subtitle",
@@ -689,7 +712,7 @@ describe("Certificate generation", () => {
             domain: testDomainWithoutLogo._id,
         });
 
-        const testCertificate = await CertificateModel.create({
+        await CertificateModel.create({
             certificateId: "cert-123",
             userId: "user-123",
             courseId: "course-123",
@@ -708,7 +731,7 @@ describe("Certificate generation", () => {
     it("should handle missing creator gracefully", async () => {
         // Create test data with missing creator
         const uniqueId = Date.now();
-        const testUser = await UserModel.create({
+        await UserModel.create({
             userId: "user-123",
             name: "John Doe",
             email: "john@example.com",
@@ -717,7 +740,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-user",
         });
 
-        const testCourse = await CourseModel.create({
+        await CourseModel.create({
             courseId: "course-123",
             title: "Test Course",
             creatorId: "nonexistent-creator",
@@ -730,7 +753,7 @@ describe("Certificate generation", () => {
             slug: "test-course-edge-1",
         });
 
-        const testCertificate = await CertificateModel.create({
+        await CertificateModel.create({
             certificateId: `cert-missing-creator-${uniqueId}`,
             userId: "user-123",
             courseId: "course-123",
@@ -749,7 +772,7 @@ describe("Certificate generation", () => {
     it("should handle missing course pageId gracefully", async () => {
         // Create test data with course missing pageId
         const uniqueId = Date.now();
-        const testUser = await UserModel.create({
+        await UserModel.create({
             userId: "user-123",
             name: "John Doe",
             email: "john@example.com",
@@ -758,7 +781,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-user",
         });
 
-        const testCreator = await UserModel.create({
+        await UserModel.create({
             userId: "creator-123",
             name: "Jane Smith",
             email: "jane@example.com",
@@ -766,7 +789,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-creator",
         });
 
-        const testCourse = await CourseModel.create({
+        await CourseModel.create({
             courseId: "course-123",
             title: "Test Course",
             creatorId: "creator-123",
@@ -779,7 +802,7 @@ describe("Certificate generation", () => {
             slug: "test-course-edge-2",
         });
 
-        const testCertificate = await CertificateModel.create({
+        await CertificateModel.create({
             certificateId: `cert-missing-pageid-${uniqueId}`,
             userId: "user-123",
             courseId: "course-123",

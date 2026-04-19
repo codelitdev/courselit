@@ -1,0 +1,13 @@
+{
+    "title": "Website",
+    "icon": "PanelsTopLeft",
+    "pages": [
+        "introduction",
+        "create-page",
+        "sales-pages",
+        "edit",
+        "rich-text",
+        "blocks",
+        "themes"
+    ]
+}

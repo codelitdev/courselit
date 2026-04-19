@@ -447,8 +447,15 @@ export async function finalizeUserCreation(
     user: InternalUser,
     domainOverride?: mongoose.Types.ObjectId | string,
 ) {
-    const domain = domainOverride || user.domain;
-    const userWithDomain = { ...user, domain } as InternalUser;
+    const rawDomain = domainOverride || user.domain;
+    const domain =
+        typeof rawDomain === "string" && mongoose.isValidObjectId(rawDomain)
+            ? new mongoose.Types.ObjectId(rawDomain)
+            : rawDomain;
+    const userWithDomain = {
+        ...(user instanceof mongoose.Document ? user.toObject() : user),
+        domain,
+    } as InternalUser;
 
     await seedNotificationPreferencesForUser({
         domain: domain as mongoose.Types.ObjectId,

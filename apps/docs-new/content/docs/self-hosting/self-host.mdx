@@ -1,0 +1,130 @@
+---
+title: CourseLit Self Hosting Guide
+description: CourseLit Self Hosting Guide
+---
+
+> Before you self-host: Although we believe in the power of hosting your own software, we still think that buying a subscription to [CourseLit](https://courselit.app) will save you a lot of time and money compared with maintaining your own CourseLit instance. Check out our [pricing](https://courselit.app/#pricing).
+
+We distribute Docker images for all our services through Docker Hub.
+
+## Hosting on a VPS using Docker
+
+We recommend [Docker Compose](https://docs.docker.com/compose/) for hosting CourseLit.
+
+Run the following commands in order.
+
+##### 1. Download the `docker-compose.yml` file to your system.
+
+```sh
+curl https://raw.githubusercontent.com/codelitdev/courselit/main/deployment/docker/docker-compose.yml --output docker-compose.yml --silent
+```
+
+##### 2. Start the app
+
+```sh
+SUPER_ADMIN_EMAIL=your@email.com docker compose up
+```
+
+The email you specify here will be set as the super admin of your CourseLit instance.
+
+> **Troubleshooting**: If you run this command multiple times, note that the super admin user will be created only once, using the email address you provided the first time. If you are unable to access the `/dashboard` route, it is most likely because the email you are using is not associated with the super admin account. Try removing the Docker containers by running `SUPER_ADMIN_EMAIL=your@email.com docker compose down`, then start again.
+
+##### 3. Test drive your CourseLit school
+
+Visit [http://localhost](http://localhost) to see your school. There will not be much to see at this point, because you still need to customize it.
+
+##### 4. Log in to your school
+
+Click the top-right icon, then click the [login](http://localhost/login) menu item. Enter the email you provided in Step 2 to log in. Since mail is not configured yet, the magic login link will be printed in the `docker compose` logs. Locate the link and click it, or copy and paste it into your browser to log in.
+
+The login link looks something like `http://localhost/login?token=some-long-string`.
+
+##### 5. Customise your school
+
+Visit [http://localhost/dashboard](http://localhost/dashboard) to customize your school.
+
+> Note: This will be a bare-bones instance. Features such as email and file uploads will not work yet. You can follow the rest of this guide to set those up.
+
+### Enabling emails
+
+If you want to send emails, including magic login links, with CourseLit, that is easy to set up as well.
+
+1. Create an environment file called `.env` with the following content in the same directory as your `docker-compose.yml` file, and replace the values as needed.
+
+```
+SUPER_ADMIN_EMAIL=your@email.com
+
+# Email
+EMAIL_HOST=host
+EMAIL_USER=user
+EMAIL_PASS=pass
+EMAIL_FROM=from_field
+```
+
+2. Restart the app
+
+```
+docker compose stop
+docker compose up
+```
+
+### Enabling file uploads
+
+If you want to upload media such as images and videos to your school, you need to configure [MediaLit](https://hub.docker.com/r/codelit/medialit). MediaLit powers CourseLit's media management and optimization. MediaLit provides a Docker image that you can self-host.
+
+To self-host it, follow these steps.
+
+1.  Uncomment the block under the `app` service in `docker-compose.yml` that looks like this:
+
+    ```
+    # - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
+    # - MEDIALIT_SERVER=http://medialit
+    ```
+
+2.  Uncomment the block titled `MediaLit` in `docker-compose.yml`.
+
+3.  In your `.env` file, paste the following code under the existing content and change the values to match your environment.
+
+    ```
+    # Medialit Server
+    CLOUD_ENDPOINT=aws_s3_endpoint
+    CLOUD_REGION=aws_s3_region
+    CLOUD_KEY=aws_s3_key
+    CLOUD_SECRET=aws_s3_secret
+    CLOUD_BUCKET_NAME=aws_s3_bucket_name
+    S3_ENDPOINT=aws_s3_cdn_endpoint
+    CLOUD_PREFIX=medialit
+    MEDIALIT_APIKEY=key_to_be_obtained_docker_compose_logs
+    ```
+
+    To learn how to configure an AWS S3 bucket for MediaLit, click [here](https://github.com/codelitdev/medialit?tab=readme-ov-file#setting-up-correct-access-on-aws-s3-bucket).
+
+4.  Start the MediaLit service once to generate an API key to use with CourseLit.
+
+    ```sh
+    docker compose up medialit
+    ```
+
+    The above command will start the MediaLit service and display a fresh API key on the console. The relevant logs will look something like the following.
+
+    ```sh
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @     API key: testcktI8Sa71QUgYtest      @
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    ```
+
+    Copy the API key.
+
+5.  Update the `MEDIALIT_APIKEY` value in your `.env` file and restart the service.
+
+6.  That's it! You now have a fully functioning LMS powered by CourseLit and MediaLit.
+
+## Hosted version
+
+If this is too technical for you to handle, CourseLit's hosted version is available at [CourseLit.app](https://courselit.app).
+
+It is managed by the team behind CourseLit. We take care of everything, so you can focus on your team and content.
+
+## Stuck somewhere?
+
+We are always here for you. Come chat with us in our <a href="https://discord.com/invite/GR4bQsN" target="_blank">Discord</a> channel or send a tweet at <a href="https://twitter.com/courselit" target="_blank">@CourseLit</a>.

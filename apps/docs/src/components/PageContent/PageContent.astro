@@ -17,6 +17,12 @@ const title = frontmatter.title;
 <article id="article" class="content">
     <section class="main-section">
         <h1 class="content-title" id="overview">{title}</h1>
+        <div class="beta-alert" role="alert">
+            Check out our overhauled documentation site, currently in beta:
+            <a href="https://docs-beta.courselit.app"
+                >https://docs-beta.courselit.app</a
+            >
+        </div>
         <nav class="block sm:hidden">
             <TableOfContents
                 client:media="(max-width: 50em)"
@@ -46,6 +52,23 @@ const title = frontmatter.title;
 
     .block {
         display: block;
+    }
+
+    .beta-alert {
+        margin: 1rem 0 1.5rem;
+        padding: 1rem 1.25rem;
+        border: 1px solid var(--theme-divider);
+        border-left: 0.35rem solid var(--theme-accent);
+        border-radius: 0.75rem;
+        background: var(--theme-bg-offset, rgba(127, 127, 127, 0.08));
+        color: var(--theme-text);
+        line-height: 1.6;
+    }
+
+    .beta-alert a {
+        color: var(--theme-accent);
+        font-weight: 600;
+        word-break: break-word;
     }
 
     @media (min-width: 50em) {
