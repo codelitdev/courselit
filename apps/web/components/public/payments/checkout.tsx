@@ -233,6 +233,9 @@ export default function Checkout({
                         response.paymentTracker,
                     );
                 }
+                if (paymentMethod === UIConstants.PAYMENT_METHOD_PAYPAL) {
+                    window.location.href = response.paymentTracker;
+                }
             } else if (response.status === "success") {
                 if (product.type === Constants.MembershipEntityType.COMMUNITY) {
                     router.replace(
