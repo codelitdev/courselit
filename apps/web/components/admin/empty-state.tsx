@@ -7,7 +7,7 @@ import { cn } from "@/lib/shadcn-utils";
 
 interface AdminEmptyStateProps {
     title: string;
-    description: string;
+    description?: string;
     actionLabel?: string;
     actionHref?: string;
     className?: string;
@@ -32,7 +32,9 @@ export default function AdminEmptyState({
                     <FileText className="h-8 w-8 text-muted-foreground" />
                 </div>
                 <h3 className="text-2xl font-semibold">{title}</h3>
-                <p className="mt-2 text-muted-foreground">{description}</p>
+                {description ? (
+                    <p className="mt-2 text-muted-foreground">{description}</p>
+                ) : null}
                 {actionLabel && actionHref ? (
                     <Link href={actionHref} className="mt-6">
                         <Button>{actionLabel}</Button>

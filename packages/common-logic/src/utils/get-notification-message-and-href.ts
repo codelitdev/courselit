@@ -97,7 +97,7 @@ export async function getNotificationMessageAndHref({
             return {
                 message: `${actorName} created a post '${truncate(post.title, 20).trim()}' in ${community.name}`,
                 href: toHref(
-                    `/dashboard/community/${community.communityId}`,
+                    `/dashboard/community/${community.communityId}/${post.postId}`,
                     hrefPrefix,
                 ),
             };
@@ -125,7 +125,7 @@ export async function getNotificationMessageAndHref({
             return {
                 message: `${actorName} commented on ${recipientUserId === post.userId ? "your" : "a"} post '${truncate(post.title, 20).trim()}' in ${community.name}`,
                 href: toHref(
-                    `/dashboard/community/${community.communityId}`,
+                    `/dashboard/community/${community.communityId}/${post.postId}#${entityId}`,
                     hrefPrefix,
                 ),
             };
@@ -175,7 +175,7 @@ export async function getNotificationMessageAndHref({
             return {
                 message: `${actorName} replied to ${prefix} comment on '${truncate(post.title, 20).trim()}' in ${community.name}`,
                 href: toHref(
-                    `/dashboard/community/${community.communityId}`,
+                    `/dashboard/community/${community.communityId}/${post.postId}#${entityId}`,
                     hrefPrefix,
                 ),
             };
@@ -198,7 +198,7 @@ export async function getNotificationMessageAndHref({
             return {
                 message: `${actorName} liked your post '${truncate(post.title, 20).trim()}' in ${community.name}`,
                 href: toHref(
-                    `/dashboard/community/${community.communityId}`,
+                    `/dashboard/community/${community.communityId}/${post.postId}`,
                     hrefPrefix,
                 ),
             };
@@ -221,7 +221,7 @@ export async function getNotificationMessageAndHref({
             return {
                 message: `${actorName} liked your comment '${truncate(comment.content, 20).trim()}' on '${truncate(post.title, 20).trim()}' in ${community.name}`,
                 href: toHref(
-                    `/dashboard/community/${community.communityId}`,
+                    `/dashboard/community/${community.communityId}/${post.postId}#${entityId}`,
                     hrefPrefix,
                 ),
             };
@@ -258,7 +258,7 @@ export async function getNotificationMessageAndHref({
             return {
                 message: `${actorName} liked your reply '${truncate(reply.content, 20).trim()}' on '${truncate(post.title, 20).trim()}' in ${community.name}`,
                 href: toHref(
-                    `/dashboard/community/${community.communityId}`,
+                    `/dashboard/community/${community.communityId}/${post.postId}#${entityId}`,
                     hrefPrefix,
                 ),
             };

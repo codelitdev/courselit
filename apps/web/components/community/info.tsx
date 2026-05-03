@@ -36,6 +36,7 @@ import {
 import { COMMUNITY_SETTINGS, TOAST_TITLE_SUCCESS } from "@ui-config/strings";
 import { Share2 } from "lucide-react";
 import WidgetErrorBoundary from "@components/public/base-layout/template/widget-error-boundary";
+import { truncate } from "@courselit/utils";
 const { permissions } = UIConstants;
 
 interface CommunityInfoProps {
@@ -106,7 +107,7 @@ export function CommunityInfo({
             <CardHeader className="flex justify-between items-center w-full">
                 <CardTitle className="w-full">
                     <div className="flex justify-between items-center w-full">
-                        <p>{name}</p>
+                        <p>{truncate(name, 200)}</p>
                         <Button
                             variant="ghost"
                             onClick={handleShareClick}

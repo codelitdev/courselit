@@ -3,7 +3,11 @@ import { Community } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
 import { useState, useEffect, useContext } from "react";
 
-export function useCommunities(page: number, itemsPerPage: number) {
+export function useCommunities(
+    page: number,
+    itemsPerPage: number,
+    publicOnly = false,
+) {
     const [communities, setCommunities] = useState<Community[]>([]);
     const [loading, setLoading] = useState(true);
     const [totalPages, setTotalPages] = useState(1);
@@ -16,8 +20,8 @@ export function useCommunities(page: number, itemsPerPage: number) {
     useEffect(() => {
         const fetchCommunities = async () => {
             const query = `
-            query ($page: Int, $limit: Int) {
-                communities: getCommunities(page: $page, limit: $limit) {
+            query ($page: Int, $limit: Int, $publicOnly: Boolean) {
+                communities: getCommunities(page: $page, limit: $limit, publicOnly: $publicOnly) {
                     name
                     communityId
                     membersCount
@@ -28,7 +32,7 @@ export function useCommunities(page: number, itemsPerPage: number) {
                     pageId
                     enabled
                 },
-                totalCommunities: getCommunitiesCount
+                totalCommunities: getCommunitiesCount(publicOnly: $publicOnly)
             }`;
             try {
                 setLoading(true);
@@ -38,6 +42,7 @@ export function useCommunities(page: number, itemsPerPage: number) {
                         variables: {
                             page,
                             limit: itemsPerPage,
+                            publicOnly,
                         },
                     })
                     .build();
@@ -53,7 +58,7 @@ export function useCommunities(page: number, itemsPerPage: number) {
         };
 
         fetchCommunities();
-    }, [page, itemsPerPage]);
+    }, [page, itemsPerPage, publicOnly]);
 
     return { communities, loading, totalPages };
 }

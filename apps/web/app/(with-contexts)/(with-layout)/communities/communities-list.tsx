@@ -26,6 +26,7 @@ export function CommunitiesList({
     const { communities, loading, totalPages } = useCommunities(
         page,
         itemsPerPage,
+        publicView,
     );
     const { theme } = useContext(ThemeContext);
 

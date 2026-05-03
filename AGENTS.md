@@ -19,6 +19,7 @@
     - Ensure **Idempotency** (safe to re-run) by using upserts or `$setOnInsert` where applicable.
 - When making changes to the structure of the Course, consider how it affects its representation on its public page (`apps/web/app/(with-contexts)/(with-layout)/p/[id]/page.tsx`) and the course viewer (`apps/web/app/(with-contexts)/course/[slug]/[id]/page.tsx`).
 - `apps/web` is a multi-tenant app.
+- Refrain from adding new GraphQL query/mutation unless required. If an existing query/mutation can be modified to implement the feature without making the query's/mutation's boundaries blurry, extend those.
 
 ### Workspace map (core modules):
 

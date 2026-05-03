@@ -21,10 +21,9 @@ interface TextRendererProps {
     className?: string;
     theme?: ThemeStyle;
 }
-
 export function TextRenderer({ json, className, theme }: TextRendererProps) {
     const extensions = createExtensions();
-    const content = (json as any) ?? (emptyDoc as any);
+    const content = ((json as any) ?? (emptyDoc as any)) as TextEditorContent;
 
     const rendered = renderToReactElement({
         extensions,
@@ -41,6 +40,7 @@ export function TextRenderer({ json, className, theme }: TextRendererProps) {
                     }
                     return <p>{children}</p>;
                 },
+                hardBreak: () => <br />,
                 heading: ({ node, children }) => {
                     const level = node?.attrs?.level ?? 1;
                     // Extract text from the node structure (same as extractHeadings does)

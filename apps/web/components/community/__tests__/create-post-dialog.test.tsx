@@ -70,10 +70,6 @@ jest.mock("../../ui/select", () => ({
     SelectValue: () => null,
 }));
 
-jest.mock("../emoji-picker", () => ({
-    EmojiPicker: () => <div>EmojiPicker</div>,
-}));
-
 jest.mock("../gif-selector", () => ({
     GifSelector: () => <div>GifSelector</div>,
 }));

@@ -22,6 +22,7 @@ import {
     MembershipRole,
     PaymentPlan,
     CommunityMediaTypes,
+    TextEditorContent,
 } from "@courselit/common-models";
 import CommunityPostModel from "@models/CommunityPost";
 import {
@@ -53,6 +54,7 @@ import {
     CommunityReportPartial,
     formatComment,
     formatCommunityReport,
+    normalizeCommunityPostContent,
     formatPost,
     getPostSubscribersExceptUserId,
     hasPermissionToDelete,
@@ -190,10 +192,12 @@ export async function getCommunities({
     ctx,
     page = 1,
     limit = 10,
+    publicOnly = false,
 }: {
     ctx: GQLContext;
     page?: number;
     limit?: number;
+    publicOnly?: boolean;
 }): Promise<Community[]> {
     const query: Partial<InternalCommunity> = {
         domain: ctx.subdomain._id,
@@ -201,6 +205,7 @@ export async function getCommunities({
     };
 
     if (
+        publicOnly ||
         !ctx.user ||
         (ctx.user &&
             !checkPermission(ctx.user.permissions, [
@@ -243,14 +248,18 @@ export async function getCommunities({
 
 export async function getCommunitiesCount({
     ctx,
+    publicOnly = false,
 }: {
     ctx: GQLContext;
+    publicOnly?: boolean;
 }): Promise<number> {
     const query: Partial<InternalCommunity> = {
         domain: ctx.subdomain._id,
+        deleted: false,
     };
 
     if (
+        publicOnly ||
         !ctx.user ||
         (ctx.user &&
             !checkPermission(ctx.user.permissions, [
@@ -632,7 +641,7 @@ export async function createCommunityPost({
 }: {
     communityId: string;
     title: string;
-    content: string;
+    content: TextEditorContent | string;
     category: string;
     media?: CommunityMedia[];
     ctx: GQLContext;
@@ -670,7 +679,7 @@ export async function createCommunityPost({
         userId: ctx.user.userId,
         communityId: community.communityId,
         title,
-        content,
+        content: normalizeCommunityPostContent(content),
         category,
         media,
     });
@@ -727,7 +736,7 @@ export async function updateCommunityPost({
     communityId: string;
     postId: string;
     title?: string;
-    content?: string;
+    content?: TextEditorContent | string;
     category?: string;
     media?: CommunityMedia[];
     ctx: GQLContext;
@@ -768,7 +777,9 @@ export async function updateCommunityPost({
     }
 
     if (title !== undefined) post.title = title;
-    if (content !== undefined) post.content = content;
+    if (content !== undefined) {
+        post.content = normalizeCommunityPostContent(content);
+    }
     if (category !== undefined) post.category = category;
 
     let removedMediaIds: string[] = [];
@@ -983,6 +994,135 @@ export async function getPosts({
     }
 
     return posts.map(async (post) => formatPost(post, ctx.user.userId));
+}
+
+export async function getFeed({
+    ctx,
+    page = 1,
+    limit = 20,
+}: {
+    ctx: GQLContext;
+    page?: number;
+    limit?: number;
+}): Promise<(PublicPost & { community: { id: string; title: string } })[]> {
+    checkIfAuthenticated(ctx);
+
+    const memberships = await MembershipModel.find<Membership>({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+        status: Constants.MembershipStatus.ACTIVE,
+    });
+
+    const communityIds = memberships
+        .map((m) => m.entityId)
+        .filter((entityId, index, list) => list.indexOf(entityId) === index);
+
+    if (!communityIds.length) {
+        return [];
+    }
+
+    const communities = await CommunityModel.find<InternalCommunity>({
+        domain: ctx.subdomain._id,
+        communityId: { $in: communityIds },
+        deleted: false,
+    });
+
+    const visibleCommunities = communities.filter((community) => {
+        if (
+            checkPermission(ctx.user.permissions, [permissions.manageCommunity])
+        ) {
+            return true;
+        }
+
+        return community.enabled;
+    });
+
+    const communityMap = new Map(
+        visibleCommunities.map((community) => [
+            community.communityId,
+            {
+                id: community.communityId,
+                title: community.name,
+            },
+        ]),
+    );
+
+    const visibleCommunityIds = visibleCommunities.map(
+        (community) => community.communityId,
+    );
+
+    if (!visibleCommunityIds.length) {
+        return [];
+    }
+
+    const skip = (page - 1) * limit;
+    const posts = await CommunityPostModel.find({
+        domain: ctx.subdomain._id,
+        communityId: { $in: visibleCommunityIds },
+        deleted: false,
+    })
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit);
+
+    return posts.map((post) => ({
+        ...formatPost(post, ctx.user.userId),
+        community: communityMap.get(post.communityId)!,
+    }));
+}
+
+export async function getFeedCount({
+    ctx,
+}: {
+    ctx: GQLContext;
+}): Promise<number> {
+    checkIfAuthenticated(ctx);
+
+    const memberships = await MembershipModel.find<Membership>({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+        status: Constants.MembershipStatus.ACTIVE,
+    });
+
+    const communityIds = memberships
+        .map((m) => m.entityId)
+        .filter((entityId, index, list) => list.indexOf(entityId) === index);
+
+    if (!communityIds.length) {
+        return 0;
+    }
+
+    const communities = await CommunityModel.find<InternalCommunity>({
+        domain: ctx.subdomain._id,
+        communityId: { $in: communityIds },
+        deleted: false,
+    });
+
+    const visibleCommunityIds = communities
+        .filter((community) => {
+            if (
+                checkPermission(ctx.user.permissions, [
+                    permissions.manageCommunity,
+                ])
+            ) {
+                return true;
+            }
+
+            return community.enabled;
+        })
+        .map((community) => community.communityId);
+
+    if (!visibleCommunityIds.length) {
+        return 0;
+    }
+
+    return await CommunityPostModel.countDocuments({
+        domain: ctx.subdomain._id,
+        communityId: { $in: visibleCommunityIds },
+        deleted: false,
+    });
 }
 
 export async function getPostsCount({

@@ -25,7 +25,11 @@ export default function Link({
                     {label}
                 </Button>
             )}
-            {!isButton && <PageLink theme={theme}>{label}</PageLink>}
+            {!isButton && (
+                <PageLink theme={theme} className="no-underline">
+                    {label}
+                </PageLink>
+            )}
         </AppLink>
     );
 }

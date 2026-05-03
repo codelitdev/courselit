@@ -11,7 +11,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
     Select,
     SelectContent,
@@ -24,13 +23,16 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { Paperclip, Video, Smile, Image as ImageIcon } from "lucide-react";
-import { EmojiPicker } from "./emoji-picker";
+import { Paperclip, Video, Image as ImageIcon } from "lucide-react";
 import { GifSelector } from "./gif-selector";
 import { MediaPreview } from "./media-preview";
-import { CommunityMediaTypes, CommunityPost } from "@courselit/common-models";
+import {
+    CommunityMediaTypes,
+    CommunityPost,
+    TextEditorContent,
+} from "@courselit/common-models";
 import { type MediaItem } from "./media-item";
-import { ProfileContext } from "@components/contexts";
+import { AddressContext, ProfileContext } from "@components/contexts";
 import {
     Dialog,
     DialogContent,
@@ -41,6 +43,9 @@ import {
     DialogClose,
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import { Editor, emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
+import { extractVideoId } from "@courselit/utils";
+import { isTextEditorNonEmpty } from "@ui-lib/utils";
 
 const createClientId = () => {
     if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -60,7 +65,7 @@ const EMPTY_MEDIA: MediaItem[] = [];
 interface CreatePostDialogProps {
     postId?: string;
     title?: string;
-    content?: string;
+    content?: TextEditorContent;
     category?: string;
     media?: MediaItem[];
     trigger?: React.ReactNode;
@@ -82,7 +87,7 @@ interface CreatePostDialogProps {
 export default function CreatePostDialog({
     postId,
     title: initialTitle = "",
-    content: initialContent = "",
+    content: initialContent = TextEditorEmptyDoc as TextEditorContent,
     category: initialCategory = "",
     media: initialMedia = EMPTY_MEDIA,
     trigger,
@@ -107,9 +112,8 @@ export default function CreatePostDialog({
     const setIsOpen = controlledOnOpenChange || setInternalIsOpen;
 
     const [title, setTitle] = useState(initialTitle);
-    const [content, setContent] = useState(initialContent);
+    const [content, setContent] = useState<TextEditorContent>(initialContent);
     const [category, setCategory] = useState(initialCategory);
-    const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
     const [isGifSelectorOpen, setIsGifSelectorOpen] = useState(false);
     const [media, setMedia] = useState<MediaItem[]>(initialMediaWithClientIds);
     const [videoUrl, setVideoUrl] = useState("");
@@ -119,6 +123,7 @@ export default function CreatePostDialog({
         category?: string;
     }>({});
     const { profile } = useContext(ProfileContext);
+    const address = useContext(AddressContext);
     const [isPosting, setIsPosting] = useState(false);
     const mediaRef = useRef<MediaItem[]>(initialMediaWithClientIds);
 
@@ -166,16 +171,11 @@ export default function CreatePostDialog({
     const isPostButtonDisabled = useMemo(
         () =>
             title.trim() === "" ||
-            content.trim() === "" ||
+            !isTextEditorNonEmpty(content) ||
             category.trim() === "" ||
             isPosting,
         [title, content, category, isPosting],
     );
-
-    const handleEmojiSelect = useCallback((emoji: string) => {
-        setContent((prevContent) => prevContent + emoji);
-        setIsEmojiPickerOpen(false);
-    }, []);
 
     const handleGifSelect = useCallback((gifUrl: string) => {
         setMedia((prevMedia) => [
@@ -221,24 +221,29 @@ export default function CreatePostDialog({
     // };
 
     const handleVideoAdd = useCallback((url: string) => {
-        if (url.includes("youtube.com") || url.includes("youtu.be")) {
-            const videoId = url.includes("youtu.be")
-                ? url.split("/").pop()
-                : url.split("v=")[1]?.split("&")[0];
+        const videoId = extractVideoId(url, "youtube");
 
-            if (videoId) {
-                setMedia((prevMedia) => [
-                    ...prevMedia,
-                    {
-                        type: "youtube",
-                        url: `https://www.youtube.com/embed/${videoId}`,
-                        title: "YouTube Video",
-                        clientId: createClientId(),
-                    },
-                ]);
-            }
+        if (videoId) {
+            setMedia((prevMedia) => [
+                ...prevMedia,
+                {
+                    type: "youtube",
+                    url: `https://www.youtube.com/embed/${videoId}`,
+                    title: "YouTube Video",
+                    clientId: createClientId(),
+                },
+            ]);
         } else {
-            setContent((prevContent) => `${prevContent} ${url} `);
+            setContent((prevContent) => ({
+                ...prevContent,
+                content: [
+                    ...(prevContent.content || []),
+                    {
+                        type: "paragraph",
+                        content: [{ type: "text", text: url }],
+                    },
+                ],
+            }));
         }
     }, []);
 
@@ -254,11 +259,12 @@ export default function CreatePostDialog({
     }, []);
 
     const handlePost = async () => {
-        if (title.trim() === "" || content.trim() === "") {
+        if (title.trim() === "" || !isTextEditorNonEmpty(content)) {
             setErrors({
                 title: title.trim() === "" ? "Title is required" : undefined,
-                content:
-                    content.trim() === "" ? "Content is required" : undefined,
+                content: !isTextEditorNonEmpty(content)
+                    ? "Content is required"
+                    : undefined,
             });
             return;
         }
@@ -379,11 +385,14 @@ export default function CreatePostDialog({
                         )}
                     </div>
                     <div>
-                        <Textarea
+                        <Editor
+                            url={address.backend}
+                            initialContent={content}
+                            onChange={(value) =>
+                                setContent(value as TextEditorContent)
+                            }
                             placeholder="What's on your mind?"
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            className="min-h-[100px] resize-none"
+                            showToolbar={false}
                         />
                         {errors.content && (
                             <p className="text-red-500 text-sm mt-1">
@@ -504,27 +513,6 @@ export default function CreatePostDialog({
                                         Add Video
                                     </Button>
                                 </div>
-                            </PopoverContent>
-                        </Popover>
-                        <Popover
-                            open={isEmojiPickerOpen}
-                            onOpenChange={setIsEmojiPickerOpen}
-                            modal={true}
-                        >
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-9 w-9"
-                                >
-                                    <Smile className="h-5 w-5" />
-                                    <span className="sr-only">Add emoji</span>
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[352px] p-4">
-                                <EmojiPicker
-                                    onEmojiSelect={handleEmojiSelect}
-                                />
                             </PopoverContent>
                         </Popover>
                         <Popover
