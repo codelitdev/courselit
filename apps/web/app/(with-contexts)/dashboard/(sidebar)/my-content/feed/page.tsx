@@ -7,12 +7,12 @@ import {
     Constants,
 } from "@courselit/common-models";
 import { AddressContext, ProfileContext } from "@components/contexts";
-import { FetchBuilder } from "@courselit/utils";
+import { extractVideoId, FetchBuilder } from "@courselit/utils";
 import { formattedLocaleDate } from "@ui-lib/utils";
 import CommunityPostCard from "@components/community/post-card";
 import PostCardSkeleton from "@components/community/post-card-skeleton";
-import CommunityPostMediaPreview from "@components/community/post-media-preview";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import AdminEmptyState from "@components/admin/empty-state";
 import { PaginatedTable } from "@courselit/components-library";
 import Link from "next/link";
@@ -265,9 +265,75 @@ export default function Page() {
 
     const showCommunitiesPanel = communities.length > 0;
 
-    const renderMediaPreview = (media: CommunityMedia) => (
-        <CommunityPostMediaPreview media={media} />
-    );
+    const renderMediaPreview = (media: CommunityMedia) => {
+        if (!media) return null;
+
+        switch (media.type) {
+            case "image":
+                return media.media ? (
+                    <Image
+                        src={media.media.thumbnail}
+                        alt="Post media"
+                        className="h-48 w-48 rounded-md object-cover"
+                        width={192}
+                        height={192}
+                    />
+                ) : null;
+            case "gif":
+                return (
+                    <img
+                        src={media.url}
+                        alt="GIF"
+                        className="h-48 w-48 rounded-md object-cover"
+                    />
+                );
+            case "video":
+                return media.media ? (
+                    <video
+                        src={media.media.file}
+                        poster={media.media.thumbnail}
+                        className="h-48 aspect-video rounded-md object-cover"
+                        controls
+                        controlsList="nodownload"
+                        onContextMenu={(e) => e.preventDefault()}
+                    >
+                        Your browser does not support the video tag.
+                    </video>
+                ) : null;
+            case "youtube": {
+                const videoId = extractVideoId(media.url, "youtube");
+
+                if (!videoId) {
+                    return null;
+                }
+
+                return (
+                    <div className="relative aspect-video w-full">
+                        <img
+                            src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+                            alt="YouTube thumbnail"
+                            className="h-full w-full rounded-md object-cover"
+                        />
+                    </div>
+                );
+            }
+            case "pdf":
+                return (
+                    <div className="flex h-48 w-36 flex-col justify-between rounded bg-red-500">
+                        <div>
+                            <div className="ml-1 mt-1 inline-block rounded bg-gray-900 p-1 text-xs text-white">
+                                PDF
+                            </div>
+                        </div>
+                        <div className="truncate p-1 text-sm text-white">
+                            {media.media?.originalFileName}
+                        </div>
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
 
     if (enabledCommunitiesLoading) {
         return null;
