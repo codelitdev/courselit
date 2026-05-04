@@ -790,28 +790,25 @@ export default function CommunityPostPage({
                 </div>
 
                 <div className="lg:col-start-3 lg:row-start-1">
-                    {community && (
-                        <CommunityInfo
-                            id={community.communityId}
-                            name={community.name}
-                            description={community.description}
-                            image={
-                                community.featuredImage?.file ||
-                                "/courselit_backdrop_square.webp"
-                            }
-                            memberCount={community.membersCount}
-                            membership={membership}
-                            paymentPlan={community.paymentPlans?.find(
-                                (plan) =>
-                                    plan.planId ===
-                                    community.defaultPaymentPlan,
-                            )}
-                            joiningReasonText={community.joiningReasonText}
-                            pageId={community.pageId}
-                            onJoin={handleJoin}
-                            onLeave={handleLeave}
-                        />
-                    )}
+                    <CommunityInfo
+                        id={community.communityId}
+                        name={community.name}
+                        description={community.description}
+                        image={
+                            community.featuredImage?.file ||
+                            "/courselit_backdrop_square.webp"
+                        }
+                        memberCount={community.membersCount}
+                        membership={membership}
+                        paymentPlan={community.paymentPlans?.find(
+                            (plan) =>
+                                plan.planId === community.defaultPaymentPlan,
+                        )}
+                        joiningReasonText={community.joiningReasonText}
+                        pageId={community.pageId}
+                        onJoin={handleJoin}
+                        onLeave={handleLeave}
+                    />
                 </div>
             </div>
         </div>

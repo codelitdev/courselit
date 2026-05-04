@@ -100,7 +100,9 @@ jest.mock("../gif-selector", () => ({
 }));
 
 jest.mock("../media-preview", () => ({
-    MediaPreview: () => <div>MediaPreview</div>,
+    MediaPreview: ({ items }: any) => (
+        <div data-testid="media-preview">{JSON.stringify(items)}</div>
+    ),
 }));
 
 import CreatePostDialog from "../create-post-dialog";
@@ -207,6 +209,27 @@ describe("CreatePostDialog", () => {
 
         await waitFor(() => {
             expect(screen.getByRole("button", { name: "Post" })).toBeDisabled();
+        });
+    });
+
+    it("treats protocol-less YouTube URLs as video attachments", async () => {
+        const createPost = jest.fn().mockResolvedValue(undefined);
+
+        renderDialog(createPost, { category: "General" });
+        await flushMicrotasks();
+
+        fireEvent.change(
+            screen.getByPlaceholderText("https://youtube.com/watch?v="),
+            {
+                target: { value: "youtu.be/abc123xyz" },
+            },
+        );
+        fireEvent.click(screen.getByRole("button", { name: "Add Video" }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId("media-preview")).toHaveTextContent(
+                "https://www.youtube.com/embed/abc123xyz",
+            );
         });
     });
 });

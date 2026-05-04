@@ -76,8 +76,12 @@ export default function extractVideoId(
         return null;
     }
 
+    const normalizedUrl = /^[a-z][a-z\d+\-.]*:\/\//i.test(url)
+        ? url
+        : `https://${url}`;
+
     try {
-        const parsedUrl = new URL(url);
+        const parsedUrl = new URL(normalizedUrl);
 
         if (platform === "youtube") {
             return extractYouTubeVideoId(parsedUrl);
