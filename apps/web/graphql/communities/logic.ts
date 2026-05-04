@@ -1062,7 +1062,7 @@ export async function getFeed({
         communityId: { $in: visibleCommunityIds },
         deleted: false,
     })
-        .sort({ updatedAt: -1 })
+        .sort({ updatedAt: -1, createdAt: -1, _id: -1 })
         .skip(skip)
         .limit(limit);
 

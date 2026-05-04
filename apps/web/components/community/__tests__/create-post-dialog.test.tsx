@@ -6,8 +6,33 @@ import {
     waitFor,
     act,
 } from "@testing-library/react";
-import CreatePostDialog from "../create-post-dialog";
 import { ProfileContext } from "@components/contexts";
+
+jest.mock("@courselit/text-editor", () => ({
+    Editor: ({ onChange, value }: any) => (
+        <textarea
+            aria-label="editor"
+            value={JSON.stringify(value)}
+            onChange={(event) =>
+                onChange({
+                    type: "doc",
+                    content: [
+                        {
+                            type: "paragraph",
+                            content: [
+                                {
+                                    type: "text",
+                                    text: event.target.value,
+                                },
+                            ],
+                        },
+                    ],
+                })
+            }
+        />
+    ),
+    emptyDoc: { type: "doc", content: [] },
+}));
 
 jest.mock("../../ui/button", () => ({
     Button: ({ children, ...props }: any) => (
@@ -78,6 +103,8 @@ jest.mock("../media-preview", () => ({
     MediaPreview: () => <div>MediaPreview</div>,
 }));
 
+import CreatePostDialog from "../create-post-dialog";
+
 const renderDialog = (
     createPost: any,
     overrides: Partial<React.ComponentProps<typeof CreatePostDialog>> = {},
@@ -125,7 +152,7 @@ describe("CreatePostDialog", () => {
         fireEvent.change(screen.getByPlaceholderText("Title"), {
             target: { value: "My title" },
         });
-        fireEvent.change(screen.getByPlaceholderText("What's on your mind?"), {
+        fireEvent.change(screen.getByLabelText("editor"), {
             target: { value: "My content" },
         });
         expect(postButton).toBeDisabled();
@@ -154,7 +181,7 @@ describe("CreatePostDialog", () => {
         fireEvent.change(screen.getByPlaceholderText("Title"), {
             target: { value: "My title" },
         });
-        fireEvent.change(screen.getByPlaceholderText("What's on your mind?"), {
+        fireEvent.change(screen.getByLabelText("editor"), {
             target: { value: "My content" },
         });
         fireEvent.change(screen.getByLabelText("category"), {

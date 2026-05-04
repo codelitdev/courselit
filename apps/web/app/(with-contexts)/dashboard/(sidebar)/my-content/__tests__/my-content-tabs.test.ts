@@ -29,24 +29,28 @@ jest.mock("next/navigation", () => ({
     usePathname: () => mockUsePathname(),
 }));
 
-jest.mock("@courselit/components-library", () => ({
-    Tabbs: (props) => {
-        const React = require("react");
+jest.mock(
+    "@courselit/components-library",
+    () => ({
+        Tabbs: (props) => {
+            const React = require("react");
 
-        return React.createElement(
-            "div",
-            null,
-            React.createElement(
+            return React.createElement(
                 "div",
-                { "data-testid": "active-tab" },
-                props.value,
-            ),
-            ...props.items.map((item) =>
-                React.createElement("div", { key: item }, item),
-            ),
-        );
-    },
-}));
+                null,
+                React.createElement(
+                    "div",
+                    { "data-testid": "active-tab" },
+                    props.value,
+                ),
+                ...props.items.map((item) =>
+                    React.createElement("div", { key: item }, item),
+                ),
+            );
+        },
+    }),
+    { virtual: true },
+);
 
 const tabs = [
     {

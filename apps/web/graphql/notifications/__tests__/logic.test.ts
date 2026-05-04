@@ -286,7 +286,7 @@ describe("Notification Preferences", () => {
 
         expect(response).toBeTruthy();
         expect(response?.href).toBe(
-            `/dashboard/community/${community.communityId}`,
+            `/dashboard/community/${community.communityId}/${post.postId}`,
         );
         expect(response?.message).toContain("created a post");
         expect(response?.message).toContain("Community A");
