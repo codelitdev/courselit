@@ -369,11 +369,9 @@ export default function Page() {
                         actionHref="/communities"
                     />
                 </div>
-                {showCommunitiesPanel ? (
-                    <div className="order-last lg:order-none lg:min-w-0">
-                        {communitiesPanel}
-                    </div>
-                ) : null}
+                <div className="order-last lg:order-none lg:min-w-0">
+                    {communitiesPanel}
+                </div>
             </div>
         );
     }

@@ -484,7 +484,7 @@ export default function CommunityPostPage({
         return <LoadingSkeleton />;
     }
 
-    if ((loaded && !community) || (postLoaded && !post)) {
+    if (!community || !post) {
         return (
             <NotFound
                 resource="Community post"
