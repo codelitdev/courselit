@@ -32,7 +32,7 @@ function MediaPreviewComponent({ items, onRemove }: MediaPreviewProps) {
                         className="relative shrink-0"
                     >
                         <div className="w-[180px]">
-                            <div className="aspect-video w-full overflow-hidden rounded-md bg-muted flex items-center justify-center">
+                            <div className="aspect-video flex w-full items-center justify-center overflow-hidden rounded-md bg-muted">
                                 {item.type === "youtube" && (
                                     <div className="text-4xl">▶️</div>
                                 )}
@@ -44,7 +44,7 @@ function MediaPreviewComponent({ items, onRemove }: MediaPreviewProps) {
                                         <img
                                             src={getPreviewSrc(item)}
                                             alt={item.title}
-                                            className="object-cover w-full h-full"
+                                            className="h-full w-full object-cover"
                                         />
                                     ) : (
                                         <FileText className="h-10 w-10 text-muted-foreground" />
@@ -57,13 +57,13 @@ function MediaPreviewComponent({ items, onRemove }: MediaPreviewProps) {
                                         <img
                                             src={getPreviewSrc(item)}
                                             alt={item.title}
-                                            className="object-cover w-full h-full"
+                                            className="h-full w-full object-cover"
                                         />
                                     ) : (
                                         <FileText className="h-10 w-10 text-muted-foreground" />
                                     ))}
                             </div>
-                            <p className="mt-1 text-sm font-medium truncate">
+                            <p className="mt-1 truncate text-sm font-medium">
                                 {item.title}
                             </p>
                             {item.type === "pdf" && (
@@ -79,7 +79,7 @@ function MediaPreviewComponent({ items, onRemove }: MediaPreviewProps) {
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-background shadow-md hover:bg-background"
+                            className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-background shadow-md hover:bg-background"
                             onClick={() => onRemove(index)}
                         >
                             <X className="h-4 w-4" />

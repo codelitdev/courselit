@@ -12,7 +12,7 @@ import DomainModel from "@models/Domain";
 import UserModel from "@models/User";
 import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
 import constants from "@/config/constants";
-import { Constants } from "@courselit/common-models";
+import { Constants, TextEditorContent } from "@courselit/common-models";
 
 jest.mock("@/services/medialit");
 jest.mock("@/services/queue");
@@ -25,6 +25,15 @@ jest.unmock("@courselit/utils");
 const SUITE_PREFIX = `ucp-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
 const id = (suffix: string) => `${SUITE_PREFIX}-${suffix}`;
 const email = (suffix: string) => `${suffix}-${SUITE_PREFIX}@example.com`;
+const doc = (text: string): TextEditorContent => ({
+    type: "doc",
+    content: [
+        {
+            type: "paragraph",
+            content: [{ type: "text", text }],
+        },
+    ],
+});
 
 describe("updateCommunityPost", () => {
     let testDomain: any;
@@ -175,7 +184,7 @@ describe("updateCommunityPost", () => {
         existingPost = await createCommunityPost({
             communityId: community.communityId,
             title: "Original Title",
-            content: "Original Content",
+            content: doc("Original Content"),
             category: "General",
             ctx: regularCtx, // regularUser is the author
         });
@@ -291,20 +300,20 @@ describe("updateCommunityPost", () => {
                 communityId: community.communityId,
                 postId: existingPost.postId,
                 title: "Updated Title",
-                content: "Updated Content",
+                content: doc("Updated Content"),
                 category: "Announcements",
                 ctx: regularCtx,
             });
 
             expect(result.title).toBe("Updated Title");
-            expect(result.content).toBe("Updated Content");
+            expect(result.content).toEqual(doc("Updated Content"));
             expect(result.category).toBe("Announcements");
 
             const dbPost = await CommunityPostModel.findOne({
                 postId: existingPost.postId,
             });
             expect(dbPost!.title).toBe("Updated Title");
-            expect(dbPost!.content).toBe("Updated Content");
+            expect(dbPost!.content).toEqual(doc("Updated Content"));
             expect(dbPost!.category).toBe("Announcements");
         });
 
@@ -317,7 +326,7 @@ describe("updateCommunityPost", () => {
             });
 
             expect(result.title).toBe("Only Title Changed");
-            expect(result.content).toBe("Original Content");
+            expect(result.content).toEqual(doc("Original Content"));
             expect(result.category).toBe("General");
 
             // media undefined means do not touch media

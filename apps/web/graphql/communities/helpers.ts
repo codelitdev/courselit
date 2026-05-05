@@ -5,6 +5,7 @@ import {
     CommunityReportType,
     Constants,
     Membership,
+    TextEditorContent,
 } from "@courselit/common-models";
 import CommunityCommentModel, {
     InternalCommunityComment,
@@ -23,6 +24,7 @@ import CommunityPostSubscriberModel, {
     CommunityPostSubscriber,
 } from "@models/CommunityPostSubscriber";
 import { hasCommunityPermission } from "@ui-lib/utils";
+import { normalizeTextEditorContent } from "@courselit/utils";
 
 export type PublicPost = Omit<
     CommunityPost,
@@ -30,6 +32,12 @@ export type PublicPost = Omit<
 > & {
     userId: string;
 };
+
+export function normalizeCommunityPostContent(
+    content: InternalCommunityPost["content"],
+): TextEditorContent {
+    return normalizeTextEditorContent(content);
+}
 
 export const formatComment = (comment: any, userId: string) => ({
     communityId: comment.communityId,
@@ -64,7 +72,7 @@ export const formatPost = (
     communityId: post.communityId,
     postId: post.postId,
     title: post.title,
-    content: post.content,
+    content: normalizeCommunityPostContent(post.content),
     category: post.category,
     media: post.media,
     pinned: post.pinned,

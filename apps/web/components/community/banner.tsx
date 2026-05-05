@@ -6,7 +6,7 @@ import { useToast } from "@courselit/components-library";
 import { TextRenderer } from "@courselit/page-blocks";
 import { isTextEditorNonEmpty } from "@ui-lib/utils";
 import { BUTTON_SAVING, TOAST_TITLE_SUCCESS } from "@ui-config/strings";
-import { AddressContext } from "@components/contexts";
+import { AddressContext, ThemeContext } from "@components/contexts";
 import type { TextEditorContent } from "@courselit/common-models";
 import { Editor, emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
 import WidgetErrorBoundary from "@components/public/base-layout/template/widget-error-boundary";
@@ -34,6 +34,7 @@ export default function Banner({
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const address = useContext(AddressContext);
     const { toast } = useToast();
+    const { theme } = useContext(ThemeContext);
 
     useEffect(() => {
         if (isEditing && textareaRef.current) {
@@ -80,7 +81,10 @@ export default function Banner({
                         <AlertDescription>
                             {isTextEditorNonEmpty(bannerText) ? (
                                 <WidgetErrorBoundary widgetName="text-editor">
-                                    <TextRenderer json={bannerText} />
+                                    <TextRenderer
+                                        json={bannerText}
+                                        theme={theme.theme}
+                                    />
                                 </WidgetErrorBoundary>
                             ) : (
                                 canEdit && (

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Play, X } from "lucide-react";
+import { extractVideoId } from "@courselit/utils";
 
 type VideoType = "youtube" | "vimeo" | "self-hosted";
 
@@ -33,13 +34,11 @@ export function VideoWithPreview({
     const [vimeoThumbnail, setVimeoThumbnail] = useState<string | null>(null);
 
     const detectVideoType = (): VideoType => {
-        const url = videoUrl.toLowerCase();
-
-        if (url.includes("youtube.com") || url.includes("youtu.be")) {
+        if (extractVideoId(videoUrl, "youtube")) {
             return "youtube";
         }
 
-        if (url.includes("vimeo.com")) {
+        if (extractVideoId(videoUrl, "vimeo")) {
             return "vimeo";
         }
 
@@ -48,55 +47,13 @@ export function VideoWithPreview({
 
     const videoType = detectVideoType();
 
-    // Extract video ID based on platform
     const getVideoId = () => {
         if (videoType === "youtube") {
-            try {
-                const url = new URL(videoUrl);
-
-                // Handle youtube.com/watch?v= format
-                if (
-                    url.hostname === "youtube.com" ||
-                    url.hostname === "www.youtube.com"
-                ) {
-                    return url.searchParams.get("v");
-                }
-
-                // Handle youtu.be/ format
-                if (url.hostname === "youtu.be") {
-                    return url.pathname.slice(1); // Remove leading slash
-                }
-
-                // Handle youtube.com/embed/ format
-                if (
-                    url.hostname === "youtube.com" ||
-                    url.hostname === "www.youtube.com"
-                ) {
-                    const pathParts = url.pathname.split("/");
-                    if (pathParts[1] === "embed") {
-                        return pathParts[2];
-                    }
-                }
-            } catch (error) {
-                console.error("Invalid YouTube URL:", error);
-                return null;
-            }
+            return extractVideoId(videoUrl, "youtube");
         }
 
         if (videoType === "vimeo") {
-            try {
-                const url = new URL(videoUrl);
-                if (url.hostname === "vimeo.com") {
-                    const videoId = url.pathname.slice(1); // Remove leading slash
-                    // Validate that the ID is numeric
-                    if (/^\d+$/.test(videoId)) {
-                        return videoId;
-                    }
-                }
-            } catch (error) {
-                console.error("Invalid Vimeo URL:", error);
-                return null;
-            }
+            return extractVideoId(videoUrl, "vimeo");
         }
 
         return null;
@@ -263,10 +220,10 @@ export function VideoWithPreview({
                                 <span className="absolute -inset-1.5 rounded-full bg-gray-200/50 animate-pulse duration-[3000ms]"></span>
 
                                 {/* Play button */}
-                                <div className="relative rounded-full bg-primary p-4 z-1">
+                                <div className="relative z-1 rounded-full bg-primary p-4 text-primary-foreground">
                                     <Play
-                                        className="h-8 w-8 text-white"
-                                        fill="white"
+                                        className="h-8 w-8"
+                                        fill="currentColor"
                                     />
                                 </div>
                             </div>

@@ -2,7 +2,13 @@
  * @jest-environment node
  */
 
-import { getCommentsCount } from "../logic";
+import {
+    getCommentsCount,
+    getCommunities,
+    getCommunitiesCount,
+    getFeed,
+    getFeedCount,
+} from "../logic";
 import CommunityModel from "@models/Community";
 import CommunityPostModel from "@models/CommunityPost";
 import CommunityCommentModel from "@models/CommunityComment";
@@ -356,5 +362,344 @@ describe("Community Logic - Comment Count Tests", () => {
             // Deleted parent comment is not counted, but active reply is counted
             expect(count).toBe(1);
         });
+    });
+});
+
+describe("Community Logic - Feed Tests", () => {
+    let testDomain: any;
+    let adminUser: any;
+    let regularUser: any;
+    let communityOne: any;
+    let communityTwo: any;
+    let mockCtx: any;
+
+    beforeAll(async () => {
+        testDomain = await DomainModel.create({
+            name: `test-domain-feed-${Date.now()}`,
+            email: "feed@example.com",
+        });
+
+        adminUser = await UserModel.create({
+            domain: testDomain._id,
+            userId: "admin-user-feed",
+            email: "admin-feed@example.com",
+            name: "Admin Feed User",
+            permissions: [constants.permissions.manageCommunity],
+            active: true,
+            unsubscribeToken: "unsubscribe-admin-feed",
+        });
+
+        regularUser = await UserModel.create({
+            domain: testDomain._id,
+            userId: "regular-user-feed",
+            email: "regular-feed@example.com",
+            name: "Regular Feed User",
+            permissions: [],
+            active: true,
+            unsubscribeToken: "unsubscribe-regular-feed",
+        });
+
+        communityOne = await CommunityModel.create({
+            domain: testDomain._id,
+            communityId: "community-feed-1",
+            name: "Community Feed One",
+            pageId: "community-feed-one",
+            slug: "community-feed-one",
+            enabled: true,
+            deleted: false,
+        });
+
+        communityTwo = await CommunityModel.create({
+            domain: testDomain._id,
+            communityId: "community-feed-2",
+            name: "Community Feed Two",
+            pageId: "community-feed-two",
+            slug: "community-feed-two",
+            enabled: true,
+            deleted: false,
+        });
+
+        mockCtx = {
+            user: regularUser,
+            subdomain: testDomain,
+        } as any;
+    });
+
+    afterEach(async () => {
+        await CommunityCommentModel.deleteMany({ domain: testDomain._id });
+        await CommunityPostModel.deleteMany({ domain: testDomain._id });
+        await MembershipModel.deleteMany({
+            domain: testDomain._id,
+            entityType: Constants.MembershipEntityType.COMMUNITY,
+        });
+    });
+
+    afterAll(async () => {
+        await CommunityCommentModel.deleteMany({ domain: testDomain._id });
+        await CommunityPostModel.deleteMany({ domain: testDomain._id });
+        await MembershipModel.deleteMany({ domain: testDomain._id });
+        await CommunityModel.deleteMany({ domain: testDomain._id });
+        await PageModel.deleteMany({ domain: testDomain._id });
+        await PaymentPlanModel.deleteMany({ domain: testDomain._id });
+        await UserModel.deleteMany({ domain: testDomain._id });
+        await DomainModel.deleteMany({ _id: testDomain._id });
+    });
+
+    it("returns paginated posts from all active community memberships", async () => {
+        await MembershipModel.create([
+            {
+                domain: testDomain._id,
+                membershipId: "feed-membership-1",
+                userId: regularUser.userId,
+                entityId: communityOne.communityId,
+                entityType: Constants.MembershipEntityType.COMMUNITY,
+                paymentPlanId: "feed-plan-1",
+                sessionId: "feed-session-1",
+                status: Constants.MembershipStatus.ACTIVE,
+                role: Constants.MembershipRole.POST,
+            },
+            {
+                domain: testDomain._id,
+                membershipId: "feed-membership-2",
+                userId: regularUser.userId,
+                entityId: communityTwo.communityId,
+                entityType: Constants.MembershipEntityType.COMMUNITY,
+                paymentPlanId: "feed-plan-2",
+                sessionId: "feed-session-2",
+                status: Constants.MembershipStatus.ACTIVE,
+                role: Constants.MembershipRole.POST,
+            },
+        ]);
+
+        await CommunityPostModel.create([
+            {
+                domain: testDomain._id,
+                userId: adminUser.userId,
+                communityId: communityOne.communityId,
+                postId: "feed-post-1",
+                title: "Older post",
+                content: "Older content",
+                category: "General",
+                likes: [],
+                deleted: false,
+                updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+            },
+            {
+                domain: testDomain._id,
+                userId: adminUser.userId,
+                communityId: communityTwo.communityId,
+                postId: "feed-post-2",
+                title: "Newest post",
+                content: "Newest content",
+                category: "General",
+                likes: [regularUser.userId],
+                deleted: false,
+                updatedAt: new Date("2026-02-01T00:00:00.000Z"),
+            },
+        ]);
+
+        const feed = await getFeed({ ctx: mockCtx, page: 1, limit: 1 });
+        const count = await getFeedCount({ ctx: mockCtx });
+
+        expect(count).toBe(2);
+        expect(feed).toHaveLength(1);
+        expect(feed[0]).toMatchObject({
+            postId: "feed-post-2",
+            hasLiked: true,
+            community: {
+                id: communityTwo.communityId,
+                title: communityTwo.name,
+            },
+        });
+    });
+
+    it("does not include posts from inactive memberships", async () => {
+        await MembershipModel.create({
+            domain: testDomain._id,
+            membershipId: "feed-membership-pending",
+            userId: regularUser.userId,
+            entityId: communityOne.communityId,
+            entityType: Constants.MembershipEntityType.COMMUNITY,
+            paymentPlanId: "feed-plan-pending",
+            sessionId: "feed-session-pending",
+            status: Constants.MembershipStatus.PENDING,
+            role: Constants.MembershipRole.POST,
+        });
+
+        await CommunityPostModel.create({
+            domain: testDomain._id,
+            userId: adminUser.userId,
+            communityId: communityOne.communityId,
+            postId: "feed-post-pending",
+            title: "Pending membership post",
+            content: "Should not appear",
+            category: "General",
+            likes: [],
+            deleted: false,
+        });
+
+        const feed = await getFeed({ ctx: mockCtx, page: 1, limit: 10 });
+        const count = await getFeedCount({ ctx: mockCtx });
+
+        expect(feed).toEqual([]);
+        expect(count).toBe(0);
+    });
+});
+
+describe("Community Logic - Enabled Communities Count Tests", () => {
+    let testDomain: any;
+    let adminUser: any;
+    let mockCtx: any;
+
+    beforeAll(async () => {
+        testDomain = await DomainModel.create({
+            name: `test-domain-enabled-count-${Date.now()}`,
+            email: "enabled-count@example.com",
+        });
+
+        adminUser = await UserModel.create({
+            domain: testDomain._id,
+            userId: "enabled-count-admin",
+            email: "enabled-count-admin@example.com",
+            name: "Enabled Count Admin",
+            permissions: [constants.permissions.manageCommunity],
+            active: true,
+            unsubscribeToken: "enabled-count-unsub",
+        });
+
+        mockCtx = {
+            user: adminUser,
+            subdomain: testDomain,
+        } as any;
+    });
+
+    afterEach(async () => {
+        await CommunityModel.deleteMany({ domain: testDomain._id });
+    });
+
+    afterAll(async () => {
+        await CommunityModel.deleteMany({ domain: testDomain._id });
+        await UserModel.deleteMany({ domain: testDomain._id });
+        await DomainModel.deleteMany({ _id: testDomain._id });
+    });
+
+    it("counts only enabled and non-deleted communities for the domain", async () => {
+        await CommunityModel.create([
+            {
+                domain: testDomain._id,
+                communityId: "enabled-community-1",
+                name: "Enabled Community",
+                pageId: "enabled-community-1",
+                slug: "enabled-community-1",
+                enabled: true,
+                deleted: false,
+            },
+            {
+                domain: testDomain._id,
+                communityId: "disabled-community-1",
+                name: "Disabled Community",
+                pageId: "disabled-community-1",
+                slug: "disabled-community-1",
+                enabled: false,
+                deleted: false,
+            },
+            {
+                domain: testDomain._id,
+                communityId: "deleted-community-1",
+                name: "Deleted Community",
+                pageId: "deleted-community-1",
+                slug: "deleted-community-1",
+                enabled: true,
+                deleted: true,
+            },
+        ]);
+
+        const count = await getCommunitiesCount({
+            ctx: mockCtx,
+            publicOnly: true,
+        });
+
+        expect(count).toBe(1);
+    });
+
+    it("returns only enabled communities for public requests even for admins", async () => {
+        await CommunityModel.create([
+            {
+                domain: testDomain._id,
+                communityId: "public-enabled-community",
+                name: "Public Enabled Community",
+                pageId: "public-enabled-community",
+                slug: "public-enabled-community",
+                enabled: true,
+                deleted: false,
+            },
+            {
+                domain: testDomain._id,
+                communityId: "public-disabled-community",
+                name: "Public Disabled Community",
+                pageId: "public-disabled-community",
+                slug: "public-disabled-community",
+                enabled: false,
+                deleted: false,
+            },
+        ]);
+
+        const communities = await Promise.all(
+            await getCommunities({
+                ctx: mockCtx,
+                page: 1,
+                limit: 10,
+                publicOnly: true,
+            }),
+        );
+        const count = await getCommunitiesCount({
+            ctx: mockCtx,
+            publicOnly: true,
+        });
+
+        expect(communities.map((community) => community.communityId)).toEqual([
+            "public-enabled-community",
+        ]);
+        expect(count).toBe(1);
+    });
+
+    it("still returns disabled communities for admins outside public requests", async () => {
+        await CommunityModel.create([
+            {
+                domain: testDomain._id,
+                communityId: "admin-enabled-community",
+                name: "Admin Enabled Community",
+                pageId: "admin-enabled-community",
+                slug: "admin-enabled-community",
+                enabled: true,
+                deleted: false,
+            },
+            {
+                domain: testDomain._id,
+                communityId: "admin-disabled-community",
+                name: "Admin Disabled Community",
+                pageId: "admin-disabled-community",
+                slug: "admin-disabled-community",
+                enabled: false,
+                deleted: false,
+            },
+        ]);
+
+        const communities = await Promise.all(
+            await getCommunities({
+                ctx: mockCtx,
+                page: 1,
+                limit: 10,
+            }),
+        );
+        const count = await getCommunitiesCount({
+            ctx: mockCtx,
+        });
+
+        expect(communities).toHaveLength(2);
+        expect(
+            communities.map((community) => community.communityId).sort(),
+        ).toEqual(["admin-disabled-community", "admin-enabled-community"]);
+        expect(count).toBe(2);
     });
 });

@@ -18,33 +18,17 @@ import {
     VerticalPaddingSelector,
     MaxWidthSelector,
 } from "@courselit/components-library";
+import { extractVideoId } from "@courselit/utils";
 import { AlertCircle, Lightbulb } from "lucide-react";
 import { Theme, ThemeStyle } from "@courselit/page-models";
 
 // Helper functions for content detection
 const hasYouTubeContent = (content: string): boolean => {
-    const lowerContent = content.toLowerCase();
-    return (
-        lowerContent.startsWith("https://www.youtube.com") ||
-        lowerContent.startsWith("https://www.youtube-nocookie.com") ||
-        lowerContent.startsWith("https://youtube.com") ||
-        lowerContent.startsWith("https://youtube-nocookie.com") ||
-        lowerContent.startsWith("https://youtu.be") ||
-        lowerContent.startsWith("https://youtube.com/embed/") ||
-        lowerContent.startsWith("https://www.youtube.com/embed/") ||
-        lowerContent.startsWith("https://www.youtube-nocookie.com/embed/") ||
-        lowerContent.startsWith("https://youtube.com/watch?v=") ||
-        lowerContent.startsWith("https://www.youtube.com/watch?v=") ||
-        lowerContent.startsWith("https://www.youtube-nocookie.com/watch?v=")
-    );
+    return !!extractVideoId(content, "youtube");
 };
 
 const hasVimeoContent = (content: string): boolean => {
-    const lowerContent = content.toLowerCase();
-    return (
-        lowerContent.startsWith("https://vimeo.com") ||
-        lowerContent.startsWith("https://player.vimeo.com")
-    );
+    return !!extractVideoId(content, "vimeo");
 };
 
 export default function AdminWidget({

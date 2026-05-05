@@ -16,6 +16,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@components/ui/tooltip";
+import { truncate } from "@courselit/utils";
 
 export function CommunityContentCard({
     community,
@@ -51,7 +52,7 @@ export function CommunityContentCard({
                 />
                 <PageCardContent theme={theme}>
                     <PageCardHeader theme={theme}>
-                        {community.name}
+                        {truncate(community.name, 50)}
                     </PageCardHeader>
                     <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center">

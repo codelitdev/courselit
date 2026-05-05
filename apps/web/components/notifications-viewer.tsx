@@ -215,6 +215,22 @@ export function NotificationsViewer() {
             .build();
         try {
             await fetcher.exec();
+            const targetUrl = new URL(href, window.location.origin);
+            const currentUrl = new URL(window.location.href);
+            const isSamePageTarget =
+                targetUrl.pathname === currentUrl.pathname &&
+                targetUrl.search === currentUrl.search;
+
+            setIsOpen(false);
+
+            if (isSamePageTarget) {
+                window.history.pushState({}, "", targetUrl.toString());
+                window.dispatchEvent(
+                    new Event("community-comment-target-change"),
+                );
+                return;
+            }
+
             router.push(href);
         } catch (error) {
             toast({
@@ -236,7 +252,11 @@ export function NotificationsViewer() {
                     <span className="sr-only">View notifications</span>
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-0" align="end">
+            <PopoverContent
+                className="w-80 p-0"
+                align="end"
+                onCloseAutoFocus={(event) => event.preventDefault()}
+            >
                 <Card>
                     <CardHeader className="border-b py-2 px-4 flex flex-row justify-between items-center">
                         <CardTitle className="text-base text-left">

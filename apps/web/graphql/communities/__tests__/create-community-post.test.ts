@@ -12,7 +12,7 @@ import DomainModel from "@models/Domain";
 import UserModel from "@models/User";
 import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
 import constants from "@/config/constants";
-import { Constants } from "@courselit/common-models";
+import { Constants, TextEditorContent } from "@courselit/common-models";
 
 jest.mock("@/services/medialit");
 jest.mock("@/services/queue");
@@ -26,6 +26,15 @@ jest.unmock("@courselit/utils");
 const SUITE_PREFIX = `ccp-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
 const id = (suffix: string) => `${SUITE_PREFIX}-${suffix}`;
 const email = (suffix: string) => `${suffix}-${SUITE_PREFIX}@example.com`;
+const doc = (text: string): TextEditorContent => ({
+    type: "doc",
+    content: [
+        {
+            type: "paragraph",
+            content: [{ type: "text", text }],
+        },
+    ],
+});
 
 describe("createCommunityPost", () => {
     let testDomain: any;
@@ -200,7 +209,7 @@ describe("createCommunityPost", () => {
                 createCommunityPost({
                     communityId: community.communityId,
                     title: "Test Post",
-                    content: "Test content",
+                    content: doc("Test content"),
                     category: "General",
                     ctx: unauthCtx,
                 }),
@@ -212,7 +221,7 @@ describe("createCommunityPost", () => {
                 createCommunityPost({
                     communityId: "nonexistent-community",
                     title: "Test Post",
-                    content: "Test content",
+                    content: doc("Test content"),
                     category: "General",
                     ctx: regularCtx,
                 }),
@@ -239,7 +248,7 @@ describe("createCommunityPost", () => {
                 createCommunityPost({
                     communityId: community.communityId,
                     title: "Test Post",
-                    content: "Test content",
+                    content: doc("Test content"),
                     category: "General",
                     ctx: noMemberCtx,
                 }),
@@ -253,7 +262,7 @@ describe("createCommunityPost", () => {
                 createCommunityPost({
                     communityId: community.communityId,
                     title: "Test Post",
-                    content: "Test content",
+                    content: doc("Test content"),
                     category: "General",
                     ctx: commentOnlyCtx,
                 }),
@@ -265,7 +274,7 @@ describe("createCommunityPost", () => {
                 createCommunityPost({
                     communityId: community.communityId,
                     title: "Test Post",
-                    content: "Test content",
+                    content: doc("Test content"),
                     category: "Nonexistent Category",
                     ctx: regularCtx,
                 }),
@@ -278,7 +287,7 @@ describe("createCommunityPost", () => {
             const result = await createCommunityPost({
                 communityId: community.communityId,
                 title: "My First Post",
-                content: "Hello world",
+                content: doc("Hello world"),
                 category: "General",
                 ctx: regularCtx,
             });
@@ -286,7 +295,7 @@ describe("createCommunityPost", () => {
             expect(result).toMatchObject({
                 communityId: community.communityId,
                 title: "My First Post",
-                content: "Hello world",
+                content: doc("Hello world"),
                 category: "General",
                 userId: regularUser.userId,
                 likesCount: 0,
@@ -299,7 +308,7 @@ describe("createCommunityPost", () => {
             const result = await createCommunityPost({
                 communityId: community.communityId,
                 title: "Persisted Post",
-                content: "Should be in DB",
+                content: doc("Should be in DB"),
                 category: "General",
                 ctx: regularCtx,
             });
@@ -311,7 +320,7 @@ describe("createCommunityPost", () => {
 
             expect(dbPost).not.toBeNull();
             expect(dbPost!.title).toBe("Persisted Post");
-            expect(dbPost!.content).toBe("Should be in DB");
+            expect(dbPost!.content).toEqual(doc("Should be in DB"));
             expect(dbPost!.category).toBe("General");
             expect(dbPost!.userId).toBe(regularUser.userId);
         });
@@ -320,7 +329,7 @@ describe("createCommunityPost", () => {
             const result = await createCommunityPost({
                 communityId: community.communityId,
                 title: "Sub Post",
-                content: "Subscription test",
+                content: doc("Subscription test"),
                 category: "General",
                 ctx: regularCtx,
             });
@@ -338,7 +347,7 @@ describe("createCommunityPost", () => {
             const result = await createCommunityPost({
                 communityId: community.communityId,
                 title: "Admin Post",
-                content: "Posted by admin",
+                content: doc("Posted by admin"),
                 category: "Announcements",
                 ctx: adminCtx,
             });
@@ -355,7 +364,7 @@ describe("createCommunityPost", () => {
             const result = await createCommunityPost({
                 communityId: community.communityId,
                 title: "No Media Post",
-                content: "Just text",
+                content: doc("Just text"),
                 category: "General",
                 ctx: regularCtx,
             });
@@ -382,7 +391,7 @@ describe("createCommunityPost", () => {
             const result = await createCommunityPost({
                 communityId: community.communityId,
                 title: "Media Post",
-                content: "Post with media",
+                content: doc("Post with media"),
                 category: "General",
                 media: [
                     {
@@ -428,7 +437,7 @@ describe("createCommunityPost", () => {
             const result = await createCommunityPost({
                 communityId: community.communityId,
                 title: "Activity Error Post",
-                content: "Should not crash",
+                content: doc("Should not crash"),
                 category: "General",
                 ctx: regularCtx,
             });

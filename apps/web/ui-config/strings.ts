@@ -311,6 +311,20 @@ export const HEADER_YOUR_PROFILE = "Your Profile";
 export const PROFILE_PAGE_MESSAGE_NOT_LOGGED_IN = "to see your profile.";
 export const PROFILE_PAGE_HEADER = "Profile";
 export const MY_CONTENT_HEADER = "My content";
+export const MY_CONTENT_PRODUCTS_TAB = "Products";
+export const MY_CONTENT_FEED_TAB = "Feed";
+export const MY_CONTENT_EMPTY_PRODUCTS =
+    "You haven't enrolled in any products yet.";
+export const MY_CONTENT_EMPTY_COMMUNITIES =
+    "You haven't joined any communities yet.";
+export const MY_CONTENT_BROWSE_PRODUCTS = "Browse products";
+export const MY_CONTENT_BROWSE_COMMUNITIES = "Browse communities";
+export const MY_CONTENT_FEED_EMPTY_TITLE = "No posts in your feed yet";
+export const MY_CONTENT_FEED_EMPTY_DESCRIPTION =
+    "Join communities and participate in discussions to see posts here.";
+export const MY_CONTENT_FEED_COMMUNITIES_TITLE = "Your communities";
+export const MY_CONTENT_FEED_COMMUNITIES_EMPTY =
+    "You haven't joined any communities yet.";
 export const NOTIFICATION_SETTINGS_PAGE_HEADER = "Notifications";
 export const NOTIFICATION_SETTINGS_PAGE_DESCRIPTION =
     "Manage how you receive notifications for each activity.";

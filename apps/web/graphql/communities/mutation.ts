@@ -1,4 +1,5 @@
 import GQLContext from "@models/GQLContext";
+import { GraphQLJSONObject } from "graphql-type-json";
 import {
     GraphQLBoolean,
     GraphQLList,
@@ -32,6 +33,7 @@ import {
     CommunityMedia,
     CommunityReportType,
     Media,
+    TextEditorContent,
 } from "@courselit/common-models";
 import mediaTypes from "../media/types";
 
@@ -141,7 +143,7 @@ const mutations = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLString) },
             title: { type: new GraphQLNonNull(GraphQLString) },
-            content: { type: new GraphQLNonNull(GraphQLString) },
+            content: { type: new GraphQLNonNull(GraphQLJSONObject) },
             category: { type: new GraphQLNonNull(GraphQLString) },
             media: { type: new GraphQLList(types.communityPostInputMedia) },
         },
@@ -156,7 +158,7 @@ const mutations = {
             }: {
                 id: string;
                 title: string;
-                content: string;
+                content: TextEditorContent | string;
                 category: string;
                 media?: CommunityMedia[];
             },
@@ -177,7 +179,7 @@ const mutations = {
             communityId: { type: new GraphQLNonNull(GraphQLString) },
             postId: { type: new GraphQLNonNull(GraphQLString) },
             title: { type: GraphQLString },
-            content: { type: GraphQLString },
+            content: { type: GraphQLJSONObject },
             category: { type: GraphQLString },
             media: { type: new GraphQLList(types.communityPostInputMedia) },
         },
@@ -194,7 +196,7 @@ const mutations = {
                 communityId: string;
                 postId: string;
                 title?: string;
-                content?: string;
+                content?: TextEditorContent | string;
                 category?: string;
                 media?: CommunityMedia[];
             },

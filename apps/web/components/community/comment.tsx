@@ -168,8 +168,15 @@ export function Comment({
         }
     };
 
+    const itemId = isCommunityComment(comment)
+        ? comment.commentId
+        : (comment as CommunityCommentReply).replyId;
+
     return (
-        <div className={`space-y-2 ${depth > 0 ? "ml-6" : ""}`}>
+        <div
+            id={itemId}
+            className={`space-y-2 rounded-xl border border-transparent px-3 py-3 transition-[background-color,border-color,box-shadow] duration-500 ${depth > 0 ? "ml-6" : ""}`}
+        >
             <div className="flex items-start gap-2">
                 <Avatar className="h-8 w-8">
                     <AvatarImage
