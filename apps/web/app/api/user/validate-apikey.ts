@@ -1,31 +1,52 @@
+// TODO: Remove this in future
 import { NextRequest } from "next/server";
-import DomainModel, { Domain } from "@models/Domain";
-import ApiKey from "@/models/ApiKey";
+import {
+    MAX_BODY_SIZE_BYTES,
+    validatePublicApiRequest,
+} from "@/app/api/public-api";
 
 export async function validateDomainAndApiKey(req: NextRequest) {
-    const domain = await DomainModel.findOne<Domain>({
-        name: req.headers.get("domain"),
+    const contentLength = req.headers.get("content-length");
+    if (contentLength && Number(contentLength) > MAX_BODY_SIZE_BYTES) {
+        return { error: { message: "Request body too large", status: 413 } };
+    }
+
+    let body: Record<string, unknown>;
+    try {
+        const parsedBody = await req.json();
+        if (
+            !parsedBody ||
+            typeof parsedBody !== "object" ||
+            Array.isArray(parsedBody)
+        ) {
+            return {
+                error: {
+                    message: "Request body must be a JSON object",
+                    status: 400,
+                },
+            };
+        }
+        body = parsedBody as Record<string, unknown>;
+    } catch {
+        return { error: { message: "Invalid JSON body", status: 400 } };
+    }
+
+    const validation = await validatePublicApiRequest(req, {
+        apiKey: body.apikey as string | undefined,
     });
-    if (!domain) {
-        return { error: { message: "Domain not found", status: 404 } };
+
+    if (validation.error) {
+        const errorBody = await validation.error.json();
+        return {
+            error: {
+                message:
+                    errorBody.error?.message ||
+                    errorBody.message ||
+                    "Bad request",
+                status: validation.error.status,
+            },
+        };
     }
 
-    const body = await req.json();
-    const apikey =
-        req.headers.get("x-api-key") ??
-        req.headers.get("X-API-Key") ??
-        body.apikey;
-    if (!apikey) {
-        return { error: { message: "Bad request", status: 400 } };
-    }
-    const apikeyObj = await ApiKey.findOne({
-        domain: domain._id,
-        key: apikey,
-    });
-
-    if (!apikeyObj) {
-        return { error: { message: "Unauthorized", status: 401 } };
-    }
-
-    return { domain, body };
+    return { ...validation, body };
 }

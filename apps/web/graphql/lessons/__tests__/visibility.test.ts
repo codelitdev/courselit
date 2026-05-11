@@ -5,8 +5,19 @@ import UserModel from "@/models/User";
 import CourseModel from "@/models/Course";
 import LessonModel from "@/models/Lesson";
 import ActivityModel from "@/models/Activity";
-import { getAllLessons, getLessonDetails, markLessonCompleted } from "../logic";
+import {
+    createLesson,
+    getAllLessons,
+    getLessonDetails,
+    markLessonCompleted,
+} from "../logic";
 import { responses } from "@/config/strings";
+import { sealMedia } from "@/services/medialit";
+
+jest.mock("@/services/medialit", () => ({
+    deleteMedia: jest.fn(),
+    sealMedia: jest.fn(),
+}));
 
 const SUITE_PREFIX = `lesson-visibility-${Date.now()}`;
 const id = (suffix: string) => `${SUITE_PREFIX}-${suffix}`;
@@ -209,6 +220,59 @@ describe("Lesson visibility and progress", () => {
                 course.courseId,
             ),
         ).rejects.toThrow(responses.item_not_found);
+    });
+
+    it("seals media before saving media-backed lessons on create", async () => {
+        const tempMediaId = id("temp-video-media");
+        (sealMedia as jest.Mock).mockResolvedValueOnce({
+            mediaId: tempMediaId,
+            originalFileName: "intro.mp4",
+            mimeType: "video/mp4",
+            size: 1234,
+            access: "private",
+            file: "https://media.example.com/temp-video.mp4",
+            thumbnail: "https://media.example.com/thumb.jpg",
+        });
+
+        const lesson = await createLesson(
+            {
+                title: "Video lesson",
+                type: Constants.LessonType.VIDEO,
+                content: JSON.stringify({}),
+                media: {
+                    mediaId: tempMediaId,
+                    originalFileName: "intro.mp4",
+                    mimeType: "video/mp4",
+                    size: 1234,
+                    access: "private",
+                    file: "https://media.example.com/temp-video.mp4",
+                    thumbnail: "https://media.example.com/thumb.jpg",
+                },
+                downloadable: false,
+                courseId: course.courseId,
+                groupId,
+                requiresEnrollment: true,
+                published: false,
+            } as any,
+            {
+                user: {
+                    ...creator.toObject(),
+                    permissions: ["course:manage"],
+                },
+                subdomain: testDomain,
+            } as any,
+        );
+
+        expect(sealMedia).toHaveBeenCalledWith(tempMediaId);
+        expect(lesson.media?.mediaId).toBe(tempMediaId);
+        expect(lesson.media?.file).toBeUndefined();
+
+        const savedLesson = await LessonModel.findOne({
+            lessonId: lesson.lessonId,
+            domain: testDomain._id,
+        }).lean();
+        expect(savedLesson?.media?.mediaId).toBe(tempMediaId);
+        expect(savedLesson?.media?.file).toBeUndefined();
     });
 
     it("should hide unpublished lessons from owners in learner lesson details", async () => {

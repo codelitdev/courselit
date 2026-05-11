@@ -21,6 +21,7 @@ import {
     COURSE_CUSTOMERS_PAGE_HEADING,
     MANAGE_COURSES_PAGE_HEADING,
     PRODUCT_TABLE_CONTEXT_MENU_INVITE_A_CUSTOMER,
+    BUTTON_SEARCH,
 } from "@ui-config/strings";
 import useProduct from "@/hooks/use-product";
 import { formattedLocaleDate, truncate } from "@ui-lib/utils";
@@ -64,6 +65,7 @@ export default function CustomersPage() {
     const productId = params.id as string;
     const [members, setMembers] = useState<Member[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
+    const [submittedSearch, setSubmittedSearch] = useState("");
     const [loading, setLoading] = useState(true);
     const address = useContext(AddressContext);
     const { product } = useProduct(productId);
@@ -78,13 +80,6 @@ export default function CustomersPage() {
         { label: COURSE_CUSTOMERS_PAGE_HEADING, href: "#" },
     ];
 
-    const filteredMembers = members.filter(
-        (member) =>
-            member.user.name
-                ?.toLowerCase()
-                .includes(searchTerm.toLowerCase()) ||
-            member.user.email.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
     const publishedLessons =
         product?.lessons?.filter((lesson) => lesson.published) || [];
 
@@ -112,8 +107,8 @@ export default function CustomersPage() {
             // `
             // :
             `
-            query GetMembers($productId: String!) {
-                members: getProductMembers(courseId: $productId, limit: 10000000) {
+            query GetMembers($productId: String!, $searchText: String) {
+                members: getProductMembers(courseId: $productId, limit: 10000000, searchText: $searchText) {
                     user {
                         userId
                         avatar {
@@ -134,7 +129,13 @@ export default function CustomersPage() {
             `;
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload({ query: mutation, variables: { productId } })
+            .setPayload({
+                query: mutation,
+                variables: {
+                    productId,
+                    searchText: submittedSearch || undefined,
+                },
+            })
             .setIsGraphQLEndpoint(true)
             .build();
         try {
@@ -170,7 +171,7 @@ export default function CustomersPage() {
         if (product) {
             fetchStudents();
         }
-    }, [product]);
+    }, [product, submittedSearch]);
 
     const handleCopyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
@@ -268,15 +269,24 @@ export default function CustomersPage() {
                 </Card>
             </div> */}
 
-            <div className="flex items-center space-x-2">
-                <Search className="h-5 w-5 text-muted-foreground" />
+            <form
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    setSubmittedSearch(searchTerm);
+                }}
+                className="flex items-center space-x-2"
+            >
                 <Input
                     placeholder="Search customers..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="max-w-sm"
                 />
-            </div>
+                <Button type="submit" size="sm">
+                    <Search className="mr-2 h-4 w-4" />
+                    {BUTTON_SEARCH}
+                </Button>
+            </form>
 
             <Table>
                 <TableHeader>
@@ -321,7 +331,7 @@ export default function CustomersPage() {
                                       </TableCell>
                                   </TableRow>
                               ))
-                        : filteredMembers.map((member: Member) => (
+                        : members.map((member: Member) => (
                               <TableRow key={member.user.email}>
                                   <TableCell className="font-medium">
                                       <Link

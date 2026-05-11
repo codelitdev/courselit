@@ -133,9 +133,20 @@ export const updateUser = async (userData: UserData, ctx: GQLContext) => {
     });
     if (!user) throw new Error(responses.item_not_found);
 
+    if (user.email === ctx.subdomain.email) {
+        const ownerProtectedKeys = ["permissions", "active"];
+        if (
+            ownerProtectedKeys.some((key) =>
+                Object.prototype.hasOwnProperty.call(userData, key),
+            )
+        ) {
+            throw new Error(responses.action_not_allowed);
+        }
+    }
+
     for (const key of keys.filter((key) => key !== "id")) {
         if (key === "tags") {
-            addTags(userData["tags"]!, ctx);
+            await addTags(userData["tags"]!, ctx);
         }
 
         user[key] = userData[key];
@@ -260,7 +271,10 @@ export const deleteUser = async (
         throw new Error(responses.user_not_found);
     }
 
-    if (userToDelete.userId === ctx.user.userId) {
+    if (
+        userToDelete.userId === ctx.user.userId ||
+        userToDelete.email === ctx.subdomain.email
+    ) {
         throw new Error(responses.action_not_allowed);
     }
 
@@ -861,6 +875,25 @@ export const getMembership = async ({
 
     return membership;
 };
+
+export async function findMembership({
+    domainId,
+    userId,
+    entityId,
+    entityType = Constants.MembershipEntityType.COURSE,
+}: {
+    domainId: mongoose.Types.ObjectId;
+    userId: string;
+    entityId: string;
+    entityType?: MembershipEntityType;
+}): Promise<InternalMembership | null> {
+    return MembershipModel.findOne<InternalMembership>({
+        domain: domainId,
+        userId,
+        entityType,
+        entityId,
+    });
+}
 
 export async function runPostMembershipTasks({
     domain,

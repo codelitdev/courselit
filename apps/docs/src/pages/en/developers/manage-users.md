@@ -27,12 +27,12 @@ POST /api/user
 
 - `Content-Type: application/json`
 - `domain`: Your domain name
+- `x-api-key`: Your API key
 
 ### Request Body
 
 ```json
 {
-    "apikey": "your-api-key",
     "email": "user@example.com",
     "name": "User Name",
     "permissions": ["read", "write"],
@@ -68,8 +68,8 @@ Here are the possible values for the `permissions` array:
 curl -X POST https://yourdomain.com/api/user \
 -H "Content-Type: application/json" \
 -H "domain: yourdomain.com" \
+-H "x-api-key: your-api-key" \
 -d '{
-  "apikey": "your-api-key",
   "email": "user@example.com",
   "name": "User Name",
   "permissions": ["course:manage", "community:manage"],

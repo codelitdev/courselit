@@ -19,6 +19,7 @@
     - Ensure **Idempotency** (safe to re-run) by using upserts or `$setOnInsert` where applicable.
 - When making changes to the structure of the Course, consider how it affects its representation on its public page (`apps/web/app/(with-contexts)/(with-layout)/p/[id]/page.tsx`) and the course viewer (`apps/web/app/(with-contexts)/course/[slug]/[id]/page.tsx`).
 - `apps/web` is a multi-tenant app.
+- Preserve the domain-owner invariant: `domain.email` identifies the school owner and public API keys resolve that owner as the API actor. Do not use raw `UserModel.update*`, `UserModel.delete*`, `DomainModel.update*`, migrations, or scripts in a way that changes/deletes the owner user, changes the owner user's permissions, or drifts `domain.email` away from the owner user without adding explicit guards and tests.
 - Refrain from adding new GraphQL query/mutation unless required. If an existing query/mutation can be modified to implement the feature without making the query's/mutation's boundaries blurry, extend those.
 
 ### Workspace map (core modules):

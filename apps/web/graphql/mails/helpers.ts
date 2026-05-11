@@ -9,7 +9,7 @@ import pug from "pug";
 import digitalDownloadTemplate from "../../templates/download-link";
 import { responses } from "@config/strings";
 import { addMailJob } from "@/services/queue";
-import { EmailBlock } from "@courselit/email-editor";
+import type { EmailBlock } from "@courselit/email-editor";
 import UserModel from "@models/User";
 import { InternalCourse } from "@courselit/orm-models";
 
@@ -88,6 +88,7 @@ export async function createTemplateAndSendMail({
     });
 
     const creator = await UserModel.findOne({
+        domain: ctx.subdomain._id,
         userId: course.creatorId,
     }).select("name");
 

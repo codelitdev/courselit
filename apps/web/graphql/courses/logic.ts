@@ -45,7 +45,7 @@ import MembershipModel from "@models/Membership";
 import { getActivities } from "../activities/logic";
 import { ActivityType } from "@courselit/common-models/dist/constants";
 import { verifyMandatoryTags } from "../mails/helpers";
-import { Email } from "@courselit/email-editor";
+import type { Email } from "@courselit/email-editor";
 import PaymentPlanModel from "@models/PaymentPlan";
 import CertificateTemplateModel, {
     CertificateTemplate,
@@ -557,6 +557,8 @@ const getProductsQuery = (
     tags?: string[],
     ids?: string[],
     publicView: boolean = false,
+    published?: boolean,
+    searchText?: string,
 ) => {
     const query: Record<string, unknown> = {
         domain: ctx.subdomain._id,
@@ -598,6 +600,14 @@ const getProductsQuery = (
         };
     }
 
+    if (!publicView && typeof published === "boolean") {
+        query.published = published;
+    }
+
+    if (searchText) {
+        query.$text = { $search: searchText };
+    }
+
     return query;
 };
 
@@ -610,6 +620,8 @@ export const getProducts = async ({
     ids,
     publicView,
     sort = -1,
+    published,
+    searchText,
 }: {
     ctx: GQLContext;
     page?: number;
@@ -619,8 +631,18 @@ export const getProducts = async ({
     ids?: string[];
     publicView?: boolean;
     sort?: number;
+    published?: boolean;
+    searchText?: string;
 }): Promise<InternalCourse[]> => {
-    const query = getProductsQuery(ctx, filterBy, tags, ids, publicView);
+    const query = getProductsQuery(
+        ctx,
+        filterBy,
+        tags,
+        ids,
+        publicView,
+        published,
+        searchText,
+    );
 
     const courses = await (CourseModel as any).paginatedFind(query, {
         page,
@@ -701,6 +723,44 @@ export const getProductsCount = async ({
     const query = getProductsQuery(ctx, filterBy, tags, ids, publicView);
 
     return await (CourseModel as any).countDocuments(query);
+};
+
+export const getCourseLessons = async ({
+    courseId,
+    ctx,
+}: {
+    courseId: string;
+    ctx: GQLContext;
+}) => {
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
+
+    return await LessonModel.find({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+    }).sort({ _id: 1 });
+};
+
+export const getCourseLessonOrThrow = async ({
+    courseId,
+    lessonId,
+    ctx,
+}: {
+    courseId: string;
+    lessonId: string;
+    ctx: GQLContext;
+}) => {
+    const course = await getCourseOrThrow(undefined, ctx, courseId);
+    const lesson = await LessonModel.findOne({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+        lessonId,
+    });
+
+    if (!lesson) {
+        throw new Error(responses.item_not_found);
+    }
+
+    return lesson;
 };
 
 export const addGroup = async ({
@@ -859,33 +919,58 @@ export const updateGroup = async ({
             $set["groups.$.drip.type"] = drip.type;
         }
         if (effectiveDripType === Constants.dripType[0]) {
+            if (
+                drip.type === Constants.dripType[0] &&
+                typeof drip.delayInMillis !== "number"
+            ) {
+                throw new Error(
+                    "Relative-date drip requires a numeric delayInMillis",
+                );
+            }
             if (typeof drip.delayInMillis === "number") {
                 $set["groups.$.drip.delayInMillis"] =
                     drip.delayInMillis * constants.relativeDripUnitInMillis;
             }
-            $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
-        }
-        if (effectiveDripType === Constants.dripType[1]) {
-            $set["groups.$.drip.delayInMillis"] = null;
-            if (drip.dateInUTC) {
+            if (drip.type === Constants.dripType[0]) {
+                $set["groups.$.drip.dateInUTC"] = null;
+            } else if (typeof drip.dateInUTC === "number") {
                 $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
             }
         }
-        if (drip.email) {
-            if (!drip.email.content || !drip.email.subject) {
-                throw new Error(responses.invalid_drip_email);
+        if (effectiveDripType === Constants.dripType[1]) {
+            if (
+                drip.type === Constants.dripType[1] &&
+                typeof drip.dateInUTC !== "number"
+            ) {
+                throw new Error("Exact-date drip requires a numeric dateInUTC");
             }
-            const parsedContent: Email = JSON.parse(drip.email.content);
-            verifyMandatoryTags(parsedContent.content);
+            if (drip.type === Constants.dripType[1]) {
+                $set["groups.$.drip.delayInMillis"] = null;
+            } else if (typeof drip.delayInMillis === "number") {
+                $set["groups.$.drip.delayInMillis"] =
+                    drip.delayInMillis * constants.relativeDripUnitInMillis;
+            }
+            if (typeof drip.dateInUTC === "number") {
+                $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
+            }
+        }
+        if (Object.prototype.hasOwnProperty.call(drip, "email")) {
+            if (drip.email) {
+                if (!drip.email.content || !drip.email.subject) {
+                    throw new Error(responses.invalid_drip_email);
+                }
+                const parsedContent: Email = JSON.parse(drip.email.content);
+                verifyMandatoryTags(parsedContent.content);
 
-            $set["groups.$.drip.email"] = {
-                content: parsedContent,
-                subject: drip.email.subject,
-                published: true,
-                delayInMillis: 0,
-            };
-        } else {
-            $set["groups.$.drip.email"] = null;
+                $set["groups.$.drip.email"] = {
+                    content: parsedContent,
+                    subject: drip.email.subject,
+                    published: true,
+                    delayInMillis: 0,
+                };
+            } else {
+                $set["groups.$.drip.email"] = null;
+            }
         }
     }
 
@@ -1048,12 +1133,14 @@ export const getMembers = async ({
     page = 1,
     limit = 10,
     status,
+    searchText,
 }: {
     ctx: GQLContext;
     courseId: string;
     page?: number;
     limit?: number;
     status?: MembershipStatus;
+    searchText?: string;
 }): Promise<
     (Pick<
         Membership,
@@ -1076,6 +1163,28 @@ export const getMembers = async ({
 
     if (status) {
         query.status = status;
+    }
+
+    const normalizedSearchText = searchText?.trim();
+    if (normalizedSearchText) {
+        const escapedSearchText = normalizedSearchText.replace(
+            /[.*+?^${}()|[\]\\]/g,
+            "\\$&",
+        );
+        const matchingUsers = await UserModel.find<User>({
+            domain: ctx.subdomain._id,
+            $or: [
+                { name: { $regex: escapedSearchText, $options: "i" } },
+                { email: { $regex: escapedSearchText, $options: "i" } },
+            ],
+        }).select("userId");
+        const matchingUserIds = matchingUsers.map((user) => user.userId);
+
+        if (!matchingUserIds.length) {
+            return [];
+        }
+
+        query.userId = { $in: matchingUserIds };
     }
 
     const members: Membership[] = await (MembershipModel as any).paginatedFind(

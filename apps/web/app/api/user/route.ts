@@ -3,15 +3,21 @@ import { responses } from "@/config/strings";
 import { createUser } from "@/graphql/users/logic";
 import constants from "@config/constants";
 import { createHash } from "crypto";
-import { validateDomainAndApiKey } from "./validate-apikey";
 import UserModel from "@models/User";
 import { checkForInvalidPermissions } from "@/lib/check-invalid-permissions";
+import { validateDomainAndApiKey } from "./validate-apikey";
+import { validateEmail } from "@/app/api/public-api";
 
 function validateRequestBody(body: any) {
     const { email, subscribedToUpdates, permissions } = body;
 
     if (!email) {
         return { error: { message: "Bad request", status: 400 } };
+    }
+
+    const emailError = validateEmail(email);
+    if (emailError) {
+        return { error: { message: emailError, status: 400 } };
     }
 
     if (subscribedToUpdates && typeof subscribedToUpdates !== "boolean") {
@@ -51,7 +57,10 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    const { email, subscribedToUpdates, name, permissions } = body;
+    const { email, subscribedToUpdates, name, permissions } = body as Record<
+        string,
+        any
+    >;
 
     try {
         await createUser({
@@ -101,7 +110,20 @@ export async function PATCH(req: NextRequest) {
         );
     }
 
-    const { email, name, permissions, subscribedToUpdates } = body;
+    const { email, name, permissions, subscribedToUpdates } = body as Record<
+        string,
+        any
+    >;
+
+    if (
+        Object.prototype.hasOwnProperty.call(body, "permissions") &&
+        email === domain.email
+    ) {
+        return NextResponse.json(
+            { error: responses.action_not_allowed },
+            { status: 403 },
+        );
+    }
 
     try {
         const user = await UserModel.findOneAndUpdate(
