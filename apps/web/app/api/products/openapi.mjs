@@ -1066,6 +1066,16 @@ export const productsApiOpenApi = {
                     published: { type: "boolean" },
                 },
             },
+            LessonGroup: {
+                type: "object",
+                properties: {
+                    groupId: { type: "string" },
+                    lessons: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/Lesson" },
+                    },
+                },
+            },
             LessonCreateRequest: {
                 type: "object",
                 required: ["title", "type", "groupId"],
@@ -1099,7 +1109,7 @@ export const productsApiOpenApi = {
                 properties: {
                     data: {
                         type: "array",
-                        items: { $ref: "#/components/schemas/Lesson" },
+                        items: { $ref: "#/components/schemas/LessonGroup" },
                     },
                 },
             },

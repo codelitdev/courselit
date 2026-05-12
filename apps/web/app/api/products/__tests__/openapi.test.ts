@@ -297,5 +297,19 @@ describe("Products OpenAPI", () => {
                 "422"
             ].description,
         ).toContain("SCORM");
+        expect(
+            routes.components.schemas.LessonListResponse.properties.data.items
+                .$ref,
+        ).toBe("#/components/schemas/LessonGroup");
+        expect(routes.components.schemas.LessonGroup).toMatchObject({
+            type: "object",
+            properties: {
+                groupId: { type: "string" },
+                lessons: {
+                    type: "array",
+                    items: { $ref: "#/components/schemas/Lesson" },
+                },
+            },
+        });
     });
 });

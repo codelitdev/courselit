@@ -2487,6 +2487,20 @@
                     }
                 }
             },
+            "LessonGroup": {
+                "type": "object",
+                "properties": {
+                    "groupId": {
+                        "type": "string"
+                    },
+                    "lessons": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Lesson"
+                        }
+                    }
+                }
+            },
             "LessonCreateRequest": {
                 "type": "object",
                 "required": ["title", "type", "groupId"],
@@ -2577,7 +2591,7 @@
                     "data": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/Lesson"
+                            "$ref": "#/components/schemas/LessonGroup"
                         }
                     }
                 }

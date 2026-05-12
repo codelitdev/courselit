@@ -81,16 +81,21 @@ describe("/api/products/{productId}/lessons", () => {
         await expect(response.json()).resolves.toEqual({
             data: [
                 {
-                    lessonId: "lesson-1",
-                    title: "Intro",
-                    type: "text",
-                    content: tiptapDoc,
-                    media: undefined,
-                    downloadable: undefined,
-                    courseId: "course-1",
                     groupId: "group-1",
-                    requiresEnrollment: true,
-                    published: false,
+                    lessons: [
+                        {
+                            lessonId: "lesson-1",
+                            title: "Intro",
+                            type: "text",
+                            content: tiptapDoc,
+                            media: undefined,
+                            downloadable: undefined,
+                            courseId: "course-1",
+                            groupId: "group-1",
+                            requiresEnrollment: true,
+                            published: false,
+                        },
+                    ],
                 },
             ],
         });

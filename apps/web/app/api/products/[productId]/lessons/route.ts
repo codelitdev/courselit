@@ -31,6 +31,19 @@ function getUnsupportedField(body: Record<string, unknown>) {
     return Object.keys(body).find((key) => !createLessonFields.has(key));
 }
 
+function groupLessonsByGroupId(sortedLessons: any[]) {
+    const groups: { groupId: string; lessons: any[] }[] = [];
+    for (const lesson of sortedLessons) {
+        const lastGroup = groups[groups.length - 1];
+        if (lastGroup && lastGroup.groupId === lesson.groupId) {
+            lastGroup.lessons.push(lesson);
+        } else {
+            groups.push({ groupId: lesson.groupId, lessons: [lesson] });
+        }
+    }
+    return groups;
+}
+
 export async function GET(
     req: NextRequest,
     { params }: { params: Promise<{ productId: string }> },
@@ -47,8 +60,15 @@ export async function GET(
             ctx: auth.ctx as any,
         });
 
+        const groupedLessons = groupLessonsByGroupId(lessons as any[]);
+
         return NextResponse.json({
-            data: lessons.map((lesson) => serializeLesson(lesson as any)),
+            data: groupedLessons.map((group) => ({
+                groupId: group.groupId,
+                lessons: group.lessons.map((lesson) =>
+                    serializeLesson(lesson as any),
+                ),
+            })),
         });
     } catch (error: any) {
         return publicApiError(

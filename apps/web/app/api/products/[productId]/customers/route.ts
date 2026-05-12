@@ -63,10 +63,12 @@ export async function GET(
             : [];
         const userMap = new Map(users.map((u: any) => [u.userId, u]));
 
-        const customers = (members as any[]).map((member) => {
-            const user = userMap.get(member.userId);
-            return serializeMember(member, user);
-        });
+        const customers = (members as any[])
+            .map((member) => {
+                const user = userMap.get(member.userId);
+                return user ? serializeMember(member, user) : null;
+            })
+            .filter(Boolean);
 
         return NextResponse.json({
             data: customers,

@@ -83,12 +83,12 @@ function validateMediaContent(lessonData: LessonValidatorProps) {
     }
 }
 
-type GroupLessonItem = Pick<Lesson, "lessonId" | "groupId">;
 export const getGroupedLessons = async (
     courseId: string,
     domainId: mongoose.Types.ObjectId,
     publishedOnly: boolean = false,
-): Promise<GroupLessonItem[]> => {
+    select?: Record<string, number>,
+): Promise<any[]> => {
     const course = await CourseModel.findOne({
         courseId: courseId,
         domain: domainId,
@@ -100,27 +100,30 @@ export const getGroupedLessons = async (
     if (publishedOnly) {
         lessonsQuery.published = true;
     }
-    const allLessons = await LessonModel.find<GroupLessonItem>(lessonsQuery, {
-        lessonId: 1,
-        groupId: 1,
-    });
-    const lessonsInSequentialOrder: GroupLessonItem[] = [];
+    const allLessons = await LessonModel.find(lessonsQuery, select);
+    const lessonsInSequentialOrder: any[] = [];
     for (let group of (course?.groups ?? []).sort(
         (a: Group, b: Group) => a.rank - b.rank,
     )) {
         lessonsInSequentialOrder.push(
             ...allLessons
-                .filter(
-                    (lesson: GroupLessonItem) => lesson.groupId === group.id,
-                )
+                .filter((lesson: any) => lesson.groupId === group.id)
                 .sort(
-                    (a: GroupLessonItem, b: GroupLessonItem) =>
+                    (a: any, b: any) =>
                         group.lessonsOrder?.indexOf(a.lessonId) -
                         group.lessonsOrder?.indexOf(b.lessonId),
                 ),
         );
     }
-    return lessonsInSequentialOrder;
+
+    const includedLessonIds = new Set(
+        lessonsInSequentialOrder.map((l) => l.lessonId),
+    );
+    const remainingLessons = allLessons.filter(
+        (lesson: any) => !includedLessonIds.has(lesson.lessonId),
+    );
+
+    return [...lessonsInSequentialOrder, ...remainingLessons];
 };
 
 export const getPrevNextCursor = async (
@@ -133,6 +136,7 @@ export const getPrevNextCursor = async (
         courseId,
         domainId,
         publishedOnly,
+        { lessonId: 1, groupId: 1 },
     );
     const indexOfCurrentLesson = lessonId
         ? lessonsInSequentialOrder.findIndex(

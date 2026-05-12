@@ -49,7 +49,7 @@
         "typescript-eslint": "^7.4.0"
     },
     "peerDependencies": {
-        "next": "*",
+        "next": "^16.0.10",
         "react": "*"
     },
     "gitHead": "fca7d2f8455c835f1c185a1ebc8513c6269ebe5b",

@@ -34,7 +34,7 @@ import {
 import { deleteAllLessons } from "../lessons/logic";
 import { deleteMedia, sealMedia } from "@/services/medialit";
 import PageModel from "@/models/Page";
-import { getPrevNextCursor } from "../lessons/helpers";
+import { getGroupedLessons, getPrevNextCursor } from "../lessons/helpers";
 import { checkPermission, extractMediaIDs } from "@courselit/utils";
 import { error } from "@/services/logger";
 import {
@@ -733,11 +733,7 @@ export const getCourseLessons = async ({
     ctx: GQLContext;
 }) => {
     const course = await getCourseOrThrow(undefined, ctx, courseId);
-
-    return await LessonModel.find({
-        domain: ctx.subdomain._id,
-        courseId: course.courseId,
-    }).sort({ _id: 1 });
+    return await getGroupedLessons(course.courseId, ctx.subdomain._id);
 };
 
 export const getCourseLessonOrThrow = async ({

@@ -49,6 +49,6 @@
         "@courselit/orm-models": "workspace:^",
         "@courselit/utils": "workspace:^",
         "jsonwebtoken": "^9.0.3",
-        "mongoose": "^8.13.1"
+        "mongoose": "^8.22.1"
     }
 }
