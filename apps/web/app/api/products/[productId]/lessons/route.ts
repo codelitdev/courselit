@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Constants } from "@courselit/common-models";
-import { getCourseLessons } from "@/graphql/courses/logic";
+import { getCourseOrThrow } from "@/graphql/courses/logic";
+import { getGroupedLessons } from "@/graphql/lessons/helpers";
 import { createLesson } from "@/graphql/lessons/logic";
 import {
     publicApiError,
@@ -55,10 +56,12 @@ export async function GET(
 
     const { productId } = await params;
     try {
-        const lessons = await getCourseLessons({
-            courseId: productId,
-            ctx: auth.ctx as any,
-        });
+        const ctx = auth.ctx as any;
+        const course = await getCourseOrThrow(undefined, ctx, productId);
+        const lessons = await getGroupedLessons(
+            course.courseId,
+            ctx.subdomain._id,
+        );
 
         const groupedLessons = groupLessonsByGroupId(lessons as any[]);
 

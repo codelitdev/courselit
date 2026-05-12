@@ -6,14 +6,18 @@ import { NextRequest } from "next/server";
 import Domain from "@models/Domain";
 import ApiKey from "@models/ApiKey";
 import User from "@models/User";
-import { getCourseLessons } from "@/graphql/courses/logic";
+import { getCourseOrThrow } from "@/graphql/courses/logic";
+import { getGroupedLessons } from "@/graphql/lessons/helpers";
 import { createLesson } from "@/graphql/lessons/logic";
 
 jest.mock("@models/Domain");
 jest.mock("@models/ApiKey");
 jest.mock("@models/User");
 jest.mock("@/graphql/courses/logic", () => ({
-    getCourseLessons: jest.fn(),
+    getCourseOrThrow: jest.fn(),
+}));
+jest.mock("@/graphql/lessons/helpers", () => ({
+    getGroupedLessons: jest.fn(),
 }));
 jest.mock("@/graphql/lessons/logic", () => ({
     createLesson: jest.fn(),
@@ -55,7 +59,10 @@ describe("/api/products/{productId}/lessons", () => {
     });
 
     it("lists lessons for a product without requiring published-only behavior", async () => {
-        (getCourseLessons as jest.Mock).mockResolvedValue([
+        (getCourseOrThrow as jest.Mock).mockResolvedValue({
+            courseId: "course-1",
+        });
+        (getGroupedLessons as jest.Mock).mockResolvedValue([
             {
                 lessonId: "lesson-1",
                 title: "Intro",
@@ -66,6 +73,16 @@ describe("/api/products/{productId}/lessons", () => {
                 published: false,
                 requiresEnrollment: true,
             },
+            {
+                lessonId: "lesson-2",
+                title: "Second",
+                type: "text",
+                content: tiptapDoc,
+                courseId: "course-1",
+                groupId: "group-2",
+                published: true,
+                requiresEnrollment: false,
+            },
         ]);
 
         const { GET } = await import("../route");
@@ -74,10 +91,12 @@ describe("/api/products/{productId}/lessons", () => {
         });
 
         expect(response.status).toBe(200);
-        expect(getCourseLessons).toHaveBeenCalledWith({
-            courseId: "course-1",
-            ctx: expect.objectContaining({ subdomain: domain }),
-        });
+        expect(getCourseOrThrow).toHaveBeenCalledWith(
+            undefined,
+            expect.objectContaining({ subdomain: domain }),
+            "course-1",
+        );
+        expect(getGroupedLessons).toHaveBeenCalledWith("course-1", domain._id);
         await expect(response.json()).resolves.toEqual({
             data: [
                 {
@@ -94,6 +113,23 @@ describe("/api/products/{productId}/lessons", () => {
                             groupId: "group-1",
                             requiresEnrollment: true,
                             published: false,
+                        },
+                    ],
+                },
+                {
+                    groupId: "group-2",
+                    lessons: [
+                        {
+                            lessonId: "lesson-2",
+                            title: "Second",
+                            type: "text",
+                            content: tiptapDoc,
+                            media: undefined,
+                            downloadable: undefined,
+                            courseId: "course-1",
+                            groupId: "group-2",
+                            requiresEnrollment: false,
+                            published: true,
                         },
                     ],
                 },

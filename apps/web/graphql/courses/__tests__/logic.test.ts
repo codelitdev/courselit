@@ -7,13 +7,7 @@ import PageModel from "@models/Page";
 import constants from "@/config/constants";
 import { responses } from "@/config/strings";
 import { Constants as CommonConstants } from "@courselit/common-models";
-import {
-    getCourse,
-    getCourseLessons,
-    getMembers,
-    getProducts,
-    updateCourse,
-} from "../logic";
+import { getCourse, getMembers, getProducts, updateCourse } from "../logic";
 import { getLessonOrThrow } from "../../lessons/logic";
 import { deleteMedia, sealMedia } from "@/services/medialit";
 
@@ -517,127 +511,6 @@ describe("public API product read helpers", () => {
         );
 
         paginatedFind.mockRestore();
-    });
-
-    it("returns lessons for a product after applying existing product access checks", async () => {
-        const course = await CourseModel.create({
-            domain: testDomain._id,
-            courseId: helperId("course"),
-            title: "Course",
-            creatorId: adminUser.userId,
-            groups: [],
-            lessons: [],
-            type: constants.course,
-            privacy: "unlisted",
-            costType: "free",
-            cost: 0,
-            slug: helperId("course-slug"),
-        });
-        const groupId = helperId("group");
-        await LessonModel.create({
-            domain: testDomain._id,
-            lessonId: helperId("lesson-1"),
-            title: "Intro",
-            type: constants.text,
-            creatorId: adminUser.userId,
-            courseId: course.courseId,
-            groupId,
-            published: false,
-        });
-
-        const lessons = await getCourseLessons({
-            courseId: course.courseId,
-            ctx: {
-                subdomain: testDomain,
-                user: adminUser,
-                address: "",
-            },
-        });
-
-        expect(lessons).toHaveLength(1);
-        expect(lessons[0].courseId).toBe(course.courseId);
-    });
-
-    it("returns lessons grouped by group rank and sorted by lessonsOrder", async () => {
-        const groupId1 = helperId("group-1");
-        const groupId2 = helperId("group-2");
-        const lesson1 = helperId("lesson-1");
-        const lesson2 = helperId("lesson-2");
-        const lesson3 = helperId("lesson-3");
-
-        const course = await CourseModel.create({
-            domain: testDomain._id,
-            courseId: helperId("course-ordered"),
-            title: "Ordered Course",
-            creatorId: adminUser.userId,
-            groups: [
-                {
-                    _id: groupId1,
-                    name: "Group 1",
-                    rank: 2000,
-                    collapsed: true,
-                    lessonsOrder: [lesson2, lesson1],
-                },
-                {
-                    _id: groupId2,
-                    name: "Group 2",
-                    rank: 1000,
-                    collapsed: true,
-                    lessonsOrder: [lesson3],
-                },
-            ],
-            lessons: [lesson1, lesson2, lesson3],
-            type: constants.course,
-            privacy: "unlisted",
-            costType: "free",
-            cost: 0,
-            slug: helperId("course-slug-ordered"),
-        });
-
-        await LessonModel.insertMany([
-            {
-                domain: testDomain._id,
-                lessonId: lesson1,
-                title: "Lesson 1",
-                type: constants.text,
-                creatorId: adminUser.userId,
-                courseId: course.courseId,
-                groupId: groupId1,
-            },
-            {
-                domain: testDomain._id,
-                lessonId: lesson2,
-                title: "Lesson 2",
-                type: constants.text,
-                creatorId: adminUser.userId,
-                courseId: course.courseId,
-                groupId: groupId1,
-            },
-            {
-                domain: testDomain._id,
-                lessonId: lesson3,
-                title: "Lesson 3",
-                type: constants.text,
-                creatorId: adminUser.userId,
-                courseId: course.courseId,
-                groupId: groupId2,
-            },
-        ]);
-
-        const lessons = await getCourseLessons({
-            courseId: course.courseId,
-            ctx: {
-                subdomain: testDomain,
-                user: adminUser,
-                address: "",
-            },
-        });
-
-        expect(lessons.map((l: any) => l.lessonId)).toEqual([
-            lesson3,
-            lesson2,
-            lesson1,
-        ]);
     });
 
     it("rejects course-scoped lesson reads when the lesson belongs to another product", async () => {

@@ -34,7 +34,7 @@ import {
 import { deleteAllLessons } from "../lessons/logic";
 import { deleteMedia, sealMedia } from "@/services/medialit";
 import PageModel from "@/models/Page";
-import { getGroupedLessons, getPrevNextCursor } from "../lessons/helpers";
+import { getPrevNextCursor } from "../lessons/helpers";
 import { checkPermission, extractMediaIDs } from "@courselit/utils";
 import { error } from "@/services/logger";
 import {
@@ -723,17 +723,6 @@ export const getProductsCount = async ({
     const query = getProductsQuery(ctx, filterBy, tags, ids, publicView);
 
     return await (CourseModel as any).countDocuments(query);
-};
-
-export const getCourseLessons = async ({
-    courseId,
-    ctx,
-}: {
-    courseId: string;
-    ctx: GQLContext;
-}) => {
-    const course = await getCourseOrThrow(undefined, ctx, courseId);
-    return await getGroupedLessons(course.courseId, ctx.subdomain._id);
 };
 
 export const addGroup = async ({
