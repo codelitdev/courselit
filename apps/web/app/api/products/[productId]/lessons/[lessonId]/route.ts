@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Constants } from "@courselit/common-models";
-import { getCourseLessonOrThrow } from "@/graphql/courses/logic";
-import { deleteLesson, updateLesson } from "@/graphql/lessons/logic";
+import {
+    deleteLesson,
+    getLessonOrThrow,
+    updateLesson,
+} from "@/graphql/lessons/logic";
 import {
     publicApiError,
     validatePublicApiRequest,
@@ -43,11 +46,7 @@ async function getProductLessonOrNull({
     ctx: any;
 }) {
     try {
-        return await getCourseLessonOrThrow({
-            courseId: productId,
-            lessonId,
-            ctx,
-        });
+        return await getLessonOrThrow(lessonId, ctx, { courseId: productId });
     } catch (error) {
         return null;
     }

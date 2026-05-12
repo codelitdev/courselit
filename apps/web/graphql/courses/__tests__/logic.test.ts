@@ -9,12 +9,12 @@ import { responses } from "@/config/strings";
 import { Constants as CommonConstants } from "@courselit/common-models";
 import {
     getCourse,
-    getCourseLessonOrThrow,
     getCourseLessons,
     getMembers,
     getProducts,
     updateCourse,
 } from "../logic";
+import { getLessonOrThrow } from "../../lessons/logic";
 import { deleteMedia, sealMedia } from "@/services/medialit";
 
 jest.mock("@/services/medialit", () => ({
@@ -640,7 +640,7 @@ describe("public API product read helpers", () => {
         ]);
     });
 
-    it("rejects lesson reads when the lesson does not belong to the product", async () => {
+    it("rejects course-scoped lesson reads when the lesson belongs to another product", async () => {
         const course = await CourseModel.create({
             domain: testDomain._id,
             courseId: helperId("course"),
@@ -654,17 +654,41 @@ describe("public API product read helpers", () => {
             cost: 0,
             slug: helperId("course-slug"),
         });
+        const otherCourse = await CourseModel.create({
+            domain: testDomain._id,
+            courseId: helperId("other-course"),
+            title: "Other Course",
+            creatorId: adminUser.userId,
+            groups: [],
+            lessons: [],
+            type: constants.course,
+            privacy: "unlisted",
+            costType: "free",
+            cost: 0,
+            slug: helperId("other-course-slug"),
+        });
+        const lessonId = helperId("other-course-lesson");
+        await LessonModel.create({
+            domain: testDomain._id,
+            lessonId,
+            title: "Other Course Lesson",
+            type: constants.text,
+            creatorId: adminUser.userId,
+            courseId: otherCourse.courseId,
+            groupId: helperId("other-group"),
+            published: false,
+        });
 
         await expect(
-            getCourseLessonOrThrow({
-                courseId: course.courseId,
-                lessonId: helperId("missing-lesson"),
-                ctx: {
+            getLessonOrThrow(
+                lessonId,
+                {
                     subdomain: testDomain,
                     user: adminUser,
                     address: "",
                 },
-            }),
+                { courseId: course.courseId },
+            ),
         ).rejects.toThrow(responses.item_not_found);
     });
 

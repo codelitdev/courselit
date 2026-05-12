@@ -6,17 +6,18 @@ import { NextRequest } from "next/server";
 import Domain from "@models/Domain";
 import ApiKey from "@models/ApiKey";
 import User from "@models/User";
-import { getCourseLessonOrThrow } from "@/graphql/courses/logic";
-import { deleteLesson, updateLesson } from "@/graphql/lessons/logic";
+import {
+    deleteLesson,
+    getLessonOrThrow,
+    updateLesson,
+} from "@/graphql/lessons/logic";
 
 jest.mock("@models/Domain");
 jest.mock("@models/ApiKey");
 jest.mock("@models/User");
-jest.mock("@/graphql/courses/logic", () => ({
-    getCourseLessonOrThrow: jest.fn(),
-}));
 jest.mock("@/graphql/lessons/logic", () => ({
     deleteLesson: jest.fn(),
+    getLessonOrThrow: jest.fn(),
     updateLesson: jest.fn(),
 }));
 
@@ -55,7 +56,7 @@ describe("/api/products/{productId}/lessons/{lessonId}", () => {
     });
 
     it("fetches a product lesson through existing product lesson logic", async () => {
-        (getCourseLessonOrThrow as jest.Mock).mockResolvedValue({
+        (getLessonOrThrow as jest.Mock).mockResolvedValue({
             lessonId: "lesson-1",
             title: "Intro",
             type: "text",
@@ -70,11 +71,11 @@ describe("/api/products/{productId}/lessons/{lessonId}", () => {
         const response = await GET(request(), { params });
 
         expect(response.status).toBe(200);
-        expect(getCourseLessonOrThrow).toHaveBeenCalledWith({
-            courseId: "course-1",
-            lessonId: "lesson-1",
-            ctx: expect.objectContaining({ subdomain: domain }),
-        });
+        expect(getLessonOrThrow).toHaveBeenCalledWith(
+            "lesson-1",
+            expect.objectContaining({ subdomain: domain }),
+            { courseId: "course-1" },
+        );
         await expect(response.json()).resolves.toMatchObject({
             lessonId: "lesson-1",
             content: tiptapDoc,
@@ -82,7 +83,7 @@ describe("/api/products/{productId}/lessons/{lessonId}", () => {
     });
 
     it("updates a lesson with Tiptap JSON converted for existing lesson logic", async () => {
-        (getCourseLessonOrThrow as jest.Mock).mockResolvedValue({
+        (getLessonOrThrow as jest.Mock).mockResolvedValue({
             lessonId: "lesson-1",
             courseId: "course-1",
         });
@@ -123,7 +124,7 @@ describe("/api/products/{productId}/lessons/{lessonId}", () => {
     });
 
     it("does not send content to existing lesson logic when content is not updated", async () => {
-        (getCourseLessonOrThrow as jest.Mock).mockResolvedValue({
+        (getLessonOrThrow as jest.Mock).mockResolvedValue({
             lessonId: "lesson-1",
             courseId: "course-1",
         });
@@ -155,7 +156,7 @@ describe("/api/products/{productId}/lessons/{lessonId}", () => {
     });
 
     it("does not update a lesson that is not part of the product path", async () => {
-        (getCourseLessonOrThrow as jest.Mock).mockRejectedValue(
+        (getLessonOrThrow as jest.Mock).mockRejectedValue(
             new Error("Item not found"),
         );
 
@@ -225,7 +226,7 @@ describe("/api/products/{productId}/lessons/{lessonId}", () => {
     });
 
     it("deletes a lesson through existing lesson logic", async () => {
-        (getCourseLessonOrThrow as jest.Mock).mockResolvedValue({
+        (getLessonOrThrow as jest.Mock).mockResolvedValue({
             lessonId: "lesson-1",
             courseId: "course-1",
         });
@@ -243,7 +244,7 @@ describe("/api/products/{productId}/lessons/{lessonId}", () => {
     });
 
     it("does not delete a lesson that is not part of the product path", async () => {
-        (getCourseLessonOrThrow as jest.Mock).mockRejectedValue(
+        (getLessonOrThrow as jest.Mock).mockRejectedValue(
             new Error("Item not found"),
         );
 

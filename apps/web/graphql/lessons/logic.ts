@@ -48,16 +48,22 @@ export const canViewUnpublished = (ctx: GQLContext, entity: any): boolean => {
     );
 };
 
-const getLessonOrThrow = async (
+export const getLessonOrThrow = async (
     id: string,
     ctx: GQLContext,
+    options?: { courseId?: string },
 ): Promise<Lesson> => {
     checkIfAuthenticated(ctx);
 
-    const lesson = await LessonModel.findOne({
+    const query: Record<string, unknown> = {
         lessonId: id,
         domain: ctx.subdomain._id,
-    });
+    };
+    if (options?.courseId) {
+        query.courseId = options.courseId;
+    }
+
+    const lesson = await LessonModel.findOne(query);
 
     if (!lesson) {
         throw new Error(responses.item_not_found);

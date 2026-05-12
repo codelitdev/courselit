@@ -736,29 +736,6 @@ export const getCourseLessons = async ({
     return await getGroupedLessons(course.courseId, ctx.subdomain._id);
 };
 
-export const getCourseLessonOrThrow = async ({
-    courseId,
-    lessonId,
-    ctx,
-}: {
-    courseId: string;
-    lessonId: string;
-    ctx: GQLContext;
-}) => {
-    const course = await getCourseOrThrow(undefined, ctx, courseId);
-    const lesson = await LessonModel.findOne({
-        domain: ctx.subdomain._id,
-        courseId: course.courseId,
-        lessonId,
-    });
-
-    if (!lesson) {
-        throw new Error(responses.item_not_found);
-    }
-
-    return lesson;
-};
-
 export const addGroup = async ({
     id,
     name,
