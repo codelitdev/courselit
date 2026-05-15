@@ -12,6 +12,7 @@ export const SettingsSchema = new mongoose.Schema<SiteInfo>({
     codeInjectionHead: { type: String },
     codeInjectionBody: { type: String },
     stripeSecret: { type: String },
+    stripeWebhookSecret: { type: String },
     paytmSecret: { type: String },
     paypalSecret: { type: String },
     mailingAddress: { type: String },

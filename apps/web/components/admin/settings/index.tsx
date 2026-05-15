@@ -8,6 +8,7 @@ import {
     SITE_SETTINGS_PAGE_HEADING,
     SITE_SETTINGS_CURRENCY,
     SITE_ADMIN_SETTINGS_STRIPE_SECRET,
+    SITE_ADMIN_SETTINGS_STRIPE_WEBHOOK_SECRET,
     SITE_ADMIN_SETTINGS_RAZORPAY_SECRET,
     SITE_ADMIN_SETTINGS_PAYPAL_SECRET,
     SITE_ADMIN_SETTINGS_PAYTM_SECRET,
@@ -528,6 +529,7 @@ const Settings = (props: SettingsProps) => {
                 $paymentMethod: String, 
                 $stripeKey: String,
                 $stripeSecret: String,
+                $stripeWebhookSecret: String,
                 $razorpayKey: String,
                 $razorpaySecret: String,
                 $razorpayWebhookSecret: String,
@@ -543,6 +545,7 @@ const Settings = (props: SettingsProps) => {
                     paymentMethod: $paymentMethod,
                     stripeKey: $stripeKey,
                     stripeSecret: $stripeSecret,
+                    stripeWebhookSecret: $stripeWebhookSecret,
                     razorpayKey: $razorpayKey,
                     razorpaySecret: $razorpaySecret,
                     razorpayWebhookSecret: $razorpayWebhookSecret,
@@ -592,6 +595,7 @@ const Settings = (props: SettingsProps) => {
                         paymentMethod: newSettings.paymentMethod,
                         stripeKey: newSettings.stripeKey,
                         stripeSecret: newSettings.stripeSecret,
+                        stripeWebhookSecret: newSettings.stripeWebhookSecret,
                         razorpayKey: newSettings.razorpayKey,
                         razorpaySecret: newSettings.razorpaySecret,
                         razorpayWebhookSecret:
@@ -694,6 +698,9 @@ const Settings = (props: SettingsProps) => {
         stripeSecret: getNewSettings
             ? newSettings.stripeSecret
             : settings.stripeSecret,
+        stripeWebhookSecret: getNewSettings
+            ? newSettings.stripeWebhookSecret
+            : settings.stripeWebhookSecret,
         paypalSecret: getNewSettings
             ? newSettings.paypalSecret
             : settings.paypalSecret,
@@ -1010,6 +1017,19 @@ const Settings = (props: SettingsProps) => {
                                     name="stripeSecret"
                                     type="password"
                                     value={newSettings.stripeSecret || ""}
+                                    onChange={onChangeData}
+                                    sx={{ mb: 2 }}
+                                    autoComplete="off"
+                                />
+                                <FormField
+                                    label={
+                                        SITE_ADMIN_SETTINGS_STRIPE_WEBHOOK_SECRET
+                                    }
+                                    name="stripeWebhookSecret"
+                                    type="password"
+                                    value={
+                                        newSettings.stripeWebhookSecret || ""
+                                    }
                                     onChange={onChangeData}
                                     sx={{ mb: 2 }}
                                     autoComplete="off"

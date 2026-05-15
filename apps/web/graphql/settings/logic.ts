@@ -119,6 +119,7 @@ export const getSiteInfo = async (ctx: GQLContext) => {
         deleted: 0,
         customDomain: 0,
         "settings.stripeSecret": 0,
+        "settings.stripeWebhookSecret": 0,
         "settings.paytmSecret": 0,
         "settings.paypalSecret": 0,
         "settings.razorpaySecret": 0,
