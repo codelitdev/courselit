@@ -227,6 +227,18 @@ export const productsApiOpenApi = {
                     },
                     { name: "search", in: "query", schema: { type: "string" } },
                     {
+                        name: "tags",
+                        in: "query",
+                        description:
+                            "Filter products matching any of the supplied tags. Pass as `tags=ai,beginner`.",
+                        style: "form",
+                        explode: false,
+                        schema: {
+                            type: "array",
+                            items: { type: "string" },
+                        },
+                    },
+                    {
                         name: "page",
                         in: "query",
                         schema: { type: "integer", default: 1, minimum: 1 },

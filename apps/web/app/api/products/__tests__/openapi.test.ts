@@ -30,6 +30,19 @@ describe("Products OpenAPI", () => {
             tags: ["Products"],
             operationId: "listProducts",
         });
+        expect(
+            routes.paths["/api/products"].get.parameters.find(
+                (parameter) => parameter.name === "tags",
+            ),
+        ).toMatchObject({
+            in: "query",
+            style: "form",
+            explode: false,
+            schema: {
+                type: "array",
+                items: { type: "string" },
+            },
+        });
         expect(routes.paths["/api/products/{productId}"].get).toMatchObject({
             tags: ["Products"],
             operationId: "getProduct",

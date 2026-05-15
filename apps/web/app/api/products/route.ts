@@ -12,6 +12,16 @@ const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
 const createProductFields = new Set(["title", "type"]);
 
+function parseTags(searchParams: URLSearchParams) {
+    const tags = searchParams
+        .getAll("tags")
+        .flatMap((value) => value.split(","))
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+
+    return tags.length ? tags : undefined;
+}
+
 export async function GET(req: NextRequest) {
     const auth = await validatePublicApiRequest(req);
     if (auth.error) {
@@ -31,6 +41,7 @@ export async function GET(req: NextRequest) {
     const type = url.searchParams.get("type");
     const published = url.searchParams.get("published");
     const search = url.searchParams.get("search");
+    const tags = parseTags(url.searchParams);
 
     try {
         const products = await getProducts({
@@ -38,6 +49,7 @@ export async function GET(req: NextRequest) {
             page,
             limit,
             filterBy: type ? ([type] as any) : undefined,
+            tags,
             published:
                 published === "true" || published === "false"
                     ? published === "true"

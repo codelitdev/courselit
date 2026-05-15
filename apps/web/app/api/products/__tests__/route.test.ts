@@ -262,6 +262,7 @@ describe("GET /api/products", () => {
             page: 1,
             limit: 50,
             filterBy: undefined,
+            tags: undefined,
             published: undefined,
             searchText: undefined,
         });
@@ -298,6 +299,42 @@ describe("GET /api/products", () => {
         expect(body.data[0]).not.toHaveProperty("costType");
         expect(body.data[0]).not.toHaveProperty("leadMagnet");
         expect(body.data[0]).not.toHaveProperty("certificate");
+    });
+
+    it("passes repeated product tag filters through to product listing logic", async () => {
+        (getProducts as jest.Mock).mockResolvedValue([]);
+
+        const { GET } = await import("../route");
+        const response = await GET(
+            makeRequest(
+                "https://school.test/api/products?tags=ai&tags=beginner",
+            ),
+        );
+
+        expect(response.status).toBe(200);
+        expect(getProducts).toHaveBeenCalledWith(
+            expect.objectContaining({
+                tags: ["ai", "beginner"],
+            }),
+        );
+    });
+
+    it("passes comma-separated product tag filters through to product listing logic", async () => {
+        (getProducts as jest.Mock).mockResolvedValue([]);
+
+        const { GET } = await import("../route");
+        const response = await GET(
+            makeRequest(
+                "https://school.test/api/products?tags=ai,%20beginner,,",
+            ),
+        );
+
+        expect(response.status).toBe(200);
+        expect(getProducts).toHaveBeenCalledWith(
+            expect.objectContaining({
+                tags: ["ai", "beginner"],
+            }),
+        );
     });
 
     it("returns a structured authentication error when the API key is invalid", async () => {
