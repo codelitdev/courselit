@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import StripePayment from "@/payments-new/stripe-payment";
+import StripePayment from "../../../../payments-new/stripe-payment";
 
 const siteInfo = {
     currencyISOCode: "usd",

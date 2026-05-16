@@ -31,7 +31,10 @@ export async function POST(req: NextRequest) {
 
         const paymentMethod = await getPaymentMethod(domain._id.toString());
         if (!paymentMethod) {
-            return Response.json({ message: "Payment method not found" });
+            return Response.json(
+                { message: "Payment method not found" },
+                { status: 404 },
+            );
         }
 
         if (
@@ -40,7 +43,10 @@ export async function POST(req: NextRequest) {
                 signature: req.headers.get("stripe-signature"),
             }))
         ) {
-            return Response.json({ message: "Payment not verified" });
+            return Response.json(
+                { message: "Payment not verified" },
+                { status: 400 },
+            );
         }
 
         const metadata = paymentMethod.getMetadata(body);
@@ -48,7 +54,10 @@ export async function POST(req: NextRequest) {
 
         const membership = await getMembership(domain._id, membershipId);
         if (!membership) {
-            return Response.json({ message: "Membership not found" });
+            return Response.json(
+                { message: "Membership not found" },
+                { status: 404 },
+            );
         }
 
         const paymentPlan = await getPaymentPlan(
