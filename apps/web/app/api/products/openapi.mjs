@@ -107,6 +107,9 @@ const lessonContentSchema = {
         "`text` lessons use `TiptapDocument`; `embed` lessons use `EmbedContent`; `quiz` lessons use `QuizContent`. Media-backed lessons (`video`, `audio`, `pdf`, `file`) use `media` instead of `content`.",
 };
 
+const tiptapDocumentDescription =
+    "Tiptap/ProseMirror document JSON used by `text` lessons. Supported nodes include `doc`, `paragraph`, `heading` (`level` 1, 2, or 3), `text`, `bulletList`, `orderedList`, `listItem`, `blockquote`, `horizontalRule`, `codeBlock`, `table`, `tableRow`, `tableHeader`, `tableCell`, `image`, and `hardBreak`. Supported marks include `bold`, `italic`, `underline`, `strike`, `code`, `link`, and `highlight`. An `image` node uses `attrs` with `src` (required), `alt` (optional), and `title` (optional).";
+
 const productCreateExample = {
     title: "AI Foundations",
     type: "course",
@@ -168,8 +171,48 @@ const lessonCreateExample = {
         type: "doc",
         content: [
             {
+                type: "heading",
+                attrs: { level: 2 },
+                content: [{ type: "text", text: "Install Rust" }],
+            },
+            {
                 type: "paragraph",
-                content: [{ type: "text", text: "Welcome to the course!" }],
+                content: [
+                    { type: "text", text: "Install " },
+                    {
+                        type: "text",
+                        marks: [{ type: "bold" }],
+                        text: "rustup",
+                    },
+                    {
+                        type: "text",
+                        text: " and create your first project.",
+                    },
+                ],
+            },
+            {
+                type: "bulletList",
+                content: [
+                    {
+                        type: "listItem",
+                        content: [
+                            {
+                                type: "paragraph",
+                                content: [
+                                    {
+                                        type: "text",
+                                        text: "Run the installer.",
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            },
+            {
+                type: "codeBlock",
+                attrs: { language: "bash" },
+                content: [{ type: "text", text: "cargo new hello-rust" }],
             },
         ],
     },
@@ -180,6 +223,10 @@ const lessonCreateExample = {
 const lessonUpdateExample = {
     title: "Updated Introduction to AI",
     published: true,
+};
+
+const lessonEvaluationExample = {
+    answers: [[0], [1, 2]],
 };
 
 export const productsApiOpenApi = {
@@ -202,6 +249,11 @@ export const productsApiOpenApi = {
             name: "Product Customers",
             description:
                 "Enroll customers and read enrollment/progress snapshots.",
+        },
+        {
+            name: "Product Learner Actions",
+            description:
+                "Submit learner quiz evaluations and mark lessons complete.",
         },
     ],
     paths: {
@@ -676,6 +728,51 @@ export const productsApiOpenApi = {
                 },
             },
         },
+        "/api/products/{productId}/customers/{userId}/lessons/{lessonId}/evaluations":
+            {
+                post: {
+                    tags: ["Product Learner Actions"],
+                    summary: "Evaluate a quiz lesson for a product customer",
+                    description:
+                        "Evaluates quiz answers for the target product customer using existing CourseLit learner runtime behavior. This records the evaluation result but does not mark the lesson complete.",
+                    operationId: "evaluateProductCustomerLesson",
+                    security: secured,
+                    parameters: [productIdParam, userIdParam, lessonIdParam],
+                    requestBody: jsonBody(
+                        {
+                            $ref: "#/components/schemas/LessonEvaluationRequest",
+                        },
+                        lessonEvaluationExample,
+                    ),
+                    responses: {
+                        200: jsonResponse(
+                            "#/components/schemas/LessonEvaluationResult",
+                        ),
+                        400: error("Answers are missing or malformed."),
+                        404: error("Customer or lesson not found."),
+                        422: error("Lesson could not be evaluated."),
+                    },
+                },
+            },
+        "/api/products/{productId}/customers/{userId}/lessons/{lessonId}/completion":
+            {
+                post: {
+                    tags: ["Product Learner Actions"],
+                    summary: "Mark a product customer lesson complete",
+                    description:
+                        "Marks a lesson complete for the target product customer using existing CourseLit learner runtime behavior. Quiz lessons still require a passing evaluation first.",
+                    operationId: "completeProductCustomerLesson",
+                    security: secured,
+                    parameters: [productIdParam, userIdParam, lessonIdParam],
+                    responses: {
+                        200: jsonResponse(
+                            "#/components/schemas/LessonCompletionResponse",
+                        ),
+                        404: error("Customer or lesson not found."),
+                        422: error("Lesson could not be marked complete."),
+                    },
+                },
+            },
     },
     components: {
         schemas: {
@@ -966,8 +1063,7 @@ export const productsApiOpenApi = {
             },
             TiptapDocument: {
                 type: "object",
-                description:
-                    "Tiptap/ProseMirror document JSON used by `text` lessons.",
+                description: tiptapDocumentDescription,
                 required: ["type", "content"],
                 properties: {
                     type: { type: "string", example: "doc" },
@@ -1196,6 +1292,36 @@ export const productsApiOpenApi = {
                     downloaded: { type: "boolean" },
                     createdAt: { type: "string", format: "date-time" },
                     updatedAt: { type: "string", format: "date-time" },
+                },
+            },
+            LessonEvaluationRequest: {
+                type: "object",
+                required: ["answers"],
+                properties: {
+                    answers: {
+                        type: "array",
+                        description:
+                            "Quiz answers by question index. Each nested array contains selected option indexes for that question.",
+                        items: {
+                            type: "array",
+                            items: { type: "number" },
+                        },
+                    },
+                },
+            },
+            LessonEvaluationResult: {
+                type: "object",
+                properties: {
+                    pass: { type: "boolean" },
+                    score: { type: "number" },
+                    requiresPassingGrade: { type: "boolean" },
+                    passingGrade: { type: "number" },
+                },
+            },
+            LessonCompletionResponse: {
+                type: "object",
+                properties: {
+                    completed: { type: "boolean" },
                 },
             },
         },

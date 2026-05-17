@@ -1,5 +1,4 @@
 import { Constants } from "@courselit/common-models";
-import mongoose from "mongoose";
 import DomainModel from "@/models/Domain";
 import UserModel from "@/models/User";
 import CourseModel from "@/models/Course";
@@ -7,6 +6,7 @@ import LessonModel from "@/models/Lesson";
 import ActivityModel from "@/models/Activity";
 import {
     createLesson,
+    evaluateLesson,
     getAllLessons,
     getLessonDetails,
     markLessonCompleted,
@@ -28,10 +28,15 @@ describe("Lesson visibility and progress", () => {
     let creator: any;
     let student: any;
     let course: any;
+    let quizCourse: any;
     let groupId: string;
+    let quizGroupId: string;
+    let quizDripGroupId: string;
     let publishedLessonOne: any;
     let unpublishedLesson: any;
     let publishedLessonTwo: any;
+    let unpublishedQuizLesson: any;
+    let dripQuizLesson: any;
     let studentCtx: any;
     let creatorCtx: any;
 
@@ -64,7 +69,9 @@ describe("Lesson visibility and progress", () => {
             purchases: [],
         });
 
-        groupId = new mongoose.Types.ObjectId().toString();
+        groupId = id("group-1");
+        quizGroupId = id("quiz-group");
+        quizDripGroupId = id("quiz-drip-group");
 
         course = await CourseModel.create({
             domain: testDomain._id,
@@ -87,6 +94,44 @@ describe("Lesson visibility and progress", () => {
                     collapsed: true,
                     drip: {
                         status: false,
+                        type: "relative-date",
+                    },
+                },
+            ],
+        });
+
+        quizCourse = await CourseModel.create({
+            domain: testDomain._id,
+            courseId: id("quiz-course"),
+            title: "Quiz Visibility Course",
+            lessons: [],
+            creatorId: creator.userId,
+            cost: 0,
+            privacy: "public",
+            type: "course",
+            costType: "free",
+            slug: id("quiz-course-slug"),
+            published: true,
+            groups: [
+                {
+                    _id: quizGroupId,
+                    name: "Quiz Group",
+                    lessonsOrder: [],
+                    rank: 1,
+                    collapsed: true,
+                    drip: {
+                        status: false,
+                        type: "relative-date",
+                    },
+                },
+                {
+                    _id: quizDripGroupId,
+                    name: "Quiz Drip Group",
+                    lessonsOrder: [],
+                    rank: 2,
+                    collapsed: true,
+                    drip: {
+                        status: true,
                         type: "relative-date",
                     },
                 },
@@ -141,6 +186,46 @@ describe("Lesson visibility and progress", () => {
             groupId,
         });
 
+        const quizContent = {
+            questions: [
+                {
+                    text: "Question 1",
+                    options: [
+                        { text: "Correct", correctAnswer: true },
+                        { text: "Incorrect", correctAnswer: false },
+                    ],
+                },
+            ],
+            requiresPassingGrade: true,
+            passingGrade: 70,
+        };
+
+        unpublishedQuizLesson = await LessonModel.create({
+            domain: testDomain._id,
+            courseId: quizCourse.courseId,
+            lessonId: id("unpublished-quiz"),
+            title: "Unpublished Quiz",
+            type: Constants.LessonType.QUIZ,
+            published: false,
+            requiresEnrollment: true,
+            content: quizContent,
+            creatorId: creator.userId,
+            groupId: quizGroupId,
+        });
+
+        dripQuizLesson = await LessonModel.create({
+            domain: testDomain._id,
+            courseId: quizCourse.courseId,
+            lessonId: id("drip-quiz"),
+            title: "Drip Quiz",
+            type: Constants.LessonType.QUIZ,
+            published: true,
+            requiresEnrollment: true,
+            content: quizContent,
+            creatorId: creator.userId,
+            groupId: quizDripGroupId,
+        });
+
         course.lessons = [
             publishedLessonOne.lessonId,
             unpublishedLesson.lessonId,
@@ -153,9 +238,22 @@ describe("Lesson visibility and progress", () => {
         ];
         await course.save();
 
+        quizCourse.lessons = [
+            unpublishedQuizLesson.lessonId,
+            dripQuizLesson.lessonId,
+        ];
+        quizCourse.groups[0].lessonsOrder = [unpublishedQuizLesson.lessonId];
+        quizCourse.groups[1].lessonsOrder = [dripQuizLesson.lessonId];
+        await quizCourse.save();
+
         student.purchases.push({
             courseId: course.courseId,
             accessibleGroups: [groupId],
+            completedLessons: [],
+        });
+        student.purchases.push({
+            courseId: quizCourse.courseId,
+            accessibleGroups: [quizGroupId],
             completedLessons: [],
         });
         student.markModified("purchases");
@@ -275,6 +373,29 @@ describe("Lesson visibility and progress", () => {
         expect(savedLesson?.media?.file).toBeUndefined();
     });
 
+    it("rejects creating a lesson when the groupId does not exist in the course", async () => {
+        await expect(
+            createLesson(
+                {
+                    title: "Orphan lesson",
+                    type: Constants.LessonType.TEXT,
+                    content: JSON.stringify({ type: "doc", content: [] }),
+                    courseId: course.courseId,
+                    groupId: "nonexistent-section",
+                    requiresEnrollment: false,
+                    published: false,
+                } as any,
+                {
+                    user: {
+                        ...creator.toObject(),
+                        permissions: ["course:manage"],
+                    },
+                    subdomain: testDomain,
+                } as any,
+            ),
+        ).rejects.toThrow(responses.group_not_found);
+    });
+
     it("should hide unpublished lessons from owners in learner lesson details", async () => {
         await expect(
             getLessonDetails(
@@ -323,5 +444,25 @@ describe("Lesson visibility and progress", () => {
         await expect(
             markLessonCompleted(unpublishedLesson.lessonId, creatorCtx),
         ).rejects.toThrow(responses.item_not_found);
+    });
+
+    it("should not allow evaluating unpublished quiz lessons", async () => {
+        await expect(
+            evaluateLesson(
+                unpublishedQuizLesson.lessonId,
+                { answers: [[0]] },
+                studentCtx,
+            ),
+        ).rejects.toThrow(responses.item_not_found);
+    });
+
+    it("should not allow evaluating drip-locked quiz lessons", async () => {
+        await expect(
+            evaluateLesson(
+                dripQuizLesson.lessonId,
+                { answers: [[0]] },
+                studentCtx,
+            ),
+        ).rejects.toThrow(responses.drip_not_released);
     });
 });

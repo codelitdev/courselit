@@ -132,7 +132,7 @@ async function formatCourse(
     const sortedGroups = course!.groups
         ?.map((group: any) => ({
             ...group,
-            id: group._id.toString(),
+            id: group._id,
         }))
         .sort(
             (groupA: any, groupB: any) =>
@@ -849,8 +849,7 @@ export const updateGroup = async ({
 
     const $set = {};
     if (name) {
-        const existingName = (group) =>
-            group.name === name && group._id.toString() !== id;
+        const existingName = (group) => group.name === name && group._id !== id;
 
         if (course.groups?.some(existingName)) {
             throw new Error(responses.existing_group);
@@ -997,7 +996,7 @@ export const moveLesson = async ({
 
     const destinationGroupIndex = normalizedGroups.findIndex((group: any) => {
         const groupId = group._id ?? group.id;
-        return groupId?.toString() === destinationGroupId;
+        return groupId === destinationGroupId;
     });
     if (destinationGroupIndex === -1) {
         throw new Error(responses.invalid_input);

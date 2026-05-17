@@ -187,6 +187,13 @@ export const createLesson = async (
         if (!course) throw new Error(responses.item_not_found);
         if (course.isBlog) throw new Error(responses.cannot_add_to_blogs); // TODO: refactor this
 
+        const group = course.groups?.find(
+            (group) => (group as any)._id === lessonData.groupId,
+        );
+        if (!group) {
+            throw new Error(responses.group_not_found);
+        }
+
         const lesson = await LessonModel.create({
             domain: ctx.subdomain._id,
             title: lessonData.title,
@@ -204,11 +211,7 @@ export const createLesson = async (
         });
 
         course.lessons.push(lesson.lessonId);
-        const group = course.groups?.find(
-            (group) =>
-                ((group as any)._id?.toString() ?? "") === lessonData.groupId,
-        );
-        group?.lessonsOrder.push(lesson.lessonId);
+        group.lessonsOrder.push(lesson.lessonId);
         await (course as any).save();
 
         return lesson;
@@ -629,7 +632,7 @@ export const evaluateLesson = async (
         domain: ctx.subdomain._id,
         lessonId,
     });
-    if (!lesson) {
+    if (!lesson || !lesson.published) {
         throw new Error(responses.item_not_found);
     }
 
@@ -639,6 +642,16 @@ export const evaluateLesson = async (
 
     if (enrolledItemIndex === -1) {
         throw new Error(responses.not_enrolled);
+    }
+
+    if (await isPartOfDripGroup(lesson, ctx.subdomain._id)) {
+        const groupIsNotInAccessibleGroups =
+            ctx.user.purchases[enrolledItemIndex].accessibleGroups.indexOf(
+                lesson.groupId,
+            ) === -1;
+        if (groupIsNotInAccessibleGroups) {
+            throw new Error(responses.drip_not_released);
+        }
     }
 
     if (lesson.type !== quiz) {

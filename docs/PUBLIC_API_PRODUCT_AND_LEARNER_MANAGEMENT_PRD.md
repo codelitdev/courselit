@@ -258,8 +258,8 @@ This PRD proposes expanding the public REST API by reusing those existing busine
 - SCORM lesson creation, SCORM package processing, or raw SCORM runtime ingestion over the public API
 - Direct multipart file upload as part of lesson create/update requests
 - Customer-runtime `/api/me` endpoints
-- Public REST endpoints for customer-facing lesson completion or quiz evaluation
-- Privileged API-key writes that set or overwrite a customer's progress
+- Arbitrary customer progress write endpoints beyond the existing learner lesson actions explicitly listed in this PRD
+- Privileged API-key writes that set or overwrite a customer's progress without going through existing lesson completion or quiz evaluation behavior
 - Bulk import/export jobs in v1
 - Webhooks in this PRD
 - Any new platform capability that does not already exist in UI/GraphQL/business logic today
@@ -307,6 +307,7 @@ Capability parity gate:
 - Product customer roster retrieval
 - Customer enrollment detail retrieval as a single-row view of existing product roster/member data
 - Customer progress read APIs
+- Learner lesson actions for quiz evaluation and lesson completion using existing `evaluateLesson` and `markLessonCompleted` behavior
 - OpenAPI docs and route-level contract tests
 
 ### Product Types In Scope
@@ -491,6 +492,18 @@ If implementation discovers that an endpoint requires behavior beyond the mapped
 - `GET /api/products/{productId}/customers/{userId}/progress`
     - fetch customer progress snapshot
     - this must be read-only and limited to progress/completion data already tracked by CourseLit today
+
+### Learner Lesson Actions
+
+- `POST /api/products/{productId}/customers/{userId}/lessons/{lessonId}/evaluations`
+    - evaluate a quiz lesson submission for the target customer
+    - request body: `{ "answers": number[][] }`
+    - backed by existing `evaluateLesson`
+    - evaluation records the existing lesson evaluation result but does not mark the lesson complete
+- `POST /api/products/{productId}/customers/{userId}/lessons/{lessonId}/completion`
+    - mark a lesson complete for the target customer
+    - backed by existing `markLessonCompleted`
+    - quiz lessons must still have a passing evaluation before completion, matching existing behavior
 
 ## Data Contracts
 
@@ -692,6 +705,17 @@ V1 should not expose raw `scormData` publicly.
 
 Progress fields may be derived from existing CourseLit progress data, published lesson counts, and reporting helpers, but must not introduce any new progress state or write capability.
 
+### Lesson Evaluation Result
+
+The public lesson evaluation result should mirror the existing quiz evaluation result:
+
+- `pass`
+- `score`
+- `requiresPassingGrade`
+- `passingGrade`
+
+The evaluation endpoint must not return correct answers or raw lesson content.
+
 ## Write Semantics
 
 ### Product Create
@@ -805,12 +829,31 @@ If the customer is already actively enrolled, the endpoint should preserve exist
 
 ### Customer Progress
 
-Customer progress is read-only in this API scope.
+Customer progress reads remain read-only in this API scope.
 
 Important constraints:
 
-- API-key-based callers should not gain a new ability to arbitrarily set another customer’s progress unless that already exists elsewhere in the platform.
-- Customer-facing lesson completion, quiz evaluation, and `/api/me` runtime APIs are not part of this implementation spec.
+- API-key-based callers must not gain a new ability to arbitrarily set another customer’s progress.
+- The only learner progress writes in scope are existing lesson runtime actions exposed as REST: quiz evaluation through `evaluateLesson` and lesson completion through `markLessonCompleted`.
+- These learner action endpoints must resolve the target customer by path `userId`, set `ctx.user` to that customer, and then call the existing GraphQL lesson function without modifying `apps/web/graphql/**`.
+- Quiz evaluation and lesson completion remain separate operations; successful quiz evaluation does not automatically mark the lesson complete.
+- `/api/me` runtime APIs are not part of this implementation spec.
+
+### Learner Lesson Actions
+
+Learner lesson action endpoints should expose existing runtime behavior for integrations that need to submit quiz answers or mark a customer's lesson complete.
+
+Expected behavior:
+
+- require a valid tenant API key and school domain
+- resolve the school owner only to authenticate the API key request using the standard public API auth path
+- resolve `{userId}` as a `User` in the same domain and fail with `404` if the learner cannot be found
+- verify `{lessonId}` belongs to `{productId}` before invoking lesson runtime behavior
+- call `evaluateLesson(lessonId, { answers }, learnerCtx)` for quiz evaluation
+- call `markLessonCompleted(lessonId, learnerCtx)` for completion
+- preserve existing errors for not enrolled, unreleased drip content, non-quiz evaluation, missing answers, and quiz completion before passing
+
+These endpoints must not accept `creatorId`, learner email, target domain, or any caller-controlled ownership fields.
 
 ## Permissions And Authentication
 
@@ -827,6 +870,7 @@ Authorization:
 - customer management endpoints require user/product-management capability equivalent to current internal checks
 - media upload signature access via API key resolves the school owner as the integration actor and requires that resolved owner user to pass the existing `media:manage` permission check
 - media upload signature access via dashboard session continues to require the logged-in user permission `media:manage`
+- learner lesson action endpoints use the resolved school owner only for API-key validation, then deliberately switch `ctx.user` to the domain learner identified by path `userId`
 
 V1 API key decision:
 
@@ -835,6 +879,7 @@ V1 API key decision:
 - API-key settings UI and API-key persistence model remain unchanged
 - user-owned keys or per-key permission models may be revisited later, but are out of scope here
 - after a valid API key is resolved, the REST auth layer resolves the school owner and sets that user as `ctx.user` for all new public API routes
+- learner lesson action routes are the only exception: after API-key validation, they set `ctx.user` to the target learner resolved from the same domain before calling existing lesson runtime logic
 - if the school owner cannot be resolved, the request fails with `403` and no route-specific business logic runs
 
 ### Media Upload Signature Authorization
@@ -901,12 +946,12 @@ The expected behavior is:
 | Customer `User.userId`                                                                  | Represents the target customer, created or reused by existing user/customer flows. It is never the API key, and it is not the school owner unless the target email is the owner.                                                                                                                                                                                                                                                                                               |
 | `Membership.userId`                                                                     | Represents the target enrolled customer, not the API key and not the integration actor.                                                                                                                                                                                                                                                                                                                                                                                        |
 | `User.purchases[*]` progress records                                                    | Stored on the target customer user, not on the integration actor.                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Certificates, lesson evaluations, activity, and other customer-runtime `userId` records | Not created by the management API except where existing enrollment/payment side effects already do so. Customer progress remains read-only in this PRD.                                                                                                                                                                                                                                                                                                                        |
+| Certificates, lesson evaluations, activity, and other customer-runtime `userId` records | Created only through the existing learner lesson action behavior explicitly exposed by this PRD, or where existing enrollment/payment side effects already do so. These records use the target learner user resolved from the same domain.                                                                                                                                                                                                                                     |
 
 This split is intentional:
 
 - creator/owner fields required by admin authoring flows use the resolved school owner integration actor
-- customer/enrollment/progress fields use the target customer user
+- customer/enrollment/progress and learner action fields use the target customer user
 - API keys themselves are not stored as `creatorId` or `userId`
 - public request payloads must not expose ownership assignment knobs
 
@@ -1113,6 +1158,8 @@ Add or update tests for:
     - already-enrolled user
 - customer roster pagination and filtering
 - progress retrieval
+- learner lesson quiz evaluation, including target learner context switching and malformed answer payloads
+- learner lesson completion, including quiz completion before passing and lesson/product path mismatch
 - OpenAPI generation including new route fragments
 
 Preferred test locations:
@@ -1128,18 +1175,20 @@ Preferred test locations:
 4. Authenticated admin/integration callers can create and manage product sections/groups and lessons via REST using existing CourseLit behavior.
 5. Authenticated admin/integration callers can list product customers, fetch customer enrollment snapshots, and enroll customers into supported products.
 6. Authenticated admin/integration callers can read customer progress for supported product types.
-7. No API endpoint in this scope introduces behavior that is not already supported by the existing CourseLit system.
-8. No `/api/me` customer-runtime endpoints are added as part of this work.
-9. All new endpoints appear in generated OpenAPI output and development Swagger UI.
-10. All new endpoints respect school-domain isolation and existing permission rules.
-11. Existing `/api/user` behavior remains backward compatible.
-12. Swagger documentation is upgraded so the new product, payment-plan, content, customer, media upload, and progress APIs are discoverable, example-driven, and testable through the UI.
-13. Every API-key-authenticated route resolves the school owner as the integration actor, sets that user as `ctx.user` where existing logic needs context, and fails with `403` if the owner cannot be resolved.
-14. Every endpoint has an explicit existing-capability mapping, and implementation does not proceed for endpoints whose mapping cannot be proven.
-15. Product/customer API work does not modify product/customer business logic in `apps/web/graphql/**`.
-16. Existing API endpoint handlers and contracts remain backward compatible.
-17. `/api/media/presigned` accepts API keys by resolving the school owner actor and requiring that actor to pass the existing `media:manage` permission check; it continues accepting logged-in dashboard sessions with `media:manage`.
-18. Swagger does not expose or request CourseLit session-cookie tokens.
+7. Authenticated admin/integration callers can submit quiz evaluations and mark lessons complete for enrolled customers using existing learner lesson behavior.
+8. No API endpoint in this scope introduces behavior that is not already supported by the existing CourseLit system.
+9. No `/api/me` customer-runtime endpoints are added as part of this work.
+10. All new endpoints appear in generated OpenAPI output and development Swagger UI.
+11. All new endpoints respect school-domain isolation and existing permission rules.
+12. Existing `/api/user` behavior remains backward compatible.
+13. Swagger documentation is upgraded so the new product, payment-plan, content, customer, media upload, and progress APIs are discoverable, example-driven, and testable through the UI.
+14. Every API-key-authenticated management route resolves the school owner as the integration actor, sets that user as `ctx.user` where existing logic needs context, and fails with `403` if the owner cannot be resolved.
+15. Every learner lesson action route resolves the school owner for API-key validation, then sets `ctx.user` to the same-domain target learner before calling existing lesson runtime logic.
+16. Every endpoint has an explicit existing-capability mapping, and implementation does not proceed for endpoints whose mapping cannot be proven.
+17. Product/customer API work does not modify product/customer business logic in `apps/web/graphql/**`.
+18. Existing API endpoint handlers and contracts remain backward compatible.
+19. `/api/media/presigned` accepts API keys by resolving the school owner actor and requiring that actor to pass the existing `media:manage` permission check; it continues accepting logged-in dashboard sessions with `media:manage`.
+20. Swagger does not expose or request CourseLit session-cookie tokens.
 
 ## Task Breakdown
 
@@ -1298,6 +1347,7 @@ Preferred test locations:
     - Estimated scope: M
 
 - [ ] Task 15: Customer progress read endpoint
+
     - Description: Add `GET /api/products/{productId}/customers/{userId}/progress` as a read-only view over existing progress/reporting data.
     - Acceptance: Route returns course/download progress fields derived from existing state, excludes raw `scormData`, and provides no write path for progress.
     - Verify: `pnpm test`
@@ -1305,37 +1355,46 @@ Preferred test locations:
     - Files: `apps/web/app/api/products/*/customers/*/progress*`, REST-layer adapters, route tests, OpenAPI fragments
     - Estimated scope: M
 
+- [ ] Task 16: Learner lesson action endpoints
+    - Description: Add quiz evaluation and lesson completion endpoints for a product customer using existing `evaluateLesson` and `markLessonCompleted` behavior.
+    - Acceptance: Routes resolve the target learner by same-domain `userId`, switch `ctx.user` to that learner before calling existing lesson runtime logic, verify the lesson belongs to the product path, keep evaluation and completion as separate operations, and preserve existing validation for enrollment, drip release, missing answers, non-quiz lessons, and quiz completion before passing.
+    - Verify: `pnpm test`, `pnpm --filter @courselit/web openapi:generate`
+    - Dependencies: Tasks 10, 13, 15
+    - Files: `apps/web/app/api/products/*/customers/*/lessons*`, REST-layer adapters, route tests, OpenAPI fragments
+    - Estimated scope: M
+
 ### Checkpoint: Customers And Progress
 
 - [ ] Customer invite/enroll flow works through REST using only existing behavior
 - [ ] Customer roster/detail/progress reads match existing reporting semantics
-- [ ] No `/api/me` endpoints or progress write endpoints are added
+- [ ] Learner quiz evaluation and lesson completion work through REST without adding arbitrary progress writes
+- [ ] No `/api/me` endpoints are added
 
 ### Phase 5: Documentation And Release Readiness
 
-- [ ] Task 16: Swagger workflow documentation
+- [ ] Task 17: Swagger workflow documentation
 
     - Description: Upgrade generated Swagger/OpenAPI documentation for the complete public API flow.
     - Acceptance: Swagger includes tags, reusable schemas, operation IDs, examples, owner-backed API-key auth, pagination defaults, destructive-route warnings, SCORM rejection examples, and draft → payment plan → publish workflow examples.
     - Verify: `pnpm --filter @courselit/web openapi:generate`, manual Swagger review
-    - Dependencies: Tasks 1-15
+    - Dependencies: Tasks 1-16
     - Files: `apps/web/openapi/*`, route OpenAPI fragments
     - Estimated scope: M
 
-- [ ] Task 17: Developer documentation
+- [ ] Task 18: Developer documentation
 
     - Description: Update public developer docs after implementation.
     - Acceptance: Docs cover products, payment plans, content authoring, owner-backed API-key auth, media upload flow, customers, progress, auth, tenant/domain model, unsupported SCORM, and no `course.cost`/`course.costType` contract.
     - Verify: manual docs review, docs build if applicable
-    - Dependencies: Task 16
+    - Dependencies: Task 17
     - Files: `apps/docs/src/pages/en/developers/*`
     - Estimated scope: M
 
-- [ ] Task 18: Final hardening and regression guard
+- [ ] Task 19: Final hardening and regression guard
     - Description: Run the full verification suite and confirm implementation boundaries.
     - Acceptance: Tests/lint/format/OpenAPI generation pass, product/customer GraphQL business logic remains unchanged, existing API endpoint handlers are backward compatible, and every endpoint has an existing-capability mapping.
     - Verify: `pnpm test`, `pnpm lint`, `pnpm prettier`, `pnpm --filter @courselit/web openapi:generate`
-    - Dependencies: Tasks 1-17
+    - Dependencies: Tasks 1-18
     - Files: no feature files unless fixing verification failures
     - Estimated scope: S
 

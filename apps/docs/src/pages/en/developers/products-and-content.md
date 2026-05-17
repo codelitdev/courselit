@@ -82,23 +82,194 @@ POST /api/products/{productId}/lessons/{lessonId}/move
 
 Text lessons accept Tiptap/ProseMirror JSON in `content`.
 
+Supported document nodes include:
+
+- `doc`
+- `paragraph`
+- `heading` with `level` 1, 2, or 3
+- `text`
+- `bulletList`, `orderedList`, and `listItem`
+- `blockquote`
+- `horizontalRule`
+- `codeBlock`
+- `table`, `tableRow`, `tableHeader`, and `tableCell`
+- `image`
+- `hardBreak`
+
+Supported text marks include:
+
+- `bold`
+- `italic`
+- `underline`
+- `strike`
+- `code`
+- `link`
+- `highlight`
+
 ```json
 {
-    "title": "Welcome",
+    "title": "Welcome to Rust",
     "type": "text",
     "content": {
         "type": "doc",
         "content": [
             {
+                "type": "heading",
+                "attrs": { "level": 2 },
+                "content": [{ "type": "text", "text": "Install Rust" }]
+            },
+            {
                 "type": "paragraph",
                 "content": [
-                    { "type": "text", "text": "Welcome to the course." }
+                    { "type": "text", "text": "Install " },
+                    {
+                        "type": "text",
+                        "marks": [{ "type": "bold" }],
+                        "text": "rustup"
+                    },
+                    {
+                        "type": "text",
+                        "text": " and create your first project."
+                    }
+                ]
+            },
+            {
+                "type": "bulletList",
+                "content": [
+                    {
+                        "type": "listItem",
+                        "content": [
+                            {
+                                "type": "paragraph",
+                                "content": [
+                                    {
+                                        "type": "text",
+                                        "text": "Run the installer."
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "type": "blockquote",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "marks": [
+                                    {
+                                        "type": "link",
+                                        "attrs": {
+                                            "href": "https://www.rust-lang.org/tools/install"
+                                        }
+                                    }
+                                ],
+                                "text": "Rust installation guide"
+                            }
+                        ]
+                    }
+                ]
+            },
+            { "type": "horizontalRule" },
+            {
+                "type": "codeBlock",
+                "attrs": { "language": "bash" },
+                "content": [{ "type": "text", "text": "cargo new hello-rust" }]
+            },
+            {
+                "type": "table",
+                "content": [
+                    {
+                        "type": "tableRow",
+                        "content": [
+                            {
+                                "type": "tableHeader",
+                                "content": [
+                                    {
+                                        "type": "paragraph",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "Command"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "tableHeader",
+                                "content": [
+                                    {
+                                        "type": "paragraph",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "Purpose"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "type": "tableRow",
+                        "content": [
+                            {
+                                "type": "tableCell",
+                                "content": [
+                                    {
+                                        "type": "paragraph",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "cargo run"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "tableCell",
+                                "content": [
+                                    {
+                                        "type": "paragraph",
+                                        "content": [
+                                            {
+                                                "type": "text",
+                                                "text": "Build and run the project"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
                 ]
             }
         ]
     }
 }
 ```
+
+Images can be included in text lesson documents with an `image` node. The `attrs` object requires `src` and may include `alt` and `title`:
+
+```json
+{
+    "type": "image",
+    "attrs": {
+        "src": "https://cdn.example.com/image.png",
+        "alt": "Diagram",
+        "title": "Diagram"
+    }
+}
+```
+
+Use a URL that is already accessible to learners, or upload to MediaLit and use the returned media URL.
 
 SCORM lesson creation is not supported by the public API. If you send a SCORM lesson type, the API returns a `not_supported` error.
 

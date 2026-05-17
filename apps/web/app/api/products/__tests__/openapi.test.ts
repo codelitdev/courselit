@@ -213,6 +213,47 @@ describe("Products OpenAPI", () => {
             operationId: "getProductCustomerProgress",
         });
         expect(
+            routes.paths[
+                "/api/products/{productId}/customers/{userId}/lessons/{lessonId}/evaluations"
+            ].post,
+        ).toMatchObject({
+            tags: ["Product Learner Actions"],
+            operationId: "evaluateProductCustomerLesson",
+        });
+        expect(
+            routes.paths[
+                "/api/products/{productId}/customers/{userId}/lessons/{lessonId}/completion"
+            ].post,
+        ).toMatchObject({
+            tags: ["Product Learner Actions"],
+            operationId: "completeProductCustomerLesson",
+        });
+        expect(
+            routes.paths[
+                "/api/products/{productId}/customers/{userId}/lessons/{lessonId}/evaluations"
+            ].post.requestBody.content["application/json"].schema.$ref,
+        ).toBe("#/components/schemas/LessonEvaluationRequest");
+        expect(
+            routes.components.schemas.LessonEvaluationRequest.properties.answers
+                .items.items,
+        ).toEqual({ type: "number" });
+        expect(
+            routes.components.schemas.LessonEvaluationResult.properties.pass,
+        ).toMatchObject({ type: "boolean" });
+        expect(
+            routes.components.schemas.LessonCompletionResponse.properties
+                .completed,
+        ).toMatchObject({ type: "boolean" });
+        expect(routes.components.schemas.TiptapDocument.description).toContain(
+            "`table`",
+        );
+        expect(routes.components.schemas.TiptapDocument.description).toContain(
+            "`bold`",
+        );
+        expect(routes.components.schemas.TiptapDocument.description).toContain(
+            "`src` (required)",
+        );
+        expect(
             routes.paths["/api/products/{productId}/customers/{userId}"],
         ).toBeUndefined();
 
