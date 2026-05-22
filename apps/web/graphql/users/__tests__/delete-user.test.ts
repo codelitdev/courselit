@@ -202,6 +202,30 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             );
         });
 
+        it("should prevent deleting the domain owner used as the API actor", async () => {
+            const domainOwner = await UserModel.create({
+                domain: testDomain._id,
+                userId: duId("domain-owner"),
+                name: "Domain Owner",
+                email: testDomain.email,
+                active: true,
+                permissions: [permissions.manageUsers],
+                purchases: [],
+                unsubscribeToken: duId("unsubscribe-domain-owner"),
+            });
+
+            await expect(
+                deleteUser(domainOwner.userId, mockCtx),
+            ).rejects.toThrow(responses.action_not_allowed);
+
+            await expect(
+                UserModel.findOne({
+                    domain: testDomain._id,
+                    userId: domainOwner.userId,
+                }),
+            ).resolves.toBeTruthy();
+        });
+
         it("should throw error for non-existent user", async () => {
             await expect(
                 deleteUser(duId("non-existent-user"), mockCtx),

@@ -182,6 +182,9 @@ export default {
             status: {
                 type: userTypes.membershipStatusType,
             },
+            searchText: {
+                type: GraphQLString,
+            },
         },
         resolve: (
             _: any,
@@ -190,11 +193,13 @@ export default {
                 page,
                 limit,
                 status,
+                searchText,
             }: {
                 courseId: string;
                 page?: number;
                 limit?: number;
                 status?: MembershipStatus;
+                searchText?: string;
             },
             ctx: GQLContext,
         ) =>
@@ -204,6 +209,7 @@ export default {
                 page,
                 limit,
                 status,
+                searchText,
             }),
     },
     getCourseCertificateTemplate: {

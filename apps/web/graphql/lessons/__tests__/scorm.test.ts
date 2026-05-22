@@ -4,7 +4,6 @@ import UserModel from "@/models/User";
 import CourseModel from "@/models/Course";
 import DomainModel from "@/models/Domain";
 import { Constants } from "@courselit/common-models";
-import mongoose from "mongoose";
 
 const SUITE_PREFIX = `scorm-tests-${Date.now()}`;
 const id = (suffix: string) => `${SUITE_PREFIX}-${suffix}`;
@@ -37,7 +36,7 @@ describe("SCORM Logic Integration", () => {
             purchases: [],
         });
 
-        const groupId = new mongoose.Types.ObjectId().toString();
+        const groupId = id("group-1");
 
         // Create Course
         course = await CourseModel.create({

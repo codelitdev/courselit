@@ -134,7 +134,7 @@ describe("reorderGroups", () => {
 
         const rankById = new Map(
             (updatedCourse?.groups ?? []).map((group: any) => [
-                group._id.toString(),
+                group._id,
                 group.rank,
             ]),
         );
@@ -143,9 +143,7 @@ describe("reorderGroups", () => {
         expect(rankById.get(groupId1)).toBe(2000);
         expect(rankById.get(groupId2)).toBe(3000);
         expect(
-            (updatedCourse?.groups ?? []).map((group: any) =>
-                group._id.toString(),
-            ),
+            (updatedCourse?.groups ?? []).map((group: any) => group._id),
         ).toEqual([groupId3, groupId1, groupId2]);
         expect(
             (reorderedCourse.groups ?? []).map((group: any) => group.id),

@@ -31,6 +31,8 @@ Now when the user tries to generate a login link, they will get an error stating
 
 Before changing user's permissions, read our [permissions](/en/users/permissions) guide so that you understand what you are doing.
 
+The school owner's permissions cannot be changed. CourseLit uses the school owner as the actor for school-level operations such as public API requests, so the owner must always remain available with their existing permissions.
+
 To change user's permissions:
 
 1. Select on the user from the users list to open its editor.

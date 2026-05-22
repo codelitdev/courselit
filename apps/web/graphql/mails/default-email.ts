@@ -1,4 +1,4 @@
-import { EmailStyle, Email } from "@courselit/email-editor";
+import type { EmailStyle, Email } from "@courselit/email-editor";
 
 export const defaultStyle: EmailStyle = {
     colors: {

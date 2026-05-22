@@ -23,6 +23,14 @@ To interact with the CourseLit API, you need an API key. Follow these steps to o
 2. Navigate to the dashboard.
 3. Go to the `Settings > Miscellaneous > API Keys` section and generate a new API key.
 
+## API Key Actor
+
+API keys are school-level credentials. They are not attached to an individual user account.
+
+When CourseLit receives an API-key-authenticated request, it resolves the school owner for the current domain and uses that owner as the actor for permission checks and resource ownership. For example, resources created through the API use the same owner-backed context that the dashboard business logic expects.
+
+Do not send `userId`, `creatorId`, or similar ownership fields in API requests unless a specific endpoint documents that field as part of the customer being managed.
+
 ## Setting Up the Environment
 
 You need to set up your environment variables to store your CourseLit server URL and API key securely. Here is an example of how to do it in JavaScript:
@@ -42,10 +50,10 @@ export async function createUser({ email }) {
         method: "POST",
         headers: {
             "content-type": "application/json",
+            "x-api-key": courselitApikey,
         },
         body: JSON.stringify({
             email,
-            apikey: courselitApikey,
         }),
     });
 

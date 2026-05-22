@@ -15,7 +15,7 @@ export const validateCourse = async (
     ctx: GQLContext,
 ) => {
     if (courseData.type === Constants.CourseType.BLOG) {
-        if (!courseData.description) {
+        if (courseData.published && !courseData.description) {
             throw new Error(responses.blog_description_empty);
         }
 
@@ -23,25 +23,6 @@ export const validateCourse = async (
             throw new Error(responses.cannot_convert_to_blog);
         }
     }
-
-    // if (courseData.costType !== constants.costPaid) {
-    //     courseData.cost = 0;
-    // }
-
-    // if (courseData.costType === constants.costPaid && courseData.cost < 0) {
-    //     throw new Error(responses.invalid_cost);
-    // }
-
-    // if (
-    //     courseData.type === constants.course &&
-    //     courseData.costType === constants.costEmail
-    // ) {
-    //     throw new Error(responses.courses_cannot_be_downloaded);
-    // }
-
-    // if (courseData.costType === constants.costPaid && courseData.cost > 0) {
-    //     await validatePaymentMethod(ctx.subdomain._id.toString());
-    // }
 
     if (
         courseData.type === Constants.CourseType.COURSE ||
@@ -88,18 +69,6 @@ export const validateCourse = async (
 
     return courseData;
 };
-
-// exports.validateCost = async (courseData, domain) => {
-//   if (courseData.cost < 0) {
-//     throw new Error(responses.invalid_cost);
-//   }
-
-//   if (courseData.cost > 0) {
-//     await validatePaymentMethod(domain);
-//   }
-
-//   return courseData;
-// };
 
 export const getPaginatedCoursesForAdmin = async ({
     query,

@@ -17,7 +17,7 @@
     "packageManager": "pnpm@10.22.0",
     "dependencies": {
         "medialit": "^0.1.0",
-        "mongoose": "^8.14.0"
+        "mongoose": "^8.22.1"
     },
     "devDependencies": {
         "@courselit/orm-models": "workspace:^",

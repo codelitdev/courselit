@@ -41,7 +41,8 @@ import { Form, useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import Resources from "@components/resources";
 import EmailViewer from "@components/admin/mails/email-viewer";
-import { defaultEmail, Email as EmailContent } from "@courselit/email-editor";
+import { defaultEmail } from "@courselit/email-editor";
+import type { Email as EmailContent } from "@courselit/email-editor";
 import constants from "@/config/constants";
 
 const { permissions } = UIConstants;
