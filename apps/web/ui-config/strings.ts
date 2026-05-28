@@ -103,7 +103,12 @@ export const SITE_ADMIN_SETTINGS_STRIPE_SECRET = "Stripe Secret Key";
 export const SITE_ADMIN_SETTINGS_RAZORPAY_SECRET = "Razorpay Secret Key";
 export const SITE_ADMIN_SETTINGS_RAZORPAY_WEBHOOK_SECRET =
     "Razorpay Webhook Secret";
-export const SITE_ADMIN_SETTINGS_PAYPAL_SECRET = "Paypal Secret Key";
+export const SITE_ADMIN_SETTINGS_PAYPAL_CLIENT_SECRET = "PayPal Client Secret";
+export const SITE_SETTINGS_PAYPAL_CLIENT_ID_TEXT = "PayPal Client ID";
+export const SITE_SETTINGS_PAYPAL_PRODUCT_ID_TEXT = "PayPal Product ID";
+export const SITE_SETTINGS_PAYPAL_MONTHLY_PLAN_ID_TEXT =
+    "PayPal Monthly Plan ID";
+export const SITE_SETTINGS_PAYPAL_YEARLY_PLAN_ID_TEXT = "PayPal Yearly Plan ID";
 export const SITE_ADMIN_SETTINGS_PAYTM_SECRET = "Paytm Secret Key";
 export const SITE_SETTINGS_SECTION_GENERAL = "Branding";
 export const SITE_SETTINGS_SECTION_PAYMENT = "Payment";
