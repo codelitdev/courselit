@@ -62,6 +62,7 @@ const community = new GraphQLObjectType({
         defaultPaymentPlan: { type: GraphQLString },
         featuredImage: { type: mediaTypes.mediaType },
         membersCount: { type: new GraphQLNonNull(GraphQLInt) },
+        courseId: { type: GraphQLString },
     },
 });
 

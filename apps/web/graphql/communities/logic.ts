@@ -182,6 +182,7 @@ export async function getCommunities({
     const query: Partial<InternalCommunity> = {
         domain: ctx.subdomain._id,
         deleted: false,
+        courseId: { $exists: false },
     };
 
     if (
@@ -217,6 +218,7 @@ export async function getCommunities({
         }),
         defaultPaymentPlan: community.defaultPaymentPlan,
         featuredImage: community.featuredImage,
+        courseId: community.courseId,
         membersCount: await getMembersCount({
             ctx,
             communityId: community.communityId,
@@ -232,6 +234,7 @@ export async function getCommunitiesCount({
 }): Promise<number> {
     const query: Partial<InternalCommunity> = {
         domain: ctx.subdomain._id,
+        courseId: { $exists: false },
     };
 
     if (
@@ -686,10 +689,10 @@ export async function deleteCommunityPost({
         throw new Error(responses.item_not_found);
     }
 
-    post.deleted = true;
+    post.deleted = true as any;
     await (post as any).save();
 
-    return post;
+    return post as any;
 }
 
 export async function getPost({
@@ -953,6 +956,7 @@ async function formatCommunity(
         joiningReasonText: community.joiningReasonText,
         defaultPaymentPlan: community.defaultPaymentPlan,
         featuredImage: community.featuredImage,
+        courseId: community.courseId,
         membersCount: await getMembersCount({
             ctx,
             communityId: community.communityId,
@@ -1374,7 +1378,9 @@ export async function postComment({
         await addNotification({
             domain: ctx.subdomain._id.toString(),
             entityId: replyId,
-            entityAction: Constants.NotificationEntityAction.COMMUNITY_REPLIED,
+            entityAction: isCourseDiscussion
+                ? Constants.NotificationEntityAction.COURSE_DISCUSSION_REPLIED
+                : Constants.NotificationEntityAction.COMMUNITY_REPLIED,
             forUserIds: postSubscribers.map((s) => s.userId),
             userId: ctx.user.userId,
             entityTargetId: comment.commentId,
@@ -1398,8 +1404,9 @@ export async function postComment({
         await addNotification({
             domain: ctx.subdomain._id.toString(),
             entityId: post.postId,
-            entityAction:
-                Constants.NotificationEntityAction.COMMUNITY_COMMENTED,
+            entityAction: isCourseDiscussion
+                ? Constants.NotificationEntityAction.COURSE_DISCUSSION_COMMENTED
+                : Constants.NotificationEntityAction.COMMUNITY_COMMENTED,
             forUserIds: postSubscribers.map((s) => s.userId),
             userId: ctx.user.userId,
         });
@@ -1491,6 +1498,13 @@ export async function toggleCommentLike({
         throw new Error(responses.item_not_found);
     }
 
+    const post = (await CommunityPostModel.findOne({
+        domain: ctx.subdomain._id,
+        communityId,
+        postId,
+    }).lean()) as unknown as CommunityPost;
+    const isCourseDiscussion = !!(post as any)?.lessonId;
+
     const member = await getMembership(ctx, communityId);
 
     if (!member || !hasPermission(member, Constants.MembershipRole.COMMENT)) {
@@ -1508,11 +1522,13 @@ export async function toggleCommentLike({
     await comment.save();
 
     if (liked && comment.userId !== ctx.user.userId) {
+        const entityAction = isCourseDiscussion
+            ? Constants.NotificationEntityAction.COURSE_DISCUSSION_COMMENT_LIKED
+            : Constants.NotificationEntityAction.COMMUNITY_COMMENT_LIKED;
         const existingNotification = await NotificationModel.findOne({
             domain: ctx.subdomain._id,
             entityId: comment.commentId,
-            entityAction:
-                Constants.NotificationEntityAction.COMMUNITY_COMMENT_LIKED,
+            entityAction,
             forUserId: comment.userId,
             userId: ctx.user.userId,
         });
@@ -1520,8 +1536,7 @@ export async function toggleCommentLike({
             await addNotification({
                 domain: ctx.subdomain._id.toString(),
                 entityId: comment.commentId,
-                entityAction:
-                    Constants.NotificationEntityAction.COMMUNITY_COMMENT_LIKED,
+                entityAction,
                 forUserIds: [comment.userId],
                 userId: ctx.user.userId,
             });
@@ -1566,6 +1581,13 @@ export async function toggleCommentReplyLike({
         throw new Error(responses.item_not_found);
     }
 
+    const post = (await CommunityPostModel.findOne({
+        domain: ctx.subdomain._id,
+        communityId,
+        postId,
+    }).lean()) as unknown as CommunityPost;
+    const isCourseDiscussion = !!(post as any)?.lessonId;
+
     const member = await getMembership(ctx, communityId);
 
     if (!member || !hasPermission(member, Constants.MembershipRole.COMMENT)) {
@@ -1589,11 +1611,13 @@ export async function toggleCommentReplyLike({
     await comment.save();
 
     if (liked && reply.userId !== ctx.user.userId) {
+        const entityAction = isCourseDiscussion
+            ? Constants.NotificationEntityAction.COURSE_DISCUSSION_REPLY_LIKED
+            : Constants.NotificationEntityAction.COMMUNITY_REPLY_LIKED;
         const existingNotification = await NotificationModel.findOne({
             domain: ctx.subdomain._id,
             entityId: reply.replyId,
-            entityAction:
-                Constants.NotificationEntityAction.COMMUNITY_REPLY_LIKED,
+            entityAction,
             forUserId: reply.userId,
             userId: ctx.user.userId,
         });
@@ -1601,8 +1625,7 @@ export async function toggleCommentReplyLike({
             await addNotification({
                 domain: ctx.subdomain._id.toString(),
                 entityId: reply.replyId,
-                entityAction:
-                    Constants.NotificationEntityAction.COMMUNITY_REPLY_LIKED,
+                entityAction,
                 forUserIds: [reply.userId],
                 userId: ctx.user.userId,
                 entityTargetId: comment.commentId,

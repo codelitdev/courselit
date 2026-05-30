@@ -102,6 +102,8 @@ export default function useProduct(id?: string | null): {
                     leadMagnet
                     defaultPaymentPlan
                     certificate
+                    discussions
+                    discussionCommunityId
                 }
             }
         `;

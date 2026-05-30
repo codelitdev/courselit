@@ -8,6 +8,7 @@ export interface InternalCommunity extends Omit<Community, "paymentPlans"> {
     createdAt: Date;
     updatedAt: Date;
     deleted: boolean;
+    courseId?: string;
 }
 
 const CommunitySchema = new mongoose.Schema<InternalCommunity>(
@@ -30,6 +31,7 @@ const CommunitySchema = new mongoose.Schema<InternalCommunity>(
         // paymentPlans: [String],
         defaultPaymentPlan: { type: String },
         featuredImage: MediaSchema,
+        courseId: { type: String },
         deleted: { type: Boolean, default: false },
     },
     {

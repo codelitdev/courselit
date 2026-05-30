@@ -893,6 +893,14 @@ export async function runPostMembershipTasks({
                 user,
                 product,
             });
+            if (product.discussionCommunityId) {
+                await addUserToDiscussionCommunity({
+                    domain,
+                    userId: user.userId,
+                    discussionCommunityId: product.discussionCommunityId,
+                    creatorId: product.creatorId,
+                });
+            }
         }
         await recordActivity({
             domain,
@@ -1013,3 +1021,46 @@ export const getCertificateInternal = async (
         productPageId: course?.pageId || null,
     };
 };
+
+async function addUserToDiscussionCommunity({
+    domain,
+    userId,
+    discussionCommunityId,
+    creatorId,
+}: {
+    domain: mongoose.Types.ObjectId;
+    userId: string;
+    discussionCommunityId: string;
+    creatorId: string;
+}) {
+    const existingMembership = await MembershipModel.findOne({
+        domain,
+        userId,
+        entityId: discussionCommunityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+    });
+
+    if (existingMembership) {
+        return;
+    }
+
+    const paymentPlan = await getInternalPaymentPlan({
+        subdomain: {
+            _id: domain,
+        },
+    });
+
+    await MembershipModel.create({
+        domain,
+        userId,
+        entityId: discussionCommunityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+        status: Constants.MembershipStatus.ACTIVE,
+        role:
+            userId === creatorId
+                ? Constants.MembershipRole.MODERATE
+                : Constants.MembershipRole.COMMENT,
+        paymentPlanId: paymentPlan.planId,
+        joiningReason: "Enrolled in course",
+    });
+}

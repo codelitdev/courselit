@@ -31,6 +31,7 @@ import getDeletedMediaIds, {
 } from "@/lib/get-deleted-media-ids";
 import ActivityModel from "@/models/Activity";
 import UserModel from "../../models/User";
+import CommunityPostModel from "@models/CommunityPost";
 
 const { permissions, quiz, scorm } = constants;
 
@@ -173,6 +174,18 @@ export const createLesson = async (
         group?.lessonsOrder.push(lesson.lessonId);
         await (course as any).save();
 
+        if (course.discussionCommunityId) {
+            await CommunityPostModel.create({
+                domain: ctx.subdomain._id,
+                userId: ctx.user.userId,
+                communityId: course.discussionCommunityId,
+                title: lessonData.title,
+                content: "",
+                category: "General",
+                lessonId: lesson.lessonId,
+            });
+        }
+
         return lesson;
     } catch (err: any) {
         throw new Error(err.message);
@@ -220,6 +233,16 @@ export const updateLesson = async (
         await deleteMedia(mediaId);
     }
 
+    if (lessonData.title && lessonData.title !== lesson.title) {
+        await CommunityPostModel.updateMany(
+            {
+                domain: ctx.subdomain._id,
+                lessonId: lesson.lessonId,
+            },
+            { $set: { title: lessonData.title } },
+        );
+    }
+
     lesson = await (lesson as any).save();
     return lesson;
 };
@@ -265,6 +288,15 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
             _id: lesson.id,
             domain: ctx.subdomain._id,
         });
+
+        await CommunityPostModel.updateMany(
+            {
+                domain: ctx.subdomain._id,
+                lessonId: lesson.lessonId,
+            },
+            { $set: { deleted: true } },
+        );
+
         return true;
     } catch (err: any) {
         throw new Error(err.message);

@@ -683,6 +683,23 @@ export const NEW_COMMUNITY_BUTTON = "New community";
 export const COMMUNITY_FIELD_NAME = "Community name";
 export const COMMUNITY_NEW_BTN_CAPTION = "Create";
 export const COMMUNITY_SETTINGS = "Manage";
+export const COURSE_DISCUSSIONS_HEADER = "Course Discussions";
+export const COURSE_DISCUSSIONS_DESCRIPTION =
+    "Allow students to discuss each lesson directly on the lesson page.";
+export const COURSE_DISCUSSIONS_ACTIVE =
+    "Discussions are active — students can comment on each lesson";
+export const COURSE_DISCUSSIONS_INACTIVE = "Discussions are disabled";
+export const COURSE_DISCUSSIONS_MANAGE_COMMUNITY =
+    "Manage discussion community";
+export const LESSON_DISCUSSIONS_HEADER = "Discussions";
+export const LESSON_DISCUSSIONS_WRITE_COMMENT = "Write a comment...";
+export const LESSON_DISCUSSIONS_VIEW_ALL = "View all course discussions";
+export const LESSON_DISCUSSIONS_EMPTY =
+    "No comments yet. Start the discussion!";
+export const LESSON_DISCUSSIONS_POST = "Post";
+export const LESSON_DISCUSSIONS_REPLY = "Reply";
+export const LESSON_DISCUSSIONS_LOADING = "Loading discussions...";
+export const LESSON_DISCUSSIONS_BUTTON = "Discussion";
 
 // Payment Plan strings
 export const NEW_PAYMENT_PLAN_HEADER = "New Payment Plan";

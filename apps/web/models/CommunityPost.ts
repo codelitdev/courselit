@@ -14,6 +14,7 @@ export interface InternalCommunityPost
         | "media"
         | "pinned"
         | "deleted"
+        | "lessonId"
     > {
     domain: mongoose.Types.ObjectId;
     userId: string;
@@ -39,6 +40,7 @@ const CommunityPostSchema = new mongoose.Schema<InternalCommunityPost>(
         media: [CommunityMediaSchema],
         pinned: { type: Boolean, default: false },
         likes: [String],
+        lessonId: { type: String },
         deleted: { type: Boolean, default: false },
     },
     {

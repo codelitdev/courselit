@@ -34,4 +34,6 @@ export interface Course {
     lessons?: Lesson[];
     user: User;
     paymentPlans?: PaymentPlan[];
+    discussions?: boolean;
+    discussionCommunityId?: string;
 }

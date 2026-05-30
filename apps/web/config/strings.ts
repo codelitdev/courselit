@@ -154,6 +154,12 @@ export const responses = {
         "CourseID is required for demo certificate",
     provider_not_configured: "Configure the provider before enabling",
     provider_invalid_configuration: "Invalid provider configuration",
+    discussions_enabled:
+        "Discussions are active — students can comment on each lesson",
+    discussions_disabled: "Discussions are disabled",
+    discussions_toggle_label: "Course Discussions",
+    discussions_toggle_description:
+        "Allow students to discuss each lesson directly on the lesson page.",
 };
 
 export const internal = {

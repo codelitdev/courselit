@@ -7,6 +7,7 @@ import {
 import Community from "@models/Community";
 import CommunityComment from "@models/CommunityComment";
 import CommunityPost from "@models/CommunityPost";
+import CourseModel from "@models/Course";
 import GQLContext from "@models/GQLContext";
 import NotificationModel, { InternalNotification } from "@models/Notification";
 import UserModel from "@models/User";
@@ -299,9 +300,99 @@ async function getMessage({
                 message: `${userName} granted your request to join ${community7.name}`,
                 href: `/dashboard/community/${community7.communityId}`,
             };
+        case Constants.NotificationEntityAction.COURSE_DISCUSSION_COMMENTED: {
+            const post = await CommunityPost.findOne({ postId: entityId });
+            if (!post) return { message: "", href: "" };
+            const lessonUrl = await getCourseDiscussionLessonUrl(post);
+            if (!lessonUrl) return { message: "", href: "" };
+            return {
+                message: `${userName} commented on your post '${truncate(post.title, 20).trim()}'`,
+                href: lessonUrl,
+            };
+        }
+        case Constants.NotificationEntityAction.COURSE_DISCUSSION_REPLIED: {
+            const comment = await CommunityComment.findOne({
+                commentId: entityTargetId,
+            });
+            if (!comment) return { message: "", href: "" };
+            const reply = comment.replies.find((r) => r.replyId === entityId);
+            if (!reply) return { message: "", href: "" };
+            const post = await CommunityPost.findOne({
+                postId: comment.postId,
+            });
+            if (!post) return { message: "", href: "" };
+            let parentReply;
+            if (reply.parentReplyId) {
+                parentReply = comment.replies.find(
+                    (r) => r.replyId === reply.parentReplyId,
+                );
+            }
+            const prefix = parentReply
+                ? loggedInUserId === parentReply.userId
+                    ? "your"
+                    : "a"
+                : loggedInUserId === comment.userId
+                  ? "your"
+                  : "a";
+            const lessonUrl = await getCourseDiscussionLessonUrl(post);
+            if (!lessonUrl) return { message: "", href: "" };
+            return {
+                message: `${userName} replied to ${prefix} comment on '${truncate(post.title, 20).trim()}'`,
+                href: lessonUrl,
+            };
+        }
+        case Constants.NotificationEntityAction
+            .COURSE_DISCUSSION_COMMENT_LIKED: {
+            const comment = await CommunityComment.findOne({
+                commentId: entityId,
+            });
+            if (!comment) return { message: "", href: "" };
+            const post = await CommunityPost.findOne({
+                postId: comment.postId,
+            });
+            if (!post) return { message: "", href: "" };
+            const lessonUrl = await getCourseDiscussionLessonUrl(post);
+            if (!lessonUrl) return { message: "", href: "" };
+            return {
+                message: `${userName} liked your comment '${truncate(comment.content, 20).trim()}' on '${truncate(post.title, 20).trim()}'`,
+                href: lessonUrl,
+            };
+        }
+        case Constants.NotificationEntityAction.COURSE_DISCUSSION_REPLY_LIKED: {
+            const comment = await CommunityComment.findOne({
+                commentId: entityTargetId,
+            });
+            if (!comment) return { message: "", href: "" };
+            const reply = comment.replies.find((r) => r.replyId === entityId);
+            if (!reply) return { message: "", href: "" };
+            const post = await CommunityPost.findOne({
+                postId: comment.postId,
+            });
+            if (!post) return { message: "", href: "" };
+            const lessonUrl = await getCourseDiscussionLessonUrl(post);
+            if (!lessonUrl) return { message: "", href: "" };
+            return {
+                message: `${userName} liked your reply '${truncate(reply.content, 20).trim()}' on '${truncate(post.title, 20).trim()}'`,
+                href: lessonUrl,
+            };
+        }
         default:
             return { message: "", href: "" };
     }
+}
+
+async function getCourseDiscussionLessonUrl(post: any): Promise<string | null> {
+    if (!post.lessonId) return null;
+    const community = await Community.findOne({
+        communityId: post.communityId,
+    });
+    if (!community || !community.courseId) return null;
+    const course = await CourseModel.findOne({
+        domain: community.domain,
+        courseId: community.courseId,
+    });
+    if (!course) return null;
+    return `/course/${course.slug}/${course.courseId}/${post.lessonId}`;
 }
 
 export async function markAsRead({

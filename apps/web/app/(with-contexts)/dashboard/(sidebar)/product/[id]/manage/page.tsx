@@ -19,6 +19,7 @@ import PaymentPlans from "./components/payment-plans";
 import DownloadOptions from "./components/download-options";
 import ProductPublishing from "./components/product-publishing";
 import Certificates from "./components/certificates";
+import CourseDiscussions from "./components/course-discussions";
 import ProductDeletion from "./components/product-deletion";
 
 const { permissions } = UIConstants;
@@ -109,6 +110,7 @@ export default function SettingsPage() {
                 />
                 <ProductPublishing product={product} />
                 <Certificates product={product} productId={productId || ""} />
+                <CourseDiscussions product={product} />
                 <ProductDeletion product={product} />
             </div>
         </DashboardContent>

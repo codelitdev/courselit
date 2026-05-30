@@ -102,6 +102,10 @@ export const NotificationEntityAction = {
     COMMUNITY_REPLY_LIKED: "community:reply:liked",
     COMMUNITY_MEMBERSHIP_REQUESTED: "community:membership:requested",
     COMMUNITY_MEMBERSHIP_GRANTED: "community:membership:granted",
+    COURSE_DISCUSSION_COMMENTED: "course:discussion:commented",
+    COURSE_DISCUSSION_REPLIED: "course:discussion:replied",
+    COURSE_DISCUSSION_COMMENT_LIKED: "course:discussion:comment:liked",
+    COURSE_DISCUSSION_REPLY_LIKED: "course:discussion:reply:liked",
 } as const;
 export const ProductPriceType = {
     FREE: "free",

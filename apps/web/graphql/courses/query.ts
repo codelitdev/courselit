@@ -5,6 +5,7 @@ import {
     GraphQLList,
     GraphQLEnumType,
     GraphQLBoolean,
+    GraphQLObjectType,
 } from "graphql";
 import types from "./types";
 import {
@@ -15,6 +16,8 @@ import {
     getProducts,
     getProductsCount,
     getCourseCertificateTemplate,
+    getCourseDiscussionPosts,
+    getCourseDiscussionStream,
 } from "./logic";
 import GQLContext from "../../models/GQLContext";
 import Filter from "./models/filter";
@@ -22,6 +25,7 @@ import constants from "../../config/constants";
 import { reports, courseMember } from "./types/reports";
 import userTypes from "../users/types";
 import { MembershipStatus } from "@courselit/common-models";
+import communityTypes from "../communities/types";
 
 const { course, download, blog } = constants;
 
@@ -218,5 +222,60 @@ export default {
             { courseId }: { courseId: string },
             context: GQLContext,
         ) => getCourseCertificateTemplate(courseId, context),
+    },
+    getCourseDiscussionPosts: {
+        type: new GraphQLList(communityTypes.communityPost),
+        args: {
+            courseId: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+            lessonId: {
+                type: GraphQLString,
+            },
+        },
+        resolve: (
+            _: any,
+            {
+                courseId,
+                lessonId,
+            }: {
+                courseId: string;
+                lessonId?: string;
+            },
+            context: GQLContext,
+        ) => getCourseDiscussionPosts({ courseId, lessonId, ctx: context }),
+    },
+    getCourseDiscussionStream: {
+        type: new GraphQLObjectType({
+            name: "CourseDiscussionStream",
+            fields: {
+                posts: { type: new GraphQLList(communityTypes.communityPost) },
+                total: { type: GraphQLInt },
+            },
+        }),
+        args: {
+            courseId: {
+                type: new GraphQLNonNull(GraphQLString),
+            },
+            page: {
+                type: GraphQLInt,
+            },
+            limit: {
+                type: GraphQLInt,
+            },
+        },
+        resolve: (
+            _: any,
+            {
+                courseId,
+                page,
+                limit,
+            }: {
+                courseId: string;
+                page?: number;
+                limit?: number;
+            },
+            context: GQLContext,
+        ) => getCourseDiscussionStream({ courseId, page, limit, ctx: context }),
     },
 };

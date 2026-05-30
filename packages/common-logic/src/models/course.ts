@@ -20,6 +20,8 @@ export interface InternalCourse extends Omit<Course, "paymentPlans"> {
     sales: number;
     customers: string[];
     certificate?: boolean;
+    discussions?: boolean;
+    discussionCommunityId?: string;
 }
 
 export const CourseSchema = new mongoose.Schema<InternalCourse>(
@@ -81,6 +83,8 @@ export const CourseSchema = new mongoose.Schema<InternalCourse>(
         defaultPaymentPlan: { type: String },
         leadMagnet: { type: Boolean, required: true, default: false },
         certificate: Boolean,
+        discussions: { type: Boolean, default: false },
+        discussionCommunityId: { type: String },
     },
     {
         timestamps: true,

@@ -35,7 +35,7 @@ import { deleteAllLessons } from "../lessons/logic";
 import { deleteMedia } from "@/services/medialit";
 import PageModel from "@/models/Page";
 import { getPrevNextCursor } from "../lessons/helpers";
-import { checkPermission } from "@courselit/utils";
+import { checkPermission, generateUniqueId, slugify } from "@courselit/utils";
 import { error } from "@/services/logger";
 import {
     deleteProductsFromPaymentPlans,
@@ -56,6 +56,10 @@ import getDeletedMediaIds, {
     extractMediaIDs,
 } from "@/lib/get-deleted-media-ids";
 import { deletePageInternal } from "../pages/logic";
+import CommunityModel from "@models/Community";
+import CommunityPostModel from "@models/CommunityPost";
+import { getInternalPaymentPlan } from "../paymentplans/logic";
+import { internal } from "@config/strings";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -231,6 +235,19 @@ export const updateCourse = async (
     for (const mediaId of mediaIdsMarkedForDeletion) {
         await deleteMedia(mediaId);
     }
+
+    const discussionsToggled = Object.prototype.hasOwnProperty.call(
+        courseData,
+        "discussions",
+    );
+    if (discussionsToggled) {
+        if (courseData.discussions) {
+            await enableDiscussions(course, ctx);
+        } else {
+            await disableDiscussions(course, ctx);
+        }
+    }
+
     course = await (course as any).save();
     await PageModel.updateOne(
         { entityId: course.courseId, domain: ctx.subdomain._id },
@@ -310,6 +327,15 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
         },
     );
     await deletePageInternal(ctx, course.pageId!);
+    if (course.discussionCommunityId) {
+        await CommunityModel.updateOne(
+            {
+                domain: ctx.subdomain._id,
+                communityId: course.discussionCommunityId,
+            },
+            { $set: { deleted: true } },
+        );
+    }
     await CourseModel.deleteOne({
         domain: ctx.subdomain._id,
         courseId: course.courseId,
@@ -1001,3 +1027,244 @@ export const updateCourseCertificateTemplate = async ({
         logo: updatedTemplate.logo,
     };
 };
+
+async function enableDiscussions(course: InternalCourse, ctx: GQLContext) {
+    if (course.discussionCommunityId) {
+        await CommunityModel.updateOne(
+            {
+                domain: ctx.subdomain._id,
+                communityId: course.discussionCommunityId,
+            },
+            { $set: { deleted: false, enabled: true } },
+        );
+        return;
+    }
+
+    const communityId = generateUniqueId();
+    const pageId = `${slugify(`${course.title}-discussions`)}-${communityId.substring(0, 5)}`;
+
+    await PageModel.create({
+        domain: ctx.subdomain._id,
+        pageId,
+        type: "community",
+        creatorId: ctx.user.userId,
+        name: `${course.title} — Discussions`,
+        entityId: communityId,
+        layout: [
+            { name: "header", deleteable: false, shared: true },
+            { name: "banner" },
+            { name: "footer", deleteable: false, shared: true },
+        ],
+        title: `${course.title} — Discussions`,
+    });
+
+    await CommunityModel.create({
+        domain: ctx.subdomain._id,
+        communityId,
+        name: `${course.title} — Discussions`,
+        pageId,
+        courseId: course.courseId,
+        autoAcceptMembers: true,
+        enabled: true,
+        categories: ["General"],
+    });
+
+    course.discussionCommunityId = communityId;
+
+    const paymentPlan = await getInternalPaymentPlan(ctx);
+    await MembershipModel.create({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        entityId: communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+        status: Constants.MembershipStatus.ACTIVE,
+        joiningReason: internal.joining_reason_creator,
+        role: Constants.MembershipRole.MODERATE,
+        paymentPlanId: paymentPlan.planId,
+    });
+
+    await createDiscussionPostsForCourseLessons(course, communityId, ctx);
+
+    await addEnrolledStudentsToDiscussions(course, communityId, ctx);
+}
+
+async function disableDiscussions(course: InternalCourse, ctx: GQLContext) {
+    if (!course.discussionCommunityId) {
+        return;
+    }
+
+    await CommunityModel.updateOne(
+        {
+            domain: ctx.subdomain._id,
+            communityId: course.discussionCommunityId,
+        },
+        { $set: { deleted: true } },
+    );
+}
+
+async function createDiscussionPostsForCourseLessons(
+    course: InternalCourse,
+    communityId: string,
+    ctx: GQLContext,
+) {
+    const courseLessons = await Lesson.find({
+        courseId: course.courseId,
+        domain: ctx.subdomain._id,
+    });
+
+    for (const lesson of courseLessons) {
+        await CommunityPostModel.create({
+            domain: ctx.subdomain._id,
+            userId: course.creatorId,
+            communityId,
+            title: lesson.title,
+            content: "",
+            category: "General",
+            lessonId: lesson.lessonId,
+        });
+    }
+}
+
+async function addEnrolledStudentsToDiscussions(
+    course: InternalCourse,
+    communityId: string,
+    ctx: GQLContext,
+) {
+    const memberships = await MembershipModel.find({
+        domain: ctx.subdomain._id,
+        entityId: course.courseId,
+        entityType: Constants.MembershipEntityType.COURSE,
+        status: Constants.MembershipStatus.ACTIVE,
+    }).lean();
+
+    const paymentPlan = await getInternalPaymentPlan(ctx);
+
+    for (const membership of memberships) {
+        const existingCommunityMembership = await MembershipModel.findOne({
+            domain: ctx.subdomain._id,
+            userId: membership.userId,
+            entityId: communityId,
+            entityType: Constants.MembershipEntityType.COMMUNITY,
+        });
+
+        if (!existingCommunityMembership) {
+            await MembershipModel.create({
+                domain: ctx.subdomain._id,
+                userId: membership.userId,
+                entityId: communityId,
+                entityType: Constants.MembershipEntityType.COMMUNITY,
+                status: Constants.MembershipStatus.ACTIVE,
+                role:
+                    course.creatorId === membership.userId
+                        ? Constants.MembershipRole.MODERATE
+                        : Constants.MembershipRole.COMMENT,
+                paymentPlanId: paymentPlan.planId,
+                joiningReason: "Enrolled in course",
+            });
+        }
+    }
+}
+
+export async function getCourseDiscussionPosts({
+    courseId,
+    lessonId,
+    ctx,
+}: {
+    courseId: string;
+    lessonId?: string;
+    ctx: GQLContext;
+}) {
+    const course = await CourseModel.findOne({
+        courseId,
+        domain: ctx.subdomain._id,
+    });
+
+    if (!course || !course.discussionCommunityId) {
+        return [];
+    }
+
+    const community = await CommunityModel.findOne({
+        domain: ctx.subdomain._id,
+        communityId: course.discussionCommunityId,
+        deleted: false,
+    });
+
+    if (!community) {
+        return [];
+    }
+
+    const query: Record<string, unknown> = {
+        domain: ctx.subdomain._id,
+        communityId: community.communityId,
+        deleted: false,
+    };
+
+    if (lessonId) {
+        query.lessonId = lessonId;
+    }
+
+    const posts = await CommunityPostModel.find(query).lean();
+    return posts.map((post) => ({
+        ...post,
+        userId: post.userId,
+        likesCount: (post.likes || []).length,
+        hasLiked: ctx.user
+            ? (post.likes || []).includes(ctx.user.userId)
+            : false,
+    }));
+}
+
+export async function getCourseDiscussionStream({
+    courseId,
+    page = 1,
+    limit = 10,
+    ctx,
+}: {
+    courseId: string;
+    page?: number;
+    limit?: number;
+    ctx: GQLContext;
+}) {
+    const course = await CourseModel.findOne({
+        courseId,
+        domain: ctx.subdomain._id,
+    });
+
+    if (!course || !course.discussionCommunityId) {
+        return { posts: [], total: 0 };
+    }
+
+    const community = await CommunityModel.findOne({
+        domain: ctx.subdomain._id,
+        communityId: course.discussionCommunityId,
+        deleted: false,
+    });
+
+    if (!community) {
+        return { posts: [], total: 0 };
+    }
+
+    const query = {
+        domain: ctx.subdomain._id,
+        communityId: community.communityId,
+        deleted: false,
+    };
+
+    const total = await CommunityPostModel.countDocuments(query);
+    const rawPosts = await (CommunityPostModel as any).paginatedFind(query, {
+        page,
+        limit,
+        sort: -1,
+    });
+
+    const posts = rawPosts.map((post) => ({
+        ...post,
+        userId: post.userId,
+        likesCount: (post.likes || []).length,
+        hasLiked: ctx.user
+            ? (post.likes || []).includes(ctx.user.userId)
+            : false,
+    }));
+
+    return { posts, total };
+}
