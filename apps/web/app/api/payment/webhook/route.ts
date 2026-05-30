@@ -17,7 +17,8 @@ import { activateMembership } from "../helpers";
 
 export async function POST(req: NextRequest) {
     try {
-        const body = await req.json();
+        const rawBody = await req.text();
+        const body = JSON.parse(rawBody);
         const domainName = req.headers.get("domain");
 
         const domain = await getDomain(domainName);
@@ -30,11 +31,22 @@ export async function POST(req: NextRequest) {
 
         const paymentMethod = await getPaymentMethod(domain._id.toString());
         if (!paymentMethod) {
-            return Response.json({ message: "Payment method not found" });
+            return Response.json(
+                { message: "Payment method not found" },
+                { status: 404 },
+            );
         }
 
-        if (!(await paymentMethod.verify(body))) {
-            return Response.json({ message: "Payment not verified" });
+        if (
+            !(await paymentMethod.verify(body, {
+                rawBody,
+                signature: req.headers.get("stripe-signature"),
+            }))
+        ) {
+            return Response.json(
+                { message: "Payment not verified" },
+                { status: 400 },
+            );
         }
 
         const metadata = paymentMethod.getMetadata(body);
@@ -42,7 +54,10 @@ export async function POST(req: NextRequest) {
 
         const membership = await getMembership(domain._id, membershipId);
         if (!membership) {
-            return Response.json({ message: "Membership not found" });
+            return Response.json(
+                { message: "Membership not found" },
+                { status: 404 },
+            );
         }
 
         const paymentPlan = await getPaymentPlan(
