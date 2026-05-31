@@ -3,12 +3,8 @@ import { Metadata, ResolvingMetadata } from "next";
 import { ReactNode } from "react";
 
 export async function generateMetadata(
-    {
-        params,
-        searchParams,
-    }: {
-        params: any;
-        searchParams: { [key: string]: string | string[] | undefined };
+    {}: {
+        params: Promise<any>;
     },
     parent: ResolvingMetadata,
 ): Promise<Metadata> {

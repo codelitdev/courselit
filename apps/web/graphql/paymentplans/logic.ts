@@ -70,6 +70,15 @@ function checkEntityManagementPermission(
     }
 }
 
+function assertPaymentPlanManagementAllowedForEntity(
+    entity: InternalCourse | InternalCommunity,
+) {
+    const community = entity as InternalCommunity;
+    if (community.communityId && community.courseId) {
+        throw new Error(responses.action_not_allowed);
+    }
+}
+
 export async function getPlan({ planId, ctx }: { planId: string; ctx: any }) {
     checkIfAuthenticated(ctx);
 
@@ -89,6 +98,7 @@ export async function getPlan({ planId, ctx }: { planId: string; ctx: any }) {
         throw new Error(responses.item_not_found);
     }
 
+    assertPaymentPlanManagementAllowedForEntity(entity);
     checkEntityManagementPermission(plan.entityType, ctx);
 
     return plan;
@@ -129,6 +139,7 @@ export async function getPlansForEntity({
         throw new Error(responses.item_not_found);
     }
 
+    assertPaymentPlanManagementAllowedForEntity(entity);
     checkEntityManagementPermission(entityType, ctx);
 
     return (await PaymentPlanModel.find<PaymentPlan>({
@@ -174,6 +185,7 @@ export async function createPlan({
         throw new Error(responses.item_not_found);
     }
 
+    assertPaymentPlanManagementAllowedForEntity(entity);
     checkEntityManagementPermission(entityType, ctx);
 
     const paymentPlanPayload: Partial<InternalPaymentPlan> = {
@@ -254,6 +266,7 @@ export async function updatePlan({
         throw new Error(responses.item_not_found);
     }
 
+    assertPaymentPlanManagementAllowedForEntity(entity);
     checkEntityManagementPermission(paymentPlan.entityType, ctx);
 
     if (name !== undefined) paymentPlan.name = name;
@@ -308,6 +321,7 @@ export async function archivePaymentPlan({
         throw new Error(responses.item_not_found);
     }
 
+    assertPaymentPlanManagementAllowedForEntity(entity);
     checkEntityManagementPermission(paymentPlan.entityType, ctx);
 
     if (
@@ -342,6 +356,7 @@ export async function changeDefaultPlan({
         throw new Error(responses.item_not_found);
     }
 
+    assertPaymentPlanManagementAllowedForEntity(entity);
     checkEntityManagementPermission(entityType, ctx);
 
     const paymentPlan = await PaymentPlanModel.findOne({

@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import { updatePage, getPage, publish } from "../logic";
+import { updatePage, getPage, getPages, publish } from "../logic";
 import DomainModel from "@/models/Domain";
 import PageModel, { Page } from "@/models/Page";
 import Course from "@/models/Course";
@@ -506,6 +506,54 @@ describe("getPage entity validation", () => {
             // Clean up the extra domain created in this test
             await CommunityModel.deleteMany({ domain: otherDomain._id });
             await DomainModel.deleteOne({ _id: otherDomain._id });
+        });
+
+        it("hides course-linked community pages and rejects direct page changes", async () => {
+            const communityId = "course-linked-community-page-id";
+
+            await CommunityModel.create({
+                communityId,
+                domain: ctx.subdomain._id,
+                enabled: true,
+                name: "Course Linked Community",
+                pageId: "course-linked-community-page",
+                slug: "course-linked-community-page",
+                courseId: "course-linked-page-course",
+            });
+
+            const page = await PageModel.create({
+                domain: ctx.subdomain._id,
+                pageId: "course-linked-community-page",
+                type: constants.communityPage,
+                entityId: communityId,
+                creatorId: "creator-1",
+                name: "Course Linked Community Page",
+                layout: [makeHeaderWidget(), makeFooterWidget()],
+                draftLayout: [makeHeaderWidget(), makeFooterWidget()],
+            });
+            const adminCtx = {
+                ...ctx,
+                user: {
+                    userId: "admin-user",
+                    permissions: [constants.permissions.manageSite],
+                },
+            } as unknown as GQLContext;
+
+            const result = await getPage({ id: page.pageId, ctx });
+            const pages = await getPages(adminCtx, constants.communityPage);
+
+            expect(result).toBeUndefined();
+            expect(pages.map((item) => item.pageId)).not.toContain(page.pageId);
+            await expect(
+                updatePage({
+                    context: adminCtx,
+                    pageId: page.pageId,
+                    title: "Updated course linked community page",
+                }),
+            ).rejects.toThrow(responses.action_not_allowed);
+            await expect(publish(page.pageId, adminCtx)).rejects.toThrow(
+                responses.action_not_allowed,
+            );
         });
     });
 

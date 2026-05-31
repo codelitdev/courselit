@@ -29,6 +29,7 @@ export const CommunitySchema = new mongoose.Schema<InternalCommunity>(
         joiningReasonText: { type: String },
         pageId: { type: String, required: true },
         defaultPaymentPlan: { type: String },
+        courseId: { type: String, default: null },
         featuredImage: MediaSchema,
         deleted: { type: Boolean, default: false },
     },
@@ -39,6 +40,14 @@ export const CommunitySchema = new mongoose.Schema<InternalCommunity>(
 
 CommunitySchema.index({ domain: 1, name: 1 }, { unique: true });
 CommunitySchema.index({ domain: 1, slug: 1 }, { unique: true });
+CommunitySchema.index(
+    { domain: 1, courseId: 1 },
+    {
+        unique: true,
+        partialFilterExpression: { courseId: { $type: "string" } },
+    },
+);
+CommunitySchema.index({ domain: 1, courseId: 1, deleted: 1, enabled: 1 });
 
 CommunitySchema.statics.paginatedFind = async function (filter, options) {
     const page = options.page || 1;

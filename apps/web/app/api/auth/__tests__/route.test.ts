@@ -34,7 +34,8 @@ jest.mock("better-auth/next-js", () => ({
 
 import { getBackendAddress } from "@/app/actions";
 import { getAuth } from "@/auth";
-import { POST, rewriteAuthRequestOrigin } from "../[...all]/route";
+import { POST } from "../[...all]/route";
+import { rewriteAuthRequestOrigin } from "../[...all]/rewrite-auth-request-origin";
 
 describe("Auth Route Origin Rewrite", () => {
     beforeEach(() => {

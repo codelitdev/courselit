@@ -170,6 +170,8 @@ const courseType = new GraphQLObjectType({
         sales: { type: GraphQLFloat },
         customers: { type: GraphQLInt },
         certificate: { type: GraphQLBoolean },
+        discussions: { type: GraphQLBoolean },
+        discussionCommunityId: { type: GraphQLString },
     },
 });
 
@@ -196,6 +198,7 @@ const courseUpdateInput = new GraphQLInputObjectType({
         featuredImage: { type: mediaTypes.mediaInputType },
         leadMagnet: { type: GraphQLBoolean },
         certificate: { type: GraphQLBoolean },
+        discussions: { type: GraphQLBoolean },
     },
 });
 

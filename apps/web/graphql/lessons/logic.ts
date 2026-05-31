@@ -37,6 +37,7 @@ import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
 import ActivityModel from "@/models/Activity";
 import UserModel from "../../models/User";
 import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
+import CommunityPostModel from "../../models/CommunityPost";
 
 const { permissions, quiz, scorm } = constants;
 
@@ -278,6 +279,8 @@ export const updateLesson = async (
             ),
         );
     }
+    const shouldSyncDiscussionTitle =
+        lessonData.title !== undefined && lessonData.title !== lesson.title;
 
     for (const key of Object.keys(lessonData)) {
         if (key === "content") {
@@ -298,6 +301,19 @@ export const updateLesson = async (
     }
 
     lesson = await (lesson as any).save();
+
+    // Sync title to the lesson-level discussion post (if any)
+    if (shouldSyncDiscussionTitle) {
+        await CommunityPostModel.updateOne(
+            {
+                domain: lesson.domain,
+                lessonId: lesson.lessonId,
+                deleted: false,
+            },
+            { $set: { title: lesson.title } },
+        );
+    }
+
     return lesson;
 };
 
@@ -350,6 +366,13 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
         );
 
         await Promise.all(cleanupTasks);
+
+        // Soft-delete the corresponding discussion post so historical
+        // comments are preserved but the post no longer appears in streams
+        await CommunityPostModel.updateMany(
+            { domain: ctx.subdomain._id, lessonId: lesson.lessonId },
+            { $set: { deleted: true } },
+        );
 
         const courseUpdateResult = await CourseModel.updateOne(
             {

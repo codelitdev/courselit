@@ -11,13 +11,15 @@ import {
     LESSON_TYPE_SCORM,
 } from "@/ui-config/constants";
 import {
-    COURSE_PROGRESS_FINISH,
     COURSE_PROGRESS_INTRO,
-    COURSE_PROGRESS_NEXT,
     COURSE_PROGRESS_PREV,
     ENROLL_BUTTON_TEXT,
     TOAST_TITLE_ERROR,
     NOT_ENROLLED_HEADER,
+    BTN_MARK_COMPLETE,
+    BTN_COMPLETED,
+    COURSE_PROGRESS_NEXT_NAV,
+    COURSE_PROGRESS_FINISH_NAV,
 } from "@/ui-config/strings";
 import { Link, Skeleton, useToast } from "@courselit/components-library";
 import { TextRenderer } from "@courselit/page-blocks";
@@ -31,13 +33,19 @@ import {
 } from "@courselit/common-models";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, ArrowDownward } from "@courselit/icons";
-import { isEnrolled } from "../../../ui-lib/utils";
+import { BookOpen, Check } from "lucide-react";
+import { isEnrolled, isLessonCompleted } from "../../../ui-lib/utils";
 import LessonEmbedViewer from "./embed-viewer";
 import QuizViewer from "./quiz-viewer";
 import ScormViewer from "./scorm-viewer";
 import { getUserProfile } from "@/app/(with-contexts)/helpers";
 import WidgetErrorBoundary from "../base-layout/template/widget-error-boundary";
-import { Button, Header1, Text1 } from "@courselit/page-primitives";
+import {
+    Button,
+    Header1,
+    Text1,
+    Link as PrimitiveLink,
+} from "@courselit/page-primitives";
 import { ThemeContext } from "@components/contexts";
 
 interface CaptionProps {
@@ -81,6 +89,7 @@ export const LessonViewer = ({
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
     const { theme } = useContext(ThemeContext);
+    const [courseTitle, setCourseTitle] = useState("");
 
     useEffect(() => {
         setError(undefined);
@@ -109,6 +118,9 @@ export const LessonViewer = ({
                     prevLesson,
                     nextLesson
                 }
+                course: getCourse(id: "${productId}") {
+                    title
+                }
             }
         `;
 
@@ -125,6 +137,9 @@ export const LessonViewer = ({
             if (response.lesson) {
                 setLesson(response.lesson);
             }
+            if (response.course?.title) {
+                setCourseTitle(response.course.title);
+            }
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -132,7 +147,7 @@ export const LessonViewer = ({
         }
     };
 
-    const markCompleteAndNext = async () => {
+    const markComplete = async () => {
         const query = `
         mutation {
             result: markLessonCompleted(id: "${lesson!.lessonId}")
@@ -149,16 +164,7 @@ export const LessonViewer = ({
             const response = await fetch.exec();
 
             if (response.result) {
-                if (lesson!.nextLesson) {
-                    await updateUserProfile();
-                    router.push(
-                        `${path}/${slug}/${lesson!.courseId}/${
-                            lesson!.nextLesson
-                        }`,
-                    );
-                } else {
-                    router.push(`/dashboard/my-content`);
-                }
+                await updateUserProfile();
             }
         } catch (err: any) {
             toast({
@@ -168,6 +174,16 @@ export const LessonViewer = ({
             });
         } finally {
             setLoading(false);
+        }
+    };
+
+    const goToNextLesson = () => {
+        if (lesson!.nextLesson) {
+            router.push(
+                `${path}/${slug}/${lesson!.courseId}/${lesson!.nextLesson}`,
+            );
+        } else {
+            router.push(`/dashboard/my-content`);
         }
     };
 
@@ -190,8 +206,8 @@ export const LessonViewer = ({
     }
 
     return (
-        <div className="text-foreground">
-            <article className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
+        <div className="relative min-h-[calc(100vh-10rem)] text-foreground pb-24">
+            <article className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto w-full min-w-0">
                 {!lesson && !error && (
                     <div className="flex flex-col">
                         <Skeleton className="h-12 w-full mb-8" />
@@ -225,8 +241,23 @@ export const LessonViewer = ({
                 )}
                 {lesson && !error && (
                     <>
-                        <header className="mb-8">
-                            <Header1 theme={theme.theme}>
+                        {courseTitle && (
+                            <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                                <BookOpen className="h-4 w-4" />
+                                <PrimitiveLink theme={theme.theme}>
+                                    <Link
+                                        href={`${path}/${slug}/${lesson.courseId}`}
+                                    >
+                                        {courseTitle}
+                                    </Link>
+                                </PrimitiveLink>
+                            </div>
+                        )}
+                        <header className="mb-8 w-full">
+                            <Header1
+                                theme={theme.theme}
+                                className="break-words w-full"
+                            >
                                 {lesson.title}
                             </Header1>
                         </header>
@@ -367,55 +398,100 @@ export const LessonViewer = ({
                                     }
                                 />
                             )}
+                        {lesson && isEnrolled(lesson.courseId, profile) && (
+                            <div className="mt-8 mb-4">
+                                {isLessonCompleted({
+                                    courseId: lesson.courseId,
+                                    lessonId: lesson.lessonId,
+                                    profile,
+                                }) ? (
+                                    <Button
+                                        theme={theme.theme}
+                                        disabled
+                                        variant="outline"
+                                        className="w-full sm:w-auto flex items-center justify-center gap-1.5"
+                                    >
+                                        <Check className="h-4 w-4" />
+                                        {BTN_COMPLETED}
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        theme={theme.theme}
+                                        onClick={markComplete}
+                                        disabled={loading}
+                                        className="w-full sm:w-auto"
+                                    >
+                                        {loading
+                                            ? "Marking..."
+                                            : BTN_MARK_COMPLETE}
+                                    </Button>
+                                )}
+                            </div>
+                        )}
+                        {lesson && isEnrolled(lesson.courseId, profile) && (
+                            <div className="sticky bottom-6 flex justify-end z-10 w-full mt-8">
+                                <div className="mr-2">
+                                    {!lesson.prevLesson && (
+                                        <Link
+                                            href={`${path}/${slug}/${lesson.courseId}`}
+                                        >
+                                            <Button
+                                                theme={theme.theme}
+                                                variant="ghost"
+                                                className="text-muted-foreground"
+                                                disabled={loading}
+                                                size="icon"
+                                                aria-label={
+                                                    COURSE_PROGRESS_INTRO
+                                                }
+                                            >
+                                                <ArrowLeft className="h-4 w-4" />
+                                            </Button>
+                                        </Link>
+                                    )}
+                                    {lesson.prevLesson && (
+                                        <Link
+                                            href={`${path}/${slug}/${lesson.courseId}/${lesson.prevLesson}`}
+                                        >
+                                            <Button
+                                                theme={theme.theme}
+                                                variant="ghost"
+                                                className="text-muted-foreground"
+                                                disabled={loading}
+                                                size="icon"
+                                                aria-label={
+                                                    COURSE_PROGRESS_PREV
+                                                }
+                                            >
+                                                <ArrowLeft className="h-4 w-4" />
+                                            </Button>
+                                        </Link>
+                                    )}
+                                </div>
+                                <Button
+                                    theme={theme.theme}
+                                    onClick={goToNextLesson}
+                                    disabled={loading}
+                                    size={
+                                        lesson.nextLesson ? "icon" : "default"
+                                    }
+                                    aria-label={
+                                        lesson.nextLesson
+                                            ? COURSE_PROGRESS_NEXT_NAV
+                                            : COURSE_PROGRESS_FINISH_NAV
+                                    }
+                                >
+                                    {lesson.nextLesson ? (
+                                        <ArrowRight className="h-4 w-4" />
+                                    ) : (
+                                        COURSE_PROGRESS_FINISH_NAV
+                                    )}
+                                </Button>
+                            </div>
+                        )}
                     </>
                 )}
             </article>
-            {lesson && isEnrolled(lesson.courseId, profile) && (
-                <div className="bg-background fixed bottom-0 left-0 w-full p-4 flex justify-end">
-                    <div className="mr-2">
-                        {!lesson.prevLesson && (
-                            <Link href={`${path}/${slug}/${lesson.courseId}`}>
-                                <Button
-                                    theme={theme.theme}
-                                    variant="secondary"
-                                    className="flex gap-1 items-center"
-                                    disabled={loading}
-                                >
-                                    <ArrowLeft />
-                                    {COURSE_PROGRESS_INTRO}
-                                </Button>
-                            </Link>
-                        )}
-                        {lesson.prevLesson && (
-                            <Link
-                                href={`${path}/${slug}/${lesson.courseId}/${lesson.prevLesson}`}
-                            >
-                                <Button
-                                    theme={theme.theme}
-                                    variant="secondary"
-                                    className="flex gap-1 items-center"
-                                    disabled={loading}
-                                >
-                                    <ArrowLeft /> {COURSE_PROGRESS_PREV}
-                                </Button>
-                            </Link>
-                        )}
-                    </div>
-                    <Button
-                        theme={theme.theme}
-                        onClick={markCompleteAndNext}
-                        disabled={loading}
-                    >
-                        {lesson.nextLesson ? (
-                            <div className="flex gap-1 items-center">
-                                {COURSE_PROGRESS_NEXT} <ArrowRight />
-                            </div>
-                        ) : (
-                            COURSE_PROGRESS_FINISH
-                        )}
-                    </Button>
-                </div>
-            )}
         </div>
     );
 };

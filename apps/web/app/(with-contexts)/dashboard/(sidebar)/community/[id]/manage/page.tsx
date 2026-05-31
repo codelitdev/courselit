@@ -5,6 +5,10 @@ import { AddressContext, ProfileContext } from "@components/contexts";
 import {
     COMMUNITY_HEADER,
     COMMUNITY_SETTINGS,
+    COMMUNITY_SETTINGS_COURSE_LINKED_DELETE_DISABLED,
+    COMMUNITY_SETTINGS_COURSE_LINKED_DESCRIPTION,
+    COMMUNITY_SETTINGS_COURSE_LINKED_LOCKED,
+    COMMUNITY_SETTINGS_COURSE_LINKED_TITLE,
     DANGER_ZONE_HEADER,
     MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
     MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
@@ -111,6 +115,7 @@ export default function Page(props: {
     const [isDeleting, setIsDeleting] = useState(false);
     const router = useRouter();
     const fetch = useGraphQLFetch();
+    const isCourseLinkedCommunity = Boolean(community?.courseId);
 
     useEffect(() => {
         if (communityLoaded && community) {
@@ -123,9 +128,11 @@ export default function Page(props: {
             communityLoaded &&
             membershipLoaded &&
             (community === null ||
-                membership === null ||
-                (membership &&
-                    membership.role !== Constants.MembershipRole.MODERATE))
+                (!community.courseId &&
+                    (membership === null ||
+                        (membership &&
+                            membership.role !==
+                                Constants.MembershipRole.MODERATE))))
         ) {
             redirect(`/dashboard/community/${id}`);
         }
@@ -526,20 +533,25 @@ export default function Page(props: {
                             {COMMUNITY_SETTINGS}
                         </h1>
                         <div className="flex gap-2">
-                            <Link
-                                href={`/dashboard/page/${pageId}?redirectTo=/dashboard/community/${id}/manage`}
-                            >
-                                <Button variant="outline" className="">
-                                    <Edit className="w-4 h-4" /> Edit page
-                                </Button>
-                            </Link>
-                            <Link
-                                href={`/dashboard/community/${id}/manage/memberships`}
-                            >
-                                <Button variant="outline" className="">
-                                    <Users className="w-4 h-4" /> Memberships
-                                </Button>
-                            </Link>
+                            {!isCourseLinkedCommunity && (
+                                <Link
+                                    href={`/dashboard/page/${pageId}?redirectTo=/dashboard/community/${id}/manage`}
+                                >
+                                    <Button variant="outline" className="">
+                                        <Edit className="w-4 h-4" /> Edit page
+                                    </Button>
+                                </Link>
+                            )}
+                            {!isCourseLinkedCommunity && (
+                                <Link
+                                    href={`/dashboard/community/${id}/manage/memberships`}
+                                >
+                                    <Button variant="outline" className="">
+                                        <Users className="w-4 h-4" />{" "}
+                                        Memberships
+                                    </Button>
+                                </Link>
+                            )}
                             <Link
                                 href={`/dashboard/community/${id}/manage/reports`}
                             >
@@ -553,260 +565,325 @@ export default function Page(props: {
                     <p className="text-muted-foreground">
                         Manage your community settings.
                     </p>
-                </div>
-                <div className="space-y-6">
-                    <FormField
-                        value={name}
-                        name="name"
-                        label={"Name"}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setName(e.target.value)
-                        }
-                        placeholder="Community name"
-                    />
-                    <div className="space-y-2">
-                        <Label htmlFor="slug" className="font-semibold">
-                            Slug
-                        </Label>
-                        <Input
-                            id="slug"
-                            name="slug"
-                            value={slug}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                setSlug(e.target.value)
-                            }
-                            placeholder="my-community"
-                        />
-                        <p className="text-sm text-muted-foreground">
-                            The URL-friendly identifier for this community page.
-                        </p>
-                    </div>
-                    <div>
-                        <h2 className="font-semibold">Description</h2>
-                        <Editor
-                            initialContent={description}
-                            onChange={(state: any) => setDescription(state)}
-                            showToolbar={false}
-                            url={address.backend}
-                            refresh={refresh}
-                        />
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                            <Label htmlFor="enabled" className="font-semibold">
-                                Community Enabled
-                            </Label>
-                            <p className="text-sm text-muted-foreground">
-                                Allow users to join your community
+                    {isCourseLinkedCommunity && (
+                        <div className="rounded-md border bg-muted/40 p-4 text-sm text-muted-foreground">
+                            <h2 className="mb-1 font-semibold text-foreground">
+                                {COMMUNITY_SETTINGS_COURSE_LINKED_TITLE}
+                            </h2>
+                            <p>
+                                {COMMUNITY_SETTINGS_COURSE_LINKED_DESCRIPTION}
                             </p>
-                        </div>
-                        <Switch
-                            id="enabled"
-                            checked={enabled}
-                            onCheckedChange={setEnabled}
-                        />
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                            <Label htmlFor="default" className="font-semibold">
-                                Auto accept members
-                            </Label>
-                            <p className="text-sm text-muted-foreground">
-                                Automatically accept new members
+                            <p className="mt-2">
+                                {COMMUNITY_SETTINGS_COURSE_LINKED_LOCKED}
                             </p>
-                        </div>
-                        <Switch
-                            id="autoAcceptMembers"
-                            checked={autoAcceptMembers}
-                            onCheckedChange={setAutoAcceptMembers}
-                        />
-                    </div>
-                    <FormField
-                        value={joiningReasonText}
-                        name="joiningReasonText"
-                        label="Joining reason text"
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setJoiningReasonText(e.target.value)
-                        }
-                        placeholder="Text to show when users request to join a free community"
-                    />
-                </div>
-                <Button type="submit">Save Changes</Button>
-            </Form>
-            <Separator className="my-8" />
-            <div className="space-y-4">
-                <div className="space-y-2">
-                    <Label className="text-base font-semibold">
-                        Featured image
-                    </Label>
-                    <p className="text-sm text-muted-foreground mb-4">
-                        The hero image for your community
-                    </p>
-                    {featuredImage && (
-                        <div className="w-32 rounded overflow-hidden border">
-                            <Image
-                                src={
-                                    featuredImage?.thumbnail ||
-                                    "/courselit-backdrop-square.webp"
-                                }
-                                alt={name}
-                            />
                         </div>
                     )}
-                    <MediaSelector
-                        title=""
-                        profile={profile as Profile}
-                        address={address}
-                        mediaId={featuredImage?.mediaId}
-                        src={featuredImage?.thumbnail || ""}
-                        srcTitle={featuredImage?.originalFileName || ""}
-                        onSelection={(media?: Media) => {
-                            if (media) {
-                                updateFeaturedImage(media);
-                            }
-                        }}
-                        onRemove={() => {
-                            updateFeaturedImage();
-                        }}
-                        access="public"
-                        strings={{
-                            buttonCaption: MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
-                            removeButtonCaption:
-                                MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
-                        }}
-                        type="community"
-                        hidePreview={true}
-                    />
                 </div>
-            </div>
-            <Separator className="my-8" />
-            <div className="space-y-4">
-                <div className="space-y-2">
-                    <Label className="text-base font-semibold">
-                        Categories
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                        Add and manage community categories
-                    </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    {categories.map((category) => (
-                        <Badge
-                            key={category}
-                            variant="secondary"
-                            className="flex items-center gap-1"
-                        >
-                            {category}
-                            <button
-                                type="button"
-                                onClick={() => handleDeleteCategory(category)}
-                                className="ml-1 hover:bg-muted rounded-full"
-                            >
-                                <X className="h-3 w-3" />
-                                <span className="sr-only">
-                                    Remove {category} category
-                                </span>
-                            </button>
-                        </Badge>
-                    ))}
-                </div>
-                <Form onSubmit={handleAddCategory} className="flex gap-2">
-                    <FormField
-                        value={newCategory}
-                        onChange={(e) => setNewCategory(e.target.value)}
-                        placeholder="Enter category name"
-                        className="flex-1"
-                    />
-                    <Button type="submit" variant="secondary">
-                        Add Category
-                    </Button>
-                </Form>
-            </div>
-            <Separator className="my-8" />
-            <div className="space-y-4 flex flex-col md:flex-row md:items-start md:justify-between w-full">
-                <div className="space-y-2">
-                    <Label className="text-base font-semibold">Pricing</Label>
-                    <p className="text-sm text-muted-foreground">
-                        Manage your community pricing plans
-                    </p>
-                </div>
-                <PaymentPlanList
-                    paymentPlans={paymentPlans.map((plan) => ({
-                        ...plan,
-                        type: plan.type.toLowerCase() as PaymentPlanType,
-                    }))}
-                    onPlanArchived={onPlanArchived}
-                    onDefaultPlanChanged={onDefaultPlanChanged}
-                    defaultPaymentPlanId={defaultPaymentPlan}
-                    entityId={id}
-                    entityType={MembershipEntityType.COMMUNITY}
-                />
-            </div>
-            <Separator className="my-8" />
-            <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-destructive">
-                    {DANGER_ZONE_HEADER}
-                </h3>
-                <AlertDialog
-                    onOpenChange={(open) =>
-                        !open &&
-                        (setDeleteConfirmation(""), setIsDeleting(false))
-                    }
-                >
-                    <AlertDialogTrigger asChild>
-                        <Button variant="destructive">Delete Community</Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>
-                                Are you absolutely sure?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This action is irreversible. All community data
-                                will be permanently deleted.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <div className="py-4">
-                            <Label
-                                htmlFor="delete-confirmation"
-                                className="text-sm font-medium"
-                            >
-                                Type &quot;delete&quot; to confirm
-                            </Label>
-                            <Input
-                                id="delete-confirmation"
-                                type="text"
-                                placeholder="Type 'delete' to confirm"
-                                value={deleteConfirmation}
-                                onChange={(e) =>
-                                    setDeleteConfirmation(e.target.value)
+                {isCourseLinkedCommunity ? null : (
+                    <>
+                        <div className="space-y-6">
+                            <FormField
+                                value={name}
+                                name="name"
+                                label={"Name"}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                    setName(e.target.value)
                                 }
-                                className="mt-2"
+                                placeholder="Community name"
+                            />
+                            <div className="space-y-2">
+                                <Label htmlFor="slug" className="font-semibold">
+                                    Slug
+                                </Label>
+                                <Input
+                                    id="slug"
+                                    name="slug"
+                                    value={slug}
+                                    onChange={(
+                                        e: ChangeEvent<HTMLInputElement>,
+                                    ) => setSlug(e.target.value)}
+                                    placeholder="my-community"
+                                />
+                                <p className="text-sm text-muted-foreground">
+                                    The URL-friendly identifier for this
+                                    community page.
+                                </p>
+                            </div>
+                            <div>
+                                <h2 className="font-semibold">Description</h2>
+                                <Editor
+                                    initialContent={description}
+                                    onChange={(state: any) =>
+                                        setDescription(state)
+                                    }
+                                    showToolbar={false}
+                                    url={address.backend}
+                                    refresh={refresh}
+                                />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label
+                                        htmlFor="enabled"
+                                        className="font-semibold"
+                                    >
+                                        Community Enabled
+                                    </Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Allow users to join your community
+                                    </p>
+                                </div>
+                                <Switch
+                                    id="enabled"
+                                    checked={enabled}
+                                    onCheckedChange={setEnabled}
+                                />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label
+                                        htmlFor="default"
+                                        className="font-semibold"
+                                    >
+                                        Auto accept members
+                                    </Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Automatically accept new members
+                                    </p>
+                                </div>
+                                <Switch
+                                    id="autoAcceptMembers"
+                                    checked={autoAcceptMembers}
+                                    onCheckedChange={setAutoAcceptMembers}
+                                />
+                            </div>
+                            <FormField
+                                value={joiningReasonText}
+                                name="joiningReasonText"
+                                label="Joining reason text"
+                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                    setJoiningReasonText(e.target.value)
+                                }
+                                placeholder="Text to show when users request to join a free community"
                             />
                         </div>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={handleDeleteConfirm}
-                                disabled={
-                                    deleteConfirmation !== "delete" ||
-                                    isDeleting
-                                }
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {isDeleting ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Deleting...
-                                    </>
-                                ) : (
-                                    "Delete"
-                                )}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-            </div>
+                        <Button type="submit">Save Changes</Button>
+                    </>
+                )}
+            </Form>
+            {!isCourseLinkedCommunity && (
+                <>
+                    <Separator className="my-8" />
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label className="text-base font-semibold">
+                                Featured image
+                            </Label>
+                            <p className="text-sm text-muted-foreground mb-4">
+                                The hero image for your community
+                            </p>
+                            {featuredImage && (
+                                <div className="w-32 rounded overflow-hidden border">
+                                    <Image
+                                        src={
+                                            featuredImage?.thumbnail ||
+                                            "/courselit-backdrop-square.webp"
+                                        }
+                                        alt={name}
+                                    />
+                                </div>
+                            )}
+                            <MediaSelector
+                                title=""
+                                profile={profile as Profile}
+                                address={address}
+                                mediaId={featuredImage?.mediaId}
+                                src={featuredImage?.thumbnail || ""}
+                                srcTitle={featuredImage?.originalFileName || ""}
+                                onSelection={(media?: Media) => {
+                                    if (media) {
+                                        updateFeaturedImage(media);
+                                    }
+                                }}
+                                onRemove={() => {
+                                    updateFeaturedImage();
+                                }}
+                                access="public"
+                                strings={{
+                                    buttonCaption:
+                                        MEDIA_SELECTOR_UPLOAD_BTN_CAPTION,
+                                    removeButtonCaption:
+                                        MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
+                                }}
+                                type="community"
+                                hidePreview={true}
+                            />
+                        </div>
+                    </div>
+                    <Separator className="my-8" />
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label className="text-base font-semibold">
+                                Categories
+                            </Label>
+                            <p className="text-sm text-muted-foreground">
+                                Add and manage community categories
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {categories.map((category) => (
+                                <Badge
+                                    key={category}
+                                    variant="secondary"
+                                    className="flex items-center gap-1"
+                                >
+                                    {category}
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            handleDeleteCategory(category)
+                                        }
+                                        className="ml-1 hover:bg-muted rounded-full"
+                                    >
+                                        <X className="h-3 w-3" />
+                                        <span className="sr-only">
+                                            Remove {category} category
+                                        </span>
+                                    </button>
+                                </Badge>
+                            ))}
+                        </div>
+                        <Form
+                            onSubmit={handleAddCategory}
+                            className="flex gap-2"
+                        >
+                            <FormField
+                                value={newCategory}
+                                onChange={(e) => setNewCategory(e.target.value)}
+                                placeholder="Enter category name"
+                                className="flex-1"
+                            />
+                            <Button type="submit" variant="secondary">
+                                Add Category
+                            </Button>
+                        </Form>
+                    </div>
+                    <Separator className="my-8" />
+                    <div className="space-y-4 flex flex-col md:flex-row md:items-start md:justify-between w-full">
+                        <div className="space-y-2">
+                            <Label className="text-base font-semibold">
+                                Pricing
+                            </Label>
+                            <p className="text-sm text-muted-foreground">
+                                Manage your community pricing plans
+                            </p>
+                        </div>
+                        <PaymentPlanList
+                            paymentPlans={paymentPlans.map((plan) => ({
+                                ...plan,
+                                type: plan.type.toLowerCase() as PaymentPlanType,
+                            }))}
+                            onPlanArchived={onPlanArchived}
+                            onDefaultPlanChanged={onDefaultPlanChanged}
+                            defaultPaymentPlanId={defaultPaymentPlan}
+                            entityId={id}
+                            entityType={MembershipEntityType.COMMUNITY}
+                        />
+                    </div>
+                </>
+            )}
+            {!isCourseLinkedCommunity && (
+                <>
+                    <Separator className="my-8" />
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-destructive">
+                            {DANGER_ZONE_HEADER}
+                        </h3>
+                        <AlertDialog
+                            onOpenChange={(open) =>
+                                !open &&
+                                (setDeleteConfirmation(""),
+                                setIsDeleting(false))
+                            }
+                        >
+                            <AlertDialogTrigger asChild>
+                                <Button
+                                    variant="destructive"
+                                    disabled={isCourseLinkedCommunity}
+                                    title={
+                                        isCourseLinkedCommunity
+                                            ? COMMUNITY_SETTINGS_COURSE_LINKED_DELETE_DISABLED
+                                            : undefined
+                                    }
+                                >
+                                    Delete Community
+                                </Button>
+                            </AlertDialogTrigger>
+                            {isCourseLinkedCommunity && (
+                                <p className="max-w-2xl text-sm text-muted-foreground">
+                                    {
+                                        COMMUNITY_SETTINGS_COURSE_LINKED_DELETE_DISABLED
+                                    }
+                                </p>
+                            )}
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                        Are you absolutely sure?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action is irreversible. All
+                                        community data will be permanently
+                                        deleted.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <div className="py-4">
+                                    <Label
+                                        htmlFor="delete-confirmation"
+                                        className="text-sm font-medium"
+                                    >
+                                        Type &quot;delete&quot; to confirm
+                                    </Label>
+                                    <Input
+                                        id="delete-confirmation"
+                                        type="text"
+                                        placeholder="Type 'delete' to confirm"
+                                        value={deleteConfirmation}
+                                        onChange={(e) =>
+                                            setDeleteConfirmation(
+                                                e.target.value,
+                                            )
+                                        }
+                                        className="mt-2"
+                                    />
+                                </div>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>
+                                        Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={handleDeleteConfirm}
+                                        disabled={
+                                            deleteConfirmation !== "delete" ||
+                                            isDeleting
+                                        }
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isDeleting ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                Deleting...
+                                            </>
+                                        ) : (
+                                            "Delete"
+                                        )}
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
+                </>
+            )}
             {/* <Form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <FormField
                     label={COMMUNITY_FIELD_NAME}

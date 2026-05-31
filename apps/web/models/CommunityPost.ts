@@ -15,6 +15,7 @@ export interface InternalCommunityPost
             | "media"
             | "pinned"
             | "deleted"
+            | "lessonId"
         >,
         "content"
     > {
@@ -44,11 +45,39 @@ const CommunityPostSchema = new mongoose.Schema<InternalCommunityPost>(
         pinned: { type: Boolean, default: false },
         likes: [String],
         deleted: { type: Boolean, default: false },
+        lessonId: { type: String, default: null },
     },
     {
         timestamps: true,
     },
 );
+
+CommunityPostSchema.index(
+    { domain: 1, communityId: 1, lessonId: 1 },
+    {
+        unique: true,
+        partialFilterExpression: { lessonId: { $type: "string" } },
+    },
+);
+CommunityPostSchema.index({
+    domain: 1,
+    communityId: 1,
+    lessonId: 1,
+    deleted: 1,
+});
+CommunityPostSchema.index({
+    domain: 1,
+    communityId: 1,
+    deleted: 1,
+    createdAt: -1,
+});
+CommunityPostSchema.index({
+    domain: 1,
+    communityId: 1,
+    deleted: 1,
+    lessonId: 1,
+    createdAt: -1,
+});
 
 CommunityPostSchema.statics.paginatedFind = async function (filter, options) {
     const page = options.page || 1;

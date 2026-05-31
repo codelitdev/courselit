@@ -1,4 +1,3 @@
-import { Course } from "@courselit/common-models";
 import { Caption, Header1, Section } from "@courselit/page-primitives";
 import { formattedLocaleDate, getFullSiteSetup } from "@ui-lib/utils";
 import { getAddressFromHeaders } from "@/app/actions";
@@ -21,7 +20,6 @@ import {
 
 export default async function ProductPage(props: {
     params: Promise<{ slug: string; id: string }>;
-    course: Course;
 }) {
     const params = await props.params;
     const address = await getAddressFromHeaders(headers);
@@ -106,7 +104,7 @@ export default async function ProductPage(props: {
     );
 }
 
-export const getProduct = async (
+const getProduct = async (
     backend: string,
     id: string,
 ): Promise<ProductWithAdminProps | undefined> => {

@@ -12,6 +12,7 @@ export * from "./text2";
 export * from "./link";
 export * from "./button";
 export * from "./input";
+export * from "./textarea";
 export * from "./caption";
 export * from "./card";
 export * from "./label";

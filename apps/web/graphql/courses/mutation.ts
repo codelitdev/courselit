@@ -17,11 +17,14 @@ import {
     moveLesson,
     reorderGroups,
     updateCourseCertificateTemplate,
+    createCourseDiscussionComment,
+    createCourseDiscussionReply,
 } from "./logic";
 import Filter from "./models/filter";
 import GQLContext from "../../models/GQLContext";
 import mediaTypes from "../media/types";
 import { Media } from "@courselit/common-models";
+import communityTypes from "../communities/types";
 
 export default {
     createCourse: {
@@ -228,6 +231,59 @@ export default {
                 signatureName,
                 signatureDesignation,
                 logo,
+            }),
+    },
+    createCourseDiscussionComment: {
+        type: communityTypes.communityComment,
+        args: {
+            courseId: { type: new GraphQLNonNull(GraphQLString) },
+            lessonId: { type: new GraphQLNonNull(GraphQLString) },
+            content: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: (
+            _: any,
+            {
+                courseId,
+                lessonId,
+                content,
+            }: { courseId: string; lessonId: string; content: string },
+            ctx: GQLContext,
+        ) =>
+            createCourseDiscussionComment({ ctx, courseId, lessonId, content }),
+    },
+    createCourseDiscussionReply: {
+        type: communityTypes.communityComment,
+        args: {
+            courseId: { type: new GraphQLNonNull(GraphQLString) },
+            lessonId: { type: new GraphQLNonNull(GraphQLString) },
+            commentId: { type: new GraphQLNonNull(GraphQLString) },
+            content: { type: new GraphQLNonNull(GraphQLString) },
+            parentReplyId: { type: GraphQLString },
+        },
+        resolve: (
+            _: any,
+            {
+                courseId,
+                lessonId,
+                commentId,
+                content,
+                parentReplyId,
+            }: {
+                courseId: string;
+                lessonId: string;
+                commentId: string;
+                content: string;
+                parentReplyId?: string;
+            },
+            ctx: GQLContext,
+        ) =>
+            createCourseDiscussionReply({
+                ctx,
+                courseId,
+                lessonId,
+                commentId,
+                content,
+                parentReplyId,
             }),
     },
 };

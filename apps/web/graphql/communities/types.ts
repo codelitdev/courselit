@@ -42,6 +42,7 @@ const community = new GraphQLObjectType({
     name: "Community",
     fields: {
         communityId: { type: new GraphQLNonNull(GraphQLString) },
+        courseId: { type: GraphQLString },
         name: { type: new GraphQLNonNull(GraphQLString) },
         slug: { type: GraphQLString },
         description: { type: GraphQLJSONObject },
@@ -105,6 +106,7 @@ const communityPost = new GraphQLObjectType({
         pinned: { type: new GraphQLNonNull(GraphQLBoolean) },
         media: { type: new GraphQLList(communityPostMedia) },
         likesCount: { type: new GraphQLNonNull(GraphQLInt) },
+        lessonId: { type: GraphQLString },
         commentsCount: {
             type: new GraphQLNonNull(GraphQLInt),
             resolve: (post, _, ctx: GQLContext, __) =>

@@ -27,6 +27,7 @@ export const useCommunity = (id?: string | null) => {
             query ($id: String!) {
                 community: getCommunity(id: $id) {
                     communityId
+                    courseId
                     name
                     slug
                     description

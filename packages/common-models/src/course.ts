@@ -31,6 +31,8 @@ export interface Course {
     createdAt: Date;
     updatedAt: Date;
     leadMagnet?: boolean;
+    discussions?: boolean;
+    discussionCommunityId?: string | null;
     lessons?: Lesson[];
     user: User;
     paymentPlans?: PaymentPlan[];

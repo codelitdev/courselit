@@ -73,7 +73,10 @@ jest.mock("@ui-lib/utils", () => ({
 }));
 
 import { Constants, Profile } from "@courselit/common-models";
-import { generateSideBarItems } from "../layout-with-sidebar";
+import {
+    generateSideBarItems,
+    getActiveLessonId,
+} from "../layout-with-sidebar";
 import { CourseFrontend } from "../helpers";
 import constants from "@/config/constants";
 
@@ -724,5 +727,150 @@ describe("generateSideBarItems", () => {
             "Chapter 5 - Text 2",
             "Text 3",
         ]);
+    });
+
+    it("hides discussions from the sidebar when discussions are disabled", () => {
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            discussions: false,
+            groups: [],
+        } as unknown as CourseFrontend;
+
+        const profile = {
+            userId: "user-1",
+            purchases: [],
+        } as unknown as Profile;
+
+        const items = generateSideBarItems(
+            course,
+            profile,
+            "/course/test-course/course-1",
+        );
+
+        expect(
+            items.find((item) => item.title === "Discussions"),
+        ).toBeUndefined();
+    });
+
+    it("shows discussions in the sidebar when discussions are enabled", () => {
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            discussions: true,
+            groups: [],
+        } as unknown as CourseFrontend;
+
+        const profile = {
+            userId: "user-1",
+            purchases: [],
+        } as unknown as Profile;
+
+        const items = generateSideBarItems(
+            course,
+            profile,
+            "/course/test-course/course-1",
+        );
+
+        expect(
+            items.find((item) => item.title === "Discussions"),
+        ).toBeDefined();
+    });
+});
+
+describe("getActiveLessonId", () => {
+    const course = {
+        slug: "test-course",
+        courseId: "course-1",
+    } as unknown as CourseFrontend;
+
+    it("returns the lesson id when on a lesson page", () => {
+        const id = getActiveLessonId(
+            course,
+            "/course/test-course/course-1/lesson-abc",
+        );
+        expect(id).toBe("lesson-abc");
+    });
+
+    it("returns empty string when on the course about page", () => {
+        const id = getActiveLessonId(course, "/course/test-course/course-1");
+        expect(id).toBe("");
+    });
+
+    it("returns empty string when on the discussions page", () => {
+        const id = getActiveLessonId(
+            course,
+            "/course/test-course/course-1/discussions",
+        );
+        expect(id).toBe("");
+    });
+
+    it("returns empty string when pathname doesn't match course", () => {
+        const id = getActiveLessonId(course, "/some/other/url");
+        expect(id).toBe("");
+    });
+});
+
+describe("showDiscussionControl", () => {
+    const course = {
+        slug: "test-course",
+        courseId: "course-1",
+        discussions: false,
+    } as unknown as CourseFrontend;
+
+    it("hides when discussions is disabled", () => {
+        const activeLessonId = getActiveLessonId(
+            course,
+            "/course/test-course/course-1/lesson-1",
+        );
+        expect(Boolean(course.discussions && activeLessonId)).toBe(false);
+    });
+
+    it("hides when not on a lesson page even if discussions enabled", () => {
+        const courseWithDiscussions = {
+            ...course,
+            discussions: true,
+        } as unknown as CourseFrontend;
+        const activeLessonId = getActiveLessonId(
+            courseWithDiscussions,
+            "/course/test-course/course-1/discussions",
+        );
+        expect(
+            Boolean(courseWithDiscussions.discussions && activeLessonId),
+        ).toBe(false);
+    });
+
+    it("shows when discussions enabled and on a lesson page", () => {
+        const courseWithDiscussions = {
+            ...course,
+            discussions: true,
+        } as unknown as CourseFrontend;
+        const activeLessonId = getActiveLessonId(
+            courseWithDiscussions,
+            "/course/test-course/course-1/lesson-1",
+        );
+        expect(
+            Boolean(courseWithDiscussions.discussions && activeLessonId),
+        ).toBe(true);
     });
 });

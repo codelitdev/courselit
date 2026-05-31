@@ -356,162 +356,171 @@ export function MembershipList({ id }: { id: string }) {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {members.map((member) => (
-                                    <TableRow key={member.user.email}>
-                                        <TableCell className="font-medium">
-                                            <Link
-                                                href={`/dashboard/users/${member.user.userId}`}
-                                            >
-                                                <div className="flex items-center space-x-2">
-                                                    <Avatar className="h-8 w-8">
-                                                        <AvatarImage
-                                                            src={
-                                                                member.user
-                                                                    .avatar
-                                                                    ?.thumbnail ||
-                                                                "/courselit_backdrop_square.webp"
-                                                            }
-                                                            alt={
-                                                                member.user
-                                                                    .name ||
-                                                                member.user
-                                                                    .email
-                                                            }
-                                                        />
-                                                        <AvatarFallback>
-                                                            {(
-                                                                member.user
-                                                                    .name ||
-                                                                member.user
-                                                                    .email
-                                                            ).charAt(0)}
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-semibold">
-                                                            {member.user.name ||
-                                                                member.user
-                                                                    .email}
-                                                        </span>
-                                                        {member.user.name && (
-                                                            <span className="text-sm text-muted-foreground">
-                                                                {
+                                {members.map((member) => {
+                                    return (
+                                        <TableRow key={member.user.email}>
+                                            <TableCell className="font-medium">
+                                                <Link
+                                                    href={`/dashboard/users/${member.user.userId}`}
+                                                >
+                                                    <div className="flex items-center space-x-2">
+                                                        <Avatar className="h-8 w-8">
+                                                            <AvatarImage
+                                                                src={
+                                                                    member.user
+                                                                        .avatar
+                                                                        ?.thumbnail ||
+                                                                    "/courselit_backdrop_square.webp"
+                                                                }
+                                                                alt={
+                                                                    member.user
+                                                                        .name ||
                                                                     member.user
                                                                         .email
                                                                 }
+                                                            />
+                                                            <AvatarFallback>
+                                                                {(
+                                                                    member.user
+                                                                        .name ||
+                                                                    member.user
+                                                                        .email
+                                                                ).charAt(0)}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <div className="flex flex-col">
+                                                            <span className="font-semibold">
+                                                                {member.user
+                                                                    .name ||
+                                                                    member.user
+                                                                        .email}
                                                             </span>
-                                                        )}
+                                                            {member.user
+                                                                .name && (
+                                                                <span className="text-sm text-muted-foreground">
+                                                                    {
+                                                                        member
+                                                                            .user
+                                                                            .email
+                                                                    }
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </Link>
-                                        </TableCell>
-                                        {/* <TableCell className="hidden xl:table-cell max-w-xs truncate">
+                                                </Link>
+                                            </TableCell>
+                                            {/* <TableCell className="hidden xl:table-cell max-w-xs truncate">
                                             {capitalize(
                                                 member.subscriptionMethod,
                                             ) || "-"}
                                         </TableCell> */}
-                                        <TableCell>
-                                            <div className="flex items-center space-x-2">
-                                                <Badge
-                                                    variant={
-                                                        member.status.toLowerCase() ===
-                                                        "pending"
-                                                            ? "secondary"
-                                                            : member.status.toLowerCase() ===
-                                                                "active"
-                                                              ? "default"
-                                                              : "destructive"
-                                                    }
-                                                >
-                                                    {member.status
-                                                        .charAt(0)
-                                                        .toUpperCase() +
-                                                        member.status.slice(1)}
-                                                </Badge>
-                                                {member.user.userId !==
-                                                    profile?.userId && (
-                                                    <Tooltip title="Change status">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() =>
-                                                                handleStatusChange(
-                                                                    member,
-                                                                )
-                                                            }
-                                                            disabled={
-                                                                isUpdating
-                                                            }
-                                                        >
-                                                            <RotateCcw className="h-3 w-3" />{" "}
-                                                        </Button>
+                                            <TableCell>
+                                                <div className="flex items-center space-x-2">
+                                                    <Badge
+                                                        variant={
+                                                            member.status.toLowerCase() ===
+                                                            "pending"
+                                                                ? "secondary"
+                                                                : member.status.toLowerCase() ===
+                                                                    "active"
+                                                                  ? "default"
+                                                                  : "destructive"
+                                                        }
+                                                    >
+                                                        {member.status
+                                                            .charAt(0)
+                                                            .toUpperCase() +
+                                                            member.status.slice(
+                                                                1,
+                                                            )}
+                                                    </Badge>
+                                                    {member.user.userId !==
+                                                        profile?.userId && (
+                                                        <Tooltip title="Change status">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    handleStatusChange(
+                                                                        member,
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    isUpdating
+                                                                }
+                                                            >
+                                                                <RotateCcw className="h-3 w-3" />{" "}
+                                                            </Button>
+                                                        </Tooltip>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center space-x-2">
+                                                    <Badge>
+                                                        {capitalize(
+                                                            member.role,
+                                                        )}
+                                                    </Badge>
+                                                    {member.user.userId !==
+                                                        profile?.userId && (
+                                                        <Tooltip title="Change role">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    handleRoleChange(
+                                                                        member,
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    isUpdating
+                                                                }
+                                                            >
+                                                                <RotateCcw className="h-3 w-3" />
+                                                            </Button>
+                                                        </Tooltip>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="hidden lg:table-cell max-w-xs truncate">
+                                                {member.joiningReason || "-"}
+                                            </TableCell>
+                                            <TableCell className="hidden xl:table-cell max-w-xs truncate">
+                                                {member.rejectionReason || "-"}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-2">
+                                                    <Tooltip
+                                                        title={`Subscription ID: ${member.subscriptionId}`}
+                                                    >
+                                                        {member.subscriptionId
+                                                            ? truncate(
+                                                                  member.subscriptionId,
+                                                                  10,
+                                                              )
+                                                            : "-"}
                                                     </Tooltip>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center space-x-2">
-                                                <Badge>
-                                                    {capitalize(member.role)}
-                                                </Badge>
-                                                {member.user.userId !==
-                                                    profile?.userId && (
-                                                    <Tooltip title="Change role">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() =>
-                                                                handleRoleChange(
-                                                                    member,
-                                                                )
-                                                            }
-                                                            disabled={
-                                                                isUpdating
-                                                            }
-                                                        >
-                                                            <RotateCcw className="h-3 w-3" />
-                                                        </Button>
-                                                    </Tooltip>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="hidden lg:table-cell max-w-xs truncate">
-                                            {member.joiningReason || "-"}
-                                        </TableCell>
-                                        <TableCell className="hidden xl:table-cell max-w-xs truncate">
-                                            {member.rejectionReason || "-"}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <Tooltip
-                                                    title={`Subscription ID: ${member.subscriptionId}`}
-                                                >
-                                                    {member.subscriptionId
-                                                        ? truncate(
-                                                              member.subscriptionId,
-                                                              10,
-                                                          )
-                                                        : "-"}
-                                                </Tooltip>
-                                                {member.subscriptionId && (
-                                                    <Tooltip title="Copy Subscription ID">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() =>
-                                                                handleCopyToClipboard(
-                                                                    member.subscriptionId!,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Copy className="h-4 w-4" />
-                                                        </Button>
-                                                    </Tooltip>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                                    {member.subscriptionId && (
+                                                        <Tooltip title="Copy Subscription ID">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    handleCopyToClipboard(
+                                                                        member.subscriptionId!,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Copy className="h-4 w-4" />
+                                                            </Button>
+                                                        </Tooltip>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
                             </TableBody>
                         </Table>
                     </PaginatedTable>

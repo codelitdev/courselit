@@ -32,7 +32,7 @@ export default async function LoginPage({
     );
 }
 
-export const getExternalLoginProviders = async (
+const getExternalLoginProviders = async (
     backend: string,
 ): Promise<RuntimeLoginProvider[]> => {
     const query = `

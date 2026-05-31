@@ -28,7 +28,14 @@ export function useEntityValidation(
         ) {
             router.push("/dashboard/communities");
         }
-    }, [communityLoaded, community, entityType, router]);
+        if (
+            entityType === membershipEntityType.COMMUNITY &&
+            communityLoaded &&
+            community?.courseId
+        ) {
+            router.push(`/dashboard/community/${entityId}/manage`);
+        }
+    }, [communityLoaded, community, entityId, entityType, router]);
 
     // Redirect if product is not found
     useEffect(() => {

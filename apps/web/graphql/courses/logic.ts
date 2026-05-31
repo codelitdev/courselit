@@ -35,10 +35,15 @@ import { deleteAllLessons } from "../lessons/logic";
 import { deleteMedia, sealMedia } from "@/services/medialit";
 import PageModel from "@/models/Page";
 import { getPrevNextCursor } from "../lessons/helpers";
-import { checkPermission, extractMediaIDs } from "@courselit/utils";
+import {
+    checkPermission,
+    extractMediaIDs,
+    generateUniqueId,
+} from "@courselit/utils";
 import { error } from "@/services/logger";
 import {
     deleteProductsFromPaymentPlans,
+    getInternalPaymentPlan,
     getPlans,
 } from "../paymentplans/logic";
 import MembershipModel from "@models/Membership";
@@ -56,6 +61,20 @@ import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
 import { deletePageInternal } from "../pages/logic";
 import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
 import { validateSlug, isDuplicateKeyError } from "../pages/helpers";
+import CommunityModel from "@models/Community";
+import CommunityPostModel from "@models/CommunityPost";
+import CommunityCommentModel from "@models/CommunityComment";
+import CommunityReportModel from "@models/CommunityReport";
+import { isPartOfDripGroup } from "../lessons/helpers";
+import {
+    addPostSubscription,
+    formatComment,
+    normalizeCommunityPostContent,
+} from "../communities/helpers";
+import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
+import { recordActivity } from "@/lib/record-activity";
+import NotificationModel from "@models/Notification";
+import canUseMongoTransactions from "@/lib/can-use-mongo-transactions";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -183,6 +202,59 @@ export const getCourse = async (
     }
 };
 
+async function getCourseForDiscussionOrThrow(
+    ctx: GQLContext,
+    courseId: string,
+    session?: mongoose.ClientSession,
+): Promise<InternalCourse> {
+    let query = CourseModel.findOne({
+        domain: ctx.subdomain._id,
+        courseId,
+    });
+    if (session) {
+        query = query.session(session);
+    }
+    const course = (await query) as InternalCourse | null;
+
+    if (!course || !course.discussions) {
+        throw new Error(responses.item_not_found);
+    }
+
+    return course;
+}
+
+function canManageCourse(course: InternalCourse, ctx: GQLContext): boolean {
+    if (
+        checkPermission(ctx.user.permissions, [
+            constants.permissions.manageAnyCourse,
+        ])
+    ) {
+        return true;
+    }
+
+    return (
+        checkOwnershipWithoutModel(course, ctx) &&
+        checkPermission(ctx.user.permissions, [
+            constants.permissions.manageCourse,
+        ])
+    );
+}
+
+async function hasActiveCourseMembership(
+    ctx: GQLContext,
+    courseId: string,
+): Promise<boolean> {
+    const membership = await MembershipModel.exists({
+        domain: ctx.subdomain._id,
+        userId: ctx.user.userId,
+        entityId: courseId,
+        entityType: Constants.MembershipEntityType.COURSE,
+        status: Constants.MembershipStatus.ACTIVE,
+    });
+
+    return Boolean(membership);
+}
+
 export const createCourse = async (
     courseData: { title: string; type: Filter },
     ctx: GQLContext,
@@ -216,6 +288,11 @@ export const updateCourse = async (
     ctx: GQLContext,
 ) => {
     let course = await getCourseOrThrow(undefined, ctx, courseData.id);
+    const shouldToggleDiscussions = Object.prototype.hasOwnProperty.call(
+        courseData,
+        "discussions",
+    );
+    const enableDiscussions = courseData.discussions as boolean | undefined;
 
     if (
         typeof courseData.title === "string" &&
@@ -242,7 +319,7 @@ export const updateCourse = async (
     }
 
     for (const key of Object.keys(courseData)) {
-        if (key === "id" || key === "slug") {
+        if (key === "id" || key === "slug" || key === "discussions") {
             continue;
         }
 
@@ -313,7 +390,15 @@ export const updateCourse = async (
         }
     }
     try {
-        course = await (course as any).save();
+        if (shouldToggleDiscussions) {
+            course = await saveCourseWithDiscussionToggle(
+                course,
+                ctx,
+                enableDiscussions,
+            );
+        } else {
+            course = await (course as any).save();
+        }
     } catch (err) {
         if (isDuplicateKeyError(err)) {
             throw new Error(responses.page_id_already_exists);
@@ -325,6 +410,54 @@ export const updateCourse = async (
         { $set: { name: course.title } },
     );
     return await formatCourse(course.courseId, ctx);
+};
+
+/**
+ * Asserts that the requesting user can access the given lesson within the course.
+ * Checks: enrollment, drip gate. Throws if access is denied.
+ * Can be used by both the lesson viewer and the course discussion helpers.
+ */
+export const assertCourseLessonAccess = async (
+    ctx: GQLContext,
+    course: InternalCourse,
+    lessonId: string,
+): Promise<void> => {
+    const isCourseManager = canManageCourse(course, ctx);
+
+    // Find the lesson to get its groupId
+    const lesson = await LessonModel.findOne({
+        domain: ctx.subdomain._id,
+        lessonId,
+        courseId: course.courseId,
+        ...(isCourseManager ? {} : { published: true }),
+    });
+    if (!lesson) {
+        throw new Error(responses.item_not_found);
+    }
+
+    if (isCourseManager) return;
+
+    const hasActiveMembership = await hasActiveCourseMembership(
+        ctx,
+        course.courseId,
+    );
+    if (!hasActiveMembership) {
+        throw new Error(responses.not_enrolled);
+    }
+
+    const purchase = ctx.user?.purchases?.find(
+        (p: Progress) => p.courseId === course.courseId,
+    );
+
+    // Check drip gate
+    if (await isPartOfDripGroup(lesson, ctx.subdomain._id)) {
+        const groupAccessible = purchase?.accessibleGroups?.includes(
+            lesson.groupId,
+        );
+        if (!groupAccessible) {
+            throw new Error(responses.drip_not_released);
+        }
+    }
 };
 
 export const deleteCourse = async (id: string, ctx: GQLContext) => {
@@ -402,8 +535,182 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
         domain: ctx.subdomain._id,
         courseId: course.courseId,
     });
+
+    const discussionCommunity = await CommunityModel.findOne({
+        domain: ctx.subdomain._id,
+        $or: [
+            {
+                communityId: (course as any).discussionCommunityId,
+                courseId: course.courseId,
+            },
+            { courseId: course.courseId },
+        ],
+    });
+    if (discussionCommunity) {
+        await hardDeleteCourseDiscussionCommunity({
+            domain: ctx.subdomain._id,
+            community: discussionCommunity,
+        });
+    }
+
     return true;
 };
+
+async function hardDeleteCourseDiscussionCommunity({
+    domain,
+    community,
+}: {
+    domain: mongoose.Types.ObjectId;
+    community: { communityId: string };
+}) {
+    const discussionPosts = await CommunityPostModel.find(
+        {
+            domain,
+            communityId: community.communityId,
+        },
+        { postId: 1 },
+    ).lean<{ postId: string }[]>();
+    const postIds = discussionPosts.map((post) => post.postId);
+    const discussionComments = await CommunityCommentModel.find(
+        {
+            domain,
+            communityId: community.communityId,
+        },
+        { commentId: 1, replies: 1 },
+    ).lean<{ commentId: string; replies?: { replyId: string }[] }[]>();
+    const commentIds = discussionComments.map((comment) => comment.commentId);
+    const replyIds = discussionComments.flatMap((comment) =>
+        (comment.replies || []).map((reply) => reply.replyId),
+    );
+    const contentIds = [
+        community.communityId,
+        ...postIds,
+        ...commentIds,
+        ...replyIds,
+    ];
+
+    await CommunityPostSubscriberModel.deleteMany({
+        domain,
+        postId: { $in: postIds },
+    });
+    await CommunityReportModel.deleteMany({
+        domain,
+        communityId: community.communityId,
+    });
+    await NotificationModel.deleteMany({
+        domain,
+        $or: [
+            { entityId: { $in: contentIds } },
+            { entityTargetId: { $in: contentIds } },
+            { "metadata.communityId": community.communityId },
+            { "metadata.postId": { $in: postIds } },
+            { "metadata.commentId": { $in: commentIds } },
+        ],
+    });
+    await ActivityModel.deleteMany({
+        domain,
+        $or: [
+            { entityId: { $in: contentIds } },
+            { "metadata.communityId": community.communityId },
+            { "metadata.postId": { $in: postIds } },
+            { "metadata.commentId": { $in: commentIds } },
+        ],
+    });
+    await CommunityCommentModel.deleteMany({
+        domain,
+        communityId: community.communityId,
+    });
+    await CommunityPostModel.deleteMany({
+        domain,
+        communityId: community.communityId,
+    });
+    await MembershipModel.deleteMany({
+        domain,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+    });
+    await PaymentPlanModel.deleteMany({
+        domain,
+        entityId: community.communityId,
+        entityType: Constants.MembershipEntityType.COMMUNITY,
+    });
+    await CommunityModel.deleteOne({
+        domain,
+        communityId: community.communityId,
+    });
+}
+
+export async function repairOrphanCourseDiscussionCommunities({
+    domain,
+    batchSize = 500,
+}: {
+    domain: mongoose.Types.ObjectId;
+    batchSize?: number;
+}): Promise<{ scanned: number; deleted: number }> {
+    let scanned = 0;
+    let deleted = 0;
+    let batch: { communityId: string; courseId?: string | null }[] = [];
+
+    const processBatch = async () => {
+        if (!batch.length) {
+            return;
+        }
+
+        const courseIds = Array.from(
+            new Set(
+                batch.map((community) => community.courseId).filter(Boolean),
+            ),
+        ) as string[];
+        const existingCourses = await CourseModel.find(
+            {
+                domain,
+                courseId: { $in: courseIds },
+            },
+            { courseId: 1 },
+        ).lean<{ courseId: string }[]>();
+        const existingCourseIds = new Set(
+            existingCourses.map((course) => course.courseId),
+        );
+
+        for (const community of batch) {
+            if (
+                community.courseId &&
+                !existingCourseIds.has(community.courseId)
+            ) {
+                await hardDeleteCourseDiscussionCommunity({
+                    domain,
+                    community,
+                });
+                deleted += 1;
+            }
+        }
+
+        batch = [];
+    };
+
+    const cursor = CommunityModel.find(
+        {
+            domain,
+            courseId: { $exists: true, $ne: null },
+        },
+        { communityId: 1, courseId: 1 },
+    ).cursor();
+
+    for await (const community of cursor) {
+        scanned += 1;
+        batch.push({
+            communityId: community.communityId,
+            courseId: community.courseId,
+        });
+        if (batch.length >= batchSize) {
+            await processBatch();
+        }
+    }
+
+    await processBatch();
+
+    return { scanned, deleted };
+}
 
 export const getCoursesAsAdmin = async ({
     offset,
@@ -1327,4 +1634,722 @@ export const updateCourseCertificateTemplate = async ({
         signatureDesignation: updatedTemplate.signatureDesignation,
         logo: updatedTemplate.logo,
     };
+};
+
+// ---------------------------------------------------------------------------
+// Course Discussion Helpers
+// ---------------------------------------------------------------------------
+
+async function getDiscussionCommunity(
+    ctx: GQLContext,
+    course: InternalCourse,
+    session?: mongoose.ClientSession,
+) {
+    const discussionCommunityId = (course as any).discussionCommunityId;
+    if (!discussionCommunityId) {
+        throw new Error(responses.item_not_found);
+    }
+
+    let query = CommunityModel.findOne({
+        domain: ctx.subdomain._id,
+        communityId: discussionCommunityId,
+        courseId: course.courseId,
+        deleted: false,
+    });
+    if (session) {
+        query = query.session(session);
+    }
+    const community = await query;
+    if (!community) {
+        throw new Error(responses.item_not_found);
+    }
+    return community;
+}
+
+async function findCourseDiscussionCommunityForToggle({
+    ctx,
+    course,
+    session,
+}: {
+    ctx: GQLContext;
+    course: InternalCourse;
+    session?: mongoose.ClientSession;
+}) {
+    const linkedCommunityId = (course as any).discussionCommunityId;
+    if (linkedCommunityId) {
+        let linkedQuery = CommunityModel.findOne({
+            domain: ctx.subdomain._id,
+            communityId: linkedCommunityId,
+            courseId: course.courseId,
+        });
+        if (session) {
+            linkedQuery = linkedQuery.session(session);
+        }
+        const linkedCommunity = await linkedQuery;
+        if (linkedCommunity) {
+            return linkedCommunity;
+        }
+    }
+
+    let fallbackQuery = CommunityModel.findOne({
+        domain: ctx.subdomain._id,
+        courseId: course.courseId,
+    });
+    if (session) {
+        fallbackQuery = fallbackQuery.session(session);
+    }
+    return await fallbackQuery;
+}
+
+async function runDiscussionTransaction<T>(
+    operation: (session?: mongoose.ClientSession) => Promise<T>,
+): Promise<T> {
+    const canTransact = await canUseMongoTransactions();
+    if (!canTransact) {
+        if (process.env.NODE_ENV === "test") {
+            return await operation();
+        }
+        throw new Error(
+            "MongoDB transactions are required for course discussions",
+        );
+    }
+
+    const session = await mongoose.startSession();
+    try {
+        let result: T | undefined;
+        await session.withTransaction(async () => {
+            result = await operation(session);
+        });
+        return result as T;
+    } finally {
+        await session.endSession();
+    }
+}
+
+async function saveCourseWithDiscussionToggle(
+    course: InternalCourse,
+    ctx: GQLContext,
+    enableDiscussions: boolean | undefined,
+): Promise<InternalCourse> {
+    return await runDiscussionTransaction(async (session) => {
+        let persistedCourseQuery = CourseModel.findOne({
+            domain: ctx.subdomain._id,
+            courseId: course.courseId,
+        });
+        if (session) {
+            persistedCourseQuery = persistedCourseQuery.session(session);
+        }
+        const persistedCourse =
+            (await persistedCourseQuery) as InternalCourse | null;
+        if (!persistedCourse) {
+            throw new Error(responses.item_not_found);
+        }
+
+        const nextCourseData = (course as any).toObject({
+            depopulate: true,
+        });
+        delete nextCourseData._id;
+        delete nextCourseData.__v;
+        (persistedCourse as any).set(nextCourseData);
+
+        if (enableDiscussions) {
+            const internalPaymentPlan = await getInternalPaymentPlan(ctx);
+            let discussionCommunity =
+                await findCourseDiscussionCommunityForToggle({
+                    ctx,
+                    course: persistedCourse,
+                    session,
+                });
+
+            if (!discussionCommunity) {
+                const communityId = generateUniqueId();
+                const communitySlug = `community-course-discussion-${persistedCourse.courseId}`;
+                [discussionCommunity] = await CommunityModel.create(
+                    [
+                        {
+                            domain: ctx.subdomain._id,
+                            communityId,
+                            name: `${persistedCourse.title} Discussions`,
+                            slug: communitySlug,
+                            pageId: communitySlug,
+                            courseId: persistedCourse.courseId,
+                            autoAcceptMembers: true,
+                            enabled: true,
+                            categories: ["General"],
+                            defaultPaymentPlan: internalPaymentPlan.planId,
+                            deleted: false,
+                        },
+                    ],
+                    { session },
+                );
+            } else {
+                (discussionCommunity as any).enabled = true;
+                (discussionCommunity as any).deleted = false;
+                if (!discussionCommunity.defaultPaymentPlan) {
+                    discussionCommunity.defaultPaymentPlan =
+                        internalPaymentPlan.planId;
+                }
+                await (discussionCommunity as any).save({ session });
+            }
+
+            (persistedCourse as any).discussionCommunityId =
+                discussionCommunity.communityId;
+            (persistedCourse as any).discussions = true;
+        } else if (enableDiscussions === false) {
+            const discussionCommunity =
+                await findCourseDiscussionCommunityForToggle({
+                    ctx,
+                    course: persistedCourse,
+                    session,
+                });
+            if (discussionCommunity) {
+                (discussionCommunity as any).enabled = false;
+                (discussionCommunity as any).deleted = false;
+                await (discussionCommunity as any).save({ session });
+                if (!(persistedCourse as any).discussionCommunityId) {
+                    (persistedCourse as any).discussionCommunityId =
+                        discussionCommunity.communityId;
+                }
+            }
+            (persistedCourse as any).discussions = false;
+        }
+
+        return await (persistedCourse as any).save({ session });
+    });
+}
+
+// ---------------------------------------------------------------------------
+// getCourseDiscussionPost
+// Returns the lesson-level discussion post (or null if none exists yet).
+// Checks lesson access; does NOT create a membership.
+// ---------------------------------------------------------------------------
+export const getCourseDiscussionPost = async ({
+    ctx,
+    courseId,
+    lessonId,
+}: {
+    ctx: GQLContext;
+    courseId: string;
+    lessonId: string;
+}) => {
+    checkIfAuthenticated(ctx);
+    const course = await getCourseForDiscussionOrThrow(ctx, courseId);
+    await assertCourseLessonAccess(ctx, course, lessonId);
+
+    const community = await getDiscussionCommunity(ctx, course);
+
+    const post = await CommunityPostModel.findOne({
+        domain: ctx.subdomain._id,
+        communityId: community.communityId,
+        lessonId,
+        deleted: false,
+    });
+
+    if (!post) {
+        return null;
+    }
+
+    return {
+        ...post.toObject(),
+        likesCount: post.likes?.length || 0,
+        hasLiked: post.likes?.includes(ctx.user?.userId) || false,
+        content: normalizeCommunityPostContent(post.content),
+    };
+};
+
+// ---------------------------------------------------------------------------
+// getCourseDiscussionStream - paginated list of lesson-posts the user can see
+// Drip-aware: filters out posts for lessons the learner cannot access yet.
+// ---------------------------------------------------------------------------
+export const getCourseDiscussionStream = async ({
+    ctx,
+    courseId,
+    page = 1,
+    limit = 20,
+}: {
+    ctx: GQLContext;
+    courseId: string;
+    page?: number;
+    limit?: number;
+}) => {
+    checkIfAuthenticated(ctx);
+    const course = await getCourseForDiscussionOrThrow(ctx, courseId);
+
+    const isCourseManager = canManageCourse(course, ctx);
+
+    const community = await getDiscussionCommunity(ctx, course);
+
+    // Get all lessons with their drip status to build accessible set
+    const allLessons = await LessonModel.find(
+        {
+            domain: ctx.subdomain._id,
+            courseId,
+            ...(isCourseManager ? {} : { published: true }),
+        },
+        { lessonId: 1, groupId: 1 },
+    );
+
+    let accessibleLessonIds: string[];
+    if (isCourseManager) {
+        accessibleLessonIds = allLessons.map((l) => l.lessonId);
+    } else {
+        const hasActiveMembership = await hasActiveCourseMembership(
+            ctx,
+            courseId,
+        );
+        if (!hasActiveMembership) {
+            return [];
+        }
+
+        const purchase = ctx.user?.purchases?.find(
+            (p: Progress) => p.courseId === courseId,
+        );
+        const accessibleGroupIds = new Set(purchase?.accessibleGroups ?? []);
+
+        // Get course to check drip groups
+        const courseDoc = await CourseModel.findOne({
+            domain: ctx.subdomain._id,
+            courseId,
+        });
+        const dripGroupIds = new Set(
+            (courseDoc?.groups ?? [])
+                .filter((g: any) => g.drip?.status)
+                .map((g: any) => g._id?.toString() ?? g.id),
+        );
+
+        accessibleLessonIds = allLessons
+            .filter((l) => {
+                // If lesson is in a drip group, check if it's accessible
+                if (dripGroupIds.has(l.groupId)) {
+                    return accessibleGroupIds.has(l.groupId);
+                }
+                return true;
+            })
+            .map((l) => l.lessonId);
+    }
+
+    if (!accessibleLessonIds.length) {
+        return [];
+    }
+
+    const skip = (page - 1) * limit;
+    const posts = await CommunityPostModel.find({
+        domain: ctx.subdomain._id,
+        communityId: community.communityId,
+        lessonId: { $in: accessibleLessonIds },
+        deleted: false,
+    })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+
+    return posts.map((post: any) => ({
+        ...post.toObject(),
+        likesCount: post.likes?.length || 0,
+        hasLiked: post.likes?.includes(ctx.user?.userId) || false,
+        content: normalizeCommunityPostContent(post.content),
+    }));
+};
+
+// ---------------------------------------------------------------------------
+// getCourseDiscussionStreamCount
+// ---------------------------------------------------------------------------
+export const getCourseDiscussionStreamCount = async ({
+    ctx,
+    courseId,
+}: {
+    ctx: GQLContext;
+    courseId: string;
+}) => {
+    checkIfAuthenticated(ctx);
+    const course = await getCourseForDiscussionOrThrow(ctx, courseId);
+
+    const isCourseManager = canManageCourse(course, ctx);
+
+    const community = await getDiscussionCommunity(ctx, course);
+
+    if (isCourseManager) {
+        const lessonIds = (
+            await LessonModel.find(
+                {
+                    domain: ctx.subdomain._id,
+                    courseId,
+                },
+                { lessonId: 1 },
+            )
+        ).map((lesson) => lesson.lessonId);
+
+        if (!lessonIds.length) {
+            return 0;
+        }
+
+        return await CommunityPostModel.countDocuments({
+            domain: ctx.subdomain._id,
+            communityId: community.communityId,
+            lessonId: { $in: lessonIds },
+            deleted: false,
+        });
+    }
+
+    const hasActiveMembership = await hasActiveCourseMembership(ctx, courseId);
+    if (!hasActiveMembership) {
+        return 0;
+    }
+
+    const purchase = ctx.user?.purchases?.find(
+        (p: Progress) => p.courseId === courseId,
+    );
+
+    const allLessons = await LessonModel.find(
+        {
+            domain: ctx.subdomain._id,
+            courseId,
+            published: true,
+        },
+        { lessonId: 1, groupId: 1 },
+    );
+
+    const courseDoc = await CourseModel.findOne({
+        domain: ctx.subdomain._id,
+        courseId,
+    });
+    const dripGroupIds = new Set(
+        (courseDoc?.groups ?? [])
+            .filter((g: any) => g.drip?.status)
+            .map((g: any) => g._id?.toString() ?? g.id),
+    );
+    const accessibleGroupIds = new Set(purchase?.accessibleGroups ?? []);
+
+    const accessibleLessonIds = allLessons
+        .filter((l) => {
+            if (dripGroupIds.has(l.groupId)) {
+                return accessibleGroupIds.has(l.groupId);
+            }
+            return true;
+        })
+        .map((l) => l.lessonId);
+
+    if (!accessibleLessonIds.length) {
+        return 0;
+    }
+
+    return await CommunityPostModel.countDocuments({
+        domain: ctx.subdomain._id,
+        communityId: community.communityId,
+        lessonId: { $in: accessibleLessonIds },
+        deleted: false,
+    });
+};
+
+// ---------------------------------------------------------------------------
+// createCourseDiscussionComment
+// Creates a new top-level comment on a lesson discussion post.
+// Lazily creates the lesson-level post and the user's community membership.
+// ---------------------------------------------------------------------------
+export const createCourseDiscussionComment = async ({
+    ctx,
+    courseId,
+    lessonId,
+    content,
+}: {
+    ctx: GQLContext;
+    courseId: string;
+    lessonId: string;
+    content: string;
+}) => {
+    checkIfAuthenticated(ctx);
+
+    const course = await getCourseForDiscussionOrThrow(ctx, courseId);
+    await assertCourseLessonAccess(ctx, course, lessonId);
+
+    const comment = await runDiscussionTransaction(async (session) => {
+        const transactionCourse = await getCourseForDiscussionOrThrow(
+            ctx,
+            courseId,
+            session,
+        );
+        const transactionCommunity = await getDiscussionCommunity(
+            ctx,
+            transactionCourse,
+            session,
+        );
+
+        let lessonQuery = LessonModel.findOne({
+            domain: ctx.subdomain._id,
+            lessonId,
+            courseId,
+        });
+        if (session) {
+            lessonQuery = lessonQuery.session(session);
+        }
+        const lesson = await lessonQuery;
+        if (!lesson) {
+            throw new Error(responses.item_not_found);
+        }
+
+        // Lazily get-or-create the lesson-level discussion post
+        let postQuery = CommunityPostModel.findOne({
+            domain: ctx.subdomain._id,
+            communityId: transactionCommunity.communityId,
+            lessonId,
+            deleted: false,
+        });
+        if (session) {
+            postQuery = postQuery.session(session);
+        }
+        let post = await postQuery;
+
+        if (!post) {
+            try {
+                [post] = await CommunityPostModel.create(
+                    [
+                        {
+                            domain: ctx.subdomain._id,
+                            communityId: transactionCommunity.communityId,
+                            userId: transactionCourse.creatorId,
+                            title: lesson.title,
+                            content: "",
+                            lessonId,
+                            category:
+                                (transactionCommunity as any).categories?.[0] ||
+                                "General",
+                        },
+                    ],
+                    { session },
+                );
+            } catch (err: any) {
+                // Handle race condition: another concurrent request created the post
+                if (
+                    err.code === 11000 ||
+                    (err.message && err.message.includes("duplicate"))
+                ) {
+                    let existingPostQuery = CommunityPostModel.findOne({
+                        domain: ctx.subdomain._id,
+                        communityId: transactionCommunity.communityId,
+                        lessonId,
+                        deleted: false,
+                    });
+                    if (session) {
+                        existingPostQuery = existingPostQuery.session(session);
+                    }
+                    post = await existingPostQuery;
+                    if (!post) {
+                        throw err;
+                    }
+                } else {
+                    throw err;
+                }
+            }
+        }
+
+        // Subscribe the commenter
+        await addPostSubscription({
+            domain: ctx.subdomain._id,
+            userId: ctx.user.userId,
+            postId: post.postId,
+            session,
+        });
+
+        const [comment] = await CommunityCommentModel.create(
+            [
+                {
+                    domain: ctx.subdomain._id,
+                    communityId: transactionCommunity.communityId,
+                    postId: post.postId,
+                    userId: ctx.user.userId,
+                    content,
+                },
+            ],
+            { session },
+        );
+
+        return comment;
+    });
+
+    return formatComment(comment, ctx.user.userId);
+};
+
+// ---------------------------------------------------------------------------
+// createCourseDiscussionReply
+// Creates a reply to a comment on a lesson discussion.
+// ---------------------------------------------------------------------------
+export const createCourseDiscussionReply = async ({
+    ctx,
+    courseId,
+    lessonId,
+    commentId,
+    content,
+    parentReplyId,
+}: {
+    ctx: GQLContext;
+    courseId: string;
+    lessonId: string;
+    commentId: string;
+    content: string;
+    parentReplyId?: string;
+}) => {
+    checkIfAuthenticated(ctx);
+
+    const course = await getCourseForDiscussionOrThrow(ctx, courseId);
+    await assertCourseLessonAccess(ctx, course, lessonId);
+
+    const { parentComment, post, replyId, communityId } =
+        await runDiscussionTransaction(async (session) => {
+            const transactionCourse = await getCourseForDiscussionOrThrow(
+                ctx,
+                courseId,
+                session,
+            );
+            const transactionCommunity = await getDiscussionCommunity(
+                ctx,
+                transactionCourse,
+                session,
+            );
+
+            let lessonQuery = LessonModel.findOne({
+                domain: ctx.subdomain._id,
+                lessonId,
+                courseId,
+            });
+            if (session) {
+                lessonQuery = lessonQuery.session(session);
+            }
+            const lesson = await lessonQuery;
+            if (!lesson) {
+                throw new Error(responses.item_not_found);
+            }
+
+            let postQuery = CommunityPostModel.findOne({
+                domain: ctx.subdomain._id,
+                communityId: transactionCommunity.communityId,
+                lessonId,
+                deleted: false,
+            });
+            if (session) {
+                postQuery = postQuery.session(session);
+            }
+            const post = await postQuery;
+            if (!post) {
+                throw new Error(responses.item_not_found);
+            }
+
+            let parentCommentQuery = CommunityCommentModel.findOne({
+                domain: ctx.subdomain._id,
+                communityId: transactionCommunity.communityId,
+                postId: post.postId,
+                commentId,
+                deleted: false,
+            });
+            if (session) {
+                parentCommentQuery = parentCommentQuery.session(session);
+            }
+            const parentComment = await parentCommentQuery;
+            if (!parentComment) {
+                throw new Error(responses.item_not_found);
+            }
+
+            const replyId = generateUniqueId();
+            parentComment.replies.push({
+                replyId,
+                userId: ctx.user.userId,
+                content,
+                parentReplyId,
+            });
+            await parentComment.save({ session });
+
+            await addPostSubscription({
+                domain: ctx.subdomain._id,
+                userId: ctx.user.userId,
+                postId: post.postId,
+                session,
+            });
+
+            return {
+                parentComment,
+                post,
+                replyId,
+                communityId: transactionCommunity.communityId,
+            };
+        });
+
+    try {
+        const parentReply = parentReplyId
+            ? parentComment.replies.find(
+                  (reply: any) => reply.replyId === parentReplyId,
+              )
+            : null;
+        const targetUserId = parentReply
+            ? parentReply.userId
+            : parentComment.userId;
+        const forUserIds =
+            targetUserId && targetUserId !== ctx.user.userId
+                ? [targetUserId]
+                : [];
+
+        if (!forUserIds.length) {
+            return formatComment(parentComment, ctx.user.userId);
+        }
+
+        await recordActivity({
+            domain: ctx.subdomain._id,
+            userId: ctx.user.userId,
+            type: Constants.ActivityType.COMMUNITY_REPLY_CREATED,
+            entityId: replyId,
+            metadata: {
+                communityId,
+                postId: post.postId,
+                commentId,
+                entityTargetId: commentId,
+                courseId,
+                lessonId,
+                forUserIds,
+            },
+        });
+    } catch (err: any) {
+        error(`Error sending discussion reply notification: ${err.message}`, {
+            stack: err.stack,
+        });
+    }
+
+    return formatComment(parentComment, ctx.user.userId);
+};
+
+// ---------------------------------------------------------------------------
+// getCourseDiscussionComments
+// Returns the list of comments for a course discussion post.
+// Checks lesson access; does NOT require or create community membership for reading.
+// ---------------------------------------------------------------------------
+export const getCourseDiscussionComments = async ({
+    ctx,
+    courseId,
+    lessonId,
+}: {
+    ctx: GQLContext;
+    courseId: string;
+    lessonId: string;
+}) => {
+    checkIfAuthenticated(ctx);
+    const course = await getCourseForDiscussionOrThrow(ctx, courseId);
+    await assertCourseLessonAccess(ctx, course, lessonId);
+
+    const community = await getDiscussionCommunity(ctx, course);
+
+    const post = await CommunityPostModel.findOne({
+        domain: ctx.subdomain._id,
+        communityId: community.communityId,
+        lessonId,
+        deleted: false,
+    });
+
+    if (!post) {
+        return [];
+    }
+
+    const comments = await CommunityCommentModel.find({
+        domain: ctx.subdomain._id,
+        communityId: community.communityId,
+        postId: post.postId,
+    });
+
+    return comments.map((comment) => formatComment(comment, ctx.user.userId));
 };

@@ -9,6 +9,7 @@ import {
     useMemo,
 } from "react";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
     Dialog,
     DialogContent,
@@ -39,6 +40,8 @@ import {
     MANAGE_LINK_TEXT,
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
+    COURSE_DISCUSSIONS_COMMUNITY_FEED_LOCKED_DESCRIPTION,
+    COURSE_DISCUSSIONS_COMMUNITY_FEED_LOCKED_TITLE,
 } from "@ui-config/strings";
 import { useCommunity } from "@/hooks/use-community";
 import { useMembership } from "@/hooks/use-membership";
@@ -50,6 +53,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import CommunityPostCard from "./post-card";
 import CommunityPostMediaPreview from "./post-media-preview";
+import { LockKeyhole } from "lucide-react";
 
 const CreatePostDialog = dynamic(() => import("./create-post-dialog"));
 
@@ -95,6 +99,7 @@ export function CommunityForum({
         access: "public",
     });
     const [fileBeingUploadedNumber, setFileBeingUploadedNumber] = useState(0);
+    const isCourseLinkedCommunity = Boolean(community?.courseId);
 
     const formatTimestamp = (value?: string) => formattedLocaleDate(value);
 
@@ -105,6 +110,11 @@ export function CommunityForum({
     }, [membership]);
 
     const loadTotalPosts = useCallback(async () => {
+        if (isCourseLinkedCommunity) {
+            setTotalPosts(0);
+            return;
+        }
+
         const query = `
             query ($communityId: String!, $category: String) {
                 totalPosts: getPostsCount(communityId: $communityId, category: $category)
@@ -136,9 +146,14 @@ export function CommunityForum({
                 description: err.message,
             });
         }
-    }, [id, activeCategory, address.backend, toast]);
+    }, [id, activeCategory, address.backend, toast, isCourseLinkedCommunity]);
 
     const loadPosts = useCallback(async () => {
+        if (isCourseLinkedCommunity) {
+            setPosts([]);
+            return;
+        }
+
         const query = `
             query ($communityId: String!, $page: Int!, $limit: Int!, $category: String) {
                 posts: getPosts(communityId: $communityId, category: $category, page: $page, limit: $limit) {
@@ -203,23 +218,37 @@ export function CommunityForum({
                 description: err.message,
             });
         }
-    }, [address.backend, activeCategory, id, page, toast]);
+    }, [
+        address.backend,
+        activeCategory,
+        id,
+        page,
+        toast,
+        isCourseLinkedCommunity,
+    ]);
 
     useEffect(() => {
         if (
             community &&
+            !isCourseLinkedCommunity &&
             membership?.status === Constants.MembershipStatus.ACTIVE
         ) {
             loadPosts();
             loadTotalPosts();
         }
-    }, [membership, community, loadTotalPosts, loadPosts]);
+    }, [
+        membership,
+        community,
+        isCourseLinkedCommunity,
+        loadTotalPosts,
+        loadPosts,
+    ]);
 
     useEffect(() => {
-        if (community) {
+        if (community && !isCourseLinkedCommunity) {
             loadPosts();
         }
-    }, [page, activeCategory, loadPosts]);
+    }, [page, activeCategory, loadPosts, community, isCourseLinkedCommunity]);
 
     useEffect(() => {
         if (community) {
@@ -228,11 +257,11 @@ export function CommunityForum({
     }, [community]);
 
     useEffect(() => {
-        if (community) {
+        if (community && !isCourseLinkedCommunity) {
             setPage(1);
             loadTotalPosts();
         }
-    }, [activeCategory, loadTotalPosts]);
+    }, [activeCategory, loadTotalPosts, community, isCourseLinkedCommunity]);
 
     useEffect(() => {
         scrollToBottom();
@@ -856,115 +885,143 @@ export function CommunityForum({
             )}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <div className="lg:col-span-2 space-y-6">
-                    {profile.name &&
-                    membership?.status.toLowerCase() ===
-                        Constants.MembershipStatus.ACTIVE ? (
-                        hasCommunityPermission(
-                            membership,
-                            Constants.MembershipRole.POST,
-                        ) ? (
-                            <CreatePostDialog
-                                categories={postCategories}
-                                createPost={createPost}
-                                isFileUploading={isUploading}
-                                fileUploadProgress={uploadProgress}
-                                fileBeingUploadedNumber={
-                                    fileBeingUploadedNumber
+                    {isCourseLinkedCommunity ? (
+                        <Alert>
+                            <LockKeyhole className="h-4 w-4" />
+                            <AlertTitle>
+                                {COURSE_DISCUSSIONS_COMMUNITY_FEED_LOCKED_TITLE}
+                            </AlertTitle>
+                            <AlertDescription>
+                                {
+                                    COURSE_DISCUSSIONS_COMMUNITY_FEED_LOCKED_DESCRIPTION
                                 }
-                            />
-                        ) : null
+                            </AlertDescription>
+                        </Alert>
                     ) : (
-                        <MembershipStatus
-                            id={id!}
-                            membership={membership}
-                            joiningReasonText={community?.joiningReasonText}
-                            key={refreshCommunityStatus}
-                            paymentPlan={community?.paymentPlans?.find(
-                                (plan) =>
-                                    plan.planId ===
-                                    community?.defaultPaymentPlan,
-                            )}
-                        />
-                    )}
-
-                    <div className="flex gap-2 flex-wrap">
-                        {visibleCategories.map((category, index) => (
-                            <Button
-                                key={category}
-                                variant={
-                                    category === activeCategory
-                                        ? "default"
-                                        : "outline"
-                                }
-                                size="sm"
-                                className={`rounded-full ${category === activeCategory ? "bg-gray-500 text-white" : ""}`}
-                                onClick={() => handleCategoryClick(category)}
-                            >
-                                {category}
-                            </Button>
-                        ))}
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="rounded-full"
-                            onClick={toggleCategories}
-                        >
-                            {showAllCategories ? "Less" : "More..."}
-                        </Button>
-                    </div>
-
-                    <Banner
-                        canEdit={
-                            membership
-                                ? hasCommunityPermission(
-                                      membership,
-                                      Constants.MembershipRole.MODERATE,
-                                  )
-                                : false
-                        }
-                        initialBannerText={
-                            community?.banner as TextEditorContent | undefined
-                        }
-                        onSaveBanner={updateBanner}
-                    />
-
-                    <PaginatedTable
-                        page={page}
-                        totalPages={Math.ceil(totalPosts / itemsPerPage)}
-                        onPageChange={setPage}
-                    >
-                        <div className="flex flex-col gap-4 mb-4">
-                            {posts.length > 0 ? (
-                                posts.map((post) => (
-                                    <CommunityPostCard
-                                        key={post.postId}
-                                        post={post}
-                                        canModerate={
-                                            !!membership &&
-                                            hasCommunityPermission(
-                                                membership,
-                                                Constants.MembershipRole
-                                                    .MODERATE,
-                                            )
+                        <>
+                            {profile.name &&
+                            membership?.status.toLowerCase() ===
+                                Constants.MembershipStatus.ACTIVE ? (
+                                hasCommunityPermission(
+                                    membership,
+                                    Constants.MembershipRole.POST,
+                                ) ? (
+                                    <CreatePostDialog
+                                        categories={postCategories}
+                                        createPost={createPost}
+                                        isFileUploading={isUploading}
+                                        fileUploadProgress={uploadProgress}
+                                        fileBeingUploadedNumber={
+                                            fileBeingUploadedNumber
                                         }
-                                        formatTimestamp={formatTimestamp}
-                                        renderMediaPreview={renderMediaPreview}
-                                        onOpen={(postId) =>
-                                            router.push(
-                                                `/dashboard/community/${id}/${postId}`,
-                                            )
-                                        }
-                                        onTogglePin={togglePin}
-                                        onLike={handleLike}
                                     />
-                                ))
+                                ) : null
                             ) : (
-                                <div className="text-center py-8">
-                                    No posts found.
-                                </div>
+                                <MembershipStatus
+                                    id={id!}
+                                    membership={membership}
+                                    joiningReasonText={
+                                        community?.joiningReasonText
+                                    }
+                                    key={refreshCommunityStatus}
+                                    paymentPlan={community?.paymentPlans?.find(
+                                        (plan) =>
+                                            plan.planId ===
+                                            community?.defaultPaymentPlan,
+                                    )}
+                                />
                             )}
-                        </div>
-                    </PaginatedTable>
+
+                            <div className="flex gap-2 flex-wrap">
+                                {visibleCategories.map((category) => (
+                                    <Button
+                                        key={category}
+                                        variant={
+                                            category === activeCategory
+                                                ? "default"
+                                                : "outline"
+                                        }
+                                        size="sm"
+                                        className={`rounded-full ${category === activeCategory ? "bg-gray-500 text-white" : ""}`}
+                                        onClick={() =>
+                                            handleCategoryClick(category)
+                                        }
+                                    >
+                                        {category}
+                                    </Button>
+                                ))}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="rounded-full"
+                                    onClick={toggleCategories}
+                                >
+                                    {showAllCategories ? "Less" : "More..."}
+                                </Button>
+                            </div>
+
+                            <Banner
+                                canEdit={
+                                    membership
+                                        ? hasCommunityPermission(
+                                              membership,
+                                              Constants.MembershipRole.MODERATE,
+                                          )
+                                        : false
+                                }
+                                initialBannerText={
+                                    community?.banner as
+                                        | TextEditorContent
+                                        | undefined
+                                }
+                                onSaveBanner={updateBanner}
+                            />
+
+                            <PaginatedTable
+                                page={page}
+                                totalPages={Math.ceil(
+                                    totalPosts / itemsPerPage,
+                                )}
+                                onPageChange={setPage}
+                            >
+                                <div className="flex flex-col gap-4 mb-4">
+                                    {posts.length > 0 ? (
+                                        posts.map((post) => (
+                                            <CommunityPostCard
+                                                key={post.postId}
+                                                post={post}
+                                                canModerate={
+                                                    !!membership &&
+                                                    hasCommunityPermission(
+                                                        membership,
+                                                        Constants.MembershipRole
+                                                            .MODERATE,
+                                                    )
+                                                }
+                                                formatTimestamp={
+                                                    formatTimestamp
+                                                }
+                                                renderMediaPreview={
+                                                    renderMediaPreview
+                                                }
+                                                onOpen={(postId) =>
+                                                    router.push(
+                                                        `/dashboard/community/${id}/${postId}`,
+                                                    )
+                                                }
+                                                onTogglePin={togglePin}
+                                                onLike={handleLike}
+                                            />
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-8">
+                                            No posts found.
+                                        </div>
+                                    )}
+                                </div>
+                            </PaginatedTable>
+                        </>
+                    )}
                     <Dialog
                         open={showDeleteConfirmation}
                         onOpenChange={setShowDeleteConfirmation}

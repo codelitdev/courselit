@@ -15,6 +15,10 @@ import {
     getProducts,
     getProductsCount,
     getCourseCertificateTemplate,
+    getCourseDiscussionPost,
+    getCourseDiscussionStream,
+    getCourseDiscussionStreamCount,
+    getCourseDiscussionComments,
 } from "./logic";
 import GQLContext from "../../models/GQLContext";
 import Filter from "./models/filter";
@@ -22,6 +26,7 @@ import constants from "../../config/constants";
 import { reports, courseMember } from "./types/reports";
 import userTypes from "../users/types";
 import { MembershipStatus } from "@courselit/common-models";
+import communityTypes from "../communities/types";
 
 const { course, download, blog } = constants;
 
@@ -224,5 +229,57 @@ export default {
             { courseId }: { courseId: string },
             context: GQLContext,
         ) => getCourseCertificateTemplate(courseId, context),
+    },
+    getCourseDiscussionPost: {
+        type: communityTypes.communityPost,
+        args: {
+            courseId: { type: new GraphQLNonNull(GraphQLString) },
+            lessonId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: (
+            _: any,
+            { courseId, lessonId }: { courseId: string; lessonId: string },
+            ctx: GQLContext,
+        ) => getCourseDiscussionPost({ ctx, courseId, lessonId }),
+    },
+    getCourseDiscussionStream: {
+        type: new GraphQLList(communityTypes.communityPost),
+        args: {
+            courseId: { type: new GraphQLNonNull(GraphQLString) },
+            page: { type: GraphQLInt },
+            limit: { type: GraphQLInt },
+        },
+        resolve: (
+            _: any,
+            {
+                courseId,
+                page,
+                limit,
+            }: { courseId: string; page?: number; limit?: number },
+            ctx: GQLContext,
+        ) => getCourseDiscussionStream({ ctx, courseId, page, limit }),
+    },
+    getCourseDiscussionStreamCount: {
+        type: GraphQLInt,
+        args: {
+            courseId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: (
+            _: any,
+            { courseId }: { courseId: string },
+            ctx: GQLContext,
+        ) => getCourseDiscussionStreamCount({ ctx, courseId }),
+    },
+    getCourseDiscussionComments: {
+        type: new GraphQLList(communityTypes.communityComment),
+        args: {
+            courseId: { type: new GraphQLNonNull(GraphQLString) },
+            lessonId: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: (
+            _: any,
+            { courseId, lessonId }: { courseId: string; lessonId: string },
+            ctx: GQLContext,
+        ) => getCourseDiscussionComments({ ctx, courseId, lessonId }),
     },
 };

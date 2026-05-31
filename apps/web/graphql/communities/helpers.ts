@@ -251,23 +251,30 @@ export async function addPostSubscription({
     domain,
     userId,
     postId,
+    session,
 }: {
     domain: mongoose.Types.ObjectId;
     userId: string;
     postId: string;
+    session?: mongoose.ClientSession;
 }) {
-    const existingSubscription = await CommunityPostSubscriberModel.findOne({
+    const existingSubscriptionQuery = CommunityPostSubscriberModel.findOne({
         domain,
         userId,
         postId,
     });
+    if (session) {
+        existingSubscriptionQuery.session(session);
+    }
+    const existingSubscription = await existingSubscriptionQuery;
 
     if (!existingSubscription) {
-        await CommunityPostSubscriberModel.create({
+        const subscription = new CommunityPostSubscriberModel({
             domain,
             userId,
             postId,
         });
+        await subscription.save({ session });
     }
 }
 

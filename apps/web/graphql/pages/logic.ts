@@ -25,6 +25,23 @@ const { product, site, blogPage, communityPage, permissions, defaultPages } =
     constants;
 const { pageNames } = Constants;
 
+async function isCourseLinkedCommunityPage(
+    page: Pick<Page, "type" | "entityId">,
+    ctx: GQLContext,
+) {
+    if (page.type !== communityPage || !page.entityId) {
+        return false;
+    }
+
+    const community = await CommunityModel.findOne({
+        domain: ctx.subdomain._id,
+        communityId: page.entityId,
+        courseId: { $ne: null },
+    }).select("_id");
+
+    return Boolean(community);
+}
+
 export async function getPage({
     id,
     ctx,
@@ -72,6 +89,7 @@ export async function getPage({
             },
         );
         if (!page) return;
+        if (await isCourseLinkedCommunityPage(page, ctx)) return;
 
         return getPageResponse(page, ctx);
     } else {
@@ -110,6 +128,7 @@ export async function getPage({
                 domain: ctx.subdomain._id,
                 communityId: page.entityId,
                 enabled: true,
+                $or: [{ courseId: { $exists: false } }, { courseId: null }],
             });
             if (!community) {
                 return;
@@ -148,6 +167,9 @@ export const updatePage = async ({
 
     if (!page) {
         return null;
+    }
+    if (await isCourseLinkedCommunityPage(page, ctx)) {
+        throw new Error(responses.action_not_allowed);
     }
 
     const deletedMediaIds = getDeletedMediaIds(
@@ -254,6 +276,9 @@ export const publish = async (
     if (!page) {
         return null;
     }
+    if (await isCourseLinkedCommunityPage(page, ctx)) {
+        throw new Error(responses.action_not_allowed);
+    }
 
     // 1. Identify all media currently in PUBLISHED state (to be potentially deleted)
     const currentPublishedMedia = extractMediaIDs(
@@ -348,7 +373,25 @@ export const getPages = async (
         deleteable: 1,
     });
 
-    return pages;
+    const communityIds = pages
+        .filter((page) => page.type === communityPage && page.entityId)
+        .map((page) => page.entityId as string);
+
+    if (!communityIds.length) {
+        return pages;
+    }
+
+    const linkedCommunityIds = await CommunityModel.distinct("communityId", {
+        domain: ctx.subdomain._id,
+        communityId: { $in: communityIds },
+        courseId: { $ne: null },
+    });
+
+    return pages.filter(
+        (page) =>
+            page.type !== communityPage ||
+            (page.entityId && !linkedCommunityIds.includes(page.entityId)),
+    );
 };
 
 export const initMandatoryPages = async (domain: Domain, user: User) => {
@@ -553,6 +596,9 @@ export const deleteBlock = async ({
 
     if (!page) {
         return null;
+    }
+    if (await isCourseLinkedCommunityPage(page, ctx)) {
+        throw new Error(responses.action_not_allowed);
     }
 
     const block = page.draftLayout.find(

@@ -23,16 +23,19 @@ export interface NotificationPostEntity {
     title: string;
     userId: string;
     communityId: string;
+    lessonId?: string | null;
 }
 
 export interface NotificationCommunityEntity {
     communityId: string;
     name: string;
+    courseId?: string | null;
 }
 
 export interface NotificationCourseEntity {
     courseId: string;
     title: string;
+    slug?: string | null;
 }
 
 export interface NotificationEntityResolver {
@@ -52,6 +55,12 @@ export interface NotificationEntityResolver {
         courseId: string,
         domainId?: unknown,
     ): Promise<NotificationCourseEntity | null>;
+    canAccessCourseLesson?(
+        courseId: string,
+        lessonId: string,
+        userId: string,
+        domainId?: unknown,
+    ): Promise<boolean>;
 }
 
 const defaultNotificationEntityResolver = createNotificationEntityResolver();
@@ -94,6 +103,23 @@ export async function getNotificationMessageAndHref({
                 return { message: "", href: "" };
             }
 
+            const courseDiscussionNotification =
+                await getCourseDiscussionNotification({
+                    actorName,
+                    recipientUserId,
+                    entityResolver,
+                    domainId,
+                    metadata,
+                    post,
+                    community,
+                    anchorId: post.postId,
+                    action: "created a course discussion post",
+                    hrefPrefix,
+                });
+            if (courseDiscussionNotification) {
+                return courseDiscussionNotification;
+            }
+
             return {
                 message: `${actorName} created a post '${truncate(post.title, 20).trim()}' in ${community.name}`,
                 href: toHref(
@@ -120,6 +146,23 @@ export async function getNotificationMessageAndHref({
             );
             if (!community) {
                 return { message: "", href: "" };
+            }
+
+            const courseDiscussionNotification =
+                await getCourseDiscussionNotification({
+                    actorName,
+                    recipientUserId,
+                    entityResolver,
+                    domainId,
+                    metadata,
+                    post,
+                    community,
+                    anchorId: entityId,
+                    action: "commented in a course discussion",
+                    hrefPrefix,
+                });
+            if (courseDiscussionNotification) {
+                return courseDiscussionNotification;
             }
 
             return {
@@ -164,6 +207,23 @@ export async function getNotificationMessageAndHref({
                 return { message: "", href: "" };
             }
 
+            const courseDiscussionNotification =
+                await getCourseDiscussionNotification({
+                    actorName,
+                    recipientUserId,
+                    entityResolver,
+                    domainId,
+                    metadata,
+                    post,
+                    community,
+                    anchorId: entityId,
+                    action: "replied in a course discussion",
+                    hrefPrefix,
+                });
+            if (courseDiscussionNotification) {
+                return courseDiscussionNotification;
+            }
+
             const prefix = parentReply
                 ? recipientUserId === parentReply.userId
                     ? "your"
@@ -195,6 +255,23 @@ export async function getNotificationMessageAndHref({
                 return { message: "", href: "" };
             }
 
+            const courseDiscussionNotification =
+                await getCourseDiscussionNotification({
+                    actorName,
+                    recipientUserId,
+                    entityResolver,
+                    domainId,
+                    metadata,
+                    post,
+                    community,
+                    anchorId: post.postId,
+                    action: "liked your course discussion post",
+                    hrefPrefix,
+                });
+            if (courseDiscussionNotification) {
+                return courseDiscussionNotification;
+            }
+
             return {
                 message: `${actorName} liked your post '${truncate(post.title, 20).trim()}' in ${community.name}`,
                 href: toHref(
@@ -216,6 +293,23 @@ export async function getNotificationMessageAndHref({
             ]);
             if (!post || !community) {
                 return { message: "", href: "" };
+            }
+
+            const courseDiscussionNotification =
+                await getCourseDiscussionNotification({
+                    actorName,
+                    recipientUserId,
+                    entityResolver,
+                    domainId,
+                    metadata,
+                    post,
+                    community,
+                    anchorId: entityId,
+                    action: "liked your course discussion comment",
+                    hrefPrefix,
+                });
+            if (courseDiscussionNotification) {
+                return courseDiscussionNotification;
             }
 
             return {
@@ -253,6 +347,23 @@ export async function getNotificationMessageAndHref({
             ]);
             if (!post || !community) {
                 return { message: "", href: "" };
+            }
+
+            const courseDiscussionNotification =
+                await getCourseDiscussionNotification({
+                    actorName,
+                    recipientUserId,
+                    entityResolver,
+                    domainId,
+                    metadata,
+                    post,
+                    community,
+                    anchorId: entityId,
+                    action: "liked your course discussion reply",
+                    hrefPrefix,
+                });
+            if (courseDiscussionNotification) {
+                return courseDiscussionNotification;
             }
 
             return {
@@ -390,6 +501,66 @@ export async function getNotificationMessageAndHref({
                 href: toHref("/dashboard", hrefPrefix),
             };
     }
+}
+
+async function getCourseDiscussionNotification({
+    actorName,
+    recipientUserId,
+    entityResolver,
+    domainId,
+    metadata,
+    post,
+    community,
+    anchorId,
+    action,
+    hrefPrefix,
+}: {
+    actorName: string;
+    recipientUserId: string;
+    entityResolver: NotificationEntityResolver;
+    domainId?: unknown;
+    metadata?: Record<string, unknown>;
+    post: NotificationPostEntity;
+    community: NotificationCommunityEntity;
+    anchorId: string;
+    action: string;
+    hrefPrefix: string;
+}): Promise<{ message: string; href: string } | null> {
+    const courseId = (metadata?.courseId as string) || community.courseId;
+    const lessonId = (metadata?.lessonId as string) || post.lessonId;
+
+    if (!courseId || !lessonId) {
+        return null;
+    }
+
+    if (!entityResolver.canAccessCourseLesson) {
+        return { message: "", href: "" };
+    }
+
+    const hasAccess = await entityResolver.canAccessCourseLesson(
+        courseId,
+        lessonId,
+        recipientUserId,
+        domainId,
+    );
+    if (!hasAccess) {
+        return { message: "", href: "" };
+    }
+
+    const course = await entityResolver.getCourse(courseId, domainId);
+    if (!course) {
+        return { message: "", href: "" };
+    }
+
+    const coursePathId = course.slug || course.courseId;
+
+    return {
+        message: `${actorName} ${action} in ${truncate(course.title, 20).trim()}`,
+        href: toHref(
+            `/course/${coursePathId}/${course.courseId}/${lessonId}?discussion=open#${anchorId}`,
+            hrefPrefix,
+        ),
+    };
 }
 
 function humanizeActivityType(activityType: ActivityType): string {

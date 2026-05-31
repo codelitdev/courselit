@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useContext } from "react";
+import { ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import constants from "@/config/constants";
 import {
     formattedLocaleDate,
@@ -10,13 +10,19 @@ import {
 import { CheckCircled, Circle, Lock } from "@courselit/icons";
 import {
     BTN_EXIT_COURSE_TOOLTIP,
+    COURSE_DISCUSSIONS_NAV_LABEL,
+    LESSON_DISCUSSIONS_TOOLTIP,
     SIDEBAR_TEXT_COURSE_ABOUT,
+    SIDEBAR_ACCESSIBILITY_TITLE,
+    SIDEBAR_ACCESSIBILITY_DESCRIPTION,
+    DISCUSSIONS_STREAM_ACCESSIBILITY_TITLE,
 } from "@ui-config/strings";
 import { Profile, Constants } from "@courselit/common-models";
 import {
     ProfileContext,
     SiteInfoContext,
     ThemeContext,
+    AddressContext,
 } from "@components/contexts";
 import { CourseFrontend, GroupWithLessons } from "./helpers";
 import {
@@ -32,18 +38,32 @@ import {
     SidebarMenuItem,
     SidebarProvider,
     SidebarTrigger,
+    useSidebar,
 } from "@components/ui/sidebar";
 import { Image } from "@courselit/components-library";
 import Link from "next/link";
 import { truncate } from "@courselit/utils";
 import { Button } from "@components/ui/button";
-import { ChevronRight, Clock, LogOutIcon } from "lucide-react";
+import {
+    ChevronRight,
+    Clock,
+    LogOutIcon,
+    MessageSquare,
+    BookOpen,
+    Folder,
+} from "lucide-react";
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
 } from "@components/ui/tooltip";
+import {
+    Sheet,
+    SheetContent,
+    SheetTitle,
+    SheetDescription,
+} from "@components/ui/sheet";
 import {
     Collapsible,
     CollapsibleContent,
@@ -52,6 +72,8 @@ import {
 import { usePathname } from "next/navigation";
 import { Caption } from "@courselit/page-primitives";
 import NextThemeSwitcher from "@components/admin/next-theme-switcher";
+import DiscussionPanel from "@/components/public/lesson-viewer/discussion-panel";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function ProductPage({
     product,
@@ -61,6 +83,27 @@ export default function ProductPage({
     children: React.ReactNode;
 }) {
     const { profile } = useContext(ProfileContext);
+    const address = useContext(AddressContext);
+    const pathname = usePathname();
+    const [discussionOpen, setDiscussionOpen] = useState(false);
+    const isMobile = useIsMobile();
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get("discussion") === "open") {
+                setTimeout(() => setDiscussionOpen(true), 0);
+            }
+        }
+    }, [pathname]);
+
+    const activeLessonId = useMemo(
+        () => getActiveLessonId(product, pathname),
+        [pathname, product],
+    );
+    const showDiscussionControl = Boolean(
+        product.discussions && activeLessonId,
+    );
 
     if (!profile) {
         return null;
@@ -77,11 +120,36 @@ export default function ProductPage({
             className="courselit-theme"
         >
             <AppSidebar course={product} profile={profile} />
-            <SidebarInset>
-                <header className="flex h-16 shrink-0 items-center gap-2 px-4 justify-between text-foreground">
+            <SidebarInset className="min-w-0 flex flex-col h-svh overflow-hidden">
+                <header className="flex h-16 shrink-0 items-center gap-2 px-4 justify-between text-foreground bg-background z-10 border-b-0">
                     <SidebarTrigger className="-ml-1" />
                     <div className="flex items-center gap-2">
                         <NextThemeSwitcher variant="ghost" />
+                        {showDiscussionControl && (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        aria-label={LESSON_DISCUSSIONS_TOOLTIP}
+                                        aria-pressed={discussionOpen}
+                                        onClick={() =>
+                                            setDiscussionOpen((open) => !open)
+                                        }
+                                        className={
+                                            discussionOpen
+                                                ? "bg-accent text-accent-foreground"
+                                                : undefined
+                                        }
+                                    >
+                                        <MessageSquare />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    {LESSON_DISCUSSIONS_TOOLTIP}
+                                </TooltipContent>
+                            </Tooltip>
+                        )}
                         <Tooltip>
                             <TooltipTrigger>
                                 <Button variant="ghost" size="icon" asChild>
@@ -96,10 +164,67 @@ export default function ProductPage({
                         </Tooltip>
                     </div>
                 </header>
-                <div className="p-4">{children}</div>
+                <div className="flex-1 overflow-y-auto p-4">{children}</div>
             </SidebarInset>
+            {showDiscussionControl && activeLessonId && (
+                <>
+                    {discussionOpen && (
+                        <Sidebar
+                            side="right"
+                            collapsible="none"
+                            className="hidden h-svh w-[24rem] shrink-0 border-l md:flex sticky top-0"
+                        >
+                            <DiscussionPanel
+                                courseId={product.courseId}
+                                lessonId={activeLessonId}
+                                backendUrl={address.backend}
+                                open={discussionOpen}
+                                courseDiscussionsHref={`/course/${product.slug}/${product.courseId}/discussions`}
+                                onClose={() => setDiscussionOpen(false)}
+                            />
+                        </Sidebar>
+                    )}
+                    {isMobile && (
+                        <Sheet
+                            open={discussionOpen}
+                            onOpenChange={setDiscussionOpen}
+                        >
+                            <SheetContent
+                                side="right"
+                                className="w-full p-0 sm:max-w-md [&>button]:hidden"
+                            >
+                                <SheetTitle className="sr-only">
+                                    {DISCUSSIONS_STREAM_ACCESSIBILITY_TITLE}
+                                </SheetTitle>
+                                <DiscussionPanel
+                                    courseId={product.courseId}
+                                    lessonId={activeLessonId}
+                                    backendUrl={address.backend}
+                                    open={discussionOpen}
+                                    courseDiscussionsHref={`/course/${product.slug}/${product.courseId}/discussions`}
+                                    onClose={() => setDiscussionOpen(false)}
+                                />
+                            </SheetContent>
+                        </Sheet>
+                    )}
+                </>
+            )}
         </SidebarProvider>
     );
+}
+
+export function getActiveLessonId(course: CourseFrontend, pathname: string) {
+    const lessonPrefix = `/course/${course.slug}/${course.courseId}/`;
+    if (!pathname.startsWith(lessonPrefix)) {
+        return "";
+    }
+
+    const lessonId = pathname.slice(lessonPrefix.length).split("/")[0];
+    if (!lessonId || lessonId === "discussions") {
+        return "";
+    }
+
+    return lessonId;
 }
 
 export function AppSidebar({
@@ -118,9 +243,20 @@ export function AppSidebar({
         pathname,
     );
     const { theme } = useContext(ThemeContext);
+    const { isMobile } = useSidebar();
 
     return (
         <Sidebar variant="floating" {...rest} className="bg-background">
+            {isMobile && (
+                <>
+                    <SheetTitle className="sr-only">
+                        {SIDEBAR_ACCESSIBILITY_TITLE}
+                    </SheetTitle>
+                    <SheetDescription className="sr-only">
+                        {SIDEBAR_ACCESSIBILITY_DESCRIPTION}
+                    </SheetDescription>
+                </>
+            )}
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -162,23 +298,26 @@ export function AppSidebar({
                                     >
                                         <div>
                                             <span className="flex justify-between items-center gap-2 w-full">
-                                                <TooltipProvider
-                                                    delayDuration={1000}
-                                                >
-                                                    <Tooltip>
-                                                        <TooltipTrigger className="text-foreground">
-                                                            {truncate(
-                                                                item.title,
-                                                                item.badge
-                                                                    ? 15
-                                                                    : 26,
-                                                            )}
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            {item.title}
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
+                                                <span className="flex items-center gap-2">
+                                                    {item.icon}
+                                                    <TooltipProvider
+                                                        delayDuration={1000}
+                                                    >
+                                                        <Tooltip>
+                                                            <TooltipTrigger className="text-foreground">
+                                                                {truncate(
+                                                                    item.title,
+                                                                    item.badge
+                                                                        ? 15
+                                                                        : 26,
+                                                                )}
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                {item.title}
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+                                                </span>
                                                 {item.badge?.text && (
                                                     <Tooltip>
                                                         <TooltipTrigger className="text-muted-foreground">
@@ -275,8 +414,12 @@ export function AppSidebar({
                                         tooltip={item.title}
                                         className="text-foreground"
                                     >
-                                        <Link href={item.href}>
-                                            {item.title}
+                                        <Link
+                                            href={item.href}
+                                            className="flex items-center gap-2"
+                                        >
+                                            {item.icon}
+                                            <span>{item.title}</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
@@ -310,6 +453,7 @@ interface SidebarItem {
         description: string;
     };
     isActive?: boolean;
+    icon?: ReactNode;
     items?: {
         title: string;
         href: string;
@@ -330,8 +474,20 @@ export function generateSideBarItems(
             title: SIDEBAR_TEXT_COURSE_ABOUT,
             href: `/course/${course.slug}/${course.courseId}`,
             isActive: pathname === `/course/${course.slug}/${course.courseId}`,
+            icon: <BookOpen className="h-4 w-4" />,
         },
     ];
+
+    if (course.discussions) {
+        items.push({
+            title: COURSE_DISCUSSIONS_NAV_LABEL,
+            href: `/course/${course.slug}/${course.courseId}/discussions`,
+            isActive:
+                pathname ===
+                `/course/${course.slug}/${course.courseId}/discussions`,
+            icon: <MessageSquare className="h-4 w-4" />,
+        });
+    }
 
     let lastGroupDripDateInMillis = getRelativeDripAnchorMillis(
         course,
@@ -349,6 +505,7 @@ export function generateSideBarItems(
                 profile,
                 lastGroupDripDateInMillis,
             }),
+            icon: <Folder className="h-4 w-4" />,
             items: [],
         };
 

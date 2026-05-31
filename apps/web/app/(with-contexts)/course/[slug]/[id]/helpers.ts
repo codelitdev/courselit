@@ -20,6 +20,8 @@ type CourseWithoutGroups = Pick<
     | "tags"
     | "paymentPlans"
     | "defaultPaymentPlan"
+    | "discussions"
+    | "discussionCommunityId"
 >;
 
 export const getProduct = async (
@@ -77,6 +79,8 @@ export const getProduct = async (
                         }
                         leadMagnet
                         defaultPaymentPlan
+                        discussions
+                        discussionCommunityId
                     }
                 }
             `,
@@ -116,5 +120,7 @@ export function formatCourse(
         firstLesson: post.firstLesson,
         paymentPlans: post.paymentPlans,
         defaultPaymentPlan: post.defaultPaymentPlan,
+        discussions: post.discussions,
+        discussionCommunityId: post.discussionCommunityId,
     };
 }

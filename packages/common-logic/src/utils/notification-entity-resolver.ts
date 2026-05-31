@@ -4,7 +4,11 @@ import {
     CommunityPostSchema,
     CommunitySchema,
     CourseSchema,
+    LessonSchema,
+    MembershipSchema,
+    UserSchema,
 } from "@courselit/orm-models";
+import { Constants, UIConstants } from "@courselit/common-models";
 import type { NotificationEntityResolver } from "./get-notification-message-and-href";
 
 export interface CreateNotificationEntityResolverOptions {
@@ -28,9 +32,14 @@ export function createNotificationEntityResolver(
                         _id: 0,
                         communityId: 1,
                         name: 1,
+                        courseId: 1,
                     },
                 )
-                .lean<{ communityId: string; name: string } | null>();
+                .lean<{
+                    communityId: string;
+                    name: string;
+                    courseId?: string | null;
+                } | null>();
         },
         async getPost(postId, domainId) {
             return await getCommunityPostModel()
@@ -45,6 +54,7 @@ export function createNotificationEntityResolver(
                         title: 1,
                         userId: 1,
                         communityId: 1,
+                        lessonId: 1,
                     },
                 )
                 .lean<{
@@ -52,6 +62,7 @@ export function createNotificationEntityResolver(
                     title: string;
                     userId: string;
                     communityId: string;
+                    lessonId?: string | null;
                 } | null>();
         },
         async getComment(commentId, domainId) {
@@ -114,9 +125,127 @@ export function createNotificationEntityResolver(
                         _id: 0,
                         courseId: 1,
                         title: 1,
+                        slug: 1,
                     },
                 )
-                .lean<{ courseId: string; title: string } | null>();
+                .lean<{
+                    courseId: string;
+                    title: string;
+                    slug?: string | null;
+                } | null>();
+        },
+        async canAccessCourseLesson(courseId, lessonId, userId, domainId) {
+            const domainQuery = getDomainQuery(domainId ?? defaultDomainId);
+            const [course, user] = await Promise.all([
+                getCourseModel()
+                    .findOne(
+                        {
+                            ...domainQuery,
+                            courseId,
+                        },
+                        {
+                            _id: 1,
+                            courseId: 1,
+                            creatorId: 1,
+                            groups: 1,
+                        },
+                    )
+                    .lean<{
+                        _id: mongoose.Types.ObjectId;
+                        courseId: string;
+                        creatorId: mongoose.Types.ObjectId | string;
+                        groups?: Array<{
+                            _id?: mongoose.Types.ObjectId | string;
+                            id?: string;
+                            drip?: { status?: boolean };
+                        }>;
+                    } | null>(),
+                getUserModel()
+                    .findOne(
+                        {
+                            ...domainQuery,
+                            userId,
+                        },
+                        {
+                            _id: 1,
+                            userId: 1,
+                            permissions: 1,
+                            purchases: 1,
+                        },
+                    )
+                    .lean<{
+                        _id: mongoose.Types.ObjectId;
+                        userId: string;
+                        permissions?: string[];
+                        purchases?: Array<{
+                            courseId: string;
+                            accessibleGroups?: string[];
+                        }>;
+                    } | null>(),
+            ]);
+
+            if (!course || !user) {
+                return false;
+            }
+
+            const canManageCourse =
+                hasPermission(user.permissions, [
+                    UIConstants.permissions.manageAnyCourse,
+                ]) ||
+                (isCourseOwner(course, user) &&
+                    hasPermission(user.permissions, [
+                        UIConstants.permissions.manageCourse,
+                    ]));
+
+            const lesson = await getLessonModel()
+                .findOne(
+                    {
+                        ...domainQuery,
+                        courseId,
+                        lessonId,
+                        ...(canManageCourse ? {} : { published: true }),
+                    },
+                    {
+                        _id: 1,
+                        groupId: 1,
+                    },
+                )
+                .lean<{ groupId?: string } | null>();
+            if (!lesson) {
+                return false;
+            }
+
+            if (canManageCourse) {
+                return true;
+            }
+
+            const membership = await getMembershipModel().exists({
+                ...domainQuery,
+                userId,
+                entityId: courseId,
+                entityType: Constants.MembershipEntityType.COURSE,
+                status: Constants.MembershipStatus.ACTIVE,
+            });
+            if (!membership) {
+                return false;
+            }
+
+            const dripGroupIds = new Set(
+                (course.groups ?? [])
+                    .filter((group) => group.drip?.status)
+                    .map((group) => group._id?.toString() ?? group.id)
+                    .filter(Boolean),
+            );
+            if (lesson.groupId && dripGroupIds.has(lesson.groupId)) {
+                const purchase = user.purchases?.find(
+                    (item) => item.courseId === courseId,
+                );
+                return Boolean(
+                    purchase?.accessibleGroups?.includes(lesson.groupId),
+                );
+            }
+
+            return true;
         },
     };
 }
@@ -155,4 +284,39 @@ function getCommunityCommentModel(): mongoose.Model<any> {
 function getCourseModel(): mongoose.Model<any> {
     return (mongoose.models.Course ||
         mongoose.model("Course", CourseSchema)) as mongoose.Model<any>;
+}
+
+function getLessonModel(): mongoose.Model<any> {
+    return (mongoose.models.Lesson ||
+        mongoose.model("Lesson", LessonSchema)) as mongoose.Model<any>;
+}
+
+function getMembershipModel(): mongoose.Model<any> {
+    return (mongoose.models.Membership ||
+        mongoose.model("Membership", MembershipSchema)) as mongoose.Model<any>;
+}
+
+function getUserModel(): mongoose.Model<any> {
+    return (mongoose.models.User ||
+        mongoose.model("User", UserSchema)) as mongoose.Model<any>;
+}
+
+function hasPermission(
+    userPermissions: string[] | undefined,
+    requiredPermissions: string[],
+): boolean {
+    return requiredPermissions.some((permission) =>
+        userPermissions?.includes(permission),
+    );
+}
+
+function isCourseOwner(
+    course: { creatorId: mongoose.Types.ObjectId | string },
+    user: { _id: mongoose.Types.ObjectId; userId: string },
+): boolean {
+    if (mongoose.Types.ObjectId.isValid(course.creatorId)) {
+        return course.creatorId.toString() === user._id.toString();
+    }
+
+    return course.creatorId.toString() === user.userId;
 }

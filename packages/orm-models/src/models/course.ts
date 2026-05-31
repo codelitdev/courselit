@@ -80,6 +80,8 @@ export const CourseSchema = new mongoose.Schema<InternalCourse>(
         // paymentPlans: [String],
         defaultPaymentPlan: { type: String },
         leadMagnet: { type: Boolean, required: true, default: false },
+        discussions: { type: Boolean, default: false },
+        discussionCommunityId: { type: String, default: null },
         certificate: Boolean,
     },
     {

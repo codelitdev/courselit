@@ -17,4 +17,5 @@ export interface CommunityPost {
     createdAt: string;
     hasLiked: boolean;
     deleted: boolean;
+    lessonId?: string | null;
 }

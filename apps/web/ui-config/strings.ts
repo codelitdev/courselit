@@ -522,6 +522,10 @@ export const COURSE_PROGRESS_INTRO = "Introduction";
 export const COURSE_PROGRESS_NEXT = "Complete and continue";
 export const COURSE_PROGRESS_START = "Start";
 export const COURSE_PROGRESS_FINISH = "Complete and finish";
+export const BTN_MARK_COMPLETE = "Mark Complete";
+export const BTN_COMPLETED = "Completed";
+export const COURSE_PROGRESS_NEXT_NAV = "Next";
+export const COURSE_PROGRESS_FINISH_NAV = "Finish";
 export const BTN_NEW_BLOG = "New blog";
 export const MANAGE_BLOG_PAGE_HEADING = "Blogs";
 export const BLOG_TABLE_HEADER_NAME = "Title";
@@ -785,6 +789,14 @@ export const NEW_COMMUNITY_BUTTON = "New community";
 export const COMMUNITY_FIELD_NAME = "Community name";
 export const COMMUNITY_NEW_BTN_CAPTION = "Create";
 export const COMMUNITY_SETTINGS = "Manage";
+export const COMMUNITY_SETTINGS_COURSE_LINKED_TITLE =
+    "Course discussion community";
+export const COMMUNITY_SETTINGS_COURSE_LINKED_DESCRIPTION =
+    "This community is attached to a course. Use the course discussions toggle to enable or disable learner access.";
+export const COMMUNITY_SETTINGS_COURSE_LINKED_LOCKED =
+    "Course-owned settings, public page settings, pricing, and join settings are managed by the parent course.";
+export const COMMUNITY_SETTINGS_COURSE_LINKED_DELETE_DISABLED =
+    "This community is attached to a course and can't be deleted here. It will be deleted automatically when the course is deleted.";
 
 // Payment Plan strings
 export const NEW_PAYMENT_PLAN_HEADER = "New Payment Plan";
@@ -833,3 +845,54 @@ export const LESSON_CONTENT_LABEL = "Content";
 export const EMAIL_EDITOR_EMAIL_EDIT_HEADER = "Editing email";
 export const EMAIL_EDITOR_TEMPLATE_EDIT_HEADER = "Editing template";
 export const LOGIN_FORM_PERSONAL_INFORMATION_LABEL = "Personal Information";
+
+export const COURSE_SETTINGS_DISCUSSIONS_TITLE = "Discussions";
+export const COURSE_SETTINGS_DISCUSSIONS_DESCRIPTION =
+    "Enable lesson-specific discussions for this course";
+export const COURSE_SETTINGS_DISCUSSIONS_LINK = "Manage discussions community";
+export const COURSE_SETTINGS_DISCUSSIONS_LINKED_COMMUNITY_TITLE =
+    "Linked Community";
+export const COURSE_SETTINGS_DISCUSSIONS_LINKED_COMMUNITY_DESCRIPTION =
+    "Discussions and moderation are handled in a course-linked community.";
+export const COURSE_DISCUSSIONS_NAV_LABEL = "Discussions";
+export const LESSON_DISCUSSIONS_TOOLTIP = "Lesson discussions";
+export const LESSON_DISCUSSIONS_PANEL_TITLE = "Discussions";
+export const LESSON_DISCUSSIONS_VIEW_ALL = "View all discussions";
+export const LESSON_DISCUSSIONS_EMPTY_TITLE = "No discussion yet";
+export const LESSON_DISCUSSIONS_EMPTY_DESCRIPTION =
+    "Start the conversation for this lesson.";
+export const LESSON_DISCUSSIONS_COMMENT_PLACEHOLDER = "Add a comment...";
+export const LESSON_DISCUSSIONS_POST_COMMENT = "Post Comment";
+export const LESSON_DISCUSSIONS_POSTING = "Posting...";
+export const LESSON_DISCUSSIONS_CLOSE = "Close discussions";
+export const LESSON_DISCUSSIONS_REPLY = "Reply";
+export const LESSON_DISCUSSIONS_REPLY_PLACEHOLDER = "Write a reply...";
+export const LESSON_DISCUSSIONS_CANCEL = "Cancel";
+export const LESSON_DISCUSSIONS_DELETE = "Delete";
+export const LESSON_DISCUSSIONS_DELETE_CONFIRM =
+    "Are you sure you want to delete this comment?";
+export const LESSON_DISCUSSIONS_REPORT = "Report";
+export const LESSON_DISCUSSIONS_REPORT_REASON_PROMPT =
+    "Please provide a reason for reporting this comment.";
+export const LESSON_DISCUSSIONS_REPORTED = "Content has been reported";
+
+export const COURSE_DISCUSSIONS_STREAM_EMPTY_TITLE =
+    "No active discussions yet";
+export const COURSE_DISCUSSIONS_STREAM_EMPTY_DESCRIPTION =
+    "Click on any lesson in the sidebar, open the discussions panel on the right, and start the very first conversation!";
+export const COURSE_DISCUSSIONS_STREAM_AUTHOR_INSTRUCTOR = "Instructor";
+export const COURSE_DISCUSSIONS_STREAM_JOIN_BUTTON = "Join Discussion";
+export const COURSE_DISCUSSIONS_STREAM_PREVIOUS = "Previous";
+export const COURSE_DISCUSSIONS_STREAM_NEXT = "Next";
+export const COURSE_DISCUSSIONS_STREAM_PAGE_LABEL = "Page";
+export const COURSE_DISCUSSIONS_STREAM_PAGE_OF = "of";
+export const COURSE_DISCUSSIONS_COMMUNITY_FEED_LOCKED_TITLE =
+    "Course discussion feed locked";
+export const COURSE_DISCUSSIONS_COMMUNITY_FEED_LOCKED_DESCRIPTION =
+    "This community is linked to a course, so discussion activity stays inside the course lessons.";
+
+export const SIDEBAR_ACCESSIBILITY_TITLE = "Course Navigation";
+export const SIDEBAR_ACCESSIBILITY_DESCRIPTION =
+    "Navigate through course sections and lessons";
+
+export const DISCUSSIONS_STREAM_ACCESSIBILITY_TITLE = "Discussions Stream";
