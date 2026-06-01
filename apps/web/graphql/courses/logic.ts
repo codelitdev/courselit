@@ -1548,12 +1548,7 @@ async function runDiscussionTransaction<T>(
 ): Promise<T> {
     const canTransact = await canUseMongoTransactions();
     if (!canTransact) {
-        if (process.env.NODE_ENV === "test") {
-            return await operation();
-        }
-        throw new Error(
-            "MongoDB transactions are required for course discussions",
-        );
+        return await operation();
     }
 
     const session = await mongoose.startSession();

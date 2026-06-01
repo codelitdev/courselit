@@ -849,7 +849,7 @@ export const LOGIN_FORM_PERSONAL_INFORMATION_LABEL = "Personal Information";
 export const COURSE_SETTINGS_DISCUSSIONS_TITLE = "Discussions";
 export const COURSE_SETTINGS_DISCUSSIONS_DESCRIPTION =
     "Enable lesson-specific discussions for this course";
-export const COURSE_SETTINGS_DISCUSSIONS_LINK = "Manage discussions community";
+export const COURSE_SETTINGS_DISCUSSIONS_LINK = "Open discussions community";
 export const COURSE_SETTINGS_DISCUSSIONS_LINKED_COMMUNITY_TITLE =
     "Linked Community";
 export const COURSE_SETTINGS_DISCUSSIONS_LINKED_COMMUNITY_DESCRIPTION =

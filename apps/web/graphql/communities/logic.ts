@@ -64,7 +64,14 @@ import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
 import { deleteMedia, sealMedia } from "@/services/medialit";
 import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
 import { recordActivity } from "@/lib/record-activity";
-import { assertCommunityAccess } from "./access-helper";
+import {
+    assertCanReadCommunity,
+    assertCanParticipateInCommunity,
+    assertCanModerateCommunity,
+    assertCanManageCommunitySettings,
+    assertCanCommentInCommunity,
+    getMembership,
+} from "./access-helper";
 
 const { permissions, communityPage } = constants;
 const standaloneCommunityQuery = {
@@ -181,7 +188,7 @@ export async function getCommunity({
 
     if (community.courseId) {
         try {
-            await assertCommunityAccess(ctx, community, "moderate");
+            await assertCanModerateCommunity(ctx, community);
         } catch (_) {
             return null;
         }
@@ -320,7 +327,7 @@ export async function updateCommunity({
         throw new Error(responses.item_not_found);
     }
 
-    await assertCommunityAccess(ctx, community, "updateSettings");
+    await assertCanManageCommunitySettings(ctx, community);
 
     if (name) {
         community.name = name;
@@ -463,7 +470,7 @@ export async function addCategory({
         throw new Error(responses.item_not_found);
     }
 
-    await assertCommunityAccess(ctx, community, "updateSettings");
+    await assertCanManageCommunitySettings(ctx, community);
 
     const member = await getMembership(ctx, id);
 
@@ -505,7 +512,7 @@ export async function deleteCategory({
         throw new Error(responses.item_not_found);
     }
 
-    await assertCommunityAccess(ctx, community, "updateSettings");
+    await assertCanManageCommunitySettings(ctx, community);
 
     const member = await getMembership(ctx, id);
 
@@ -636,19 +643,6 @@ export async function joinCommunity({
     return member;
 }
 
-async function getMembership(
-    ctx: GQLContext,
-    communityId: string,
-): Promise<Membership | null> {
-    return await MembershipModel.findOne({
-        domain: ctx.subdomain._id,
-        entityId: communityId,
-        entityType: Constants.MembershipEntityType.COMMUNITY,
-        userId: ctx.user.userId,
-        status: Constants.MembershipStatus.ACTIVE,
-    });
-}
-
 export async function createCommunityPost({
     communityId,
     title,
@@ -777,7 +771,7 @@ export async function updateCommunityPost({
     if (community.courseId) {
         throw new Error(responses.action_not_allowed);
     }
-    await assertCommunityAccess(ctx, community, "readPost");
+    await assertCanReadCommunity(ctx, community);
 
     const member = await getMembership(ctx, communityId);
 
@@ -876,7 +870,7 @@ export async function deleteCommunityPost({
     if (!community) {
         throw new Error(responses.item_not_found);
     }
-    await assertCommunityAccess(ctx, community, "readPost");
+    await assertCanReadCommunity(ctx, community);
 
     const query: Record<string, unknown> = {
         domain: ctx.subdomain._id,
@@ -940,10 +934,7 @@ export async function getPost({
     if (!community) {
         throw new Error(responses.item_not_found);
     }
-    if (community.courseId) {
-        throw new Error(responses.action_not_allowed);
-    }
-    await assertCommunityAccess(ctx, community, "readPost");
+    await assertCanReadCommunity(ctx, community);
 
     const post = await CommunityPostModel.findOne({
         domain: ctx.subdomain._id,
@@ -953,6 +944,10 @@ export async function getPost({
     });
     if (!post) {
         throw new Error(responses.item_not_found);
+    }
+
+    if (community.courseId) {
+        return formatPost(post, ctx.user.userId);
     }
 
     const member = await getMembership(ctx, communityId);
@@ -999,7 +994,7 @@ export async function getPosts({
     if (community.courseId) {
         throw new Error(responses.action_not_allowed);
     }
-    await assertCommunityAccess(ctx, community, "readPost");
+    await assertCanReadCommunity(ctx, community);
 
     const member = await getMembership(ctx, communityId);
     if (!member) {
@@ -1187,7 +1182,7 @@ export async function getPostsCount({
     if (community.courseId) {
         throw new Error(responses.action_not_allowed);
     }
-    await assertCommunityAccess(ctx, community, "readPost");
+    await assertCanReadCommunity(ctx, community);
 
     const member = await getMembership(ctx, communityId);
 
@@ -1229,7 +1224,7 @@ export async function getMember({
 
     if (community.courseId) {
         try {
-            await assertCommunityAccess(ctx, community, "moderate");
+            await assertCanModerateCommunity(ctx, community);
         } catch (_) {
             return null;
         }
@@ -1286,7 +1281,7 @@ export async function getMembers({
         throw new Error(responses.action_not_allowed);
     }
 
-    await assertCommunityAccess(ctx, community, "moderate");
+    await assertCanModerateCommunity(ctx, community);
 
     const query: Record<string, unknown> = {
         domain: ctx.subdomain._id,
@@ -1623,7 +1618,7 @@ export async function togglePostLike({
     if (!community.courseId) {
         assertStandaloneDiscussionPost(post);
     }
-    await assertCommunityAccess(ctx, community, "react", { post });
+    await assertCanParticipateInCommunity(ctx, community, { post });
 
     let liked = false;
     if (post.likes.includes(ctx.user.userId)) {
@@ -1688,7 +1683,7 @@ export async function togglePinned({
     }
     assertStandaloneDiscussionPost(post);
 
-    await assertCommunityAccess(ctx, community, "moderate");
+    await assertCanModerateCommunity(ctx, community);
 
     post.pinned = !post.pinned;
 
@@ -1738,15 +1733,20 @@ export async function postComment({
     if (!post) {
         throw new Error(responses.item_not_found);
     }
-    assertStandaloneDiscussionPost(post);
 
-    const member = await getMembership(ctx, communityId);
+    if (community.courseId) {
+        await assertCanCommentInCommunity(ctx, community);
+    } else {
+        assertStandaloneDiscussionPost(post);
 
-    if (
-        !community.courseId &&
-        (!member || !hasPermission(member, Constants.MembershipRole.COMMENT))
-    ) {
-        throw new Error(responses.action_not_allowed);
+        const member = await getMembership(ctx, communityId);
+
+        if (
+            !member ||
+            !hasPermission(member, Constants.MembershipRole.COMMENT)
+        ) {
+            throw new Error(responses.action_not_allowed);
+        }
     }
 
     let comment;
@@ -1791,6 +1791,8 @@ export async function postComment({
                 postId: post.postId,
                 commentId: comment.commentId,
                 entityTargetId: comment.commentId,
+                courseId: community.courseId,
+                lessonId: post.lessonId,
                 forUserIds: postSubscribers.map((s) => s.userId),
             },
         });
@@ -1818,6 +1820,8 @@ export async function postComment({
             metadata: {
                 communityId: community.communityId,
                 postId: post.postId,
+                courseId: community.courseId,
+                lessonId: post.lessonId,
                 forUserIds: postSubscribers.map((s) => s.userId),
             },
         });
@@ -1854,14 +1858,14 @@ export async function getComments({
     if (!community) {
         throw new Error(responses.item_not_found);
     }
-    if (community.courseId) {
-        throw new Error(responses.action_not_allowed);
-    }
+    await assertCanReadCommunity(ctx, community);
 
-    const member = await getMembership(ctx, communityId);
+    if (!community.courseId) {
+        const member = await getMembership(ctx, communityId);
 
-    if (!member) {
-        return [];
+        if (!member) {
+            return [];
+        }
     }
 
     const comments = await (CommunityCommentModel as any).paginatedFind(
@@ -1922,7 +1926,7 @@ export async function toggleCommentLike({
     if (!comment) {
         throw new Error(responses.item_not_found);
     }
-    await assertCommunityAccess(ctx, community, "react", { post });
+    await assertCanParticipateInCommunity(ctx, community, { post });
 
     const member = await getMembership(ctx, communityId);
 
@@ -2005,7 +2009,7 @@ export async function toggleCommentReplyLike({
     if (!comment) {
         throw new Error(responses.item_not_found);
     }
-    await assertCommunityAccess(ctx, community, "react", { post });
+    await assertCanParticipateInCommunity(ctx, community, { post });
 
     const member = community.courseId
         ? null
@@ -2086,7 +2090,7 @@ export async function deleteComment({
     if (!post) {
         throw new Error(responses.item_not_found);
     }
-    await assertCommunityAccess(ctx, community, "deleteComment", { post });
+    await assertCanParticipateInCommunity(ctx, community, { post });
 
     let comment = await CommunityCommentModel.findOne({
         domain: ctx.subdomain._id,
@@ -2104,7 +2108,7 @@ export async function deleteComment({
             ? comment.replies.find((r) => r.replyId === replyId)?.userId
             : comment.userId;
         if (ctx.user.userId !== ownerUserId) {
-            await assertCommunityAccess(ctx, community, "moderate");
+            await assertCanModerateCommunity(ctx, community);
         }
     } else {
         const member = await getMembership(ctx, communityId);
@@ -2379,7 +2383,7 @@ export async function reportCommunityContent({
     if (!post) {
         throw new Error(responses.item_not_found);
     }
-    await assertCommunityAccess(ctx, community, "report", { post });
+    await assertCanParticipateInCommunity(ctx, community, { post });
 
     if (content.userId === ctx.user.userId) {
         throw new Error(responses.action_not_allowed);
@@ -2425,7 +2429,7 @@ export async function getCommunityReports({
         throw new Error(responses.item_not_found);
     }
 
-    await assertCommunityAccess(ctx, community, "moderate");
+    await assertCanModerateCommunity(ctx, community);
 
     const query: Record<string, unknown> = {
         domain: ctx.subdomain._id,
@@ -2467,7 +2471,7 @@ export async function getCommunityReportsCount({
         throw new Error(responses.item_not_found);
     }
 
-    await assertCommunityAccess(ctx, community, "moderate");
+    await assertCanModerateCommunity(ctx, community);
 
     const query: Record<string, unknown> = {
         domain: ctx.subdomain._id,
@@ -2508,7 +2512,7 @@ export async function updateCommunityReportStatus({
         throw new Error(responses.item_not_found);
     }
 
-    await assertCommunityAccess(ctx, community, "moderate");
+    await assertCanModerateCommunity(ctx, community);
 
     const report = await CommunityReportModel.findOne<InternalCommunityReport>({
         domain: ctx.subdomain._id,

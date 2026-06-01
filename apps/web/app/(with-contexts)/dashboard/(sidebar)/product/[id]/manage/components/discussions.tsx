@@ -136,7 +136,7 @@ export default function Discussions({ product }: DiscussionsProps) {
                             </div>
                         </div>
                         <Link
-                            href={`/dashboard/community/${discussionCommunityId}/manage`}
+                            href={`/dashboard/community/${discussionCommunityId}`}
                             className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline group"
                         >
                             {COURSE_SETTINGS_DISCUSSIONS_LINK}

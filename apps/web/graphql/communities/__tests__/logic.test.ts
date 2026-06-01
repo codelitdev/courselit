@@ -4,6 +4,7 @@
 
 import {
     getCommentsCount,
+    getComments,
     getCommunities,
     getCommunitiesCount,
     getCommunity,
@@ -754,6 +755,87 @@ describe("Community Logic - Feed Tests", () => {
         ).rejects.toThrow("You do not have rights to perform this action");
     });
 
+    it("allows course managers to read and comment on lesson-linked posts through community moderation routes", async () => {
+        const courseManager = await UserModel.create({
+            domain: testDomain._id,
+            userId: "course-discussion-manager-user",
+            email: "course-discussion-manager@example.com",
+            name: "Course Discussion Manager",
+            permissions: [constants.permissions.manageCourse],
+            active: true,
+            unsubscribeToken: "course-discussion-manager-unsub",
+        });
+        const managerCtx = {
+            user: courseManager,
+            subdomain: testDomain,
+        } as any;
+
+        const course = await CourseModel.create({
+            domain: testDomain._id,
+            courseId: "manager-course-discussion-course",
+            title: "Manager Course Discussion Course",
+            creatorId: courseManager.userId,
+            pageId: "manager-course-discussion-page",
+            groups: [],
+            lessons: [],
+            type: "course",
+            privacy: "unlisted",
+            costType: "free",
+            cost: 0,
+            slug: "manager-course-discussion-course",
+            discussions: true,
+        });
+
+        const courseCommunity = await CommunityModel.create({
+            domain: testDomain._id,
+            communityId: "course-community-manager-routes",
+            name: "Course Discussion Manager Routes",
+            pageId: "course-community-manager-page",
+            slug: "course-community-manager",
+            enabled: true,
+            deleted: false,
+            categories: ["General"],
+            courseId: course.courseId,
+        });
+
+        const post = await CommunityPostModel.create({
+            domain: testDomain._id,
+            userId: adminUser.userId,
+            communityId: courseCommunity.communityId,
+            postId: "manager-course-post",
+            title: "Course discussion post",
+            content: "Reachable to course managers",
+            category: "General",
+            lessonId: "manager-lesson",
+            courseId: course.courseId,
+            likes: [],
+            deleted: false,
+        });
+
+        const loadedPost = await getPost({
+            ctx: managerCtx,
+            communityId: courseCommunity.communityId,
+            postId: post.postId,
+        });
+        const comment = await postComment({
+            ctx: managerCtx,
+            communityId: courseCommunity.communityId,
+            postId: post.postId,
+            content: "Moderator comment",
+        });
+        const comments = await getComments({
+            ctx: managerCtx,
+            communityId: courseCommunity.communityId,
+            postId: post.postId,
+        });
+
+        expect(loadedPost?.postId).toBe(post.postId);
+        expect(comment.content).toBe("Moderator comment");
+        expect(comments.map((item) => item.commentId)).toContain(
+            comment.commentId,
+        );
+    });
+
     it("rejects generic moderation changes for lesson-linked discussion posts and course-linked memberships", async () => {
         const moderatorUser = await UserModel.create({
             domain: testDomain._id,
@@ -1003,6 +1085,16 @@ describe("Community Logic - Feed Tests", () => {
             categories: ["General"],
             courseId: course.courseId,
         });
+        await MembershipModel.create({
+            domain: testDomain._id,
+            membershipId: "post-like-course-membership",
+            userId: regularUser.userId,
+            entityId: course.courseId,
+            entityType: Constants.MembershipEntityType.COURSE,
+            paymentPlanId: "post-like-plan-course",
+            sessionId: "post-like-session-course",
+            status: Constants.MembershipStatus.ACTIVE,
+        });
         await LessonModel.create({
             domain: testDomain._id,
             lessonId: "post-like-lesson",
@@ -1045,9 +1137,23 @@ describe("Community Logic - Feed Tests", () => {
         });
 
         expect(likedPost.hasLiked).toBe(true);
+
+        const unenrolledUser = await UserModel.create({
+            domain: testDomain._id,
+            userId: "unenrolled-user-feed",
+            email: "unenrolled@example.com",
+            name: "Unenrolled User",
+            permissions: [],
+            active: true,
+            unsubscribeToken: "unsubscribe-unenrolled-feed",
+        });
+
         await expect(
             togglePostLike({
-                ctx: mockCtx,
+                ctx: {
+                    ...mockCtx,
+                    user: unenrolledUser,
+                },
                 communityId: courseCommunity.communityId,
                 postId: post.postId,
             }),
@@ -1207,6 +1313,15 @@ describe("Community Logic - Feed Tests", () => {
             active: true,
             unsubscribeToken: "effective-course-community-admin-unsub",
         });
+        const explicitCommunityModerator = await UserModel.create({
+            domain: testDomain._id,
+            userId: "explicit-linked-community-moderator",
+            email: "explicit-linked-community-moderator@example.com",
+            name: "Explicit Linked Community Moderator",
+            permissions: [],
+            active: true,
+            unsubscribeToken: "explicit-linked-community-moderator-unsub",
+        });
         const courseAdminCtx = {
             user: courseAdmin,
             subdomain: testDomain,
@@ -1252,6 +1367,18 @@ describe("Community Logic - Feed Tests", () => {
             role: Constants.MembershipRole.COMMENT,
         });
 
+        await MembershipModel.create({
+            domain: testDomain._id,
+            membershipId: "direct-fetch-explicit-moderator-membership",
+            userId: explicitCommunityModerator.userId,
+            entityId: courseCommunity.communityId,
+            entityType: Constants.MembershipEntityType.COMMUNITY,
+            paymentPlanId: "direct-fetch-explicit-moderator-plan",
+            sessionId: "direct-fetch-explicit-moderator-session",
+            status: Constants.MembershipStatus.ACTIVE,
+            role: Constants.MembershipRole.MODERATE,
+        });
+
         const communityForAdmin = await getCommunity({
             ctx: courseAdminCtx,
             id: courseCommunity.communityId,
@@ -1263,12 +1390,20 @@ describe("Community Logic - Feed Tests", () => {
             },
             id: courseCommunity.communityId,
         });
+        const communityForExplicitModerator = await getCommunity({
+            ctx: {
+                ...mockCtx,
+                user: explicitCommunityModerator,
+            },
+            id: courseCommunity.communityId,
+        });
 
         expect(communityForAdmin?.communityId).toBe(
             courseCommunity.communityId,
         );
         expect(communityForAdmin?.courseId).toBe(course.courseId);
         expect(communityForLearner).toBeNull();
+        expect(communityForExplicitModerator).toBeNull();
         await expect(
             getMember({
                 ctx: {
@@ -1278,6 +1413,103 @@ describe("Community Logic - Feed Tests", () => {
                 communityId: courseCommunity.communityId,
             }),
         ).resolves.toBeNull();
+        await expect(
+            getCommunityReports({
+                ctx: {
+                    ...mockCtx,
+                    user: explicitCommunityModerator,
+                },
+                communityId: courseCommunity.communityId,
+            }),
+        ).rejects.toThrow("You do not have rights to perform this action");
+    });
+
+    it("allows effective course moderators to review linked discussion posts and comments", async () => {
+        const courseAdmin = await UserModel.create({
+            domain: testDomain._id,
+            userId: "effective-course-review-admin",
+            email: "effective-course-review-admin@example.com",
+            name: "Effective Course Review Admin",
+            permissions: [constants.permissions.manageAnyCourse],
+            active: true,
+            unsubscribeToken: "effective-course-review-admin-unsub",
+        });
+        const courseAdminCtx = {
+            user: courseAdmin,
+            subdomain: testDomain,
+        } as any;
+
+        const course = await CourseModel.create({
+            domain: testDomain._id,
+            courseId: "review-course-discussion-course",
+            title: "Review Course Discussion Course",
+            creatorId: adminUser.userId,
+            pageId: "review-course-discussion-page",
+            groups: [],
+            lessons: [],
+            type: "course",
+            privacy: "unlisted",
+            costType: "free",
+            cost: 0,
+            slug: "review-course-discussion-course",
+            discussions: true,
+        });
+
+        const courseCommunity = await CommunityModel.create({
+            domain: testDomain._id,
+            communityId: "course-community-review",
+            name: "Course Discussion Review",
+            pageId: "course-community-review-page",
+            slug: "course-community-review",
+            enabled: true,
+            deleted: false,
+            categories: ["General"],
+            courseId: course.courseId,
+        });
+
+        const post = await CommunityPostModel.create({
+            domain: testDomain._id,
+            userId: regularUser.userId,
+            communityId: courseCommunity.communityId,
+            postId: "review-course-post",
+            title: "Course discussion post",
+            content: "Reviewable content",
+            category: "General",
+            lessonId: "review-lesson",
+            courseId: course.courseId,
+            likes: [],
+            deleted: false,
+        });
+
+        await CommunityCommentModel.create({
+            domain: testDomain._id,
+            communityId: courseCommunity.communityId,
+            postId: post.postId,
+            commentId: "review-course-comment",
+            userId: regularUser.userId,
+            content: "Reviewable comment",
+            likes: [],
+            replies: [],
+            deleted: false,
+        });
+
+        await expect(
+            getPost({
+                ctx: courseAdminCtx,
+                communityId: courseCommunity.communityId,
+                postId: post.postId,
+            }),
+        ).resolves.toMatchObject({
+            postId: post.postId,
+            communityId: courseCommunity.communityId,
+        });
+        await expect(
+            getComments({
+                ctx: courseAdminCtx,
+                communityId: courseCommunity.communityId,
+                postId: post.postId,
+            }),
+        ).resolves.toHaveLength(1);
     });
 
     it("rejects course-linked community categories and payment plan changes", async () => {

@@ -58,11 +58,13 @@ export default function CommentSection({
     postId,
     onPostUpdated,
     membership,
+    canModerate,
 }: {
     communityId: string;
     postId: string;
     onPostUpdated: (postId: string, commentsCount: number) => void;
-    membership: Pick<Membership, "status" | "role" | "rejectionReason">;
+    membership?: Pick<Membership, "status" | "role" | "rejectionReason">;
+    canModerate?: boolean;
 }) {
     const [comments, setComments] = useState<CommunityComment[]>([]);
     const [content, setContent] = useState("");
@@ -667,6 +669,7 @@ export default function CommentSection({
                         communityId={communityId}
                         key={comment.commentId}
                         membership={membership}
+                        canModerate={canModerate}
                         comment={comment}
                         onLike={(commentId: string, replyId?: string) => {
                             if (replyId) {

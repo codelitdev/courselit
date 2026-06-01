@@ -51,6 +51,7 @@ interface CommunityInfoProps {
     onJoin: (joiningReason?: string) => void;
     onLeave: () => void;
     membership?: Pick<Membership, "status" | "rejectionReason" | "role">;
+    courseLinked?: boolean;
 }
 
 export function CommunityInfo({
@@ -65,6 +66,7 @@ export function CommunityInfo({
     pageId,
     onJoin,
     onLeave,
+    courseLinked,
 }: CommunityInfoProps) {
     const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
     const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
@@ -135,11 +137,14 @@ export function CommunityInfo({
                             </WidgetErrorBoundary>
                         )}
                     </div>
-                    <p className="text-sm">
-                        <strong>{memberCount.toLocaleString()}</strong> members
-                    </p>
+                    {!courseLinked && (
+                        <p className="text-sm">
+                            <strong>{memberCount.toLocaleString()}</strong>{" "}
+                            members
+                        </p>
+                    )}
                 </div>
-                {!membership && (
+                {!courseLinked && !membership && (
                     <Fragment>
                         {amount > 0 && (
                             <Link
@@ -190,7 +195,8 @@ export function CommunityInfo({
                         )}
                     </Fragment>
                 )}
-                {membership &&
+                {!courseLinked &&
+                    membership &&
                     membership.status === Constants.MembershipStatus.ACTIVE && (
                         <>
                             <Button
@@ -262,18 +268,19 @@ export function CommunityInfo({
                             )}
                         </>
                     )}
-                {membership &&
+                {((membership &&
                     hasCommunityPermission(
                         membership,
                         Constants.MembershipRole.MODERATE,
                     ) &&
-                    membership.status === Constants.MembershipStatus.ACTIVE && (
-                        <Link href={`/dashboard/community/${id}/manage`}>
-                            <Button variant="outline" className="w-full mt-2">
-                                {COMMUNITY_SETTINGS}
-                            </Button>
-                        </Link>
-                    )}
+                    membership.status === Constants.MembershipStatus.ACTIVE) ||
+                    courseLinked) && (
+                    <Link href={`/dashboard/community/${id}/manage`}>
+                        <Button variant="outline" className="w-full mt-2">
+                            {COMMUNITY_SETTINGS}
+                        </Button>
+                    </Link>
+                )}
             </CardContent>
         </Card>
     );

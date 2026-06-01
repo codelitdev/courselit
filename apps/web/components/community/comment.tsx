@@ -50,7 +50,8 @@ interface CommentProps {
     ) => void;
     onDelete: (comment: CommentOrReply) => void;
     depth?: number;
-    membership: Pick<Membership, "status" | "role" | "rejectionReason">;
+    membership?: Pick<Membership, "status" | "role" | "rejectionReason">;
+    canModerate?: boolean;
     isPosting?: boolean;
 }
 
@@ -61,6 +62,7 @@ export function Comment({
     onReply,
     onDelete,
     membership,
+    canModerate = false,
     depth = 0,
     isPosting = false,
 }: CommentProps) {
@@ -216,10 +218,12 @@ export function Comment({
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                    {(hasCommunityPermission(
-                                        membership,
-                                        Constants.MembershipRole.MODERATE,
-                                    ) ||
+                                    {((membership &&
+                                        hasCommunityPermission(
+                                            membership,
+                                            Constants.MembershipRole.MODERATE,
+                                        )) ||
+                                        canModerate ||
                                         profile?.userId ===
                                             comment.user.userId) && (
                                         <DropdownMenuItem
@@ -329,6 +333,7 @@ export function Comment({
                         onReply={onReply}
                         onDelete={onDelete}
                         membership={membership}
+                        canModerate={canModerate}
                         depth={depth + 1}
                         isPosting={isPosting}
                     />

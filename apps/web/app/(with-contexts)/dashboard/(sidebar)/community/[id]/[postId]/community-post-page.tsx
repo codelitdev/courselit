@@ -94,6 +94,7 @@ export default function CommunityPostPage({
     });
     const [fileBeingUploadedNumber, setFileBeingUploadedNumber] = useState(0);
     const { theme } = useContext(ThemeContext);
+    const isCourseLinkedCommunity = Boolean(community?.courseId);
 
     const formatTimestamp = (value?: string) => formattedLocaleDate(value);
 
@@ -512,9 +513,12 @@ export default function CommunityPostPage({
             )}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <div className="space-y-6 lg:col-span-2">
-                    {profile.name &&
-                    membership?.status.toLowerCase() ===
-                        Constants.MembershipStatus.ACTIVE ? null : (
+                    {!isCourseLinkedCommunity &&
+                    !(
+                        profile.name &&
+                        membership?.status.toLowerCase() ===
+                            Constants.MembershipStatus.ACTIVE
+                    ) ? (
                         <MembershipStatus
                             id={communityId}
                             membership={membership}
@@ -526,7 +530,7 @@ export default function CommunityPostPage({
                                     community?.defaultPaymentPlan,
                             )}
                         />
-                    )}
+                    ) : null}
 
                     <div className="space-y-4 rounded-lg border bg-card p-6">
                         <div className="flex items-start justify-between gap-4">
@@ -662,9 +666,20 @@ export default function CommunityPostPage({
                                 {currentPost.commentsCount}
                             </Button>
                         </div>
-                        {membership && (
+                        {(membership || isCourseLinkedCommunity) && (
                             <CommentSection
                                 membership={membership}
+                                canModerate={
+                                    isCourseLinkedCommunity ||
+                                    Boolean(
+                                        membership &&
+                                            hasCommunityPermission(
+                                                membership,
+                                                Constants.MembershipRole
+                                                    .MODERATE,
+                                            ),
+                                    )
+                                }
                                 postId={currentPost.postId}
                                 communityId={communityId}
                                 onPostUpdated={(
@@ -808,6 +823,7 @@ export default function CommunityPostPage({
                         pageId={community.pageId}
                         onJoin={handleJoin}
                         onLeave={handleLeave}
+                        courseLinked={isCourseLinkedCommunity}
                     />
                 </div>
             </div>

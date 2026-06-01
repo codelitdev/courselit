@@ -9,7 +9,6 @@ import {
     useMemo,
 } from "react";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
     Dialog,
     DialogContent,
@@ -40,8 +39,7 @@ import {
     MANAGE_LINK_TEXT,
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
-    COURSE_DISCUSSIONS_COMMUNITY_FEED_LOCKED_DESCRIPTION,
-    COURSE_DISCUSSIONS_COMMUNITY_FEED_LOCKED_TITLE,
+    COURSE_DISCUSSIONS_STREAM_EMPTY_TITLE,
 } from "@ui-config/strings";
 import { useCommunity } from "@/hooks/use-community";
 import { useMembership } from "@/hooks/use-membership";
@@ -53,7 +51,6 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import CommunityPostCard from "./post-card";
 import CommunityPostMediaPreview from "./post-media-preview";
-import { LockKeyhole } from "lucide-react";
 
 const CreatePostDialog = dynamic(() => import("./create-post-dialog"));
 
@@ -111,7 +108,37 @@ export function CommunityForum({
 
     const loadTotalPosts = useCallback(async () => {
         if (isCourseLinkedCommunity) {
-            setTotalPosts(0);
+            if (!community?.courseId) {
+                setTotalPosts(0);
+                return;
+            }
+
+            const query = `
+                query ($courseId: String!) {
+                    totalPosts: getCourseDiscussionStreamCount(courseId: $courseId)
+                }
+            `;
+            const fetch = new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setPayload({
+                    query,
+                    variables: {
+                        courseId: community.courseId,
+                    },
+                })
+                .setIsGraphQLEndpoint(true)
+                .build();
+
+            try {
+                const response = await fetch.exec();
+                setTotalPosts(response.totalPosts || 0);
+            } catch (err: any) {
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: err.message,
+                    variant: "destructive",
+                });
+            }
             return;
         }
 
@@ -142,15 +169,74 @@ export function CommunityForum({
             }
         } catch (err: any) {
             toast({
-                title: "Error",
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         }
-    }, [id, activeCategory, address.backend, toast, isCourseLinkedCommunity]);
+    }, [
+        id,
+        activeCategory,
+        address.backend,
+        toast,
+        isCourseLinkedCommunity,
+        community?.courseId,
+    ]);
 
     const loadPosts = useCallback(async () => {
         if (isCourseLinkedCommunity) {
-            setPosts([]);
+            if (!community?.courseId) {
+                setPosts([]);
+                return;
+            }
+
+            const query = `
+                query ($courseId: String!, $page: Int!, $limit: Int!) {
+                    posts: getCourseDiscussionStream(courseId: $courseId, page: $page, limit: $limit) {
+                        communityId
+                        postId
+                        title
+                        content
+                        lessonId
+                        likesCount
+                        commentsCount
+                        updatedAt
+                        hasLiked
+                        user {
+                            userId
+                            name
+                            avatar {
+                                mediaId
+                                file
+                                thumbnail
+                            }
+                        }
+                    }
+                }
+            `;
+            const fetch = new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setPayload({
+                    query,
+                    variables: {
+                        courseId: community.courseId,
+                        page,
+                        limit: itemsPerPage,
+                    },
+                })
+                .setIsGraphQLEndpoint(true)
+                .build();
+
+            try {
+                const response = await fetch.exec();
+                setPosts(response.posts || []);
+            } catch (err: any) {
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: err.message,
+                    variant: "destructive",
+                });
+            }
             return;
         }
 
@@ -214,8 +300,9 @@ export function CommunityForum({
             }
         } catch (err: any) {
             toast({
-                title: "Error",
+                title: TOAST_TITLE_ERROR,
                 description: err.message,
+                variant: "destructive",
             });
         }
     }, [
@@ -225,12 +312,18 @@ export function CommunityForum({
         page,
         toast,
         isCourseLinkedCommunity,
+        community?.courseId,
     ]);
 
     useEffect(() => {
+        if (community && isCourseLinkedCommunity) {
+            loadPosts();
+            loadTotalPosts();
+            return;
+        }
+
         if (
             community &&
-            !isCourseLinkedCommunity &&
             membership?.status === Constants.MembershipStatus.ACTIVE
         ) {
             loadPosts();
@@ -245,7 +338,7 @@ export function CommunityForum({
     ]);
 
     useEffect(() => {
-        if (community && !isCourseLinkedCommunity) {
+        if (community) {
             loadPosts();
         }
     }, [page, activeCategory, loadPosts, community, isCourseLinkedCommunity]);
@@ -257,7 +350,7 @@ export function CommunityForum({
     }, [community]);
 
     useEffect(() => {
-        if (community && !isCourseLinkedCommunity) {
+        if (community) {
             setPage(1);
             loadTotalPosts();
         }
@@ -886,17 +979,45 @@ export function CommunityForum({
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <div className="lg:col-span-2 space-y-6">
                     {isCourseLinkedCommunity ? (
-                        <Alert>
-                            <LockKeyhole className="h-4 w-4" />
-                            <AlertTitle>
-                                {COURSE_DISCUSSIONS_COMMUNITY_FEED_LOCKED_TITLE}
-                            </AlertTitle>
-                            <AlertDescription>
-                                {
-                                    COURSE_DISCUSSIONS_COMMUNITY_FEED_LOCKED_DESCRIPTION
-                                }
-                            </AlertDescription>
-                        </Alert>
+                        <>
+                            <PaginatedTable
+                                page={page}
+                                totalPages={Math.max(
+                                    1,
+                                    Math.ceil(totalPosts / itemsPerPage),
+                                )}
+                                onPageChange={setPage}
+                            >
+                                <div className="flex flex-col gap-4 mb-4">
+                                    {posts.length > 0 ? (
+                                        posts.map((post) => (
+                                            <CommunityPostCard
+                                                key={post.postId}
+                                                post={post}
+                                                canModerate={true}
+                                                formatTimestamp={
+                                                    formatTimestamp
+                                                }
+                                                renderMediaPreview={
+                                                    renderMediaPreview
+                                                }
+                                                onOpen={(postId) =>
+                                                    router.push(
+                                                        `/dashboard/community/${id}/${postId}`,
+                                                    )
+                                                }
+                                            />
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-8">
+                                            {
+                                                COURSE_DISCUSSIONS_STREAM_EMPTY_TITLE
+                                            }
+                                        </div>
+                                    )}
+                                </div>
+                            </PaginatedTable>
+                        </>
                     ) : (
                         <>
                             {profile.name &&
@@ -979,8 +1100,9 @@ export function CommunityForum({
 
                             <PaginatedTable
                                 page={page}
-                                totalPages={Math.ceil(
-                                    totalPosts / itemsPerPage,
+                                totalPages={Math.max(
+                                    1,
+                                    Math.ceil(totalPosts / itemsPerPage),
                                 )}
                                 onPageChange={setPage}
                             >
@@ -1127,6 +1249,7 @@ export function CommunityForum({
                             pageId={community?.pageId}
                             onJoin={handleJoin}
                             onLeave={handleLeave}
+                            courseLinked={isCourseLinkedCommunity}
                         />
                     )}
                 </div>
