@@ -34,7 +34,7 @@ import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
 import {
     cancelAndDeleteMemberships,
     deleteCommunityPosts,
-} from "../communities/logic";
+} from "../communities/helpers";
 import CommunityPostModel from "@models/CommunityPost";
 import CommunityCommentModel from "@models/CommunityComment";
 import { deleteMedia } from "@/services/medialit";

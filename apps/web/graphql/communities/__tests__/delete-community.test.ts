@@ -7,6 +7,7 @@ import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
 import MembershipModel from "@models/Membership";
 import PaymentPlanModel from "@models/PaymentPlan";
 import ActivityModel from "@models/Activity";
+import NotificationModel from "@models/Notification";
 import PageModel from "@models/Page";
 import DomainModel from "@models/Domain";
 import UserModel from "@models/User";
@@ -81,6 +82,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 planId: { $ne: "internal-plan" },
             }),
             ActivityModel.deleteMany({ domain: testDomain._id }),
+            NotificationModel.deleteMany({ domain: testDomain._id }),
             PageModel.deleteMany({ domain: testDomain._id }),
             InvoiceModel.deleteMany({ domain: testDomain._id }),
         ]);
@@ -335,6 +337,127 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 postId: post.postId,
             });
             expect(subscriptions).toHaveLength(0);
+        });
+
+        it("should delete notifications and activities referencing community content", async () => {
+            const community = await CommunityModel.create({
+                domain: testDomain._id,
+                communityId: "dc-comm-references",
+                name: "Reference Community",
+                pageId: "comm-references-page",
+                slug: "comm-references-page",
+                enabled: true,
+                deleted: false,
+            });
+            const post = await CommunityPostModel.create({
+                domain: testDomain._id,
+                communityId: community.communityId,
+                postId: "post-references",
+                userId: adminUser.userId,
+                title: "Reference Post",
+                content: "Reference content",
+                category: "general",
+            });
+            const comment = await CommunityCommentModel.create({
+                domain: testDomain._id,
+                communityId: community.communityId,
+                postId: post.postId,
+                commentId: "comment-references",
+                userId: adminUser.userId,
+                content: "Reference comment",
+                replies: [
+                    {
+                        replyId: "reply-references",
+                        userId: adminUser.userId,
+                        content: "Reference reply",
+                    },
+                ],
+            });
+
+            await NotificationModel.create([
+                {
+                    domain: testDomain._id,
+                    notificationId: "notification-community-reference",
+                    userId: adminUser.userId,
+                    forUserId: adminUser.userId,
+                    activityType:
+                        Constants.ActivityType.COMMUNITY_COMMENT_CREATED,
+                    entityId: community.communityId,
+                    metadata: {},
+                },
+                {
+                    domain: testDomain._id,
+                    notificationId: "notification-post-reference",
+                    userId: adminUser.userId,
+                    forUserId: adminUser.userId,
+                    activityType:
+                        Constants.ActivityType.COMMUNITY_COMMENT_CREATED,
+                    entityId: "other-entity",
+                    metadata: {
+                        communityId: community.communityId,
+                        postId: post.postId,
+                    },
+                },
+                {
+                    domain: testDomain._id,
+                    notificationId: "notification-comment-reference",
+                    userId: adminUser.userId,
+                    forUserId: adminUser.userId,
+                    activityType:
+                        Constants.ActivityType.COMMUNITY_COMMENT_CREATED,
+                    entityId: "other-entity-target",
+                    entityTargetId: comment.commentId,
+                    metadata: {
+                        commentId: comment.commentId,
+                    },
+                },
+            ]);
+            await ActivityModel.create([
+                {
+                    domain: testDomain._id,
+                    userId: adminUser.userId,
+                    type: constants.activityTypes[0],
+                    entityId: "reply-references",
+                    metadata: {},
+                },
+                {
+                    domain: testDomain._id,
+                    userId: adminUser.userId,
+                    type: constants.activityTypes[0],
+                    entityId: "other-activity",
+                    metadata: {
+                        communityId: community.communityId,
+                        postId: post.postId,
+                        commentId: comment.commentId,
+                    },
+                },
+            ]);
+
+            await deleteCommunity({ ctx: mockCtx, id: community.communityId });
+
+            await expect(
+                NotificationModel.countDocuments({
+                    domain: testDomain._id,
+                    $or: [
+                        { entityId: community.communityId },
+                        { entityTargetId: comment.commentId },
+                        { "metadata.communityId": community.communityId },
+                        { "metadata.postId": post.postId },
+                        { "metadata.commentId": comment.commentId },
+                    ],
+                }),
+            ).resolves.toBe(0);
+            await expect(
+                ActivityModel.countDocuments({
+                    domain: testDomain._id,
+                    $or: [
+                        { entityId: "reply-references" },
+                        { "metadata.communityId": community.communityId },
+                        { "metadata.postId": post.postId },
+                        { "metadata.commentId": comment.commentId },
+                    ],
+                }),
+            ).resolves.toBe(0);
         });
     });
 

@@ -34,7 +34,7 @@ import { responses, internal } from "@/config/strings";
 import constants from "@/config/constants";
 import { Constants } from "@courselit/common-models";
 import { deleteMedia } from "@/services/medialit";
-import { deleteCommunityPosts } from "../../communities/logic";
+import { deleteCommunityPosts } from "../../communities/helpers";
 
 // Mock external dependencies
 jest.mock("@/services/medialit", () => ({
@@ -47,8 +47,8 @@ jest.mock("@/payments-new", () => ({
     }),
 }));
 
-jest.mock("../../communities/logic", () => ({
-    ...jest.requireActual("../../communities/logic"),
+jest.mock("../../communities/helpers", () => ({
+    ...jest.requireActual("../../communities/helpers"),
     deleteCommunityPosts: jest.fn().mockResolvedValue(true),
 }));
 

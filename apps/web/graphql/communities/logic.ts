@@ -1,8 +1,4 @@
-import {
-    checkPermission,
-    extractMediaIDs,
-    generateUniqueId,
-} from "@courselit/utils";
+import { checkPermission, generateUniqueId } from "@courselit/utils";
 import CommunityModel, { InternalCommunity } from "@models/Community";
 import constants from "../../config/constants";
 import GQLContext from "../../models/GQLContext";
@@ -21,7 +17,6 @@ import {
     CommunityReportStatus,
     MembershipRole,
     PaymentPlan,
-    CommunityMediaTypes,
     TextEditorContent,
 } from "@courselit/common-models";
 import CommunityPostModel from "@models/CommunityPost";
@@ -45,13 +40,13 @@ import {
     getInternalPaymentPlan,
     getPlans,
 } from "../paymentplans/logic";
-import { getPaymentMethodFromSettings } from "@/payments-new";
 import CommunityReportModel, {
     InternalCommunityReport,
 } from "@models/CommunityReport";
 import {
     addPostSubscription,
     CommunityReportPartial,
+    deleteCommunityInternal,
     formatComment,
     formatCommunityReport,
     normalizeCommunityPostContent,
@@ -65,12 +60,8 @@ import { error } from "@/services/logger";
 import { hasActiveSubscription } from "../users/logic";
 import { internal } from "@config/strings";
 import { hasCommunityPermission as hasPermission } from "@ui-lib/utils";
-import ActivityModel from "@models/Activity";
 import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
 import { deleteMedia, sealMedia } from "@/services/medialit";
-import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
-import InvoiceModel from "@models/Invoice";
-import { InternalMembership } from "@courselit/orm-models";
 import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
 import { recordActivity } from "@/lib/record-activity";
 import { assertCommunityAccess } from "./access-helper";
@@ -1347,9 +1338,10 @@ async function formatCommunity(
         featuredImage: community.featuredImage,
         membersCount: community.courseId
             ? 0
-            : await getMembersCount({
-                  ctx,
-                  communityId: community.communityId,
+            : await (MembershipModel as any).countDocuments({
+                  domain: ctx.subdomain._id,
+                  entityId: community.communityId,
+                  entityType: Constants.MembershipEntityType.COMMUNITY,
                   status: Constants.MembershipStatus.ACTIVE,
               }),
     };
@@ -2280,201 +2272,14 @@ export async function deleteCommunity({
         throw new Error(responses.action_not_allowed);
     }
 
-    await CommunityReportModel.deleteMany({
-        domain: ctx.subdomain._id,
-        communityId: community.communityId,
-    });
-    await deleteCommunityPostsSubscriptions(community, ctx);
-    await deleteCommunityPosts(ctx, "community", community.communityId);
-    await deleteMemberships(community, ctx);
+    const formattedCommunity = await formatCommunity(community, ctx);
 
-    await PageModel.deleteOne({
-        domain: ctx.subdomain._id,
-        pageId: community.pageId,
-        entityId: community.communityId,
+    await deleteCommunityInternal({
+        ctx,
+        community,
     });
 
-    const mediaToBeDeleted = extractMediaIDs(JSON.stringify(community));
-    for (const mediaId of Array.from(mediaToBeDeleted)) {
-        await deleteMedia(mediaId);
-    }
-    await CommunityModel.deleteOne({
-        domain: ctx.subdomain._id,
-        communityId: id,
-    });
-
-    return await formatCommunity(community, ctx);
-}
-
-export async function deleteCommunityPosts(
-    ctx: GQLContext,
-    by: "community" | "user",
-    id: string,
-) {
-    const query =
-        by === "community"
-            ? {
-                  domain: ctx.subdomain._id,
-                  communityId: id,
-              }
-            : {
-                  domain: ctx.subdomain._id,
-                  userId: id,
-              };
-    await CommunityCommentModel.deleteMany(query);
-    const mediaTypesToDelete = [
-        CommunityMediaTypes.IMAGE,
-        CommunityMediaTypes.VIDEO,
-        CommunityMediaTypes.GIF,
-        CommunityMediaTypes.PDF,
-    ];
-    const postsWithMedia = await CommunityPostModel.aggregate<{
-        media: CommunityMedia[];
-    }>([
-        {
-            $match: {
-                ...query,
-                "media.type": { $in: mediaTypesToDelete },
-            },
-        },
-        {
-            $project: {
-                media: {
-                    $filter: {
-                        input: "$media",
-                        as: "media",
-                        cond: {
-                            $and: [
-                                {
-                                    $in: ["$$media.type", mediaTypesToDelete],
-                                },
-                                { $ifNull: ["$$media.media.mediaId", false] },
-                            ],
-                        },
-                    },
-                },
-            },
-        },
-    ]);
-    for (const post of postsWithMedia) {
-        for (const media of post.media) {
-            const mediaId = media.media?.mediaId;
-            if (mediaId) {
-                await deleteMedia(mediaId);
-            }
-        }
-    }
-    await CommunityPostModel.deleteMany(query);
-}
-
-async function deleteCommunityPostsSubscriptions(
-    community: Community,
-    ctx: GQLContext,
-) {
-    const subscriberAggregation = await CommunityPostModel.aggregate([
-        {
-            $match: {
-                domain: ctx.subdomain._id,
-                communityId: community.communityId,
-            },
-        },
-        {
-            $lookup: {
-                from: CommunityPostSubscriberModel.collection.name,
-                localField: "postId",
-                foreignField: "postId",
-                as: "subscribers",
-            },
-        },
-        { $unwind: "$subscribers" },
-        {
-            $group: {
-                _id: null,
-                subscriberIds: { $addToSet: "$subscribers._id" },
-            },
-        },
-        {
-            $project: {
-                _id: 0,
-                subscriberIds: 1,
-            },
-        },
-    ]);
-    const subscriberIds = subscriberAggregation[0]?.subscriberIds ?? [];
-    if (subscriberIds.length > 0) {
-        await CommunityPostSubscriberModel.deleteMany({
-            _id: { $in: subscriberIds },
-        });
-    }
-}
-
-async function deleteMemberships(community: Community, ctx: GQLContext) {
-    const paymentPlans = await PaymentPlanModel.find({
-        domain: ctx.subdomain._id,
-        entityId: community.communityId,
-        entityType: Constants.MembershipEntityType.COMMUNITY,
-    });
-
-    for (const paymentPlan of paymentPlans) {
-        // Delete included products memberships
-        if (
-            paymentPlan.includedProducts &&
-            paymentPlan.includedProducts.length > 0
-        ) {
-            await ActivityModel.deleteMany({
-                domain: ctx.subdomain._id,
-                type: constants.activityTypes[0],
-                "metadata.isIncludedInPlan": true,
-                "metadata.paymentPlanId": paymentPlan.planId,
-            });
-            await MembershipModel.deleteMany({
-                domain: ctx.subdomain._id,
-                paymentPlanId: paymentPlan.planId,
-                entityType: Constants.MembershipEntityType.COURSE,
-                isIncludedInPlan: true,
-            });
-        }
-        const memberships = await MembershipModel.find({
-            domain: ctx.subdomain._id,
-            paymentPlanId: paymentPlan.planId,
-        });
-        await cancelAndDeleteMemberships(memberships, ctx);
-        await paymentPlan.deleteOne();
-    }
-
-    // delete memberships joined via internal payment plan
-    const paymentPlan = await getInternalPaymentPlan(ctx);
-    await MembershipModel.deleteMany({
-        domain: ctx.subdomain._id,
-        entityId: community.communityId,
-        entityType: Constants.MembershipEntityType.COMMUNITY,
-        paymentPlanId: paymentPlan.planId,
-    });
-}
-
-export async function cancelAndDeleteMemberships(
-    memberships: InternalMembership[],
-    ctx: GQLContext,
-) {
-    for (const membership of memberships) {
-        // Cancel active subscriptions
-        if (membership.subscriptionId) {
-            const paymentMethod = await getPaymentMethodFromSettings(
-                ctx.subdomain.settings,
-                membership.subscriptionMethod,
-            );
-            await paymentMethod?.cancel(membership.subscriptionId);
-        }
-
-        // Delete associated invoices
-        await InvoiceModel.deleteMany({
-            domain: ctx.subdomain._id,
-            membershipId: membership.membershipId,
-        });
-
-        // Delete membership
-        await membership.deleteOne();
-    }
+    return formattedCommunity;
 }
 
 export async function reportCommunityContent({

@@ -64,16 +64,14 @@ import { validateSlug, isDuplicateKeyError } from "../pages/helpers";
 import CommunityModel from "@models/Community";
 import CommunityPostModel from "@models/CommunityPost";
 import CommunityCommentModel from "@models/CommunityComment";
-import CommunityReportModel from "@models/CommunityReport";
 import { isPartOfDripGroup } from "../lessons/helpers";
 import {
     addPostSubscription,
+    deleteCommunityInternal,
     formatComment,
     normalizeCommunityPostContent,
 } from "../communities/helpers";
-import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
 import { recordActivity } from "@/lib/record-activity";
-import NotificationModel from "@models/Notification";
 import canUseMongoTransactions from "@/lib/can-use-mongo-transactions";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
@@ -547,170 +545,14 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
         ],
     });
     if (discussionCommunity) {
-        await hardDeleteCourseDiscussionCommunity({
-            domain: ctx.subdomain._id,
+        await deleteCommunityInternal({
+            ctx,
             community: discussionCommunity,
         });
     }
 
     return true;
 };
-
-async function hardDeleteCourseDiscussionCommunity({
-    domain,
-    community,
-}: {
-    domain: mongoose.Types.ObjectId;
-    community: { communityId: string };
-}) {
-    const discussionPosts = await CommunityPostModel.find(
-        {
-            domain,
-            communityId: community.communityId,
-        },
-        { postId: 1 },
-    ).lean<{ postId: string }[]>();
-    const postIds = discussionPosts.map((post) => post.postId);
-    const discussionComments = await CommunityCommentModel.find(
-        {
-            domain,
-            communityId: community.communityId,
-        },
-        { commentId: 1, replies: 1 },
-    ).lean<{ commentId: string; replies?: { replyId: string }[] }[]>();
-    const commentIds = discussionComments.map((comment) => comment.commentId);
-    const replyIds = discussionComments.flatMap((comment) =>
-        (comment.replies || []).map((reply) => reply.replyId),
-    );
-    const contentIds = [
-        community.communityId,
-        ...postIds,
-        ...commentIds,
-        ...replyIds,
-    ];
-
-    await CommunityPostSubscriberModel.deleteMany({
-        domain,
-        postId: { $in: postIds },
-    });
-    await CommunityReportModel.deleteMany({
-        domain,
-        communityId: community.communityId,
-    });
-    await NotificationModel.deleteMany({
-        domain,
-        $or: [
-            { entityId: { $in: contentIds } },
-            { entityTargetId: { $in: contentIds } },
-            { "metadata.communityId": community.communityId },
-            { "metadata.postId": { $in: postIds } },
-            { "metadata.commentId": { $in: commentIds } },
-        ],
-    });
-    await ActivityModel.deleteMany({
-        domain,
-        $or: [
-            { entityId: { $in: contentIds } },
-            { "metadata.communityId": community.communityId },
-            { "metadata.postId": { $in: postIds } },
-            { "metadata.commentId": { $in: commentIds } },
-        ],
-    });
-    await CommunityCommentModel.deleteMany({
-        domain,
-        communityId: community.communityId,
-    });
-    await CommunityPostModel.deleteMany({
-        domain,
-        communityId: community.communityId,
-    });
-    await MembershipModel.deleteMany({
-        domain,
-        entityId: community.communityId,
-        entityType: Constants.MembershipEntityType.COMMUNITY,
-    });
-    await PaymentPlanModel.deleteMany({
-        domain,
-        entityId: community.communityId,
-        entityType: Constants.MembershipEntityType.COMMUNITY,
-    });
-    await CommunityModel.deleteOne({
-        domain,
-        communityId: community.communityId,
-    });
-}
-
-export async function repairOrphanCourseDiscussionCommunities({
-    domain,
-    batchSize = 500,
-}: {
-    domain: mongoose.Types.ObjectId;
-    batchSize?: number;
-}): Promise<{ scanned: number; deleted: number }> {
-    let scanned = 0;
-    let deleted = 0;
-    let batch: { communityId: string; courseId?: string | null }[] = [];
-
-    const processBatch = async () => {
-        if (!batch.length) {
-            return;
-        }
-
-        const courseIds = Array.from(
-            new Set(
-                batch.map((community) => community.courseId).filter(Boolean),
-            ),
-        ) as string[];
-        const existingCourses = await CourseModel.find(
-            {
-                domain,
-                courseId: { $in: courseIds },
-            },
-            { courseId: 1 },
-        ).lean<{ courseId: string }[]>();
-        const existingCourseIds = new Set(
-            existingCourses.map((course) => course.courseId),
-        );
-
-        for (const community of batch) {
-            if (
-                community.courseId &&
-                !existingCourseIds.has(community.courseId)
-            ) {
-                await hardDeleteCourseDiscussionCommunity({
-                    domain,
-                    community,
-                });
-                deleted += 1;
-            }
-        }
-
-        batch = [];
-    };
-
-    const cursor = CommunityModel.find(
-        {
-            domain,
-            courseId: { $exists: true, $ne: null },
-        },
-        { communityId: 1, courseId: 1 },
-    ).cursor();
-
-    for await (const community of cursor) {
-        scanned += 1;
-        batch.push({
-            communityId: community.communityId,
-            courseId: community.courseId,
-        });
-        if (batch.length >= batchSize) {
-            await processBatch();
-        }
-    }
-
-    await processBatch();
-
-    return { scanned, deleted };
-}
 
 export const getCoursesAsAdmin = async ({
     offset,
