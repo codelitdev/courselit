@@ -27,6 +27,9 @@ describe("Lesson visibility and progress", () => {
     let testDomain: any;
     let creator: any;
     let student: any;
+    let manageAnyAdmin: any;
+    let ownerManager: any;
+    let otherManager: any;
     let course: any;
     let quizCourse: any;
     let groupId: string;
@@ -39,6 +42,9 @@ describe("Lesson visibility and progress", () => {
     let dripQuizLesson: any;
     let studentCtx: any;
     let creatorCtx: any;
+    let manageAnyAdminCtx: any;
+    let ownerManagerCtx: any;
+    let otherManagerCtx: any;
 
     beforeAll(async () => {
         testDomain = await DomainModel.create({
@@ -69,6 +75,39 @@ describe("Lesson visibility and progress", () => {
             purchases: [],
         });
 
+        manageAnyAdmin = await UserModel.create({
+            domain: testDomain._id,
+            userId: id("manage-any-admin"),
+            email: email("manage-any-admin"),
+            name: "Manage Any Admin",
+            active: true,
+            permissions: ["course:manage_any"],
+            unsubscribeToken: id("unsubscribe-manage-any-admin"),
+            purchases: [],
+        });
+
+        ownerManager = await UserModel.create({
+            domain: testDomain._id,
+            userId: id("owner-manager"),
+            email: email("owner-manager"),
+            name: "Owner Manager",
+            active: true,
+            permissions: ["course:manage"],
+            unsubscribeToken: id("unsubscribe-owner-manager"),
+            purchases: [],
+        });
+
+        otherManager = await UserModel.create({
+            domain: testDomain._id,
+            userId: id("other-manager"),
+            email: email("other-manager"),
+            name: "Other Manager",
+            active: true,
+            permissions: ["course:manage"],
+            unsubscribeToken: id("unsubscribe-other-manager"),
+            purchases: [],
+        });
+
         groupId = id("group-1");
         quizGroupId = id("quiz-group");
         quizDripGroupId = id("quiz-drip-group");
@@ -78,7 +117,7 @@ describe("Lesson visibility and progress", () => {
             courseId: id("course"),
             title: "Visibility Course",
             lessons: [],
-            creatorId: creator.userId,
+            creatorId: ownerManager.userId,
             cost: 0,
             privacy: "public",
             type: "course",
@@ -105,7 +144,7 @@ describe("Lesson visibility and progress", () => {
             courseId: id("quiz-course"),
             title: "Quiz Visibility Course",
             lessons: [],
-            creatorId: creator.userId,
+            creatorId: ownerManager.userId,
             cost: 0,
             privacy: "public",
             type: "course",
@@ -268,6 +307,21 @@ describe("Lesson visibility and progress", () => {
             user: creator,
             subdomain: testDomain,
         } as any;
+
+        manageAnyAdminCtx = {
+            user: manageAnyAdmin,
+            subdomain: testDomain,
+        } as any;
+
+        ownerManagerCtx = {
+            user: ownerManager,
+            subdomain: testDomain,
+        } as any;
+
+        otherManagerCtx = {
+            user: otherManager,
+            subdomain: testDomain,
+        } as any;
     });
 
     afterAll(async () => {
@@ -396,18 +450,75 @@ describe("Lesson visibility and progress", () => {
         ).rejects.toThrow(responses.group_not_found);
     });
 
-    it("should hide unpublished lessons from owners in learner lesson details", async () => {
+    it("allows owner course managers to read unpublished lessons", async () => {
+        const lesson = await getLessonDetails(
+            unpublishedLesson.lessonId,
+            ownerManagerCtx,
+            course.courseId,
+        );
+
+        expect(lesson.lessonId).toBe(unpublishedLesson.lessonId);
+        expect(lesson.prevLesson).toBe(publishedLessonOne.lessonId);
+        expect(lesson.nextLesson).toBe(publishedLessonTwo.lessonId);
+    });
+
+    it("allows manage-any course admins to read unpublished lessons", async () => {
+        const lesson = await getLessonDetails(
+            unpublishedLesson.lessonId,
+            manageAnyAdminCtx,
+            course.courseId,
+        );
+
+        expect(lesson.lessonId).toBe(unpublishedLesson.lessonId);
+    });
+
+    it("allows manage-any course admins to read enrollment-gated lessons without enrollment", async () => {
+        const lesson = await getLessonDetails(
+            dripQuizLesson.lessonId,
+            manageAnyAdminCtx,
+            quizCourse.courseId,
+        );
+
+        expect(lesson.lessonId).toBe(dripQuizLesson.lessonId);
+        expect(manageAnyAdmin.purchases).toEqual([]);
+    });
+
+    it("allows owner course managers to read enrollment-gated lessons without enrollment", async () => {
+        const lesson = await getLessonDetails(
+            dripQuizLesson.lessonId,
+            ownerManagerCtx,
+            quizCourse.courseId,
+        );
+
+        expect(lesson.lessonId).toBe(dripQuizLesson.lessonId);
+        expect(ownerManager.purchases).toEqual([]);
+    });
+
+    it("does not let non-owner course managers bypass enrollment", async () => {
         await expect(
             getLessonDetails(
-                unpublishedLesson.lessonId,
-                creatorCtx,
-                course.courseId,
+                dripQuizLesson.lessonId,
+                otherManagerCtx,
+                quizCourse.courseId,
             ),
-        ).rejects.toThrow(responses.item_not_found);
+        ).rejects.toThrow(responses.not_enrolled);
+    });
+
+    it("does not let regular users bypass drip access", async () => {
+        await expect(
+            getLessonDetails(
+                dripQuizLesson.lessonId,
+                studentCtx,
+                quizCourse.courseId,
+            ),
+        ).rejects.toThrow(responses.drip_not_released);
     });
 
     it("should support forcing published-only lessons even for owner context", async () => {
-        const ownerLessons = await getAllLessons(course as any, creatorCtx);
+        const ownerLessons = await getAllLessons(
+            course as any,
+            ownerManagerCtx,
+        );
         expect(
             ownerLessons.some(
                 (lesson: any) => lesson.lessonId === unpublishedLesson.lessonId,
@@ -416,7 +527,7 @@ describe("Lesson visibility and progress", () => {
 
         const forcedLearnerLessons = await getAllLessons(
             course as any,
-            creatorCtx,
+            ownerManagerCtx,
             true,
         );
         expect(
@@ -442,7 +553,7 @@ describe("Lesson visibility and progress", () => {
 
     it("should not allow completing unpublished lessons for owners", async () => {
         await expect(
-            markLessonCompleted(unpublishedLesson.lessonId, creatorCtx),
+            markLessonCompleted(unpublishedLesson.lessonId, ownerManagerCtx),
         ).rejects.toThrow(responses.item_not_found);
     });
 

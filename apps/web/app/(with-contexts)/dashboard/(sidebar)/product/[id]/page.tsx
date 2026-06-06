@@ -44,6 +44,7 @@ import {
     MANAGE_LINK_TEXT,
     TOAST_TITLE_SUCCESS,
     VIEW_PAGE_MENU_ITEM,
+    PREVIEW_COURSE_MENU_ITEM,
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
 import { AddressContext, SiteInfoContext } from "@components/contexts";
@@ -210,6 +211,17 @@ export default function DashboardPage() {
                                         {VIEW_PAGE_MENU_ITEM}
                                     </a>
                                 </DropdownMenuItem>
+                                {product?.type?.toLowerCase() ===
+                                    Constants.CourseType.COURSE && (
+                                    <DropdownMenuItem asChild>
+                                        <Link
+                                            href={`/course/${product.slug}/${product.courseId}`}
+                                        >
+                                            <BookOpen className="mr-2 h-4 w-4" />
+                                            {PREVIEW_COURSE_MENU_ITEM}
+                                        </Link>
+                                    </DropdownMenuItem>
+                                )}
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem asChild>
                                     <Link

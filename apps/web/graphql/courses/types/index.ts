@@ -25,6 +25,7 @@ const { course, download, blog, costPaid, costEmail, costFree } = constants;
 import sequenceTypes from "../../mails/types";
 import { getPlans } from "@/graphql/paymentplans/logic";
 import GQLContext from "@/models/GQLContext";
+import { canManageCourseInContext } from "../permissions";
 
 const courseStatusType = new GraphQLEnumType({
     name: "CoursePrivacyType",
@@ -150,6 +151,11 @@ const courseType = new GraphQLObjectType({
         slug: { type: new GraphQLNonNull(GraphQLString) },
         description: { type: GraphQLString },
         leadMagnet: { type: GraphQLBoolean },
+        isManager: {
+            type: new GraphQLNonNull(GraphQLBoolean),
+            resolve: (course, _, ctx: GQLContext) =>
+                canManageCourseInContext(course, ctx),
+        },
         featuredImage: {
             type: mediaTypes.mediaType,
             resolve: (course, _, context, __) => getMedia(course.featuredImage),

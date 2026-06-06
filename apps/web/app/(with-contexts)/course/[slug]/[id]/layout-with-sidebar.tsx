@@ -35,9 +35,9 @@ import {
 } from "@components/ui/sidebar";
 import { Image } from "@courselit/components-library";
 import Link from "next/link";
-import { truncate } from "@courselit/utils";
+import { checkPermission, truncate } from "@courselit/utils";
 import { Button } from "@components/ui/button";
-import { ChevronRight, Clock, LogOutIcon } from "lucide-react";
+import { BookOpen, ChevronRight, Clock, LogOutIcon } from "lucide-react";
 import {
     Tooltip,
     TooltipContent,
@@ -318,6 +318,27 @@ interface SidebarItem {
     }[];
 }
 
+function canManageCourseFromProfile(course: CourseFrontend, profile: Profile) {
+    if (!profile?.userId) {
+        return false;
+    }
+
+    if (
+        checkPermission(profile.permissions ?? [], [
+            constants.permissions.manageAnyCourse,
+        ])
+    ) {
+        return true;
+    }
+
+    return (
+        course.creatorId === profile.userId &&
+        checkPermission(profile.permissions ?? [], [
+            constants.permissions.manageCourse,
+        ])
+    );
+}
+
 export function generateSideBarItems(
     course: CourseFrontend,
     profile: Profile,
@@ -325,6 +346,9 @@ export function generateSideBarItems(
 ): SidebarItem[] {
     if (!course) return [];
 
+    const isManager =
+        Boolean(course.isManager) ||
+        canManageCourseFromProfile(course, profile);
     const items: SidebarItem[] = [
         {
             title: SIDEBAR_TEXT_COURSE_ABOUT,
@@ -348,6 +372,7 @@ export function generateSideBarItems(
                 group,
                 profile,
                 lastGroupDripDateInMillis,
+                isManager,
             }),
             items: [],
         };
@@ -359,28 +384,34 @@ export function generateSideBarItems(
             if (isActive) {
                 groupItem.isActive = true;
             }
+            let lessonStatusIcon: ReactNode;
+            if (!isManager) {
+                if (!profile?.userId) {
+                    lessonStatusIcon = lesson.requiresEnrollment ? (
+                        <Lock />
+                    ) : undefined;
+                } else if (isEnrolled(course.courseId, profile)) {
+                    lessonStatusIcon = isLessonCompleted({
+                        courseId: course.courseId,
+                        lessonId: lesson.lessonId,
+                        profile,
+                    }) ? (
+                        <CheckCircled />
+                    ) : (
+                        <Circle />
+                    );
+                } else {
+                    lessonStatusIcon = lesson.requiresEnrollment ? (
+                        <Lock />
+                    ) : undefined;
+                }
+            }
             groupItem.items!.push({
                 title: lesson.title,
                 href: `/course/${course.slug}/${course.courseId}/${lesson.lessonId}`,
                 isActive,
-                icon:
-                    profile && profile.userId ? (
-                        isEnrolled(course.courseId, profile) ? (
-                            isLessonCompleted({
-                                courseId: course.courseId,
-                                lessonId: lesson.lessonId,
-                                profile,
-                            }) ? (
-                                <CheckCircled />
-                            ) : (
-                                <Circle />
-                            )
-                        ) : lesson.requiresEnrollment ? (
-                            <Lock />
-                        ) : undefined
-                    ) : lesson.requiresEnrollment ? (
-                        <Lock />
-                    ) : undefined,
+                leadingIcon: <BookOpen className="h-4 w-4 shrink-0" />,
+                icon: lessonStatusIcon,
             });
         }
 
@@ -393,6 +424,7 @@ export function generateSideBarItems(
             group.drip.status &&
             group.drip.type ===
                 Constants.dripType[0].split("-")[0].toUpperCase() &&
+            !isManager &&
             !isGroupAccessibleToUser(course, profile as Profile, group)
         ) {
             lastGroupDripDateInMillis += group?.drip?.delayInMillis ?? 0;
@@ -407,12 +439,18 @@ function getDripLabel({
     group,
     profile,
     lastGroupDripDateInMillis,
+    isManager,
 }: {
     course: CourseFrontend;
     group: GroupWithLessons;
     profile: Profile;
     lastGroupDripDateInMillis: number;
+    isManager: boolean;
 }): { text: string; description: string } | undefined {
+    if (isManager) {
+        return undefined;
+    }
+
     if (
         group.drip?.status &&
         isGroupAccessibleToUser(course, profile as Profile, group)
