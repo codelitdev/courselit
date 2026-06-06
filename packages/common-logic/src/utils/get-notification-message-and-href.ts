@@ -33,6 +33,7 @@ export interface NotificationCommunityEntity {
 export interface NotificationCourseEntity {
     courseId: string;
     title: string;
+    slug?: string;
 }
 
 export interface NotificationEntityResolver {
@@ -379,6 +380,41 @@ export async function getNotificationMessageAndHref({
                 message: `${actorName} downloaded ${truncate(course.title, 20).trim()}`,
                 href: toHref(
                     `/dashboard/product/${course.courseId}/customers`,
+                    hrefPrefix,
+                ),
+            };
+        }
+
+        case Constants.ActivityType.COURSE_DISCUSSION_ACTIVITY: {
+            const productId = metadata?.productId as string | undefined;
+            const entityType = metadata?.entityType as string | undefined;
+            const lessonId = metadata?.entityId as string | undefined;
+            const commentId = metadata?.commentId as string | undefined;
+            const replyId = metadata?.replyId as string | undefined;
+            const eventType = metadata?.eventType as string | undefined;
+
+            if (!productId || entityType !== "lesson" || !lessonId) {
+                return { message: "", href: "" };
+            }
+
+            const course = await entityResolver.getCourse(productId, domainId);
+            if (!course?.slug) {
+                return { message: "", href: "" };
+            }
+
+            const targetId = replyId || commentId;
+            const targetHash = replyId
+                ? `discussion-reply-${replyId}`
+                : commentId
+                  ? `discussion-comment-${commentId}`
+                  : undefined;
+
+            return {
+                message: `${actorName} ${eventType === "reply_created" ? "replied" : "commented"} on ${truncate(course.title, 20).trim()}`,
+                href: toHref(
+                    `/course/${course.slug}/${course.courseId}/${lessonId}?discussion=open${
+                        targetId && targetHash ? `#${targetHash}` : ""
+                    }`,
                     hrefPrefix,
                 ),
             };

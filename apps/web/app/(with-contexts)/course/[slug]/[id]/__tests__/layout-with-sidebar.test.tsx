@@ -51,6 +51,15 @@ jest.mock("@courselit/components-library", () => ({
     Image: () => null,
 }));
 
+jest.mock("@courselit/page-blocks", () => ({
+    TextRenderer: () => null,
+}));
+
+jest.mock("@courselit/text-editor", () => ({
+    Editor: () => null,
+    emptyDoc: {},
+}));
+
 jest.mock("@courselit/icons", () => ({
     CheckCircled: () => null,
     Circle: () => null,
@@ -61,7 +70,9 @@ jest.mock("lucide-react", () => ({
     BookOpen: () => null,
     ChevronRight: () => null,
     Clock: () => null,
+    Folder: () => null,
     LogOutIcon: () => null,
+    MessageSquare: () => null,
 }));
 
 jest.mock("@courselit/page-primitives", () => ({
@@ -827,5 +838,53 @@ describe("generateSideBarItems", () => {
 
         expect(items[1].badge).toBeUndefined();
         expect(items[1].items?.[0].icon).toBeUndefined();
+    });
+
+    it("shows the discussions sidebar item only when discussions are enabled", () => {
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            groups: [],
+            discussions: false,
+        } as unknown as CourseFrontend;
+
+        const profile = {
+            userId: "user-1",
+            purchases: [
+                {
+                    courseId: "course-1",
+                    accessibleGroups: [],
+                },
+            ],
+        } as unknown as Profile;
+
+        expect(
+            generateSideBarItems(
+                course,
+                profile,
+                "/course/test-course/course-1",
+            ).some((item) => item.title === "Discussions"),
+        ).toBe(false);
+
+        expect(
+            generateSideBarItems(
+                { ...course, discussions: true } as CourseFrontend,
+                profile,
+                "/course/test-course/course-1/discussions",
+            ).find((item) => item.title === "Discussions"),
+        ).toMatchObject({
+            href: "/course/test-course/course-1/discussions",
+            isActive: true,
+        });
     });
 });

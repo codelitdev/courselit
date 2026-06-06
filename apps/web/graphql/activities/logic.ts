@@ -7,6 +7,7 @@ const { permissions, activityTypes, analyticsDurations } = constants;
 import ActivityModel, { Activity } from "../../models/Activity";
 import { calculatePastDate } from "./helpers";
 import { ActivityType } from "@courselit/common-models";
+import CourseModel from "../../models/Course";
 
 export interface Activities {
     count: number;
@@ -30,8 +31,32 @@ export const getActivities = async ({
     entityId?: string;
 }): Promise<Activities> => {
     checkIfAuthenticated(ctx);
-    if (!checkPermission(ctx.user.permissions, [permissions.manageSettings])) {
-        throw new Error(responses.action_not_allowed);
+
+    const hasGlobalPermission = checkPermission(ctx.user.permissions, [
+        permissions.manageSettings,
+        permissions.manageAnyCourse,
+    ]);
+
+    let allowedCourseIds: string[] | undefined = undefined;
+
+    if (!hasGlobalPermission) {
+        if (checkPermission(ctx.user.permissions, [permissions.manageCourse])) {
+            const ownedCourses = await CourseModel.find({
+                creatorId: ctx.user.userId,
+                domain: ctx.subdomain._id,
+            }).select("courseId");
+            const ownedCourseIds = ownedCourses.map((c) => c.courseId);
+
+            if (entityId) {
+                if (!ownedCourseIds.includes(entityId)) {
+                    throw new Error(responses.action_not_allowed);
+                }
+            } else {
+                allowedCourseIds = ownedCourseIds;
+            }
+        } else {
+            throw new Error(responses.action_not_allowed);
+        }
     }
 
     let startFromDate = calculatePastDate(duration, ctx.subdomain);
@@ -44,12 +69,16 @@ export const getActivities = async ({
         : startFromDate;
 
     // Single query for both current and previous period
-    const query = {
+    const query: Record<string, any> = {
         createdAt: { $gte: extendedStartDate },
         type,
         domain: ctx.subdomain._id,
-        ...(entityId ? { entityId } : {}),
     };
+    if (entityId) {
+        query.entityId = entityId;
+    } else if (allowedCourseIds) {
+        query.entityId = { $in: allowedCourseIds };
+    }
     const activities: Activity[] = await ActivityModel.find(query);
 
     // Split activities into current and previous periods

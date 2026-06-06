@@ -19,6 +19,7 @@ type CourseWithoutGroups = Pick<
     | "slug"
     | "cost"
     | "courseId"
+    | "discussions"
     | "tags"
     | "paymentPlans"
     | "defaultPaymentPlan"
@@ -47,6 +48,7 @@ export const getProduct = async (
                         slug,
                         cost,
                         courseId,
+                        discussions,
                         isManager,
                         groups {
                             id,
@@ -130,6 +132,7 @@ export function formatCourse(
         slug: post.slug,
         cost: post.cost,
         courseId: post.courseId,
+        discussions: post.discussions,
         isManager: Boolean(
             (post as Course & { isManager?: boolean }).isManager,
         ),

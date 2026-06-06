@@ -77,88 +77,95 @@ export default function ProductPage(props: {
         : TextEditorEmptyDoc;
 
     return (
-        <div className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
-            <Header1 className="mb-8 text-foreground" theme={theme.theme}>
-                {product.title}
-            </Header1>
-            {progress?.certificateId && (
-                <Link
-                    href={`/accomplishment/${progress.certificateId}`}
-                    className="mb-4"
-                >
-                    <Button theme={theme.theme}>
-                        <BadgeCheck className="h-4 w-4" />{" "}
-                        {BTN_VIEW_CERTIFICATE}
-                    </Button>
-                </Link>
-            )}
-            {!isEnrolled(product.courseId, profile as Profile) &&
-                checkPermission(profile.permissions ?? [], [
-                    permissions.enrollInCourse,
-                ]) && (
-                    <div>
-                        <div className="flex justify-between items-center">
-                            <div className="font-medium flex items-center">
-                                {getSymbolFromCurrency(
-                                    siteInfo.currencyISOCode ?? "",
-                                )}
-                                {product.cost}
-                                <span className="text-sm text-muted-foreground ml-1">
-                                    {product.costType ?? ""}
-                                </span>
-                            </div>
-                            <Link
-                                href={`/checkout?type=course&id=${product.courseId}`}
-                            >
-                                <Button theme={theme.theme}>
-                                    {ENROLL_BUTTON_TEXT}
-                                </Button>
-                            </Link>
-                        </div>
-                    </div>
-                )}
-            {product.featuredImage && (
-                <div className="flex justify-center">
-                    <div className="mt-4 mb-8 w-full md:max-w-screen-md">
-                        <Image
-                            alt={product.featuredImage.caption}
-                            src={product.featuredImage.file!}
-                            loading="eager"
-                            sizes="50vw"
-                        />
-                    </div>
-                </div>
-            )}
-            <div className="overflow-hidden min-h-[360px]">
-                <div className="flex flex-col gap-4 text-foreground">
-                    <TableOfContent
-                        json={descriptionJson}
+        <div className="flex w-full min-h-[calc(100vh-4rem)] text-foreground relative min-w-0">
+            <div className="flex-grow min-w-0 flex flex-col justify-between overflow-y-auto max-h-[calc(100vh-4rem)]">
+                <div className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto w-full px-4 pt-4">
+                    <Header1
+                        className="mb-8 text-foreground"
                         theme={theme.theme}
-                    />
-                    <WidgetErrorBoundary widgetName="text-editor">
-                        <TextRenderer
-                            json={descriptionJson}
-                            theme={theme.theme}
-                        />
-                    </WidgetErrorBoundary>
-                </div>
-            </div>
-            {isEnrolled(product.courseId, profile as Profile) &&
-                product.firstLesson && (
-                    <div className="self-end">
+                    >
+                        {product.title}
+                    </Header1>
+                    {progress?.certificateId && (
                         <Link
-                            href={`/course/${product.slug}/${product.courseId}/${product.firstLesson}`}
+                            href={`/accomplishment/${progress.certificateId}`}
+                            className="mb-4"
                         >
-                            <Button
-                                theme={theme.theme}
-                                className="flex gap-1 items-center"
-                            >
-                                {COURSE_PROGRESS_START}
-                                <ArrowRight />
+                            <Button theme={theme.theme}>
+                                <BadgeCheck className="h-4 w-4" />{" "}
+                                {BTN_VIEW_CERTIFICATE}
                             </Button>
                         </Link>
+                    )}
+                    {!isEnrolled(product.courseId, profile as Profile) &&
+                        checkPermission(profile.permissions ?? [], [
+                            permissions.enrollInCourse,
+                        ]) && (
+                            <div>
+                                <div className="flex justify-between items-center">
+                                    <div className="font-medium flex items-center">
+                                        {getSymbolFromCurrency(
+                                            siteInfo.currencyISOCode ?? "",
+                                        )}
+                                        {product.cost}
+                                        <span className="text-sm text-muted-foreground ml-1">
+                                            {product.costType ?? ""}
+                                        </span>
+                                    </div>
+                                    <Link
+                                        href={`/checkout?type=course&id=${product.courseId}`}
+                                    >
+                                        <Button theme={theme.theme}>
+                                            {ENROLL_BUTTON_TEXT}
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
+                    {product.featuredImage && (
+                        <div className="flex justify-center">
+                            <div className="mt-4 mb-8 w-full md:max-w-screen-md">
+                                <Image
+                                    alt={product.featuredImage.caption}
+                                    src={product.featuredImage.file!}
+                                    loading="eager"
+                                    sizes="50vw"
+                                />
+                            </div>
+                        </div>
+                    )}
+                    <div className="overflow-hidden min-h-[360px]">
+                        <div className="flex flex-col gap-4 text-foreground">
+                            <TableOfContent
+                                json={descriptionJson}
+                                theme={theme.theme}
+                            />
+                            <WidgetErrorBoundary widgetName="text-editor">
+                                <TextRenderer
+                                    json={descriptionJson}
+                                    theme={theme.theme}
+                                />
+                            </WidgetErrorBoundary>
+                        </div>
                     </div>
-                )}
+                    {isEnrolled(product.courseId, profile as Profile) &&
+                        product.firstLesson && (
+                            <div className="self-end">
+                                <Link
+                                    href={`/course/${product.slug}/${product.courseId}/${product.firstLesson}`}
+                                >
+                                    <Button
+                                        theme={theme.theme}
+                                        className="flex gap-1 items-center"
+                                    >
+                                        {COURSE_PROGRESS_START}
+                                        <ArrowRight />
+                                    </Button>
+                                </Link>
+                            </div>
+                        )}
+                </div>
+            </div>
         </div>
     );
 }

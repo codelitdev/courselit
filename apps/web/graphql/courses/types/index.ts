@@ -151,6 +151,10 @@ const courseType = new GraphQLObjectType({
         slug: { type: new GraphQLNonNull(GraphQLString) },
         description: { type: GraphQLString },
         leadMagnet: { type: GraphQLBoolean },
+        discussions: {
+            type: new GraphQLNonNull(GraphQLBoolean),
+            resolve: (course) => Boolean(course.discussions),
+        },
         isManager: {
             type: new GraphQLNonNull(GraphQLBoolean),
             resolve: (course, _, ctx: GQLContext) =>
@@ -201,6 +205,7 @@ const courseUpdateInput = new GraphQLInputObjectType({
         description: { type: GraphQLString },
         featuredImage: { type: mediaTypes.mediaInputType },
         leadMagnet: { type: GraphQLBoolean },
+        discussions: { type: GraphQLBoolean },
         certificate: { type: GraphQLBoolean },
     },
 });

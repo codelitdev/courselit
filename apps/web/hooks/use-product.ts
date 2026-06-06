@@ -70,6 +70,7 @@ export default function useProduct(id?: string | null): {
                         }
                     },
                     courseId,
+                    discussions,
                     cost,
                     costType,
                     featuredImage {

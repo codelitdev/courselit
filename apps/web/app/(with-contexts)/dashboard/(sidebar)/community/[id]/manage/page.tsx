@@ -4,6 +4,7 @@ import DashboardContent from "@components/admin/dashboard-content";
 import { AddressContext, ProfileContext } from "@components/contexts";
 import {
     COMMUNITY_HEADER,
+    COMMUNITY_REPORTS_HEADER,
     COMMUNITY_SETTINGS,
     DANGER_ZONE_HEADER,
     MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
@@ -545,7 +546,7 @@ export default function Page(props: {
                             >
                                 <Button variant="outline" className="">
                                     <FlagTriangleRight className="w-4 h-4" />{" "}
-                                    Reported content
+                                    {COMMUNITY_REPORTS_HEADER}
                                 </Button>
                             </Link>
                         </div>

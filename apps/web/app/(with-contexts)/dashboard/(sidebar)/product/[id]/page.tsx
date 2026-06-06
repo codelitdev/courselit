@@ -47,7 +47,10 @@ import {
     PREVIEW_COURSE_MENU_ITEM,
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
-import { AddressContext, SiteInfoContext } from "@components/contexts";
+import {
+    AddressContext,
+    // SiteInfoContext
+} from "@components/contexts";
 import useProduct from "../../../../../../hooks/use-product";
 import { formatDistanceToNow } from "date-fns";
 import { capitalize } from "@courselit/utils";
@@ -77,7 +80,7 @@ export default function DashboardPage() {
             href: "#",
         },
     ];
-    const siteinfo = useContext(SiteInfoContext);
+    // const siteinfo = useContext(SiteInfoContext);
     const { data: salesData, loading: salesLoading } = useActivities(
         ActivityType.PURCHASED,
         timeRange,

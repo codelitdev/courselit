@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useContext } from "react";
+import { ReactNode, useContext, useEffect, useRef } from "react";
 import constants from "@/config/constants";
 import {
     formattedLocaleDate,
@@ -11,12 +11,14 @@ import { CheckCircled, Circle, Lock } from "@courselit/icons";
 import {
     BTN_EXIT_COURSE_TOOLTIP,
     SIDEBAR_TEXT_COURSE_ABOUT,
+    SIDEBAR_TEXT_COURSE_DISCUSSIONS,
 } from "@ui-config/strings";
 import { Profile, Constants } from "@courselit/common-models";
 import {
     ProfileContext,
     SiteInfoContext,
     ThemeContext,
+    AddressContext,
 } from "@components/contexts";
 import { CourseFrontend, GroupWithLessons } from "./helpers";
 import {
@@ -32,12 +34,20 @@ import {
     SidebarMenuItem,
     SidebarProvider,
     SidebarTrigger,
+    useSidebar,
 } from "@components/ui/sidebar";
 import { Image } from "@courselit/components-library";
 import Link from "next/link";
 import { checkPermission, truncate } from "@courselit/utils";
 import { Button } from "@components/ui/button";
-import { BookOpen, ChevronRight, Clock, LogOutIcon } from "lucide-react";
+import {
+    BookOpen,
+    ChevronRight,
+    Clock,
+    Folder,
+    LogOutIcon,
+    MessageSquare,
+} from "lucide-react";
 import {
     Tooltip,
     TooltipContent,
@@ -49,9 +59,45 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@components/ui/collapsible";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { Caption } from "@courselit/page-primitives";
 import NextThemeSwitcher from "@components/admin/next-theme-switcher";
+import ProductDiscussionPanel from "@/components/public/product-discussions/panel";
+
+function MobileStateSync() {
+    const { open, setOpenMobile, isMobile } = useSidebar();
+    useEffect(() => {
+        setOpenMobile(open);
+    }, [open, isMobile, setOpenMobile]);
+    return null;
+}
+
+function DiscussionSidebarSync({
+    pathname,
+    router,
+    searchParams,
+}: {
+    pathname: string | null;
+    router: ReturnType<typeof useRouter>;
+    searchParams: ReturnType<typeof useSearchParams>;
+}) {
+    const { openMobile, isMobile } = useSidebar();
+    const prevOpenMobile = useRef(openMobile);
+    useEffect(() => {
+        if (isMobile && prevOpenMobile.current && !openMobile) {
+            const params = new URLSearchParams(searchParams?.toString() || "");
+            if (params.has("discussion")) {
+                params.delete("discussion");
+                const newPath = params.toString()
+                    ? `${pathname}?${params.toString()}`
+                    : pathname;
+                router.push(newPath || "");
+            }
+        }
+        prevOpenMobile.current = openMobile;
+    }, [openMobile, isMobile, searchParams, pathname, router]);
+    return null;
+}
 
 export default function ProductPage({
     product,
@@ -61,6 +107,17 @@ export default function ProductPage({
     children: React.ReactNode;
 }) {
     const { profile } = useContext(ProfileContext);
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const isDiscussionOpen = searchParams?.get("discussion") === "open";
+    const router = useRouter();
+    const address = useContext(AddressContext);
+
+    const pathSegments = pathname.split("/").filter(Boolean);
+    const isLessonPage =
+        pathSegments.length === 4 && pathSegments[0] === "course";
+    const isActualLessonPage =
+        isLessonPage && pathSegments[3] !== "discussions";
 
     if (!profile) {
         return null;
@@ -78,9 +135,37 @@ export default function ProductPage({
         >
             <AppSidebar course={product} profile={profile} />
             <SidebarInset>
-                <header className="flex h-16 shrink-0 items-center gap-2 px-4 justify-between text-foreground">
+                <header className="flex h-16 shrink-0 items-center gap-2 px-4 justify-between text-foreground transition-all duration-200">
                     <SidebarTrigger className="-ml-1" />
                     <div className="flex items-center gap-2">
+                        {isActualLessonPage && product.discussions && (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant={
+                                            isDiscussionOpen
+                                                ? "secondary"
+                                                : "ghost"
+                                        }
+                                        size="icon"
+                                        asChild
+                                    >
+                                        <Link
+                                            href={
+                                                isDiscussionOpen
+                                                    ? pathname
+                                                    : `${pathname}?discussion=open`
+                                            }
+                                        >
+                                            <MessageSquare className="h-4 w-4" />
+                                        </Link>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    {SIDEBAR_TEXT_COURSE_DISCUSSIONS}
+                                </TooltipContent>
+                            </Tooltip>
+                        )}
                         <NextThemeSwitcher variant="ghost" />
                         <Tooltip>
                             <TooltipTrigger>
@@ -96,8 +181,64 @@ export default function ProductPage({
                         </Tooltip>
                     </div>
                 </header>
-                <div className="p-4">{children}</div>
+                <div className="flex flex-1 flex-col min-h-0 min-w-0">
+                    {children}
+                </div>
             </SidebarInset>
+            {isActualLessonPage && product.discussions && (
+                <SidebarProvider
+                    open={isDiscussionOpen}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            const params = new URLSearchParams(
+                                searchParams?.toString() || "",
+                            );
+                            params.delete("discussion");
+                            const newPath = params.toString()
+                                ? `${pathname}?${params.toString()}`
+                                : pathname;
+                            router.push(newPath || "");
+                        }
+                    }}
+                    style={
+                        {
+                            "--sidebar-width": "20rem",
+                            "--sidebar-width-mobile": "28rem",
+                        } as React.CSSProperties
+                    }
+                    className="min-h-0 w-auto"
+                >
+                    <MobileStateSync />
+                    <DiscussionSidebarSync
+                        pathname={pathname}
+                        router={router}
+                        searchParams={searchParams}
+                    />
+                    <Sidebar
+                        side="right"
+                        collapsible="offcanvas"
+                        className="z-40"
+                    >
+                        <ProductDiscussionPanel
+                            address={address}
+                            productId={product.courseId}
+                            slug={product.slug}
+                            entityId={pathSegments[3]}
+                            className="w-full"
+                            onClose={() => {
+                                const params = new URLSearchParams(
+                                    searchParams?.toString() || "",
+                                );
+                                params.delete("discussion");
+                                const newPath = params.toString()
+                                    ? `${pathname}?${params.toString()}`
+                                    : pathname;
+                                router.push(newPath || "");
+                            }}
+                        />
+                    </Sidebar>
+                </SidebarProvider>
+            )}
         </SidebarProvider>
     );
 }
@@ -162,23 +303,26 @@ export function AppSidebar({
                                     >
                                         <div>
                                             <span className="flex justify-between items-center gap-2 w-full">
-                                                <TooltipProvider
-                                                    delayDuration={1000}
-                                                >
-                                                    <Tooltip>
-                                                        <TooltipTrigger className="text-foreground">
-                                                            {truncate(
-                                                                item.title,
-                                                                item.badge
-                                                                    ? 15
-                                                                    : 26,
-                                                            )}
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            {item.title}
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
+                                                <span className="flex min-w-0 items-center gap-2">
+                                                    <Folder className="h-4 w-4 shrink-0 text-foreground" />
+                                                    <TooltipProvider
+                                                        delayDuration={1000}
+                                                    >
+                                                        <Tooltip>
+                                                            <TooltipTrigger className="min-w-0 truncate text-foreground">
+                                                                {truncate(
+                                                                    item.title,
+                                                                    item.badge
+                                                                        ? 15
+                                                                        : 26,
+                                                                )}
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                {item.title}
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+                                                </span>
                                                 {item.badge?.text && (
                                                     <Tooltip>
                                                         <TooltipTrigger className="text-muted-foreground">
@@ -231,8 +375,11 @@ export function AppSidebar({
                                                                         href={
                                                                             item.href
                                                                         }
-                                                                        className="w-full"
+                                                                        className="flex w-full min-w-0 items-center gap-2"
                                                                     >
+                                                                        {
+                                                                            item.leadingIcon
+                                                                        }
                                                                         <TooltipProvider
                                                                             delayDuration={
                                                                                 1000
@@ -276,6 +423,7 @@ export function AppSidebar({
                                         className="text-foreground"
                                     >
                                         <Link href={item.href}>
+                                            {item.icon}
                                             {item.title}
                                         </Link>
                                     </SidebarMenuButton>
@@ -305,6 +453,7 @@ export function AppSidebar({
 interface SidebarItem {
     title: string;
     href: string;
+    icon?: ReactNode;
     badge?: {
         text: string;
         description: string;
@@ -313,6 +462,7 @@ interface SidebarItem {
     items?: {
         title: string;
         href: string;
+        leadingIcon?: ReactNode;
         icon?: ReactNode;
         isActive?: boolean;
     }[];
@@ -353,9 +503,21 @@ export function generateSideBarItems(
         {
             title: SIDEBAR_TEXT_COURSE_ABOUT,
             href: `/course/${course.slug}/${course.courseId}`,
+            icon: <BookOpen className="h-4 w-4 shrink-0" />,
             isActive: pathname === `/course/${course.slug}/${course.courseId}`,
         },
     ];
+
+    if (course.discussions) {
+        items.push({
+            title: SIDEBAR_TEXT_COURSE_DISCUSSIONS,
+            href: `/course/${course.slug}/${course.courseId}/discussions`,
+            icon: <MessageSquare className="h-4 w-4 shrink-0" />,
+            isActive:
+                pathname ===
+                `/course/${course.slug}/${course.courseId}/discussions`,
+        });
+    }
 
     let lastGroupDripDateInMillis = getRelativeDripAnchorMillis(
         course,
