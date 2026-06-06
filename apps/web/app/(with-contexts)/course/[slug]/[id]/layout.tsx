@@ -12,6 +12,7 @@ export async function generateMetadata(
     parent: ResolvingMetadata,
 ): Promise<Metadata> {
     const params = await props.params;
+    const requestHeaders = await headers();
     const address = await getAddressFromHeaders(headers);
     const siteInfo = await getFullSiteSetup(address);
 
@@ -35,13 +36,23 @@ export async function generateMetadata(
                 query,
                 variables: { id: params.id },
             })
+            .setHeaders({
+                cookie: requestHeaders.get("cookie") ?? "",
+            })
             .setIsGraphQLEndpoint(true)
             .build();
         const response = await fetch.exec();
         const course = response.course;
+        const parentTitle = (await parent)?.title?.absolute;
+
+        if (!course?.title) {
+            notFound();
+        }
 
         return {
-            title: `${course?.title} | ${(await parent)?.title?.absolute}`,
+            title: parentTitle
+                ? `${course.title} | ${parentTitle}`
+                : course.title,
         };
     } catch (error) {
         notFound();
@@ -57,8 +68,17 @@ export default async function Layout(props: {
     const { children } = props;
 
     const { id } = params;
+    const requestHeaders = await headers();
     const address = await getAddressFromHeaders(headers);
-    const product = await getProduct(id, address);
+    let product;
+
+    try {
+        product = await getProduct(id, address, {
+            cookie: requestHeaders.get("cookie") ?? "",
+        });
+    } catch (error) {
+        notFound();
+    }
 
     return <LayoutWithSidebar product={product}>{children}</LayoutWithSidebar>;
 }

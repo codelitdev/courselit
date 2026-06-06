@@ -7,14 +7,17 @@ import type { MembershipEntityType } from "@courselit/common-models";
 import { useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
 import { TOAST_TITLE_ERROR } from "@ui-config/strings";
-import { useSearchParams } from "next/navigation";
+import { notFound, useSearchParams } from "next/navigation";
 import { useCallback, useContext, useEffect, useState } from "react";
 import type { RuntimeLoginProvider } from "@/lib/login-providers";
+import { Header1 } from "@courselit/page-primitives";
+import { ThemeContext } from "@components/contexts";
 
 const { MembershipEntityType } = Constants;
 
 export default function ProductCheckout() {
     const address = useContext(AddressContext);
+    const { theme } = useContext(ThemeContext);
     const searchParams = useSearchParams();
     const entityId = searchParams?.get("id");
     const entityType = searchParams?.get("type");
@@ -23,6 +26,7 @@ export default function ProductCheckout() {
     const [product, setProduct] = useState<Product | null>(null);
     const [paymentPlans, setPaymentPlans] = useState<PaymentPlan[]>([]);
     const [includedProducts, setIncludedProducts] = useState<Course[]>([]);
+    const [productNotFound, setProductNotFound] = useState(false);
     const [loginProviders, setLoginProviders] = useState<
         RuntimeLoginProvider[]
     >([]);
@@ -60,10 +64,7 @@ export default function ProductCheckout() {
             if (response.includedProducts) {
                 setIncludedProducts([...response.includedProducts]);
             } else {
-                toast({
-                    title: TOAST_TITLE_ERROR,
-                    description: "Course not found",
-                });
+                setProductNotFound(true);
             }
         } catch (err: any) {
             toast({
@@ -77,7 +78,7 @@ export default function ProductCheckout() {
     const getProduct = useCallback(async () => {
         const query = `
             query ($id: String!) {
-                course: getCourse(id: $id) {
+                course: getCourse(id: $id, asGuest: true) {
                     courseId
                     title
                     slug
@@ -126,10 +127,7 @@ export default function ProductCheckout() {
                 });
                 setPaymentPlans([...response.course.paymentPlans]);
             } else {
-                toast({
-                    title: TOAST_TITLE_ERROR,
-                    description: "Course not found",
-                });
+                setProductNotFound(true);
             }
             setLoginProviders(response.loginProviders || []);
         } catch (err: any) {
@@ -195,10 +193,7 @@ export default function ProductCheckout() {
                 });
                 setPaymentPlans([...response.community.paymentPlans]);
             } else {
-                toast({
-                    title: TOAST_TITLE_ERROR,
-                    description: "Community not found",
-                });
+                setProductNotFound(true);
             }
             setLoginProviders(response.loginProviders || []);
         } catch (err: any) {
@@ -226,18 +221,27 @@ export default function ProductCheckout() {
         }
     }, [paymentPlans, getIncludedProducts]);
 
+    if (productNotFound) {
+        notFound();
+    }
+
     if (!product) {
         return null;
     }
 
     return (
-        <Checkout
-            product={product}
-            paymentPlans={paymentPlans}
-            includedProducts={includedProducts}
-            loginProviders={loginProviders}
-            type={entityType as MembershipEntityType | undefined}
-            id={entityId as string | undefined}
-        />
+        <>
+            <Header1 theme={theme.theme} className="mb-8">
+                Checkout
+            </Header1>
+            <Checkout
+                product={product}
+                paymentPlans={paymentPlans}
+                includedProducts={includedProducts}
+                loginProviders={loginProviders}
+                type={entityType as MembershipEntityType | undefined}
+                id={entityId as string | undefined}
+            />
+        </>
     );
 }

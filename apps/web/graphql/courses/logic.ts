@@ -6,11 +6,7 @@ import { InternalCourse } from "@courselit/orm-models";
 import UserModel from "@/models/User";
 import { Media, User } from "@courselit/common-models";
 import { responses } from "@/config/strings";
-import {
-    checkIfAuthenticated,
-    validateOffset,
-    checkOwnershipWithoutModel,
-} from "@/lib/graphql";
+import { checkIfAuthenticated, validateOffset } from "@/lib/graphql";
 import constants from "@/config/constants";
 import {
     getPaginatedCoursesForAdmin,
@@ -43,7 +39,6 @@ import {
 } from "../paymentplans/logic";
 import MembershipModel from "@models/Membership";
 import { getActivities } from "../activities/logic";
-import { ActivityType } from "@courselit/common-models/dist/constants";
 import { verifyMandatoryTags } from "../mails/helpers";
 import type { Email } from "@courselit/email-editor";
 import PaymentPlanModel from "@models/PaymentPlan";
@@ -56,6 +51,10 @@ import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
 import { deletePageInternal } from "../pages/logic";
 import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
 import { validateSlug, isDuplicateKeyError } from "../pages/helpers";
+import {
+    canManageCourseInContext,
+    getCourseManagementAccess,
+} from "./permissions";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -83,18 +82,14 @@ export const getCourseOrThrow = async (
         throw new Error(responses.item_not_found);
     }
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
-        if (!checkOwnershipWithoutModel(course, ctx)) {
+    const access = getCourseManagementAccess(course, ctx);
+
+    if (!access.canManage) {
+        if (!access.isOwner) {
             throw new Error(responses.item_not_found);
-        } else {
-            if (
-                !checkPermission(ctx.user.permissions, [
-                    permissions.manageCourse,
-                ])
-            ) {
-                throw new Error(responses.action_not_allowed);
-            }
         }
+
+        throw new Error(responses.action_not_allowed);
     }
 
     return course;
@@ -163,12 +158,7 @@ export const getCourse = async (
     }
 
     if (ctx.user && !asGuest) {
-        const isOwner =
-            checkPermission(ctx.user.permissions, [
-                permissions.manageAnyCourse,
-            ]) || checkOwnershipWithoutModel(course, ctx);
-
-        if (isOwner) {
+        if (canManageCourseInContext(course, ctx)) {
             return await formatCourse(course.courseId, ctx, true);
         }
     }
@@ -462,7 +452,7 @@ export const getCoursesAsAdmin = async ({
         sales: (
             await getActivities({
                 entityId: course.courseId,
-                type: ActivityType.PURCHASED,
+                type: Constants.ActivityType.PURCHASED,
                 duration: "lifetime",
                 ctx: context,
             })
@@ -674,7 +664,7 @@ export const getProducts = async ({
                 ? (
                       await getActivities({
                           entityId: course.courseId,
-                          type: ActivityType.PURCHASED,
+                          type: Constants.ActivityType.PURCHASED,
                           duration: "lifetime",
                           ctx,
                       })

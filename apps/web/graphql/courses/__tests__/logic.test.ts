@@ -7,7 +7,13 @@ import PageModel from "@models/Page";
 import constants from "@/config/constants";
 import { responses } from "@/config/strings";
 import { Constants as CommonConstants } from "@courselit/common-models";
-import { getCourse, getMembers, getProducts, updateCourse } from "../logic";
+import {
+    getCourse,
+    getCoursesAsAdmin,
+    getMembers,
+    getProducts,
+    updateCourse,
+} from "../logic";
 import { getLessonOrThrow } from "../../lessons/logic";
 import { deleteMedia, sealMedia } from "@/services/medialit";
 
@@ -356,6 +362,8 @@ describe("updateCourse", () => {
 describe("getCourse", () => {
     let testDomain: any;
     let adminUser: any;
+    let ownerManager: any;
+    let ownerWithoutManagePermission: any;
 
     beforeAll(async () => {
         testDomain = await DomainModel.create({
@@ -371,6 +379,28 @@ describe("getCourse", () => {
             permissions: [constants.permissions.manageAnyCourse],
             active: true,
             unsubscribeToken: getCourseId("unsubscribe-admin"),
+            purchases: [],
+        });
+
+        ownerManager = await UserModel.create({
+            domain: testDomain._id,
+            userId: getCourseId("owner-manager"),
+            email: getCourseEmail("owner-manager"),
+            name: "Owner Manager",
+            permissions: [constants.permissions.manageCourse],
+            active: true,
+            unsubscribeToken: getCourseId("unsubscribe-owner-manager"),
+            purchases: [],
+        });
+
+        ownerWithoutManagePermission = await UserModel.create({
+            domain: testDomain._id,
+            userId: getCourseId("owner-without-manage"),
+            email: getCourseEmail("owner-without-manage"),
+            name: "Owner Without Manage",
+            permissions: [],
+            active: true,
+            unsubscribeToken: getCourseId("unsubscribe-owner-without-manage"),
             purchases: [],
         });
     });
@@ -436,6 +466,56 @@ describe("getCourse", () => {
             groupId2,
             groupId3,
         ]);
+    });
+
+    it("allows course managers to preview unpublished courses", async () => {
+        const course = await CourseModel.create({
+            domain: testDomain._id,
+            courseId: getCourseId("unpublished-course"),
+            title: getCourseId("unpublished-course-title"),
+            creatorId: ownerManager.userId,
+            groups: [],
+            lessons: [],
+            type: "course",
+            privacy: "unlisted",
+            costType: "free",
+            cost: 0,
+            slug: getCourseId("unpublished-course-slug"),
+            published: false,
+        });
+
+        const formattedCourse = await getCourse(course.courseId, {
+            subdomain: testDomain,
+            user: ownerManager,
+            address: "",
+        });
+
+        expect(formattedCourse?.courseId).toBe(course.courseId);
+    });
+
+    it("does not allow course owners without manage permission to preview unpublished courses", async () => {
+        const course = await CourseModel.create({
+            domain: testDomain._id,
+            courseId: getCourseId("unpublished-owner-course"),
+            title: getCourseId("unpublished-owner-course-title"),
+            creatorId: ownerWithoutManagePermission.userId,
+            groups: [],
+            lessons: [],
+            type: "course",
+            privacy: "unlisted",
+            costType: "free",
+            cost: 0,
+            slug: getCourseId("unpublished-owner-course-slug"),
+            published: false,
+        });
+
+        const formattedCourse = await getCourse(course.courseId, {
+            subdomain: testDomain,
+            user: ownerWithoutManagePermission,
+            address: "",
+        });
+
+        expect(formattedCourse).toBeNull();
     });
 });
 
@@ -511,6 +591,65 @@ describe("public API product read helpers", () => {
         );
 
         paginatedFind.mockRestore();
+    });
+
+    it("returns owned dashboard products for course:manage users", async () => {
+        const courseManageUser = await UserModel.create({
+            domain: testDomain._id,
+            userId: helperId("dashboard-manage-user"),
+            email: `${helperId("dashboard-manage")}@example.com`,
+            name: "Dashboard Course Manager",
+            permissions: [constants.permissions.manageCourse],
+            active: true,
+            unsubscribeToken: helperId("unsubscribe-dashboard-manage"),
+            purchases: [],
+        });
+
+        const ownedCourse = await CourseModel.create({
+            domain: testDomain._id,
+            courseId: helperId("dashboard-owned-course"),
+            title: "Dashboard Owned Course",
+            creatorId: courseManageUser.userId,
+            groups: [],
+            lessons: [],
+            type: constants.course,
+            privacy: "unlisted",
+            costType: "free",
+            cost: 0,
+            slug: helperId("dashboard-owned-course-slug"),
+        });
+
+        const otherCourse = await CourseModel.create({
+            domain: testDomain._id,
+            courseId: helperId("dashboard-other-course"),
+            title: "Dashboard Other Course",
+            creatorId: adminUser.userId,
+            groups: [],
+            lessons: [],
+            type: constants.course,
+            privacy: "unlisted",
+            costType: "free",
+            cost: 0,
+            slug: helperId("dashboard-other-course-slug"),
+        });
+
+        const products = await Promise.all(
+            await getCoursesAsAdmin({
+                offset: 1,
+                context: {
+                    subdomain: testDomain,
+                    user: courseManageUser,
+                    address: "",
+                },
+            }),
+        );
+
+        expect(products.map((product) => product.courseId)).toContain(
+            ownedCourse.courseId,
+        );
+        expect(products.map((product) => product.courseId)).not.toContain(
+            otherCourse.courseId,
+        );
     });
 
     it("rejects course-scoped lesson reads when the lesson belongs to another product", async () => {
