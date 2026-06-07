@@ -248,12 +248,15 @@ export function AppSidebar({
                                                                 }
                                                                 className="text-foreground"
                                                             >
-                                                                <span>
+                                                                <span className="flex items-center gap-2 w-full">
+                                                                    {
+                                                                        item.leadingIcon
+                                                                    }
                                                                     <Link
                                                                         href={
                                                                             item.href
                                                                         }
-                                                                        className="w-full"
+                                                                        className="flex-1"
                                                                     >
                                                                         <TooltipProvider
                                                                             delayDuration={
@@ -336,6 +339,7 @@ interface SidebarItem {
         title: string;
         href: string;
         icon?: ReactNode;
+        leadingIcon?: ReactNode;
         isActive?: boolean;
     }[];
 }

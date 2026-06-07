@@ -71,7 +71,11 @@ export const appendCourseViewerSessionParamsToHref = (
     href: string,
     params?: CourseViewerSessionParams,
 ) => {
-    if (!params?.preview && !isSafeCourseViewerReturnPath(params?.returnTo)) {
+    if (!params) {
+        return href;
+    }
+
+    if (!params.preview && !isSafeCourseViewerReturnPath(params.returnTo)) {
         return href;
     }
 
