@@ -95,8 +95,6 @@ export const LessonViewer = ({
     const { toast } = useToast();
     const { theme } = useContext(ThemeContext);
 
-    const isDiscussionOpen = searchParams?.get("discussion") === "open";
-
     const isCompleted =
         lesson && profile && profile.purchases
             ? isLessonCompleted({
@@ -221,355 +219,297 @@ export const LessonViewer = ({
     }
 
     return (
-        <div
-            className={`flex w-full text-foreground min-w-0 justify-center ${
-                isDiscussionOpen
-                    ? "h-[calc(100vh-4rem)]"
-                    : "min-h-[calc(100vh-4rem)]"
-            }`}
-        >
-            <div
-                className={`w-full relative flex flex-col ${
-                    isDiscussionOpen ? "h-full" : "min-h-[calc(100vh-4rem)]"
-                }`}
-            >
-                <div
-                    className={`flex-grow min-w-0 flex flex-col justify-between ${
-                        isDiscussionOpen
-                            ? "overflow-y-auto max-h-[calc(100vh-4rem)]"
-                            : ""
-                    }`}
-                >
-                    <div className="w-full lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
-                        <article className="flex flex-col pb-[100px] w-full px-4 pt-4">
-                            {!lesson && !error && (
-                                <div className="flex flex-col">
-                                    <Skeleton className="h-12 w-full mb-8" />
-                                    <Skeleton className="h-4 w-full mb-2" />
-                                    <Skeleton className="h-4 w-full mb-2" />
-                                    <Skeleton className="h-4 w-full mb-2" />
-                                    <Skeleton className="h-4 w-full mb-2" />
-                                    <Skeleton className="h-4 w-8 mb-2" />
-                                </div>
-                            )}
-                            {error && (
-                                <div className="flex flex-col ">
-                                    <header className="mb-8">
-                                        <Header1 theme={theme.theme}>
-                                            {NOT_ENROLLED_HEADER}
-                                        </Header1>
-                                    </header>
-                                    <Text1 theme={theme.theme} className="mb-4">
-                                        {error}.
-                                    </Text1>
-                                    {error ===
-                                        "You are not enrolled in the course" && (
-                                        <Link
-                                            href={`/checkout?type=${Constants.MembershipEntityType.COURSE}&id=${productId}`}
-                                        >
-                                            <Button theme={theme.theme}>
-                                                {ENROLL_BUTTON_TEXT}
-                                            </Button>
-                                        </Link>
-                                    )}
-                                </div>
-                            )}
-                            {lesson && !error && (
-                                <>
-                                    <header className="mb-8 flex flex-col gap-1">
-                                        {courseTitle && (
-                                            <NextLink
-                                                href={appendCourseViewerSessionParamsToHref(
-                                                    `/course/${slug}/${productId}`,
-                                                    viewerSessionParams,
-                                                )}
-                                                className="flex items-center gap-2 text-sm text-muted-foreground font-semibold hover:text-foreground transition-colors w-fit mb-1"
-                                            >
-                                                <BookOpen className="h-4 w-4 shrink-0" />
-                                                <span>{courseTitle}</span>
-                                            </NextLink>
-                                        )}
-                                        <Header1 theme={theme.theme}>
-                                            {lesson.title}
-                                        </Header1>
-                                    </header>
-                                    {String.prototype.toUpperCase.call(
-                                        LESSON_TYPE_VIDEO,
-                                    ) === lesson.type && (
-                                        <div>
-                                            <video
-                                                controls
-                                                controlsList="nodownload"
-                                                onContextMenu={(e) =>
-                                                    e.preventDefault()
-                                                }
-                                                key={lesson.lessonId}
-                                                className="w-full rounded mb-2"
-                                            >
-                                                <source
-                                                    src={
-                                                        lesson.media &&
-                                                        (lesson.media
-                                                            .file as string)
-                                                    }
-                                                    type="video/mp4"
-                                                />
-                                                Your browser does not support
-                                                the video tag.
-                                            </video>
-                                            <Caption
-                                                text={
-                                                    lesson.media?.caption ??
-                                                    lesson.media
-                                                        ?.originalFileName ??
-                                                    ""
-                                                }
-                                            />
-                                        </div>
-                                    )}
-                                    {String.prototype.toUpperCase.call(
-                                        LESSON_TYPE_AUDIO,
-                                    ) === lesson.type && (
-                                        <div>
-                                            <audio
-                                                controls
-                                                controlsList="nodownload"
-                                                onContextMenu={(e) =>
-                                                    e.preventDefault()
-                                                }
-                                            >
-                                                <source
-                                                    src={
-                                                        lesson.media &&
-                                                        (lesson.media
-                                                            .file as string)
-                                                    }
-                                                    type="audio/mpeg"
-                                                />
-                                                Your browser does not support
-                                                the video tag.
-                                            </audio>
-                                            <Caption
-                                                text={
-                                                    lesson.media?.caption ??
-                                                    lesson.media
-                                                        ?.originalFileName ??
-                                                    ""
-                                                }
-                                            />
-                                        </div>
-                                    )}
-                                    {String.prototype.toUpperCase.call(
-                                        LESSON_TYPE_PDF,
-                                    ) === lesson.type && (
-                                        <div>
-                                            <iframe
-                                                frameBorder="0"
-                                                width="100%"
-                                                height="500"
-                                                src={`${
-                                                    lesson.media &&
-                                                    lesson.media.file
-                                                }#view=fit`}
-                                            ></iframe>
-                                            <Caption
-                                                text={
-                                                    lesson.media?.caption ??
-                                                    lesson.media
-                                                        ?.originalFileName ??
-                                                    ""
-                                                }
-                                            />
-                                        </div>
-                                    )}
-                                    {String.prototype.toUpperCase.call(
-                                        LESSON_TYPE_TEXT,
-                                    ) === lesson.type &&
-                                        lesson.content && (
-                                            <WidgetErrorBoundary widgetName="text-editor">
-                                                <TextRenderer
-                                                    json={
-                                                        lesson.content as TextEditorContent
-                                                    }
-                                                    theme={theme.theme}
-                                                />
-                                            </WidgetErrorBoundary>
-                                        )}
-                                    {String.prototype.toUpperCase.call(
-                                        LESSON_TYPE_EMBED,
-                                    ) === lesson.type &&
-                                        lesson.content && (
-                                            <LessonEmbedViewer
-                                                content={
-                                                    lesson.content as {
-                                                        value: string;
-                                                    }
-                                                }
-                                            />
-                                        )}
-                                    {String.prototype.toUpperCase.call(
-                                        LESSON_TYPE_QUIZ,
-                                    ) === lesson.type &&
-                                        lesson.content && (
-                                            <QuizViewer
-                                                lessonId={lesson.lessonId}
-                                                content={lesson.content as Quiz}
-                                                address={address}
-                                            />
-                                        )}
-                                    {String.prototype.toUpperCase.call(
-                                        LESSON_TYPE_FILE,
-                                    ) === lesson.type &&
-                                        lesson.media?.file && (
-                                            <div>
-                                                <Link href={lesson.media.file}>
-                                                    <Button
-                                                        theme={theme.theme}
-                                                        className="flex gap-1 items-center"
-                                                    >
-                                                        <ArrowDownward />
-                                                        {
-                                                            lesson.media
-                                                                ?.originalFileName
-                                                        }
-                                                    </Button>
-                                                </Link>
-                                            </div>
-                                        )}
-                                    {String.prototype.toUpperCase.call(
-                                        LESSON_TYPE_SCORM,
-                                    ) === lesson.type &&
-                                        lesson.content && (
-                                            <ScormViewer
-                                                lessonId={lesson.lessonId}
-                                                launchUrl={
-                                                    (
-                                                        lesson.content as unknown as {
-                                                            launchUrl: string;
-                                                        }
-                                                    ).launchUrl
-                                                }
-                                            />
-                                        )}
-                                    {isEnrolled(lesson.courseId, profile) &&
-                                        !isPreview && (
-                                            <div className="mt-8 flex flex-col gap-4">
-                                                <div className="flex justify-start">
-                                                    {isCompleted ? (
-                                                        <Button
-                                                            theme={theme.theme}
-                                                            disabled
-                                                            className="flex gap-1.5 items-center"
-                                                        >
-                                                            <Check className="h-4 w-4 text-current" />
-                                                            {
-                                                                COURSE_PROGRESS_COMPLETED
-                                                            }
-                                                        </Button>
-                                                    ) : (
-                                                        <Button
-                                                            theme={theme.theme}
-                                                            onClick={
-                                                                markAsCompleted
-                                                            }
-                                                            disabled={loading}
-                                                            className="flex gap-1.5 items-center"
-                                                        >
-                                                            {
-                                                                COURSE_PROGRESS_MARK_COMPLETED
-                                                            }
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-                                </>
-                            )}
-                            {lesson &&
-                                (isEnrolled(lesson.courseId, profile) ||
-                                    isPreview) && (
-                                    <div className="sticky bottom-6 z-20 pointer-events-none w-full flex justify-end pointer-events-auto mt-auto pb-6 pr-6">
-                                        <div className="flex gap-2">
-                                            {lesson.prevLesson ? (
-                                                <Link
-                                                    href={appendCourseViewerSessionParamsToHref(
-                                                        `${path}/${slug}/${lesson.courseId}/${lesson.prevLesson}`,
-                                                        viewerSessionParams,
-                                                    )}
-                                                >
-                                                    <Button
-                                                        theme={theme.theme}
-                                                        variant="secondary"
-                                                        size="icon"
-                                                        disabled={loading}
-                                                        aria-label={
-                                                            COURSE_PROGRESS_PREV
-                                                        }
-                                                    >
-                                                        <ArrowLeft className="h-4 w-4" />
-                                                    </Button>
-                                                </Link>
-                                            ) : (
-                                                <Link
-                                                    href={appendCourseViewerSessionParamsToHref(
-                                                        `${path}/${slug}/${lesson.courseId}`,
-                                                        viewerSessionParams,
-                                                    )}
-                                                >
-                                                    <Button
-                                                        theme={theme.theme}
-                                                        variant="secondary"
-                                                        size="icon"
-                                                        disabled={loading}
-                                                        aria-label={
-                                                            COURSE_PROGRESS_INTRO
-                                                        }
-                                                    >
-                                                        <ArrowLeft className="h-4 w-4" />
-                                                    </Button>
-                                                </Link>
-                                            )}
-                                            {lesson.nextLesson ? (
-                                                <Link
-                                                    href={appendCourseViewerSessionParamsToHref(
-                                                        `${path}/${slug}/${lesson.courseId}/${lesson.nextLesson}`,
-                                                        viewerSessionParams,
-                                                    )}
-                                                >
-                                                    <Button
-                                                        theme={theme.theme}
-                                                        variant="secondary"
-                                                        size="icon"
-                                                        disabled={loading}
-                                                        aria-label={
-                                                            COURSE_PROGRESS_NEXT
-                                                        }
-                                                    >
-                                                        <ArrowRight className="h-4 w-4" />
-                                                    </Button>
-                                                </Link>
-                                            ) : (
-                                                <Link href={exitPath}>
-                                                    <Button
-                                                        theme={theme.theme}
-                                                        variant="secondary"
-                                                        size="icon"
-                                                        disabled={loading}
-                                                        aria-label={
-                                                            COURSE_PROGRESS_FINISH
-                                                        }
-                                                    >
-                                                        <ArrowRight className="h-4 w-4" />
-                                                    </Button>
-                                                </Link>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                        </article>
+        <div className="text-foreground">
+            <article className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto w-full px-4 pt-4">
+                {!lesson && !error && (
+                    <div className="flex flex-col">
+                        <Skeleton className="h-12 w-full mb-8" />
+                        <Skeleton className="h-4 w-full mb-2" />
+                        <Skeleton className="h-4 w-full mb-2" />
+                        <Skeleton className="h-4 w-full mb-2" />
+                        <Skeleton className="h-4 w-full mb-2" />
+                        <Skeleton className="h-4 w-8 mb-2" />
                     </div>
-                </div>
-            </div>
+                )}
+                {error && (
+                    <div className="flex flex-col ">
+                        <header className="mb-8">
+                            <Header1 theme={theme.theme}>
+                                {NOT_ENROLLED_HEADER}
+                            </Header1>
+                        </header>
+                        <Text1 theme={theme.theme} className="mb-4">
+                            {error}.
+                        </Text1>
+                        {error === "You are not enrolled in the course" && (
+                            <Link
+                                href={`/checkout?type=${Constants.MembershipEntityType.COURSE}&id=${productId}`}
+                            >
+                                <Button theme={theme.theme}>
+                                    {ENROLL_BUTTON_TEXT}
+                                </Button>
+                            </Link>
+                        )}
+                    </div>
+                )}
+                {lesson && !error && (
+                    <>
+                        <header className="mb-8 flex flex-col gap-1">
+                            {courseTitle && (
+                                <NextLink
+                                    href={appendCourseViewerSessionParamsToHref(
+                                        `/course/${slug}/${productId}`,
+                                        viewerSessionParams,
+                                    )}
+                                    className="flex items-center gap-2 text-sm text-muted-foreground font-semibold hover:text-foreground transition-colors w-fit mb-1"
+                                >
+                                    <BookOpen className="h-4 w-4 shrink-0" />
+                                    <span>{courseTitle}</span>
+                                </NextLink>
+                            )}
+                            <Header1 theme={theme.theme}>
+                                {lesson.title}
+                            </Header1>
+                        </header>
+                        {String.prototype.toUpperCase.call(
+                            LESSON_TYPE_VIDEO,
+                        ) === lesson.type && (
+                            <div>
+                                <video
+                                    controls
+                                    controlsList="nodownload"
+                                    onContextMenu={(e) => e.preventDefault()}
+                                    key={lesson.lessonId}
+                                    className="w-full rounded mb-2"
+                                >
+                                    <source
+                                        src={
+                                            lesson.media &&
+                                            (lesson.media.file as string)
+                                        }
+                                        type="video/mp4"
+                                    />
+                                    Your browser does not support the video tag.
+                                </video>
+                                <Caption
+                                    text={
+                                        lesson.media?.caption ??
+                                        lesson.media?.originalFileName ??
+                                        ""
+                                    }
+                                />
+                            </div>
+                        )}
+                        {String.prototype.toUpperCase.call(
+                            LESSON_TYPE_AUDIO,
+                        ) === lesson.type && (
+                            <div>
+                                <audio
+                                    controls
+                                    controlsList="nodownload"
+                                    onContextMenu={(e) => e.preventDefault()}
+                                >
+                                    <source
+                                        src={
+                                            lesson.media &&
+                                            (lesson.media.file as string)
+                                        }
+                                        type="audio/mpeg"
+                                    />
+                                    Your browser does not support the video tag.
+                                </audio>
+                                <Caption
+                                    text={
+                                        lesson.media?.caption ??
+                                        lesson.media?.originalFileName ??
+                                        ""
+                                    }
+                                />
+                            </div>
+                        )}
+                        {String.prototype.toUpperCase.call(LESSON_TYPE_PDF) ===
+                            lesson.type && (
+                            <div>
+                                <iframe
+                                    frameBorder="0"
+                                    width="100%"
+                                    height="500"
+                                    src={`${
+                                        lesson.media && lesson.media.file
+                                    }#view=fit`}
+                                ></iframe>
+                                <Caption
+                                    text={
+                                        lesson.media?.caption ??
+                                        lesson.media?.originalFileName ??
+                                        ""
+                                    }
+                                />
+                            </div>
+                        )}
+                        {String.prototype.toUpperCase.call(LESSON_TYPE_TEXT) ===
+                            lesson.type &&
+                            lesson.content && (
+                                <WidgetErrorBoundary widgetName="text-editor">
+                                    <TextRenderer
+                                        json={
+                                            lesson.content as TextEditorContent
+                                        }
+                                        theme={theme.theme}
+                                    />
+                                </WidgetErrorBoundary>
+                            )}
+                        {String.prototype.toUpperCase.call(
+                            LESSON_TYPE_EMBED,
+                        ) === lesson.type &&
+                            lesson.content && (
+                                <LessonEmbedViewer
+                                    content={
+                                        lesson.content as {
+                                            value: string;
+                                        }
+                                    }
+                                />
+                            )}
+                        {String.prototype.toUpperCase.call(LESSON_TYPE_QUIZ) ===
+                            lesson.type &&
+                            lesson.content && (
+                                <QuizViewer
+                                    lessonId={lesson.lessonId}
+                                    content={lesson.content as Quiz}
+                                    address={address}
+                                />
+                            )}
+                        {String.prototype.toUpperCase.call(LESSON_TYPE_FILE) ===
+                            lesson.type &&
+                            lesson.media?.file && (
+                                <div>
+                                    <Link href={lesson.media.file}>
+                                        <Button
+                                            theme={theme.theme}
+                                            className="flex gap-1 items-center"
+                                        >
+                                            <ArrowDownward />
+                                            {lesson.media?.originalFileName}
+                                        </Button>
+                                    </Link>
+                                </div>
+                            )}
+                        {String.prototype.toUpperCase.call(
+                            LESSON_TYPE_SCORM,
+                        ) === lesson.type &&
+                            lesson.content && (
+                                <ScormViewer
+                                    lessonId={lesson.lessonId}
+                                    launchUrl={
+                                        (
+                                            lesson.content as unknown as {
+                                                launchUrl: string;
+                                            }
+                                        ).launchUrl
+                                    }
+                                />
+                            )}
+                        {isEnrolled(lesson.courseId, profile) && !isPreview && (
+                            <div className="mt-8 flex flex-col gap-4">
+                                <div className="flex justify-start">
+                                    {isCompleted ? (
+                                        <Button
+                                            theme={theme.theme}
+                                            disabled
+                                            className="flex gap-1.5 items-center"
+                                        >
+                                            <Check className="h-4 w-4 text-current" />
+                                            {COURSE_PROGRESS_COMPLETED}
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            theme={theme.theme}
+                                            onClick={markAsCompleted}
+                                            disabled={loading}
+                                            className="flex gap-1.5 items-center"
+                                        >
+                                            {COURSE_PROGRESS_MARK_COMPLETED}
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+                {lesson &&
+                    (isEnrolled(lesson.courseId, profile) || isPreview) && (
+                        <div className="sticky bottom-6 z-20 pointer-events-none w-full flex justify-end pointer-events-auto mt-auto pb-6 pr-6">
+                            <div className="flex gap-2">
+                                {lesson.prevLesson ? (
+                                    <Link
+                                        href={appendCourseViewerSessionParamsToHref(
+                                            `${path}/${slug}/${lesson.courseId}/${lesson.prevLesson}`,
+                                            viewerSessionParams,
+                                        )}
+                                    >
+                                        <Button
+                                            theme={theme.theme}
+                                            variant="secondary"
+                                            size="icon"
+                                            disabled={loading}
+                                            aria-label={COURSE_PROGRESS_PREV}
+                                        >
+                                            <ArrowLeft className="h-4 w-4" />
+                                        </Button>
+                                    </Link>
+                                ) : (
+                                    <Link
+                                        href={appendCourseViewerSessionParamsToHref(
+                                            `${path}/${slug}/${lesson.courseId}`,
+                                            viewerSessionParams,
+                                        )}
+                                    >
+                                        <Button
+                                            theme={theme.theme}
+                                            variant="secondary"
+                                            size="icon"
+                                            disabled={loading}
+                                            aria-label={COURSE_PROGRESS_INTRO}
+                                        >
+                                            <ArrowLeft className="h-4 w-4" />
+                                        </Button>
+                                    </Link>
+                                )}
+                                {lesson.nextLesson ? (
+                                    <Link
+                                        href={appendCourseViewerSessionParamsToHref(
+                                            `${path}/${slug}/${lesson.courseId}/${lesson.nextLesson}`,
+                                            viewerSessionParams,
+                                        )}
+                                    >
+                                        <Button
+                                            theme={theme.theme}
+                                            variant="secondary"
+                                            size="icon"
+                                            disabled={loading}
+                                            aria-label={COURSE_PROGRESS_NEXT}
+                                        >
+                                            <ArrowRight className="h-4 w-4" />
+                                        </Button>
+                                    </Link>
+                                ) : (
+                                    <Link href={exitPath}>
+                                        <Button
+                                            theme={theme.theme}
+                                            variant="secondary"
+                                            size="icon"
+                                            disabled={loading}
+                                            aria-label={COURSE_PROGRESS_FINISH}
+                                        >
+                                            <ArrowRight className="h-4 w-4" />
+                                        </Button>
+                                    </Link>
+                                )}
+                            </div>
+                        </div>
+                    )}
+            </article>
         </div>
     );
 };
