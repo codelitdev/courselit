@@ -47,10 +47,14 @@ import {
     PREVIEW_COURSE_MENU_ITEM,
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
-import { AddressContext, SiteInfoContext } from "@components/contexts";
-import useProduct from "../../../../../../hooks/use-product";
+import {
+    AddressContext,
+    SiteInfoContext,
+    ProfileContext,
+} from "@components/contexts";
+import useProduct from "@/hooks/use-product";
 import { formatDistanceToNow } from "date-fns";
-import { capitalize } from "@courselit/utils";
+import { capitalize, checkPermission } from "@courselit/utils";
 import { truncate } from "@ui-lib/utils";
 import MetricCard from "./metric-card";
 import { useToast, Tooltip as TooltipCL } from "@courselit/components-library";
@@ -59,6 +63,7 @@ import { Constants, UIConstants } from "@courselit/common-models";
 import Resources from "@components/resources";
 import { TIME_RANGES } from "@ui-config/constants";
 import SalesCard from "../../overview/sales-card";
+import { appendCourseViewerSessionParamsToHref } from "@/lib/course-viewer-session-params";
 const { permissions } = UIConstants;
 
 const { ActivityType } = Constants;
@@ -69,6 +74,7 @@ export default function DashboardPage() {
     const [timeRange, setTimeRange] = useState("7d");
     // const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const address = useContext(AddressContext);
+    const { profile } = useContext(ProfileContext);
     const { product, loaded: productLoaded } = useProduct(productId);
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
@@ -215,7 +221,13 @@ export default function DashboardPage() {
                                     Constants.CourseType.COURSE && (
                                     <DropdownMenuItem asChild>
                                         <Link
-                                            href={`/course/${product.slug}/${product.courseId}`}
+                                            href={appendCourseViewerSessionParamsToHref(
+                                                `/course/${product.slug}/${product.courseId}`,
+                                                {
+                                                    preview: true,
+                                                    returnTo: `/dashboard/product/${productId}`,
+                                                },
+                                            )}
                                         >
                                             <BookOpen className="mr-2 h-4 w-4" />
                                             {PREVIEW_COURSE_MENU_ITEM}
@@ -242,14 +254,19 @@ export default function DashboardPage() {
                                         {EDIT_CONTENT_MENU_ITEM}
                                     </Link>
                                 </DropdownMenuItem> */}
-                                <DropdownMenuItem asChild>
-                                    <Link
-                                        href={`/dashboard/page/${product?.pageId}?redirectTo=/dashboard/product/${product?.courseId}`}
-                                    >
-                                        <Globe className="mr-2 h-4 w-4" />
-                                        {EDIT_PAGE_MENU_ITEM}
-                                    </Link>
-                                </DropdownMenuItem>
+                                {profile &&
+                                    checkPermission(profile.permissions!, [
+                                        permissions.manageSite,
+                                    ]) && (
+                                        <DropdownMenuItem asChild>
+                                            <Link
+                                                href={`/dashboard/page/${product?.pageId}?redirectTo=/dashboard/product/${product?.courseId}`}
+                                            >
+                                                <Globe className="mr-2 h-4 w-4" />
+                                                {EDIT_PAGE_MENU_ITEM}
+                                            </Link>
+                                        </DropdownMenuItem>
+                                    )}
                                 <DropdownMenuItem asChild>
                                     <Link
                                         href={`/dashboard/product/${productId}/manage`}

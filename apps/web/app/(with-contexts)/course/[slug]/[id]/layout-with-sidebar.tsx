@@ -10,6 +10,7 @@ import {
 import { CheckCircled, Circle, Lock } from "@courselit/icons";
 import {
     BTN_EXIT_COURSE_TOOLTIP,
+    PREVIEW_COURSE_MENU_ITEM,
     SIDEBAR_TEXT_COURSE_ABOUT,
 } from "@ui-config/strings";
 import { Profile, Constants } from "@courselit/common-models";
@@ -35,7 +36,7 @@ import {
 } from "@components/ui/sidebar";
 import { Image } from "@courselit/components-library";
 import Link from "next/link";
-import { checkPermission, truncate } from "@courselit/utils";
+import { truncate } from "@courselit/utils";
 import { Button } from "@components/ui/button";
 import { BookOpen, ChevronRight, Clock, LogOutIcon } from "lucide-react";
 import {
@@ -49,9 +50,15 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@components/ui/collapsible";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Caption } from "@courselit/page-primitives";
 import NextThemeSwitcher from "@components/admin/next-theme-switcher";
+import {
+    appendCourseViewerSessionParamsToHref,
+    getCourseViewerSessionParams,
+    getCourseViewerReturnPath,
+} from "@/lib/course-viewer-session-params";
+import { Badge } from "@/components/ui/badge";
 
 export default function ProductPage({
     product,
@@ -61,6 +68,9 @@ export default function ProductPage({
     children: React.ReactNode;
 }) {
     const { profile } = useContext(ProfileContext);
+    const searchParams = useSearchParams();
+    const viewerSessionParams = getCourseViewerSessionParams(searchParams);
+    const exitPath = getCourseViewerReturnPath(viewerSessionParams.returnTo);
 
     if (!profile) {
         return null;
@@ -76,16 +86,25 @@ export default function ProductPage({
             }
             className="courselit-theme"
         >
-            <AppSidebar course={product} profile={profile} />
+            <AppSidebar
+                course={product}
+                profile={profile}
+                viewerSessionParams={viewerSessionParams}
+            />
             <SidebarInset>
                 <header className="flex h-16 shrink-0 items-center gap-2 px-4 justify-between text-foreground">
                     <SidebarTrigger className="-ml-1" />
                     <div className="flex items-center gap-2">
+                        {product.isPreview && (
+                            <Badge variant="secondary">
+                                {PREVIEW_COURSE_MENU_ITEM}
+                            </Badge>
+                        )}
                         <NextThemeSwitcher variant="ghost" />
                         <Tooltip>
                             <TooltipTrigger>
                                 <Button variant="ghost" size="icon" asChild>
-                                    <Link href="/dashboard/my-content">
+                                    <Link href={exitPath}>
                                         <LogOutIcon />
                                     </Link>
                                 </Button>
@@ -105,10 +124,12 @@ export default function ProductPage({
 export function AppSidebar({
     course,
     profile,
+    viewerSessionParams,
     ...rest
 }: {
     course: CourseFrontend;
     profile: Partial<Profile>;
+    viewerSessionParams?: ReturnType<typeof getCourseViewerSessionParams>;
 } & React.ComponentProps<typeof Sidebar>) {
     const siteinfo = useContext(SiteInfoContext);
     const pathname = usePathname();
@@ -116,6 +137,7 @@ export function AppSidebar({
         course,
         profile as Profile,
         pathname,
+        viewerSessionParams,
     );
     const { theme } = useContext(ThemeContext);
 
@@ -318,41 +340,22 @@ interface SidebarItem {
     }[];
 }
 
-function canManageCourseFromProfile(course: CourseFrontend, profile: Profile) {
-    if (!profile?.userId) {
-        return false;
-    }
-
-    if (
-        checkPermission(profile.permissions ?? [], [
-            constants.permissions.manageAnyCourse,
-        ])
-    ) {
-        return true;
-    }
-
-    return (
-        course.creatorId === profile.userId &&
-        checkPermission(profile.permissions ?? [], [
-            constants.permissions.manageCourse,
-        ])
-    );
-}
-
 export function generateSideBarItems(
     course: CourseFrontend,
     profile: Profile,
     pathname: string,
+    viewerSessionParams?: ReturnType<typeof getCourseViewerSessionParams>,
 ): SidebarItem[] {
     if (!course) return [];
 
-    const isManager =
-        Boolean(course.isManager) ||
-        canManageCourseFromProfile(course, profile);
+    const isPreview = Boolean(course.isPreview);
     const items: SidebarItem[] = [
         {
             title: SIDEBAR_TEXT_COURSE_ABOUT,
-            href: `/course/${course.slug}/${course.courseId}`,
+            href: appendCourseViewerSessionParamsToHref(
+                `/course/${course.slug}/${course.courseId}`,
+                viewerSessionParams,
+            ),
             isActive: pathname === `/course/${course.slug}/${course.courseId}`,
         },
     ];
@@ -372,7 +375,7 @@ export function generateSideBarItems(
                 group,
                 profile,
                 lastGroupDripDateInMillis,
-                isManager,
+                isPreview,
             }),
             items: [],
         };
@@ -385,7 +388,7 @@ export function generateSideBarItems(
                 groupItem.isActive = true;
             }
             let lessonStatusIcon: ReactNode;
-            if (!isManager) {
+            if (!isPreview) {
                 if (!profile?.userId) {
                     lessonStatusIcon = lesson.requiresEnrollment ? (
                         <Lock />
@@ -408,7 +411,10 @@ export function generateSideBarItems(
             }
             groupItem.items!.push({
                 title: lesson.title,
-                href: `/course/${course.slug}/${course.courseId}/${lesson.lessonId}`,
+                href: appendCourseViewerSessionParamsToHref(
+                    `/course/${course.slug}/${course.courseId}/${lesson.lessonId}`,
+                    viewerSessionParams,
+                ),
                 isActive,
                 leadingIcon: <BookOpen className="h-4 w-4 shrink-0" />,
                 icon: lessonStatusIcon,
@@ -424,7 +430,7 @@ export function generateSideBarItems(
             group.drip.status &&
             group.drip.type ===
                 Constants.dripType[0].split("-")[0].toUpperCase() &&
-            !isManager &&
+            !isPreview &&
             !isGroupAccessibleToUser(course, profile as Profile, group)
         ) {
             lastGroupDripDateInMillis += group?.drip?.delayInMillis ?? 0;
@@ -439,15 +445,15 @@ function getDripLabel({
     group,
     profile,
     lastGroupDripDateInMillis,
-    isManager,
+    isPreview,
 }: {
     course: CourseFrontend;
     group: GroupWithLessons;
     profile: Profile;
     lastGroupDripDateInMillis: number;
-    isManager: boolean;
+    isPreview: boolean;
 }): { text: string; description: string } | undefined {
-    if (isManager) {
+    if (isPreview) {
         return undefined;
     }
 

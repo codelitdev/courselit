@@ -25,7 +25,7 @@ export default function useCourse(
         async (courseId: string) => {
             const query = `
             query {
-                course: getCourse(id: "${courseId}") {
+                course: getCourse(id: "${courseId}", preview: true) {
                     title,
                     description,
                     courseId,

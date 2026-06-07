@@ -26,7 +26,6 @@ import { TextRenderer } from "@courselit/page-blocks";
 import {
     Constants,
     TextEditorContent,
-    UIConstants,
     type Address,
     type Lesson,
     type Profile,
@@ -44,9 +43,11 @@ import { Button, Header1, Text1 } from "@courselit/page-primitives";
 import { ThemeContext } from "@components/contexts";
 import NextLink from "next/link";
 import { BookOpen, Check } from "lucide-react";
-import { checkPermission } from "@courselit/utils";
-
-const { permissions } = UIConstants;
+import {
+    appendCourseViewerSessionParamsToHref,
+    getCourseViewerSessionParams,
+    getCourseViewerReturnPath,
+} from "@/lib/course-viewer-session-params";
 
 interface CaptionProps {
     text: string;
@@ -85,24 +86,16 @@ export const LessonViewer = ({
 }: LessonViewerProps) => {
     const [lesson, setLesson] = useState<Lesson>();
     const [courseTitle, setCourseTitle] = useState<string>("");
-    const [courseCreatorId, setCourseCreatorId] = useState<string>("");
-    const [isManager, setIsManager] = useState(false);
+    const [isPreview, setIsPreview] = useState(false);
     const [error, setError] = useState();
     const searchParams = useSearchParams();
+    const viewerSessionParams = getCourseViewerSessionParams(searchParams);
     const [loading, setLoading] = useState(false);
+    const exitPath = getCourseViewerReturnPath(viewerSessionParams.returnTo);
     const { toast } = useToast();
     const { theme } = useContext(ThemeContext);
 
     const isDiscussionOpen = searchParams?.get("discussion") === "open";
-    const canManageCourse =
-        isManager ||
-        checkPermission(profile?.permissions ?? [], [
-            permissions.manageAnyCourse,
-        ]) ||
-        (courseCreatorId === profile?.userId &&
-            checkPermission(profile?.permissions ?? [], [
-                permissions.manageCourse,
-            ]));
 
     const isCompleted =
         lesson && profile && profile.purchases
@@ -119,17 +112,16 @@ export const LessonViewer = ({
         if (lessonId) {
             loadLesson(lessonId);
         }
-    }, [lessonId]);
+    }, [lessonId, viewerSessionParams.preview]);
 
     const loadLesson = async (id: string) => {
         const query = `
-            query {
-                course: getCourse(id: "${productId}") {
+            query ($productId: String!, $lessonId: String!, $preview: Boolean) {
+                course: getCourse(id: $productId, preview: $preview) {
                     title
-                    creatorId
-                    isManager
+                    isPreview
                 }
-                lesson: getLessonDetails(id: "${id}", courseId: "${productId}") {
+                lesson: getLessonDetails(id: $lessonId, courseId: $productId, preview: $preview) {
                     lessonId,
                     title,
                     downloadable,
@@ -150,7 +142,14 @@ export const LessonViewer = ({
 
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
+            .setPayload({
+                query,
+                variables: {
+                    productId,
+                    lessonId: id,
+                    preview: viewerSessionParams.preview,
+                },
+            })
             .setIsGraphQLEndpoint(true)
             .build();
 
@@ -160,8 +159,7 @@ export const LessonViewer = ({
 
             if (response.course) {
                 setCourseTitle(response.course.title || "");
-                setCourseCreatorId(response.course.creatorId || "");
-                setIsManager(Boolean(response.course.isManager));
+                setIsPreview(Boolean(response.course.isPreview));
             }
             if (response.lesson) {
                 setLesson(response.lesson);
@@ -281,7 +279,10 @@ export const LessonViewer = ({
                                     <header className="mb-8 flex flex-col gap-1">
                                         {courseTitle && (
                                             <NextLink
-                                                href={`/course/${slug}/${productId}`}
+                                                href={appendCourseViewerSessionParamsToHref(
+                                                    `/course/${slug}/${productId}`,
+                                                    viewerSessionParams,
+                                                )}
                                                 className="flex items-center gap-2 text-sm text-muted-foreground font-semibold hover:text-foreground transition-colors w-fit mb-1"
                                             >
                                                 <BookOpen className="h-4 w-4 shrink-0" />
@@ -450,47 +451,51 @@ export const LessonViewer = ({
                                                 }
                                             />
                                         )}
-                                    {isEnrolled(lesson.courseId, profile) && (
-                                        <div className="mt-8 flex flex-col gap-4">
-                                            <div className="flex justify-start">
-                                                {isCompleted ? (
-                                                    <Button
-                                                        theme={theme.theme}
-                                                        disabled
-                                                        className="flex gap-1.5 items-center bg-muted text-muted-foreground opacity-75"
-                                                    >
-                                                        <Check className="h-4 w-4" />
-                                                        {
-                                                            COURSE_PROGRESS_COMPLETED
-                                                        }
-                                                    </Button>
-                                                ) : (
-                                                    <Button
-                                                        theme={theme.theme}
-                                                        onClick={
-                                                            markAsCompleted
-                                                        }
-                                                        disabled={loading}
-                                                        className="flex gap-1.5 items-center"
-                                                    >
-                                                        {
-                                                            COURSE_PROGRESS_MARK_COMPLETED
-                                                        }
-                                                    </Button>
-                                                )}
+                                    {isEnrolled(lesson.courseId, profile) &&
+                                        !isPreview && (
+                                            <div className="mt-8 flex flex-col gap-4">
+                                                <div className="flex justify-start">
+                                                    {isCompleted ? (
+                                                        <Button
+                                                            theme={theme.theme}
+                                                            disabled
+                                                            className="flex gap-1.5 items-center"
+                                                        >
+                                                            <Check className="h-4 w-4 text-current" />
+                                                            {
+                                                                COURSE_PROGRESS_COMPLETED
+                                                            }
+                                                        </Button>
+                                                    ) : (
+                                                        <Button
+                                                            theme={theme.theme}
+                                                            onClick={
+                                                                markAsCompleted
+                                                            }
+                                                            disabled={loading}
+                                                            className="flex gap-1.5 items-center"
+                                                        >
+                                                            {
+                                                                COURSE_PROGRESS_MARK_COMPLETED
+                                                            }
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
                                 </>
                             )}
                             {lesson &&
                                 (isEnrolled(lesson.courseId, profile) ||
-                                    canManageCourse) && (
+                                    isPreview) && (
                                     <div className="sticky bottom-6 z-20 pointer-events-none w-full flex justify-end pointer-events-auto mt-auto pb-6 pr-6">
                                         <div className="flex gap-2">
                                             {lesson.prevLesson ? (
                                                 <Link
-                                                    href={`${path}/${slug}/${lesson.courseId}/${lesson.prevLesson}`}
+                                                    href={appendCourseViewerSessionParamsToHref(
+                                                        `${path}/${slug}/${lesson.courseId}/${lesson.prevLesson}`,
+                                                        viewerSessionParams,
+                                                    )}
                                                 >
                                                     <Button
                                                         theme={theme.theme}
@@ -506,7 +511,10 @@ export const LessonViewer = ({
                                                 </Link>
                                             ) : (
                                                 <Link
-                                                    href={`${path}/${slug}/${lesson.courseId}`}
+                                                    href={appendCourseViewerSessionParamsToHref(
+                                                        `${path}/${slug}/${lesson.courseId}`,
+                                                        viewerSessionParams,
+                                                    )}
                                                 >
                                                     <Button
                                                         theme={theme.theme}
@@ -523,7 +531,10 @@ export const LessonViewer = ({
                                             )}
                                             {lesson.nextLesson ? (
                                                 <Link
-                                                    href={`${path}/${slug}/${lesson.courseId}/${lesson.nextLesson}`}
+                                                    href={appendCourseViewerSessionParamsToHref(
+                                                        `${path}/${slug}/${lesson.courseId}/${lesson.nextLesson}`,
+                                                        viewerSessionParams,
+                                                    )}
                                                 >
                                                     <Button
                                                         theme={theme.theme}
@@ -538,9 +549,7 @@ export const LessonViewer = ({
                                                     </Button>
                                                 </Link>
                                             ) : (
-                                                <Link
-                                                    href={`/dashboard/my-content`}
-                                                >
+                                                <Link href={exitPath}>
                                                     <Button
                                                         theme={theme.theme}
                                                         variant="secondary"

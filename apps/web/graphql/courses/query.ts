@@ -44,12 +44,19 @@ export default {
             asGuest: {
                 type: GraphQLBoolean,
             },
+            preview: {
+                type: GraphQLBoolean,
+            },
         },
         resolve: (
             _: any,
-            { id, asGuest }: { id: string; asGuest?: boolean },
+            {
+                id,
+                asGuest,
+                preview,
+            }: { id: string; asGuest?: boolean; preview?: boolean },
             context: GQLContext,
-        ) => getCourse(id, context, asGuest),
+        ) => getCourse(id, context, asGuest, preview),
     },
     getCoursesAsAdmin: {
         type: new GraphQLList(types.adminCourseItemType),

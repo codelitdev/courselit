@@ -9,9 +9,12 @@ import {
     ThemeContext,
     TypefacesContext,
 } from "@components/contexts";
-import { Profile } from "@courselit/common-models";
+import { Profile, UIConstants } from "@courselit/common-models";
 import { useSearchParams } from "next/navigation";
 import { useContext, use } from "react";
+import { checkPermission } from "@courselit/utils";
+
+import PermissionError from "@/components/admin/permission-error";
 
 export default function Page(props: { params: Promise<{ id: string }> }) {
     const params = use(props.params);
@@ -24,6 +27,22 @@ export default function Page(props: { params: Promise<{ id: string }> }) {
     const { profile } = useContext(ProfileContext);
     const config = useContext(ServerConfigContext);
     const { theme } = useContext(ThemeContext);
+
+    if (
+        profile &&
+        profile.permissions &&
+        !checkPermission(profile.permissions, [
+            UIConstants.permissions.manageSite,
+        ])
+    ) {
+        return (
+            <div className="flex h-screen w-screen items-center justify-center bg-background">
+                <PermissionError
+                    missingPermissions={[UIConstants.permissions.manageSite]}
+                />
+            </div>
+        );
+    }
 
     return (
         <PageEditor

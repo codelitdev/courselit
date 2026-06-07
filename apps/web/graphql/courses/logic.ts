@@ -99,6 +99,7 @@ async function formatCourse(
     courseId: string,
     ctx: GQLContext,
     includeUnpublishedLessons: boolean = false,
+    isPreview: boolean = false,
 ) {
     const course: InternalCourse | null = (await CourseModel.findOne({
         courseId,
@@ -139,6 +140,7 @@ async function formatCourse(
         ...course,
         groups: sortedGroups,
         paymentPlans,
+        isPreview,
     };
     return result;
 }
@@ -147,6 +149,7 @@ export const getCourse = async (
     id: string,
     ctx: GQLContext,
     asGuest: boolean = false,
+    preview: boolean = false,
 ) => {
     const course: InternalCourse | null = (await CourseModel.findOne({
         courseId: id,
@@ -157,14 +160,20 @@ export const getCourse = async (
         throw new Error(responses.item_not_found);
     }
 
-    if (ctx.user && !asGuest) {
-        if (canManageCourseInContext(course, ctx)) {
-            return await formatCourse(course.courseId, ctx, true);
-        }
+    const isPreview =
+        !asGuest && preview && canManageCourseInContext(course, ctx);
+
+    if (isPreview) {
+        return await formatCourse(course.courseId, ctx, true, true);
     }
 
     if (course.published) {
-        const formattedCourse = await formatCourse(course.courseId, ctx);
+        const formattedCourse = await formatCourse(
+            course.courseId,
+            ctx,
+            false,
+            false,
+        );
         return asGuest
             ? { ...formattedCourse, __forcePublishedLessons: true }
             : formattedCourse;

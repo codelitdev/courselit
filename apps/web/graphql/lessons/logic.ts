@@ -108,6 +108,7 @@ export const getLessonDetails = async (
     id: string,
     ctx: GQLContext,
     courseId?: string,
+    preview: boolean = false,
 ) => {
     const query: any = {
         lessonId: id,
@@ -122,14 +123,14 @@ export const getLessonDetails = async (
         throw new Error(responses.item_not_found);
     }
 
-    const canManageCourse = await canManageLessonCourse(lesson, ctx);
+    const isPreview = preview && (await canManageLessonCourse(lesson, ctx));
 
-    if (!lesson.published && !canManageCourse) {
+    if (!lesson.published && !isPreview) {
         throw new Error(responses.item_not_found);
     }
 
     if (
-        !canManageCourse &&
+        !isPreview &&
         lesson.requiresEnrollment &&
         (!ctx.user ||
             !ctx.user.purchases.some(
@@ -139,10 +140,7 @@ export const getLessonDetails = async (
         throw new Error(responses.not_enrolled);
     }
 
-    if (
-        !canManageCourse &&
-        (await isPartOfDripGroup(lesson, ctx.subdomain._id))
-    ) {
+    if (!isPreview && (await isPartOfDripGroup(lesson, ctx.subdomain._id))) {
         if (!ctx.user) {
             throw new Error(responses.drip_not_released);
         }
@@ -162,7 +160,7 @@ export const getLessonDetails = async (
         lesson.courseId,
         ctx.subdomain._id,
         lesson.lessonId,
-        !canManageCourse,
+        !isPreview,
     );
     lesson.prevLesson = prevLesson;
     lesson.nextLesson = nextLesson;

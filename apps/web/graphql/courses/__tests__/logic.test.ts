@@ -1,6 +1,7 @@
 import DomainModel from "@models/Domain";
 import UserModel from "@models/User";
 import CourseModel from "@models/Course";
+import ActivityModel from "@models/Activity";
 import LessonModel from "@models/Lesson";
 import MembershipModel from "@models/Membership";
 import PageModel from "@models/Page";
@@ -14,6 +15,7 @@ import {
     getProducts,
     updateCourse,
 } from "../logic";
+import { getActivities } from "../../activities/logic";
 import { getLessonOrThrow } from "../../lessons/logic";
 import { deleteMedia, sealMedia } from "@/services/medialit";
 
@@ -455,11 +457,16 @@ describe("getCourse", () => {
             slug: getCourseId("course-slug"),
         });
 
-        const formattedCourse = await getCourse(course.courseId, {
-            subdomain: testDomain,
-            user: adminUser,
-            address: "",
-        });
+        const formattedCourse = await getCourse(
+            course.courseId,
+            {
+                subdomain: testDomain,
+                user: adminUser,
+                address: "",
+            },
+            false,
+            true,
+        );
 
         expect(formattedCourse?.groups?.map((group: any) => group.id)).toEqual([
             groupId1,
@@ -468,7 +475,32 @@ describe("getCourse", () => {
         ]);
     });
 
-    it("allows course managers to preview unpublished courses", async () => {
+    it("does not allow course managers to preview unpublished courses without preview mode", async () => {
+        const course = await CourseModel.create({
+            domain: testDomain._id,
+            courseId: getCourseId("unpublished-course-no-preview"),
+            title: getCourseId("unpublished-course-no-preview-title"),
+            creatorId: ownerManager.userId,
+            groups: [],
+            lessons: [],
+            type: "course",
+            privacy: "unlisted",
+            costType: "free",
+            cost: 0,
+            slug: getCourseId("unpublished-course-no-preview-slug"),
+            published: false,
+        });
+
+        const formattedCourse = await getCourse(course.courseId, {
+            subdomain: testDomain,
+            user: ownerManager,
+            address: "",
+        });
+
+        expect(formattedCourse).toBeNull();
+    });
+
+    it("allows course managers to preview unpublished courses in preview mode", async () => {
         const course = await CourseModel.create({
             domain: testDomain._id,
             courseId: getCourseId("unpublished-course"),
@@ -484,6 +516,37 @@ describe("getCourse", () => {
             published: false,
         });
 
+        const formattedCourse = await getCourse(
+            course.courseId,
+            {
+                subdomain: testDomain,
+                user: ownerManager,
+                address: "",
+            },
+            false,
+            true,
+        );
+
+        expect(formattedCourse?.courseId).toBe(course.courseId);
+        expect((formattedCourse as any)?.isPreview).toBe(true);
+    });
+
+    it("returns non-preview course responses for managers outside preview mode", async () => {
+        const course = await CourseModel.create({
+            domain: testDomain._id,
+            courseId: getCourseId("published-manager-course"),
+            title: getCourseId("published-manager-course-title"),
+            creatorId: ownerManager.userId,
+            groups: [],
+            lessons: [],
+            type: "course",
+            privacy: "unlisted",
+            costType: "free",
+            cost: 0,
+            slug: getCourseId("published-manager-course-slug"),
+            published: true,
+        });
+
         const formattedCourse = await getCourse(course.courseId, {
             subdomain: testDomain,
             user: ownerManager,
@@ -491,6 +554,7 @@ describe("getCourse", () => {
         });
 
         expect(formattedCourse?.courseId).toBe(course.courseId);
+        expect((formattedCourse as any)?.isPreview).toBe(false);
     });
 
     it("does not allow course owners without manage permission to preview unpublished courses", async () => {
@@ -509,11 +573,16 @@ describe("getCourse", () => {
             published: false,
         });
 
-        const formattedCourse = await getCourse(course.courseId, {
-            subdomain: testDomain,
-            user: ownerWithoutManagePermission,
-            address: "",
-        });
+        const formattedCourse = await getCourse(
+            course.courseId,
+            {
+                subdomain: testDomain,
+                user: ownerWithoutManagePermission,
+                address: "",
+            },
+            false,
+            true,
+        );
 
         expect(formattedCourse).toBeNull();
     });
@@ -650,6 +719,106 @@ describe("public API product read helpers", () => {
         expect(products.map((product) => product.courseId)).not.toContain(
             otherCourse.courseId,
         );
+    });
+
+    it("restricts overview metrics to owned products for course:manage users", async () => {
+        const courseManageUser = await UserModel.create({
+            domain: testDomain._id,
+            userId: helperId("manage-user-2"),
+            email: `${helperId("manage2")}@example.com`,
+            name: "Course Manager 2",
+            permissions: [constants.permissions.manageCourse],
+            active: true,
+            unsubscribeToken: helperId("unsubscribe-manage-2"),
+            purchases: [],
+        });
+
+        const course = await CourseModel.create({
+            domain: testDomain._id,
+            courseId: helperId("owned-course"),
+            title: "Owned Course",
+            creatorId: courseManageUser.userId,
+            groups: [],
+            lessons: [],
+            type: constants.course,
+            privacy: "unlisted",
+            costType: "free",
+            cost: 0,
+            slug: helperId("owned-course-slug"),
+        });
+
+        const otherCourse = await CourseModel.create({
+            domain: testDomain._id,
+            courseId: helperId("other-course"),
+            title: "Other Course",
+            creatorId: "another-user-id",
+            groups: [],
+            lessons: [],
+            type: constants.course,
+            privacy: "unlisted",
+            costType: "free",
+            cost: 0,
+            slug: helperId("other-course-slug"),
+        });
+
+        const ctx = {
+            subdomain: testDomain,
+            user: courseManageUser,
+            address: "",
+        };
+
+        await expect(
+            getActivities({
+                ctx,
+                type: CommonConstants.ActivityType.PURCHASED,
+                duration: "lifetime",
+                entityId: course.courseId,
+            }),
+        ).resolves.toBeDefined();
+
+        await expect(
+            getActivities({
+                ctx,
+                type: CommonConstants.ActivityType.PURCHASED,
+                duration: "lifetime",
+                entityId: otherCourse.courseId,
+            }),
+        ).rejects.toThrow(responses.action_not_allowed);
+
+        await ActivityModel.create([
+            {
+                domain: testDomain._id,
+                type: CommonConstants.ActivityType.PURCHASED,
+                entityId: course.courseId,
+                createdAt: new Date(),
+                metadata: { cost: 100 },
+                userId: courseManageUser.userId,
+            },
+            {
+                domain: testDomain._id,
+                type: CommonConstants.ActivityType.PURCHASED,
+                entityId: otherCourse.courseId,
+                createdAt: new Date(),
+                metadata: { cost: 50 },
+                userId: courseManageUser.userId,
+            },
+            {
+                domain: testDomain._id,
+                type: CommonConstants.ActivityType.PURCHASED,
+                entityId: course.courseId,
+                createdAt: new Date(),
+                metadata: { cost: 35 },
+                userId: courseManageUser.userId,
+            },
+        ]);
+
+        const aggregated = await getActivities({
+            ctx,
+            type: CommonConstants.ActivityType.PURCHASED,
+            duration: "lifetime",
+        });
+
+        expect(aggregated.count).toBe(135);
     });
 
     it("rejects course-scoped lesson reads when the lesson belongs to another product", async () => {

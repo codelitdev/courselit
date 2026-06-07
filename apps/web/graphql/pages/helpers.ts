@@ -83,7 +83,7 @@ export async function getPageResponse(
     };
     switch (page.type) {
         case constants.product:
-            const course = await getCourse(page.entityId!, ctx);
+            const course = await getCourse(page.entityId!, ctx, false, true);
             if (course) {
                 pageData = {
                     pageType: Constants.PageType.PRODUCT,

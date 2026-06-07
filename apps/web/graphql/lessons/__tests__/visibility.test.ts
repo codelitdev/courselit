@@ -450,11 +450,22 @@ describe("Lesson visibility and progress", () => {
         ).rejects.toThrow(responses.group_not_found);
     });
 
-    it("allows owner course managers to read unpublished lessons", async () => {
+    it("does not allow owner course managers to read unpublished lessons outside preview mode", async () => {
+        await expect(
+            getLessonDetails(
+                unpublishedLesson.lessonId,
+                ownerManagerCtx,
+                course.courseId,
+            ),
+        ).rejects.toThrow(responses.item_not_found);
+    });
+
+    it("allows owner course managers to read unpublished lessons in preview mode", async () => {
         const lesson = await getLessonDetails(
             unpublishedLesson.lessonId,
             ownerManagerCtx,
             course.courseId,
+            true,
         );
 
         expect(lesson.lessonId).toBe(unpublishedLesson.lessonId);
@@ -462,32 +473,67 @@ describe("Lesson visibility and progress", () => {
         expect(lesson.nextLesson).toBe(publishedLessonTwo.lessonId);
     });
 
-    it("allows manage-any course admins to read unpublished lessons", async () => {
+    it("allows manage-any course admins to read unpublished lessons in preview mode", async () => {
         const lesson = await getLessonDetails(
             unpublishedLesson.lessonId,
             manageAnyAdminCtx,
             course.courseId,
+            true,
         );
 
         expect(lesson.lessonId).toBe(unpublishedLesson.lessonId);
     });
 
-    it("allows manage-any course admins to read enrollment-gated lessons without enrollment", async () => {
+    it("does not let manage-any course admins bypass enrollment outside preview mode", async () => {
+        await expect(
+            getLessonDetails(
+                dripQuizLesson.lessonId,
+                manageAnyAdminCtx,
+                quizCourse.courseId,
+            ),
+        ).rejects.toThrow(responses.not_enrolled);
+    });
+
+    it("allows manage-any course admins to read enrollment-gated lessons without enrollment in preview mode", async () => {
         const lesson = await getLessonDetails(
             dripQuizLesson.lessonId,
             manageAnyAdminCtx,
             quizCourse.courseId,
+            true,
         );
 
         expect(lesson.lessonId).toBe(dripQuizLesson.lessonId);
         expect(manageAnyAdmin.purchases).toEqual([]);
     });
 
-    it("allows owner course managers to read enrollment-gated lessons without enrollment", async () => {
+    it("does not let non-manager users bypass enrollment with preview mode", async () => {
+        await expect(
+            getLessonDetails(
+                dripQuizLesson.lessonId,
+                creatorCtx,
+                quizCourse.courseId,
+                true,
+            ),
+        ).rejects.toThrow(responses.not_enrolled);
+    });
+
+    it("does not let non-manager users bypass drip access with preview mode", async () => {
+        await expect(
+            getLessonDetails(
+                dripQuizLesson.lessonId,
+                studentCtx,
+                quizCourse.courseId,
+                true,
+            ),
+        ).rejects.toThrow(responses.drip_not_released);
+    });
+
+    it("allows owner course managers to read enrollment-gated lessons without enrollment in preview mode", async () => {
         const lesson = await getLessonDetails(
             dripQuizLesson.lessonId,
             ownerManagerCtx,
             quizCourse.courseId,
+            true,
         );
 
         expect(lesson.lessonId).toBe(dripQuizLesson.lessonId);
@@ -500,6 +546,7 @@ describe("Lesson visibility and progress", () => {
                 dripQuizLesson.lessonId,
                 otherManagerCtx,
                 quizCourse.courseId,
+                true,
             ),
         ).rejects.toThrow(responses.not_enrolled);
     });

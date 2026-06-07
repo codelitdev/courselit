@@ -5,7 +5,7 @@ import { responses } from "@/config/strings";
 export type CourseFrontend = CourseWithoutGroups & {
     groups: GroupWithLessons[];
     firstLesson: string;
-    isManager: boolean;
+    isPreview: boolean;
 };
 
 export type GroupWithLessons = Group & { lessons: Lesson[] };
@@ -27,6 +27,7 @@ type CourseWithoutGroups = Pick<
 export const getProduct = async (
     id: string,
     address: string,
+    preview: boolean = false,
     requestHeaders?: Record<string, string>,
 ): Promise<CourseFrontend> => {
     const fetchBuilder = new FetchBuilder()
@@ -34,8 +35,8 @@ export const getProduct = async (
         .setIsGraphQLEndpoint(true)
         .setPayload({
             query: `
-                query ($id: String!) {
-                    product: getCourse(id: $id) {
+                query ($id: String!, $preview: Boolean) {
+                    product: getCourse(id: $id, preview: $preview) {
                         title,
                         description,
                         featuredImage {
@@ -47,7 +48,7 @@ export const getProduct = async (
                         slug,
                         cost,
                         courseId,
-                        isManager,
+                        isPreview,
                         groups {
                             id,
                             name,
@@ -84,7 +85,7 @@ export const getProduct = async (
                     }
                 }
             `,
-            variables: { id },
+            variables: { id, preview },
         })
         .setIsGraphQLEndpoint(true);
 
@@ -130,8 +131,8 @@ export function formatCourse(
         slug: post.slug,
         cost: post.cost,
         courseId: post.courseId,
-        isManager: Boolean(
-            (post as Course & { isManager?: boolean }).isManager,
+        isPreview: Boolean(
+            (post as Course & { isPreview?: boolean }).isPreview,
         ),
         groups: groupsWithLessons as GroupWithLessons[],
         tags: post.tags,
