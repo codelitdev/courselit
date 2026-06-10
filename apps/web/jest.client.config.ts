@@ -39,6 +39,7 @@ const config = {
             "<rootDir>/../../packages/components-library/src",
         "@courselit/icons": "<rootDir>/../../packages/icons/src",
         "@courselit/text-editor": "<rootDir>/../../packages/text-editor/src",
+        "@courselit/page-blocks": "<rootDir>/../../packages/page-blocks/src",
         "@courselit/common-models":
             "<rootDir>/../../packages/common-models/src",
         nanoid: "<rootDir>/__mocks__/nanoid.ts",
@@ -54,6 +55,7 @@ const config = {
         "@/templates/(.*)": "<rootDir>/templates/$1",
         "@/hooks/(.*)": "<rootDir>/hooks/$1",
         "@/app/(.*)": "<rootDir>/app/$1",
+        "@/components/(.*)": "<rootDir>/components/$1",
         "@ui-lib/(.*)": "<rootDir>/ui-lib/$1",
         "@config/(.*)": "<rootDir>/config/$1",
         "@/models/(.*)": "<rootDir>/models/$1",

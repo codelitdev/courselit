@@ -130,6 +130,47 @@ export const SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_DESCRIPTION =
 export const SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_ACTION = "Reset";
 export const FREE_COST = "FREE";
 export const SIDEBAR_TEXT_COURSE_ABOUT = "Introduction";
+export const SIDEBAR_TEXT_COURSE_DISCUSSIONS = "Discussions";
+export const COURSE_DISCUSSIONS_TITLE = "Discussions";
+export const COURSE_DISCUSSIONS_TOOLTIP = "Discussions";
+export const COURSE_DISCUSSIONS_DESCRIPTION =
+    "Enable lesson-specific discussions for this course";
+export const COURSE_DISCUSSIONS_VIEW_ALL = "View all discussions";
+export const COURSE_DISCUSSIONS_EMPTY = "No discussions yet";
+export const COURSE_DISCUSSIONS_COMMENT_PLACEHOLDER = "Add a comment...";
+export const COURSE_DISCUSSIONS_REPLY_PLACEHOLDER = "Add a reply...";
+export const COURSE_DISCUSSIONS_POST_COMMENT = "Post Comment";
+export const COURSE_DISCUSSIONS_POST_REPLY = "Post Reply";
+export const COURSE_DISCUSSIONS_REPLY = "Reply";
+export const COURSE_DISCUSSIONS_REPORT = "Report";
+export const COURSE_DISCUSSIONS_DELETE = "Delete";
+export const COURSE_DISCUSSIONS_DELETED = "Deleted";
+export const COURSE_DISCUSSIONS_DELETE_CONFIRM =
+    "Are you sure you want to delete this?";
+export const COURSE_DISCUSSIONS_REPORT_REASON = "Why are you reporting this?";
+export const COURSE_DISCUSSIONS_REPORTED = "Reported";
+export const COURSE_DISCUSSIONS_CONTENT_REQUIRED = "Add a comment first.";
+export const COURSE_DISCUSSIONS_CONTENT_TOO_LONG =
+    "Discussion content is too long.";
+export const COURSE_DISCUSSIONS_ADMIN_REPORTS = "Reports";
+export const COURSE_DISCUSSIONS_ADMIN_VIEW_REPORTS = "Reported content";
+export const COURSE_DISCUSSIONS_ADMIN_NO_REPORTS = "No reports";
+export const COURSE_DISCUSSIONS_ADMIN_NO_REPORTS_DESCRIPTION =
+    "Reported discussion comments and replies will appear here.";
+export const COURSE_DISCUSSIONS_ADMIN_STATUS = "Status";
+export const COURSE_DISCUSSIONS_ADMIN_REASON = "Reason";
+export const COURSE_DISCUSSIONS_ADMIN_TARGET = "Target";
+export const COURSE_DISCUSSIONS_ADMIN_REPORTED_BY = "Reported by";
+export const COURSE_DISCUSSIONS_ADMIN_LESSON = "Lesson";
+export const COURSE_DISCUSSIONS_ADMIN_CONTENT = "Content";
+export const COURSE_DISCUSSIONS_ADMIN_AUTHOR = "Author";
+export const COURSE_DISCUSSIONS_ADMIN_DATE = "Date";
+export const COURSE_DISCUSSIONS_ADMIN_FILTER_ALL = "All";
+export const COURSE_DISCUSSIONS_ADMIN_STATUS_PENDING = "pending";
+export const COURSE_DISCUSSIONS_ADMIN_STATUS_ACCEPTED = "accepted";
+export const COURSE_DISCUSSIONS_ADMIN_STATUS_REJECTED = "rejected";
+export const COURSE_DISCUSSIONS_ADMIN_REJECTION_REASON_DEFAULT =
+    "Rejected by moderator";
 export const REACT_COMPONENT_CRASHED =
     "We've encountered a problem in showing the content";
 export const CHECKOUT_PAGE_TITLE = "Checkout";

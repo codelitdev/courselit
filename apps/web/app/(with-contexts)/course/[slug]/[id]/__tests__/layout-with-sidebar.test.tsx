@@ -1,10 +1,28 @@
+let mockPathname = "/course/test-course/course-1";
+
 jest.mock("next/navigation", () => ({
-    usePathname: () => "/course/test-course/course-1",
+    usePathname: () => mockPathname,
+    useRouter: () => ({ push: jest.fn() }),
     useSearchParams: () => new URLSearchParams(),
 }));
 
 jest.mock("next/link", () => {
-    return ({ children }: { children: React.ReactNode }) => children;
+    function MockLink({
+        children,
+        href,
+        ...props
+    }: {
+        children: React.ReactNode;
+        href: string;
+    }) {
+        return (
+            <a href={href} {...props}>
+                {children}
+            </a>
+        );
+    }
+
+    return MockLink;
 });
 
 jest.mock("@components/contexts", () => {
@@ -25,6 +43,10 @@ jest.mock("@components/contexts", () => {
         ThemeContext: React.createContext({
             theme: {},
         }),
+        AddressContext: React.createContext({
+            backend: "http://localhost:3000",
+            frontend: "http://localhost:3000",
+        }),
     };
 });
 
@@ -41,7 +63,12 @@ jest.mock("@components/ui/sidebar", () => ({
     SidebarMenuItem: ({ children }: any) => children,
     SidebarProvider: ({ children }: any) => children,
     SidebarTrigger: () => null,
-    useSidebar: () => ({ openMobile: false }),
+    useSidebar: () => ({
+        open: false,
+        openMobile: false,
+        isMobile: false,
+        setOpenMobile: jest.fn(),
+    }),
 }));
 
 jest.mock("@components/ui/tooltip", () => ({
@@ -63,8 +90,19 @@ jest.mock("@components/ui/button", () => ({
 
 jest.mock("@components/admin/next-theme-switcher", () => () => null);
 
+jest.mock("@/components/public/product-discussions/panel", () => () => null);
+
 jest.mock("@courselit/components-library", () => ({
     Image: () => null,
+}));
+
+jest.mock("@courselit/page-blocks", () => ({
+    TextRenderer: () => null,
+}));
+
+jest.mock("@courselit/text-editor", () => ({
+    Editor: () => null,
+    emptyDoc: {},
 }));
 
 jest.mock("@courselit/icons", () => ({
@@ -77,7 +115,9 @@ jest.mock("lucide-react", () => ({
     BookOpen: () => null,
     ChevronRight: () => null,
     Clock: () => null,
+    Folder: () => null,
     LogOutIcon: () => null,
+    MessageSquare: () => null,
 }));
 
 jest.mock("@courselit/page-primitives", () => ({
@@ -797,6 +837,10 @@ describe("generateSideBarItems", () => {
 });
 
 describe("Course viewer layout", () => {
+    beforeEach(() => {
+        mockPathname = "/course/test-course/course-1";
+    });
+
     it("renders the preview badge in the viewer header when preview mode is active", () => {
         const course = {
             title: "Course",
@@ -822,5 +866,142 @@ describe("Course viewer layout", () => {
         );
 
         expect(screen.getByText("Preview")).toBeInTheDocument();
+    });
+
+    it("shows the discussions sidebar item only when discussions are enabled", () => {
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            groups: [],
+            discussions: false,
+        } as unknown as CourseFrontend;
+
+        const profile = {
+            userId: "user-1",
+            purchases: [
+                {
+                    courseId: "course-1",
+                    accessibleGroups: [],
+                },
+            ],
+        } as unknown as Profile;
+
+        expect(
+            generateSideBarItems(
+                course,
+                profile,
+                "/course/test-course/course-1",
+            ).some((item) => item.title === "Discussions"),
+        ).toBe(false);
+
+        expect(
+            generateSideBarItems(
+                { ...course, discussions: true } as CourseFrontend,
+                profile,
+                "/course/test-course/course-1/discussions",
+            ).find((item) => item.title === "Discussions"),
+        ).toMatchObject({
+            href: "/course/test-course/course-1/discussions",
+            isActive: true,
+        });
+    });
+
+    it("does not show a discussions header action on the course overview page", () => {
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: false,
+            groups: [],
+            discussions: true,
+        } as unknown as CourseFrontend;
+
+        render(
+            <ProductPage product={course}>
+                <div>Course body</div>
+            </ProductPage>,
+        );
+
+        expect(screen.queryByLabelText("Discussions")).not.toBeInTheDocument();
+    });
+
+    it("does not show a discussions header action on the discussions hub page", () => {
+        mockPathname = "/course/test-course/course-1/discussions";
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: false,
+            groups: [],
+            discussions: true,
+        } as unknown as CourseFrontend;
+
+        render(
+            <ProductPage product={course}>
+                <div>Discussions body</div>
+            </ProductPage>,
+        );
+
+        expect(screen.queryByLabelText("Discussions")).not.toBeInTheDocument();
+    });
+
+    it("opens the discussion panel from lesson pages", () => {
+        mockPathname = "/course/test-course/course-1/lesson-1";
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: false,
+            groups: [],
+            discussions: true,
+        } as unknown as CourseFrontend;
+
+        render(
+            <ProductPage product={course}>
+                <div>Lesson body</div>
+            </ProductPage>,
+        );
+
+        expect(screen.getByLabelText("Discussions")).toHaveAttribute(
+            "href",
+            "/course/test-course/course-1/lesson-1?discussion=open",
+        );
     });
 });

@@ -152,6 +152,7 @@ export const ActivityType = {
     COMMUNITY_REPLY_LIKED: "community_reply_liked",
     COMMUNITY_MEMBERSHIP_REQUESTED: "community_membership_requested",
     COMMUNITY_MEMBERSHIP_GRANTED: "community_membership_granted",
+    COURSE_DISCUSSION_ACTIVITY: "course_discussion_activity",
 } as const;
 export const ActivityPermissionMap = {
     [ActivityType.ENROLLED]: "course:manage_any",
@@ -183,6 +184,7 @@ export const ActivityPermissionMap = {
     [ActivityType.COMMUNITY_REPLY_LIKED]: "",
     [ActivityType.COMMUNITY_MEMBERSHIP_REQUESTED]: "community:manage",
     [ActivityType.COMMUNITY_MEMBERSHIP_GRANTED]: "",
+    [ActivityType.COURSE_DISCUSSION_ACTIVITY]: "",
 } as const;
 export const CourseType = {
     COURSE: "course",

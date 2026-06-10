@@ -10,6 +10,7 @@ import NotificationPreferenceModel from "@models/NotificationPreference";
 import NotificationModel from "@models/Notification";
 import CommunityModel from "@models/Community";
 import CommunityPostModel from "@models/CommunityPost";
+import CourseModel from "@models/Course";
 import constants from "@/config/constants";
 import { Constants } from "@courselit/common-models";
 
@@ -56,12 +57,14 @@ describe("Notification Preferences", () => {
         await NotificationModel.deleteMany({ domain: domain._id });
         await CommunityPostModel.deleteMany({ domain: domain._id });
         await CommunityModel.deleteMany({ domain: domain._id });
+        await CourseModel.deleteMany({ domain: domain._id });
     });
 
     afterAll(async () => {
         await NotificationModel.deleteMany({ domain: domain._id });
         await CommunityPostModel.deleteMany({ domain: domain._id });
         await CommunityModel.deleteMany({ domain: domain._id });
+        await CourseModel.deleteMany({ domain: domain._id });
         await NotificationPreferenceModel.deleteMany({ domain: domain._id });
         await UserModel.deleteMany({ domain: domain._id });
         await DomainModel.deleteOne({ _id: domain._id });
@@ -101,9 +104,19 @@ describe("Notification Preferences", () => {
                 preference.activityType ===
                 Constants.ActivityType.COMMUNITY_POST_CREATED,
         );
+        const courseDiscussionPreference = preferences.find(
+            (preference) =>
+                preference.activityType ===
+                Constants.ActivityType.COURSE_DISCUSSION_ACTIVITY,
+        );
 
         expect(generalPreference).toBeTruthy();
         expect(generalPreference?.channels).toEqual([
+            Constants.NotificationChannel.APP,
+            Constants.NotificationChannel.EMAIL,
+        ]);
+        expect(courseDiscussionPreference).toBeTruthy();
+        expect(courseDiscussionPreference?.channels).toEqual([
             Constants.NotificationChannel.APP,
             Constants.NotificationChannel.EMAIL,
         ]);
@@ -290,6 +303,54 @@ describe("Notification Preferences", () => {
         );
         expect(response?.message).toContain("created a post");
         expect(response?.message).toContain("Community A");
+    });
+
+    it("should format course discussion notification hrefs using metadata", async () => {
+        const course = await CourseModel.create({
+            domain: domain._id,
+            courseId: id("discussion-course"),
+            title: "Discussion Course",
+            slug: id("discussion-course-slug"),
+            cost: 0,
+            costType: "free",
+            privacy: "public",
+            type: "course",
+            creatorId: manager.userId,
+            published: true,
+            discussions: true,
+        });
+
+        const notification = await NotificationModel.create({
+            domain: domain._id,
+            notificationId: id("discussion-notification"),
+            userId: learner.userId,
+            forUserId: manager.userId,
+            activityType: Constants.ActivityType.COURSE_DISCUSSION_ACTIVITY,
+            entityId: id("comment"),
+            metadata: {
+                eventType: "comment_created",
+                productId: course.courseId,
+                entityType: "lesson",
+                entityId: id("lesson"),
+                commentId: id("comment"),
+            },
+        });
+
+        const response = await getNotification({
+            ctx: {
+                user: manager,
+                subdomain: domain,
+            } as any,
+            notificationId: notification.notificationId,
+        });
+
+        expect(response).toBeTruthy();
+        expect(response?.href).toBe(
+            `/course/${course.slug}/${course.courseId}/${id(
+                "lesson",
+            )}?discussion=open#discussion-comment-${id("comment")}`,
+        );
+        expect(response?.message).toContain("commented on Discussion Course");
     });
 
     it("should return empty message and href when entity cannot be resolved", async () => {
