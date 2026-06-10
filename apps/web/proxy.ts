@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getBackendAddress } from "@/app/actions";
 import { auth } from "./auth";
+import { COURSE_VIEWER_CURRENT_URL_HEADER } from "./lib/course-viewer-session-params";
 
 export async function proxy(request: NextRequest) {
     const requestHeaders = request.headers;
@@ -10,6 +11,13 @@ export async function proxy(request: NextRequest) {
         requestHeaders.set(
             "x-forwarded-proto",
             request.nextUrl.protocol.replace(":", ""),
+        );
+    }
+
+    if (request.nextUrl.pathname.startsWith("/course/")) {
+        requestHeaders.set(
+            COURSE_VIEWER_CURRENT_URL_HEADER,
+            `${request.nextUrl.pathname}${request.nextUrl.search}`,
         );
     }
 
@@ -103,6 +111,7 @@ export const config = {
         "/favicon.ico",
         "/api/:path*",
         "/healthy",
+        "/course/:path*",
         "/dashboard/:path*",
     ],
 };

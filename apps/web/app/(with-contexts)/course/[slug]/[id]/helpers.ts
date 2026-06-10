@@ -1,9 +1,11 @@
 import { Course, Group, Lesson } from "@courselit/common-models";
 import { FetchBuilder } from "@courselit/utils";
+import { responses } from "@/config/strings";
 
 export type CourseFrontend = CourseWithoutGroups & {
     groups: GroupWithLessons[];
     firstLesson: string;
+    isPreview: boolean;
 };
 
 export type GroupWithLessons = Group & { lessons: Lesson[] };
@@ -25,14 +27,16 @@ type CourseWithoutGroups = Pick<
 export const getProduct = async (
     id: string,
     address: string,
+    preview: boolean = false,
+    requestHeaders?: Record<string, string>,
 ): Promise<CourseFrontend> => {
-    const fetch = new FetchBuilder()
+    const fetchBuilder = new FetchBuilder()
         .setUrl(`${address}/api/graph`)
         .setIsGraphQLEndpoint(true)
         .setPayload({
             query: `
-                query ($id: String!) {
-                    product: getCourse(id: $id) {
+                query ($id: String!, $preview: Boolean) {
+                    product: getCourse(id: $id, preview: $preview) {
                         title,
                         description,
                         featuredImage {
@@ -44,6 +48,7 @@ export const getProduct = async (
                         slug,
                         cost,
                         courseId,
+                        isPreview,
                         groups {
                             id,
                             name,
@@ -80,17 +85,32 @@ export const getProduct = async (
                     }
                 }
             `,
-            variables: { id },
+            variables: { id, preview },
         })
-        .setIsGraphQLEndpoint(true)
-        .build();
+        .setIsGraphQLEndpoint(true);
+
+    if (requestHeaders) {
+        fetchBuilder.setHeaders(requestHeaders);
+    }
+
+    const fetch = fetchBuilder.build();
     const response = await fetch.exec();
     return formatCourse(response.product);
 };
 
 export function formatCourse(
-    post: Course & { lessons: Lesson[]; firstLesson: string; groups: Group[] },
+    post:
+        | (Course & {
+              lessons: Lesson[];
+              firstLesson: string;
+              groups: Group[];
+          })
+        | null,
 ): CourseFrontend {
+    if (!post) {
+        throw new Error(responses.item_not_found);
+    }
+
     const groupsWithLessons = post.groups.map((group) => ({
         ...group,
         lessons: post.lessons
@@ -111,6 +131,9 @@ export function formatCourse(
         slug: post.slug,
         cost: post.cost,
         courseId: post.courseId,
+        isPreview: Boolean(
+            (post as Course & { isPreview?: boolean }).isPreview,
+        ),
         groups: groupsWithLessons as GroupWithLessons[],
         tags: post.tags,
         firstLesson: post.firstLesson,

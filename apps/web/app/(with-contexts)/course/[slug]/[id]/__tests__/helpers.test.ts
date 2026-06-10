@@ -64,4 +64,17 @@ describe("course helpers formatCourse", () => {
             formatted.groups[0].lessons.map((lesson) => lesson.lessonId),
         ).toEqual(["lesson-3", "lesson-2"]);
     });
+
+    it("throws item_not_found instead of reading properties from a null course", () => {
+        expect(() => formatCourse(null as any)).toThrow("Item not found");
+    });
+
+    it("maps backend effective preview state", () => {
+        const formatted = formatCourse({
+            ...makeCourse(),
+            isPreview: true,
+        });
+
+        expect(formatted.isPreview).toBe(true);
+    });
 });

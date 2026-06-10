@@ -150,6 +150,10 @@ const courseType = new GraphQLObjectType({
         slug: { type: new GraphQLNonNull(GraphQLString) },
         description: { type: GraphQLString },
         leadMagnet: { type: GraphQLBoolean },
+        isPreview: {
+            type: new GraphQLNonNull(GraphQLBoolean),
+            resolve: (course) => Boolean((course as any).isPreview),
+        },
         featuredImage: {
             type: mediaTypes.mediaType,
             resolve: (course, _, context, __) => getMedia(course.featuredImage),

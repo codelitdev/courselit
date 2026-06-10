@@ -1,16 +1,32 @@
 jest.mock("next/navigation", () => ({
     usePathname: () => "/course/test-course/course-1",
+    useSearchParams: () => new URLSearchParams(),
 }));
 
 jest.mock("next/link", () => {
     return ({ children }: { children: React.ReactNode }) => children;
 });
 
-jest.mock("@components/contexts", () => ({
-    ProfileContext: { Provider: ({ children }: any) => children },
-    SiteInfoContext: { Provider: ({ children }: any) => children },
-    ThemeContext: { Provider: ({ children }: any) => children },
-}));
+jest.mock("@components/contexts", () => {
+    const React = require("react");
+
+    return {
+        ProfileContext: React.createContext({
+            profile: {
+                userId: "user-1",
+                purchases: [],
+            },
+        }),
+        SiteInfoContext: React.createContext({
+            title: "Test Site",
+            logo: undefined,
+            hideCourseLitBranding: true,
+        }),
+        ThemeContext: React.createContext({
+            theme: {},
+        }),
+    };
+});
 
 jest.mock("@components/ui/sidebar", () => ({
     Sidebar: ({ children }: any) => children,
@@ -25,6 +41,7 @@ jest.mock("@components/ui/sidebar", () => ({
     SidebarMenuItem: ({ children }: any) => children,
     SidebarProvider: ({ children }: any) => children,
     SidebarTrigger: () => null,
+    useSidebar: () => ({ openMobile: false }),
 }));
 
 jest.mock("@components/ui/tooltip", () => ({
@@ -57,6 +74,7 @@ jest.mock("@courselit/icons", () => ({
 }));
 
 jest.mock("lucide-react", () => ({
+    BookOpen: () => null,
     ChevronRight: () => null,
     Clock: () => null,
     LogOutIcon: () => null,
@@ -73,9 +91,10 @@ jest.mock("@ui-lib/utils", () => ({
 }));
 
 import { Constants, Profile } from "@courselit/common-models";
-import { generateSideBarItems } from "../layout-with-sidebar";
+import ProductPage, { generateSideBarItems } from "../layout-with-sidebar";
 import { CourseFrontend } from "../helpers";
 import constants from "@/config/constants";
+import { render, screen } from "@testing-library/react";
 
 describe("generateSideBarItems", () => {
     const originalDateNow = Date.now;
@@ -724,5 +743,84 @@ describe("generateSideBarItems", () => {
             "Chapter 5 - Text 2",
             "Text 3",
         ]);
+    });
+
+    it("shows dripped enrollment-gated lessons as unlocked in preview mode", () => {
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: true,
+            groups: [
+                {
+                    id: "group-1",
+                    name: "Admin Section",
+                    lessons: [
+                        {
+                            lessonId: "lesson-1",
+                            title: "Gated Lesson",
+                            requiresEnrollment: true,
+                        },
+                    ],
+                    drip: {
+                        status: true,
+                        type: Constants.dripType[0].split("-")[0].toUpperCase(),
+                        delayInMillis: 2,
+                    },
+                },
+            ],
+        } as unknown as CourseFrontend;
+
+        const profile = {
+            userId: "admin-1",
+            purchases: [],
+        } as unknown as Profile;
+
+        const items = generateSideBarItems(
+            course,
+            profile,
+            "/course/test-course/course-1",
+        );
+
+        expect(items[1].badge).toBeUndefined();
+        expect(items[1].items?.[0].icon).toBeUndefined();
+    });
+});
+
+describe("Course viewer layout", () => {
+    it("renders the preview badge in the viewer header when preview mode is active", () => {
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: true,
+            groups: [],
+        } as unknown as CourseFrontend;
+
+        render(
+            <ProductPage product={course}>
+                <div>Course body</div>
+            </ProductPage>,
+        );
+
+        expect(screen.getByText("Preview")).toBeInTheDocument();
     });
 });

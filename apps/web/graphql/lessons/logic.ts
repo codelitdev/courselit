@@ -37,8 +37,22 @@ import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
 import ActivityModel from "@/models/Activity";
 import UserModel from "../../models/User";
 import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
+import { canManageCourseInContext } from "../courses/permissions";
 
 const { permissions, quiz, scorm } = constants;
+
+async function canManageLessonCourse(lesson: Lesson, ctx: GQLContext) {
+    if (!ctx.user) {
+        return false;
+    }
+
+    const course = await CourseModel.findOne({
+        courseId: lesson.courseId,
+        domain: ctx.subdomain._id,
+    }).select("creatorId");
+
+    return course ? canManageCourseInContext(course, ctx) : false;
+}
 
 export const canViewUnpublished = (ctx: GQLContext, entity: any): boolean => {
     return (
@@ -94,6 +108,7 @@ export const getLessonDetails = async (
     id: string,
     ctx: GQLContext,
     courseId?: string,
+    preview: boolean = false,
 ) => {
     const query: any = {
         lessonId: id,
@@ -104,11 +119,18 @@ export const getLessonDetails = async (
     }
     const lesson = await LessonModel.findOne(query);
 
-    if (!lesson || !lesson.published) {
+    if (!lesson) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const isPreview = preview && (await canManageLessonCourse(lesson, ctx));
+
+    if (!lesson.published && !isPreview) {
         throw new Error(responses.item_not_found);
     }
 
     if (
+        !isPreview &&
         lesson.requiresEnrollment &&
         (!ctx.user ||
             !ctx.user.purchases.some(
@@ -118,7 +140,7 @@ export const getLessonDetails = async (
         throw new Error(responses.not_enrolled);
     }
 
-    if (await isPartOfDripGroup(lesson, ctx.subdomain._id)) {
+    if (!isPreview && (await isPartOfDripGroup(lesson, ctx.subdomain._id))) {
         if (!ctx.user) {
             throw new Error(responses.drip_not_released);
         }
@@ -138,7 +160,7 @@ export const getLessonDetails = async (
         lesson.courseId,
         ctx.subdomain._id,
         lesson.lessonId,
-        true,
+        !isPreview,
     );
     lesson.prevLesson = prevLesson;
     lesson.nextLesson = nextLesson;

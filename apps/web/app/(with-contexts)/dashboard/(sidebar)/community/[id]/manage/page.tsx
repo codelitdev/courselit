@@ -19,7 +19,9 @@ import {
     PaymentPlanType,
     Profile,
     Media,
+    UIConstants,
 } from "@courselit/common-models";
+import { checkPermission } from "@courselit/utils";
 import {
     Badge,
     Form,
@@ -526,13 +528,19 @@ export default function Page(props: {
                             {COMMUNITY_SETTINGS}
                         </h1>
                         <div className="flex gap-2">
-                            <Link
-                                href={`/dashboard/page/${pageId}?redirectTo=/dashboard/community/${id}/manage`}
-                            >
-                                <Button variant="outline" className="">
-                                    <Edit className="w-4 h-4" /> Edit page
-                                </Button>
-                            </Link>
+                            {profile &&
+                                checkPermission(profile.permissions!, [
+                                    UIConstants.permissions.manageSite,
+                                ]) && (
+                                    <Link
+                                        href={`/dashboard/page/${pageId}?redirectTo=/dashboard/community/${id}/manage`}
+                                    >
+                                        <Button variant="outline" className="">
+                                            <Edit className="w-4 h-4" /> Edit
+                                            page
+                                        </Button>
+                                    </Link>
+                                )}
                             <Link
                                 href={`/dashboard/community/${id}/manage/memberships`}
                             >

@@ -174,7 +174,8 @@ const themeStyles: ThemeStyle = {
             custom: "transition-all duration-200 ease-in-out hover:bg-blue-400 hover:text-black hover:shadow-md hover:scale-105",
             disabled: {
                 background: "bg-slate-700",
-                opacity: "opacity-50",
+                color: "text-white",
+                opacity: "opacity-100",
                 cursor: "cursor-not-allowed",
             },
         },

@@ -10,6 +10,7 @@ import {
 import { CheckCircled, Circle, Lock } from "@courselit/icons";
 import {
     BTN_EXIT_COURSE_TOOLTIP,
+    PREVIEW_COURSE_MENU_ITEM,
     SIDEBAR_TEXT_COURSE_ABOUT,
 } from "@ui-config/strings";
 import { Profile, Constants } from "@courselit/common-models";
@@ -37,7 +38,7 @@ import { Image } from "@courselit/components-library";
 import Link from "next/link";
 import { truncate } from "@courselit/utils";
 import { Button } from "@components/ui/button";
-import { ChevronRight, Clock, LogOutIcon } from "lucide-react";
+import { BookOpen, ChevronRight, Clock, LogOutIcon } from "lucide-react";
 import {
     Tooltip,
     TooltipContent,
@@ -49,9 +50,15 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@components/ui/collapsible";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Caption } from "@courselit/page-primitives";
 import NextThemeSwitcher from "@components/admin/next-theme-switcher";
+import {
+    appendCourseViewerSessionParamsToHref,
+    getCourseViewerSessionParams,
+    getCourseViewerReturnPath,
+} from "@/lib/course-viewer-session-params";
+import { Badge } from "@/components/ui/badge";
 
 export default function ProductPage({
     product,
@@ -61,6 +68,9 @@ export default function ProductPage({
     children: React.ReactNode;
 }) {
     const { profile } = useContext(ProfileContext);
+    const searchParams = useSearchParams();
+    const viewerSessionParams = getCourseViewerSessionParams(searchParams);
+    const exitPath = getCourseViewerReturnPath(viewerSessionParams.returnTo);
 
     if (!profile) {
         return null;
@@ -76,16 +86,25 @@ export default function ProductPage({
             }
             className="courselit-theme"
         >
-            <AppSidebar course={product} profile={profile} />
+            <AppSidebar
+                course={product}
+                profile={profile}
+                viewerSessionParams={viewerSessionParams}
+            />
             <SidebarInset>
                 <header className="flex h-16 shrink-0 items-center gap-2 px-4 justify-between text-foreground">
                     <SidebarTrigger className="-ml-1" />
                     <div className="flex items-center gap-2">
+                        {product.isPreview && (
+                            <Badge variant="secondary">
+                                {PREVIEW_COURSE_MENU_ITEM}
+                            </Badge>
+                        )}
                         <NextThemeSwitcher variant="ghost" />
                         <Tooltip>
                             <TooltipTrigger>
                                 <Button variant="ghost" size="icon" asChild>
-                                    <Link href="/dashboard/my-content">
+                                    <Link href={exitPath}>
                                         <LogOutIcon />
                                     </Link>
                                 </Button>
@@ -105,10 +124,12 @@ export default function ProductPage({
 export function AppSidebar({
     course,
     profile,
+    viewerSessionParams,
     ...rest
 }: {
     course: CourseFrontend;
     profile: Partial<Profile>;
+    viewerSessionParams?: ReturnType<typeof getCourseViewerSessionParams>;
 } & React.ComponentProps<typeof Sidebar>) {
     const siteinfo = useContext(SiteInfoContext);
     const pathname = usePathname();
@@ -116,6 +137,7 @@ export function AppSidebar({
         course,
         profile as Profile,
         pathname,
+        viewerSessionParams,
     );
     const { theme } = useContext(ThemeContext);
 
@@ -226,12 +248,15 @@ export function AppSidebar({
                                                                 }
                                                                 className="text-foreground"
                                                             >
-                                                                <span>
+                                                                <span className="flex items-center gap-2 w-full">
+                                                                    {
+                                                                        item.leadingIcon
+                                                                    }
                                                                     <Link
                                                                         href={
                                                                             item.href
                                                                         }
-                                                                        className="w-full"
+                                                                        className="flex-1"
                                                                     >
                                                                         <TooltipProvider
                                                                             delayDuration={
@@ -314,6 +339,7 @@ interface SidebarItem {
         title: string;
         href: string;
         icon?: ReactNode;
+        leadingIcon?: ReactNode;
         isActive?: boolean;
     }[];
 }
@@ -322,13 +348,18 @@ export function generateSideBarItems(
     course: CourseFrontend,
     profile: Profile,
     pathname: string,
+    viewerSessionParams?: ReturnType<typeof getCourseViewerSessionParams>,
 ): SidebarItem[] {
     if (!course) return [];
 
+    const isPreview = Boolean(course.isPreview);
     const items: SidebarItem[] = [
         {
             title: SIDEBAR_TEXT_COURSE_ABOUT,
-            href: `/course/${course.slug}/${course.courseId}`,
+            href: appendCourseViewerSessionParamsToHref(
+                `/course/${course.slug}/${course.courseId}`,
+                viewerSessionParams,
+            ),
             isActive: pathname === `/course/${course.slug}/${course.courseId}`,
         },
     ];
@@ -348,6 +379,7 @@ export function generateSideBarItems(
                 group,
                 profile,
                 lastGroupDripDateInMillis,
+                isPreview,
             }),
             items: [],
         };
@@ -359,28 +391,37 @@ export function generateSideBarItems(
             if (isActive) {
                 groupItem.isActive = true;
             }
+            let lessonStatusIcon: ReactNode;
+            if (!isPreview) {
+                if (!profile?.userId) {
+                    lessonStatusIcon = lesson.requiresEnrollment ? (
+                        <Lock />
+                    ) : undefined;
+                } else if (isEnrolled(course.courseId, profile)) {
+                    lessonStatusIcon = isLessonCompleted({
+                        courseId: course.courseId,
+                        lessonId: lesson.lessonId,
+                        profile,
+                    }) ? (
+                        <CheckCircled />
+                    ) : (
+                        <Circle />
+                    );
+                } else {
+                    lessonStatusIcon = lesson.requiresEnrollment ? (
+                        <Lock />
+                    ) : undefined;
+                }
+            }
             groupItem.items!.push({
                 title: lesson.title,
-                href: `/course/${course.slug}/${course.courseId}/${lesson.lessonId}`,
+                href: appendCourseViewerSessionParamsToHref(
+                    `/course/${course.slug}/${course.courseId}/${lesson.lessonId}`,
+                    viewerSessionParams,
+                ),
                 isActive,
-                icon:
-                    profile && profile.userId ? (
-                        isEnrolled(course.courseId, profile) ? (
-                            isLessonCompleted({
-                                courseId: course.courseId,
-                                lessonId: lesson.lessonId,
-                                profile,
-                            }) ? (
-                                <CheckCircled />
-                            ) : (
-                                <Circle />
-                            )
-                        ) : lesson.requiresEnrollment ? (
-                            <Lock />
-                        ) : undefined
-                    ) : lesson.requiresEnrollment ? (
-                        <Lock />
-                    ) : undefined,
+                leadingIcon: <BookOpen className="h-4 w-4 shrink-0" />,
+                icon: lessonStatusIcon,
             });
         }
 
@@ -393,6 +434,7 @@ export function generateSideBarItems(
             group.drip.status &&
             group.drip.type ===
                 Constants.dripType[0].split("-")[0].toUpperCase() &&
+            !isPreview &&
             !isGroupAccessibleToUser(course, profile as Profile, group)
         ) {
             lastGroupDripDateInMillis += group?.drip?.delayInMillis ?? 0;
@@ -407,12 +449,18 @@ function getDripLabel({
     group,
     profile,
     lastGroupDripDateInMillis,
+    isPreview,
 }: {
     course: CourseFrontend;
     group: GroupWithLessons;
     profile: Profile;
     lastGroupDripDateInMillis: number;
+    isPreview: boolean;
 }): { text: string; description: string } | undefined {
+    if (isPreview) {
+        return undefined;
+    }
+
     if (
         group.drip?.status &&
         isGroupAccessibleToUser(course, profile as Profile, group)

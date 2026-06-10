@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLString } from "graphql";
+import {
+    GraphQLBoolean,
+    GraphQLNonNull,
+    GraphQLID,
+    GraphQLString,
+} from "graphql";
 import types from "./types";
 import { getLesson, getLessonDetails } from "./logic";
 import GQLContext from "../../models/GQLContext";
@@ -23,11 +28,18 @@ export default {
             courseId: {
                 type: GraphQLString,
             },
+            preview: {
+                type: GraphQLBoolean,
+            },
         },
         resolve: (
             _: any,
-            { id, courseId }: { id: string; courseId?: string },
+            {
+                id,
+                courseId,
+                preview,
+            }: { id: string; courseId?: string; preview?: boolean },
             context: GQLContext,
-        ) => getLessonDetails(id, context, courseId),
+        ) => getLessonDetails(id, context, courseId, preview),
     },
 };

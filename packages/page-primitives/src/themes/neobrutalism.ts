@@ -166,8 +166,9 @@ const themeStyles: ThemeStyle = {
             shadow: "shadow-sm",
             custom: "transition-all duration-200 ease-in-out hover:shadow-none hover:translate-x-1 hover:translate-y-1",
             disabled: {
-                background: "#F3F4F6",
-                opacity: "opacity-50",
+                background: "bg-gray-200",
+                color: "text-gray-900",
+                opacity: "opacity-100",
                 cursor: "cursor-not-allowed",
             },
         },
