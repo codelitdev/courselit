@@ -8,13 +8,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ThemeContext, ProfileContext } from "@components/contexts";
-import { Avatar, AvatarFallback, AvatarImage } from "@components/ui/avatar";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@components/ui/dropdown-menu";
 import { TextRenderer } from "@courselit/page-blocks";
 import { Editor, emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
 import { isTextEditorNonEmpty, formattedLocaleDate } from "@ui-lib/utils";
@@ -40,16 +33,14 @@ import {
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
 import { useToast } from "@courselit/components-library";
-import {
-    ThumbsUp,
-    MessageSquare,
-    MoreVertical,
-    Trash2,
-    Flag,
-    X,
-} from "lucide-react";
+import { ThumbsUp, MessageSquare, Trash2, Flag, X } from "lucide-react";
 import { ReportReasonDialog } from "./report-reason-dialog";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import {
+    appendCourseViewerSessionParamsToHref,
+    getCourseViewerSessionParams,
+} from "@/lib/course-viewer-session-params";
 
 type DiscussionContent = {
     productId: string;
@@ -192,6 +183,12 @@ export default function ProductDiscussionPanel({
 }: ProductDiscussionPanelProps) {
     const { theme } = useContext(ThemeContext);
     const { toast } = useToast();
+    const searchParams = useSearchParams();
+    const viewerSessionParams = getCourseViewerSessionParams(searchParams);
+    const allDiscussionsHref = appendCourseViewerSessionParamsToHref(
+        `/course/${slug}/${productId}/discussions`,
+        viewerSessionParams,
+    );
     const [comments, setComments] = useState<DiscussionComment[]>([]);
     const [nextCursor, setNextCursor] = useState<string>();
     const [hasMore, setHasMore] = useState(false);
@@ -206,6 +203,8 @@ export default function ProductDiscussionPanel({
         commentId: string;
         parentReplyId?: string;
     }>();
+    const [replyFocusToken, setReplyFocusToken] = useState(0);
+    const replyComposerRef = useRef<HTMLDivElement | null>(null);
     const [replyContent, setReplyContent] = useState<TextEditorContent>(
         TextEditorEmptyDoc as TextEditorContent,
     );
@@ -215,22 +214,46 @@ export default function ProductDiscussionPanel({
         contentType: "COMMENT" | "REPLY";
         contentId: string;
     } | null>(null);
-    const initialHighlightedId = useMemo(
-        () =>
-            typeof window === "undefined"
-                ? ""
-                : window.location.hash.replace("#", ""),
-        [],
+    const [hashTargetId, setHashTargetId] = useState(() =>
+        readDiscussionHash(),
     );
-    const initialTarget = useMemo(
-        () => getDiscussionTargetFromHash(initialHighlightedId),
-        [initialHighlightedId],
+    const [highlightedId, setHighlightedId] = useState(hashTargetId);
+    const highlightedTarget = useMemo(
+        () => getDiscussionTargetFromHash(hashTargetId),
+        [hashTargetId],
     );
-    const [highlightedId, setHighlightedId] = useState(initialHighlightedId);
 
     useEffect(() => {
-        loadComments();
+        function syncHighlightedIdFromHash() {
+            const nextHash = readDiscussionHash();
+            setHashTargetId(nextHash);
+            setHighlightedId(nextHash);
+        }
+
+        syncHighlightedIdFromHash();
+        window.addEventListener("hashchange", syncHighlightedIdFromHash);
+        return () =>
+            window.removeEventListener("hashchange", syncHighlightedIdFromHash);
+    }, []);
+
+    useEffect(() => {
+        const nextHash = readDiscussionHash();
+        setHashTargetId(nextHash);
+        setHighlightedId(nextHash);
     }, [productId, entityId]);
+
+    useEffect(
+        () => {
+            loadComments();
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [
+            productId,
+            entityId,
+            highlightedTarget?.contentType,
+            highlightedTarget?.contentId,
+        ],
+    );
 
     useEffect(() => {
         if (!highlightedId) {
@@ -247,6 +270,26 @@ export default function ProductDiscussionPanel({
 
         return () => window.clearTimeout(timeout);
     }, [highlightedId, comments.length]);
+
+    useEffect(() => {
+        if (!replyingTo || !replyComposerRef.current) {
+            return;
+        }
+
+        const timeout = window.setTimeout(() => {
+            const composer = replyComposerRef.current;
+            composer?.scrollIntoView({
+                block: "center",
+                behavior: "smooth",
+            });
+            const editor = composer?.querySelector<HTMLElement>(
+                '[contenteditable="true"], textarea, [role="textbox"]',
+            );
+            editor?.focus();
+        }, 0);
+
+        return () => window.clearTimeout(timeout);
+    }, [replyingTo, replyFocusToken]);
 
     async function graph(payload: Record<string, unknown>) {
         const fetch = new FetchBuilder()
@@ -278,10 +321,10 @@ export default function ProductDiscussionPanel({
                     cursor,
                     targetContentType: cursor
                         ? undefined
-                        : initialTarget?.contentType,
+                        : highlightedTarget?.contentType,
                     targetContentId: cursor
                         ? undefined
-                        : initialTarget?.contentId,
+                        : highlightedTarget?.contentId,
                 },
             });
 
@@ -504,6 +547,11 @@ export default function ProductDiscussionPanel({
         setReportDialogOpen(true);
     }
 
+    function startReply(target: { commentId: string; parentReplyId?: string }) {
+        setReplyingTo(target);
+        setReplyFocusToken((value) => value + 1);
+    }
+
     async function handleReportSubmit(reason: string) {
         setReportDialogOpen(false);
         if (!pendingReport) return;
@@ -591,10 +639,7 @@ export default function ProductDiscussionPanel({
                         </Button>
                     )}
                 </div>
-                <Link
-                    href={`/course/${slug}/${productId}/discussions`}
-                    className="block"
-                >
+                <Link href={allDiscussionsHref} className="block">
                     <Caption
                         theme={theme.theme}
                         className="underline hover:text-foreground transition-colors"
@@ -630,7 +675,7 @@ export default function ProductDiscussionPanel({
                                 openReportDialog("COMMENT", comment.commentId)
                             }
                             onReply={() =>
-                                setReplyingTo({
+                                startReply({
                                     commentId: comment.commentId,
                                 })
                             }
@@ -656,7 +701,7 @@ export default function ProductDiscussionPanel({
                                         openReportDialog("REPLY", reply.replyId)
                                     }
                                     onReply={() =>
-                                        setReplyingTo({
+                                        startReply({
                                             commentId: comment.commentId,
                                             parentReplyId: reply.replyId,
                                         })
@@ -677,18 +722,22 @@ export default function ProductDiscussionPanel({
                                 </Button>
                             )}
                             {replyingTo?.commentId === comment.commentId && (
-                                <Composer
-                                    content={replyContent}
-                                    refresh={replyRefresh}
-                                    placeholder={
-                                        COURSE_DISCUSSIONS_REPLY_PLACEHOLDER
-                                    }
-                                    buttonLabel={COURSE_DISCUSSIONS_POST_REPLY}
-                                    address={address}
-                                    posting={posting}
-                                    onChange={setReplyContent}
-                                    onSubmit={postReply}
-                                />
+                                <div ref={replyComposerRef}>
+                                    <Composer
+                                        content={replyContent}
+                                        refresh={replyRefresh}
+                                        placeholder={
+                                            COURSE_DISCUSSIONS_REPLY_PLACEHOLDER
+                                        }
+                                        buttonLabel={
+                                            COURSE_DISCUSSIONS_POST_REPLY
+                                        }
+                                        address={address}
+                                        posting={posting}
+                                        onChange={setReplyContent}
+                                        onSubmit={postReply}
+                                    />
+                                </div>
                             )}
                         </DiscussionItem>
                     ))}
@@ -743,6 +792,14 @@ function getDiscussionTargetFromHash(hash: string) {
             contentId: hash.replace("discussion-reply-", ""),
         };
     }
+
+    return null;
+}
+
+function readDiscussionHash() {
+    return typeof window === "undefined"
+        ? ""
+        : window.location.hash.replace("#", "");
 }
 
 function getComposerContentError(content: TextEditorContent) {
@@ -819,17 +876,24 @@ function DiscussionItem({
         <article
             id={itemId}
             className={`scroll-mt-4 transition-[background-color,border-color,box-shadow] duration-500 ${
-                isHighlighted ? "bg-yellow-100 text-black" : ""
+                isHighlighted
+                    ? "bg-yellow-100 text-black dark:bg-yellow-950/40 dark:text-yellow-100 px-4 -mx-4 rounded-lg shadow-sm"
+                    : ""
             } ${compact ? "ml-8 mt-4 space-y-3" : "py-4 space-y-3"}`}
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9 flex-shrink-0">
-                        {avatarUrl && (
-                            <AvatarImage src={avatarUrl} alt={displayName} />
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-semibold text-muted-foreground">
+                        {avatarUrl ? (
+                            <img
+                                src={avatarUrl}
+                                alt={displayName}
+                                className="h-full w-full object-cover"
+                            />
+                        ) : (
+                            initials
                         )}
-                        <AvatarFallback>{initials}</AvatarFallback>
-                    </Avatar>
+                    </div>
                     <div className="flex items-baseline gap-2 flex-wrap min-w-0 flex-1">
                         <Text2
                             theme={theme.theme}
@@ -842,42 +906,31 @@ function DiscussionItem({
                         </Caption>
                     </div>
                 </div>
-                {!item.deleted && (
-                    <DropdownMenu modal={false}>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                theme={theme.theme}
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                            >
-                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                            align="end"
-                            className="min-w-[120px]"
-                        >
-                            {!isOwn && (
-                                <DropdownMenuItem
-                                    className="cursor-pointer flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-                                    onClick={onReport}
-                                >
-                                    <Flag className="h-4 w-4" />
-                                    <span>{COURSE_DISCUSSIONS_REPORT}</span>
-                                </DropdownMenuItem>
-                            )}
-                            {isOwn && (
-                                <DropdownMenuItem
-                                    className="cursor-pointer flex items-center gap-2 text-sm text-destructive hover:text-destructive focus:text-destructive focus:bg-destructive/10"
-                                    onClick={onDelete}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                    <span>{COURSE_DISCUSSIONS_DELETE}</span>
-                                </DropdownMenuItem>
-                            )}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                {!item.deleted && !isOwn && (
+                    <Button
+                        theme={theme.theme}
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={onReport}
+                        aria-label={COURSE_DISCUSSIONS_REPORT}
+                        title={COURSE_DISCUSSIONS_REPORT}
+                    >
+                        <Flag className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                )}
+                {!item.deleted && isOwn && (
+                    <Button
+                        theme={theme.theme}
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                        onClick={onDelete}
+                        aria-label={COURSE_DISCUSSIONS_DELETE}
+                        title={COURSE_DISCUSSIONS_DELETE}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
                 )}
             </div>
             <div className="text-sm leading-normal">

@@ -1,9 +1,10 @@
 let mockPathname = "/course/test-course/course-1";
+let mockSearchParams = new URLSearchParams();
 
 jest.mock("next/navigation", () => ({
     usePathname: () => mockPathname,
     useRouter: () => ({ push: jest.fn() }),
-    useSearchParams: () => new URLSearchParams(),
+    useSearchParams: () => mockSearchParams,
 }));
 
 jest.mock("next/link", () => {
@@ -141,6 +142,8 @@ describe("generateSideBarItems", () => {
     const originalRelativeDripUnitInMillis = constants.relativeDripUnitInMillis;
 
     beforeEach(() => {
+        mockPathname = "/course/test-course/course-1";
+        mockSearchParams = new URLSearchParams();
         Date.now = jest.fn(() =>
             new Date("2026-03-22T00:00:00.000Z").getTime(),
         );
@@ -839,6 +842,7 @@ describe("generateSideBarItems", () => {
 describe("Course viewer layout", () => {
     beforeEach(() => {
         mockPathname = "/course/test-course/course-1";
+        mockSearchParams = new URLSearchParams();
     });
 
     it("renders the preview badge in the viewer header when preview mode is active", () => {
@@ -1003,5 +1007,91 @@ describe("Course viewer layout", () => {
             "href",
             "/course/test-course/course-1/lesson-1?discussion=open",
         );
+    });
+
+    it("preserves preview session params when opening the discussion panel", () => {
+        mockPathname = "/course/test-course/course-1/lesson-1";
+        mockSearchParams = new URLSearchParams(
+            "preview=true&returnTo=%2Fdashboard%2Fproduct%2Fcourse-1",
+        );
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: true,
+            groups: [],
+            discussions: true,
+        } as unknown as CourseFrontend;
+
+        render(
+            <ProductPage product={course}>
+                <div>Lesson body</div>
+            </ProductPage>,
+        );
+
+        expect(screen.getByLabelText("Discussions")).toHaveAttribute(
+            "href",
+            "/course/test-course/course-1/lesson-1?preview=true&returnTo=%2Fdashboard%2Fproduct%2Fcourse-1&discussion=open",
+        );
+    });
+
+    it("preserves the open discussion panel while navigating lesson links", () => {
+        mockPathname = "/course/test-course/course-1/lesson-1";
+        mockSearchParams = new URLSearchParams("discussion=open");
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: false,
+            groups: [
+                {
+                    id: "group-1",
+                    name: "Section",
+                    lessons: [
+                        {
+                            lessonId: "lesson-1",
+                            title: "Lesson 1",
+                            requiresEnrollment: false,
+                        },
+                        {
+                            lessonId: "lesson-2",
+                            title: "Lesson 2",
+                            requiresEnrollment: false,
+                        },
+                    ],
+                },
+            ],
+            discussions: true,
+        } as unknown as CourseFrontend;
+
+        const { container } = render(
+            <ProductPage product={course}>
+                <div>Lesson body</div>
+            </ProductPage>,
+        );
+
+        expect(
+            container.querySelector(
+                'a[href="/course/test-course/course-1/lesson-2?discussion=open"]',
+            ),
+        ).toBeInTheDocument();
     });
 });

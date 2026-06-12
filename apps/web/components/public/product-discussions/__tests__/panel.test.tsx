@@ -11,6 +11,7 @@ const mockToast = jest.fn();
 const mockExec = jest.fn();
 const payloads: Record<string, any>[] = [];
 const scrollIntoView = jest.fn();
+let mockSearchParams = new URLSearchParams();
 
 jest.mock("@components/contexts", () => {
     const React = jest.requireActual("react");
@@ -41,6 +42,10 @@ jest.mock("next/link", () => {
     return MockNextLink;
 });
 
+jest.mock("next/navigation", () => ({
+    useSearchParams: () => mockSearchParams,
+}));
+
 jest.mock("@courselit/components-library", () => ({
     useToast: () => ({
         toast: mockToast,
@@ -67,12 +72,6 @@ jest.mock("@courselit/page-primitives", () => ({
     Text2: ({ children, className }: any) => (
         <span className={className}>{children}</span>
     ),
-}));
-
-jest.mock("@components/ui/avatar", () => ({
-    Avatar: ({ children }: any) => <div>{children}</div>,
-    AvatarFallback: ({ children }: any) => <span>{children}</span>,
-    AvatarImage: ({ alt }: any) => <span>{alt}</span>,
 }));
 
 jest.mock("@courselit/page-blocks", () => ({
@@ -132,7 +131,6 @@ jest.mock("lucide-react", () => ({
     Flag: () => null,
     ThumbsUp: () => null,
     MessageSquare: () => null,
-    MoreVertical: () => null,
     Trash2: () => null,
     X: () => null,
 }));
@@ -212,6 +210,7 @@ describe("ProductDiscussionPanel", () => {
     beforeEach(() => {
         jest.clearAllMocks();
         payloads.length = 0;
+        mockSearchParams = new URLSearchParams();
         window.location.hash = "";
         mockExec.mockImplementation(() => {
             const payload = payloads[payloads.length - 1];
@@ -247,6 +246,25 @@ describe("ProductDiscussionPanel", () => {
         });
     });
 
+    it("preserves preview session params in the view all discussions link", async () => {
+        mockSearchParams = new URLSearchParams(
+            "preview=true&returnTo=%2Fdashboard%2Fproduct%2Fcourse-1&discussion=open",
+        );
+
+        renderPanel();
+
+        await waitFor(() => {
+            expect(screen.getByText("Root comment")).toBeInTheDocument();
+        });
+
+        expect(
+            screen.getByText("View all discussions").closest("a"),
+        ).toHaveAttribute(
+            "href",
+            "/course/course-slug/course-1/discussions?preview=true&discussion=open&returnTo=%2Fdashboard%2Fproduct%2Fcourse-1",
+        );
+    });
+
     it("loads the hash target, highlights it, and scrolls it into view", async () => {
         window.location.hash = "#discussion-reply-reply-1";
 
@@ -271,6 +289,38 @@ describe("ProductDiscussionPanel", () => {
         });
     });
 
+    it("reloads, scrolls, and highlights when a notification hash arrives after mount", async () => {
+        renderPanel();
+
+        await waitFor(() => {
+            expect(screen.getByText("Root comment")).toBeInTheDocument();
+        });
+        expect(payloads[0].variables.targetContentId).toBeUndefined();
+
+        scrollIntoView.mockClear();
+        window.location.hash = "#discussion-reply-reply-1";
+        window.dispatchEvent(new HashChangeEvent("hashchange"));
+
+        await waitFor(() => {
+            expect(payloads[payloads.length - 1].variables).toEqual(
+                expect.objectContaining({
+                    targetContentType: "REPLY",
+                    targetContentId: "reply-1",
+                }),
+            );
+        });
+
+        await waitFor(() => {
+            expect(
+                document.getElementById("discussion-reply-reply-1"),
+            ).toHaveClass("bg-yellow-100");
+        });
+        expect(scrollIntoView).toHaveBeenCalledWith({
+            block: "center",
+            behavior: "smooth",
+        });
+    });
+
     it("stores parentReplyId when replying to an existing reply", async () => {
         renderPanel();
 
@@ -280,10 +330,22 @@ describe("ProductDiscussionPanel", () => {
 
         const replyButtons = screen.getAllByText("Reply");
         fireEvent.click(replyButtons[1]);
+        await waitFor(() => {
+            expect(screen.getByLabelText("Add a reply...")).toHaveFocus();
+        });
+        expect(scrollIntoView).toHaveBeenCalledWith({
+            block: "center",
+            behavior: "smooth",
+        });
+
         fireEvent.change(screen.getByLabelText("Add a reply..."), {
             target: { value: "Replying to a reply" },
         });
-        fireEvent.click(screen.getByText("Post Reply"));
+        const postReplyButton = screen.getByText("Post Reply");
+        await waitFor(() => {
+            expect(postReplyButton).not.toBeDisabled();
+        });
+        fireEvent.click(postReplyButton);
 
         await waitFor(() => {
             expect(screen.getByText("Replying to a reply")).toBeInTheDocument();

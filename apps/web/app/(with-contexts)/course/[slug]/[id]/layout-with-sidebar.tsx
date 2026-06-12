@@ -67,6 +67,7 @@ import {
     appendCourseViewerSessionParamsToHref,
     getCourseViewerSessionParams,
     getCourseViewerReturnPath,
+    setHrefQueryParam,
 } from "@/lib/course-viewer-session-params";
 import { Badge } from "@/components/ui/badge";
 import ProductDiscussionPanel from "@/components/public/product-discussions/panel";
@@ -128,9 +129,11 @@ export default function ProductPage({
     const isActualLessonPage =
         isLessonPage && pathSegments[3] !== "discussions";
     const showDiscussionsAction = product.discussions && isActualLessonPage;
-    const discussionsHref = isDiscussionOpen
-        ? pathname
-        : `${pathname}?discussion=open`;
+    const discussionsHref = getDiscussionHref({
+        pathname,
+        searchParams,
+        isDiscussionOpen,
+    });
 
     if (!profile) {
         return null;
@@ -261,6 +264,23 @@ export default function ProductPage({
                 </SidebarProvider>
             )}
         </SidebarProvider>
+    );
+}
+
+function getDiscussionHref({
+    pathname,
+    searchParams,
+    isDiscussionOpen,
+}: {
+    pathname: string;
+    searchParams: ReturnType<typeof useSearchParams>;
+    isDiscussionOpen: boolean;
+}) {
+    const currentSearch = searchParams?.toString() || "";
+    return setHrefQueryParam(
+        currentSearch ? `${pathname}?${currentSearch}` : pathname,
+        "discussion",
+        isDiscussionOpen ? null : "open",
     );
 }
 
