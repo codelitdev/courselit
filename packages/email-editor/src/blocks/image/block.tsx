@@ -24,14 +24,14 @@ export function ImageBlock({ block }: ImageBlockProps) {
         // foregroundColor = "#000000",
         paddingTop = "0px",
         paddingBottom = "0px",
+        paddingX = "0px",
     } = block.settings;
 
     return (
         <Section>
             <div
                 style={{
-                    paddingTop,
-                    paddingBottom,
+                    padding: `${paddingTop} ${paddingX} ${paddingBottom} ${paddingX}`,
                     backgroundColor,
                     textAlign: alignment,
                 }}
