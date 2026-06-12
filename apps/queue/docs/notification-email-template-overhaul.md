@@ -2,13 +2,13 @@
 
 ## Summary
 
-Replace the hand-written notification email HTML in `@courselit/queue` with a standardized `@courselit/email-editor` template. The email will show the actor beside an avatar, make “View notification” the clear primary button, move unsubscribe into small grey footer text, and conditionally include a CourseLit branding badge.
+Replace the hand-written notification email HTML in `@courselit/queue` with a standardized `@courselit/email-editor` template. The email will show the actor name with the actor avatar when a safe avatar URL exists, make “View notification” the clear primary button, move unsubscribe into small grey footer text, and conditionally include a CourseLit branding badge.
 
 ## Key Changes
 
 - Render notification emails with `renderEmailToHtml` from `@courselit/email-editor` instead of raw inline HTML.
 - Template structure:
-    - Actor row with avatar and `actorName`.
+    - Actor avatar, when available, followed by `actorName`.
     - Notification message.
     - Centered `View notification` button.
     - Footer separator/spacer.
@@ -16,7 +16,8 @@ Replace the hand-written notification email HTML in `@courselit/queue` with a st
     - Conditional `Powered by CourseLit` badge below the footer.
 - Avatar behavior:
     - Use `payload.actor.avatar.file`, then `payload.actor.avatar.thumbnail`.
-    - If no avatar URL exists, render initials from `actorName`.
+    - Render the avatar only when the URL is safe for email markup.
+    - If no safe avatar URL exists, skip the avatar image entirely and render only the actor name.
 - Branding behavior:
     - Match existing system-email templates.
     - Show the badge when `!payload.domain.settings?.hideCourseLitBranding`.
@@ -35,13 +36,14 @@ Replace the hand-written notification email HTML in `@courselit/queue` with a st
     - `unsubscribeUrl`
     - `hideCourseLitBranding`
 - Use standard email-editor `image` and `text` blocks for actor avatar/name rendering.
-    - When no actor avatar URL exists, generate a small initials SVG data URI for the image block.
+    - Do not generate initials image fallbacks; some email clients render `data:` images as broken images.
 
 ## Tests
 
 - Verify the rendered email includes:
     - Actor name and avatar URL when available.
-    - Initials fallback when avatar is missing.
+    - No avatar image when avatar is missing.
+    - No avatar image when the avatar URL uses an unsafe scheme.
     - `View notification` before unsubscribe.
     - Unsubscribe only in the footer area.
     - `Powered by CourseLit` when branding is not hidden.
