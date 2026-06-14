@@ -1,10 +1,16 @@
 import { getNotificationMessageAndHref } from "@courselit/common-logic";
+import { renderEmailToHtml } from "@courselit/email-editor";
 import { getEmailFrom } from "@courselit/utils";
 import { addMailJob } from "../../../domain/handler";
 import { getSiteUrl } from "../../../utils/get-site-url";
 import { getUnsubLink } from "../../../utils/get-unsub-link";
 import { ChannelPayload, NotificationChannel } from "./types";
 import { getDomainId } from "../../../observability/posthog";
+import { buildNotificationEmailTemplate } from "./notification-email-template";
+
+function getActorAvatarUrl(actor: ChannelPayload["actor"]) {
+    return actor?.avatar?.file || actor?.avatar?.thumbnail || undefined;
+}
 
 export class EmailChannel implements NotificationChannel {
     async send(payload: ChannelPayload): Promise<void> {
@@ -40,6 +46,17 @@ export class EmailChannel implements NotificationChannel {
             payload.domain,
             payload.recipient.unsubscribeToken,
         );
+        const body = await renderEmailToHtml({
+            email: buildNotificationEmailTemplate({
+                actorName,
+                actorAvatarUrl: getActorAvatarUrl(payload.actor),
+                message: notificationDetails.message,
+                notificationUrl: notificationDetails.href,
+                unsubscribeUrl,
+                hideCourseLitBranding:
+                    payload.domain.settings?.hideCourseLitBranding,
+            }),
+        });
 
         await addMailJob({
             to: [payload.recipient.email],
@@ -49,14 +66,7 @@ export class EmailChannel implements NotificationChannel {
             }),
             domainId: getDomainId(payload.domain?._id),
             subject: notificationDetails.message,
-            body: `
-                <p>${notificationDetails.message}</p>
-                <p><a href="${notificationDetails.href}">View notification</a></p>
-                <hr />
-                <p>
-                    <a href="${unsubscribeUrl}">Unsubscribe from email notifications</a>
-                </p>
-            `,
+            body,
             headers: {
                 "List-Unsubscribe": `<${unsubscribeUrl}>`,
                 "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
