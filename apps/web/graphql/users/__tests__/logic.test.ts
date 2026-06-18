@@ -82,10 +82,10 @@ describe("updateUser", () => {
             ),
         ).rejects.toThrow(responses.action_not_allowed);
 
-        const owner = await UserModel.findOne({
+        const owner = (await UserModel.findOne({
             userId: "owner",
             domain: domainId,
-        }).lean();
+        }).lean()) as any;
         expect(owner?.permissions).toEqual([
             UIConstants.permissions.manageUsers,
         ]);
@@ -109,10 +109,10 @@ describe("updateUser", () => {
             ctx,
         );
 
-        const owner = await UserModel.findOne({
+        const owner = (await UserModel.findOne({
             userId: "owner",
             domain: domainId,
-        }).lean();
+        }).lean()) as any;
         expect(owner?.name).toBe("Updated Owner");
         expect(owner?.permissions).toEqual([
             UIConstants.permissions.manageUsers,
@@ -138,10 +138,10 @@ describe("updateUser", () => {
             ),
         ).rejects.toThrow(responses.action_not_allowed);
 
-        const owner = await UserModel.findOne({
+        const owner = (await UserModel.findOne({
             userId: "owner",
             domain: domainId,
-        }).lean();
+        }).lean()) as any;
         expect(owner?.active).toBe(true);
     });
 });

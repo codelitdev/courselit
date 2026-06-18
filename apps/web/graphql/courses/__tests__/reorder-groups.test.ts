@@ -386,7 +386,7 @@ describe("reorderGroups", () => {
         await expect(
             reorderGroups({
                 courseId: ownerNoPermissionCourse.courseId,
-                groupIds: ownerNoPermissionCourse.groups.map((group: any) =>
+                groupIds: ownerNoPermissionCourse.groups!.map((group: any) =>
                     group.id.toString(),
                 ),
                 ctx: {
