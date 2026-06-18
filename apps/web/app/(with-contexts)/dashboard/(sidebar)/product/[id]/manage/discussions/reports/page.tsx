@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import DashboardContent from "@components/admin/dashboard-content";
 import useProduct from "@/hooks/use-product";
@@ -24,7 +24,6 @@ import {
     COURSE_DISCUSSIONS_ADMIN_STATUS_PENDING,
     COURSE_DISCUSSIONS_ADMIN_STATUS_REJECTED,
     COURSE_DISCUSSIONS_TITLE,
-    LOAD_MORE_TEXT,
     MANAGE_COURSES_PAGE_HEADING,
     TOAST_TITLE_ERROR,
 } from "@ui-config/strings";
@@ -39,7 +38,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@courselit/components-library";
+import { PaginatedTable, useToast } from "@courselit/components-library";
 import {
     Select,
     SelectContent,
@@ -52,6 +51,7 @@ import { RejectionReasonDialog } from "./rejection-reason-dialog";
 import Link from "next/link";
 
 const { permissions } = UIConstants;
+const itemsPerPage = 10;
 
 type ReportStatus = "pending" | "accepted" | "rejected";
 
@@ -85,10 +85,9 @@ export default function ProductDiscussionReportsPage() {
     const address = useContext(AddressContext);
     const { toast } = useToast();
     const [reports, setReports] = useState<DiscussionReport[]>([]);
-    const [reportsCursor, setReportsCursor] = useState<string>();
-    const [hasMoreReports, setHasMoreReports] = useState(false);
+    const [page, setPage] = useState(1);
+    const [totalReports, setTotalReports] = useState(0);
     const [status, setStatus] = useState<ReportStatus | undefined>();
-    const [loading, setLoading] = useState(false);
 
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
@@ -103,29 +102,25 @@ export default function ProductDiscussionReportsPage() {
         { label: COURSE_DISCUSSIONS_ADMIN_REPORTS, href: "#" },
     ];
 
-    useEffect(() => {
-        if (productId && address?.backend) {
-            loadReports(undefined, status);
-        }
-    }, [productId, address?.backend, status]);
+    const graph = useCallback(
+        async (payload: Record<string, unknown>) => {
+            const fetch = new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setPayload(payload)
+                .setIsGraphQLEndpoint(true)
+                .build();
 
-    async function graph(payload: Record<string, unknown>) {
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(payload)
-            .setIsGraphQLEndpoint(true)
-            .build();
+            return await fetch.exec();
+        },
+        [address.backend],
+    );
 
-        return await fetch.exec();
-    }
-
-    async function loadReports(cursor?: string, selectedStatus = status) {
-        setLoading(true);
+    const loadReports = useCallback(async () => {
         try {
             const response = await graph({
                 query: `
-                    query GetProductDiscussionReports($productId: String!, $status: ProductDiscussionReportStatus, $cursor: String) {
-                        reports: getProductDiscussionReports(productId: $productId, status: $status, cursor: $cursor, limit: 20) {
+                    query GetProductDiscussionReports($productId: String!, $status: ProductDiscussionReportStatus, $page: Int, $limit: Int) {
+                        reports: getProductDiscussionReports(productId: $productId, status: $status, page: $page, limit: $limit) {
                             items {
                                 reportId
                                 contentType
@@ -141,33 +136,33 @@ export default function ProductDiscussionReportsPage() {
                                 authorName
                                 reporterName
                             }
-                            nextCursor
-                            hasMore
                         }
+                        totalReports: getProductDiscussionReportsCount(productId: $productId, status: $status)
                     }
                 `,
                 variables: {
                     productId,
-                    status: selectedStatus?.toUpperCase(),
-                    cursor,
+                    status: status?.toUpperCase(),
+                    page,
+                    limit: itemsPerPage,
                 },
             });
-            const page = response.reports;
-            setReports((current) =>
-                cursor ? [...current, ...page.items] : page.items,
-            );
-            setReportsCursor(page.nextCursor);
-            setHasMoreReports(page.hasMore);
+            setReports(response.reports.items);
+            setTotalReports(response.totalReports);
         } catch (err: any) {
             toast({
                 title: TOAST_TITLE_ERROR,
                 description: err.message,
                 variant: "destructive",
             });
-        } finally {
-            setLoading(false);
         }
-    }
+    }, [graph, page, productId, status, toast]);
+
+    useEffect(() => {
+        if (productId && address?.backend) {
+            void Promise.resolve().then(loadReports);
+        }
+    }, [productId, address?.backend, loadReports]);
 
     const [rejectionDialogOpen, setRejectionDialogOpen] = useState(false);
     const [currentReportId, setCurrentReportId] = useState<string | null>(null);
@@ -262,28 +257,19 @@ export default function ProductDiscussionReportsPage() {
         switch (status) {
             case "pending":
                 return (
-                    <Badge
-                        variant="secondary"
-                        className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 text-[10px]"
-                    >
+                    <Badge variant="secondary" className="text-[10px]">
                         PENDING
                     </Badge>
                 );
             case "accepted":
                 return (
-                    <Badge
-                        variant="default"
-                        className="bg-red-100 text-red-700 hover:bg-red-100 text-[10px]"
-                    >
+                    <Badge variant="default" className="text-[10px]">
                         ACCEPTED
                     </Badge>
                 );
             case "rejected":
                 return (
-                    <Badge
-                        variant="outline"
-                        className="bg-gray-100 text-gray-700 hover:bg-gray-100 text-[10px]"
-                    >
+                    <Badge variant="outline" className="text-[10px]">
                         REJECTED
                     </Badge>
                 );
@@ -312,19 +298,20 @@ export default function ProductDiscussionReportsPage() {
                     </div>
                 </div>
 
-                <div className="rounded-md bg-white">
-                    <div className="py-4 pr-4 border-b">
+                <div className="space-y-4">
+                    <div>
                         <Select
                             value={status || "all"}
-                            onValueChange={(val) =>
+                            onValueChange={(val) => {
+                                setPage(1);
                                 setStatus(
                                     val === "all"
                                         ? undefined
                                         : (val as ReportStatus),
-                                )
-                            }
+                                );
+                            }}
                         >
-                            <SelectTrigger className="w-[180px] bg-white">
+                            <SelectTrigger className="w-[180px]">
                                 <SelectValue placeholder="All" />
                             </SelectTrigger>
                             <SelectContent>
@@ -340,7 +327,7 @@ export default function ProductDiscussionReportsPage() {
                         </Select>
                     </div>
 
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto rounded-md border">
                         {reports.length === 0 ? (
                             <AdminEmptyState
                                 title={COURSE_DISCUSSIONS_ADMIN_NO_REPORTS}
@@ -350,118 +337,123 @@ export default function ProductDiscussionReportsPage() {
                                 className="mt-4"
                             />
                         ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="bg-gray-50/50">
-                                        <TableHead className="text-sm font-medium text-gray-500">
-                                            {COURSE_DISCUSSIONS_ADMIN_LESSON}
-                                        </TableHead>
-                                        <TableHead className="text-sm font-medium text-gray-500">
-                                            {COURSE_DISCUSSIONS_ADMIN_CONTENT}
-                                        </TableHead>
-                                        <TableHead className="text-sm font-medium text-gray-500">
-                                            {COURSE_DISCUSSIONS_ADMIN_AUTHOR}
-                                        </TableHead>
-                                        <TableHead className="text-sm font-medium text-gray-500">
-                                            {
-                                                COURSE_DISCUSSIONS_ADMIN_REPORTED_BY
-                                            }
-                                        </TableHead>
-                                        <TableHead className="text-sm font-medium text-gray-500">
-                                            {COURSE_DISCUSSIONS_ADMIN_REASON}
-                                        </TableHead>
-                                        <TableHead className="text-sm font-medium text-gray-500">
-                                            {COURSE_DISCUSSIONS_ADMIN_STATUS}
-                                        </TableHead>
-                                        <TableHead className="text-sm font-medium text-gray-500">
-                                            {COURSE_DISCUSSIONS_ADMIN_DATE}
-                                        </TableHead>
-                                        <TableHead className="text-sm font-medium text-gray-500 text-right">
-                                            Actions
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {reports.map((report) => (
-                                        <TableRow
-                                            key={report.reportId}
-                                            className="border-b"
-                                        >
-                                            <TableCell className="text-sm text-gray-600 font-medium">
-                                                {report.lessonTitle ||
-                                                    report.entityId}
-                                            </TableCell>
-                                            <TableCell className="text-sm text-gray-600 max-w-[200px] truncate">
-                                                {getViewerDiscussionHref(
-                                                    report,
-                                                ) ? (
-                                                    <Link
-                                                        href={
-                                                            getViewerDiscussionHref(
-                                                                report,
-                                                            )!
-                                                        }
-                                                        className="underline hover:opacity-80 font-medium"
-                                                    >
-                                                        {report.contentPreview ||
-                                                            "View Details"}
-                                                    </Link>
-                                                ) : (
-                                                    report.contentPreview ||
-                                                    "View Details"
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="text-sm text-gray-600">
-                                                {report.authorName || "-"}
-                                            </TableCell>
-                                            <TableCell className="text-sm text-gray-600">
-                                                {report.reporterName ||
-                                                    report.userId}
-                                            </TableCell>
-                                            <TableCell className="text-sm text-gray-600">
-                                                {report.reason}
-                                            </TableCell>
-                                            <TableCell>
-                                                {getStatusBadge(report.status)}
-                                            </TableCell>
-                                            <TableCell className="text-sm text-gray-500">
-                                                {new Date(
-                                                    report.createdAt,
-                                                ).toLocaleDateString()}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() =>
-                                                        handleStatusChange(
-                                                            report,
-                                                        )
-                                                    }
-                                                >
-                                                    <RotateCCW className="mr-2 h-4 w-4" />
-                                                    Change
-                                                </Button>
-                                            </TableCell>
+                            <PaginatedTable
+                                page={page}
+                                totalPages={Math.ceil(
+                                    totalReports / itemsPerPage,
+                                )}
+                                onPageChange={setPage}
+                            >
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>
+                                                {
+                                                    COURSE_DISCUSSIONS_ADMIN_CONTENT
+                                                }
+                                            </TableHead>
+                                            <TableHead>
+                                                {
+                                                    COURSE_DISCUSSIONS_ADMIN_LESSON
+                                                }
+                                            </TableHead>
+                                            <TableHead>
+                                                {
+                                                    COURSE_DISCUSSIONS_ADMIN_AUTHOR
+                                                }
+                                            </TableHead>
+                                            <TableHead>
+                                                {
+                                                    COURSE_DISCUSSIONS_ADMIN_REPORTED_BY
+                                                }
+                                            </TableHead>
+                                            <TableHead>
+                                                {
+                                                    COURSE_DISCUSSIONS_ADMIN_REASON
+                                                }
+                                            </TableHead>
+                                            <TableHead>
+                                                {
+                                                    COURSE_DISCUSSIONS_ADMIN_STATUS
+                                                }
+                                            </TableHead>
+                                            <TableHead>
+                                                {COURSE_DISCUSSIONS_ADMIN_DATE}
+                                            </TableHead>
+                                            <TableHead className="text-right">
+                                                Actions
+                                            </TableHead>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {reports.map((report) => (
+                                            <TableRow key={report.reportId}>
+                                                <TableCell className="max-w-[200px] truncate">
+                                                    {getViewerDiscussionHref(
+                                                        report,
+                                                    ) ? (
+                                                        <Link
+                                                            href={
+                                                                getViewerDiscussionHref(
+                                                                    report,
+                                                                )!
+                                                            }
+                                                            className="font-medium underline underline-offset-4"
+                                                        >
+                                                            {report.contentPreview ||
+                                                                "View Details"}
+                                                        </Link>
+                                                    ) : (
+                                                        report.contentPreview ||
+                                                        "View Details"
+                                                    )}
+                                                </TableCell>
+                                                <TableCell className="font-medium">
+                                                    {report.lessonTitle ||
+                                                        report.entityId}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {report.authorName || "-"}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {report.reporterName ||
+                                                        report.userId}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {report.reason}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {getStatusBadge(
+                                                        report.status,
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {new Date(
+                                                        report.createdAt,
+                                                    ).toLocaleDateString()}
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            handleStatusChange(
+                                                                report,
+                                                            )
+                                                        }
+                                                    >
+                                                        <RotateCCW className="mr-2 h-4 w-4" />
+                                                        Change
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </PaginatedTable>
                         )}
                     </div>
                 </div>
-
-                {hasMoreReports && (
-                    <div className="mt-4">
-                        <Button
-                            variant="secondary"
-                            disabled={loading}
-                            onClick={() => loadReports(reportsCursor)}
-                        >
-                            {LOAD_MORE_TEXT}
-                        </Button>
-                    </div>
-                )}
             </div>
 
             <RejectionReasonDialog

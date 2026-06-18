@@ -228,6 +228,14 @@ describe("product discussion persistence foundation", () => {
             schema.getQueryType()?.getFields().getProductDiscussionReports,
         ).toBeDefined();
         expect(
+            schema
+                .getQueryType()
+                ?.getFields()
+                .getProductDiscussionReports.args.some(
+                    (arg) => arg.name === "page",
+                ),
+        ).toBe(true);
+        expect(
             schema.getQueryType()?.getFields().getProductDiscussionSummaries,
         ).toBeDefined();
         expect(
@@ -1229,18 +1237,30 @@ describe("product discussion comment and reply logic", () => {
             ctx: adminCtx,
             productId: courseId,
             status: "pending",
+            page: 1,
             limit: 10,
         });
         expect(reports.items).toHaveLength(1);
         expect(reports.items[0].reportId).toBe(report.reportId);
+        expect(
+            (
+                await listDiscussionReports({
+                    ctx: adminCtx,
+                    productId: courseId,
+                    status: "pending",
+                    page: 2,
+                    limit: 10,
+                })
+            ).items,
+        ).toHaveLength(0);
 
         // Verify that GraphQL resolved fields on ProductDiscussionReport work properly
         const graphql = require("graphql").graphql;
         const gqlResult: any = await graphql({
             schema,
             source: `
-                query GetProductDiscussionReports($productId: String!) {
-                    getProductDiscussionReports(productId: $productId) {
+                query GetProductDiscussionReports($productId: String!, $page: Int, $limit: Int) {
+                    getProductDiscussionReports(productId: $productId, page: $page, limit: $limit) {
                         items {
                             reportId
                             lessonTitle
@@ -1251,7 +1271,7 @@ describe("product discussion comment and reply logic", () => {
                     }
                 }
             `,
-            variableValues: { productId: courseId },
+            variableValues: { productId: courseId, page: 1, limit: 10 },
             contextValue: adminCtx,
         });
 

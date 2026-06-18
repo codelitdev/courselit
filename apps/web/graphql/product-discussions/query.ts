@@ -95,6 +95,7 @@ const queries = {
         args: {
             productId: { type: new GraphQLNonNull(GraphQLString) },
             status: { type: types.productDiscussionReportStatusType },
+            page: { type: GraphQLInt },
             cursor: { type: GraphQLString },
             limit: { type: GraphQLInt },
         },
@@ -103,11 +104,13 @@ const queries = {
             {
                 productId,
                 status,
+                page,
                 cursor,
                 limit,
             }: {
                 productId: string;
                 status?: "pending" | "accepted" | "rejected";
+                page?: number;
                 cursor?: string;
                 limit?: number;
             },
@@ -117,6 +120,7 @@ const queries = {
                 ctx,
                 productId,
                 status,
+                page,
                 cursor,
                 limit,
             }),

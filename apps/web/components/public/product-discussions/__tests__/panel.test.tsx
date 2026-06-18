@@ -102,18 +102,37 @@ jest.mock("@courselit/text-editor", () => ({
     ),
 }));
 
-jest.mock("@courselit/utils", () => ({
-    FetchBuilder: jest.fn().mockImplementation(() => ({
-        setUrl: jest.fn().mockReturnThis(),
-        setPayload: jest.fn(function (payload) {
-            payloads.push(payload);
-            return this;
-        }),
-        setIsGraphQLEndpoint: jest.fn().mockReturnThis(),
-        build: jest.fn().mockReturnThis(),
-        exec: mockExec,
-    })),
-}));
+jest.mock("@courselit/utils", () => {
+    const extractTextFromTextEditorContent = (node: unknown): string => {
+        if (!node || typeof node !== "object") {
+            return "";
+        }
+
+        const record = node as Record<string, unknown>;
+        const ownText = typeof record.text === "string" ? record.text : "";
+        const children = Array.isArray(record.content)
+            ? record.content
+                  .map((child) => extractTextFromTextEditorContent(child))
+                  .join("")
+            : "";
+
+        return `${ownText}${children}`;
+    };
+
+    return {
+        extractTextFromTextEditorContent,
+        FetchBuilder: jest.fn().mockImplementation(() => ({
+            setUrl: jest.fn().mockReturnThis(),
+            setPayload: jest.fn(function (payload) {
+                payloads.push(payload);
+                return this;
+            }),
+            setIsGraphQLEndpoint: jest.fn().mockReturnThis(),
+            build: jest.fn().mockReturnThis(),
+            exec: mockExec,
+        })),
+    };
+});
 
 jest.mock("../report-reason-dialog", () => ({
     ReportReasonDialog: ({ isOpen, onClose, onSubmit }: any) => {
@@ -281,7 +300,7 @@ describe("ProductDiscussionPanel", () => {
             }),
         );
         expect(document.getElementById("discussion-reply-reply-1")).toHaveClass(
-            "bg-yellow-100",
+            "bg-accent/40",
         );
         expect(scrollIntoView).toHaveBeenCalledWith({
             block: "center",
@@ -313,7 +332,7 @@ describe("ProductDiscussionPanel", () => {
         await waitFor(() => {
             expect(
                 document.getElementById("discussion-reply-reply-1"),
-            ).toHaveClass("bg-yellow-100");
+            ).toHaveClass("bg-accent/40");
         });
         expect(scrollIntoView).toHaveBeenCalledWith({
             block: "center",

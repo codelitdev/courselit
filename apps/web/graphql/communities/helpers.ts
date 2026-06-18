@@ -24,7 +24,10 @@ import CommunityPostSubscriberModel, {
     CommunityPostSubscriber,
 } from "@models/CommunityPostSubscriber";
 import { hasCommunityPermission } from "@ui-lib/utils";
-import { normalizeTextEditorContent } from "@courselit/utils";
+import {
+    extractTextFromTextEditorContent,
+    normalizeTextEditorContent,
+} from "@courselit/utils";
 
 export type PublicPost = Omit<
     CommunityPost,
@@ -157,7 +160,7 @@ export async function getCommunityReportContent({
     }
 
     return {
-        content: content.content,
+        content: extractTextFromTextEditorContent(content.content),
         id: contentId,
         media: content.media,
     };

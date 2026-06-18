@@ -2,7 +2,11 @@
 
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import type React from "react";
-import { FetchBuilder } from "@courselit/utils";
+import {
+    FetchBuilder,
+    extractTextFromTextEditorContent,
+} from "@courselit/utils";
+import clsx from "clsx";
 import type { Address, TextEditorContent } from "@courselit/common-models";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -17,8 +21,11 @@ import {
     COURSE_DISCUSSIONS_CONTENT_REQUIRED,
     COURSE_DISCUSSIONS_CONTENT_TOO_LONG,
     COURSE_DISCUSSIONS_DELETE,
+    COURSE_DISCUSSIONS_DELETE_CANCEL,
     COURSE_DISCUSSIONS_DELETED,
     COURSE_DISCUSSIONS_DELETE_CONFIRM,
+    COURSE_DISCUSSIONS_DELETE_CONFIRM_DESCRIPTION,
+    COURSE_DISCUSSIONS_DELETE_CONFIRM_TITLE,
     COURSE_DISCUSSIONS_EMPTY,
     COURSE_DISCUSSIONS_POST_COMMENT,
     COURSE_DISCUSSIONS_POST_REPLY,
@@ -41,6 +48,15 @@ import {
     appendCourseViewerSessionParamsToHref,
     getCourseViewerSessionParams,
 } from "@/lib/course-viewer-session-params";
+import { getCurrentHashTargetId, scrollToHashTarget } from "@/lib/hash-target";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Button as ShadcnButton } from "@/components/ui/button";
 
 type DiscussionContent = {
     productId: string;
@@ -76,6 +92,11 @@ type DiscussionComment = DiscussionContent & {
     replyNextCursor?: string;
     hasMoreReplies: boolean;
     replies: DiscussionReply[];
+};
+
+type DiscussionContentTarget = {
+    contentType: "COMMENT" | "REPLY";
+    contentId: string;
 };
 
 interface ProductDiscussionPanelProps {
@@ -210,36 +231,31 @@ export default function ProductDiscussionPanel({
     );
     const [replyRefresh, setReplyRefresh] = useState(0);
     const [reportDialogOpen, setReportDialogOpen] = useState(false);
-    const [pendingReport, setPendingReport] = useState<{
-        contentType: "COMMENT" | "REPLY";
-        contentId: string;
-    } | null>(null);
+    const [pendingReport, setPendingReport] =
+        useState<DiscussionContentTarget | null>(null);
+    const [pendingDelete, setPendingDelete] =
+        useState<DiscussionContentTarget | null>(null);
     const [hashTargetId, setHashTargetId] = useState(() =>
-        readDiscussionHash(),
+        getCurrentHashTargetId(),
     );
-    const [highlightedId, setHighlightedId] = useState(hashTargetId);
     const highlightedTarget = useMemo(
         () => getDiscussionTargetFromHash(hashTargetId),
         [hashTargetId],
     );
 
     useEffect(() => {
-        function syncHighlightedIdFromHash() {
-            const nextHash = readDiscussionHash();
-            setHashTargetId(nextHash);
-            setHighlightedId(nextHash);
+        function syncTargetIdFromHash() {
+            setHashTargetId(getCurrentHashTargetId());
         }
 
-        syncHighlightedIdFromHash();
-        window.addEventListener("hashchange", syncHighlightedIdFromHash);
+        syncTargetIdFromHash();
+        window.addEventListener("hashchange", syncTargetIdFromHash);
         return () =>
-            window.removeEventListener("hashchange", syncHighlightedIdFromHash);
+            window.removeEventListener("hashchange", syncTargetIdFromHash);
     }, []);
 
     useEffect(() => {
-        const nextHash = readDiscussionHash();
-        setHashTargetId(nextHash);
-        setHighlightedId(nextHash);
+        setHashTargetId(getCurrentHashTargetId());
     }, [productId, entityId]);
 
     useEffect(
@@ -256,20 +272,12 @@ export default function ProductDiscussionPanel({
     );
 
     useEffect(() => {
-        if (!highlightedId) {
+        if (!hashTargetId) {
             return;
         }
 
-        const element = document.getElementById(highlightedId);
-        if (!element) {
-            return;
-        }
-
-        element.scrollIntoView({ block: "center", behavior: "smooth" });
-        const timeout = window.setTimeout(() => setHighlightedId(""), 3000);
-
-        return () => window.clearTimeout(timeout);
-    }, [highlightedId, comments.length]);
+        scrollToHashTarget({ targetId: hashTargetId });
+    }, [hashTargetId, comments.length]);
 
     useEffect(() => {
         if (!replyingTo || !replyComposerRef.current) {
@@ -519,10 +527,6 @@ export default function ProductDiscussionPanel({
         contentType: "COMMENT" | "REPLY",
         contentId: string,
     ) {
-        if (!window.confirm(COURSE_DISCUSSIONS_DELETE_CONFIRM)) {
-            return;
-        }
-
         await graph({
             query:
                 contentType === "COMMENT"
@@ -537,6 +541,19 @@ export default function ProductDiscussionPanel({
             deleted: true,
             content: null,
         });
+        setPendingDelete(null);
+    }
+
+    function openDeleteDialog(
+        contentType: "COMMENT" | "REPLY",
+        contentId: string,
+    ) {
+        setPendingDelete({ contentType, contentId });
+    }
+
+    function confirmDeleteContent() {
+        if (!pendingDelete) return;
+        void deleteContent(pendingDelete.contentType, pendingDelete.contentId);
     }
 
     function openReportDialog(
@@ -660,7 +677,6 @@ export default function ProductDiscussionPanel({
                             key={comment.commentId}
                             item={comment}
                             itemId={`discussion-comment-${comment.commentId}`}
-                            highlightedId={highlightedId}
                             onLike={() =>
                                 toggleLike(
                                     "COMMENT",
@@ -669,7 +685,7 @@ export default function ProductDiscussionPanel({
                                 )
                             }
                             onDelete={() =>
-                                deleteContent("COMMENT", comment.commentId)
+                                openDeleteDialog("COMMENT", comment.commentId)
                             }
                             onReport={() =>
                                 openReportDialog("COMMENT", comment.commentId)
@@ -685,7 +701,6 @@ export default function ProductDiscussionPanel({
                                     key={reply.replyId}
                                     item={reply}
                                     itemId={`discussion-reply-${reply.replyId}`}
-                                    highlightedId={highlightedId}
                                     compact
                                     onLike={() =>
                                         toggleLike(
@@ -695,7 +710,7 @@ export default function ProductDiscussionPanel({
                                         )
                                     }
                                     onDelete={() =>
-                                        deleteContent("REPLY", reply.replyId)
+                                        openDeleteDialog("REPLY", reply.replyId)
                                     }
                                     onReport={() =>
                                         openReportDialog("REPLY", reply.replyId)
@@ -774,6 +789,40 @@ export default function ProductDiscussionPanel({
                 }}
                 onSubmit={handleReportSubmit}
             />
+            <Dialog
+                open={!!pendingDelete}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setPendingDelete(null);
+                    }
+                }}
+            >
+                <DialogContent>
+                    <DialogTitle>
+                        {COURSE_DISCUSSIONS_DELETE_CONFIRM_TITLE}
+                    </DialogTitle>
+                    <DialogDescription>
+                        {COURSE_DISCUSSIONS_DELETE_CONFIRM}{" "}
+                        {COURSE_DISCUSSIONS_DELETE_CONFIRM_DESCRIPTION}
+                    </DialogDescription>
+                    <DialogFooter>
+                        <ShadcnButton
+                            type="button"
+                            variant="secondary"
+                            onClick={() => setPendingDelete(null)}
+                        >
+                            {COURSE_DISCUSSIONS_DELETE_CANCEL}
+                        </ShadcnButton>
+                        <ShadcnButton
+                            type="button"
+                            variant="destructive"
+                            onClick={confirmDeleteContent}
+                        >
+                            {COURSE_DISCUSSIONS_DELETE}
+                        </ShadcnButton>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </aside>
     );
 }
@@ -796,12 +845,6 @@ function getDiscussionTargetFromHash(hash: string) {
     return null;
 }
 
-function readDiscussionHash() {
-    return typeof window === "undefined"
-        ? ""
-        : window.location.hash.replace("#", "");
-}
-
 function getComposerContentError(content: TextEditorContent) {
     if (!isTextEditorNonEmpty(content)) {
         return COURSE_DISCUSSIONS_CONTENT_REQUIRED;
@@ -813,31 +856,19 @@ function getComposerContentError(content: TextEditorContent) {
         return COURSE_DISCUSSIONS_CONTENT_TOO_LONG;
     }
 
-    if (extractText(content).length > MAX_DISCUSSION_TEXT_LENGTH) {
+    if (
+        extractTextFromTextEditorContent(content).length >
+        MAX_DISCUSSION_TEXT_LENGTH
+    ) {
         return COURSE_DISCUSSIONS_CONTENT_TOO_LONG;
     }
 
     return "";
 }
 
-function extractText(node: unknown): string {
-    if (!node || typeof node !== "object") {
-        return "";
-    }
-
-    const record = node as Record<string, unknown>;
-    const ownText = typeof record.text === "string" ? record.text : "";
-    const children = Array.isArray(record.content)
-        ? record.content.map(extractText).join("")
-        : "";
-
-    return `${ownText}${children}`;
-}
-
 function DiscussionItem({
     item,
     itemId,
-    highlightedId,
     compact = false,
     children,
     onLike,
@@ -847,7 +878,6 @@ function DiscussionItem({
 }: {
     item: DiscussionContent;
     itemId: string;
-    highlightedId: string;
     compact?: boolean;
     children?: React.ReactNode;
     onLike: () => void;
@@ -857,7 +887,6 @@ function DiscussionItem({
 }) {
     const { theme } = useContext(ThemeContext);
     const { profile } = useContext(ProfileContext);
-    const isHighlighted = highlightedId === itemId;
     const isOwn = profile?.userId === item.userId;
     const displayName = item.user?.name || item.user?.email || item.userId;
     const initials =
@@ -871,15 +900,21 @@ function DiscussionItem({
     const displayDate = formattedLocaleDate(item.createdAt);
 
     const avatarUrl = item.user?.avatar?.thumbnail || item.user?.avatar?.file;
+    const cardStyles = theme.theme?.interactives?.card;
+    const actionButtonSurface = clsx(
+        "bg-card text-card-foreground hover:bg-card hover:text-card-foreground",
+        cardStyles?.border?.width,
+        cardStyles?.border?.radius,
+        cardStyles?.border?.style,
+        cardStyles?.shadow,
+    );
 
     return (
         <article
             id={itemId}
             className={`scroll-mt-4 transition-[background-color,border-color,box-shadow] duration-500 ${
-                isHighlighted
-                    ? "bg-yellow-100 text-black dark:bg-yellow-950/40 dark:text-yellow-100 px-4 -mx-4 rounded-lg shadow-sm"
-                    : ""
-            } ${compact ? "ml-8 mt-4 space-y-3" : "py-4 space-y-3"}`}
+                compact ? "ml-8 mt-4 space-y-3" : "py-4 space-y-3"
+            }`}
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -911,7 +946,7 @@ function DiscussionItem({
                         theme={theme.theme}
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0"
+                        className={clsx(actionButtonSurface, "h-8 w-8 p-0")}
                         onClick={onReport}
                         aria-label={COURSE_DISCUSSIONS_REPORT}
                         title={COURSE_DISCUSSIONS_REPORT}
@@ -924,7 +959,10 @@ function DiscussionItem({
                         theme={theme.theme}
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                        className={clsx(
+                            actionButtonSurface,
+                            "h-8 w-8 p-0 text-destructive hover:text-destructive",
+                        )}
                         onClick={onDelete}
                         aria-label={COURSE_DISCUSSIONS_DELETE}
                         title={COURSE_DISCUSSIONS_DELETE}
@@ -951,11 +989,13 @@ function DiscussionItem({
                         theme={theme.theme}
                         variant="ghost"
                         size="sm"
-                        className={`flex items-center gap-1.5 h-8 px-2.5 py-1 transition-colors ${
+                        className={clsx(
+                            actionButtonSurface,
+                            "flex items-center gap-1.5 h-8 px-2.5 py-1 transition-colors",
                             item.hasLiked
                                 ? "text-foreground"
-                                : "text-muted-foreground hover:text-foreground"
-                        }`}
+                                : "text-muted-foreground hover:text-foreground",
+                        )}
                         onClick={onLike}
                     >
                         <ThumbsUp
@@ -976,7 +1016,10 @@ function DiscussionItem({
                         theme={theme.theme}
                         variant="ghost"
                         size="sm"
-                        className="flex items-center gap-1.5 h-8 px-2.5 py-1 text-muted-foreground hover:text-foreground"
+                        className={clsx(
+                            actionButtonSurface,
+                            "flex items-center gap-1.5 h-8 px-2.5 py-1 text-muted-foreground hover:text-foreground",
+                        )}
                         onClick={onReply}
                     >
                         <MessageSquare className="h-4 w-4" />

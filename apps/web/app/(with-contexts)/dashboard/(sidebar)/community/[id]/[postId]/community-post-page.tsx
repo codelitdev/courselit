@@ -689,7 +689,7 @@ export default function CommunityPostPage({
                         onOpenChange={setShowDeleteConfirmation}
                     >
                         <DialogContent>
-                            <DialogTitle>Delete Post</DialogTitle>
+                            <DialogTitle>Delete post</DialogTitle>
                             <DialogDescription>
                                 Are you sure you want to delete this post?
                             </DialogDescription>

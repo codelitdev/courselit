@@ -145,8 +145,12 @@ export const COURSE_DISCUSSIONS_REPLY = "Reply";
 export const COURSE_DISCUSSIONS_REPORT = "Report";
 export const COURSE_DISCUSSIONS_DELETE = "Delete";
 export const COURSE_DISCUSSIONS_DELETED = "Deleted";
+export const COURSE_DISCUSSIONS_DELETE_CONFIRM_TITLE = "Delete discussion";
 export const COURSE_DISCUSSIONS_DELETE_CONFIRM =
     "Are you sure you want to delete this?";
+export const COURSE_DISCUSSIONS_DELETE_CONFIRM_DESCRIPTION =
+    "This action cannot be undone.";
+export const COURSE_DISCUSSIONS_DELETE_CANCEL = "Cancel";
 export const COURSE_DISCUSSIONS_REPORT_REASON = "Why are you reporting this?";
 export const COURSE_DISCUSSIONS_REPORTED = "Reported";
 export const COURSE_DISCUSSIONS_CONTENT_REQUIRED = "Add a comment first.";

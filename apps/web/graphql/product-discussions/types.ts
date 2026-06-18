@@ -14,6 +14,7 @@ import ProductDiscussionLikeModel from "@/models/ProductDiscussionLike";
 import ProductDiscussionReplyModel from "@/models/ProductDiscussionReply";
 import UserModel from "@/models/User";
 import userTypes from "../users/types";
+import { extractTextFromTextEditorContent } from "@courselit/utils";
 
 const productDiscussionEntityType = new GraphQLEnumType({
     name: "ProductDiscussionEntityType",
@@ -240,20 +241,6 @@ const productDiscussionSummariesConnection = new GraphQLObjectType({
     },
 });
 
-function extractText(node: unknown): string {
-    if (!node || typeof node !== "object") {
-        return "";
-    }
-
-    const record = node as Record<string, unknown>;
-    const ownText = typeof record.text === "string" ? record.text : "";
-    const children = Array.isArray(record.content)
-        ? record.content.map(extractText).join("")
-        : "";
-
-    return `${ownText}${children}`;
-}
-
 const productDiscussionReport = new GraphQLObjectType({
     name: "ProductDiscussionReport",
     fields: {
@@ -309,7 +296,7 @@ const productDiscussionReport = new GraphQLObjectType({
                               replyId: report.contentId,
                           });
                 if (!item) return null;
-                return extractText(item.content);
+                return extractTextFromTextEditorContent(item.content);
             },
         },
         authorName: {

@@ -13,7 +13,10 @@ import LessonModel from "@/models/Lesson";
 import GQLContext from "@/models/GQLContext";
 import { Constants, TextEditorContent } from "@courselit/common-models";
 import { getLessonDetails } from "../lessons/logic";
-import { checkPermission } from "@courselit/utils";
+import {
+    checkPermission,
+    extractTextFromTextEditorContent,
+} from "@courselit/utils";
 import mongoose from "mongoose";
 import { randomUUID } from "crypto";
 import { recordActivity } from "@/lib/record-activity";
@@ -136,26 +139,12 @@ export function validateDiscussionContent(content: unknown): TextEditorContent {
         throw new Error(responses.invalid_input);
     }
 
-    const text = extractText(doc);
+    const text = extractTextFromTextEditorContent(doc);
     if (!text.trim() || text.length > MAX_DISCUSSION_TEXT_LENGTH) {
         throw new Error(responses.invalid_input);
     }
 
     return doc;
-}
-
-function extractText(node: unknown): string {
-    if (!node || typeof node !== "object") {
-        return "";
-    }
-
-    const record = node as Record<string, unknown>;
-    const ownText = typeof record.text === "string" ? record.text : "";
-    const children = Array.isArray(record.content)
-        ? record.content.map(extractText).join("")
-        : "";
-
-    return `${ownText}${children}`;
 }
 
 export async function assertRateLimit({
@@ -1069,12 +1058,14 @@ export async function listDiscussionReports({
     ctx,
     productId,
     status,
+    page,
     cursor,
     limit = 10,
 }: {
     ctx: GQLContext;
     productId: string;
     status?: ProductDiscussionReportStatus;
+    page?: number;
     cursor?: string;
     limit?: number;
 }): Promise<CursorEnvelope<any>> {
@@ -1086,6 +1077,21 @@ export async function listDiscussionReports({
     };
     if (status) {
         filter.status = status;
+    }
+
+    if (page) {
+        const currentPage = Math.max(1, page);
+        const reports = await ProductDiscussionReportModel.find(filter)
+            .sort({ createdAt: -1, reportId: -1 })
+            .skip((currentPage - 1) * limit)
+            .limit(limit);
+
+        return {
+            items: reports.map((report) => report.toObject()),
+            hasMore:
+                (await ProductDiscussionReportModel.countDocuments(filter)) >
+                currentPage * limit,
+        };
     }
 
     const decodedCursor = cursor ? decodeCursor<ReportCursor>(cursor) : null;
@@ -1363,9 +1369,9 @@ async function incrementLikesCount({
 }
 
 function getContentFingerprint(content: TextEditorContent) {
-    return Buffer.from(extractText(content).trim().toLowerCase()).toString(
-        "base64",
-    );
+    return Buffer.from(
+        extractTextFromTextEditorContent(content).trim().toLowerCase(),
+    ).toString("base64");
 }
 
 async function updateSummaryForCreate({

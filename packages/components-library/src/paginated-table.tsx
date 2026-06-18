@@ -27,46 +27,44 @@ const PaginatedTableContainer = ({
 }: ComponentProps<"div"> & PaginatedTableProps) => (
     <div className={cn(className)} {...props}>
         {children}
-        <Pagination>
-            <PaginationContent>
-                <PaginationItem>
-                    <PaginationPrevious
-                        onClick={() => onPageChange(page - 1)}
-                        aria-disabled={page === 1}
-                        tabIndex={page === 1 ? -1 : undefined}
-                        className={
-                            page === 1
-                                ? "pointer-events-none opacity-50"
-                                : undefined
-                        }
-                    />
-                </PaginationItem>
-                <PaginationItem>
-                    <PaginationLink>{page}</PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                    <PaginationNext
-                        onClick={() => onPageChange(page + 1)}
-                        aria-disabled={page === totalPages || totalPages === 0}
-                        tabIndex={
-                            page === totalPages || totalPages === 0
-                                ? -1
-                                : undefined
-                        }
-                        className={
-                            page === totalPages || totalPages === 0
-                                ? "pointer-events-none opacity-50"
-                                : undefined
-                        }
-                    />
-                </PaginationItem>
-                <PaginationItem>
-                    <PaginationLink className="pointer-events-none">
-                        of {totalPages}
-                    </PaginationLink>
-                </PaginationItem>
-            </PaginationContent>
-        </Pagination>
+        {totalPages > 0 && (
+            <Pagination>
+                <PaginationContent>
+                    <PaginationItem>
+                        <PaginationPrevious
+                            onClick={() => onPageChange(page - 1)}
+                            aria-disabled={page === 1}
+                            tabIndex={page === 1 ? -1 : undefined}
+                            className={
+                                page === 1
+                                    ? "pointer-events-none opacity-50"
+                                    : undefined
+                            }
+                        />
+                    </PaginationItem>
+                    <PaginationItem>
+                        <PaginationLink>{page}</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem>
+                        <PaginationNext
+                            onClick={() => onPageChange(page + 1)}
+                            aria-disabled={page === totalPages}
+                            tabIndex={page === totalPages ? -1 : undefined}
+                            className={
+                                page === totalPages
+                                    ? "pointer-events-none opacity-50"
+                                    : undefined
+                            }
+                        />
+                    </PaginationItem>
+                    <PaginationItem>
+                        <PaginationLink className="pointer-events-none">
+                            of {totalPages}
+                        </PaginationLink>
+                    </PaginationItem>
+                </PaginationContent>
+            </Pagination>
+        )}
     </div>
 );
 

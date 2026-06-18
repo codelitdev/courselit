@@ -46,6 +46,30 @@ jest.mock("@components/admin/empty-state", () => ({
 }));
 
 jest.mock("@courselit/components-library", () => ({
+    PaginatedTable: ({ children, page, totalPages, onPageChange }: any) => (
+        <div>
+            {children}
+            {totalPages > 0 && (
+                <div>
+                    <button
+                        disabled={page === 1}
+                        onClick={() => onPageChange(page - 1)}
+                    >
+                        Previous
+                    </button>
+                    <span>
+                        {page} of {totalPages}
+                    </span>
+                    <button
+                        disabled={page === totalPages}
+                        onClick={() => onPageChange(page + 1)}
+                    >
+                        Next
+                    </button>
+                </div>
+            )}
+        </div>
+    ),
     useToast: () => ({
         toast: mockToast,
     }),
@@ -158,9 +182,8 @@ describe("ProductDiscussionReportsPage", () => {
                                 reporterName: "Reporter One",
                             },
                         ],
-                        nextCursor: "reports-cursor",
-                        hasMore: true,
                     },
+                    totalReports: 11,
                 });
             }
             if (payload.query.includes("UpdateProductDiscussionReportStatus")) {
@@ -183,6 +206,20 @@ describe("ProductDiscussionReportsPage", () => {
             expect(screen.getByText("Text lesson")).toBeInTheDocument();
         });
 
+        expect(
+            screen
+                .getAllByRole("columnheader")
+                .map((header) => header.textContent),
+        ).toEqual([
+            "Content",
+            "Lesson",
+            "Author",
+            "Reported by",
+            "Reason",
+            "Status",
+            "Date",
+            "Actions",
+        ]);
         expect(screen.getByText("Reported content")).toBeInTheDocument();
         expect(
             screen.getByText("Reported content").closest("a"),
@@ -194,7 +231,33 @@ describe("ProductDiscussionReportsPage", () => {
         expect(screen.getByText("Reporter One")).toBeInTheDocument();
         expect(screen.getByText("Spam")).toBeInTheDocument();
         expect(screen.getByText("ACCEPTED")).toBeInTheDocument();
+        expect(screen.getByText("1 of 2")).toBeInTheDocument();
+        expect(payloads[payloads.length - 1].variables).toEqual({
+            productId: "product-1",
+            status: undefined,
+            page: 1,
+            limit: 10,
+        });
         expect(screen.queryByText("approved")).not.toBeInTheDocument();
+    });
+
+    it("loads the next numbered reports page", async () => {
+        renderPage();
+
+        await waitFor(() => {
+            expect(screen.getByText("Text lesson")).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByText("Next"));
+
+        await waitFor(() => {
+            expect(payloads[payloads.length - 1].variables).toEqual({
+                productId: "product-1",
+                status: undefined,
+                page: 2,
+                limit: 10,
+            });
+        });
     });
 
     it("filters reports by status and cycles accepted reports with a rejection reason", async () => {
