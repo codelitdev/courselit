@@ -1,78 +1,18 @@
-import { generateUniqueId } from "@courselit/utils";
-import mongoose from "mongoose";
-import CommunityMediaSchema from "./CommunityMedia";
 import {
-    CommunityComment,
-    CommunityCommentReply,
-} from "@courselit/common-models";
+    InternalCommunityComment,
+    InternalReply,
+    CommunityCommentSchema,
+} from "@courselit/orm-models";
+import mongoose, { Model } from "mongoose";
 
-export interface InternalCommunityComment
-    extends Pick<
-        CommunityComment,
-        "communityId" | "postId" | "commentId" | "content" | "media"
-    > {
-    domain: mongoose.Types.ObjectId;
-    userId: string;
-    likes: string[];
-    replies: InternalReply[];
-    deleted: boolean;
-}
+const CommunityCommentModel =
+    (mongoose.models.CommunityComment as
+        | Model<InternalCommunityComment>
+        | undefined) ||
+    mongoose.model<InternalCommunityComment>(
+        "CommunityComment",
+        CommunityCommentSchema,
+    );
 
-export interface InternalReply
-    extends Omit<CommunityCommentReply, "likesCount" | "hasLiked"> {
-    userId: string;
-    likes: string[];
-}
-
-const ReplySchema = new mongoose.Schema(
-    {
-        userId: { type: String, required: true },
-        content: { type: mongoose.Schema.Types.Mixed, required: true },
-        media: [CommunityMediaSchema],
-        replyId: { type: String, required: true, default: generateUniqueId },
-        parentReplyId: { type: String, default: null },
-        likes: [String],
-        deleted: { type: Boolean, default: false },
-    },
-    {
-        timestamps: true,
-    },
-);
-
-const CommunityCommentSchema = new mongoose.Schema<InternalCommunityComment>(
-    {
-        domain: { type: mongoose.Schema.Types.ObjectId, required: true },
-        userId: { type: String, required: true },
-        communityId: { type: String, required: true },
-        postId: { type: String, required: true },
-        commentId: {
-            type: String,
-            required: true,
-            unique: true,
-            default: generateUniqueId,
-        },
-        content: { type: mongoose.Schema.Types.Mixed, required: true },
-        media: [CommunityMediaSchema],
-        likes: [String],
-        replies: [ReplySchema],
-        deleted: { type: Boolean, required: true, default: false },
-    },
-    {
-        timestamps: true,
-    },
-);
-
-CommunityCommentSchema.statics.paginatedFind = async function (
-    filter,
-    options,
-) {
-    const page = options.page || 1;
-    const limit = options.limit || 10;
-    const skip = (page - 1) * limit;
-
-    const docs = await this.find(filter).skip(skip).limit(limit).exec();
-    return docs;
-};
-
-export default mongoose.models.CommunityComment ||
-    mongoose.model("CommunityComment", CommunityCommentSchema);
+export type { InternalCommunityComment, InternalReply };
+export default CommunityCommentModel;
