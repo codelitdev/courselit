@@ -1,5 +1,6 @@
 import { CommunityCommentReply } from "./community-comment-reply";
 import { CommunityMedia } from "./community-media";
+import { TextEditorContent } from "./text-editor-content";
 import User from "./user";
 
 export interface CommunityComment {
@@ -7,7 +8,7 @@ export interface CommunityComment {
     communityId: string;
     postId: string;
     commentId: string;
-    content: string;
+    content: TextEditorContent | string;
     media: CommunityMedia[];
     likesCount: number;
     updatedAt: string;

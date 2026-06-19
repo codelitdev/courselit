@@ -1,8 +1,9 @@
+"use client";
+
 import { AddressContext, ProfileContext } from "@components/contexts";
 import { Button } from "@components/ui/button";
-import { Textarea } from "@components/ui/textarea";
-import { FetchBuilder } from "@courselit/utils";
-import { useContext, useEffect, useState } from "react";
+import { FetchBuilder, extractVideoId } from "@courselit/utils";
+import { useContext, useEffect, useState, useCallback } from "react";
 import { Link, useToast } from "@courselit/components-library";
 import { Comment } from "./comment";
 import {
@@ -10,7 +11,19 @@ import {
     CommunityCommentReply,
     CommunityPost,
     Membership,
+    TextEditorContent,
 } from "@courselit/common-models";
+import { Editor, emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
+import { MediaPreview } from "./media-preview";
+import type { MediaItem } from "./media-item";
+import { Input } from "@/components/ui/input";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import { Paperclip, Video, Image as ImageIcon } from "lucide-react";
+import { GifSelector } from "./gif-selector";
 
 const HASH_HIGHLIGHT_CLASSES = [
     "border-border",
@@ -53,6 +66,13 @@ const focusCommentTarget = (targetId: string) => {
     window.dispatchEvent(new Event("community-comment-target-change"));
 };
 
+const createClientId = () => {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
+
 export default function CommentSection({
     communityId,
     postId,
@@ -65,12 +85,17 @@ export default function CommentSection({
     membership: Pick<Membership, "status" | "role" | "rejectionReason">;
 }) {
     const [comments, setComments] = useState<CommunityComment[]>([]);
-    const [content, setContent] = useState("");
+    const [content, setContent] = useState<TextEditorContent>(
+        TextEditorEmptyDoc as TextEditorContent,
+    );
+    const [media, setMedia] = useState<MediaItem[]>([]);
     const address = useContext(AddressContext);
     const [post, setPost] = useState<CommunityPost>();
     const { profile } = useContext(ProfileContext);
     const { toast } = useToast();
     const [isPosting, setIsPosting] = useState(false);
+    const [isGifSelectorOpen, setIsGifSelectorOpen] = useState(false);
+    const [videoUrl, setVideoUrl] = useState("");
 
     useEffect(() => {
         loadPost();
@@ -164,6 +189,8 @@ export default function CommentSection({
                     }
                     media {
                         type
+                        title
+                        url
                         media {
                             mediaId
                             file
@@ -179,6 +206,16 @@ export default function CommentSection({
                             userId
                             name
                             avatar {
+                                mediaId
+                                file
+                                thumbnail
+                            }
+                        }
+                        media {
+                            type
+                            title
+                            url
+                            media {
                                 mediaId
                                 file
                                 thumbnail
@@ -220,12 +257,77 @@ export default function CommentSection({
         }
     };
 
+    const handleFileUpload = useCallback(
+        (event: React.ChangeEvent<HTMLInputElement>) => {
+            const files = event.target.files;
+            if (files) {
+                const nextItems: MediaItem[] = Array.from(files).map((file) => {
+                    const url = URL.createObjectURL(file);
+                    const isPdf = file.type === "application/pdf";
+                    const isImage = file.type.startsWith("image/");
+                    const type = isPdf ? "pdf" : isImage ? "image" : "video";
+
+                    return {
+                        type,
+                        url,
+                        title: file.name,
+                        file,
+                        clientId: createClientId(),
+                        fileSize: `${(file.size / (1024 * 1024)).toFixed(1)}mb`,
+                    };
+                });
+
+                setMedia((prevMedia) => [...prevMedia, ...nextItems]);
+            }
+        },
+        [],
+    );
+
+    const handleMediaRemove = useCallback((index: number) => {
+        setMedia((prevMedia) => {
+            const mediaToRemove = prevMedia[index];
+            if (mediaToRemove?.file && mediaToRemove.url?.startsWith("blob:")) {
+                URL.revokeObjectURL(mediaToRemove.url);
+            }
+            return prevMedia.filter((_, i) => i !== index);
+        });
+    }, []);
+
+    const handleGifSelect = useCallback((gifUrl: string) => {
+        setMedia((prevMedia) => [
+            ...prevMedia,
+            {
+                type: "gif",
+                url: gifUrl,
+                title: "GIF",
+                clientId: createClientId(),
+            },
+        ]);
+        setIsGifSelectorOpen(false);
+    }, []);
+
+    const handleVideoAdd = useCallback((url: string) => {
+        const videoId = extractVideoId(url, "youtube");
+        if (videoId) {
+            setMedia((prevMedia) => [
+                ...prevMedia,
+                {
+                    type: "youtube",
+                    url: `https://www.youtube.com/embed/${videoId}`,
+                    title: "YouTube Video",
+                    clientId: createClientId(),
+                },
+            ]);
+        }
+        setVideoUrl("");
+    }, []);
+
     const handlePostComment = async () => {
-        if (!content) return;
+        if (!content || !profile?.name) return;
 
         const query = `
-            mutation ($communityId: String!, $postId: String!, $content: String!) {
-                comment: postComment(communityId: $communityId, postId: $postId, content: $content) {
+            mutation ($communityId: String!, $postId: String!, $content: JSONObject!, $media: [CommunityPostInputMedia]) {
+                comment: postComment(communityId: $communityId, postId: $postId, content: $content, media: $media) {
                     communityId
                     postId
                     commentId
@@ -241,6 +343,8 @@ export default function CommentSection({
                     }
                     media {
                         type
+                        title
+                        url
                         media {
                             mediaId
                             file
@@ -256,6 +360,16 @@ export default function CommentSection({
                             userId
                             name
                             avatar {
+                                mediaId
+                                file
+                                thumbnail
+                            }
+                        }
+                        media {
+                            type
+                            title
+                            url
+                            media {
                                 mediaId
                                 file
                                 thumbnail
@@ -280,6 +394,15 @@ export default function CommentSection({
                     communityId,
                     postId,
                     content,
+                    media:
+                        media.length > 0
+                            ? media.map((m) => ({
+                                  type: m.type,
+                                  title: m.title,
+                                  url: m.url,
+                                  media: m.media,
+                              }))
+                            : undefined,
                 },
             })
             .setIsGraphQLEndpoint(true)
@@ -293,7 +416,8 @@ export default function CommentSection({
                     ...prevComments,
                     response.comment,
                 ]);
-                setContent("");
+                setContent(TextEditorEmptyDoc as TextEditorContent);
+                setMedia([]);
                 focusCommentTarget(response.comment.commentId);
                 setPost((prevPost) => {
                     if (prevPost) {
@@ -317,11 +441,12 @@ export default function CommentSection({
 
     const handleCommentReply = async (
         commentId: string,
-        content: string,
+        replyContent: TextEditorContent | string,
+        replyMedia: MediaItem[],
         parentReplyId?: string,
     ) => {
         const query = `
-            mutation ($communityId: String!, $postId: String!, $commentId: String!, $content: String!, $parentReplyId: String, $media: [CommunityPostInputMedia]) {
+            mutation ($communityId: String!, $postId: String!, $commentId: String!, $content: JSONObject!, $parentReplyId: String, $media: [CommunityPostInputMedia]) {
                 comment: postComment(communityId: $communityId, postId: $postId, parentCommentId: $commentId, content: $content, parentReplyId: $parentReplyId, media: $media) {
                     communityId
                     postId
@@ -338,6 +463,8 @@ export default function CommentSection({
                     }
                     media {
                         type
+                        title
+                        url
                         media {
                             mediaId
                             file
@@ -358,11 +485,21 @@ export default function CommentSection({
                                 thumbnail
                             }
                         }
+                        media {
+                            type
+                            title
+                            url
+                            media {
+                                mediaId
+                                file
+                                thumbnail
+                            }
+                        }
                         updatedAt
                         likesCount
                         hasLiked
                         deleted
-                    } 
+                    }
                     hasLiked
                     updatedAt
                     deleted
@@ -377,8 +514,17 @@ export default function CommentSection({
                     communityId,
                     postId,
                     commentId,
-                    content,
+                    content: replyContent,
                     parentReplyId,
+                    media:
+                        replyMedia.length > 0
+                            ? replyMedia.map((m) => ({
+                                  type: m.type,
+                                  title: m.title,
+                                  url: m.url,
+                                  media: m.media,
+                              }))
+                            : undefined,
                 },
             })
             .setIsGraphQLEndpoint(true)
@@ -430,6 +576,8 @@ export default function CommentSection({
                     }
                     media {
                         type
+                        title
+                        url
                         media {
                             mediaId
                             file
@@ -445,6 +593,16 @@ export default function CommentSection({
                             userId
                             name
                             avatar {
+                                mediaId
+                                file
+                                thumbnail
+                            }
+                        }
+                        media {
+                            type
+                            title
+                            url
+                            media {
                                 mediaId
                                 file
                                 thumbnail
@@ -506,10 +664,13 @@ export default function CommentSection({
                     }
                     media {
                         type
+                        title
+                        url
                         media {
                             mediaId
                             file
                             thumbnail
+                            size
                         }
                     }
                     likesCount
@@ -520,6 +681,16 @@ export default function CommentSection({
                             userId
                             name
                             avatar {
+                                mediaId
+                                file
+                                thumbnail
+                            }
+                        }
+                        media {
+                            type
+                            title
+                            url
+                            media {
                                 mediaId
                                 file
                                 thumbnail
@@ -584,6 +755,8 @@ export default function CommentSection({
                     }
                     media {
                         type
+                        title
+                        url
                         media {
                             mediaId
                             file
@@ -599,6 +772,16 @@ export default function CommentSection({
                             userId
                             name
                             avatar {
+                                mediaId
+                                file
+                                thumbnail
+                            }
+                        }
+                        media {
+                            type
+                            title
+                            url
+                            media {
                                 mediaId
                                 file
                                 thumbnail
@@ -675,10 +858,16 @@ export default function CommentSection({
                                 handleCommentLike(commentId);
                             }
                         }}
-                        onReply={(commentId, content, parentReplyId?: string) =>
+                        onReply={(
+                            commentId,
+                            replyContent,
+                            replyMedia,
+                            parentReplyId?: string,
+                        ) =>
                             handleCommentReply(
                                 commentId,
-                                content,
+                                replyContent,
+                                replyMedia,
                                 parentReplyId,
                             )
                         }
@@ -698,14 +887,123 @@ export default function CommentSection({
             )}
             {profile?.name && (
                 <div className="flex flex-col gap-2">
-                    <Textarea
-                        placeholder="Add a comment..."
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                    />
-                    <Button onClick={handlePostComment} disabled={isPosting}>
-                        {isPosting ? "Posting..." : "Post Comment"}
-                    </Button>
+                    <div>
+                        <Editor
+                            url={address.backend}
+                            initialContent={content}
+                            onChange={(value) =>
+                                setContent(value as TextEditorContent)
+                            }
+                            placeholder="Add a comment..."
+                            showToolbar={false}
+                        />
+                    </div>
+                    {media.length > 0 && (
+                        <div className="overflow-x-auto">
+                            <MediaPreview
+                                items={media}
+                                onRemove={handleMediaRemove}
+                            />
+                        </div>
+                    )}
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1">
+                            <Popover modal={true}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-9 w-9"
+                                    >
+                                        <Paperclip className="h-5 w-5" />
+                                        <span className="sr-only">
+                                            Attach files
+                                        </span>
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80">
+                                    <div className="grid gap-4">
+                                        <h4 className="font-medium leading-none">
+                                            Attach files
+                                        </h4>
+                                        <Input
+                                            id="comment-file"
+                                            type="file"
+                                            multiple
+                                            accept="image/*,video/*,application/pdf"
+                                            onChange={handleFileUpload}
+                                        />
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                            <Popover
+                                open={isGifSelectorOpen}
+                                onOpenChange={setIsGifSelectorOpen}
+                                modal={true}
+                            >
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-9 w-9"
+                                    >
+                                        <ImageIcon className="h-5 w-5" />
+                                        <span className="sr-only">Add GIF</span>
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80">
+                                    <GifSelector
+                                        onGifSelect={handleGifSelect}
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                            <Popover modal={true}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-9 w-9"
+                                    >
+                                        <Video className="h-5 w-5" />
+                                        <span className="sr-only">
+                                            Add video
+                                        </span>
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80">
+                                    <div className="grid gap-4">
+                                        <h4 className="font-medium leading-none">
+                                            Add video
+                                        </h4>
+                                        <Input
+                                            id="comment-video"
+                                            type="url"
+                                            placeholder="https://youtube.com/watch?v="
+                                            value={videoUrl}
+                                            onChange={(e) =>
+                                                setVideoUrl(e.target.value)
+                                            }
+                                        />
+                                        <Button
+                                            size="sm"
+                                            onClick={() =>
+                                                handleVideoAdd(videoUrl)
+                                            }
+                                            disabled={!videoUrl.trim()}
+                                        >
+                                            Add Video
+                                        </Button>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                        <Button
+                            onClick={handlePostComment}
+                            disabled={isPosting}
+                        >
+                            {isPosting ? "Posting..." : "Post Comment"}
+                        </Button>
+                    </div>
                 </div>
             )}
         </div>

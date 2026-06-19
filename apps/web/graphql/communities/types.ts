@@ -142,7 +142,7 @@ const communityCommentReply = new GraphQLObjectType({
     name: "CommunityCommentReply",
     fields: {
         replyId: { type: new GraphQLNonNull(GraphQLString) },
-        content: { type: new GraphQLNonNull(GraphQLString) },
+        content: { type: new GraphQLNonNull(GraphQLJSONObject) },
         user: {
             type: userTypes.userType,
             resolve: (reply, _, ctx: GQLContext, __) =>
@@ -163,7 +163,7 @@ const communityComment = new GraphQLObjectType({
         communityId: { type: new GraphQLNonNull(GraphQLString) },
         postId: { type: new GraphQLNonNull(GraphQLString) },
         commentId: { type: new GraphQLNonNull(GraphQLString) },
-        content: { type: new GraphQLNonNull(GraphQLString) },
+        content: { type: new GraphQLNonNull(GraphQLJSONObject) },
         user: {
             type: userTypes.userType,
             resolve: (comment, _, ctx: GQLContext, __) =>
@@ -182,7 +182,7 @@ const communityReportContent = new GraphQLObjectType({
     name: "CommunityReportContent",
     fields: {
         id: { type: new GraphQLNonNull(GraphQLString) },
-        content: { type: new GraphQLNonNull(GraphQLString) },
+        content: { type: new GraphQLNonNull(GraphQLJSONObject) },
         media: { type: new GraphQLList(communityPostMedia) },
     },
 });

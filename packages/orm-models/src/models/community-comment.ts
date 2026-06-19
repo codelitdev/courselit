@@ -4,15 +4,17 @@ import { CommunityMediaSchema } from "./community-media";
 import {
     CommunityComment,
     CommunityCommentReply,
+    TextEditorContent,
 } from "@courselit/common-models";
 
 export interface InternalCommunityComment
     extends Pick<
         CommunityComment,
-        "communityId" | "postId" | "commentId" | "content" | "media"
+        "communityId" | "postId" | "commentId" | "media"
     > {
     domain: mongoose.Types.ObjectId;
     userId: string;
+    content: TextEditorContent | string;
     likes: string[];
     replies: InternalReply[];
     deleted: boolean;
@@ -21,13 +23,14 @@ export interface InternalCommunityComment
 export interface InternalReply
     extends Omit<CommunityCommentReply, "likesCount" | "hasLiked"> {
     userId: string;
+    content: TextEditorContent | string;
     likes: string[];
 }
 
 export const ReplySchema = new mongoose.Schema(
     {
         userId: { type: String, required: true },
-        content: { type: String, required: true },
+        content: { type: mongoose.Schema.Types.Mixed, required: true },
         media: [CommunityMediaSchema],
         replyId: { type: String, required: true, default: generateUniqueId },
         parentReplyId: { type: String, default: null },
@@ -52,7 +55,7 @@ export const CommunityCommentSchema =
                 unique: true,
                 default: generateUniqueId,
             },
-            content: { type: String, required: true },
+            content: { type: mongoose.Schema.Types.Mixed, required: true },
             media: [CommunityMediaSchema],
             likes: [String],
             replies: [ReplySchema],

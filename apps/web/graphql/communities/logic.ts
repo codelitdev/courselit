@@ -1630,7 +1630,7 @@ export async function postComment({
     ctx: GQLContext;
     communityId: string;
     postId: string;
-    content: string;
+    content: TextEditorContent | string;
     media?: CommunityMedia[];
     parentCommentId?: string;
     parentReplyId?: string;
