@@ -31,6 +31,7 @@ const nextConfig = {
         "jsonwebtoken",
     ],
     experimental: {},
+    allowedDevOrigins: ["clcomp.taile2f1.ts.net"],
 };
 
 module.exports = nextConfig;

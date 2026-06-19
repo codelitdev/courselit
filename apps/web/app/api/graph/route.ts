@@ -3,7 +3,8 @@ import schema from "@/graphql";
 import { graphql } from "graphql";
 import { getAddress } from "@/lib/utils";
 import User from "@models/User";
-import { auth } from "@/auth";
+import { getAuth } from "@/auth";
+import { getBackendAddress } from "@/app/actions";
 import { als } from "@/async-local-storage";
 import { getCachedDomain } from "@/lib/domain-cache";
 
@@ -27,6 +28,9 @@ export async function POST(req: NextRequest) {
             { status: 400 },
         );
     }
+
+    const backendAddress = await getBackendAddress(req.headers);
+    const auth = getAuth(backendAddress);
 
     const [domain, session, body] = await Promise.all([
         getCachedDomain(domainName),
