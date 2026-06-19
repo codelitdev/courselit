@@ -44,7 +44,7 @@ export const formatComment = (comment: any, userId: string) => ({
     postId: comment.postId,
     userId: comment.userId,
     commentId: comment.commentId,
-    content: comment.content,
+    content: normalizeTextEditorContent(comment.content),
     hasLiked: comment.likes.includes(userId),
     createdAt: comment.createdAt,
     updatedAt: comment.updatedAt,
@@ -53,7 +53,7 @@ export const formatComment = (comment: any, userId: string) => ({
     replies: comment.replies.map((reply) => ({
         replyId: reply.replyId,
         userId: reply.userId,
-        content: reply.content,
+        content: normalizeTextEditorContent(reply.content),
         media: reply.media,
         parentReplyId: reply.parentReplyId,
         createdAt: reply.createdAt,
@@ -120,7 +120,7 @@ export async function getCommunityReportContent({
     contentId: string;
     contentParentId?: string;
 }): Promise<{
-    content: string;
+    content: TextEditorContent;
     id: string;
     media: CommunityMedia[];
 }> {
@@ -157,7 +157,7 @@ export async function getCommunityReportContent({
     }
 
     return {
-        content: content.content,
+        content: normalizeTextEditorContent(content.content),
         id: contentId,
         media: content.media,
     };

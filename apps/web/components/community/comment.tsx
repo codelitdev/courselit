@@ -1,7 +1,8 @@
+"use client";
+
 import { useContext, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
     ThumbsUp,
     MessageSquare,
@@ -13,9 +14,15 @@ import {
     CommunityComment,
     CommunityCommentReply,
     Constants,
+    CommunityMedia,
     Membership,
+    TextEditorContent,
 } from "@courselit/common-models";
-import { formattedLocaleDate, hasCommunityPermission } from "@ui-lib/utils";
+import {
+    formattedLocaleDate,
+    hasCommunityPermission,
+    isTextEditorNonEmpty,
+} from "@ui-lib/utils";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -30,10 +37,22 @@ import {
     DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { isCommunityComment } from "./utils";
 import { DELETED_COMMENT_PLACEHOLDER } from "@ui-config/strings";
 import { useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
+import { TextRenderer } from "@courselit/page-blocks";
+import { MediaPreview } from "./media-preview";
+import type { MediaItem } from "./media-item";
+import { Editor, emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
+
+const createClientId = () => {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
 
 type CommentOrReply =
     | CommunityComment
@@ -45,7 +64,8 @@ interface CommentProps {
     onLike: (commentId: string, replyId?: string) => void;
     onReply: (
         commentId: string,
-        content: string,
+        content: TextEditorContent | string,
+        media: MediaItem[],
         parentReplyId?: string,
     ) => void;
     onDelete: (comment: CommentOrReply) => void;
@@ -65,7 +85,11 @@ export function Comment({
     isPosting = false,
 }: CommentProps) {
     const [isReplying, setIsReplying] = useState(false);
-    const [replyContent, setReplyContent] = useState("");
+    const [replyContent, setReplyContent] = useState<TextEditorContent>(
+        TextEditorEmptyDoc as TextEditorContent,
+    );
+    const [replyMedia, setReplyMedia] = useState<MediaItem[]>([]);
+    const [replyEditorKey, setReplyEditorKey] = useState(0);
     const [commentToDelete, setCommentToDelete] =
         useState<CommentOrReply | null>(null);
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
@@ -172,6 +196,43 @@ export function Comment({
         ? comment.commentId
         : (comment as CommunityCommentReply).replyId;
 
+    const renderContent = () => {
+        if (comment.deleted) {
+            return (
+                <span className="italic text-gray-500">
+                    {DELETED_COMMENT_PLACEHOLDER}
+                </span>
+            );
+        }
+
+        const content = comment.content;
+        if (typeof content === "string") {
+            return (
+                <p className="text-sm mt-1 whitespace-pre-wrap">{content}</p>
+            );
+        }
+
+        return (
+            <div className="text-sm mt-1">
+                <TextRenderer json={content} />
+            </div>
+        );
+    };
+
+    const renderMedia = (media: CommunityMedia[] | undefined) => {
+        if (!media || media.length === 0) return null;
+
+        const mediaItems: MediaItem[] = media.map((m) => ({
+            ...m,
+        }));
+
+        return (
+            <div className="mt-2 overflow-x-auto">
+                <MediaPreview items={mediaItems} onRemove={() => {}} />
+            </div>
+        );
+    };
+
     return (
         <div
             id={itemId}
@@ -245,15 +306,12 @@ export function Comment({
                             </DropdownMenu>
                         )}
                     </div>
-                    <p className="text-sm mt-1 whitespace-pre-wrap">
-                        {comment.deleted ? (
-                            <span className="italic text-gray-500">
-                                {DELETED_COMMENT_PLACEHOLDER}
-                            </span>
-                        ) : (
-                            comment.content
-                        )}
-                    </p>
+                    {renderContent()}
+                    {renderMedia(
+                        isCommunityComment(comment)
+                            ? (comment as CommunityComment).media
+                            : (comment as CommunityCommentReply).media,
+                    )}
                     <div className="flex items-center gap-4 mt-2">
                         <Button
                             variant="ghost"
@@ -278,38 +336,133 @@ export function Comment({
             </div>
             {isReplying && profile?.name && (
                 <div className="mt-2 space-y-2 p-1">
-                    <Textarea
-                        placeholder="Write a reply..."
-                        value={replyContent}
-                        onChange={(e) => setReplyContent(e.target.value)}
-                    />
-                    <div className="flex justify-end gap-2">
+                    <div className="rounded-md border border-input px-3 py-2">
+                        <Editor
+                            key={replyEditorKey}
+                            url={address.backend}
+                            initialContent={replyContent}
+                            onChange={(value) =>
+                                setReplyContent(value as TextEditorContent)
+                            }
+                            placeholder="Write a reply..."
+                            showToolbar={false}
+                        />
+                        {replyMedia.length > 0 && (
+                            <div className="mt-2">
+                                <MediaPreview
+                                    items={replyMedia}
+                                    onRemove={(index) =>
+                                        setReplyMedia((prev) => {
+                                            const toRemove = prev[index];
+                                            if (
+                                                toRemove?.file &&
+                                                toRemove.url?.startsWith(
+                                                    "blob:",
+                                                )
+                                            ) {
+                                                URL.revokeObjectURL(
+                                                    toRemove.url,
+                                                );
+                                            }
+                                            return prev.filter(
+                                                (_, i) => i !== index,
+                                            );
+                                        })
+                                    }
+                                />
+                            </div>
+                        )}
+                    </div>
+                    <div className="flex justify-end gap-2 items-center">
+                        <label className="cursor-pointer">
+                            <input
+                                type="file"
+                                multiple
+                                accept="image/*,video/*,application/pdf"
+                                className="sr-only"
+                                onChange={(e) => {
+                                    const files = e.target.files;
+                                    if (!files) return;
+                                    const nextItems: MediaItem[] = Array.from(
+                                        files,
+                                    ).map((file) => {
+                                        const url = URL.createObjectURL(file);
+                                        const isPdf =
+                                            file.type === "application/pdf";
+                                        const isImage =
+                                            file.type.startsWith("image/");
+                                        const type = isPdf
+                                            ? "pdf"
+                                            : isImage
+                                              ? "image"
+                                              : "video";
+                                        return {
+                                            type,
+                                            url,
+                                            title: file.name,
+                                            file,
+                                            clientId: createClientId(),
+                                            fileSize: `${(file.size / (1024 * 1024)).toFixed(1)}mb`,
+                                        };
+                                    });
+                                    setReplyMedia((prev) => [
+                                        ...prev,
+                                        ...nextItems,
+                                    ]);
+                                    e.target.value = "";
+                                }}
+                            />
+                            <span className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3">
+                                Attach
+                            </span>
+                        </label>
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setIsReplying(false)}
+                            onClick={() => {
+                                setIsReplying(false);
+                                setReplyContent(
+                                    TextEditorEmptyDoc as TextEditorContent,
+                                );
+                                setReplyMedia([]);
+                                setReplyEditorKey((k) => k + 1);
+                            }}
                         >
                             Cancel
                         </Button>
                         <Button
                             size="sm"
                             onClick={() => {
-                                if (replyContent.trim()) {
-                                    isCommunityComment(comment)
-                                        ? onReply(
-                                              comment.commentId,
-                                              replyContent,
-                                          )
-                                        : onReply(
-                                              comment.commentId,
-                                              replyContent,
-                                              comment.replyId,
-                                          );
-                                    setReplyContent("");
-                                    setIsReplying(false);
+                                const hasContent =
+                                    isTextEditorNonEmpty(replyContent);
+                                const hasMedia = replyMedia.length > 0;
+                                if (!hasContent && !hasMedia) return;
+                                if (isCommunityComment(comment)) {
+                                    onReply(
+                                        comment.commentId,
+                                        replyContent,
+                                        replyMedia,
+                                    );
+                                } else {
+                                    onReply(
+                                        comment.commentId,
+                                        replyContent,
+                                        replyMedia,
+                                        comment.replyId,
+                                    );
                                 }
+                                setReplyContent(
+                                    TextEditorEmptyDoc as TextEditorContent,
+                                );
+                                setReplyMedia([]);
+                                setReplyEditorKey((k) => k + 1);
+                                setIsReplying(false);
                             }}
-                            disabled={isPosting}
+                            disabled={
+                                isPosting ||
+                                (!isTextEditorNonEmpty(replyContent) &&
+                                    replyMedia.length === 0)
+                            }
                         >
                             Reply
                         </Button>

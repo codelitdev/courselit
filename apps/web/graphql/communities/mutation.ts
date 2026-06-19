@@ -303,7 +303,7 @@ const mutations = {
         args: {
             communityId: { type: new GraphQLNonNull(GraphQLString) },
             postId: { type: new GraphQLNonNull(GraphQLString) },
-            content: { type: new GraphQLNonNull(GraphQLString) },
+            content: { type: new GraphQLNonNull(GraphQLJSONObject) },
             media: { type: new GraphQLList(types.communityPostInputMedia) },
             parentCommentId: { type: GraphQLString },
             parentReplyId: { type: GraphQLString },
@@ -320,7 +320,7 @@ const mutations = {
             }: {
                 communityId: string;
                 postId: string;
-                content: string;
+                content: TextEditorContent | string;
                 media?: CommunityMedia[];
                 parentCommentId?: string;
                 parentReplyId?: string;

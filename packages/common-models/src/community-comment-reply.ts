@@ -1,9 +1,10 @@
+import { TextEditorContent } from "./text-editor-content";
 import User from "./user";
 
 export interface CommunityCommentReply {
     replyId: string;
     user: User;
-    content: string;
+    content: TextEditorContent | string;
     media: {
         type: string;
         title: string;
