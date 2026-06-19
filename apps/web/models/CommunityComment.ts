@@ -27,7 +27,7 @@ export interface InternalReply
 const ReplySchema = new mongoose.Schema(
     {
         userId: { type: String, required: true },
-        content: { type: String, required: true },
+        content: { type: mongoose.Schema.Types.Mixed, required: true },
         media: [CommunityMediaSchema],
         replyId: { type: String, required: true, default: generateUniqueId },
         parentReplyId: { type: String, default: null },
@@ -51,7 +51,7 @@ const CommunityCommentSchema = new mongoose.Schema<InternalCommunityComment>(
             unique: true,
             default: generateUniqueId,
         },
-        content: { type: String, required: true },
+        content: { type: mongoose.Schema.Types.Mixed, required: true },
         media: [CommunityMediaSchema],
         likes: [String],
         replies: [ReplySchema],
