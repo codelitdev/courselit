@@ -1,6 +1,7 @@
 import {
     CommunityMedia,
     CommunityPost,
+    CommunityReaction,
     CommunityReport,
     CommunityReportType,
     Constants,
@@ -25,6 +26,7 @@ import CommunityPostSubscriberModel, {
 } from "@models/CommunityPostSubscriber";
 import { hasCommunityPermission } from "@ui-lib/utils";
 import { normalizeTextEditorContent } from "@courselit/utils";
+import UserModel from "@models/User";
 
 export type PublicPost = Omit<
     CommunityPost,
@@ -33,54 +35,163 @@ export type PublicPost = Omit<
     userId: string;
 };
 
+const HEART_EMOJI = "❤️";
+
+/**
+ * Get reactions from an entity that may have either `reactions` (Map) or legacy `likes` (string[]).
+ * Returns a Map<string, string[]>.
+ */
+function getReactionsMap(entity: any): Map<string, string[]> {
+    if (entity.reactions && typeof entity.reactions === "object") {
+        // New format: reactions is a Map or object
+        if (entity.reactions instanceof Map) {
+            if (entity.reactions.size > 0) {
+                return entity.reactions;
+            }
+        } else {
+            // Plain object from lean() / serialization
+            const entries = Object.entries(entity.reactions);
+            if (entries.length > 0) {
+                return new Map(entries);
+            }
+        }
+    }
+    // Legacy format: likes is a string[]
+    if (Array.isArray(entity.likes) && entity.likes.length > 0) {
+        return new Map([[HEART_EMOJI, [...entity.likes]]]);
+    }
+    return new Map();
+}
+
+/**
+ * Convert a Map<string, string[]> to a CommunityReaction[] array with reactor details.
+ */
+export async function formatReactions(
+    reactionsMap: Map<string, string[]>,
+    userId: string,
+): Promise<CommunityReaction[]> {
+    const reactions: CommunityReaction[] = [];
+
+    const entries: [string, string[]][] = [];
+    reactionsMap.forEach((value, key) => {
+        entries.push([key, value]);
+    });
+
+    for (let i = 0; i < entries.length; i++) {
+        const [emoji, userIds] = entries[i];
+        if (userIds.length === 0) continue;
+
+        const reactors = await UserModel.find(
+            { userId: { $in: userIds } },
+            { userId: 1, name: 1, avatar: 1, _id: 0 },
+        ).lean();
+
+        reactions.push({
+            emoji,
+            count: userIds.length,
+            hasReacted: userIds.includes(userId),
+            reactors: reactors.map((r: any) => ({
+                userId: r.userId,
+                name: r.name,
+                avatar: r.avatar || {},
+            })),
+        });
+    }
+
+    // Sort reactions: user's reactions first, then by count descending
+    reactions.sort((a, b) => {
+        if (a.hasReacted !== b.hasReacted) return a.hasReacted ? -1 : 1;
+        return b.count - a.count;
+    });
+
+    return reactions;
+}
+
+/**
+ * Compute likesCount from reactions (sum of all reaction counts for backward compat).
+ */
+function computeLikesCount(reactionsMap: Map<string, string[]>): number {
+    let count = 0;
+    reactionsMap.forEach(function (userIds: string[]) {
+        count += userIds.length;
+    });
+    return count;
+}
+
+/**
+ * Compute hasLiked from reactions (user is in any reaction).
+ */
+function computeHasLiked(
+    reactionsMap: Map<string, string[]>,
+    userId: string,
+): boolean {
+    let found = false;
+    reactionsMap.forEach(function (userIds: string[]) {
+        if (userIds.includes(userId)) found = true;
+    });
+    return found;
+}
+
 export function normalizeCommunityPostContent(
     content: InternalCommunityPost["content"],
 ): TextEditorContent {
     return normalizeTextEditorContent(content);
 }
 
-export const formatComment = (comment: any, userId: string) => ({
-    communityId: comment.communityId,
-    postId: comment.postId,
-    userId: comment.userId,
-    commentId: comment.commentId,
-    content: comment.content,
-    hasLiked: comment.likes.includes(userId),
-    createdAt: comment.createdAt,
-    updatedAt: comment.updatedAt,
-    media: comment.media,
-    likesCount: comment.likes.length,
-    replies: comment.replies.map((reply) => ({
-        replyId: reply.replyId,
-        userId: reply.userId,
-        content: reply.content,
-        media: reply.media,
-        parentReplyId: reply.parentReplyId,
-        createdAt: reply.createdAt,
-        updatedAt: reply.updatedAt,
-        likesCount: reply.likes.length,
-        hasLiked: reply.likes.includes(userId),
-        deleted: reply.deleted,
-    })),
-    deleted: comment.deleted,
-});
+export const formatComment = (comment: any, userId: string) => {
+    const reactionsMap = getReactionsMap(comment);
+    return {
+        communityId: comment.communityId,
+        postId: comment.postId,
+        userId: comment.userId,
+        commentId: comment.commentId,
+        content: comment.content,
+        hasLiked: computeHasLiked(reactionsMap, userId),
+        createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt,
+        media: comment.media,
+        likesCount: computeLikesCount(reactionsMap),
+        reactions: [], // Populated by resolver with user details
+        replies: comment.replies.map((reply: any) => {
+            const replyReactionsMap = getReactionsMap(reply);
+            return {
+                replyId: reply.replyId,
+                userId: reply.userId,
+                content: reply.content,
+                media: reply.media,
+                parentReplyId: reply.parentReplyId,
+                createdAt: reply.createdAt,
+                updatedAt: reply.updatedAt,
+                likesCount: computeLikesCount(replyReactionsMap),
+                hasLiked: computeHasLiked(replyReactionsMap, userId),
+                reactions: [], // Populated by resolver
+                deleted: reply.deleted,
+            };
+        }),
+        deleted: comment.deleted,
+    };
+};
 
 export const formatPost = (
     post: InternalCommunityPost,
     userId: string,
-): PublicPost => ({
-    communityId: post.communityId,
-    postId: post.postId,
-    title: post.title,
-    content: normalizeCommunityPostContent(post.content),
-    category: post.category,
-    media: post.media,
-    pinned: post.pinned,
-    likesCount: post.likes.length,
-    updatedAt: post.updatedAt,
-    hasLiked: post.likes.includes(userId),
-    userId: post.userId,
-});
+): PublicPost => {
+    const reactionsMap = getReactionsMap(post);
+    return {
+        communityId: post.communityId,
+        postId: post.postId,
+        title: post.title,
+        content: normalizeCommunityPostContent(post.content),
+        category: post.category,
+        media: post.media,
+        pinned: post.pinned,
+        likesCount: computeLikesCount(reactionsMap),
+        updatedAt: post.updatedAt,
+        hasLiked: computeHasLiked(reactionsMap, userId),
+        reactions: [], // Populated by resolver with user details
+        userId: post.userId,
+    };
+};
 
 export async function toggleContentVisibility(
     contentId: string,
