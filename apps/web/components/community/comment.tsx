@@ -3,7 +3,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
-    ThumbsUp,
     MessageSquare,
     MoreVertical,
     FlagTriangleRight,
@@ -34,6 +33,7 @@ import { isCommunityComment } from "./utils";
 import { DELETED_COMMENT_PLACEHOLDER } from "@ui-config/strings";
 import { useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
+import { ReactionsBar } from "./reactions-bar";
 
 type CommentOrReply =
     | CommunityComment
@@ -42,7 +42,7 @@ type CommentOrReply =
 interface CommentProps {
     communityId: string;
     comment: CommentOrReply;
-    onLike: (commentId: string, replyId?: string) => void;
+    onReact: (commentId: string, emoji: string, replyId?: string) => void;
     onReply: (
         commentId: string,
         content: string,
@@ -57,7 +57,7 @@ interface CommentProps {
 export function Comment({
     communityId,
     comment,
-    onLike,
+    onReact,
     onReply,
     onDelete,
     membership,
@@ -255,15 +255,21 @@ export function Comment({
                         )}
                     </p>
                     <div className="flex items-center gap-4 mt-2">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className={`text-muted-foreground ${comment.hasLiked ? "bg-accent" : ""}`}
-                            onClick={() => onLike(comment.commentId)}
-                        >
-                            <ThumbsUp className="h-4 w-4 mr-2" />
-                            {comment.likesCount}
-                        </Button>
+                        <ReactionsBar
+                            reactions={comment.reactions || []}
+                            onReact={(emoji) => {
+                                if (isCommunityComment(comment)) {
+                                    onReact(comment.commentId, emoji);
+                                } else {
+                                    onReact(
+                                        comment.commentId,
+                                        emoji,
+                                        comment.replyId,
+                                    );
+                                }
+                            }}
+                            compact
+                        />
                         <Button
                             variant="ghost"
                             size="sm"
@@ -325,7 +331,9 @@ export function Comment({
                             ...reply,
                             commentId: comment.commentId,
                         }}
-                        onLike={() => onLike(comment.commentId, reply.replyId)}
+                        onReact={(commentId, emoji, replyId) =>
+                            onReact(commentId, emoji, reply.replyId)
+                        }
                         onReply={onReply}
                         onDelete={onDelete}
                         membership={membership}

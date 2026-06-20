@@ -50,7 +50,10 @@ function getReactionsMap(entity: any): Map<string, string[]> {
             }
         } else {
             // Plain object from lean() / serialization
-            const entries = Object.entries(entity.reactions);
+            const entries = Object.entries(entity.reactions) as [
+                string,
+                string[],
+            ][];
             if (entries.length > 0) {
                 return new Map(entries);
             }

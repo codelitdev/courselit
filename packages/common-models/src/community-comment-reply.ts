@@ -1,3 +1,4 @@
+import { CommunityReaction } from "./community-reaction";
 import User from "./user";
 
 export interface CommunityCommentReply {
@@ -14,5 +15,6 @@ export interface CommunityCommentReply {
     updatedAt: string;
     likesCount: number;
     hasLiked: boolean;
+    reactions: CommunityReaction[];
     deleted: boolean;
 }
