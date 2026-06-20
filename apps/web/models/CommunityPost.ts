@@ -22,6 +22,7 @@ export interface InternalCommunityPost
     domain: mongoose.Types.ObjectId;
     userId: string;
     likes: string[];
+    reactions: Map<string, string[]>;
     createdAt: string;
     updatedAt: string;
 }
@@ -43,6 +44,7 @@ const CommunityPostSchema = new mongoose.Schema<InternalCommunityPost>(
         media: [CommunityMediaSchema],
         pinned: { type: Boolean, default: false },
         likes: [String],
+        reactions: { type: Map, of: [String], default: {} },
         deleted: { type: Boolean, default: false },
     },
     {

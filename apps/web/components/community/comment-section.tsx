@@ -53,6 +53,75 @@ const focusCommentTarget = (targetId: string) => {
     window.dispatchEvent(new Event("community-comment-target-change"));
 };
 
+const REACTIONS_FRAGMENT = `
+    reactions {
+        emoji
+        count
+        hasReacted
+        reactors {
+            userId
+            name
+            avatar {
+                mediaId
+                file
+                thumbnail
+            }
+        }
+    }
+`;
+
+const REPLY_FIELDS = `
+    replyId
+    content
+    user {
+        userId
+        name
+        avatar {
+            mediaId
+            file
+            thumbnail
+        }
+    }
+    updatedAt
+    likesCount
+    hasLiked
+    ${REACTIONS_FRAGMENT}
+    deleted
+`;
+
+const COMMENT_FIELDS = `
+    communityId
+    postId
+    commentId
+    content
+    user {
+        userId
+        name
+        avatar {
+            mediaId
+            file
+            thumbnail
+        }
+    }
+    media {
+        type
+        media {
+            mediaId
+            file
+            thumbnail
+            size
+        }
+    }
+    likesCount
+    ${REACTIONS_FRAGMENT}
+    replies {
+        ${REPLY_FIELDS}
+    }
+    hasLiked
+    updatedAt
+    deleted
+`;
+
 export default function CommentSection({
     communityId,
     postId,
@@ -149,49 +218,7 @@ export default function CommentSection({
         const query = `
             query ($communityId: String!, $postId: String!) {
                 comments: getComments(communityId: $communityId, postId: $postId) {
-                    communityId
-                    postId
-                    commentId
-                    content
-                    user {
-                        userId
-                        name
-                        avatar {
-                            mediaId
-                            file
-                            thumbnail
-                        }
-                    }
-                    media {
-                        type
-                        media {
-                            mediaId
-                            file
-                            thumbnail
-                            size
-                        }
-                    }
-                    likesCount
-                    replies {
-                        replyId
-                        content
-                        user {
-                            userId
-                            name
-                            avatar {
-                                mediaId
-                                file
-                                thumbnail
-                            }
-                        }
-                        updatedAt
-                        likesCount
-                        hasLiked
-                        deleted
-                    } 
-                    hasLiked
-                    updatedAt
-                    deleted
+                    ${COMMENT_FIELDS}
                 }
             }
         `;
@@ -226,49 +253,7 @@ export default function CommentSection({
         const query = `
             mutation ($communityId: String!, $postId: String!, $content: String!) {
                 comment: postComment(communityId: $communityId, postId: $postId, content: $content) {
-                    communityId
-                    postId
-                    commentId
-                    content
-                    user {
-                        userId
-                        name
-                        avatar {
-                            mediaId
-                            file
-                            thumbnail
-                        }
-                    }
-                    media {
-                        type
-                        media {
-                            mediaId
-                            file
-                            thumbnail
-                            size
-                        }
-                    }
-                    likesCount
-                    replies {
-                        replyId
-                        content
-                        user {
-                            userId
-                            name
-                            avatar {
-                                mediaId
-                                file
-                                thumbnail
-                            }
-                        }
-                        updatedAt
-                        likesCount
-                        hasLiked
-                        deleted
-                    } 
-                    hasLiked
-                    updatedAt
-                    deleted
+                    ${COMMENT_FIELDS}
                 }
             }
         `;
@@ -323,49 +308,7 @@ export default function CommentSection({
         const query = `
             mutation ($communityId: String!, $postId: String!, $commentId: String!, $content: String!, $parentReplyId: String, $media: [CommunityPostInputMedia]) {
                 comment: postComment(communityId: $communityId, postId: $postId, parentCommentId: $commentId, content: $content, parentReplyId: $parentReplyId, media: $media) {
-                    communityId
-                    postId
-                    commentId
-                    content
-                    user {
-                        userId
-                        name
-                        avatar {
-                            mediaId
-                            file
-                            thumbnail
-                        }
-                    }
-                    media {
-                        type
-                        media {
-                            mediaId
-                            file
-                            thumbnail
-                            size
-                        }
-                    }
-                    likesCount
-                    replies {
-                        replyId
-                        content
-                        user {
-                            userId
-                            name
-                            avatar {
-                                mediaId
-                                file
-                                thumbnail
-                            }
-                        }
-                        updatedAt
-                        likesCount
-                        hasLiked
-                        deleted
-                    } 
-                    hasLiked
-                    updatedAt
-                    deleted
+                    ${COMMENT_FIELDS}
                 }
             }
         `;
@@ -411,53 +354,11 @@ export default function CommentSection({
         }
     };
 
-    const handleCommentLike = async (commentId: string) => {
+    const handleCommentReact = async (commentId: string, emoji: string) => {
         const query = `
-            mutation ($communityId: String!, $postId: String!, $commentId: String!) {
-                comment: toggleCommentLike(communityId: $communityId, postId: $postId, commentId: $commentId) {
-                    communityId
-                    postId
-                    commentId
-                    content
-                    user {
-                        userId
-                        name
-                        avatar {
-                            mediaId
-                            file
-                            thumbnail
-                        }
-                    }
-                    media {
-                        type
-                        media {
-                            mediaId
-                            file
-                            thumbnail
-                            size
-                        }
-                    }
-                    likesCount
-                    replies {
-                        replyId
-                        content
-                        user {
-                            userId
-                            name
-                            avatar {
-                                mediaId
-                                file
-                                thumbnail
-                            }
-                        }
-                        updatedAt
-                        likesCount
-                        hasLiked
-                        deleted
-                    } 
-                    hasLiked
-                    updatedAt
-                    deleted
+            mutation ($communityId: String!, $postId: String!, $commentId: String!, $emoji: String!) {
+                comment: toggleCommentReaction(communityId: $communityId, postId: $postId, commentId: $commentId, emoji: $emoji) {
+                    ${COMMENT_FIELDS}
                 }
             }
         `;
@@ -469,6 +370,7 @@ export default function CommentSection({
                     communityId,
                     postId,
                     commentId,
+                    emoji,
                 },
             })
             .setIsGraphQLEndpoint(true)
@@ -487,52 +389,15 @@ export default function CommentSection({
         }
     };
 
-    const handleReplyLike = async (commentId: string, replyId: string) => {
+    const handleReplyReact = async (
+        commentId: string,
+        emoji: string,
+        replyId: string,
+    ) => {
         const query = `
-            mutation ($communityId: String!, $postId: String!, $commentId: String!, $replyId: String!) {
-                comment: toggleCommentReplyLike(communityId: $communityId, postId: $postId, commentId: $commentId, replyId: $replyId) {
-                    communityId
-                    postId
-                    commentId
-                    content
-                    user {
-                        userId
-                        name
-                        avatar {
-                            mediaId
-                            file
-                            thumbnail
-                        }
-                    }
-                    media {
-                        type
-                        media {
-                            mediaId
-                            file
-                            thumbnail
-                        }
-                    }
-                    likesCount
-                    replies {
-                        replyId
-                        content
-                        user {
-                            userId
-                            name
-                            avatar {
-                                mediaId
-                                file
-                                thumbnail
-                            }
-                        }
-                        updatedAt
-                        likesCount
-                        hasLiked
-                        deleted
-                    } 
-                    hasLiked
-                    updatedAt
-                    deleted
+            mutation ($communityId: String!, $postId: String!, $commentId: String!, $replyId: String!, $emoji: String!) {
+                comment: toggleCommentReplyReaction(communityId: $communityId, postId: $postId, commentId: $commentId, replyId: $replyId, emoji: $emoji) {
+                    ${COMMENT_FIELDS}
                 }
             }
         `;
@@ -545,6 +410,7 @@ export default function CommentSection({
                     postId,
                     commentId,
                     replyId,
+                    emoji,
                 },
             })
             .setIsGraphQLEndpoint(true)
@@ -569,49 +435,7 @@ export default function CommentSection({
         const query = `
             mutation ($communityId: String!, $postId: String!, $commentId: String!, $replyId: String) {
                 comment: deleteComment(communityId: $communityId, postId: $postId, commentId: $commentId, replyId: $replyId) {
-                    communityId
-                    postId
-                    commentId
-                    content
-                    user {
-                        userId
-                        name
-                        avatar {
-                            mediaId
-                            file
-                            thumbnail
-                        }
-                    }
-                    media {
-                        type
-                        media {
-                            mediaId
-                            file
-                            thumbnail
-                            size
-                        }
-                    }
-                    likesCount
-                    replies {
-                        replyId
-                        content
-                        user {
-                            userId
-                            name
-                            avatar {
-                                mediaId
-                                file
-                                thumbnail
-                            }
-                        }
-                        updatedAt
-                        likesCount
-                        hasLiked
-                        deleted
-                    } 
-                    hasLiked
-                    updatedAt
-                    deleted
+                    ${COMMENT_FIELDS}
                 }
             }
         `;
@@ -668,11 +492,15 @@ export default function CommentSection({
                         key={comment.commentId}
                         membership={membership}
                         comment={comment}
-                        onLike={(commentId: string, replyId?: string) => {
+                        onReact={(
+                            commentId: string,
+                            emoji: string,
+                            replyId?: string,
+                        ) => {
                             if (replyId) {
-                                handleReplyLike(commentId, replyId);
+                                handleReplyReact(commentId, emoji, replyId);
                             } else {
-                                handleCommentLike(commentId);
+                                handleCommentReact(commentId, emoji);
                             }
                         }}
                         onReply={(commentId, content, parentReplyId?: string) =>

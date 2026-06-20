@@ -15,10 +15,11 @@ import {
 } from "@courselit/page-blocks";
 import { CommunityMedia, CommunityPost } from "@courselit/common-models";
 import { capitalize, truncate } from "@courselit/utils";
-import { MessageSquare, Pin, ThumbsUp } from "lucide-react";
+import { MessageSquare, Pin } from "lucide-react";
 import Link from "next/link";
 import { useContext } from "react";
 import { ThemeContext } from "@components/contexts";
+import { ReactionsBar } from "./reactions-bar";
 
 interface CommunityPostCardProps {
     post: CommunityPost;
@@ -29,7 +30,7 @@ interface CommunityPostCardProps {
     renderMediaPreview: (media: CommunityMedia) => React.ReactNode;
     onOpen: (postId: string) => void;
     onTogglePin?: (postId: string, e?: React.MouseEvent) => void;
-    onLike?: (postId: string, e?: React.MouseEvent) => void;
+    onReact?: (postId: string, emoji: string, e?: React.MouseEvent) => void;
 }
 
 export default function CommunityPostCard({
@@ -41,7 +42,7 @@ export default function CommunityPostCard({
     renderMediaPreview,
     onOpen,
     onTogglePin,
-    onLike,
+    onReact,
 }: CommunityPostCardProps) {
     const { theme } = useContext(ThemeContext);
 
@@ -138,15 +139,10 @@ export default function CommunityPostCard({
             </CardContent>
             <CardFooter>
                 <div className="flex items-center gap-4">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`text-muted-foreground ${post.hasLiked ? "bg-accent" : ""}`}
-                        onClick={(e) => onLike?.(post.postId, e)}
-                    >
-                        <ThumbsUp className="mr-2 h-4 w-4" />
-                        {post.likesCount}
-                    </Button>
+                    <ReactionsBar
+                        reactions={post.reactions || []}
+                        onReact={(emoji) => onReact?.(post.postId, emoji)}
+                    />
                     <Button
                         variant="ghost"
                         size="sm"

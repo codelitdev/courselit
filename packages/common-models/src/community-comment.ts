@@ -1,5 +1,6 @@
 import { CommunityCommentReply } from "./community-comment-reply";
 import { CommunityMedia } from "./community-media";
+import { CommunityReaction } from "./community-reaction";
 import User from "./user";
 
 export interface CommunityComment {
@@ -13,6 +14,7 @@ export interface CommunityComment {
     updatedAt: string;
     createdAt: string;
     hasLiked: boolean;
+    reactions: CommunityReaction[];
     replies: CommunityCommentReply[];
     deleted: boolean;
 }
