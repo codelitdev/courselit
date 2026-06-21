@@ -444,6 +444,79 @@ describe("product discussion validation foundation", () => {
         });
         expect(events).toHaveLength(1);
     });
+
+    it("rejects lesson discussions on unpublished courses for learners but allows for creators/admins", async () => {
+        await CourseModel.create({
+            domain: testDomain._id,
+            courseId: id("discussion-course-unpublished"),
+            title: id("discussion-course-unpublished-title"),
+            creatorId: id("another-creator"),
+            groups: [
+                {
+                    _id: id("discussion-group-unpublished"),
+                    name: "Discussion section",
+                    rank: 1,
+                    lessonsOrder: [id("discussion-lesson-unpublished")],
+                },
+            ],
+            lessons: [id("discussion-lesson-unpublished")],
+            type: "course",
+            privacy: "public",
+            costType: "free",
+            cost: 0,
+            slug: id("discussion-course-unpublished-slug"),
+            published: false,
+            discussions: true,
+        });
+        await LessonModel.create({
+            domain: testDomain._id,
+            lessonId: id("discussion-lesson-unpublished"),
+            title: "Discussion Lesson",
+            type: "text",
+            creatorId: id("another-creator"),
+            courseId: id("discussion-course-unpublished"),
+            groupId: id("discussion-group-unpublished"),
+            requiresEnrollment: true,
+            published: true,
+        });
+
+        // 1. Learner user (who is not creator/admin) should be blocked:
+        await expect(
+            validateDiscussionTargetForLearner({
+                ctx: {
+                    subdomain: testDomain,
+                    user: learnerUser,
+                    address: "",
+                },
+                productId: id("discussion-course-unpublished"),
+                entityType: "lesson",
+                entityId: id("discussion-lesson-unpublished"),
+            }),
+        ).rejects.toThrow(responses.item_not_found);
+
+        // 2. Creator (who is owner/creator of the course) should be allowed:
+        const creatorUser = await UserModel.create({
+            domain: testDomain._id,
+            userId: id("another-creator"),
+            email: email("another-creator"),
+            name: "Another Creator",
+            permissions: [constants.permissions.manageCourse],
+            active: true,
+            unsubscribeToken: id("another-creator-token"),
+        });
+        const result = await validateDiscussionTargetForLearner({
+            ctx: {
+                subdomain: testDomain,
+                user: creatorUser,
+                address: "",
+            },
+            productId: id("discussion-course-unpublished"),
+            entityType: "lesson",
+            entityId: id("discussion-lesson-unpublished"),
+        });
+        expect(result.product).toBeDefined();
+        expect(result.lesson).toBeDefined();
+    });
 });
 
 describe("product discussion comment and reply logic", () => {
@@ -642,7 +715,7 @@ describe("product discussion comment and reply logic", () => {
                 entityId: comment.commentId,
                 metadata: expect.objectContaining({
                     eventType: "comment_created",
-                    productId: courseId,
+                    courseId,
                     entityType: "lesson",
                     entityId: lessonId,
                     commentId: comment.commentId,
@@ -941,7 +1014,7 @@ describe("product discussion comment and reply logic", () => {
             type: CommonConstants.ActivityType.COURSE_DISCUSSION_REACTED,
             entityId: comment.commentId,
             metadata: {
-                productId: courseId,
+                courseId,
                 entityType: "lesson",
                 entityId: lessonId,
                 contentType: "comment",

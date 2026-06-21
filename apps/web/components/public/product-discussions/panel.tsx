@@ -928,14 +928,6 @@ function DiscussionItem({
 
     const avatarUrl =
         item.user?.avatar?.thumbnail || "/courselit_backdrop_square.webp";
-    const cardStyles = theme.theme?.interactives?.card;
-    const actionButtonSurface = clsx(
-        "bg-card text-card-foreground hover:bg-card hover:text-card-foreground",
-        cardStyles?.border?.width,
-        cardStyles?.border?.radius,
-        cardStyles?.border?.style,
-        cardStyles?.shadow,
-    );
 
     return (
         <article

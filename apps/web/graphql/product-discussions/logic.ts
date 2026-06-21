@@ -102,6 +102,10 @@ export async function validateDiscussionTargetForLearner({
             ]) &&
                 checkOwnershipWithoutModel(product, ctx)));
 
+    if (!product.published && !isAdminOrCreator) {
+        throw new Error(responses.item_not_found);
+    }
+
     let lesson;
     if (isAdminOrCreator) {
         lesson = await LessonModel.findOne({
