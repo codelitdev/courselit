@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+export const RATE_LIMIT_EVENT_TTL_SECONDS = 25 * 60 * 60; // 25 hours
+
 export interface InternalRateLimitEvent extends mongoose.Document {
     domain: mongoose.Types.ObjectId;
     userId: string;
@@ -40,4 +42,7 @@ RateLimitEventSchema.index({
     fingerprint: 1,
     createdAt: -1,
 });
-RateLimitEventSchema.index({ createdAt: 1 }, { expireAfterSeconds: 604800 });
+RateLimitEventSchema.index(
+    { createdAt: 1 },
+    { expireAfterSeconds: RATE_LIMIT_EVENT_TTL_SECONDS },
+);

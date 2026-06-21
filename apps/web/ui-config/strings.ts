@@ -135,6 +135,10 @@ export const COURSE_DISCUSSIONS_TITLE = "Discussions";
 export const COURSE_DISCUSSIONS_TOOLTIP = "Discussions";
 export const COURSE_DISCUSSIONS_DESCRIPTION =
     "Enable lesson-specific discussions for this course";
+export const DISCUSSIONS_DISABLED_MESSAGE =
+    "Discussions are disabled for this product.";
+export const DISCUSSIONS_ENABLED_MESSAGE =
+    "Discussions are enabled for this product.";
 export const COURSE_DISCUSSIONS_VIEW_ALL = "View all discussions";
 export const COURSE_DISCUSSIONS_EMPTY = "No discussions yet";
 export const COURSE_DISCUSSIONS_COMMENT_PLACEHOLDER = "Add a comment...";
@@ -160,7 +164,7 @@ export const COURSE_DISCUSSIONS_ADMIN_REPORTS = "Reports";
 export const COURSE_DISCUSSIONS_ADMIN_VIEW_REPORTS = "Reported content";
 export const COURSE_DISCUSSIONS_ADMIN_NO_REPORTS = "No reports";
 export const COURSE_DISCUSSIONS_ADMIN_NO_REPORTS_DESCRIPTION =
-    "Reported discussion comments and replies will appear here.";
+    "Reported discussion comments will appear here.";
 export const COURSE_DISCUSSIONS_ADMIN_STATUS = "Status";
 export const COURSE_DISCUSSIONS_ADMIN_REASON = "Reason";
 export const COURSE_DISCUSSIONS_ADMIN_TARGET = "Target";
@@ -783,7 +787,7 @@ export const USER_DELETE_DIALOG_DELETION_HEADING = "What will be deleted";
 export const USER_DELETE_DIALOG_DELETION_ITEM_COMMUNICATION =
     "Notifications, mail statuses, lesson evaluations, download links, certificates, and activity logs.";
 export const USER_DELETE_DIALOG_DELETION_ITEM_COMMUNITY =
-    "Community posts, comments, replies, subscriptions, reports, and related likes.";
+    "Community posts, comments, replies, subscriptions, reports, and related likes. Product discussion likes, subscriptions, and reports (written comments and replies will be anonymized).";
 export const USER_DELETE_DIALOG_DELETION_ITEM_COMMERCE =
     "Memberships, invoices, course enrollments, and marketing sequence entries.";
 export const USER_DELETE_DIALOG_DELETION_ITEM_ACCOUNT =

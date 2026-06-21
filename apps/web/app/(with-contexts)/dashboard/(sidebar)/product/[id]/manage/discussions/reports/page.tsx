@@ -57,9 +57,8 @@ type ReportStatus = "pending" | "accepted" | "rejected";
 
 type DiscussionReport = {
     reportId: string;
-    contentType: string;
+    contentType: "COMMENT" | "REPLY";
     contentId: string;
-    commentId?: string;
     userId: string;
     reason: string;
     status: ReportStatus;
@@ -125,7 +124,6 @@ export default function ProductDiscussionReportsPage() {
                                 reportId
                                 contentType
                                 contentId
-                                commentId
                                 userId
                                 reason
                                 status
@@ -245,12 +243,11 @@ export default function ProductDiscussionReportsPage() {
         const returnTo = encodeURIComponent(
             `/dashboard/product/${productId}/manage/discussions/reports`,
         );
+        const targetHash = `discussion-${
+            report.contentType === "REPLY" ? "reply" : "comment"
+        }-${report.contentId}`;
 
-        return `/course/${product.slug}/${productId}/${report.entityId}?discussion=open&preview=true&returnTo=${returnTo}#discussion-${
-            report.contentType === "reply"
-                ? `reply__${report.commentId || ""}__${report.contentId}`
-                : `comment-${report.contentId}`
-        }`;
+        return `/course/${product.slug}/${productId}/${report.entityId}?discussion=open&preview=true&returnTo=${returnTo}#${targetHash}`;
     }
 
     const getStatusBadge = (status: ReportStatus) => {
@@ -327,14 +324,13 @@ export default function ProductDiscussionReportsPage() {
                         </Select>
                     </div>
 
-                    <div className="overflow-x-auto rounded-md border">
+                    <div className="overflow-x-auto">
                         {reports.length === 0 ? (
                             <AdminEmptyState
                                 title={COURSE_DISCUSSIONS_ADMIN_NO_REPORTS}
                                 description={
                                     COURSE_DISCUSSIONS_ADMIN_NO_REPORTS_DESCRIPTION
                                 }
-                                className="mt-4"
                             />
                         ) : (
                             <PaginatedTable
@@ -343,6 +339,7 @@ export default function ProductDiscussionReportsPage() {
                                     totalReports / itemsPerPage,
                                 )}
                                 onPageChange={setPage}
+                                className="rounded-md border"
                             >
                                 <Table>
                                     <TableHeader>

@@ -115,12 +115,14 @@ export function createNotificationEntityResolver(
                         courseId: 1,
                         title: 1,
                         slug: 1,
+                        creatorId: 1,
                     },
                 )
                 .lean<{
                     courseId: string;
                     title: string;
                     slug?: string;
+                    creatorId?: string;
                 } | null>();
         },
     };

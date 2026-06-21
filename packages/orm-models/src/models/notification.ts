@@ -69,6 +69,8 @@ export const NotificationSchema = new mongoose.Schema(
     },
 );
 
+NotificationSchema.index({ domain: 1, "metadata.courseId": 1 });
+
 NotificationSchema.statics.paginate = async function (userId, options) {
     const page = options.page || 1;
     const limit = options.limit || 10;

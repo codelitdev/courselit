@@ -88,6 +88,7 @@ jest.mock("lucide-react", () => ({
 }));
 
 jest.mock("@courselit/utils", () => ({
+    truncate: (value: string) => value,
     FetchBuilder: jest.fn().mockImplementation(() => ({
         setUrl: jest.fn().mockReturnThis(),
         setPayload: jest.fn(function (payload) {
@@ -186,6 +187,7 @@ describe("CourseDiscussionsPage", () => {
         expect(payloads[0].variables).toEqual({
             productId: "course-1",
             cursor: undefined,
+            preview: false,
         });
         expect(screen.getByText("3")).toBeInTheDocument();
         expect(screen.getByText("Text lesson").closest("a")).toHaveAttribute(
@@ -212,6 +214,7 @@ describe("CourseDiscussionsPage", () => {
             "http://localhost:3000",
             true,
         );
+        expect(payloads[0].variables.preview).toBe(true);
         expect(
             screen.getByText("Course with discussions").closest("a"),
         ).toHaveAttribute(
@@ -239,6 +242,7 @@ describe("CourseDiscussionsPage", () => {
         expect(payloads[payloads.length - 1].variables).toEqual({
             productId: "course-1",
             cursor: "summary-cursor",
+            preview: false,
         });
     });
 });

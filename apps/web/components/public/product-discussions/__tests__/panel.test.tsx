@@ -72,6 +72,31 @@ jest.mock("@courselit/page-primitives", () => ({
     Text2: ({ children, className }: any) => (
         <span className={className}>{children}</span>
     ),
+    Link: ({ children, className }: any) => (
+        <span className={className}>{children}</span>
+    ),
+}));
+
+jest.mock("@/components/ui/dialog", () => ({
+    Dialog: ({ children }: any) => children,
+    DialogContent: ({ children }: any) => children,
+    DialogDescription: ({ children }: any) => children,
+    DialogFooter: ({ children }: any) => children,
+    DialogTitle: ({ children }: any) => children,
+}));
+
+jest.mock("@/components/ui/button", () => ({
+    Button: ({ children, onClick }: any) => (
+        <button onClick={onClick}>{children}</button>
+    ),
+}));
+
+jest.mock("@/components/ui/avatar", () => ({
+    Avatar: ({ children, className }: any) => (
+        <span className={className}>{children}</span>
+    ),
+    AvatarImage: ({ src, alt }: any) => <img src={src} alt={alt} />,
+    AvatarFallback: ({ children }: any) => <span>{children}</span>,
 }));
 
 jest.mock("@courselit/page-blocks", () => ({
@@ -152,6 +177,7 @@ jest.mock("lucide-react", () => ({
     MessageSquare: () => null,
     Trash2: () => null,
     X: () => null,
+    Reply: () => null,
 }));
 
 const address = { backend: "http://localhost:3000", frontend: "" };
@@ -180,7 +206,10 @@ const initialComment = {
     hasMoreReplies: false,
     deleted: false,
     createdAt: "2026-06-01T00:00:00.000Z",
-    user: { name: "Learner Two" },
+    user: {
+        name: "Learner Two",
+        avatar: { thumbnail: "/learner-two-avatar.png" },
+    },
     replies: [
         {
             productId: "course-1",
@@ -261,6 +290,25 @@ describe("ProductDiscussionPanel", () => {
                     },
                 });
             }
+            if (payload.query.includes("CreateProductDiscussionComment")) {
+                return Promise.resolve({
+                    comment: {
+                        productId: "course-1",
+                        entityType: "LESSON",
+                        entityId: "lesson-1",
+                        commentId: "comment-2",
+                        userId: "learner-1",
+                        content: doc("A new comment"),
+                        likesCount: 0,
+                        hasLiked: false,
+                        replyCount: 0,
+                        hasMoreReplies: false,
+                        deleted: false,
+                        createdAt: "2026-06-01T00:00:00.000Z",
+                        user: { name: "Learner One" },
+                    },
+                });
+            }
             return Promise.resolve({});
         });
     });
@@ -275,6 +323,11 @@ describe("ProductDiscussionPanel", () => {
         await waitFor(() => {
             expect(screen.getByText("Root comment")).toBeInTheDocument();
         });
+
+        expect(screen.getByAltText("Learner Two's avatar")).toHaveAttribute(
+            "src",
+            "/learner-two-avatar.png",
+        );
 
         expect(
             screen.getByText("View all discussions").closest("a"),
@@ -301,6 +354,11 @@ describe("ProductDiscussionPanel", () => {
         );
         expect(document.getElementById("discussion-reply-reply-1")).toHaveClass(
             "bg-accent/40",
+            "rounded-xl",
+            "border",
+            "border-transparent",
+            "px-3",
+            "py-3",
         );
         expect(scrollIntoView).toHaveBeenCalledWith({
             block: "center",
@@ -340,6 +398,30 @@ describe("ProductDiscussionPanel", () => {
         });
     });
 
+    it("updates the URL and highlights a newly posted comment", async () => {
+        renderPanel();
+
+        await waitFor(() => {
+            expect(screen.getByText("Root comment")).toBeInTheDocument();
+        });
+
+        fireEvent.change(screen.getByLabelText("Add a comment..."), {
+            target: { value: "A new comment" },
+        });
+        const postCommentButton = screen.getByText("Post Comment");
+        await waitFor(() => {
+            expect(postCommentButton).not.toBeDisabled();
+        });
+        fireEvent.click(postCommentButton);
+
+        await waitFor(() => {
+            expect(
+                document.getElementById("discussion-comment-comment-2"),
+            ).toHaveClass("bg-accent/40");
+        });
+        expect(window.location.hash).toBe("#discussion-comment-comment-2");
+    });
+
     it("stores parentReplyId when replying to an existing reply", async () => {
         renderPanel();
 
@@ -375,5 +457,11 @@ describe("ProductDiscussionPanel", () => {
                 parentReplyId: "reply-1",
             }),
         );
+        await waitFor(() => {
+            expect(
+                document.getElementById("discussion-reply-reply-2"),
+            ).toHaveClass("bg-accent/40");
+        });
+        expect(window.location.hash).toBe("#discussion-reply-reply-2");
     });
 });

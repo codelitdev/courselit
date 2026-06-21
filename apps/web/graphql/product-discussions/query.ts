@@ -1,5 +1,10 @@
 import GQLContext from "@models/GQLContext";
-import { GraphQLInt, GraphQLNonNull, GraphQLString } from "graphql";
+import {
+    GraphQLBoolean,
+    GraphQLInt,
+    GraphQLNonNull,
+    GraphQLString,
+} from "graphql";
 import {
     getDiscussionReportsCount,
     listDiscussionComments,
@@ -129,6 +134,7 @@ const queries = {
         type: types.productDiscussionSummariesConnection,
         args: {
             productId: { type: new GraphQLNonNull(GraphQLString) },
+            preview: { type: GraphQLBoolean },
             cursor: { type: GraphQLString },
             limit: { type: GraphQLInt },
         },
@@ -136,10 +142,12 @@ const queries = {
             _: any,
             {
                 productId,
+                preview,
                 cursor,
                 limit,
             }: {
                 productId: string;
+                preview?: boolean;
                 cursor?: string;
                 limit?: number;
             },
@@ -148,6 +156,7 @@ const queries = {
             listDiscussionSummaries({
                 ctx,
                 productId,
+                preview,
                 cursor,
                 limit,
             }),

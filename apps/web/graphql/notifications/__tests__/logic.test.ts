@@ -104,10 +104,15 @@ describe("Notification Preferences", () => {
                 preference.activityType ===
                 Constants.ActivityType.COMMUNITY_POST_CREATED,
         );
-        const courseDiscussionPreference = preferences.find(
+        const courseDiscussionCommentPreference = preferences.find(
             (preference) =>
                 preference.activityType ===
-                Constants.ActivityType.COURSE_DISCUSSION_ACTIVITY,
+                Constants.ActivityType.COURSE_DISCUSSION_COMMENT_CREATED,
+        );
+        const courseDiscussionReactionPreference = preferences.find(
+            (preference) =>
+                preference.activityType ===
+                Constants.ActivityType.COURSE_DISCUSSION_REACTED,
         );
 
         expect(generalPreference).toBeTruthy();
@@ -115,8 +120,11 @@ describe("Notification Preferences", () => {
             Constants.NotificationChannel.APP,
             Constants.NotificationChannel.EMAIL,
         ]);
-        expect(courseDiscussionPreference).toBeTruthy();
-        expect(courseDiscussionPreference?.channels).toEqual([
+        expect(courseDiscussionCommentPreference?.channels).toEqual([
+            Constants.NotificationChannel.APP,
+            Constants.NotificationChannel.EMAIL,
+        ]);
+        expect(courseDiscussionReactionPreference?.channels).toEqual([
             Constants.NotificationChannel.APP,
             Constants.NotificationChannel.EMAIL,
         ]);
@@ -305,7 +313,7 @@ describe("Notification Preferences", () => {
         expect(response?.message).toContain("Community A");
     });
 
-    it("should format course discussion notification hrefs using metadata", async () => {
+    it("should add preview mode to unpublished course discussion notification hrefs for managers only", async () => {
         const course = await CourseModel.create({
             domain: domain._id,
             courseId: id("discussion-course"),
@@ -316,7 +324,7 @@ describe("Notification Preferences", () => {
             privacy: "public",
             type: "course",
             creatorId: manager.userId,
-            published: true,
+            published: false,
             discussions: true,
         });
 
@@ -325,7 +333,8 @@ describe("Notification Preferences", () => {
             notificationId: id("discussion-notification"),
             userId: learner.userId,
             forUserId: manager.userId,
-            activityType: Constants.ActivityType.COURSE_DISCUSSION_ACTIVITY,
+            activityType:
+                Constants.ActivityType.COURSE_DISCUSSION_COMMENT_CREATED,
             entityId: id("comment"),
             metadata: {
                 eventType: "comment_created",
@@ -348,9 +357,66 @@ describe("Notification Preferences", () => {
         expect(response?.href).toBe(
             `/course/${course.slug}/${course.courseId}/${id(
                 "lesson",
-            )}?discussion=open#discussion-comment-${id("comment")}`,
+            )}?discussion=open&preview=true#discussion-comment-${id("comment")}`,
         );
         expect(response?.message).toContain("commented on Discussion Course");
+
+        const learnerNotification = await NotificationModel.create({
+            domain: domain._id,
+            notificationId: id("learner-discussion-notification"),
+            userId: manager.userId,
+            forUserId: learner.userId,
+            activityType:
+                Constants.ActivityType.COURSE_DISCUSSION_COMMENT_CREATED,
+            entityId: id("comment"),
+            metadata: notification.metadata,
+        });
+        const learnerResponse = await getNotification({
+            ctx: {
+                user: learner,
+                subdomain: domain,
+            } as any,
+            notificationId: learnerNotification.notificationId,
+        });
+
+        expect(learnerResponse?.href).toBe(
+            `/course/${course.slug}/${course.courseId}/${id(
+                "lesson",
+            )}?discussion=open#discussion-comment-${id("comment")}`,
+        );
+
+        const reactionNotification = await NotificationModel.create({
+            domain: domain._id,
+            notificationId: id("discussion-reaction-notification"),
+            userId: learner.userId,
+            forUserId: manager.userId,
+            activityType: Constants.ActivityType.COURSE_DISCUSSION_REACTED,
+            entityId: id("reply"),
+            metadata: {
+                productId: course.courseId,
+                entityType: "lesson",
+                entityId: id("lesson"),
+                contentType: "reply",
+                commentId: id("comment"),
+                replyId: id("reply"),
+            },
+        });
+        const reactionResponse = await getNotification({
+            ctx: {
+                user: manager,
+                subdomain: domain,
+            } as any,
+            notificationId: reactionNotification.notificationId,
+        });
+
+        expect(reactionResponse?.message).toContain(
+            "reacted to your reply on Discussion Course",
+        );
+        expect(reactionResponse?.href).toBe(
+            `/course/${course.slug}/${course.courseId}/${id(
+                "lesson",
+            )}?discussion=open&preview=true#discussion-reply-${id("reply")}`,
+        );
     });
 
     it("should return empty message and href when entity cannot be resolved", async () => {

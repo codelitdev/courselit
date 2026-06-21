@@ -22,6 +22,7 @@
 - Preserve the domain-owner invariant: `domain.email` identifies the school owner and public API keys resolve that owner as the API actor. Do not use raw `UserModel.update*`, `UserModel.delete*`, `DomainModel.update*`, migrations, or scripts in a way that changes/deletes the owner user, changes the owner user's permissions, or drifts `domain.email` away from the owner user without adding explicit guards and tests.
 - Refrain from adding new GraphQL query/mutation unless required. If an existing query/mutation can be modified to implement the feature without making the query's/mutation's boundaries blurry, extend those.
 - Always keep openapi.mjs files in sync with the actual implementation of the API endpoints.
+- While adding a new collection, always confirm how the deletion/cleanup will work for it.
 
 ### Workspace map (core modules):
 

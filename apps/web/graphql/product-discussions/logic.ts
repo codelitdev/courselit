@@ -21,6 +21,7 @@ import mongoose from "mongoose";
 import { randomUUID } from "crypto";
 import { recordActivity } from "@/lib/record-activity";
 import { checkOwnershipWithoutModel } from "@/lib/graphql";
+import { canManageCourseInContext } from "../courses/permissions";
 
 export const MAX_DISCUSSION_CONTENT_BYTES = 32768;
 export const MAX_DISCUSSION_TEXT_LENGTH = 5000;
@@ -828,6 +829,25 @@ export async function toggleDiscussionLike({
                 userId: ctx.user.userId,
             });
             await incrementLikesCount({ contentType, contentId, delta: 1 });
+            if (target.userId !== ctx.user.userId) {
+                await recordActivity({
+                    domain: ctx.subdomain._id,
+                    userId: ctx.user.userId,
+                    type: Constants.ActivityType.COURSE_DISCUSSION_REACTED,
+                    entityId: contentId,
+                    metadata: {
+                        courseId: productId,
+                        entityType,
+                        entityId,
+                        contentType,
+                        commentId: target.commentId,
+                        ...(contentType === "reply"
+                            ? { replyId: contentId }
+                            : {}),
+                        forUserIds: [target.userId],
+                    },
+                });
+            }
         }
     } else {
         const deletedLike = await ProductDiscussionLikeModel.findOneAndDelete({
@@ -1208,17 +1228,20 @@ export async function updateDiscussionReportStatus({
 export async function listDiscussionSummaries({
     ctx,
     productId,
+    preview = false,
     cursor,
     limit = 10,
 }: {
     ctx: GQLContext;
     productId: string;
+    preview?: boolean;
     cursor?: string;
     limit?: number;
 }): Promise<CursorEnvelope<any>> {
     const accessibleLessonIds = await getAccessibleDiscussionLessonIds({
         ctx,
         productId,
+        preview,
     });
 
     const filter: Record<string, unknown> = {
@@ -1550,7 +1573,7 @@ async function recordDiscussionActivity({
     productId: string;
     entityType: ProductDiscussionEntityType;
     entityId: string;
-    eventType: "comment_created" | "reply_created";
+    eventType: "comment_created" | "reply_created" | "reacted";
     commentId: string;
     replyId?: string;
 }) {
@@ -1566,11 +1589,11 @@ async function recordDiscussionActivity({
     await recordActivity({
         domain: ctx.subdomain._id,
         userId: ctx.user.userId,
-        type: Constants.ActivityType.COURSE_DISCUSSION_ACTIVITY,
+        type: Constants.ActivityType.COURSE_DISCUSSION_COMMENT_CREATED,
         entityId: replyId || commentId,
         metadata: {
             eventType,
-            productId,
+            courseId: productId,
             entityType,
             entityId,
             commentId,
@@ -1664,25 +1687,32 @@ async function validateProductDiscussionAdmin({
 async function getAccessibleDiscussionLessonIds({
     ctx,
     productId,
+    preview = false,
 }: {
     ctx: GQLContext;
     productId: string;
+    preview?: boolean;
 }) {
     const product = await CourseModel.findOne({
         domain: ctx.subdomain._id,
         courseId: productId,
         type: Constants.CourseType.COURSE,
-        published: true,
     });
 
     if (!product || !product.discussions) {
         throw new Error(responses.item_not_found);
     }
 
+    const isManager = canManageCourseInContext(product, ctx);
+    const isPreview = preview && isManager;
+    if (!product.published && !isPreview) {
+        throw new Error(responses.item_not_found);
+    }
+
     const lessons = await LessonModel.find({
         domain: ctx.subdomain._id,
         courseId: productId,
-        published: true,
+        ...(isPreview ? {} : { published: true }),
     }).lean<
         {
             lessonId: string;
@@ -1691,15 +1721,7 @@ async function getAccessibleDiscussionLessonIds({
         }[]
     >();
 
-    const isAdminOrCreator =
-        ctx.user &&
-        (checkPermission(ctx.user.permissions, [permissions.manageAnyCourse]) ||
-            (checkPermission(ctx.user.permissions, [
-                permissions.manageCourse,
-            ]) &&
-                checkOwnershipWithoutModel(product, ctx)));
-
-    if (isAdminOrCreator) {
+    if (isManager) {
         return lessons.map((lesson) => lesson.lessonId);
     }
 

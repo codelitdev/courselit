@@ -208,7 +208,8 @@ describe("product discussion persistence foundation", () => {
     });
 
     it("exposes discussions in the Course GraphQL type and update input", () => {
-        const discussionsField = courseTypes.courseType.getFields().discussions;
+        const courseFields = courseTypes.courseType.getFields();
+        const discussionsField = courseFields.discussions;
         expect(discussionsField).toBeDefined();
         expect(
             discussionsField.resolve?.(
@@ -238,6 +239,14 @@ describe("product discussion persistence foundation", () => {
         expect(
             schema.getQueryType()?.getFields().getProductDiscussionSummaries,
         ).toBeDefined();
+        expect(
+            schema
+                .getQueryType()
+                ?.getFields()
+                .getProductDiscussionSummaries.args.some(
+                    (arg) => arg.name === "preview",
+                ),
+        ).toBe(true);
         expect(
             schema.getMutationType()?.getFields()
                 .createProductDiscussionComment,
@@ -628,7 +637,8 @@ describe("product discussion comment and reply logic", () => {
             expect.objectContaining({
                 domain: testDomain._id,
                 userId: learnerUser.userId,
-                type: CommonConstants.ActivityType.COURSE_DISCUSSION_ACTIVITY,
+                type: CommonConstants.ActivityType
+                    .COURSE_DISCUSSION_COMMENT_CREATED,
                 entityId: comment.commentId,
                 metadata: expect.objectContaining({
                     eventType: "comment_created",
@@ -879,6 +889,66 @@ describe("product discussion comment and reply logic", () => {
                 subjectId: `${courseId}:lesson:${lessonId}`,
             }),
         ).toBe(2);
+    });
+
+    it("records one reaction activity when another user newly likes discussion content", async () => {
+        const comment = await createDiscussionComment({
+            ctx,
+            productId: courseId,
+            entityType: "lesson",
+            entityId: lessonId,
+            content: doc("React to me"),
+        });
+        recordActivityMock.mockClear();
+
+        const secondLearnerCtx = {
+            subdomain: testDomain,
+            user: secondLearnerUser,
+            address: "",
+        };
+        await toggleDiscussionLike({
+            ctx: secondLearnerCtx,
+            productId: courseId,
+            entityType: "lesson",
+            entityId: lessonId,
+            contentType: "comment",
+            contentId: comment.commentId,
+            liked: true,
+        });
+        await toggleDiscussionLike({
+            ctx: secondLearnerCtx,
+            productId: courseId,
+            entityType: "lesson",
+            entityId: lessonId,
+            contentType: "comment",
+            contentId: comment.commentId,
+            liked: true,
+        });
+        await toggleDiscussionLike({
+            ctx: secondLearnerCtx,
+            productId: courseId,
+            entityType: "lesson",
+            entityId: lessonId,
+            contentType: "comment",
+            contentId: comment.commentId,
+            liked: false,
+        });
+
+        expect(recordActivityMock).toHaveBeenCalledTimes(1);
+        expect(recordActivityMock).toHaveBeenCalledWith({
+            domain: testDomain._id,
+            userId: secondLearnerUser.userId,
+            type: CommonConstants.ActivityType.COURSE_DISCUSSION_REACTED,
+            entityId: comment.commentId,
+            metadata: {
+                productId: courseId,
+                entityType: "lesson",
+                entityId: lessonId,
+                contentType: "comment",
+                commentId: comment.commentId,
+                forUserIds: [learnerUser.userId],
+            },
+        });
     });
 
     it("enforces like toggle rate limits only for state-changing likes", async () => {
@@ -1551,6 +1621,64 @@ describe("product discussion comment and reply logic", () => {
         expect(
             adminSummaries.items.map((item) => item.entityId).sort(),
         ).toEqual([lessonId, lockedLessonId].sort());
+    });
+
+    it("lists unpublished discussion targets only for authorized preview managers", async () => {
+        await Promise.all([
+            CourseModel.updateOne(
+                { domain: testDomain._id, courseId },
+                { $set: { published: false } },
+            ),
+            LessonModel.updateOne(
+                { domain: testDomain._id, lessonId },
+                { $set: { published: false } },
+            ),
+            ProductDiscussionSummaryModel.create({
+                domain: testDomain._id,
+                productId: courseId,
+                entityType: "lesson",
+                entityId: lessonId,
+                commentsCount: 1,
+                repliesCount: 0,
+                totalCount: 1,
+                activityCountIncludingDeleted: 1,
+                lastActivityAt: new Date("2026-01-02T00:00:00.000Z"),
+                lastCommentId: id("unpublished-comment"),
+            }),
+        ]);
+
+        await expect(
+            listDiscussionSummaries({
+                ctx,
+                productId: courseId,
+                preview: true,
+            }),
+        ).rejects.toThrow(responses.item_not_found);
+
+        await expect(
+            listDiscussionSummaries({
+                ctx: {
+                    subdomain: testDomain,
+                    user: productAdminUser,
+                    address: "",
+                },
+                productId: courseId,
+            }),
+        ).rejects.toThrow(responses.item_not_found);
+
+        const previewSummaries = await listDiscussionSummaries({
+            ctx: {
+                subdomain: testDomain,
+                user: productAdminUser,
+                address: "",
+            },
+            productId: courseId,
+            preview: true,
+        });
+
+        expect(previewSummaries.items.map((item) => item.entityId)).toEqual([
+            lessonId,
+        ]);
     });
 });
 

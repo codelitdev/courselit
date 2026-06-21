@@ -91,7 +91,10 @@ describe("Notifications Page", () => {
             screen.getByText("Community Membership Granted"),
         ).toBeInTheDocument();
         expect(
-            screen.getByText("Course Discussion Activity"),
+            screen.getByText("Course Discussion Comment Created"),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByText("Course Discussion Reacted"),
         ).toBeInTheDocument();
         expect(
             screen.queryByText(

@@ -31,6 +31,11 @@ import CertificateModel from "@models/Certificate";
 import ActivityModel from "@models/Activity";
 import EmailEventModel from "@models/EmailEvent";
 import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
+import ProductDiscussionCommentModel from "@models/ProductDiscussionComment";
+import ProductDiscussionReplyModel from "@models/ProductDiscussionReply";
+import ProductDiscussionLikeModel from "@models/ProductDiscussionLike";
+import ProductDiscussionSubscriberModel from "@models/ProductDiscussionSubscriber";
+import ProductDiscussionReportModel from "@models/ProductDiscussionReport";
 import {
     cancelAndDeleteMemberships,
     deleteCommunityPosts,
@@ -301,10 +306,52 @@ export async function cleanupPersonalData(
             domain: ctx.subdomain._id,
             userId: userToDelete.userId,
         }),
+        ProductDiscussionLikeModel.deleteMany({
+            domain: ctx.subdomain._id,
+            userId: userToDelete.userId,
+        }),
+        ProductDiscussionSubscriberModel.deleteMany({
+            domain: ctx.subdomain._id,
+            userId: userToDelete.userId,
+        }),
+        ProductDiscussionReportModel.deleteMany({
+            domain: ctx.subdomain._id,
+            userId: userToDelete.userId,
+        }),
     ]);
 
     // Delete all posts and comments created by the user
     await deleteCommunityPosts(ctx, "user", userToDelete.userId);
+
+    // Anonymize and redact product discussion comments created by the user
+    await ProductDiscussionCommentModel.updateMany(
+        { domain: ctx.subdomain._id, userId: userToDelete.userId },
+        {
+            $set: {
+                userId: "deleted",
+                content: { type: "doc", content: [] },
+                deleted: true,
+                deletedAt: new Date(),
+                deletedBy: "system",
+                deletedByRole: "author",
+            },
+        },
+    );
+
+    // Anonymize and redact product discussion replies created by the user
+    await ProductDiscussionReplyModel.updateMany(
+        { domain: ctx.subdomain._id, userId: userToDelete.userId },
+        {
+            $set: {
+                userId: "deleted",
+                content: { type: "doc", content: [] },
+                deleted: true,
+                deletedAt: new Date(),
+                deletedBy: "system",
+                deletedByRole: "author",
+            },
+        },
+    );
 
     // Remove user from likes on posts
     await CommunityPostModel.updateMany(

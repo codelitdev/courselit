@@ -2,7 +2,7 @@
 
 import { useContext, useEffect, useMemo, useState, use } from "react";
 import { AddressContext, ThemeContext } from "@components/contexts";
-import { FetchBuilder } from "@courselit/utils";
+import { FetchBuilder, truncate } from "@courselit/utils";
 import { getProduct } from "../helpers";
 import {
     Button,
@@ -91,8 +91,8 @@ export default function CourseDiscussionsPage(props: {
         try {
             const response = await graph({
                 query: `
-                    query GetProductDiscussionSummaries($productId: String!, $cursor: String) {
-                        summaries: getProductDiscussionSummaries(productId: $productId, cursor: $cursor, limit: 20) {
+                    query GetProductDiscussionSummaries($productId: String!, $preview: Boolean, $cursor: String) {
+                        summaries: getProductDiscussionSummaries(productId: $productId, preview: $preview, cursor: $cursor, limit: 20) {
                             items {
                                 entityId
                                 totalCount
@@ -107,6 +107,7 @@ export default function CourseDiscussionsPage(props: {
                 `,
                 variables: {
                     productId: id,
+                    preview: Boolean(viewerSessionParams.preview),
                     cursor,
                 },
             });
@@ -170,7 +171,7 @@ export default function CourseDiscussionsPage(props: {
                                             theme={theme.theme}
                                             className="font-semibold"
                                         >
-                                            {summary.title}
+                                            {truncate(summary.title, 50)}
                                         </Text1>
                                         <Text2
                                             theme={theme.theme}

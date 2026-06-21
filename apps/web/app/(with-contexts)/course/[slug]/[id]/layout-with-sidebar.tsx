@@ -39,7 +39,7 @@ import {
 } from "@components/ui/sidebar";
 import { Image } from "@courselit/components-library";
 import Link from "next/link";
-import { checkPermission, truncate } from "@courselit/utils";
+import { truncate } from "@courselit/utils";
 import { Button } from "@components/ui/button";
 import {
     BookOpen,
@@ -512,27 +512,6 @@ interface SidebarItem {
     }[];
 }
 
-function canManageCourseFromProfile(course: CourseFrontend, profile: Profile) {
-    if (!profile?.userId) {
-        return false;
-    }
-
-    if (
-        checkPermission(profile.permissions ?? [], [
-            constants.permissions.manageAnyCourse,
-        ])
-    ) {
-        return true;
-    }
-
-    return (
-        course.creatorId === profile.userId &&
-        checkPermission(profile.permissions ?? [], [
-            constants.permissions.manageCourse,
-        ])
-    );
-}
-
 export function generateSideBarItems(
     course: CourseFrontend,
     profile: Profile,
@@ -542,9 +521,6 @@ export function generateSideBarItems(
     if (!course) return [];
 
     const isPreview = Boolean(course.isPreview);
-    const isManager =
-        Boolean(course.isManager) ||
-        canManageCourseFromProfile(course, profile);
     const items: SidebarItem[] = [
         {
             title: SIDEBAR_TEXT_COURSE_ABOUT,
@@ -587,7 +563,6 @@ export function generateSideBarItems(
                 profile,
                 lastGroupDripDateInMillis,
                 isPreview,
-                isManager,
             }),
             items: [],
         };
@@ -600,7 +575,7 @@ export function generateSideBarItems(
                 groupItem.isActive = true;
             }
             let lessonStatusIcon: ReactNode;
-            if (!isPreview && !isManager) {
+            if (!isPreview) {
                 if (!profile?.userId) {
                     lessonStatusIcon = lesson.requiresEnrollment ? (
                         <Lock />
@@ -643,7 +618,6 @@ export function generateSideBarItems(
             group.drip.type ===
                 Constants.dripType[0].split("-")[0].toUpperCase() &&
             !isPreview &&
-            !isManager &&
             !isGroupAccessibleToUser(course, profile as Profile, group)
         ) {
             lastGroupDripDateInMillis += group?.drip?.delayInMillis ?? 0;
@@ -659,16 +633,14 @@ function getDripLabel({
     profile,
     lastGroupDripDateInMillis,
     isPreview,
-    isManager,
 }: {
     course: CourseFrontend;
     group: GroupWithLessons;
     profile: Profile;
     lastGroupDripDateInMillis: number;
     isPreview: boolean;
-    isManager: boolean;
 }): { text: string; description: string } | undefined {
-    if (isPreview || isManager) {
+    if (isPreview) {
         return undefined;
     }
 

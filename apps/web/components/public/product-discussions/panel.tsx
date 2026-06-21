@@ -15,7 +15,13 @@ import { ThemeContext, ProfileContext } from "@components/contexts";
 import { TextRenderer } from "@courselit/page-blocks";
 import { Editor, emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
 import { isTextEditorNonEmpty, formattedLocaleDate } from "@ui-lib/utils";
-import { Button, Caption, Text1, Text2 } from "@courselit/page-primitives";
+import {
+    Button,
+    Caption,
+    Text1,
+    Text2,
+    Link as PageLink,
+} from "@courselit/page-primitives";
 import {
     COURSE_DISCUSSIONS_COMMENT_PLACEHOLDER,
     COURSE_DISCUSSIONS_CONTENT_REQUIRED,
@@ -38,9 +44,10 @@ import {
     LOAD_MORE_TEXT,
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
+    CAPTION_CLOSE,
 } from "@ui-config/strings";
 import { useToast } from "@courselit/components-library";
-import { ThumbsUp, MessageSquare, Trash2, Flag, X } from "lucide-react";
+import { ThumbsUp, MessageSquare, Trash2, Flag, X, Reply } from "lucide-react";
 import { ReportReasonDialog } from "./report-reason-dialog";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -48,7 +55,11 @@ import {
     appendCourseViewerSessionParamsToHref,
     getCourseViewerSessionParams,
 } from "@/lib/course-viewer-session-params";
-import { getCurrentHashTargetId, scrollToHashTarget } from "@/lib/hash-target";
+import {
+    focusHashTarget,
+    getCurrentHashTargetId,
+    scrollToHashTarget,
+} from "@/lib/hash-target";
 import {
     Dialog,
     DialogContent,
@@ -57,6 +68,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Button as ShadcnButton } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type DiscussionContent = {
     productId: string;
@@ -238,6 +250,7 @@ export default function ProductDiscussionPanel({
     const [hashTargetId, setHashTargetId] = useState(() =>
         getCurrentHashTargetId(),
     );
+    const locallyCreatedTargetIdRef = useRef<string | null>(null);
     const highlightedTarget = useMemo(
         () => getDiscussionTargetFromHash(hashTargetId),
         [hashTargetId],
@@ -260,6 +273,10 @@ export default function ProductDiscussionPanel({
 
     useEffect(
         () => {
+            if (locallyCreatedTargetIdRef.current === hashTargetId) {
+                locallyCreatedTargetIdRef.current = null;
+                return;
+            }
             loadComments();
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -307,6 +324,12 @@ export default function ProductDiscussionPanel({
             .build();
 
         return await fetch.exec();
+    }
+
+    function focusCreatedContent(targetId: string) {
+        locallyCreatedTargetIdRef.current = targetId;
+        focusHashTarget({ targetId });
+        setHashTargetId(targetId);
     }
 
     async function loadComments(cursor?: string) {
@@ -376,6 +399,9 @@ export default function ProductDiscussionPanel({
                 { ...response.comment, replies: [] },
                 ...current,
             ]);
+            focusCreatedContent(
+                `discussion-comment-${response.comment.commentId}`,
+            );
             setComposerContent(TextEditorEmptyDoc as TextEditorContent);
             setComposerRefresh((value) => value + 1);
         } catch (err: any) {
@@ -422,6 +448,7 @@ export default function ProductDiscussionPanel({
                         : comment,
                 ),
             );
+            focusCreatedContent(`discussion-reply-${response.reply.replyId}`);
             setReplyingTo(undefined);
             setReplyContent(TextEditorEmptyDoc as TextEditorContent);
             setReplyRefresh((value) => value + 1);
@@ -640,29 +667,29 @@ export default function ProductDiscussionPanel({
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <MessageSquare className="h-4 w-4" />
-                        <Text2 theme={theme.theme} className="font-semibold">
+                        <Text2
+                            theme={theme.theme}
+                            className="font-semibold text-base"
+                        >
                             {COURSE_DISCUSSIONS_TITLE}
                         </Text2>
                     </div>
                     {onClose && (
-                        <Button
-                            theme={theme.theme}
+                        <ShadcnButton
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7"
                             onClick={onClose}
+                            aria-label={CAPTION_CLOSE}
+                            title={CAPTION_CLOSE}
                         >
-                            <X className="h-4 w-4" />
-                        </Button>
+                            <X />
+                        </ShadcnButton>
                     )}
                 </div>
                 <Link href={allDiscussionsHref} className="block">
-                    <Caption
-                        theme={theme.theme}
-                        className="underline hover:text-foreground transition-colors"
-                    >
+                    <PageLink theme={theme.theme} className="text-xs">
                         {COURSE_DISCUSSIONS_VIEW_ALL}
-                    </Caption>
+                    </PageLink>
                 </Link>
             </header>
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
@@ -899,7 +926,8 @@ function DiscussionItem({
 
     const displayDate = formattedLocaleDate(item.createdAt);
 
-    const avatarUrl = item.user?.avatar?.thumbnail || item.user?.avatar?.file;
+    const avatarUrl =
+        item.user?.avatar?.thumbnail || "/courselit_backdrop_square.webp";
     const cardStyles = theme.theme?.interactives?.card;
     const actionButtonSurface = clsx(
         "bg-card text-card-foreground hover:bg-card hover:text-card-foreground",
@@ -912,63 +940,55 @@ function DiscussionItem({
     return (
         <article
             id={itemId}
-            className={`scroll-mt-4 transition-[background-color,border-color,box-shadow] duration-500 ${
-                compact ? "ml-8 mt-4 space-y-3" : "py-4 space-y-3"
+            className={`scroll-mt-4 space-y-3 rounded-xl border border-transparent px-3 py-3 transition-[background-color,border-color,box-shadow] duration-500 ${
+                compact ? "ml-8 mt-4" : ""
             }`}
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-semibold text-muted-foreground">
-                        {avatarUrl ? (
-                            <img
-                                src={avatarUrl}
-                                alt={displayName}
-                                className="h-full w-full object-cover"
-                            />
-                        ) : (
-                            initials
-                        )}
-                    </div>
-                    <div className="flex items-baseline gap-2 flex-wrap min-w-0 flex-1">
+                    <Avatar className="h-8 w-8">
+                        <AvatarImage
+                            src={avatarUrl}
+                            alt={`${displayName}'s avatar`}
+                        />
+                        <AvatarFallback>{initials}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col items-baseline gap-1 flex-wrap min-w-0 flex-1">
                         <Text2
                             theme={theme.theme}
                             className="font-semibold text-sm leading-none"
                         >
                             {displayName}
                         </Text2>
-                        <Caption theme={theme.theme} className="leading-none">
+                        <Caption
+                            theme={theme.theme}
+                            className="leading-none text-xs"
+                        >
                             {displayDate}
                         </Caption>
                     </div>
                 </div>
                 {!item.deleted && !isOwn && (
-                    <Button
-                        theme={theme.theme}
+                    <ShadcnButton
                         variant="ghost"
                         size="sm"
-                        className={clsx(actionButtonSurface, "h-8 w-8 p-0")}
                         onClick={onReport}
                         aria-label={COURSE_DISCUSSIONS_REPORT}
                         title={COURSE_DISCUSSIONS_REPORT}
                     >
                         <Flag className="h-4 w-4 text-muted-foreground" />
-                    </Button>
+                    </ShadcnButton>
                 )}
                 {!item.deleted && isOwn && (
-                    <Button
-                        theme={theme.theme}
+                    <ShadcnButton
                         variant="ghost"
                         size="sm"
-                        className={clsx(
-                            actionButtonSurface,
-                            "h-8 w-8 p-0 text-destructive hover:text-destructive",
-                        )}
                         onClick={onDelete}
                         aria-label={COURSE_DISCUSSIONS_DELETE}
                         title={COURSE_DISCUSSIONS_DELETE}
                     >
                         <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </ShadcnButton>
                 )}
             </div>
             <div className="text-sm leading-normal">
@@ -985,13 +1005,10 @@ function DiscussionItem({
             </div>
             {!item.deleted && (
                 <div className="flex items-center gap-3 pt-1">
-                    <Button
-                        theme={theme.theme}
+                    <ShadcnButton
                         variant="ghost"
                         size="sm"
                         className={clsx(
-                            actionButtonSurface,
-                            "flex items-center gap-1.5 h-8 px-2.5 py-1 transition-colors",
                             item.hasLiked
                                 ? "text-foreground"
                                 : "text-muted-foreground hover:text-foreground",
@@ -1011,25 +1028,16 @@ function DiscussionItem({
                         >
                             {item.likesCount}
                         </Caption>
-                    </Button>
-                    <Button
-                        theme={theme.theme}
-                        variant="ghost"
-                        size="sm"
-                        className={clsx(
-                            actionButtonSurface,
-                            "flex items-center gap-1.5 h-8 px-2.5 py-1 text-muted-foreground hover:text-foreground",
-                        )}
-                        onClick={onReply}
-                    >
-                        <MessageSquare className="h-4 w-4" />
+                    </ShadcnButton>
+                    <ShadcnButton variant="ghost" size="sm" onClick={onReply}>
+                        <Reply className="h-4 w-4" />
                         <Caption
                             theme={theme.theme}
                             className="text-xs font-medium"
                         >
                             {COURSE_DISCUSSIONS_REPLY}
                         </Caption>
-                    </Button>
+                    </ShadcnButton>
                 </div>
             )}
             {children && <div className="mt-4 space-y-4">{children}</div>}

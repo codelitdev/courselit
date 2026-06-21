@@ -5,12 +5,20 @@ import LessonEvaluation from "@models/LessonEvaluation";
 import MembershipModel from "@models/Membership";
 import PaymentPlanModel from "@models/PaymentPlan";
 import ActivityModel from "@models/Activity";
+import NotificationModel from "@models/Notification";
 import PageModel from "@models/Page";
 import DomainModel from "@models/Domain";
 import UserModel from "@models/User";
 import InvoiceModel from "@models/Invoice";
 import CertificateModel from "@models/Certificate";
 import CertificateTemplateModel from "@models/CertificateTemplate";
+import ProductDiscussionCommentModel from "@models/ProductDiscussionComment";
+import ProductDiscussionReplyModel from "@models/ProductDiscussionReply";
+import ProductDiscussionLikeModel from "@models/ProductDiscussionLike";
+import ProductDiscussionReportModel from "@models/ProductDiscussionReport";
+import ProductDiscussionSummaryModel from "@models/ProductDiscussionSummary";
+import ProductDiscussionSubscriberModel from "@models/ProductDiscussionSubscriber";
+import RateLimitEventModel from "@models/RateLimitEvent";
 import constants from "@/config/constants";
 import { Constants } from "@courselit/common-models";
 
@@ -101,8 +109,24 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 internal: { $ne: true },
             }),
             ActivityModel.deleteMany({ domain: testDomain._id }),
+            NotificationModel.deleteMany({ domain: testDomain._id }),
             PageModel.deleteMany({ domain: testDomain._id }),
             InvoiceModel.deleteMany({ domain: testDomain._id }),
+            ProductDiscussionCommentModel.deleteMany({
+                domain: testDomain._id,
+            }),
+            ProductDiscussionReplyModel.deleteMany({ domain: testDomain._id }),
+            ProductDiscussionLikeModel.deleteMany({ domain: testDomain._id }),
+            ProductDiscussionReportModel.deleteMany({
+                domain: testDomain._id,
+            }),
+            ProductDiscussionSummaryModel.deleteMany({
+                domain: testDomain._id,
+            }),
+            ProductDiscussionSubscriberModel.deleteMany({
+                domain: testDomain._id,
+            }),
+            RateLimitEventModel.deleteMany({ domain: testDomain._id }),
         ]);
 
         // Reset user purchases
@@ -264,6 +288,163 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 pageId: page.pageId,
             });
             expect(deletedPage).toBeNull();
+        });
+
+        it("should delete discussion-owned data and retain TTL-managed rate-limit events", async () => {
+            const productId = dcId("course-with-discussions");
+            const entityId = dcId("lesson-with-discussions");
+            const commentId = dcId("discussion-comment");
+            const replyId = dcId("discussion-reply");
+            const unrelatedProductId = dcId("unrelated-product");
+            const page = await PageModel.create({
+                domain: testDomain._id,
+                pageId: dcId("discussion-page"),
+                name: "Discussion Course Page",
+                creatorId: adminUser.userId,
+                deleteable: true,
+            });
+            await CourseModel.create({
+                domain: testDomain._id,
+                courseId: productId,
+                title: "Discussion Course",
+                creatorId: adminUser.userId,
+                deleteable: true,
+                pageId: page.pageId,
+                groups: [],
+                lessons: [],
+                type: "course",
+                privacy: "unlisted",
+                costType: "free",
+                cost: 0,
+                slug: dcId("discussion-course"),
+            });
+
+            const target = {
+                domain: testDomain._id,
+                productId,
+                entityType: "lesson",
+                entityId,
+            } as const;
+            await Promise.all([
+                ProductDiscussionCommentModel.create({
+                    ...target,
+                    commentId,
+                    userId: regularUser.userId,
+                    content: { type: "doc", content: [] },
+                }),
+                ProductDiscussionReplyModel.create({
+                    ...target,
+                    commentId,
+                    replyId,
+                    userId: regularUser.userId,
+                    content: { type: "doc", content: [] },
+                }),
+                ProductDiscussionLikeModel.create({
+                    ...target,
+                    contentType: "comment",
+                    contentId: commentId,
+                    userId: regularUser.userId,
+                }),
+                ProductDiscussionReportModel.create({
+                    ...target,
+                    reportId: dcId("discussion-report"),
+                    contentType: "comment",
+                    contentId: commentId,
+                    userId: regularUser.userId,
+                    reason: "Test report",
+                }),
+                ProductDiscussionSummaryModel.create({
+                    ...target,
+                    commentsCount: 1,
+                    repliesCount: 1,
+                    totalCount: 2,
+                    activityCountIncludingDeleted: 2,
+                    lastActivityAt: new Date(),
+                }),
+                ProductDiscussionSubscriberModel.create({
+                    ...target,
+                    subscriptionId: dcId("discussion-subscription"),
+                    userId: regularUser.userId,
+                }),
+                ActivityModel.create({
+                    domain: testDomain._id,
+                    userId: regularUser.userId,
+                    type: Constants.ActivityType
+                        .COURSE_DISCUSSION_COMMENT_CREATED,
+                    entityId: commentId,
+                    metadata: { courseId: productId },
+                }),
+                NotificationModel.create({
+                    domain: testDomain._id,
+                    notificationId: dcId("discussion-notification"),
+                    userId: regularUser.userId,
+                    forUserId: adminUser.userId,
+                    activityType:
+                        Constants.ActivityType
+                            .COURSE_DISCUSSION_COMMENT_CREATED,
+                    entityId: commentId,
+                    metadata: { courseId: productId },
+                }),
+                ActivityModel.create({
+                    domain: testDomain._id,
+                    userId: regularUser.userId,
+                    type: Constants.ActivityType
+                        .COURSE_DISCUSSION_COMMENT_CREATED,
+                    entityId: dcId("unrelated-comment"),
+                    metadata: { courseId: unrelatedProductId },
+                }),
+                NotificationModel.create({
+                    domain: testDomain._id,
+                    notificationId: dcId("unrelated-notification"),
+                    userId: regularUser.userId,
+                    forUserId: adminUser.userId,
+                    activityType:
+                        Constants.ActivityType
+                            .COURSE_DISCUSSION_COMMENT_CREATED,
+                    entityId: dcId("unrelated-comment"),
+                    metadata: { courseId: unrelatedProductId },
+                }),
+                RateLimitEventModel.create({
+                    domain: testDomain._id,
+                    userId: regularUser.userId,
+                    scope: "course_discussion",
+                    action: "comment:create",
+                    subjectId: `${productId}:lesson:${entityId}`,
+                }),
+            ]);
+
+            await deleteCourse(productId, mockCtx);
+
+            const remainingCounts = await Promise.all([
+                ProductDiscussionCommentModel.countDocuments({ productId }),
+                ProductDiscussionReplyModel.countDocuments({ productId }),
+                ProductDiscussionLikeModel.countDocuments({ productId }),
+                ProductDiscussionReportModel.countDocuments({ productId }),
+                ProductDiscussionSummaryModel.countDocuments({ productId }),
+                ProductDiscussionSubscriberModel.countDocuments({ productId }),
+                ActivityModel.countDocuments({
+                    domain: testDomain._id,
+                    "metadata.courseId": productId,
+                }),
+                NotificationModel.countDocuments({
+                    domain: testDomain._id,
+                    "metadata.courseId": productId,
+                }),
+                RateLimitEventModel.countDocuments({
+                    domain: testDomain._id,
+                    scope: "course_discussion",
+                    subjectId: `${productId}:lesson:${entityId}`,
+                }),
+                ActivityModel.countDocuments({
+                    domain: testDomain._id,
+                    "metadata.courseId": unrelatedProductId,
+                }),
+                NotificationModel.countDocuments({
+                    domain: testDomain._id,
+                    "metadata.courseId": unrelatedProductId,
+                }),
+            ]);
+            expect(remainingCounts).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]);
         });
 
         it("should delete course with featured image", async () => {
@@ -765,11 +946,11 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
         });
     });
 
-    describe("Activity Deletion", () => {
-        it("should delete all activities related to the course", async () => {
+    describe("Activity and Notification Deletion", () => {
+        it("should delete all activities and notifications related to the course", async () => {
             const page = await PageModel.create({
                 domain: testDomain._id,
-                pageId: "test-page-activities",
+                pageId: "test-page-activities-notifications",
                 name: "Test Page",
                 creatorId: adminUser.userId,
                 deleteable: true,
@@ -777,7 +958,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
 
             const course = await CourseModel.create({
                 domain: testDomain._id,
-                courseId: "test-course-activities",
+                courseId: "test-course-activities-notifications",
                 title: "Test Course",
                 creatorId: adminUser.userId,
                 deleteable: true,
@@ -786,7 +967,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 privacy: "unlisted",
                 costType: "free",
                 cost: 0,
-                slug: "test-course-activities",
+                slug: "test-course-activities-notifications",
                 groups: [],
                 lessons: [],
             });
@@ -821,6 +1002,42 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 },
             });
 
+            // Notification with entityId = courseId
+            await NotificationModel.create({
+                domain: testDomain._id,
+                notificationId: dcId("notification-entity"),
+                userId: regularUser.userId,
+                forUserId: adminUser.userId,
+                activityType: "enrolled",
+                entityId: course.courseId,
+            });
+
+            // Notification with metadata.courseId
+            await NotificationModel.create({
+                domain: testDomain._id,
+                notificationId: dcId("notification-metadata"),
+                userId: regularUser.userId,
+                forUserId: adminUser.userId,
+                activityType: "lesson_completed",
+                entityId: "lesson-123",
+                metadata: {
+                    courseId: course.courseId,
+                },
+            });
+
+            // Notification with both
+            await NotificationModel.create({
+                domain: testDomain._id,
+                notificationId: dcId("notification-both"),
+                userId: regularUser.userId,
+                forUserId: adminUser.userId,
+                activityType: "course_completed",
+                entityId: course.courseId,
+                metadata: {
+                    courseId: course.courseId,
+                },
+            });
+
             await deleteCourse(course.courseId, mockCtx);
 
             const remainingActivities = await ActivityModel.find({
@@ -831,6 +1048,15 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 ],
             });
             expect(remainingActivities).toHaveLength(0);
+
+            const remainingNotifications = await NotificationModel.find({
+                domain: testDomain._id,
+                $or: [
+                    { entityId: course.courseId },
+                    { "metadata.courseId": course.courseId },
+                ],
+            });
+            expect(remainingNotifications).toHaveLength(0);
         });
     });
 

@@ -169,7 +169,7 @@ describe("ProductDiscussionReportsPage", () => {
                         items: [
                             {
                                 reportId: "report-1",
-                                contentType: "comment",
+                                contentType: "COMMENT",
                                 contentId: "comment-1",
                                 userId: "reporter-1",
                                 reason: "Spam",
@@ -239,6 +239,41 @@ describe("ProductDiscussionReportsPage", () => {
             limit: 10,
         });
         expect(screen.queryByText("approved")).not.toBeInTheDocument();
+    });
+
+    it("links reply reports to the rendered reply target", async () => {
+        mockExec.mockResolvedValueOnce({
+            reports: {
+                items: [
+                    {
+                        reportId: "report-reply-1",
+                        contentType: "REPLY",
+                        contentId: "reply-1",
+                        userId: "reporter-1",
+                        reason: "Spam",
+                        status: "pending",
+                        createdAt: "2026-06-01T00:00:00.000Z",
+                        entityId: "lesson-1",
+                        lessonTitle: "Text lesson",
+                        contentPreview: "Reported reply",
+                        authorName: "Author One",
+                        reporterName: "Reporter One",
+                    },
+                ],
+            },
+            totalReports: 1,
+        });
+
+        renderPage();
+
+        await waitFor(() => {
+            expect(screen.getByText("Reported reply")).toBeInTheDocument();
+        });
+
+        expect(screen.getByText("Reported reply").closest("a")).toHaveAttribute(
+            "href",
+            "/course/course-with-reports/product-1/lesson-1?discussion=open&preview=true&returnTo=%2Fdashboard%2Fproduct%2Fproduct-1%2Fmanage%2Fdiscussions%2Freports#discussion-reply-reply-1",
+        );
     });
 
     it("loads the next numbered reports page", async () => {

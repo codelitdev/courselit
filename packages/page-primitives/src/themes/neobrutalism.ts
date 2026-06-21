@@ -194,7 +194,7 @@ const themeStyles: ThemeStyle = {
                 radius: "rounded-none",
             },
             shadow: "shadow-sm",
-            custom: "transition-all duration-150 ease-in-out hover:shadow-none hover:translate-x-1 hover:translate-y-1",
+            custom: "transition-all duration-150 ease-in-out hover:shadow-none",
             disabled: {
                 background: "#F3F4F6",
                 cursor: "cursor-not-allowed",

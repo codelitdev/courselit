@@ -1,6 +1,7 @@
 import { ActivityType, Constants } from "@courselit/common-models";
 import { truncate } from "@courselit/utils";
 import { createNotificationEntityResolver } from "./notification-entity-resolver";
+import { getCourseManagementAccess } from "./course-management-access";
 
 export interface NotificationReplyEntity {
     replyId: string;
@@ -34,6 +35,7 @@ export interface NotificationCourseEntity {
     courseId: string;
     title: string;
     slug?: string;
+    creatorId?: string;
 }
 
 export interface NotificationEntityResolver {
@@ -62,6 +64,7 @@ export async function getNotificationMessageAndHref({
     entityId,
     actorName,
     recipientUserId,
+    recipientPermissions = [],
     resolver,
     entityTargetId,
     metadata,
@@ -72,6 +75,7 @@ export async function getNotificationMessageAndHref({
     entityId: string;
     actorName: string;
     recipientUserId: string;
+    recipientPermissions?: string[];
     resolver?: NotificationEntityResolver;
     entityTargetId?: string;
     metadata?: Record<string, unknown>;
@@ -385,13 +389,15 @@ export async function getNotificationMessageAndHref({
             };
         }
 
-        case Constants.ActivityType.COURSE_DISCUSSION_ACTIVITY: {
-            const productId = metadata?.productId as string | undefined;
+        case Constants.ActivityType.COURSE_DISCUSSION_COMMENT_CREATED:
+        case Constants.ActivityType.COURSE_DISCUSSION_REACTED: {
+            const productId = metadata?.courseId as string | undefined;
             const entityType = metadata?.entityType as string | undefined;
             const lessonId = metadata?.entityId as string | undefined;
             const commentId = metadata?.commentId as string | undefined;
             const replyId = metadata?.replyId as string | undefined;
             const eventType = metadata?.eventType as string | undefined;
+            const contentType = metadata?.contentType as string | undefined;
 
             if (!productId || entityType !== "lesson" || !lessonId) {
                 return { message: "", href: "" };
@@ -408,11 +414,25 @@ export async function getNotificationMessageAndHref({
                 : commentId
                   ? `discussion-comment-${commentId}`
                   : undefined;
+            const query = new URLSearchParams({ discussion: "open" });
+            if (
+                getCourseManagementAccess({
+                    creatorId: String(course.creatorId),
+                    userId: recipientUserId,
+                    permissions: recipientPermissions,
+                }).canManage
+            ) {
+                query.set("preview", "true");
+            }
 
             return {
-                message: `${actorName} ${eventType === "reply_created" ? "replied" : "commented"} on ${truncate(course.title, 20).trim()}`,
+                message:
+                    activityType ===
+                    Constants.ActivityType.COURSE_DISCUSSION_REACTED
+                        ? `${actorName} reacted to your ${contentType === "reply" ? "reply" : "comment"} on ${truncate(course.title, 20).trim()}`
+                        : `${actorName} ${eventType === "reply_created" ? "replied" : "commented"} on ${truncate(course.title, 20).trim()}`,
                 href: toHref(
-                    `/course/${course.slug}/${course.courseId}/${lessonId}?discussion=open${
+                    `/course/${course.slug}/${course.courseId}/${lessonId}?${query.toString()}${
                         targetId && targetHash ? `#${targetHash}` : ""
                     }`,
                     hrefPrefix,

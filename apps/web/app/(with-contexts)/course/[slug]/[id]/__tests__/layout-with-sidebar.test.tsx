@@ -837,6 +837,50 @@ describe("generateSideBarItems", () => {
         expect(items[1].badge).toBeUndefined();
         expect(items[1].items?.[0].icon).toBeUndefined();
     });
+
+    it("does not bypass learner drip rules for course managers outside preview mode", () => {
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "admin-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: false,
+            groups: [
+                {
+                    id: "group-1",
+                    name: "Dripped Section",
+                    lessons: [],
+                    drip: {
+                        status: true,
+                        type: Constants.dripType[0].split("-")[0].toUpperCase(),
+                        delayInMillis: 2,
+                    },
+                },
+            ],
+        } as unknown as CourseFrontend;
+
+        const profile = {
+            userId: "admin-1",
+            permissions: [constants.permissions.manageCourse],
+            purchases: [],
+        } as unknown as Profile;
+
+        const items = generateSideBarItems(
+            course,
+            profile,
+            "/course/test-course/course-1",
+        );
+
+        expect(items[1].badge?.text).toBe("2 days");
+    });
 });
 
 describe("Course viewer layout", () => {

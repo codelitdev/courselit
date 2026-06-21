@@ -322,7 +322,7 @@ Indexes:
 
 - `{ domain: 1, userId: 1, scope: 1, action: 1, subjectId: 1, createdAt: -1 }`
 - `{ domain: 1, userId: 1, scope: 1, subjectId: 1, fingerprint: 1, createdAt: -1 }`
-- TTL index on `createdAt` to expire old rate-limit events after the longest configured retention window, for example 7 days.
+- TTL index on `createdAt` to expire rate-limit events after 25 hours. This covers the longest current enforcement window of 24 hours while allowing for MongoDB TTL cleanup delay.
 
 Usage:
 
@@ -615,15 +615,16 @@ Future product-level blog comment validation:
 
 ## Notification Requirements
 
-Add activity types for course discussion comments/replies if existing activity taxonomy does not fit cleanly.
+Add granular activity types for course discussion comments/replies and reactions.
 
-- Add a new `ActivityType` entry for course discussion activity, for example `COURSE_DISCUSSION_ACTIVITY`.
-- Use the same activity type for both top-level comments and replies.
-- Store the specific event kind in metadata, for example `eventType: "comment_created" | "reply_created"`.
-- Seed default notification preferences for the new activity type using the existing notification preference system.
-- Show the new preference in the existing General notification preferences screen as `Course discussion activity`.
-- The preference row must support the same App and Email channel toggles as the existing community activity rows.
-- Product admins and learners should both use this preference row to control discussion notifications.
+- Add `COURSE_DISCUSSION_COMMENT_CREATED` for both top-level comments and replies.
+- Store the specific comment event kind in metadata as `eventType: "comment_created" | "reply_created"`.
+- Add `COURSE_DISCUSSION_REACTED` for newly created likes on comments or replies.
+- A reaction activity must notify only the liked content's author, exclude self-likes, and must not be emitted for unlikes or idempotent repeated likes.
+- Seed default notification preferences for both activity types using the existing notification preference system.
+- Show `Course discussion comment created` and `Course discussion reacted` in the existing General notification preferences screen.
+- Both preference rows must support the same App and Email channel toggles as the existing community activity rows.
+- Product admins and learners should use these preference rows to control discussion notifications independently.
 - Respect recipient notification preferences before creating in-app or email notifications.
 - Build the recipient list as a unique set of `userId`s before sending notifications.
 - Exclude the actor from recipients.
@@ -647,6 +648,11 @@ Recipients for a reply:
 - all product admins for the product
 - exclude the actor
 
+Recipient for a reaction:
+
+- the liked comment/reply author only
+- exclude the actor, so self-likes do not create activity
+
 Product admin recipient resolution must use the same product-management permission source used to authorize dashboard product management access.
 
 Notification payload metadata:
@@ -659,6 +665,8 @@ Notification payload metadata:
     entityId: string;
     commentId: string;
     replyId?: string;
+    eventType?: "comment_created" | "reply_created";
+    contentType?: "comment" | "reply";
 }
 ```
 
@@ -669,9 +677,11 @@ Notification href:
 - This release must not create `entityType = "product"` notification hrefs unless product-level comments are explicitly added to scope.
 - Must open the discussion panel.
 - Must include a stable target for scroll and highlight.
+- For recipients who can manage the product, include `preview=true` so notification links remain valid for unpublished products or lessons. Determine management access from the recipient's current permissions and product ownership; never grant preview from URL state alone.
 - Example shape:
     - `/course/[slug]/[id]/[lessonId]?discussion=open#discussion-comment-[commentId]`
     - `/course/[slug]/[id]/[lessonId]?discussion=open#discussion-reply-[replyId]`
+    - manager target: `/course/[slug]/[id]/[lessonId]?discussion=open&preview=true#discussion-comment-[commentId]`
 
 Email:
 
@@ -697,6 +707,14 @@ Highlight:
 - Deleted content remains stored for admin moderation/audit visibility unless a future hard-delete policy is introduced.
 - Course viewer APIs must redact deleted comment/reply content and return only deleted placeholders.
 - Admin dashboard APIs may return deleted comment/reply content, but the UI must display a clear deleted label.
+- Hard-deleting a product must delete all records for that `productId` from `ProductDiscussionComment`, `ProductDiscussionReply`, `ProductDiscussionLike`, `ProductDiscussionReport`, `ProductDiscussionSummary`, and `ProductDiscussionSubscriber`.
+- Hard-deleting a product must also delete its product discussion `Activity` and `Notification` records by `{ domain, "metadata.courseId": productId }`. This cleanup is intentionally based on product ownership metadata rather than a fixed activity-type list so legacy and future discussion activity types cannot leave dead notification links.
+- `Activity` and `Notification` must each define an index on `{ domain: 1, "metadata.courseId": 1 }` for bounded product cleanup.
+- Product deletion must not scan or explicitly delete generic `RateLimitEvent` records. These short-lived records expire through their 25-hour TTL index.
+- Product discussion cleanup must run from every product hard-deletion path, including the interactive `deleteCourse` flow and `packages/scripts/src/cleanup-domain.ts`.
+- Deleting a user must perform the following to ensure GDPR compliance while preserving thread layout and summary counts:
+    - Hard-delete all `ProductDiscussionLike`, `ProductDiscussionSubscriber`, and `ProductDiscussionReport` documents authored/created by the deleted user.
+    - Anonymize all `ProductDiscussionComment` and `ProductDiscussionReply` documents authored by the user by setting their `userId` to `"deleted"`, marking them `deleted: true`, and clearing their `content` field to `{ type: "doc", content: [] }`.
 
 ## UX Requirements
 
@@ -790,6 +808,7 @@ Acceptance criteria:
 - `ProductDiscussionComment`, `ProductDiscussionReply`, `ProductDiscussionLike`, `ProductDiscussionReport`, `ProductDiscussionSummary`, `ProductDiscussionSubscriber`, and `RateLimitEvent` are defined with the fields and indexes in this PRD.
 - Discussion models use `productId`, `entityType`, and `entityId`; no `CourseDiscussion*` models are introduced.
 - `ProductDiscussionSummary.lastActivityAt` is required and summary counters include `activityCountIncludingDeleted`.
+- A shared product discussion cleanup helper hard-deletes all discussion-owned records plus product-linked activity and notification records, and is used by both interactive product deletion and domain cleanup. Generic rate-limit events remain TTL-managed.
 
 Verification:
 
@@ -930,8 +949,8 @@ Description: Add discussion notification activity, preference row, recipient res
 
 Acceptance criteria:
 
-- `COURSE_DISCUSSION_ACTIVITY` or equivalent activity type is added with default preferences.
-- General notification preferences show `Course discussion activity` with App and Email toggles.
+- `COURSE_DISCUSSION_COMMENT_CREATED` and `COURSE_DISCUSSION_REACTED` are added with default preferences.
+- General notification preferences show `Course discussion comment created` and `Course discussion reacted`, each with App and Email toggles.
 - Recipients include active subscribers and product admins from the dashboard product-management permission source, excluding the actor and deduped in application logic.
 - Lesson notification hrefs open the correct lesson discussion target and include stable highlight anchors.
 

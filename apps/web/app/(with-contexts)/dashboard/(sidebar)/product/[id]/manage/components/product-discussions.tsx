@@ -6,10 +6,11 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@courselit/components-library";
 import {
-    APP_MESSAGE_COURSE_SAVED,
     COURSE_DISCUSSIONS_ADMIN_VIEW_REPORTS,
     COURSE_DISCUSSIONS_DESCRIPTION,
     COURSE_DISCUSSIONS_TITLE,
+    DISCUSSIONS_DISABLED_MESSAGE,
+    DISCUSSIONS_ENABLED_MESSAGE,
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
@@ -64,7 +65,9 @@ export default function ProductDiscussions({
             if (response?.updateCourse) {
                 toast({
                     title: TOAST_TITLE_SUCCESS,
-                    description: APP_MESSAGE_COURSE_SAVED,
+                    description: response.updateCourse.discussions
+                        ? DISCUSSIONS_ENABLED_MESSAGE
+                        : DISCUSSIONS_DISABLED_MESSAGE,
                 });
             }
         } catch (err: any) {
