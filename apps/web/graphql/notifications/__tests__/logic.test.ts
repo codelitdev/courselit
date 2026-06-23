@@ -338,7 +338,7 @@ describe("Notification Preferences", () => {
             entityId: id("comment"),
             metadata: {
                 eventType: "comment_created",
-                productId: course.courseId,
+                courseId: course.courseId,
                 entityType: "lesson",
                 entityId: id("lesson"),
                 commentId: id("comment"),
@@ -393,7 +393,7 @@ describe("Notification Preferences", () => {
             activityType: Constants.ActivityType.COURSE_DISCUSSION_REACTED,
             entityId: id("reply"),
             metadata: {
-                productId: course.courseId,
+                courseId: course.courseId,
                 entityType: "lesson",
                 entityId: id("lesson"),
                 contentType: "reply",
