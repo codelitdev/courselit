@@ -1,9 +1,14 @@
 "use client";
 
 import { useContext, useEffect, useMemo, useState, use } from "react";
-import { AddressContext, ThemeContext } from "@components/contexts";
+import {
+    AddressContext,
+    ProfileContext,
+    ThemeContext,
+} from "@components/contexts";
 import { FetchBuilder, truncate } from "@courselit/utils";
 import { getProduct } from "../helpers";
+import { isEnrolled } from "@ui-lib/utils";
 import {
     Button,
     Header1,
@@ -19,7 +24,7 @@ import {
 } from "@ui-config/strings";
 import { BookOpen, MessageSquare } from "lucide-react";
 import NextLink from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
     appendCourseViewerSessionParamsToHref,
     getCourseViewerSessionParams,
@@ -39,54 +44,95 @@ export default function CourseDiscussionsPage(props: {
     const params = use(props.params);
     const { slug, id } = params;
     const address = useContext(AddressContext);
+    const { profile } = useContext(ProfileContext);
     const { theme } = useContext(ThemeContext);
+    const { replace } = useRouter();
     const searchParams = useSearchParams();
     const viewerSessionParams = getCourseViewerSessionParams(searchParams);
+    const isViewerEnrolled = Boolean(
+        profile?.userId &&
+            isEnrolled(id, profile as NonNullable<typeof profile>),
+    );
+    const introHref = appendCourseViewerSessionParamsToHref(
+        `/course/${slug}/${id}`,
+        { returnTo: viewerSessionParams.returnTo },
+    );
     const [summaries, setSummaries] = useState<DiscussionSummary[]>([]);
     const [courseTitle, setCourseTitle] = useState<string>("");
     const [nextCursor, setNextCursor] = useState<string>();
     const [hasMore, setHasMore] = useState(false);
     const [loading, setLoading] = useState(false);
     const [lessonsById, setLessonsById] = useState<Record<string, string>>({});
+    const [canUseDiscussions, setCanUseDiscussions] = useState(false);
+    const [effectivePreview, setEffectivePreview] = useState(false);
 
     useEffect(() => {
+        setCanUseDiscussions(false);
+        setEffectivePreview(false);
+        setSummaries([]);
+        setNextCursor(undefined);
+        setHasMore(false);
+        setLessonsById({});
+
         if (!id || !address?.backend) return;
-        getProduct(
-            id,
-            address.backend,
-            Boolean(viewerSessionParams.preview),
-        ).then((product) => {
-            setCourseTitle(product.title || "");
-            const lessons = Object.fromEntries(
-                product.groups
-                    .flatMap((group) => group.lessons)
-                    .map((lesson) => [lesson.lessonId, lesson.title]),
-            );
-            setLessonsById(lessons);
-        });
-        loadSummaries();
-    }, [id, address?.backend, viewerSessionParams.preview]);
+        if (!profile?.userId) {
+            replace(introHref);
+            return;
+        }
+        if (!isViewerEnrolled && !viewerSessionParams.preview) {
+            replace(introHref);
+            return;
+        }
 
-    const rows = useMemo(
-        () =>
-            summaries.map((summary) => ({
-                ...summary,
-                title: lessonsById[summary.entityId] || summary.entityId,
-            })),
-        [summaries, lessonsById],
-    );
+        let cancelled = false;
+        getProduct(id, address.backend, Boolean(viewerSessionParams.preview))
+            .then((product) => {
+                if (cancelled) return;
+                const isEffectivePreview = Boolean(product.isPreview);
+                if (!isViewerEnrolled && !isEffectivePreview) {
+                    replace(introHref);
+                    return;
+                }
 
-    async function graph(payload: Record<string, unknown>) {
-        const fetch = new FetchBuilder()
-            .setUrl(`${address.backend}/api/graph`)
-            .setPayload(payload)
-            .setIsGraphQLEndpoint(true)
-            .build();
+                setCanUseDiscussions(true);
+                setEffectivePreview(isEffectivePreview);
+                setCourseTitle(product.title || "");
+                const lessons = Object.fromEntries(
+                    product.groups
+                        .flatMap((group) => group.lessons)
+                        .map((lesson) => [lesson.lessonId, lesson.title]),
+                );
+                setLessonsById(lessons);
+                loadSummaries(undefined, isEffectivePreview);
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    replace(introHref);
+                }
+            });
 
-        return await fetch.exec();
-    }
+        return () => {
+            cancelled = true;
+        };
+    }, [
+        id,
+        address?.backend,
+        viewerSessionParams.preview,
+        viewerSessionParams.returnTo,
+        profile?.userId,
+        isViewerEnrolled,
+        introHref,
+        replace,
+    ]);
 
-    async function loadSummaries(cursor?: string) {
+    async function loadSummaries(
+        cursor?: string,
+        previewOverride = effectivePreview,
+    ) {
+        if (!canUseDiscussions && cursor) {
+            return;
+        }
+
         setLoading(true);
         try {
             const response = await graph({
@@ -107,7 +153,7 @@ export default function CourseDiscussionsPage(props: {
                 `,
                 variables: {
                     productId: id,
-                    preview: Boolean(viewerSessionParams.preview),
+                    preview: previewOverride,
                     cursor,
                 },
             });
@@ -121,6 +167,29 @@ export default function CourseDiscussionsPage(props: {
         } finally {
             setLoading(false);
         }
+    }
+
+    const rows = useMemo(
+        () =>
+            summaries.map((summary) => ({
+                ...summary,
+                title: lessonsById[summary.entityId] || summary.entityId,
+            })),
+        [summaries, lessonsById],
+    );
+
+    async function graph(payload: Record<string, unknown>) {
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload(payload)
+            .setIsGraphQLEndpoint(true)
+            .build();
+
+        return await fetch.exec();
+    }
+
+    if (!canUseDiscussions) {
+        return null;
     }
 
     return (

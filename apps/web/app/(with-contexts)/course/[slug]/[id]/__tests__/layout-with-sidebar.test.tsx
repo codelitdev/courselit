@@ -1,5 +1,6 @@
 let mockPathname = "/course/test-course/course-1";
 let mockSearchParams = new URLSearchParams();
+let mockIsEnrolled = true;
 
 jest.mock("next/navigation", () => ({
     usePathname: () => mockPathname,
@@ -127,7 +128,7 @@ jest.mock("@courselit/page-primitives", () => ({
 
 jest.mock("@ui-lib/utils", () => ({
     formattedLocaleDate: () => "Mar 22, 2026",
-    isEnrolled: () => true,
+    isEnrolled: () => mockIsEnrolled,
     isLessonCompleted: () => false,
 }));
 
@@ -136,6 +137,7 @@ import ProductPage, { generateSideBarItems } from "../layout-with-sidebar";
 import { CourseFrontend } from "../helpers";
 import constants from "@/config/constants";
 import { render, screen } from "@testing-library/react";
+import { ProfileContext } from "@components/contexts";
 
 describe("generateSideBarItems", () => {
     const originalDateNow = Date.now;
@@ -144,6 +146,7 @@ describe("generateSideBarItems", () => {
     beforeEach(() => {
         mockPathname = "/course/test-course/course-1";
         mockSearchParams = new URLSearchParams();
+        mockIsEnrolled = true;
         Date.now = jest.fn(() =>
             new Date("2026-03-22T00:00:00.000Z").getTime(),
         );
@@ -887,6 +890,7 @@ describe("Course viewer layout", () => {
     beforeEach(() => {
         mockPathname = "/course/test-course/course-1";
         mockSearchParams = new URLSearchParams();
+        mockIsEnrolled = true;
     });
 
     it("renders the preview badge in the viewer header when preview mode is active", () => {
@@ -962,6 +966,89 @@ describe("Course viewer layout", () => {
             href: "/course/test-course/course-1/discussions",
             isActive: true,
         });
+    });
+
+    it("hides discussion sidebar and header actions for guests", () => {
+        mockPathname = "/course/test-course/course-1/lesson-1";
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: false,
+            groups: [],
+            discussions: true,
+        } as unknown as CourseFrontend;
+
+        expect(
+            generateSideBarItems(
+                course,
+                {} as Profile,
+                "/course/test-course/course-1/discussions",
+            ).some((item) => item.title === "Discussions"),
+        ).toBe(false);
+
+        render(
+            <ProfileContext.Provider value={{ profile: {} } as any}>
+                <ProductPage product={course}>
+                    <div>Public lesson body</div>
+                </ProductPage>
+            </ProfileContext.Provider>,
+        );
+
+        expect(screen.getByText("Public lesson body")).toBeInTheDocument();
+        expect(screen.queryByLabelText("Discussions")).not.toBeInTheDocument();
+    });
+
+    it("hides discussion sidebar and header actions for logged-in non-enrolled users", () => {
+        mockPathname = "/course/test-course/course-1/lesson-1";
+        mockIsEnrolled = false;
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: false,
+            groups: [],
+            discussions: true,
+        } as unknown as CourseFrontend;
+        const profile = {
+            userId: "user-1",
+            purchases: [],
+        } as unknown as Profile;
+
+        expect(
+            generateSideBarItems(
+                course,
+                profile,
+                "/course/test-course/course-1/discussions",
+            ).some((item) => item.title === "Discussions"),
+        ).toBe(false);
+
+        render(
+            <ProductPage product={course}>
+                <div>Public lesson body</div>
+            </ProductPage>,
+        );
+
+        expect(screen.getByText("Public lesson body")).toBeInTheDocument();
+        expect(screen.queryByLabelText("Discussions")).not.toBeInTheDocument();
     });
 
     it("does not show a discussions header action on the course overview page", () => {

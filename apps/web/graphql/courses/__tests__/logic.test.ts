@@ -523,6 +523,7 @@ describe("product discussion comment and reply logic", () => {
     let testDomain: any;
     let learnerUser: any;
     let secondLearnerUser: any;
+    let nonEnrolledUser: any;
     let productAdminUser: any;
     let ctx: any;
 
@@ -576,6 +577,16 @@ describe("product discussion comment and reply logic", () => {
                     accessibleGroups: [groupId],
                 },
             ],
+        });
+        nonEnrolledUser = await UserModel.create({
+            domain: testDomain._id,
+            userId: id("discussion-api-non-enrolled"),
+            email: email("discussion-api-non-enrolled"),
+            name: "Discussion API Non Enrolled",
+            permissions: [constants.permissions.enrollInCourse],
+            active: true,
+            unsubscribeToken: id("discussion-api-non-enrolled-token"),
+            purchases: [],
         });
         productAdminUser = await UserModel.create({
             domain: testDomain._id,
@@ -723,6 +734,115 @@ describe("product discussion comment and reply logic", () => {
                 }),
             }),
         );
+    });
+
+    it("rejects guests and non-enrolled users from reading public lesson discussions", async () => {
+        await LessonModel.updateOne(
+            {
+                domain: testDomain._id,
+                lessonId,
+            },
+            {
+                $set: {
+                    requiresEnrollment: false,
+                },
+            },
+        );
+
+        const comment = await ProductDiscussionCommentModel.create({
+            domain: testDomain._id,
+            productId: courseId,
+            entityType: "lesson",
+            entityId: lessonId,
+            commentId: id("guest-hidden-comment"),
+            userId: learnerUser.userId,
+            content: doc("Guests should not see this"),
+        });
+        await ProductDiscussionReplyModel.create({
+            domain: testDomain._id,
+            productId: courseId,
+            entityType: "lesson",
+            entityId: lessonId,
+            commentId: comment.commentId,
+            replyId: id("guest-hidden-reply"),
+            userId: secondLearnerUser.userId,
+            content: doc("Guests should not see this reply"),
+        });
+        await ProductDiscussionSummaryModel.create({
+            domain: testDomain._id,
+            productId: courseId,
+            entityType: "lesson",
+            entityId: lessonId,
+            commentsCount: 1,
+            repliesCount: 1,
+            totalCount: 2,
+            activityCountIncludingDeleted: 2,
+            lastActivityAt: new Date(),
+        });
+
+        const guestCtx = {
+            subdomain: testDomain,
+            user: undefined,
+            address: "",
+        } as any;
+
+        await expect(
+            validateDiscussionTargetForLearner({
+                ctx: guestCtx,
+                productId: courseId,
+                entityType: "lesson",
+                entityId: lessonId,
+            }),
+        ).rejects.toThrow(responses.request_not_authenticated);
+        await expect(
+            listDiscussionComments({
+                ctx: guestCtx,
+                productId: courseId,
+                entityType: "lesson",
+                entityId: lessonId,
+            }),
+        ).rejects.toThrow(responses.request_not_authenticated);
+        await expect(
+            listDiscussionReplies({
+                ctx: guestCtx,
+                commentId: comment.commentId,
+            }),
+        ).rejects.toThrow(responses.request_not_authenticated);
+        await expect(
+            listDiscussionSummaries({
+                ctx: guestCtx,
+                productId: courseId,
+            }),
+        ).rejects.toThrow(responses.request_not_authenticated);
+
+        const nonEnrolledCtx = {
+            subdomain: testDomain,
+            user: nonEnrolledUser,
+            address: "",
+        } as any;
+
+        await expect(
+            validateDiscussionTargetForLearner({
+                ctx: nonEnrolledCtx,
+                productId: courseId,
+                entityType: "lesson",
+                entityId: lessonId,
+            }),
+        ).rejects.toThrow(responses.not_enrolled);
+        await expect(
+            listDiscussionComments({
+                ctx: nonEnrolledCtx,
+                productId: courseId,
+                entityType: "lesson",
+                entityId: lessonId,
+            }),
+        ).rejects.toThrow(responses.not_enrolled);
+
+        const nonEnrolledSummaries = await listDiscussionSummaries({
+            ctx: nonEnrolledCtx,
+            productId: courseId,
+        });
+        expect(nonEnrolledSummaries.items).toEqual([]);
     });
 
     it("creates replies under the top-level comment and lists comments/replies with cursors", async () => {

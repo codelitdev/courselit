@@ -19,6 +19,7 @@
 8. Product management permissions allow course viewer discussion participation for manageable lessons even when the actor is not enrolled as a learner; preview derives from the same permissions and must preserve those session params while navigating.
 9. Replies are stored and displayed as one-level replies under the original top-level comment. Replying to a reply adds the new reply to that same reply list.
 10. The feature should use existing GraphQL patterns unless a REST endpoint is already the natural integration point for the touched surface.
+11. Discussions are available only to enrolled learners or product managers. A public lesson may be visible to guests or logged-in non-enrolled users when `requiresEnrollment` is `false`, but discussion entry points, hub rows, comments, replies, and composers must remain hidden until the actor is enrolled in the product or has product management permissions while accessing via preview mode.
 
 ## Objective
 
@@ -111,6 +112,7 @@ Success means:
 ### Lesson Discussion Panel
 
 - Add a discussion icon button to the course viewer header.
+- Hide the discussion icon button and panel for guests and logged-in non-enrolled users, even when the current lesson has `requiresEnrollment: false` and the lesson content itself is publicly viewable.
 - On desktop, opening discussions shows a right sidebar for the current lesson.
 - On mobile, opening discussions shows a full-screen panel or sheet.
 - The panel header includes:
@@ -177,9 +179,11 @@ Success means:
 
 - Add route: `/course/[slug]/[id]/discussions`.
 - The route appears in the course viewer sidebar only when discussions are enabled.
+- The route and sidebar entry must be hidden from guests and logged-in non-enrolled users. If an ineligible actor opens the route directly, redirect them to the course introduction page without listing discussion metadata.
 - The page lists only lessons that are currently available in the actor's course viewer access mode.
-- For enrolled/non-preview learners, available lessons are determined by existing course access, enrollment, drip, visibility, and lesson access rules.
+- For enrolled non-preview learners, available lessons are determined by existing course enrollment, drip, visibility, and lesson access rules.
 - For effective preview sessions, available lessons are the lessons visible in that preview response, including preview-visible lessons that the actor could not access as an enrolled learner.
+- For guests and logged-in non-enrolled users, no lesson discussion summaries or counts are returned, including for public lessons with `requiresEnrollment: false`.
 - For available lessons, show lessons with at least one visible or deleted discussion item, plus counts.
 - Do not show available lessons with zero discussion activity.
 - Do not show discussion activity for lessons outside the actor's current viewer mode. For non-preview learners, this includes lessons that have not dripped yet; for effective preview sessions, this includes lessons omitted from the preview response.
@@ -580,6 +584,7 @@ Validation:
 - `entityType = "product"` is schema-supported but must be rejected by course discussion API/UI write and read operations in this release
 - discussions must be enabled for course viewer write operations
 - for `entityType = "lesson"`, `entityId` must be a lesson that belongs to the product
+- course discussion read and write operations require an enrolled learner or product manager; guests and logged-in non-enrolled users must not receive discussion summaries, comments, replies, like state, or composer affordances, even for public lessons with `requiresEnrollment: false`
 - actor must have access to the target entity before reading or writing discussion content:
     - for `entityType = "lesson"` in normal learner mode, enforce existing course enrollment, drip, visibility, and lesson access rules
     - for `entityType = "lesson"`, allow access when the actor has product management permissions for the product, even when the actor is not enrolled
@@ -703,6 +708,7 @@ Highlight:
 - For `entityType = "lesson"`, normal learner access must follow existing enrollment, visibility, drip, and lesson access rules.
 - For `entityType = "lesson"`, product management permissions can grant non-enrolled product admins course viewer participation for manageable lessons.
 - For `entityType = "product"`, course viewer read/write APIs must reject access in this release because product-level comments are future-only.
+- Public lesson access is not discussion access. GraphQL discussion queries and mutations must verify enrollment or product management permissions before resolving discussion-owned data or user-specific fields such as `hasLiked`.
 - Deleted content remains addressable for moderation and notification context, but user-facing content text is hidden.
 - Deleted content remains stored for admin moderation/audit visibility unless a future hard-delete policy is introduced.
 - Course viewer APIs must redact deleted comment/reply content and return only deleted placeholders.
@@ -930,6 +936,7 @@ Acceptance criteria:
 
 - The page lists only server-filtered lesson summaries available in the actor's current course viewer mode.
 - In normal learner mode, this means accessible/dripped lessons.
+- Guests and logged-in non-enrolled users see no discussion hub rows or counts, including for public lessons with `requiresEnrollment: false`.
 - For product admins, this means lessons they can manage through product management permissions.
 - Lessons with zero activity are hidden; lessons with only deleted placeholders can appear via `activityCountIncludingDeleted`.
 - Clicking a row navigates to the relevant lesson and opens the discussion panel.
@@ -938,6 +945,7 @@ Acceptance criteria:
 Verification:
 
 - Tests cover normal learner accessible lesson filtering, no future-lesson leakage outside preview, preview-visible lesson filtering, row navigation, panel opening, and highlight behavior.
+- Tests cover that guests and logged-in non-enrolled users do not see the discussion sidebar entry, do not receive `/discussions` summaries, and do not receive lesson comments/replies for public lessons with `requiresEnrollment: false`.
 
 Dependencies: Task 6.
 
@@ -987,6 +995,7 @@ Estimated scope: Medium.
 ### Checkpoint: End-To-End Feature
 
 - Course viewer participant can create, reply, like, report, delete, browse `/discussions`, and follow deep links.
+- Guests and logged-in non-enrolled users cannot see or interact with course discussions, even when they can view a public lesson whose `requiresEnrollment` is `false`.
 - Product admin with product management permissions can participate in manageable lesson discussions without learner enrollment.
 - Product admin can enable discussions, browse discussions and report content from the course viewer, then moderate reports and restore content from the reported-content queue.
 - Notification preferences and delivery are verified for app and email channels.
@@ -1021,6 +1030,7 @@ Estimated scope: Small.
 - Course viewer participants can like and unlike visible comments and replies, and like state/counts update consistently.
 - `/course/[slug]/[id]/discussions` lists lesson discussion activity and deep-links correctly.
 - `/course/[slug]/[id]/discussions` never reveals discussion activity outside the actor's current course viewer mode. Non-preview learners must not see lessons that have not dripped; effective preview sessions may show preview-visible lessons even without learner enrollment.
+- `/course/[slug]/[id]/discussions` never reveals discussion activity to guests or logged-in non-enrolled users, including for public lessons with `requiresEnrollment: false`.
 - New comments and replies notify discussion participants and product admins, excluding the actor.
 - Email and in-app notification links open the exact lesson discussion target and highlight it temporarily.
 - Course viewer participants can report content and delete their own content.

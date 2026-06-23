@@ -20,7 +20,10 @@ import {
 import mongoose from "mongoose";
 import { randomUUID } from "crypto";
 import { recordActivity } from "@/lib/record-activity";
-import { checkOwnershipWithoutModel } from "@/lib/graphql";
+import {
+    checkIfAuthenticated,
+    checkOwnershipWithoutModel,
+} from "@/lib/graphql";
 import { canManageCourseInContext } from "../courses/permissions";
 
 export const MAX_DISCUSSION_CONTENT_BYTES = 32768;
@@ -77,6 +80,8 @@ export async function validateDiscussionTargetForLearner({
     entityType: ProductDiscussionEntityType;
     entityId: string;
 }) {
+    checkIfAuthenticated(ctx);
+
     if (entityType === "product") {
         throw new Error(responses.action_not_allowed);
     }
@@ -104,6 +109,10 @@ export async function validateDiscussionTargetForLearner({
 
     if (!product.published && !isAdminOrCreator) {
         throw new Error(responses.item_not_found);
+    }
+
+    if (!isAdminOrCreator && !isEnrolledInProduct(ctx, productId)) {
+        throw new Error(responses.not_enrolled);
     }
 
     let lesson;
@@ -983,6 +992,8 @@ export async function deleteDiscussionComment({
     ctx: GQLContext;
     commentId: string;
 }) {
+    checkIfAuthenticated(ctx);
+
     const comment = await ProductDiscussionCommentModel.findOne({
         domain: ctx.subdomain._id,
         commentId,
@@ -1034,6 +1045,8 @@ export async function deleteDiscussionReply({
     ctx: GQLContext;
     replyId: string;
 }) {
+    checkIfAuthenticated(ctx);
+
     const reply = await ProductDiscussionReplyModel.findOne({
         domain: ctx.subdomain._id,
         replyId,
@@ -1242,6 +1255,8 @@ export async function listDiscussionSummaries({
     cursor?: string;
     limit?: number;
 }): Promise<CursorEnvelope<any>> {
+    checkIfAuthenticated(ctx);
+
     const accessibleLessonIds = await getAccessibleDiscussionLessonIds({
         ctx,
         productId,
@@ -1665,6 +1680,8 @@ async function validateProductDiscussionAdmin({
     ctx: GQLContext;
     productId: string;
 }) {
+    checkIfAuthenticated(ctx);
+
     const product = await CourseModel.findOne({
         domain: ctx.subdomain._id,
         courseId: productId,
@@ -1729,9 +1746,10 @@ async function getAccessibleDiscussionLessonIds({
         return lessons.map((lesson) => lesson.lessonId);
     }
 
-    const progress = ctx.user?.purchases?.find(
-        (purchase: any) => purchase.courseId === productId,
-    );
+    const progress = getProductProgress(ctx, productId);
+    if (!progress) {
+        return [];
+    }
     const accessibleGroups = new Set(progress?.accessibleGroups || []);
 
     const dripLockedGroupIds = new Set<string>();
@@ -1744,19 +1762,24 @@ async function getAccessibleDiscussionLessonIds({
         }
     }
 
-    const isEnrolled = !!progress;
-
     return lessons
         .filter((lesson) => {
-            if (lesson.requiresEnrollment && !isEnrolled) {
-                return false;
-            }
             if (dripLockedGroupIds.has(lesson.groupId)) {
                 return false;
             }
             return true;
         })
         .map((lesson) => lesson.lessonId);
+}
+
+function getProductProgress(ctx: GQLContext, productId: string) {
+    return ctx.user?.purchases?.find(
+        (purchase: any) => purchase.courseId === productId,
+    );
+}
+
+function isEnrolledInProduct(ctx: GQLContext, productId: string) {
+    return Boolean(getProductProgress(ctx, productId));
 }
 
 function getNextReportStatus(

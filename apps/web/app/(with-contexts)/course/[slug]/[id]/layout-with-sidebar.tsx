@@ -128,16 +128,16 @@ export default function ProductPage({
         pathSegments.length === 4 && pathSegments[0] === "course";
     const isActualLessonPage =
         isLessonPage && pathSegments[3] !== "discussions";
-    const showDiscussionsAction = product.discussions && isActualLessonPage;
+    const canUseDiscussions =
+        Boolean(profile?.userId) &&
+        product.discussions &&
+        (product.isPreview || isEnrolled(product.courseId, profile));
+    const showDiscussionsAction = canUseDiscussions && isActualLessonPage;
     const discussionsHref = getDiscussionHref({
         pathname,
         searchParams,
         isDiscussionOpen,
     });
-
-    if (!profile) {
-        return null;
-    }
 
     return (
         <SidebarProvider
@@ -151,7 +151,7 @@ export default function ProductPage({
         >
             <AppSidebar
                 course={product}
-                profile={profile}
+                profile={profile || {}}
                 viewerSessionParams={viewerSessionParams}
             />
             <SidebarInset>
@@ -209,7 +209,7 @@ export default function ProductPage({
                     {children}
                 </div>
             </SidebarInset>
-            {isActualLessonPage && product.discussions && (
+            {isActualLessonPage && canUseDiscussions && (
                 <SidebarProvider
                     open={isDiscussionOpen}
                     onOpenChange={(open) => {
@@ -298,7 +298,7 @@ export function AppSidebar({
     const pathname = usePathname();
     const sideBarItems = generateSideBarItems(
         course,
-        profile as Profile,
+        profile,
         pathname,
         viewerSessionParams,
     );
@@ -514,7 +514,7 @@ interface SidebarItem {
 
 export function generateSideBarItems(
     course: CourseFrontend,
-    profile: Profile,
+    profile: Partial<Profile>,
     pathname: string,
     viewerSessionParams?: ReturnType<typeof getCourseViewerSessionParams>,
 ): SidebarItem[] {
@@ -533,7 +533,11 @@ export function generateSideBarItems(
         },
     ];
 
-    if (course.discussions) {
+    if (
+        course.discussions &&
+        profile?.userId &&
+        (course.isPreview || isEnrolled(course.courseId, profile as Profile))
+    ) {
         items.push({
             title: SIDEBAR_TEXT_COURSE_DISCUSSIONS,
             href: appendCourseViewerSessionParamsToHref(
@@ -580,11 +584,11 @@ export function generateSideBarItems(
                     lessonStatusIcon = lesson.requiresEnrollment ? (
                         <Lock />
                     ) : undefined;
-                } else if (isEnrolled(course.courseId, profile)) {
+                } else if (isEnrolled(course.courseId, profile as Profile)) {
                     lessonStatusIcon = isLessonCompleted({
                         courseId: course.courseId,
                         lessonId: lesson.lessonId,
-                        profile,
+                        profile: profile as Profile,
                     }) ? (
                         <CheckCircled />
                     ) : (
@@ -618,7 +622,7 @@ export function generateSideBarItems(
             group.drip.type ===
                 Constants.dripType[0].split("-")[0].toUpperCase() &&
             !isPreview &&
-            !isGroupAccessibleToUser(course, profile as Profile, group)
+            !isGroupAccessibleToUser(course, profile, group)
         ) {
             lastGroupDripDateInMillis += group?.drip?.delayInMillis ?? 0;
         }
@@ -636,7 +640,7 @@ function getDripLabel({
 }: {
     course: CourseFrontend;
     group: GroupWithLessons;
-    profile: Profile;
+    profile: Partial<Profile>;
     lastGroupDripDateInMillis: number;
     isPreview: boolean;
 }): { text: string; description: string } | undefined {
@@ -644,10 +648,7 @@ function getDripLabel({
         return undefined;
     }
 
-    if (
-        group.drip?.status &&
-        isGroupAccessibleToUser(course, profile as Profile, group)
-    ) {
+    if (group.drip?.status && isGroupAccessibleToUser(course, profile, group)) {
         return undefined;
     }
 
@@ -666,8 +667,9 @@ function getDripLabel({
             );
             availableLabel =
                 daysUntilAvailable &&
-                !isGroupAccessibleToUser(course, profile as Profile, group)
-                    ? isEnrolled(course.courseId, profile)
+                !isGroupAccessibleToUser(course, profile, group)
+                    ? profile?.userId &&
+                      isEnrolled(course.courseId, profile as Profile)
                         ? `Available in ${daysUntilAvailable} days`
                         : `Available ${daysUntilAvailable} days after enrollment`
                     : "";
@@ -695,9 +697,9 @@ function getDripLabel({
 
 function getRelativeDripAnchorMillis(
     course: CourseFrontend,
-    profile: Profile,
+    profile: Partial<Profile>,
 ): number {
-    const purchase = profile.purchases?.find(
+    const purchase = profile?.purchases?.find(
         (purchase) => purchase.courseId === course.courseId,
     );
 
@@ -737,12 +739,12 @@ function normalizeTimestamp(value: string | number | Date): number {
 
 export function isGroupAccessibleToUser(
     course: CourseFrontend,
-    profile: Profile,
+    profile: Partial<Profile>,
     group: GroupWithLessons,
 ): boolean {
     if (!group.drip || !group.drip.status) return true;
 
-    if (!Array.isArray(profile.purchases)) return false;
+    if (!Array.isArray(profile?.purchases)) return false;
     const groupId = getGroupId(group);
     if (!groupId) return false;
 

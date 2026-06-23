@@ -1,12 +1,17 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import CourseDiscussionsPage from "../page";
-import { AddressContext, ThemeContext } from "@components/contexts";
+import {
+    AddressContext,
+    ProfileContext,
+    ThemeContext,
+} from "@components/contexts";
 import { FetchBuilder } from "@courselit/utils";
 import { getProduct } from "../../helpers";
 
 const mockExec = jest.fn();
 const payloads: Record<string, any>[] = [];
+const mockRouterReplace = jest.fn();
 
 jest.mock("next/link", () => {
     function MockNextLink({
@@ -32,6 +37,9 @@ const mockSearchParams = jest.fn(() => new URLSearchParams());
 
 jest.mock("next/navigation", () => ({
     useSearchParams: () => mockSearchParams(),
+    useRouter: () => ({
+        replace: mockRouterReplace,
+    }),
 }));
 
 jest.mock("@components/contexts", () => {
@@ -40,6 +48,11 @@ jest.mock("@components/contexts", () => {
         AddressContext: React.createContext({
             backend: "",
             frontend: "",
+        }),
+        ProfileContext: React.createContext({
+            profile: {
+                userId: "learner-1",
+            },
         }),
         ThemeContext: React.createContext({
             theme: {},
@@ -101,7 +114,12 @@ jest.mock("@courselit/utils", () => ({
     })),
 }));
 
-function renderPage() {
+function renderPage(
+    profile: Record<string, unknown> | null = {
+        userId: "learner-1",
+        purchases: [{ courseId: "course-1" }],
+    },
+) {
     const params = Promise.resolve({
         slug: "course-slug",
         id: "course-1",
@@ -116,11 +134,13 @@ function renderPage() {
         <AddressContext.Provider
             value={{ backend: "http://localhost:3000", frontend: "" }}
         >
-            <ThemeContext.Provider value={{ theme: {} } as any}>
-                <React.Suspense fallback={<div>Loading</div>}>
-                    <CourseDiscussionsPage params={params} />
-                </React.Suspense>
-            </ThemeContext.Provider>
+            <ProfileContext.Provider value={{ profile } as any}>
+                <ThemeContext.Provider value={{ theme: {} } as any}>
+                    <React.Suspense fallback={<div>Loading</div>}>
+                        <CourseDiscussionsPage params={params} />
+                    </React.Suspense>
+                </ThemeContext.Provider>
+            </ProfileContext.Provider>
         </AddressContext.Provider>,
     );
 }
@@ -130,6 +150,23 @@ describe("CourseDiscussionsPage", () => {
         jest.clearAllMocks();
         payloads.length = 0;
         mockSearchParams.mockReturnValue(new URLSearchParams());
+        (getProduct as jest.Mock).mockResolvedValue({
+            title: "Course with discussions",
+            groups: [
+                {
+                    lessons: [
+                        {
+                            lessonId: "lesson-1",
+                            title: "Text lesson",
+                        },
+                        {
+                            lessonId: "lesson-2",
+                            title: "Video lesson",
+                        },
+                    ],
+                },
+            ],
+        });
         mockExec.mockImplementation(() => {
             const payload = payloads[payloads.length - 1];
             if (payload.variables?.cursor) {
@@ -197,6 +234,20 @@ describe("CourseDiscussionsPage", () => {
     });
 
     it("preserves course viewer preview session params while browsing discussions", async () => {
+        (getProduct as jest.Mock).mockResolvedValueOnce({
+            title: "Course with discussions",
+            isPreview: true,
+            groups: [
+                {
+                    lessons: [
+                        {
+                            lessonId: "lesson-1",
+                            title: "Text lesson",
+                        },
+                    ],
+                },
+            ],
+        });
         mockSearchParams.mockReturnValue(
             new URLSearchParams(
                 "preview=true&returnTo=%2Fdashboard%2Fproduct%2Fcourse-1",
@@ -244,5 +295,61 @@ describe("CourseDiscussionsPage", () => {
             cursor: "summary-cursor",
             preview: false,
         });
+    });
+
+    it("does not fetch or render discussion summaries for guests", async () => {
+        renderPage(null);
+
+        await waitFor(() => {
+            expect(mockRouterReplace).toHaveBeenCalledWith(
+                "/course/course-slug/course-1",
+            );
+        });
+        expect(getProduct).not.toHaveBeenCalled();
+        expect(FetchBuilder).not.toHaveBeenCalled();
+        expect(
+            screen.queryByRole("heading", { name: "Discussions" }),
+        ).not.toBeInTheDocument();
+    });
+
+    it("does not fetch or render discussion summaries for logged-in non-enrolled users", async () => {
+        renderPage({
+            userId: "learner-1",
+            purchases: [],
+        });
+
+        await waitFor(() => {
+            expect(mockRouterReplace).toHaveBeenCalledWith(
+                "/course/course-slug/course-1",
+            );
+        });
+        expect(getProduct).not.toHaveBeenCalled();
+        expect(FetchBuilder).not.toHaveBeenCalled();
+        expect(
+            screen.queryByRole("heading", { name: "Discussions" }),
+        ).not.toBeInTheDocument();
+    });
+
+    it("redirects logged-in non-enrolled users who manually add preview mode", async () => {
+        mockSearchParams.mockReturnValue(new URLSearchParams("preview=true"));
+
+        renderPage({
+            userId: "learner-1",
+            purchases: [],
+        });
+
+        await waitFor(() => {
+            expect(getProduct).toHaveBeenCalledWith(
+                "course-1",
+                "http://localhost:3000",
+                true,
+            );
+        });
+        await waitFor(() => {
+            expect(mockRouterReplace).toHaveBeenCalledWith(
+                "/course/course-slug/course-1",
+            );
+        });
+        expect(FetchBuilder).not.toHaveBeenCalled();
     });
 });
