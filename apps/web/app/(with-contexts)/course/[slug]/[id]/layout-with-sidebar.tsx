@@ -128,10 +128,12 @@ export default function ProductPage({
         pathSegments.length === 4 && pathSegments[0] === "course";
     const isActualLessonPage =
         isLessonPage && pathSegments[3] !== "discussions";
-    const canUseDiscussions =
-        Boolean(profile?.userId) &&
-        product.discussions &&
-        (product.isPreview || isEnrolled(product.courseId, profile));
+    const viewerProfile = profile?.userId ? (profile as Profile) : undefined;
+    const canUseDiscussions = Boolean(
+        viewerProfile &&
+            product.discussions &&
+            (product.isPreview || isEnrolled(product.courseId, viewerProfile)),
+    );
     const showDiscussionsAction = canUseDiscussions && isActualLessonPage;
     const discussionsHref = getDiscussionHref({
         pathname,

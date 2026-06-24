@@ -29,6 +29,7 @@ import {
     appendCourseViewerSessionParamsToHref,
     getCourseViewerSessionParams,
 } from "@/lib/course-viewer-session-params";
+import type { Profile } from "@courselit/common-models";
 
 type DiscussionSummary = {
     entityId: string;
@@ -49,9 +50,9 @@ export default function CourseDiscussionsPage(props: {
     const { replace } = useRouter();
     const searchParams = useSearchParams();
     const viewerSessionParams = getCourseViewerSessionParams(searchParams);
+    const viewerProfile = profile?.userId ? (profile as Profile) : undefined;
     const isViewerEnrolled = Boolean(
-        profile?.userId &&
-            isEnrolled(id, profile as NonNullable<typeof profile>),
+        viewerProfile && isEnrolled(id, viewerProfile),
     );
     const introHref = appendCourseViewerSessionParamsToHref(
         `/course/${slug}/${id}`,

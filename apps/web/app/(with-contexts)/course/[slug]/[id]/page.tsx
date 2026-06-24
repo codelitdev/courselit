@@ -32,6 +32,7 @@ import {
     appendCourseViewerSessionParamsToHref,
 } from "@/lib/course-viewer-session-params";
 import { useSearchParams } from "next/navigation";
+import type { Profile } from "@courselit/common-models";
 
 export default function ProductPage(props: {
     params: Promise<{ slug: string; id: string }>;
@@ -79,8 +80,9 @@ export default function ProductPage(props: {
     const descriptionJson = product.description
         ? JSON.parse(product.description)
         : TextEditorEmptyDoc;
+    const viewerProfile = profile?.userId ? (profile as Profile) : undefined;
     const enrolled = Boolean(
-        profile?.userId && isEnrolled(product.courseId, profile),
+        viewerProfile && isEnrolled(product.courseId, viewerProfile),
     );
     const isPreview = Boolean(product.isPreview);
 
