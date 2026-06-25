@@ -4,7 +4,6 @@ import { LessonViewer } from "@components/public/lesson-viewer";
 import { redirect } from "next/navigation";
 import { useContext, use } from "react";
 import { ProfileContext, AddressContext } from "@components/contexts";
-import { Profile } from "@courselit/common-models";
 
 export default function LessonPage(props: {
     params: Promise<{
@@ -26,7 +25,7 @@ export default function LessonPage(props: {
         <LessonViewer
             lessonId={lesson as string}
             slug={slug}
-            profile={profile as Profile}
+            profile={profile}
             setProfile={setProfile}
             address={address}
             productId={id}
