@@ -13,6 +13,7 @@ import CommunityPostModel from "@models/CommunityPost";
 import CourseModel from "@models/Course";
 import constants from "@/config/constants";
 import { Constants } from "@courselit/common-models";
+import { DiscussionActivityEventType } from "@/graphql/product-discussions/logic";
 
 const SUITE_PREFIX = `notification-preferences-${Date.now()}`;
 const id = (suffix: string) => `${SUITE_PREFIX}-${suffix}`;
@@ -337,9 +338,9 @@ describe("Notification Preferences", () => {
                 Constants.ActivityType.COURSE_DISCUSSION_COMMENT_CREATED,
             entityId: id("comment"),
             metadata: {
-                eventType: "comment_created",
+                eventType: DiscussionActivityEventType.COMMENT_CREATED,
                 courseId: course.courseId,
-                entityType: "lesson",
+                entityType: Constants.ProductDiscussionEntityType.LESSON,
                 entityId: id("lesson"),
                 commentId: id("comment"),
             },
@@ -394,9 +395,9 @@ describe("Notification Preferences", () => {
             entityId: id("reply"),
             metadata: {
                 courseId: course.courseId,
-                entityType: "lesson",
+                entityType: Constants.ProductDiscussionEntityType.LESSON,
                 entityId: id("lesson"),
-                contentType: "reply",
+                contentType: Constants.ProductDiscussionContentType.REPLY,
                 commentId: id("comment"),
                 replyId: id("reply"),
             },

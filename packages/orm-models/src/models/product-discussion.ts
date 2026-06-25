@@ -1,11 +1,18 @@
-import { TextEditorContent } from "@courselit/common-models";
+import {
+    TextEditorContent,
+    Constants,
+    ProductDiscussionEntityType,
+    ProductDiscussionContentType,
+    ProductDiscussionDeletedByRole,
+    ProductDiscussionReportStatus,
+} from "@courselit/common-models";
 import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
 
-export type ProductDiscussionEntityType = "lesson" | "product";
-export type ProductDiscussionContentType = "comment" | "reply";
-export type ProductDiscussionDeletedByRole = "author" | "course_admin";
-export type ProductDiscussionReportStatus = "pending" | "accepted" | "rejected";
+// export type ProductDiscussionEntityType = "lesson" | "product";
+// export type ProductDiscussionContentType = "comment" | "reply";
+// export type ProductDiscussionDeletedByRole = "author" | "course_admin";
+// export type ProductDiscussionReportStatus = "pending" | "accepted" | "rejected";
 
 interface ProductDiscussionTarget {
     domain: mongoose.Types.ObjectId;
@@ -107,7 +114,7 @@ const targetFields = {
     entityType: {
         type: String,
         required: true,
-        enum: ["lesson", "product"],
+        enum: Object.values(Constants.ProductDiscussionEntityType),
     },
     entityId: { type: String, required: true },
 };
@@ -134,7 +141,7 @@ export const ProductDiscussionCommentSchema =
             deletedBy: String,
             deletedByRole: {
                 type: String,
-                enum: ["author", "course_admin"],
+                enum: Object.values(Constants.ProductDiscussionDeletedByRole),
             },
             deleteReason: String,
             restoredAt: Date,
@@ -192,7 +199,7 @@ export const ProductDiscussionReplySchema =
             deletedBy: String,
             deletedByRole: {
                 type: String,
-                enum: ["author", "course_admin"],
+                enum: Object.values(Constants.ProductDiscussionDeletedByRole),
             },
             deleteReason: String,
             restoredAt: Date,
@@ -234,7 +241,7 @@ export const ProductDiscussionLikeSchema =
             contentType: {
                 type: String,
                 required: true,
-                enum: ["comment", "reply"],
+                enum: Object.values(Constants.ProductDiscussionContentType),
             },
             contentId: { type: String, required: true },
             commentId: String,
@@ -337,7 +344,7 @@ export const ProductDiscussionReportSchema =
             contentType: {
                 type: String,
                 required: true,
-                enum: ["comment", "reply"],
+                enum: Object.values(Constants.ProductDiscussionContentType),
             },
             contentId: { type: String, required: true },
             commentId: String,
@@ -346,8 +353,8 @@ export const ProductDiscussionReportSchema =
             status: {
                 type: String,
                 required: true,
-                enum: ["pending", "accepted", "rejected"],
-                default: "pending",
+                enum: Object.values(Constants.ProductDiscussionReportStatus),
+                default: Constants.ProductDiscussionReportStatus.PENDING,
             },
             rejectionReason: String,
         },

@@ -228,3 +228,20 @@ export const Features = {
     API: "api",
     LOG: "log",
 } as const;
+export const ProductDiscussionEntityType = {
+    LESSON: "lesson",
+    PRODUCT: "product",
+} as const;
+export const ProductDiscussionContentType = {
+    COMMENT: "comment",
+    REPLY: "reply",
+} as const;
+export const ProductDiscussionDeletedByRole = {
+    AUTHOR: "author",
+    COURSE_ADMIN: "course_admin",
+} as const;
+export const ProductDiscussionReportStatus = {
+    PENDING: "pending",
+    ACCEPTED: "accepted",
+    REJECTED: "rejected",
+} as const;

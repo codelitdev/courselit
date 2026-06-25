@@ -45,6 +45,7 @@ import {
     updateDiscussionReportStatus,
     validateDiscussionContent,
     validateDiscussionTargetForLearner,
+    DiscussionActivityEventType,
 } from "../../product-discussions/logic";
 import { recordActivity } from "@/lib/record-activity";
 import { deleteMedia, sealMedia } from "@/services/medialit";
@@ -313,7 +314,7 @@ describe("product discussion validation foundation", () => {
                     address: "",
                 },
                 productId: id("discussion-course"),
-                entityType: "product",
+                entityType: CommonConstants.ProductDiscussionEntityType.PRODUCT,
                 entityId: id("discussion-course"),
             }),
         ).rejects.toThrow(responses.action_not_allowed);
@@ -362,7 +363,7 @@ describe("product discussion validation foundation", () => {
                     address: "",
                 },
                 productId: id("discussion-course"),
-                entityType: "lesson",
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
                 entityId: id("discussion-lesson"),
             }),
         ).rejects.toThrow(responses.action_not_allowed);
@@ -489,7 +490,7 @@ describe("product discussion validation foundation", () => {
                     address: "",
                 },
                 productId: id("discussion-course-unpublished"),
-                entityType: "lesson",
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
                 entityId: id("discussion-lesson-unpublished"),
             }),
         ).rejects.toThrow(responses.item_not_found);
@@ -511,7 +512,7 @@ describe("product discussion validation foundation", () => {
                 address: "",
             },
             productId: id("discussion-course-unpublished"),
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: id("discussion-lesson-unpublished"),
         });
         expect(result.product).toBeDefined();
@@ -687,7 +688,7 @@ describe("product discussion comment and reply logic", () => {
         const comment = await createDiscussionComment({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             content: doc("First comment"),
         });
@@ -700,7 +701,7 @@ describe("product discussion comment and reply logic", () => {
         const summary = await ProductDiscussionSummaryModel.findOne({
             domain: testDomain._id,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
         });
         expect(summary?.commentsCount).toBe(1);
@@ -712,7 +713,7 @@ describe("product discussion comment and reply logic", () => {
         const subscriber = await ProductDiscussionSubscriberModel.findOne({
             domain: testDomain._id,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             userId: learnerUser.userId,
         });
@@ -725,9 +726,10 @@ describe("product discussion comment and reply logic", () => {
                     .COURSE_DISCUSSION_COMMENT_CREATED,
                 entityId: comment.commentId,
                 metadata: expect.objectContaining({
-                    eventType: "comment_created",
+                    eventType: DiscussionActivityEventType.COMMENT_CREATED,
                     courseId,
-                    entityType: "lesson",
+                    entityType:
+                        CommonConstants.ProductDiscussionEntityType.LESSON,
                     entityId: lessonId,
                     commentId: comment.commentId,
                     forUserIds: [productAdminUser.userId],
@@ -752,7 +754,7 @@ describe("product discussion comment and reply logic", () => {
         const comment = await ProductDiscussionCommentModel.create({
             domain: testDomain._id,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             commentId: id("guest-hidden-comment"),
             userId: learnerUser.userId,
@@ -761,7 +763,7 @@ describe("product discussion comment and reply logic", () => {
         await ProductDiscussionReplyModel.create({
             domain: testDomain._id,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             commentId: comment.commentId,
             replyId: id("guest-hidden-reply"),
@@ -771,7 +773,7 @@ describe("product discussion comment and reply logic", () => {
         await ProductDiscussionSummaryModel.create({
             domain: testDomain._id,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             commentsCount: 1,
             repliesCount: 1,
@@ -790,7 +792,7 @@ describe("product discussion comment and reply logic", () => {
             validateDiscussionTargetForLearner({
                 ctx: guestCtx,
                 productId: courseId,
-                entityType: "lesson",
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
                 entityId: lessonId,
             }),
         ).rejects.toThrow(responses.request_not_authenticated);
@@ -798,7 +800,7 @@ describe("product discussion comment and reply logic", () => {
             listDiscussionComments({
                 ctx: guestCtx,
                 productId: courseId,
-                entityType: "lesson",
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
                 entityId: lessonId,
             }),
         ).rejects.toThrow(responses.request_not_authenticated);
@@ -825,7 +827,7 @@ describe("product discussion comment and reply logic", () => {
             validateDiscussionTargetForLearner({
                 ctx: nonEnrolledCtx,
                 productId: courseId,
-                entityType: "lesson",
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
                 entityId: lessonId,
             }),
         ).rejects.toThrow(responses.not_enrolled);
@@ -833,7 +835,7 @@ describe("product discussion comment and reply logic", () => {
             listDiscussionComments({
                 ctx: nonEnrolledCtx,
                 productId: courseId,
-                entityType: "lesson",
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
                 entityId: lessonId,
             }),
         ).rejects.toThrow(responses.not_enrolled);
@@ -849,14 +851,14 @@ describe("product discussion comment and reply logic", () => {
         const comment = await createDiscussionComment({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             content: doc("Root"),
         });
         const firstReply = await createDiscussionReply({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             commentId: comment.commentId,
             content: doc("First reply"),
@@ -864,7 +866,7 @@ describe("product discussion comment and reply logic", () => {
         const secondReply = await createDiscussionReply({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             commentId: comment.commentId,
             parentReplyId: firstReply.replyId,
@@ -877,7 +879,7 @@ describe("product discussion comment and reply logic", () => {
         const comments = await listDiscussionComments({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             limit: 10,
             replyPreviewLimit: 1,
@@ -903,9 +905,10 @@ describe("product discussion comment and reply logic", () => {
         const targetSeededComments = await listDiscussionComments({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
-            targetContentType: "reply",
+            targetContentType:
+                CommonConstants.ProductDiscussionContentType.REPLY,
             targetContentId: secondReply.replyId,
             limit: 10,
             replyPreviewLimit: 1,
@@ -920,7 +923,7 @@ describe("product discussion comment and reply logic", () => {
         const summary = await ProductDiscussionSummaryModel.findOne({
             domain: testDomain._id,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
         });
         expect(summary?.commentsCount).toBe(1);
@@ -934,7 +937,7 @@ describe("product discussion comment and reply logic", () => {
         const comment = await createDiscussionComment({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             content: doc("Notify participants"),
         });
@@ -942,7 +945,7 @@ describe("product discussion comment and reply logic", () => {
             {
                 domain: testDomain._id,
                 productId: courseId,
-                entityType: "lesson",
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
                 entityId: lessonId,
                 userId: productAdminUser.userId,
             },
@@ -950,7 +953,8 @@ describe("product discussion comment and reply logic", () => {
                 $setOnInsert: {
                     domain: testDomain._id,
                     productId: courseId,
-                    entityType: "lesson",
+                    entityType:
+                        CommonConstants.ProductDiscussionEntityType.LESSON,
                     entityId: lessonId,
                     userId: productAdminUser.userId,
                 },
@@ -967,7 +971,7 @@ describe("product discussion comment and reply logic", () => {
                 address: "",
             },
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             commentId: comment.commentId,
             content: doc("Reply notification"),
@@ -994,7 +998,7 @@ describe("product discussion comment and reply logic", () => {
         const comment = await createDiscussionComment({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             content: doc("Like me"),
         });
@@ -1002,18 +1006,18 @@ describe("product discussion comment and reply logic", () => {
         const liked = await toggleDiscussionLike({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
-            contentType: "comment",
+            contentType: CommonConstants.ProductDiscussionContentType.COMMENT,
             contentId: comment.commentId,
             liked: true,
         });
         await toggleDiscussionLike({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
-            contentType: "comment",
+            contentType: CommonConstants.ProductDiscussionContentType.COMMENT,
             contentId: comment.commentId,
             liked: true,
         });
@@ -1023,7 +1027,8 @@ describe("product discussion comment and reply logic", () => {
         expect(
             await ProductDiscussionLikeModel.countDocuments({
                 domain: testDomain._id,
-                contentType: "comment",
+                contentType:
+                    CommonConstants.ProductDiscussionContentType.COMMENT,
                 contentId: comment.commentId,
             }),
         ).toBe(1);
@@ -1048,18 +1053,18 @@ describe("product discussion comment and reply logic", () => {
         const unliked = await toggleDiscussionLike({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
-            contentType: "comment",
+            contentType: CommonConstants.ProductDiscussionContentType.COMMENT,
             contentId: comment.commentId,
             liked: false,
         });
         await toggleDiscussionLike({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
-            contentType: "comment",
+            contentType: CommonConstants.ProductDiscussionContentType.COMMENT,
             contentId: comment.commentId,
             liked: false,
         });
@@ -1069,7 +1074,8 @@ describe("product discussion comment and reply logic", () => {
         expect(
             await ProductDiscussionLikeModel.countDocuments({
                 domain: testDomain._id,
-                contentType: "comment",
+                contentType:
+                    CommonConstants.ProductDiscussionContentType.COMMENT,
                 contentId: comment.commentId,
             }),
         ).toBe(0);
@@ -1088,7 +1094,7 @@ describe("product discussion comment and reply logic", () => {
         const comment = await createDiscussionComment({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             content: doc("React to me"),
         });
@@ -1102,27 +1108,27 @@ describe("product discussion comment and reply logic", () => {
         await toggleDiscussionLike({
             ctx: secondLearnerCtx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
-            contentType: "comment",
+            contentType: CommonConstants.ProductDiscussionContentType.COMMENT,
             contentId: comment.commentId,
             liked: true,
         });
         await toggleDiscussionLike({
             ctx: secondLearnerCtx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
-            contentType: "comment",
+            contentType: CommonConstants.ProductDiscussionContentType.COMMENT,
             contentId: comment.commentId,
             liked: true,
         });
         await toggleDiscussionLike({
             ctx: secondLearnerCtx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
-            contentType: "comment",
+            contentType: CommonConstants.ProductDiscussionContentType.COMMENT,
             contentId: comment.commentId,
             liked: false,
         });
@@ -1135,9 +1141,10 @@ describe("product discussion comment and reply logic", () => {
             entityId: comment.commentId,
             metadata: {
                 courseId,
-                entityType: "lesson",
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
                 entityId: lessonId,
-                contentType: "comment",
+                contentType:
+                    CommonConstants.ProductDiscussionContentType.COMMENT,
                 commentId: comment.commentId,
                 forUserIds: [learnerUser.userId],
             },
@@ -1148,7 +1155,7 @@ describe("product discussion comment and reply logic", () => {
         const comment = await createDiscussionComment({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             content: doc("Like limited"),
         });
@@ -1170,9 +1177,10 @@ describe("product discussion comment and reply logic", () => {
             toggleDiscussionLike({
                 ctx,
                 productId: courseId,
-                entityType: "lesson",
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
                 entityId: lessonId,
-                contentType: "comment",
+                contentType:
+                    CommonConstants.ProductDiscussionContentType.COMMENT,
                 contentId: comment.commentId,
                 liked: true,
             }),
@@ -1197,7 +1205,7 @@ describe("product discussion comment and reply logic", () => {
             createDiscussionComment({
                 ctx,
                 productId: courseId,
-                entityType: "lesson",
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
                 entityId: lessonId,
                 content: doc("Daily limit root"),
             }),
@@ -1211,7 +1219,7 @@ describe("product discussion comment and reply logic", () => {
         const comment = await createDiscussionComment({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             content: doc("Root before reply limit"),
         });
@@ -1233,7 +1241,7 @@ describe("product discussion comment and reply logic", () => {
             createDiscussionReply({
                 ctx,
                 productId: courseId,
-                entityType: "lesson",
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
                 entityId: lessonId,
                 commentId: comment.commentId,
                 content: doc("Daily limit reply"),
@@ -1245,7 +1253,7 @@ describe("product discussion comment and reply logic", () => {
         await createDiscussionComment({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             content: doc("Duplicate content"),
         });
@@ -1254,7 +1262,7 @@ describe("product discussion comment and reply logic", () => {
             createDiscussionComment({
                 ctx,
                 productId: courseId,
-                entityType: "lesson",
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
                 entityId: lessonId,
                 content: doc("Duplicate content"),
             }),
@@ -1265,14 +1273,14 @@ describe("product discussion comment and reply logic", () => {
         const comment = await createDiscussionComment({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             content: doc("Liked root"),
         });
         const reply = await createDiscussionReply({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             commentId: comment.commentId,
             content: doc("Liked reply"),
@@ -1281,18 +1289,18 @@ describe("product discussion comment and reply logic", () => {
         await toggleDiscussionLike({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
-            contentType: "comment",
+            contentType: CommonConstants.ProductDiscussionContentType.COMMENT,
             contentId: comment.commentId,
             liked: true,
         });
         await toggleDiscussionLike({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
-            contentType: "reply",
+            contentType: CommonConstants.ProductDiscussionContentType.REPLY,
             contentId: reply.replyId,
             liked: true,
         });
@@ -1300,7 +1308,7 @@ describe("product discussion comment and reply logic", () => {
         const likedComments = await listDiscussionComments({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             limit: 10,
             replyPreviewLimit: 2,
@@ -1320,7 +1328,7 @@ describe("product discussion comment and reply logic", () => {
         const deletedComments = await listDiscussionComments({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             limit: 10,
             replyPreviewLimit: 2,
@@ -1344,7 +1352,7 @@ describe("product discussion comment and reply logic", () => {
         const comment = await createDiscussionComment({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             content: doc("Report me"),
         });
@@ -1352,22 +1360,25 @@ describe("product discussion comment and reply logic", () => {
         const report = await createDiscussionReport({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
-            contentType: "comment",
+            contentType: CommonConstants.ProductDiscussionContentType.COMMENT,
             contentId: comment.commentId,
             reason: "Spam",
         });
 
-        expect(report.status).toBe("pending");
+        expect(report.status).toBe(
+            CommonConstants.ProductDiscussionReportStatus.PENDING,
+        );
         expect(report.contentId).toBe(comment.commentId);
         await expect(
             createDiscussionReport({
                 ctx,
                 productId: courseId,
-                entityType: "lesson",
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
                 entityId: lessonId,
-                contentType: "comment",
+                contentType:
+                    CommonConstants.ProductDiscussionContentType.COMMENT,
                 contentId: comment.commentId,
                 reason: "Still spam",
             }),
@@ -1378,7 +1389,7 @@ describe("product discussion comment and reply logic", () => {
         const comment = await createDiscussionComment({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             content: doc("Report limited"),
         });
@@ -1399,9 +1410,10 @@ describe("product discussion comment and reply logic", () => {
             createDiscussionReport({
                 ctx,
                 productId: courseId,
-                entityType: "lesson",
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
                 entityId: lessonId,
-                contentType: "comment",
+                contentType:
+                    CommonConstants.ProductDiscussionContentType.COMMENT,
                 contentId: comment.commentId,
                 reason: "Spam",
             }),
@@ -1412,14 +1424,14 @@ describe("product discussion comment and reply logic", () => {
         const comment = await createDiscussionComment({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             content: doc("Delete root"),
         });
         const reply = await createDiscussionReply({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             commentId: comment.commentId,
             content: doc("Delete reply"),
@@ -1431,13 +1443,16 @@ describe("product discussion comment and reply logic", () => {
         });
         expect(deletedComment.deleted).toBe(true);
         expect(deletedComment.deletedBy).toBe(learnerUser.userId);
-        expect(deletedComment.deletedByRole).toBe("author");
+        expect(deletedComment.deletedByRole).toBe(
+            CommonConstants.ProductDiscussionDeletedByRole.AUTHOR,
+        );
         expect(
             (
                 await ProductDiscussionSubscriberModel.findOne({
                     domain: testDomain._id,
                     productId: courseId,
-                    entityType: "lesson",
+                    entityType:
+                        CommonConstants.ProductDiscussionEntityType.LESSON,
                     entityId: lessonId,
                     userId: learnerUser.userId,
                 })
@@ -1453,7 +1468,7 @@ describe("product discussion comment and reply logic", () => {
         const summary = await ProductDiscussionSummaryModel.findOne({
             domain: testDomain._id,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
         });
         expect(summary?.commentsCount).toBe(0);
@@ -1465,7 +1480,8 @@ describe("product discussion comment and reply logic", () => {
                 await ProductDiscussionSubscriberModel.findOne({
                     domain: testDomain._id,
                     productId: courseId,
-                    entityType: "lesson",
+                    entityType:
+                        CommonConstants.ProductDiscussionEntityType.LESSON,
                     entityId: lessonId,
                     userId: learnerUser.userId,
                 })
@@ -1482,16 +1498,16 @@ describe("product discussion comment and reply logic", () => {
         const comment = await createDiscussionComment({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             content: doc("Moderate me"),
         });
         const report = await createDiscussionReport({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
-            contentType: "comment",
+            contentType: CommonConstants.ProductDiscussionContentType.COMMENT,
             contentId: comment.commentId,
             reason: "Spam",
         });
@@ -1499,7 +1515,7 @@ describe("product discussion comment and reply logic", () => {
         const reports = await listDiscussionReports({
             ctx: adminCtx,
             productId: courseId,
-            status: "pending",
+            status: CommonConstants.ProductDiscussionReportStatus.PENDING,
             page: 1,
             limit: 10,
         });
@@ -1510,7 +1526,8 @@ describe("product discussion comment and reply logic", () => {
                 await listDiscussionReports({
                     ctx: adminCtx,
                     productId: courseId,
-                    status: "pending",
+                    status: CommonConstants.ProductDiscussionReportStatus
+                        .PENDING,
                     page: 2,
                     limit: 10,
                 })
@@ -1550,7 +1567,7 @@ describe("product discussion comment and reply logic", () => {
             await getDiscussionReportsCount({
                 ctx: adminCtx,
                 productId: courseId,
-                status: "pending",
+                status: CommonConstants.ProductDiscussionReportStatus.PENDING,
             }),
         ).toBe(1);
 
@@ -1559,7 +1576,9 @@ describe("product discussion comment and reply logic", () => {
             productId: courseId,
             reportId: report.reportId,
         });
-        expect(accepted.status).toBe("accepted");
+        expect(accepted.status).toBe(
+            CommonConstants.ProductDiscussionReportStatus.ACCEPTED,
+        );
         expect(
             (
                 await ProductDiscussionCommentModel.findOne({
@@ -1567,13 +1586,14 @@ describe("product discussion comment and reply logic", () => {
                     commentId: comment.commentId,
                 })
             )?.deletedByRole,
-        ).toBe("course_admin");
+        ).toBe(CommonConstants.ProductDiscussionDeletedByRole.COURSE_ADMIN);
         expect(
             (
                 await ProductDiscussionSummaryModel.findOne({
                     domain: testDomain._id,
                     productId: courseId,
-                    entityType: "lesson",
+                    entityType:
+                        CommonConstants.ProductDiscussionEntityType.LESSON,
                     entityId: lessonId,
                 })
             )?.totalCount,
@@ -1585,7 +1605,9 @@ describe("product discussion comment and reply logic", () => {
             reportId: report.reportId,
             rejectionReason: "Not an issue",
         });
-        expect(rejected.status).toBe("rejected");
+        expect(rejected.status).toBe(
+            CommonConstants.ProductDiscussionReportStatus.REJECTED,
+        );
         expect(rejected.rejectionReason).toBe("Not an issue");
         expect(
             (
@@ -1600,7 +1622,8 @@ describe("product discussion comment and reply logic", () => {
                 await ProductDiscussionSummaryModel.findOne({
                     domain: testDomain._id,
                     productId: courseId,
-                    entityType: "lesson",
+                    entityType:
+                        CommonConstants.ProductDiscussionEntityType.LESSON,
                     entityId: lessonId,
                 })
             )?.totalCount,
@@ -1611,7 +1634,9 @@ describe("product discussion comment and reply logic", () => {
             productId: courseId,
             reportId: report.reportId,
         });
-        expect(pending.status).toBe("pending");
+        expect(pending.status).toBe(
+            CommonConstants.ProductDiscussionReportStatus.PENDING,
+        );
         expect(pending.rejectionReason).toBe("");
     });
 
@@ -1624,7 +1649,7 @@ describe("product discussion comment and reply logic", () => {
         const comment = await createDiscussionComment({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             content: doc("Admin can inspect this"),
         });
@@ -1637,7 +1662,7 @@ describe("product discussion comment and reply logic", () => {
         const learnerComments = await listDiscussionComments({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             limit: 10,
         });
@@ -1650,7 +1675,7 @@ describe("product discussion comment and reply logic", () => {
         const adminComments = await listDiscussionComments({
             ctx: adminCtx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             limit: 10,
         });
@@ -1664,7 +1689,7 @@ describe("product discussion comment and reply logic", () => {
             listDiscussionComments({
                 ctx: adminCtx,
                 productId: courseId,
-                entityType: "product",
+                entityType: CommonConstants.ProductDiscussionEntityType.PRODUCT,
                 entityId: courseId,
                 limit: 10,
             }),
@@ -1673,7 +1698,7 @@ describe("product discussion comment and reply logic", () => {
         const activeComment = await createDiscussionComment({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             content: doc("Admin can report this"),
         });
@@ -1681,9 +1706,9 @@ describe("product discussion comment and reply logic", () => {
         const report = await createDiscussionReport({
             ctx: adminCtx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
-            contentType: "comment",
+            contentType: CommonConstants.ProductDiscussionContentType.COMMENT,
             contentId: activeComment.commentId,
             reason: "Needs moderation review",
         });
@@ -1695,7 +1720,7 @@ describe("product discussion comment and reply logic", () => {
         const comment = await createDiscussionComment({
             ctx,
             productId: courseId,
-            entityType: "lesson",
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
             entityId: lessonId,
             content: doc("Profile test comment"),
         });
@@ -1770,7 +1795,7 @@ describe("product discussion comment and reply logic", () => {
             {
                 domain: testDomain._id,
                 productId: courseId,
-                entityType: "lesson",
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
                 entityId: lessonId,
                 commentsCount: 1,
                 repliesCount: 0,
@@ -1782,7 +1807,7 @@ describe("product discussion comment and reply logic", () => {
             {
                 domain: testDomain._id,
                 productId: courseId,
-                entityType: "lesson",
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
                 entityId: lockedLessonId,
                 commentsCount: 1,
                 repliesCount: 0,
@@ -1829,7 +1854,7 @@ describe("product discussion comment and reply logic", () => {
             ProductDiscussionSummaryModel.create({
                 domain: testDomain._id,
                 productId: courseId,
-                entityType: "lesson",
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
                 entityId: lessonId,
                 commentsCount: 1,
                 repliesCount: 0,

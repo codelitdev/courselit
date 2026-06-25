@@ -23,6 +23,7 @@
 - Refrain from adding new GraphQL query/mutation unless required. If an existing query/mutation can be modified to implement the feature without making the query's/mutation's boundaries blurry, extend those.
 - Always keep openapi.mjs files in sync with the actual implementation of the API endpoints.
 - While adding a new collection, always confirm how the deletion/cleanup will work for it.
+- Never define inlined types. Always use `packages/common-models` to define shared types.
 
 ### Workspace map (core modules):
 

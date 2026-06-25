@@ -10,11 +10,14 @@ import {
     listDiscussionComments,
     listDiscussionReports,
     listDiscussionReplies,
-    ProductDiscussionContentType,
     listDiscussionSummaries,
-    ProductDiscussionEntityType,
 } from "./logic";
 import types from "./types";
+import {
+    ProductDiscussionContentType,
+    ProductDiscussionEntityType,
+    ProductDiscussionReportStatus,
+} from "@courselit/common-models";
 
 const queries = {
     getProductDiscussionComments: {
@@ -114,7 +117,7 @@ const queries = {
                 limit,
             }: {
                 productId: string;
-                status?: "pending" | "accepted" | "rejected";
+                status?: ProductDiscussionReportStatus;
                 page?: number;
                 cursor?: string;
                 limit?: number;
@@ -174,7 +177,7 @@ const queries = {
                 status,
             }: {
                 productId: string;
-                status?: "pending" | "accepted" | "rejected";
+                status?: ProductDiscussionReportStatus;
             },
             ctx: GQLContext,
         ) => getDiscussionReportsCount({ ctx, productId, status }),

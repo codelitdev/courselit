@@ -11,7 +11,13 @@ import RateLimitEventModel from "@/models/RateLimitEvent";
 import UserModel from "@/models/User";
 import LessonModel from "@/models/Lesson";
 import GQLContext from "@/models/GQLContext";
-import { Constants, TextEditorContent } from "@courselit/common-models";
+import {
+    Constants,
+    TextEditorContent,
+    ProductDiscussionContentType,
+    ProductDiscussionEntityType,
+    ProductDiscussionReportStatus,
+} from "@courselit/common-models";
 import { getLessonDetails } from "../lessons/logic";
 import {
     checkPermission,
@@ -35,9 +41,6 @@ export const COURSE_DISCUSSION_RATE_LIMITS = {
     likesPerMinute: { window: 60 * 1000, limit: 60 },
     reportsPerHour: { window: 60 * 60 * 1000, limit: 10 },
 } as const;
-
-export type ProductDiscussionEntityType = "lesson" | "product";
-export type ProductDiscussionContentType = "comment" | "reply";
 
 const { permissions } = appConstants;
 
@@ -67,8 +70,6 @@ type SummaryCursor = {
     entityId: string;
 };
 
-type ProductDiscussionReportStatus = "pending" | "accepted" | "rejected";
-
 export async function validateDiscussionTargetForLearner({
     ctx,
     productId,
@@ -82,7 +83,7 @@ export async function validateDiscussionTargetForLearner({
 }) {
     checkIfAuthenticated(ctx);
 
-    if (entityType === "product") {
+    if (entityType === Constants.ProductDiscussionEntityType.PRODUCT) {
         throw new Error(responses.action_not_allowed);
     }
 
@@ -289,7 +290,7 @@ export async function createDiscussionComment({
             entityId,
             commentId: comment.commentId,
             createdAt: comment.createdAt,
-            type: "comment",
+            type: Constants.ProductDiscussionContentType.COMMENT,
         }),
         upsertSubscriber({
             domain: ctx.subdomain._id,
@@ -300,13 +301,13 @@ export async function createDiscussionComment({
         }),
     ]);
 
-    await recordDiscussionActivity({
+    await recordDiscussionActivityForCommentReply({
         ctx,
         product: target.product,
         productId,
         entityType,
         entityId,
-        eventType: "comment_created",
+        eventType: DiscussionActivityEventType.COMMENT_CREATED,
         commentId: comment.commentId,
     });
 
@@ -410,7 +411,7 @@ export async function createDiscussionReply({
             entityId,
             replyId: reply.replyId,
             createdAt: reply.createdAt,
-            type: "reply",
+            type: Constants.ProductDiscussionContentType.REPLY,
         }),
         upsertSubscriber({
             domain: ctx.subdomain._id,
@@ -421,13 +422,13 @@ export async function createDiscussionReply({
         }),
     ]);
 
-    await recordDiscussionActivity({
+    await recordDiscussionActivityForCommentReply({
         ctx,
         product: target.product,
         productId,
         entityType,
         entityId,
-        eventType: "reply_created",
+        eventType: DiscussionActivityEventType.REPLY_CREATED,
         commentId,
         replyId: reply.replyId,
     });
@@ -522,7 +523,9 @@ export async function listDiscussionComments({
                 })
                     .sort({ createdAt: 1, replyId: 1 })
                     .limit(replyPreviewLimit + 1),
-                targetContentType === "reply" && targetContentId
+                targetContentType ===
+                    Constants.ProductDiscussionContentType.REPLY &&
+                targetContentId
                     ? ProductDiscussionReplyModel.findOne({
                           domain: ctx.subdomain._id,
                           productId,
@@ -574,9 +577,13 @@ export async function listDiscussionComments({
     });
 
     const items = visibleComments.map((comment) => ({
-        ...formatDiscussionContent(comment, "comment", {
-            redactDeleted: true,
-        }),
+        ...formatDiscussionContent(
+            comment,
+            Constants.ProductDiscussionContentType.COMMENT,
+            {
+                redactDeleted: true,
+            },
+        ),
         hasLiked: likedContentIds.has(comment.commentId),
         replyCount: replyCountsByCommentId.get(comment.commentId) || 0,
         replyNextCursor: commentReplyData.find(
@@ -589,9 +596,13 @@ export async function listDiscussionComments({
         ),
         replies: (repliesByCommentId.get(comment.commentId) || []).map(
             (reply) => ({
-                ...formatDiscussionContent(reply, "reply", {
-                    redactDeleted: true,
-                }),
+                ...formatDiscussionContent(
+                    reply,
+                    Constants.ProductDiscussionContentType.REPLY,
+                    {
+                        redactDeleted: true,
+                    },
+                ),
                 hasLiked: likedContentIds.has(reply.replyId),
             }),
         ),
@@ -669,9 +680,13 @@ export async function listDiscussionReplies({
 
     return {
         items: visibleReplies.map((reply) => ({
-            ...formatDiscussionContent(reply, "reply", {
-                redactDeleted: true,
-            }),
+            ...formatDiscussionContent(
+                reply,
+                Constants.ProductDiscussionContentType.REPLY,
+                {
+                    redactDeleted: true,
+                },
+            ),
             hasLiked: likedContentIds.has(reply.replyId),
         })),
         hasMore,
@@ -726,7 +741,7 @@ async function getTargetCommentForList({
         return null;
     }
 
-    if (targetContentType === "comment") {
+    if (targetContentType === Constants.ProductDiscussionContentType.COMMENT) {
         return await ProductDiscussionCommentModel.findOne({
             domain,
             productId,
@@ -762,7 +777,10 @@ function formatDiscussionContent(
     { redactDeleted }: { redactDeleted: boolean },
 ) {
     const object = item.toObject();
-    const id = type === "comment" ? object.commentId : object.replyId;
+    const id =
+        type === Constants.ProductDiscussionContentType.COMMENT
+            ? object.commentId
+            : object.replyId;
 
     return {
         ...object,
@@ -836,7 +854,7 @@ export async function toggleDiscussionLike({
                 contentType,
                 contentId,
                 commentId:
-                    contentType === "reply"
+                    contentType === Constants.ProductDiscussionContentType.REPLY
                         ? target.commentId
                         : target.commentId,
                 userId: ctx.user.userId,
@@ -854,7 +872,8 @@ export async function toggleDiscussionLike({
                         entityId,
                         contentType,
                         commentId: target.commentId,
-                        ...(contentType === "reply"
+                        ...(contentType ===
+                        Constants.ProductDiscussionContentType.REPLY
                             ? { replyId: contentId }
                             : {}),
                         forUserIds: [target.userId],
@@ -927,7 +946,7 @@ export async function createDiscussionReport({
         });
     } catch (err) {
         await validateProductDiscussionAdmin({ ctx, productId });
-        if (entityType !== "lesson") {
+        if (entityType !== Constants.ProductDiscussionEntityType.LESSON) {
             throw err;
         }
         const lesson = await LessonModel.findOne({
@@ -1016,7 +1035,7 @@ export async function deleteDiscussionComment({
         comment.deleted = true;
         comment.deletedAt = new Date();
         comment.deletedBy = ctx.user.userId;
-        comment.deletedByRole = "author";
+        comment.deletedByRole = Constants.ProductDiscussionDeletedByRole.AUTHOR;
         await comment.save();
 
         await updateSummaryForSoftDelete({
@@ -1024,7 +1043,7 @@ export async function deleteDiscussionComment({
             productId: comment.productId,
             entityType: comment.entityType,
             entityId: comment.entityId,
-            type: "comment",
+            type: Constants.ProductDiscussionContentType.COMMENT,
         });
         await refreshSubscriberForUser({
             domain: ctx.subdomain._id,
@@ -1069,7 +1088,7 @@ export async function deleteDiscussionReply({
         reply.deleted = true;
         reply.deletedAt = new Date();
         reply.deletedBy = ctx.user.userId;
-        reply.deletedByRole = "author";
+        reply.deletedByRole = Constants.ProductDiscussionDeletedByRole.AUTHOR;
         await reply.save();
 
         await updateSummaryForSoftDelete({
@@ -1077,7 +1096,7 @@ export async function deleteDiscussionReply({
             productId: reply.productId,
             entityType: reply.entityType,
             entityId: reply.entityId,
-            type: "reply",
+            type: Constants.ProductDiscussionContentType.REPLY,
         });
         await refreshSubscriberForUser({
             domain: ctx.subdomain._id,
@@ -1205,7 +1224,7 @@ export async function updateDiscussionReportStatus({
     const previousStatus = report.status;
     const nextStatus = getNextReportStatus(report.status);
 
-    if (nextStatus === "rejected") {
+    if (nextStatus === Constants.ProductDiscussionReportStatus.REJECTED) {
         if (!rejectionReason?.trim()) {
             throw new Error(responses.invalid_input);
         }
@@ -1216,20 +1235,26 @@ export async function updateDiscussionReportStatus({
     report.status = nextStatus;
     await report.save();
 
-    if (nextStatus === "accepted" && previousStatus !== "accepted") {
+    if (
+        nextStatus === Constants.ProductDiscussionReportStatus.ACCEPTED &&
+        previousStatus !== Constants.ProductDiscussionReportStatus.ACCEPTED
+    ) {
         await moderationSoftDelete({
             ctx,
             report,
         });
     }
 
-    if (previousStatus === "accepted" && nextStatus !== "accepted") {
+    if (
+        previousStatus === Constants.ProductDiscussionReportStatus.ACCEPTED &&
+        nextStatus !== Constants.ProductDiscussionReportStatus.ACCEPTED
+    ) {
         const acceptedReportsCount =
             await ProductDiscussionReportModel.countDocuments({
                 domain: ctx.subdomain._id,
                 contentType: report.contentType,
                 contentId: report.contentId,
-                status: "accepted",
+                status: Constants.ProductDiscussionReportStatus.ACCEPTED,
             });
         if (acceptedReportsCount === 0) {
             await moderationRestore({
@@ -1266,7 +1291,7 @@ export async function listDiscussionSummaries({
     const filter: Record<string, unknown> = {
         domain: ctx.subdomain._id,
         productId,
-        entityType: "lesson",
+        entityType: Constants.ProductDiscussionEntityType.LESSON,
         activityCountIncludingDeleted: { $gt: 0 },
     };
     if (accessibleLessonIds) {
@@ -1317,7 +1342,7 @@ function getDiscussionSubjectId({
 }
 
 function assertLessonDiscussionTarget(entityType: ProductDiscussionEntityType) {
-    if (entityType !== "lesson") {
+    if (entityType !== Constants.ProductDiscussionEntityType.LESSON) {
         throw new Error(responses.action_not_allowed);
     }
 }
@@ -1338,7 +1363,7 @@ async function getDiscussionContentTarget({
     contentId: string;
 }) {
     const target =
-        contentType === "comment"
+        contentType === Constants.ProductDiscussionContentType.COMMENT
             ? await ProductDiscussionCommentModel.findOne({
                   domain,
                   productId,
@@ -1371,7 +1396,7 @@ async function getDiscussionContentTargetForModeration({
     contentId: string;
 }) {
     const target =
-        contentType === "comment"
+        contentType === Constants.ProductDiscussionContentType.COMMENT
             ? await ProductDiscussionCommentModel.findOne({
                   domain,
                   commentId: contentId,
@@ -1397,7 +1422,7 @@ async function incrementLikesCount({
     contentId: string;
     delta: 1 | -1;
 }) {
-    if (contentType === "comment") {
+    if (contentType === Constants.ProductDiscussionContentType.COMMENT) {
         await ProductDiscussionCommentModel.updateOne(
             { commentId: contentId },
             { $inc: { likesCount: delta } },
@@ -1433,7 +1458,7 @@ async function updateSummaryForCreate({
     commentId?: string;
     replyId?: string;
     createdAt: Date;
-    type: "comment" | "reply";
+    type: ProductDiscussionContentType;
 }) {
     await ProductDiscussionSummaryModel.updateOne(
         { domain, productId, entityType, entityId },
@@ -1450,8 +1475,14 @@ async function updateSummaryForCreate({
                 ...(replyId ? { lastReplyId: replyId } : {}),
             },
             $inc: {
-                commentsCount: type === "comment" ? 1 : 0,
-                repliesCount: type === "reply" ? 1 : 0,
+                commentsCount:
+                    type === Constants.ProductDiscussionContentType.COMMENT
+                        ? 1
+                        : 0,
+                repliesCount:
+                    type === Constants.ProductDiscussionContentType.REPLY
+                        ? 1
+                        : 0,
                 totalCount: 1,
                 activityCountIncludingDeleted: 1,
             },
@@ -1500,14 +1531,20 @@ async function updateSummaryForSoftDelete({
     productId: string;
     entityType: ProductDiscussionEntityType;
     entityId: string;
-    type: "comment" | "reply";
+    type: ProductDiscussionContentType;
 }) {
     await ProductDiscussionSummaryModel.updateOne(
         { domain, productId, entityType, entityId },
         {
             $inc: {
-                commentsCount: type === "comment" ? -1 : 0,
-                repliesCount: type === "reply" ? -1 : 0,
+                commentsCount:
+                    type === Constants.ProductDiscussionContentType.COMMENT
+                        ? -1
+                        : 0,
+                repliesCount:
+                    type === Constants.ProductDiscussionContentType.REPLY
+                        ? -1
+                        : 0,
                 totalCount: -1,
             },
         },
@@ -1525,14 +1562,20 @@ async function updateSummaryForRestore({
     productId: string;
     entityType: ProductDiscussionEntityType;
     entityId: string;
-    type: "comment" | "reply";
+    type: ProductDiscussionContentType;
 }) {
     await ProductDiscussionSummaryModel.updateOne(
         { domain, productId, entityType, entityId },
         {
             $inc: {
-                commentsCount: type === "comment" ? 1 : 0,
-                repliesCount: type === "reply" ? 1 : 0,
+                commentsCount:
+                    type === Constants.ProductDiscussionContentType.COMMENT
+                        ? 1
+                        : 0,
+                repliesCount:
+                    type === Constants.ProductDiscussionContentType.REPLY
+                        ? 1
+                        : 0,
                 totalCount: 1,
             },
         },
@@ -1577,7 +1620,15 @@ async function refreshSubscriberForUser({
     );
 }
 
-async function recordDiscussionActivity({
+export const DiscussionActivityEventType = {
+    COMMENT_CREATED: "comment_created",
+    REPLY_CREATED: "reply_created",
+} as const;
+
+export type DiscussionActivityEventType =
+    (typeof DiscussionActivityEventType)[keyof typeof DiscussionActivityEventType];
+
+async function recordDiscussionActivityForCommentReply({
     ctx,
     product,
     productId,
@@ -1592,7 +1643,7 @@ async function recordDiscussionActivity({
     productId: string;
     entityType: ProductDiscussionEntityType;
     entityId: string;
-    eventType: "comment_created" | "reply_created" | "reacted";
+    eventType: DiscussionActivityEventType;
     commentId: string;
     replyId?: string;
 }) {
@@ -1785,13 +1836,13 @@ function isEnrolledInProduct(ctx: GQLContext, productId: string) {
 function getNextReportStatus(
     status: ProductDiscussionReportStatus,
 ): ProductDiscussionReportStatus {
-    if (status === "pending") {
-        return "accepted";
+    if (status === Constants.ProductDiscussionReportStatus.PENDING) {
+        return Constants.ProductDiscussionReportStatus.ACCEPTED;
     }
-    if (status === "accepted") {
-        return "rejected";
+    if (status === Constants.ProductDiscussionReportStatus.ACCEPTED) {
+        return Constants.ProductDiscussionReportStatus.REJECTED;
     }
-    return "pending";
+    return Constants.ProductDiscussionReportStatus.PENDING;
 }
 
 async function moderationSoftDelete({
@@ -1814,7 +1865,8 @@ async function moderationSoftDelete({
     target.deleted = true;
     target.deletedAt = new Date();
     target.deletedBy = ctx.user.userId;
-    target.deletedByRole = "course_admin";
+    target.deletedByRole =
+        Constants.ProductDiscussionDeletedByRole.COURSE_ADMIN;
     target.deleteReason = report.reason;
     await target.save();
 
@@ -1847,7 +1899,11 @@ async function moderationRestore({
         contentId: report.contentId,
     });
 
-    if (!target.deleted || target.deletedByRole !== "course_admin") {
+    if (
+        !target.deleted ||
+        target.deletedByRole !==
+            Constants.ProductDiscussionDeletedByRole.COURSE_ADMIN
+    ) {
         return;
     }
 

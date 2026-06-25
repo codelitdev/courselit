@@ -2,6 +2,7 @@ import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import ProductDiscussionReportsPage from "../reports/page";
 import { AddressContext } from "@components/contexts";
+import { Constants } from "@courselit/common-models";
 
 const mockToast = jest.fn();
 const mockExec = jest.fn();
@@ -173,7 +174,8 @@ describe("ProductDiscussionReportsPage", () => {
                                 contentId: "comment-1",
                                 userId: "reporter-1",
                                 reason: "Spam",
-                                status: "accepted",
+                                status: Constants.ProductDiscussionReportStatus
+                                    .ACCEPTED,
                                 createdAt: "2026-06-01T00:00:00.000Z",
                                 entityId: "lesson-1",
                                 lessonTitle: "Text lesson",
@@ -190,7 +192,8 @@ describe("ProductDiscussionReportsPage", () => {
                 return Promise.resolve({
                     report: {
                         reportId: "report-1",
-                        status: "rejected",
+                        status: Constants.ProductDiscussionReportStatus
+                            .REJECTED,
                         rejectionReason: "Rejected by moderator",
                     },
                 });
@@ -251,7 +254,7 @@ describe("ProductDiscussionReportsPage", () => {
                         contentId: "reply-1",
                         userId: "reporter-1",
                         reason: "Spam",
-                        status: "pending",
+                        status: Constants.ProductDiscussionReportStatus.PENDING,
                         createdAt: "2026-06-01T00:00:00.000Z",
                         entityId: "lesson-1",
                         lessonTitle: "Text lesson",

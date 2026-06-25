@@ -6,7 +6,11 @@ import DashboardContent from "@components/admin/dashboard-content";
 import useProduct from "@/hooks/use-product";
 import { AddressContext } from "@components/contexts";
 import { FetchBuilder, truncate } from "@courselit/utils";
-import { UIConstants } from "@courselit/common-models";
+import {
+    Constants,
+    ProductDiscussionReportStatus,
+    UIConstants,
+} from "@courselit/common-models";
 import {
     COURSE_DISCUSSIONS_ADMIN_AUTHOR,
     COURSE_DISCUSSIONS_ADMIN_CONTENT,
@@ -49,15 +53,13 @@ import Link from "next/link";
 const { permissions } = UIConstants;
 const itemsPerPage = 10;
 
-type ReportStatus = "pending" | "accepted" | "rejected";
-
 type DiscussionReport = {
     reportId: string;
     contentType: "COMMENT" | "REPLY";
     contentId: string;
     userId: string;
     reason: string;
-    status: ReportStatus;
+    status: ProductDiscussionReportStatus;
     createdAt: string;
     entityId: string;
     lessonTitle?: string;
@@ -75,7 +77,9 @@ export default function ProductDiscussionReportsPage() {
     const [reports, setReports] = useState<DiscussionReport[]>([]);
     const [page, setPage] = useState(1);
     const [totalReports, setTotalReports] = useState(0);
-    const [status, setStatus] = useState<ReportStatus | undefined>();
+    const [status, setStatus] = useState<
+        ProductDiscussionReportStatus | undefined
+    >();
 
     const breadcrumbs = [
         { label: MANAGE_COURSES_PAGE_HEADING, href: "/dashboard/products" },
@@ -155,15 +159,17 @@ export default function ProductDiscussionReportsPage() {
     const [currentReportId, setCurrentReportId] = useState<string | null>(null);
 
     async function handleStatusChange(report: DiscussionReport) {
-        // Status transition sequence for reports: pending -> accepted -> rejected -> pending
-        let nextStatus: ReportStatus = "pending";
-        if (report.status === "pending") {
-            nextStatus = "accepted";
-        } else if (report.status === "accepted") {
-            nextStatus = "rejected";
+        let nextStatus: ProductDiscussionReportStatus =
+            Constants.ProductDiscussionReportStatus.PENDING;
+        if (report.status === Constants.ProductDiscussionReportStatus.PENDING) {
+            nextStatus = Constants.ProductDiscussionReportStatus.ACCEPTED;
+        } else if (
+            report.status === Constants.ProductDiscussionReportStatus.ACCEPTED
+        ) {
+            nextStatus = Constants.ProductDiscussionReportStatus.REJECTED;
         }
 
-        if (nextStatus === "rejected") {
+        if (nextStatus === Constants.ProductDiscussionReportStatus.REJECTED) {
             setCurrentReportId(report.reportId);
             setRejectionDialogOpen(true);
         } else {
@@ -173,7 +179,11 @@ export default function ProductDiscussionReportsPage() {
 
     async function handleRejectionConfirm(reason: string) {
         if (currentReportId) {
-            await updateReportStatus(currentReportId, "rejected", reason);
+            await updateReportStatus(
+                currentReportId,
+                Constants.ProductDiscussionReportStatus.REJECTED,
+                reason,
+            );
         }
         setRejectionDialogOpen(false);
         setCurrentReportId(null);
@@ -181,7 +191,7 @@ export default function ProductDiscussionReportsPage() {
 
     async function updateReportStatus(
         reportId: string,
-        nextStatus: ReportStatus,
+        nextStatus: ProductDiscussionReportStatus,
         rejectionReason?: string,
     ) {
         try {
@@ -199,7 +209,8 @@ export default function ProductDiscussionReportsPage() {
                     productId,
                     reportId,
                     rejectionReason:
-                        nextStatus === "rejected"
+                        nextStatus ===
+                        Constants.ProductDiscussionReportStatus.REJECTED
                             ? rejectionReason ||
                               COURSE_DISCUSSIONS_ADMIN_REJECTION_REASON_DEFAULT
                             : undefined,
@@ -210,7 +221,7 @@ export default function ProductDiscussionReportsPage() {
                     item.reportId === reportId
                         ? {
                               ...item,
-                              status: response.report.status.toLowerCase() as ReportStatus,
+                              status: response.report.status.toLowerCase() as ProductDiscussionReportStatus,
                           }
                         : item,
                 ),
@@ -233,27 +244,29 @@ export default function ProductDiscussionReportsPage() {
             `/dashboard/product/${productId}/manage/discussions/reports`,
         );
         const targetHash = `discussion-${
-            report.contentType === "REPLY" ? "reply" : "comment"
+            report.contentType === "REPLY"
+                ? Constants.ProductDiscussionContentType.REPLY
+                : Constants.ProductDiscussionContentType.COMMENT
         }-${report.contentId}`;
 
         return `/course/${product.slug}/${productId}/${report.entityId}?discussion=open&preview=true&returnTo=${returnTo}#${targetHash}`;
     }
 
-    const getStatusBadge = (status: ReportStatus) => {
+    const getStatusBadge = (status: ProductDiscussionReportStatus) => {
         switch (status) {
-            case "pending":
+            case Constants.ProductDiscussionReportStatus.PENDING:
                 return (
                     <Badge variant="secondary" className="text-[10px]">
                         PENDING
                     </Badge>
                 );
-            case "accepted":
+            case Constants.ProductDiscussionReportStatus.ACCEPTED:
                 return (
                     <Badge variant="default" className="text-[10px]">
                         ACCEPTED
                     </Badge>
                 );
-            case "rejected":
+            case Constants.ProductDiscussionReportStatus.REJECTED:
                 return (
                     <Badge variant="outline" className="text-[10px]">
                         REJECTED
@@ -293,7 +306,7 @@ export default function ProductDiscussionReportsPage() {
                                 setStatus(
                                     val === "all"
                                         ? undefined
-                                        : (val as ReportStatus),
+                                        : (val as ProductDiscussionReportStatus),
                                 );
                             }}
                         >
@@ -302,11 +315,28 @@ export default function ProductDiscussionReportsPage() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All</SelectItem>
-                                <SelectItem value="pending">Pending</SelectItem>
-                                <SelectItem value="accepted">
+                                <SelectItem
+                                    value={
+                                        Constants.ProductDiscussionReportStatus
+                                            .PENDING
+                                    }
+                                >
+                                    Pending
+                                </SelectItem>
+                                <SelectItem
+                                    value={
+                                        Constants.ProductDiscussionReportStatus
+                                            .ACCEPTED
+                                    }
+                                >
                                     Accepted
                                 </SelectItem>
-                                <SelectItem value="rejected">
+                                <SelectItem
+                                    value={
+                                        Constants.ProductDiscussionReportStatus
+                                            .REJECTED
+                                    }
+                                >
                                     Rejected
                                 </SelectItem>
                             </SelectContent>

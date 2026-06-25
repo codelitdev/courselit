@@ -15,30 +15,41 @@ import ProductDiscussionReplyModel from "@/models/ProductDiscussionReply";
 import UserModel from "@/models/User";
 import userTypes from "../users/types";
 import { extractTextFromTextEditorContent } from "@courselit/utils";
+import { Constants } from "@courselit/common-models";
+const {
+    ProductDiscussionEntityType,
+    ProductDiscussionContentType,
+    ProductDiscussionReportStatus,
+} = Constants;
 
 const productDiscussionEntityType = new GraphQLEnumType({
     name: "ProductDiscussionEntityType",
-    values: {
-        LESSON: { value: "lesson" },
-        PRODUCT: { value: "product" },
-    },
+    values: Object.fromEntries(
+        Object.entries(ProductDiscussionEntityType).map(([key, value]) => [
+            key,
+            { value: value },
+        ]),
+    ),
 });
 
 const productDiscussionContentType = new GraphQLEnumType({
     name: "ProductDiscussionContentType",
-    values: {
-        COMMENT: { value: "comment" },
-        REPLY: { value: "reply" },
-    },
+    values: Object.fromEntries(
+        Object.entries(ProductDiscussionContentType).map(([key, value]) => [
+            key,
+            { value: value },
+        ]),
+    ),
 });
 
 const productDiscussionReportStatusType = new GraphQLEnumType({
     name: "ProductDiscussionReportStatus",
-    values: {
-        PENDING: { value: "pending" },
-        ACCEPTED: { value: "accepted" },
-        REJECTED: { value: "rejected" },
-    },
+    values: Object.fromEntries(
+        Object.entries(ProductDiscussionReportStatus).map(([key, value]) => [
+            key,
+            { value: value },
+        ]),
+    ),
 });
 
 const productDiscussionReply = new GraphQLObjectType({
@@ -274,7 +285,8 @@ const productDiscussionReport = new GraphQLObjectType({
         lessonTitle: {
             type: GraphQLString,
             resolve: async (report, _, ctx) => {
-                if (report.entityType !== "lesson") return null;
+                if (report.entityType !== ProductDiscussionEntityType.LESSON)
+                    return null;
                 const lesson = await LessonModel.findOne({
                     domain: ctx.subdomain._id,
                     lessonId: report.entityId,
@@ -286,7 +298,7 @@ const productDiscussionReport = new GraphQLObjectType({
             type: GraphQLString,
             resolve: async (report, _, ctx) => {
                 const item =
-                    report.contentType === "comment"
+                    report.contentType === ProductDiscussionContentType.COMMENT
                         ? await ProductDiscussionCommentModel.findOne({
                               domain: ctx.subdomain._id,
                               commentId: report.contentId,
@@ -303,7 +315,7 @@ const productDiscussionReport = new GraphQLObjectType({
             type: GraphQLString,
             resolve: async (report, _, ctx) => {
                 const item =
-                    report.contentType === "comment"
+                    report.contentType === ProductDiscussionContentType.COMMENT
                         ? await ProductDiscussionCommentModel.findOne({
                               domain: ctx.subdomain._id,
                               commentId: report.contentId,

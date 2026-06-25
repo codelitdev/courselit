@@ -333,7 +333,7 @@ export async function cleanupPersonalData(
                 deleted: true,
                 deletedAt: new Date(),
                 deletedBy: "system",
-                deletedByRole: "author",
+                deletedByRole: Constants.ProductDiscussionDeletedByRole.AUTHOR,
             },
         },
     );
@@ -348,7 +348,7 @@ export async function cleanupPersonalData(
                 deleted: true,
                 deletedAt: new Date(),
                 deletedBy: "system",
-                deletedByRole: "author",
+                deletedByRole: Constants.ProductDiscussionDeletedByRole.AUTHOR,
             },
         },
     );

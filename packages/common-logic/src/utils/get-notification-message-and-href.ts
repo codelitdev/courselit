@@ -399,7 +399,11 @@ export async function getNotificationMessageAndHref({
             const eventType = metadata?.eventType as string | undefined;
             const contentType = metadata?.contentType as string | undefined;
 
-            if (!productId || entityType !== "lesson" || !lessonId) {
+            if (
+                !productId ||
+                entityType !== Constants.ProductDiscussionEntityType.LESSON ||
+                !lessonId
+            ) {
                 return { message: "", href: "" };
             }
 
@@ -429,7 +433,7 @@ export async function getNotificationMessageAndHref({
                 message:
                     activityType ===
                     Constants.ActivityType.COURSE_DISCUSSION_REACTED
-                        ? `${actorName} reacted to your ${contentType === "reply" ? "reply" : "comment"} on ${truncate(course.title, 20).trim()}`
+                        ? `${actorName} reacted to your ${contentType === Constants.ProductDiscussionContentType.REPLY ? Constants.ProductDiscussionContentType.REPLY : Constants.ProductDiscussionContentType.COMMENT} on ${truncate(course.title, 20).trim()}`
                         : `${actorName} ${eventType === "reply_created" ? "replied" : "commented"} on ${truncate(course.title, 20).trim()}`,
                 href: toHref(
                     `/course/${course.slug}/${course.courseId}/${lessonId}?${query.toString()}${

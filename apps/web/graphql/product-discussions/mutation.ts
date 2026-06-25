@@ -7,12 +7,14 @@ import {
     createDiscussionReport,
     deleteDiscussionComment,
     deleteDiscussionReply,
-    ProductDiscussionContentType,
-    ProductDiscussionEntityType,
     toggleDiscussionLike,
     updateDiscussionReportStatus,
 } from "./logic";
 import types from "./types";
+import {
+    ProductDiscussionContentType,
+    ProductDiscussionEntityType,
+} from "@courselit/common-models";
 
 const targetArgs = {
     productId: { type: new GraphQLNonNull(GraphQLString) },

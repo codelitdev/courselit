@@ -322,7 +322,7 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
             const target = {
                 domain: testDomain._id,
                 productId,
-                entityType: "lesson",
+                entityType: Constants.ProductDiscussionEntityType.LESSON,
                 entityId,
             } as const;
             await Promise.all([
@@ -341,14 +341,14 @@ describe("deleteCourse - Comprehensive Test Suite", () => {
                 }),
                 ProductDiscussionLikeModel.create({
                     ...target,
-                    contentType: "comment",
+                    contentType: Constants.ProductDiscussionContentType.COMMENT,
                     contentId: commentId,
                     userId: regularUser.userId,
                 }),
                 ProductDiscussionReportModel.create({
                     ...target,
                     reportId: dcId("discussion-report"),
-                    contentType: "comment",
+                    contentType: Constants.ProductDiscussionContentType.COMMENT,
                     contentId: commentId,
                     userId: regularUser.userId,
                     reason: "Test report",
