@@ -11,8 +11,6 @@ import {
     COURSE_SETTINGS_CARD_HEADER,
     MANAGE_COURSES_PAGE_HEADING,
 } from "@ui-config/strings";
-
-// Import the new components
 import ProductDetails from "./components/product-details";
 import ProductFeaturedImage from "./components/product-featured-image";
 import PaymentPlans from "./components/payment-plans";

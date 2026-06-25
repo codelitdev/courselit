@@ -7,7 +7,6 @@ import ProductDiscussionReplyModel from "@/models/ProductDiscussionReply";
 import ProductDiscussionReportModel from "@/models/ProductDiscussionReport";
 import ProductDiscussionSubscriberModel from "@/models/ProductDiscussionSubscriber";
 import ProductDiscussionSummaryModel from "@/models/ProductDiscussionSummary";
-import RateLimitEventModel from "@/models/RateLimitEvent";
 import UserModel from "@/models/User";
 import LessonModel from "@/models/Lesson";
 import GQLContext from "@/models/GQLContext";
@@ -18,22 +17,23 @@ import {
     ProductDiscussionEntityType,
     ProductDiscussionReportStatus,
 } from "@courselit/common-models";
-import { getLessonDetails } from "../lessons/logic";
 import {
     checkPermission,
     extractTextFromTextEditorContent,
 } from "@courselit/utils";
 import mongoose from "mongoose";
-import { randomUUID } from "crypto";
 import { recordActivity } from "@/lib/record-activity";
-import {
-    checkIfAuthenticated,
-    checkOwnershipWithoutModel,
-} from "@/lib/graphql";
+import { assertRateLimit } from "@/lib/assert-rate-limit";
+import { checkIfAuthenticated } from "@/lib/graphql";
 import { canManageCourseInContext } from "../courses/permissions";
-
-export const MAX_DISCUSSION_CONTENT_BYTES = 32768;
-export const MAX_DISCUSSION_TEXT_LENGTH = 5000;
+import {
+    decodeCursor,
+    encodeCursor,
+    getDiscussionSubjectId,
+    getProductProgress,
+    validateDiscussionContent,
+    validateDiscussionTargetForLearner,
+} from "./helpers";
 
 export const COURSE_DISCUSSION_RATE_LIMITS = {
     commentsPerMinute: { window: 60 * 1000, limit: 5 },
@@ -69,160 +69,6 @@ type SummaryCursor = {
     lastActivityAt: string;
     entityId: string;
 };
-
-export async function validateDiscussionTargetForLearner({
-    ctx,
-    productId,
-    entityType,
-    entityId,
-}: {
-    ctx: GQLContext;
-    productId: string;
-    entityType: ProductDiscussionEntityType;
-    entityId: string;
-}) {
-    checkIfAuthenticated(ctx);
-
-    if (entityType === Constants.ProductDiscussionEntityType.PRODUCT) {
-        throw new Error(responses.action_not_allowed);
-    }
-
-    const product = await CourseModel.findOne({
-        domain: ctx.subdomain._id,
-        courseId: productId,
-    });
-
-    if (!product || product.type !== Constants.CourseType.COURSE) {
-        throw new Error(responses.item_not_found);
-    }
-
-    if (!product.discussions) {
-        throw new Error(responses.action_not_allowed);
-    }
-
-    const isAdminOrCreator =
-        ctx.user &&
-        (checkPermission(ctx.user.permissions, [permissions.manageAnyCourse]) ||
-            (checkPermission(ctx.user.permissions, [
-                permissions.manageCourse,
-            ]) &&
-                checkOwnershipWithoutModel(product, ctx)));
-
-    if (!product.published && !isAdminOrCreator) {
-        throw new Error(responses.item_not_found);
-    }
-
-    if (!isAdminOrCreator && !isEnrolledInProduct(ctx, productId)) {
-        throw new Error(responses.not_enrolled);
-    }
-
-    let lesson;
-    if (isAdminOrCreator) {
-        lesson = await LessonModel.findOne({
-            lessonId: entityId,
-            domain: ctx.subdomain._id,
-            courseId: productId,
-        });
-        if (!lesson) {
-            throw new Error(responses.item_not_found);
-        }
-    } else {
-        lesson = await getLessonDetails(entityId, ctx, productId);
-    }
-
-    return {
-        product,
-        lesson,
-        productId,
-        entityType,
-        entityId,
-    };
-}
-
-export function validateDiscussionContent(content: unknown): TextEditorContent {
-    if (!content || typeof content !== "object") {
-        throw new Error(responses.invalid_input);
-    }
-
-    const doc = content as TextEditorContent;
-    if (doc.type !== "doc") {
-        throw new Error(responses.invalid_input);
-    }
-
-    const contentBytes = Buffer.byteLength(JSON.stringify(doc), "utf8");
-    if (contentBytes > MAX_DISCUSSION_CONTENT_BYTES) {
-        throw new Error(responses.invalid_input);
-    }
-
-    const text = extractTextFromTextEditorContent(doc);
-    if (!text.trim() || text.length > MAX_DISCUSSION_TEXT_LENGTH) {
-        throw new Error(responses.invalid_input);
-    }
-
-    return doc;
-}
-
-export async function assertRateLimit({
-    domain,
-    userId,
-    scope,
-    action,
-    subjectId,
-    window,
-    limit,
-    fingerprint,
-    record = true,
-}: {
-    domain: mongoose.Types.ObjectId;
-    userId: string;
-    scope: string;
-    action: string;
-    subjectId: string;
-    window: number;
-    limit: number;
-    fingerprint?: string;
-    record?: boolean;
-}) {
-    const since = new Date(Date.now() - window);
-    const existingEvents = await RateLimitEventModel.countDocuments({
-        domain,
-        userId,
-        scope,
-        action,
-        subjectId,
-        createdAt: { $gte: since },
-    });
-
-    if (existingEvents >= limit) {
-        throw new Error(responses.action_not_allowed);
-    }
-
-    if (fingerprint) {
-        const duplicate = await RateLimitEventModel.findOne({
-            domain,
-            userId,
-            scope,
-            subjectId,
-            fingerprint,
-            createdAt: { $gte: since },
-        }).select("_id");
-
-        if (duplicate) {
-            throw new Error(responses.action_not_allowed);
-        }
-    }
-
-    if (record) {
-        await RateLimitEventModel.create({
-            domain,
-            userId,
-            scope,
-            action,
-            subjectId,
-            fingerprint,
-        });
-    }
-}
 
 export async function createDiscussionComment({
     ctx,
@@ -277,7 +123,6 @@ export async function createDiscussionComment({
         productId,
         entityType,
         entityId,
-        commentId: randomUUID(),
         userId: ctx.user.userId,
         content: validatedContent,
     });
@@ -397,7 +242,6 @@ export async function createDiscussionReply({
         entityType,
         entityId,
         commentId,
-        replyId: randomUUID(),
         parentReplyId,
         userId: ctx.user.userId,
         content: validatedContent,
@@ -989,7 +833,6 @@ export async function createDiscussionReport({
             productId,
             entityType,
             entityId,
-            reportId: randomUUID(),
             contentType,
             contentId,
             commentId: target.commentId,
@@ -1327,18 +1170,6 @@ export async function listDiscussionSummaries({
                   })
                 : undefined,
     };
-}
-
-function getDiscussionSubjectId({
-    productId,
-    entityType,
-    entityId,
-}: {
-    productId: string;
-    entityType: ProductDiscussionEntityType;
-    entityId: string;
-}) {
-    return `${productId}:${entityType}:${entityId}`;
 }
 
 function assertLessonDiscussionTarget(entityType: ProductDiscussionEntityType) {
@@ -1823,16 +1654,6 @@ async function getAccessibleDiscussionLessonIds({
         .map((lesson) => lesson.lessonId);
 }
 
-function getProductProgress(ctx: GQLContext, productId: string) {
-    return ctx.user?.purchases?.find(
-        (purchase: any) => purchase.courseId === productId,
-    );
-}
-
-function isEnrolledInProduct(ctx: GQLContext, productId: string) {
-    return Boolean(getProductProgress(ctx, productId));
-}
-
 function getNextReportStatus(
     status: ProductDiscussionReportStatus,
 ): ProductDiscussionReportStatus {
@@ -1926,18 +1747,4 @@ async function moderationRestore({
         entityId: target.entityId,
         userId: target.userId,
     });
-}
-
-function encodeCursor(
-    cursor: CommentCursor | ReplyCursor | ReportCursor | SummaryCursor,
-) {
-    return Buffer.from(JSON.stringify(cursor), "utf8").toString("base64");
-}
-
-function decodeCursor<T>(cursor: string): T {
-    try {
-        return JSON.parse(Buffer.from(cursor, "base64").toString("utf8"));
-    } catch {
-        throw new Error(responses.invalid_input);
-    }
 }

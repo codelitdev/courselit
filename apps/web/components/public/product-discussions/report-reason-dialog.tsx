@@ -11,13 +11,13 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { POPUP_CANCEL_ACTION } from "@ui-config/strings";
-
-const REPORT_DIALOG_TITLE = "Report Post";
-const REPORT_DIALOG_DESCRIPTION =
-    "Please provide a reason for reporting this post.";
-const REPORT_DIALOG_PLACEHOLDER = "Reason for reporting...";
-const REPORT_DIALOG_SUBMIT = "Submit";
+import {
+    POPUP_CANCEL_ACTION,
+    COURSE_DISCUSSIONS_REPORT_DIALOG_TITLE,
+    COURSE_DISCUSSIONS_REPORT_DIALOG_DESCRIPTION,
+    COURSE_DISCUSSIONS_REPORT_DIALOG_PLACEHOLDER,
+    COURSE_DISCUSSIONS_REPORT_DIALOG_SUBMIT,
+} from "@ui-config/strings";
 
 interface ReportReasonDialogProps {
     isOpen: boolean;
@@ -52,9 +52,11 @@ export function ReportReasonDialog({
         <Dialog open={isOpen} onOpenChange={handleClose}>
             <DialogContent className="sm:max-w-[440px]">
                 <DialogHeader>
-                    <DialogTitle>{REPORT_DIALOG_TITLE}</DialogTitle>
+                    <DialogTitle>
+                        {COURSE_DISCUSSIONS_REPORT_DIALOG_TITLE}
+                    </DialogTitle>
                     <DialogDescription>
-                        {REPORT_DIALOG_DESCRIPTION}
+                        {COURSE_DISCUSSIONS_REPORT_DIALOG_DESCRIPTION}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -62,7 +64,9 @@ export function ReportReasonDialog({
                     <Textarea
                         ref={textareaRef}
                         id="report-reason"
-                        placeholder={REPORT_DIALOG_PLACEHOLDER}
+                        placeholder={
+                            COURSE_DISCUSSIONS_REPORT_DIALOG_PLACEHOLDER
+                        }
                         value={reason}
                         onChange={(e) => setReason(e.target.value)}
                         rows={4}
@@ -88,7 +92,7 @@ export function ReportReasonDialog({
                         disabled={!reason.trim()}
                         onClick={handleSubmit}
                     >
-                        {REPORT_DIALOG_SUBMIT}
+                        {COURSE_DISCUSSIONS_REPORT_DIALOG_SUBMIT}
                     </Button>
                 </DialogFooter>
             </DialogContent>

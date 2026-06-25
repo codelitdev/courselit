@@ -225,6 +225,7 @@ describe("CourseDiscussionsPage", () => {
             productId: "course-1",
             cursor: undefined,
             preview: false,
+            limit: 20,
         });
         expect(screen.getByText("3")).toBeInTheDocument();
         expect(screen.getByText("Text lesson").closest("a")).toHaveAttribute(
@@ -294,6 +295,7 @@ describe("CourseDiscussionsPage", () => {
             productId: "course-1",
             cursor: "summary-cursor",
             preview: false,
+            limit: 20,
         });
     });
 

@@ -12,6 +12,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+    BUTTON_CANCEL_TEXT,
+    BUTTON_CONFIRM_TEXT,
+    COURSE_DISCUSSIONS_ADMIN_REJECTION_DIALOG_TITLE,
+    COURSE_DISCUSSIONS_ADMIN_REJECTION_DIALOG_DESCRIPTION,
+    COURSE_DISCUSSIONS_ADMIN_REJECTION_DIALOG_LABEL,
+} from "@ui-config/strings";
 
 interface RejectionReasonDialogProps {
     isOpen: boolean;
@@ -35,16 +42,17 @@ export function RejectionReasonDialog({
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Enter Rejection Reason</DialogTitle>
+                    <DialogTitle>
+                        {COURSE_DISCUSSIONS_ADMIN_REJECTION_DIALOG_TITLE}
+                    </DialogTitle>
                     <DialogDescription>
-                        Please provide a reason for rejecting this report. This
-                        is optional but recommended.
+                        {COURSE_DISCUSSIONS_ADMIN_REJECTION_DIALOG_DESCRIPTION}
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="reason" className="text-right">
-                            Reason
+                            {COURSE_DISCUSSIONS_ADMIN_REJECTION_DIALOG_LABEL}
                         </Label>
                         <Input
                             id="reason"
@@ -56,10 +64,10 @@ export function RejectionReasonDialog({
                 </div>
                 <DialogFooter>
                     <Button type="button" variant="secondary" onClick={onClose}>
-                        Cancel
+                        {BUTTON_CANCEL_TEXT}
                     </Button>
                     <Button type="submit" onClick={handleConfirm}>
-                        Confirm
+                        {BUTTON_CONFIRM_TEXT}
                     </Button>
                 </DialogFooter>
             </DialogContent>

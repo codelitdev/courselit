@@ -9,11 +9,6 @@ import {
 import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
 
-// export type ProductDiscussionEntityType = "lesson" | "product";
-// export type ProductDiscussionContentType = "comment" | "reply";
-// export type ProductDiscussionDeletedByRole = "author" | "course_admin";
-// export type ProductDiscussionReportStatus = "pending" | "accepted" | "rejected";
-
 interface ProductDiscussionTarget {
     domain: mongoose.Types.ObjectId;
     productId: string;

@@ -28,9 +28,6 @@ import courseTypes from "../types";
 import schema from "../../index";
 import {
     COURSE_DISCUSSION_RATE_LIMITS,
-    MAX_DISCUSSION_CONTENT_BYTES,
-    MAX_DISCUSSION_TEXT_LENGTH,
-    assertRateLimit,
     createDiscussionComment,
     createDiscussionReply,
     createDiscussionReport,
@@ -43,10 +40,15 @@ import {
     listDiscussionReplies,
     toggleDiscussionLike,
     updateDiscussionReportStatus,
-    validateDiscussionContent,
-    validateDiscussionTargetForLearner,
     DiscussionActivityEventType,
 } from "../../product-discussions/logic";
+import {
+    MAX_DISCUSSION_CONTENT_BYTES,
+    MAX_DISCUSSION_TEXT_LENGTH,
+    validateDiscussionContent,
+    validateDiscussionTargetForLearner,
+} from "../../product-discussions/helpers";
+import { assertRateLimit } from "@/lib/assert-rate-limit";
 import { recordActivity } from "@/lib/record-activity";
 import { deleteMedia, sealMedia } from "@/services/medialit";
 
@@ -62,6 +64,12 @@ jest.mock("@/services/medialit", () => ({
 jest.mock("@/lib/record-activity", () => ({
     recordActivity: jest.fn(),
 }));
+// Generate unique ids so schema defaults (generateUniqueId) don't collide on
+// unique indexes when multiple discussion docs are created within one test.
+jest.mock("nanoid", () => ({
+    nanoid: () => Math.random().toString(36).substring(2),
+}));
+jest.unmock("@courselit/utils");
 
 const recordActivityMock = recordActivity as jest.Mock;
 

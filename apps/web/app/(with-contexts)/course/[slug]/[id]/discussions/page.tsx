@@ -138,8 +138,8 @@ export default function CourseDiscussionsPage(props: {
         try {
             const response = await graph({
                 query: `
-                    query GetProductDiscussionSummaries($productId: String!, $preview: Boolean, $cursor: String) {
-                        summaries: getProductDiscussionSummaries(productId: $productId, preview: $preview, cursor: $cursor, limit: 20) {
+                    query GetProductDiscussionSummaries($productId: String!, $preview: Boolean, $cursor: String, $limit: Int) {
+                        summaries: getProductDiscussionSummaries(productId: $productId, preview: $preview, cursor: $cursor, limit: $limit) {
                             items {
                                 entityId
                                 totalCount
@@ -156,6 +156,7 @@ export default function CourseDiscussionsPage(props: {
                     productId: id,
                     preview: previewOverride,
                     cursor,
+                    limit: 20,
                 },
             });
 

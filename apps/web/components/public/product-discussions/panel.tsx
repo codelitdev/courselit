@@ -7,7 +7,12 @@ import {
     extractTextFromTextEditorContent,
 } from "@courselit/utils";
 import clsx from "clsx";
-import type { Address, TextEditorContent } from "@courselit/common-models";
+import type {
+    Address,
+    TextEditorContent,
+    ProductDiscussionContentType,
+} from "@courselit/common-models";
+import { Constants } from "@courselit/common-models";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -107,7 +112,7 @@ type DiscussionComment = DiscussionContent & {
 };
 
 type DiscussionContentTarget = {
-    contentType: "COMMENT" | "REPLY";
+    contentType: Uppercase<ProductDiscussionContentType>;
     contentId: string;
 };
 
@@ -347,7 +352,8 @@ export default function ProductDiscussionPanel({
                 `,
                 variables: {
                     productId,
-                    entityType: "LESSON",
+                    entityType:
+                        Constants.ProductDiscussionEntityType.LESSON.toUpperCase(),
                     entityId,
                     cursor,
                     targetContentType: cursor
@@ -390,7 +396,8 @@ export default function ProductDiscussionPanel({
                 `,
                 variables: {
                     productId,
-                    entityType: "LESSON",
+                    entityType:
+                        Constants.ProductDiscussionEntityType.LESSON.toUpperCase(),
                     entityId,
                     content: composerContent,
                 },
@@ -429,7 +436,8 @@ export default function ProductDiscussionPanel({
                 `,
                 variables: {
                     productId,
-                    entityType: "LESSON",
+                    entityType:
+                        Constants.ProductDiscussionEntityType.LESSON.toUpperCase(),
                     entityId,
                     commentId: replyingTo.commentId,
                     parentReplyId: replyingTo.parentReplyId,
@@ -520,14 +528,28 @@ export default function ProductDiscussionPanel({
     }
 
     async function toggleLike(
-        contentType: "COMMENT" | "REPLY",
+        contentType: Uppercase<ProductDiscussionContentType>,
         contentId: string,
         liked: boolean,
     ) {
         const response = await graph({
             query: `
-                mutation ToggleProductDiscussionLike($productId: String!, $entityType: ProductDiscussionEntityType!, $entityId: String!, $contentType: ProductDiscussionContentType!, $contentId: String!, $liked: Boolean!) {
-                    like: toggleProductDiscussionLike(productId: $productId, entityType: $entityType, entityId: $entityId, contentType: $contentType, contentId: $contentId, liked: $liked) {
+                mutation ToggleProductDiscussionLike(
+                    $productId: String!, 
+                    $entityType: ProductDiscussionEntityType!, 
+                    $entityId: String!, 
+                    $contentType: ProductDiscussionContentType!, 
+                    $contentId: String!, 
+                    $liked: Boolean!
+                ) {
+                    like: toggleProductDiscussionLike(
+                        productId: $productId, 
+                        entityType: $entityType, 
+                        entityId: $entityId, 
+                        contentType: $contentType, 
+                        contentId: $contentId, 
+                        liked: $liked
+                    ) {
                         contentType
                         contentId
                         likesCount
@@ -537,7 +559,8 @@ export default function ProductDiscussionPanel({
             `,
             variables: {
                 productId,
-                entityType: "LESSON",
+                entityType:
+                    Constants.ProductDiscussionEntityType.LESSON.toUpperCase(),
                 entityId,
                 contentType,
                 contentId,
@@ -551,16 +574,28 @@ export default function ProductDiscussionPanel({
     }
 
     async function deleteContent(
-        contentType: "COMMENT" | "REPLY",
+        contentType: Uppercase<ProductDiscussionContentType>,
         contentId: string,
     ) {
         await graph({
             query:
-                contentType === "COMMENT"
-                    ? `mutation DeleteProductDiscussionComment($commentId: String!) { deleteProductDiscussionComment(commentId: $commentId) { commentId deleted } }`
-                    : `mutation DeleteProductDiscussionReply($replyId: String!) { deleteProductDiscussionReply(replyId: $replyId) { replyId deleted } }`,
+                contentType ===
+                Constants.ProductDiscussionContentType.COMMENT.toUpperCase()
+                    ? `mutation DeleteProductDiscussionComment($commentId: String!) { 
+                        deleteProductDiscussionComment(commentId: $commentId) { 
+                            commentId 
+                            deleted 
+                        } 
+                    }`
+                    : `mutation DeleteProductDiscussionReply($replyId: String!) { 
+                        deleteProductDiscussionReply(replyId: $replyId) { 
+                            replyId 
+                            deleted 
+                        } 
+                    }`,
             variables:
-                contentType === "COMMENT"
+                contentType ===
+                Constants.ProductDiscussionContentType.COMMENT.toUpperCase()
                     ? { commentId: contentId }
                     : { replyId: contentId },
         });
@@ -572,7 +607,7 @@ export default function ProductDiscussionPanel({
     }
 
     function openDeleteDialog(
-        contentType: "COMMENT" | "REPLY",
+        contentType: Uppercase<ProductDiscussionContentType>,
         contentId: string,
     ) {
         setPendingDelete({ contentType, contentId });
@@ -584,7 +619,7 @@ export default function ProductDiscussionPanel({
     }
 
     function openReportDialog(
-        contentType: "COMMENT" | "REPLY",
+        contentType: Uppercase<ProductDiscussionContentType>,
         contentId: string,
     ) {
         setPendingReport({ contentType, contentId });
@@ -605,15 +640,30 @@ export default function ProductDiscussionPanel({
         try {
             await graph({
                 query: `
-                    mutation CreateProductDiscussionReport($productId: String!, $entityType: ProductDiscussionEntityType!, $entityId: String!, $contentType: ProductDiscussionContentType!, $contentId: String!, $reason: String!) {
-                        createProductDiscussionReport(productId: $productId, entityType: $entityType, entityId: $entityId, contentType: $contentType, contentId: $contentId, reason: $reason) {
+                    mutation CreateProductDiscussionReport(
+                        $productId: String!, 
+                        $entityType: ProductDiscussionEntityType!, 
+                        $entityId: String!, 
+                        $contentType: ProductDiscussionContentType!, 
+                        $contentId: String!, 
+                        $reason: String!
+                    ) {
+                        createProductDiscussionReport(
+                            productId: $productId, 
+                            entityType: $entityType, 
+                            entityId: $entityId, 
+                            contentType: $contentType, 
+                            contentId: $contentId, 
+                            reason: $reason
+                        ) {
                             reportId
                         }
                     }
                 `,
                 variables: {
                     productId,
-                    entityType: "LESSON",
+                    entityType:
+                        Constants.ProductDiscussionEntityType.LESSON.toUpperCase(),
                     entityId,
                     contentType,
                     contentId,
@@ -634,14 +684,15 @@ export default function ProductDiscussionPanel({
     }
 
     function updateContent(
-        contentType: "COMMENT" | "REPLY",
+        contentType: Uppercase<ProductDiscussionContentType>,
         contentId: string,
         patch: Partial<DiscussionComment & DiscussionReply>,
     ) {
         setComments((current) =>
             current.map((comment) => {
                 if (
-                    contentType === "COMMENT" &&
+                    contentType ===
+                        Constants.ProductDiscussionContentType.COMMENT.toUpperCase() &&
                     comment.commentId === contentId
                 ) {
                     return { ...comment, ...patch };

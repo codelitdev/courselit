@@ -33,6 +33,7 @@ export const MEDIA_UPLOAD_BUTTON_TEXT = "Upload";
 export const MEDIA_UPLOADING = "Uploading...";
 export const MEDIA_ADD_NEW_BUTTON_TEXT = "Add new";
 export const BUTTON_CANCEL_TEXT = "Cancel";
+export const BUTTON_CONFIRM_TEXT = "Confirm";
 export const BUTTON_CANCEL_SCHEDULED_MAIL = "Cancel sending";
 export const MEDIA_SEARCH_INPUT_PLACEHOLDER = "Search your media";
 export const LOAD_MORE_TEXT = "Load more";
@@ -161,7 +162,7 @@ export const COURSE_DISCUSSIONS_CONTENT_REQUIRED = "Add a comment first.";
 export const COURSE_DISCUSSIONS_CONTENT_TOO_LONG =
     "Discussion content is too long.";
 export const COURSE_DISCUSSIONS_ADMIN_REPORTS = "Reports";
-export const COURSE_DISCUSSIONS_ADMIN_VIEW_REPORTS = "Reported content";
+export const COURSE_DISCUSSIONS_ADMIN_VIEW_REPORTS = "Manage reported content";
 export const COURSE_DISCUSSIONS_ADMIN_NO_REPORTS = "No reports";
 export const COURSE_DISCUSSIONS_ADMIN_NO_REPORTS_DESCRIPTION =
     "Reported discussion comments will appear here.";
@@ -179,6 +180,17 @@ export const COURSE_DISCUSSIONS_ADMIN_STATUS_ACCEPTED = "accepted";
 export const COURSE_DISCUSSIONS_ADMIN_STATUS_REJECTED = "rejected";
 export const COURSE_DISCUSSIONS_ADMIN_REJECTION_REASON_DEFAULT =
     "Rejected by moderator";
+export const COURSE_DISCUSSIONS_ADMIN_REJECTION_DIALOG_TITLE =
+    "Enter Rejection Reason";
+export const COURSE_DISCUSSIONS_ADMIN_REJECTION_DIALOG_DESCRIPTION =
+    "Please provide a reason for rejecting this report. This is optional but recommended.";
+export const COURSE_DISCUSSIONS_ADMIN_REJECTION_DIALOG_LABEL = "Reason";
+export const COURSE_DISCUSSIONS_REPORT_DIALOG_TITLE = "Report post";
+export const COURSE_DISCUSSIONS_REPORT_DIALOG_DESCRIPTION =
+    "Please provide a reason for reporting this post.";
+export const COURSE_DISCUSSIONS_REPORT_DIALOG_PLACEHOLDER =
+    "Reason for reporting...";
+export const COURSE_DISCUSSIONS_REPORT_DIALOG_SUBMIT = "Submit";
 export const REACT_COMPONENT_CRASHED =
     "We've encountered a problem in showing the content";
 export const CHECKOUT_PAGE_TITLE = "Checkout";
