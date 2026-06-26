@@ -7,6 +7,7 @@ import {
     Constants,
     TextEditorContent,
     ProductDiscussionEntityType,
+    ProductDiscussionReportStatus,
 } from "@courselit/common-models";
 import { getLessonDetails } from "../lessons/logic";
 import {
@@ -147,4 +148,16 @@ export function validateDiscussionContent(content: unknown): TextEditorContent {
     }
 
     return doc;
+}
+
+export function getNextReportStatus(
+    status: ProductDiscussionReportStatus,
+): ProductDiscussionReportStatus {
+    if (status === Constants.ProductDiscussionReportStatus.PENDING) {
+        return Constants.ProductDiscussionReportStatus.ACCEPTED;
+    }
+    if (status === Constants.ProductDiscussionReportStatus.ACCEPTED) {
+        return Constants.ProductDiscussionReportStatus.REJECTED;
+    }
+    return Constants.ProductDiscussionReportStatus.PENDING;
 }

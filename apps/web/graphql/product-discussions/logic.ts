@@ -33,6 +33,7 @@ import {
     getProductProgress,
     validateDiscussionContent,
     validateDiscussionTargetForLearner,
+    getNextReportStatus,
 } from "./helpers";
 
 export const COURSE_DISCUSSION_RATE_LIMITS = {
@@ -1652,18 +1653,6 @@ async function getAccessibleDiscussionLessonIds({
             return true;
         })
         .map((lesson) => lesson.lessonId);
-}
-
-function getNextReportStatus(
-    status: ProductDiscussionReportStatus,
-): ProductDiscussionReportStatus {
-    if (status === Constants.ProductDiscussionReportStatus.PENDING) {
-        return Constants.ProductDiscussionReportStatus.ACCEPTED;
-    }
-    if (status === Constants.ProductDiscussionReportStatus.ACCEPTED) {
-        return Constants.ProductDiscussionReportStatus.REJECTED;
-    }
-    return Constants.ProductDiscussionReportStatus.PENDING;
 }
 
 async function moderationSoftDelete({

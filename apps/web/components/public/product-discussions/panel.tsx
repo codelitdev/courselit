@@ -755,6 +755,7 @@ export default function ProductDiscussionPanel({
                             key={comment.commentId}
                             item={comment}
                             itemId={`discussion-comment-${comment.commentId}`}
+                            replyCount={comment.replyCount}
                             onLike={() =>
                                 toggleLike(
                                     "COMMENT",
@@ -953,6 +954,7 @@ function DiscussionItem({
     onReply,
     onDelete,
     onReport,
+    replyCount,
 }: {
     item: DiscussionContent;
     itemId: string;
@@ -962,6 +964,7 @@ function DiscussionItem({
     onReply: () => void;
     onDelete: () => void;
     onReport: () => void;
+    replyCount?: number;
 }) {
     const { theme } = useContext(ThemeContext);
     const { profile } = useContext(ProfileContext);
@@ -1079,6 +1082,9 @@ function DiscussionItem({
                             className="text-xs font-medium"
                         >
                             {COURSE_DISCUSSIONS_REPLY}
+                            {replyCount != null && replyCount > 0
+                                ? ` (${replyCount})`
+                                : ""}
                         </Caption>
                     </ShadcnButton>
                 </div>
