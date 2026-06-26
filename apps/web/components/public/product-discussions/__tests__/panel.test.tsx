@@ -429,7 +429,7 @@ describe("ProductDiscussionPanel", () => {
             expect(screen.getByText("First reply")).toBeInTheDocument();
         });
 
-        const replyButtons = screen.getAllByText("Reply");
+        const replyButtons = screen.getAllByRole("button", { name: /reply/i });
         fireEvent.click(replyButtons[1]);
         await waitFor(() => {
             expect(screen.getByLabelText("Add a reply...")).toHaveFocus();
