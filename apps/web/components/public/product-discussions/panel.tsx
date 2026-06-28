@@ -7,6 +7,7 @@ import {
     extractTextFromTextEditorContent,
 } from "@courselit/utils";
 import clsx from "clsx";
+import { Skeleton } from "@/components/ui/skeleton";
 import type {
     Address,
     TextEditorContent,
@@ -273,6 +274,9 @@ export default function ProductDiscussionPanel({
     }, []);
 
     useEffect(() => {
+        setComments([]);
+        setNextCursor(undefined);
+        setHasMore(false);
         setHashTargetId(getCurrentHashTargetId());
     }, [productId, entityId]);
 
@@ -744,6 +748,23 @@ export default function ProductDiscussionPanel({
                 </Link>
             </header>
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+                {loading && comments.length === 0 && (
+                    <div className="space-y-6">
+                        {[...Array(3)].map((_, i) => (
+                            <div key={i} className="space-y-3">
+                                <div className="flex items-center gap-3">
+                                    <Skeleton className="h-8 w-8 rounded-full" />
+                                    <div className="space-y-1.5">
+                                        <Skeleton className="h-3 w-24" />
+                                        <Skeleton className="h-3 w-16" />
+                                    </div>
+                                </div>
+                                <Skeleton className="h-4 w-3/4" />
+                                <Skeleton className="h-4 w-1/2" />
+                            </div>
+                        ))}
+                    </div>
+                )}
                 {!loading && comments.length === 0 && (
                     <Text2 theme={theme.theme}>
                         {COURSE_DISCUSSIONS_EMPTY}
