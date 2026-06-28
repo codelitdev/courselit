@@ -10,6 +10,9 @@ jest.mock("@courselit/components-library", () => ({
     useToast: () => ({
         toast: mockToast,
     }),
+    Chip: ({ children }: { children: React.ReactNode }) => (
+        <span>{children}</span>
+    ),
 }));
 
 jest.mock("@/hooks/use-graphql-fetch", () => ({
