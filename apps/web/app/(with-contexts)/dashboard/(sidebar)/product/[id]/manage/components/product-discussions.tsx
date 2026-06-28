@@ -18,6 +18,8 @@ import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
 import { COURSE_TYPE_COURSE } from "@ui-config/constants";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Chip } from "@courselit/components-library";
+import { BETA_LABEL } from "@ui-config/strings";
 
 const MUTATION_UPDATE_DISCUSSIONS = `
     mutation UpdateDiscussions($courseId: String!, $discussions: Boolean!) {
@@ -90,9 +92,12 @@ export default function ProductDiscussions({
         <div className="space-y-8">
             <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                    <Label className="text-base font-semibold">
-                        {COURSE_DISCUSSIONS_TITLE}
-                    </Label>
+                    <div className="flex items-center gap-2">
+                        <Label className="text-base font-semibold">
+                            {COURSE_DISCUSSIONS_TITLE}
+                        </Label>
+                        <Chip>{BETA_LABEL}</Chip>
+                    </div>
                     <p className="text-sm text-muted-foreground">
                         {COURSE_DISCUSSIONS_DESCRIPTION}
                     </p>

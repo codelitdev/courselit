@@ -6,6 +6,8 @@ layout: ../../../layouts/MainLayout.astro
 
 Course Discussions let learners ask questions, share insights, and have conversations directly inside the lesson they are watching. Each lesson has its own independent discussion thread, keeping conversations in context.
 
+> The feature is currently in beta, which means you may encounter bugs. Please report them in our <a href="https://discord.com/invite/GR4bQsN" target="_blank">Discord</a> group if you run into any.
+
 ## Enable discussions for a course
 
 Discussions are disabled by default. A product admin must turn them on before learners can participate.
