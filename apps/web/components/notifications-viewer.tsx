@@ -231,7 +231,11 @@ export function NotificationsViewer() {
                 return;
             }
 
-            router.push(href);
+            targetUrl.searchParams.set(
+                "returnTo",
+                currentUrl.pathname + currentUrl.search,
+            );
+            router.push(targetUrl.toString());
         } catch (error) {
             toast({
                 title: "Error",
