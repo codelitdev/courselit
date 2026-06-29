@@ -30,6 +30,7 @@ export interface InternalProductDiscussionComment
     deleteReason?: string;
     restoredAt?: Date;
     restoredBy?: string;
+    isEdited: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -50,6 +51,7 @@ export interface InternalProductDiscussionReply
     deleteReason?: string;
     restoredAt?: Date;
     restoredBy?: string;
+    isEdited: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -141,6 +143,7 @@ export const ProductDiscussionCommentSchema =
             deleteReason: String,
             restoredAt: Date,
             restoredBy: String,
+            isEdited: { type: Boolean, required: true, default: false },
         },
         {
             timestamps: true,
@@ -199,6 +202,7 @@ export const ProductDiscussionReplySchema =
             deleteReason: String,
             restoredAt: Date,
             restoredBy: String,
+            isEdited: { type: Boolean, required: true, default: false },
         },
         {
             timestamps: true,

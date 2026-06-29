@@ -281,6 +281,70 @@ export async function createDiscussionReply({
     return reply;
 }
 
+export async function updateDiscussionComment({
+    ctx,
+    commentId,
+    content,
+}: {
+    ctx: GQLContext;
+    commentId: string;
+    content: unknown;
+}) {
+    checkIfAuthenticated(ctx);
+    const validatedContent = validateDiscussionContent(content);
+
+    const comment = await ProductDiscussionCommentModel.findOne({
+        domain: ctx.subdomain._id,
+        commentId,
+    });
+    if (!comment) {
+        throw new Error(responses.item_not_found);
+    }
+    if (comment.userId !== ctx.user.userId) {
+        throw new Error(responses.item_not_found);
+    }
+    if (comment.deleted) {
+        throw new Error(responses.item_not_found);
+    }
+
+    comment.content = validatedContent;
+    comment.isEdited = true;
+    await comment.save();
+    return comment;
+}
+
+export async function updateDiscussionReply({
+    ctx,
+    replyId,
+    content,
+}: {
+    ctx: GQLContext;
+    replyId: string;
+    content: unknown;
+}) {
+    checkIfAuthenticated(ctx);
+    const validatedContent = validateDiscussionContent(content);
+
+    const reply = await ProductDiscussionReplyModel.findOne({
+        domain: ctx.subdomain._id,
+        replyId,
+    });
+    if (!reply) {
+        throw new Error(responses.item_not_found);
+    }
+    if (reply.userId !== ctx.user.userId) {
+        throw new Error(responses.item_not_found);
+    }
+    if (reply.deleted) {
+        throw new Error(responses.item_not_found);
+    }
+
+    reply.content = validatedContent;
+    reply.isEdited = true;
+    await reply.save();
+    return reply;
+}
+
 export async function listDiscussionComments({
     ctx,
     productId,

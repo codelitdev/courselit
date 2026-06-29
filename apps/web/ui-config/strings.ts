@@ -191,6 +191,10 @@ export const COURSE_DISCUSSIONS_REPORT_DIALOG_DESCRIPTION =
 export const COURSE_DISCUSSIONS_REPORT_DIALOG_PLACEHOLDER =
     "Reason for reporting...";
 export const COURSE_DISCUSSIONS_REPORT_DIALOG_SUBMIT = "Submit";
+export const COURSE_DISCUSSIONS_EDIT = "Edit";
+export const COURSE_DISCUSSIONS_EDITED_LABEL = "edited";
+export const COURSE_DISCUSSIONS_SAVE = "Save";
+export const COURSE_DISCUSSIONS_CANCEL = "Cancel";
 export const REACT_COMPONENT_CRASHED =
     "We've encountered a problem in showing the content";
 export const CHECKOUT_PAGE_TITLE = "Checkout";

@@ -82,6 +82,10 @@ const productDiscussionReply = new GraphQLObjectType({
             },
         },
         deleted: { type: new GraphQLNonNull(GraphQLBoolean) },
+        isEdited: {
+            type: new GraphQLNonNull(GraphQLBoolean),
+            resolve: (doc) => doc.isEdited ?? false,
+        },
         createdAt: {
             type: new GraphQLNonNull(GraphQLString),
             resolve: (reply) =>
@@ -169,6 +173,10 @@ const productDiscussionComment = new GraphQLObjectType({
             },
         },
         deleted: { type: new GraphQLNonNull(GraphQLBoolean) },
+        isEdited: {
+            type: new GraphQLNonNull(GraphQLBoolean),
+            resolve: (doc) => doc.isEdited ?? false,
+        },
         createdAt: {
             type: new GraphQLNonNull(GraphQLString),
             resolve: (comment) =>

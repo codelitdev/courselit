@@ -20,7 +20,11 @@ import { z } from "zod";
 import { ThemeContext, ProfileContext } from "@components/contexts";
 import { TextRenderer } from "@courselit/page-blocks";
 import { Editor, emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
-import { isTextEditorNonEmpty, formattedLocaleDate } from "@ui-lib/utils";
+import {
+    isTextEditorNonEmpty,
+    formattedLocaleDate,
+    truncate,
+} from "@ui-lib/utils";
 import {
     Button,
     Caption,
@@ -38,6 +42,10 @@ import {
     COURSE_DISCUSSIONS_DELETE_CONFIRM,
     COURSE_DISCUSSIONS_DELETE_CONFIRM_DESCRIPTION,
     COURSE_DISCUSSIONS_DELETE_CONFIRM_TITLE,
+    COURSE_DISCUSSIONS_EDIT,
+    COURSE_DISCUSSIONS_EDITED_LABEL,
+    COURSE_DISCUSSIONS_SAVE,
+    COURSE_DISCUSSIONS_CANCEL,
     COURSE_DISCUSSIONS_EMPTY,
     COURSE_DISCUSSIONS_POST_COMMENT,
     COURSE_DISCUSSIONS_POST_REPLY,
@@ -53,7 +61,15 @@ import {
     CAPTION_CLOSE,
 } from "@ui-config/strings";
 import { useToast } from "@courselit/components-library";
-import { ThumbsUp, MessageSquare, Trash2, Flag, X, Reply } from "lucide-react";
+import {
+    ThumbsUp,
+    MessageSquare,
+    Trash2,
+    Flag,
+    X,
+    Reply,
+    Pencil,
+} from "lucide-react";
 import { ReportReasonDialog } from "./report-reason-dialog";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -88,6 +104,7 @@ type DiscussionContent = {
     likesCount: number;
     hasLiked: boolean;
     deleted: boolean;
+    isEdited: boolean;
     createdAt: string;
     user?: {
         name?: string;
@@ -139,6 +156,7 @@ const COMMENT_FIELDS = `
     replyNextCursor
     hasMoreReplies
     deleted
+    isEdited
     createdAt
     user {
         name
@@ -160,6 +178,7 @@ const COMMENT_FIELDS = `
         likesCount
         hasLiked
         deleted
+        isEdited
         createdAt
         user {
             name
@@ -184,6 +203,32 @@ const REPLY_FIELDS = `
     likesCount
     hasLiked
     deleted
+    isEdited
+    createdAt
+    user {
+        name
+        email
+        avatar {
+            file
+            thumbnail
+        }
+    }
+`;
+
+const COMMENT_FIELDS_WITHOUT_REPLIES = `
+    productId
+    entityType
+    entityId
+    commentId
+    userId
+    content
+    likesCount
+    hasLiked
+    replyCount
+    replyNextCursor
+    hasMoreReplies
+    deleted
+    isEdited
     createdAt
     user {
         name
@@ -253,6 +298,11 @@ export default function ProductDiscussionPanel({
         useState<DiscussionContentTarget | null>(null);
     const [pendingDelete, setPendingDelete] =
         useState<DiscussionContentTarget | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editingContent, setEditingContent] = useState<Record<
+        string,
+        unknown
+    > | null>(null);
     const [hashTargetId, setHashTargetId] = useState(() =>
         getCurrentHashTargetId(),
     );
@@ -539,19 +589,19 @@ export default function ProductDiscussionPanel({
         const response = await graph({
             query: `
                 mutation ToggleProductDiscussionLike(
-                    $productId: String!, 
-                    $entityType: ProductDiscussionEntityType!, 
-                    $entityId: String!, 
-                    $contentType: ProductDiscussionContentType!, 
-                    $contentId: String!, 
+                    $productId: String!,
+                    $entityType: ProductDiscussionEntityType!,
+                    $entityId: String!,
+                    $contentType: ProductDiscussionContentType!,
+                    $contentId: String!,
                     $liked: Boolean!
                 ) {
                     like: toggleProductDiscussionLike(
-                        productId: $productId, 
-                        entityType: $entityType, 
-                        entityId: $entityId, 
-                        contentType: $contentType, 
-                        contentId: $contentId, 
+                        productId: $productId,
+                        entityType: $entityType,
+                        entityId: $entityId,
+                        contentType: $contentType,
+                        contentId: $contentId,
                         liked: $liked
                     ) {
                         contentType
@@ -585,17 +635,17 @@ export default function ProductDiscussionPanel({
             query:
                 contentType ===
                 Constants.ProductDiscussionContentType.COMMENT.toUpperCase()
-                    ? `mutation DeleteProductDiscussionComment($commentId: String!) { 
-                        deleteProductDiscussionComment(commentId: $commentId) { 
-                            commentId 
-                            deleted 
-                        } 
+                    ? `mutation DeleteProductDiscussionComment($commentId: String!) {
+                        deleteProductDiscussionComment(commentId: $commentId) {
+                            commentId
+                            deleted
+                        }
                     }`
-                    : `mutation DeleteProductDiscussionReply($replyId: String!) { 
-                        deleteProductDiscussionReply(replyId: $replyId) { 
-                            replyId 
-                            deleted 
-                        } 
+                    : `mutation DeleteProductDiscussionReply($replyId: String!) {
+                        deleteProductDiscussionReply(replyId: $replyId) {
+                            replyId
+                            deleted
+                        }
                     }`,
             variables:
                 contentType ===
@@ -645,19 +695,19 @@ export default function ProductDiscussionPanel({
             await graph({
                 query: `
                     mutation CreateProductDiscussionReport(
-                        $productId: String!, 
-                        $entityType: ProductDiscussionEntityType!, 
-                        $entityId: String!, 
-                        $contentType: ProductDiscussionContentType!, 
-                        $contentId: String!, 
+                        $productId: String!,
+                        $entityType: ProductDiscussionEntityType!,
+                        $entityId: String!,
+                        $contentType: ProductDiscussionContentType!,
+                        $contentId: String!,
                         $reason: String!
                     ) {
                         createProductDiscussionReport(
-                            productId: $productId, 
-                            entityType: $entityType, 
-                            entityId: $entityId, 
-                            contentType: $contentType, 
-                            contentId: $contentId, 
+                            productId: $productId,
+                            entityType: $entityType,
+                            entityId: $entityId,
+                            contentType: $contentType,
+                            contentId: $contentId,
                             reason: $reason
                         ) {
                             reportId
@@ -712,6 +762,94 @@ export default function ProductDiscussionPanel({
                 };
             }),
         );
+    }
+
+    function patchItem(
+        itemId: string,
+        patch: Partial<DiscussionComment & DiscussionReply>,
+    ) {
+        setComments((current) =>
+            current.map((comment) => {
+                if (comment.commentId === itemId) {
+                    return { ...comment, ...patch };
+                }
+                return {
+                    ...comment,
+                    replies: comment.replies.map((reply) =>
+                        reply.replyId === itemId
+                            ? { ...reply, ...patch }
+                            : reply,
+                    ),
+                };
+            }),
+        );
+    }
+
+    async function editComment(
+        commentId: string,
+        content: Record<string, unknown>,
+    ) {
+        try {
+            const response = await graph({
+                query: `
+                    mutation UpdateProductDiscussionComment($commentId: String!, $content: JSONObject!) {
+                        comment: updateProductDiscussionComment(commentId: $commentId, content: $content) {
+                            ${COMMENT_FIELDS_WITHOUT_REPLIES}
+                        }
+                    }
+                `,
+                variables: { commentId, content },
+            });
+            if (response?.comment) {
+                patchItem(commentId, {
+                    content: response.comment.content,
+                    isEdited: response.comment.isEdited,
+                });
+            }
+        } catch (err: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
+        } finally {
+            setEditingId(null);
+            setEditingContent(null);
+        }
+    }
+
+    async function editReply(
+        replyId: string,
+        content: Record<string, unknown>,
+    ) {
+        try {
+            const response = await graph({
+                query: `
+                    mutation UpdateProductDiscussionReply($replyId: String!, $content: JSONObject!) {
+                        reply: updateProductDiscussionReply(replyId: $replyId, content: $content) {
+                            content
+                            isEdited
+                        }
+                    }
+                `,
+                variables: { replyId, content },
+            });
+            if (response?.reply) {
+                patchItem(replyId, {
+                    content: response.reply.content,
+                    isEdited: response.reply.isEdited,
+                });
+            }
+        } catch (err: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
+        } finally {
+            setEditingId(null);
+            setEditingContent(null);
+        }
     }
 
     return (
@@ -795,6 +933,29 @@ export default function ProductDiscussionPanel({
                                     commentId: comment.commentId,
                                 })
                             }
+                            onEdit={() => {
+                                setEditingId(comment.commentId);
+                                setEditingContent(
+                                    comment.content as unknown as Record<
+                                        string,
+                                        unknown
+                                    >,
+                                );
+                            }}
+                            isEditing={editingId === comment.commentId}
+                            editingContent={
+                                editingId === comment.commentId
+                                    ? editingContent
+                                    : null
+                            }
+                            onEditSave={(content) =>
+                                editComment(comment.commentId, content)
+                            }
+                            onEditCancel={() => {
+                                setEditingId(null);
+                                setEditingContent(null);
+                            }}
+                            address={address}
                         >
                             {comment.replies.map((reply) => (
                                 <DiscussionItem
@@ -821,6 +982,29 @@ export default function ProductDiscussionPanel({
                                             parentReplyId: reply.replyId,
                                         })
                                     }
+                                    onEdit={() => {
+                                        setEditingId(reply.replyId);
+                                        setEditingContent(
+                                            reply.content as unknown as Record<
+                                                string,
+                                                unknown
+                                            >,
+                                        );
+                                    }}
+                                    isEditing={editingId === reply.replyId}
+                                    editingContent={
+                                        editingId === reply.replyId
+                                            ? editingContent
+                                            : null
+                                    }
+                                    onEditSave={(content) =>
+                                        editReply(reply.replyId, content)
+                                    }
+                                    onEditCancel={() => {
+                                        setEditingId(null);
+                                        setEditingContent(null);
+                                    }}
+                                    address={address}
                                 />
                             ))}
                             {comment.hasMoreReplies && (
@@ -975,6 +1159,12 @@ function DiscussionItem({
     onReply,
     onDelete,
     onReport,
+    onEdit,
+    isEditing = false,
+    editingContent,
+    onEditSave,
+    onEditCancel,
+    address,
     replyCount,
 }: {
     item: DiscussionContent;
@@ -985,6 +1175,12 @@ function DiscussionItem({
     onReply: () => void;
     onDelete: () => void;
     onReport: () => void;
+    onEdit?: () => void;
+    isEditing?: boolean;
+    editingContent?: Record<string, unknown> | null;
+    onEditSave?: (content: Record<string, unknown>) => void;
+    onEditCancel?: () => void;
+    address?: Address;
     replyCount?: number;
 }) {
     const { theme } = useContext(ThemeContext);
@@ -1000,6 +1196,11 @@ function DiscussionItem({
             .slice(0, 2) || "?";
 
     const displayDate = formattedLocaleDate(item.createdAt);
+    const isEdited = item.isEdited && !item.deleted;
+
+    const [localEditContent, setLocalEditContent] = useState<TextEditorContent>(
+        TextEditorEmptyDoc as TextEditorContent,
+    );
 
     const avatarUrl =
         item.user?.avatar?.thumbnail || "/courselit_backdrop_square.webp";
@@ -1025,13 +1226,19 @@ function DiscussionItem({
                             theme={theme.theme}
                             className="font-semibold text-sm leading-none"
                         >
-                            {displayName}
+                            {truncate(displayName, 16)}
                         </Text2>
                         <Caption
                             theme={theme.theme}
                             className="leading-none text-xs"
                         >
                             {displayDate}
+                            {isEdited && (
+                                <span className="opacity-60">
+                                    {" · "}
+                                    {COURSE_DISCUSSIONS_EDITED_LABEL}
+                                </span>
+                            )}
                         </Caption>
                     </div>
                 </div>
@@ -1046,16 +1253,29 @@ function DiscussionItem({
                         <Flag className="h-4 w-4 text-muted-foreground" />
                     </ShadcnButton>
                 )}
-                {!item.deleted && isOwn && (
-                    <ShadcnButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={onDelete}
-                        aria-label={COURSE_DISCUSSIONS_DELETE}
-                        title={COURSE_DISCUSSIONS_DELETE}
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </ShadcnButton>
+                {!item.deleted && isOwn && !isEditing && (
+                    <div className="flex items-center gap-1">
+                        {onEdit && (
+                            <ShadcnButton
+                                variant="ghost"
+                                size="sm"
+                                onClick={onEdit}
+                                aria-label={COURSE_DISCUSSIONS_EDIT}
+                                title={COURSE_DISCUSSIONS_EDIT}
+                            >
+                                <Pencil className="h-4 w-4" />
+                            </ShadcnButton>
+                        )}
+                        <ShadcnButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={onDelete}
+                            aria-label={COURSE_DISCUSSIONS_DELETE}
+                            title={COURSE_DISCUSSIONS_DELETE}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </ShadcnButton>
+                    </div>
                 )}
             </div>
             <div className="text-sm leading-normal">
@@ -1066,11 +1286,66 @@ function DiscussionItem({
                     >
                         {COURSE_DISCUSSIONS_DELETED}
                     </Text1>
+                ) : isEditing && address ? (
+                    <div className="space-y-2">
+                        <div className="max-h-[200px] overflow-y-auto rounded-[inherit]">
+                            <Editor
+                                url={address.backend}
+                                initialContent={
+                                    editingContent as unknown as TextEditorContent
+                                }
+                                onChange={(value) =>
+                                    setLocalEditContent(
+                                        value as TextEditorContent,
+                                    )
+                                }
+                                showToolbar={false}
+                                editorClassName="min-h-[80px] max-w-none"
+                            />
+                        </div>
+                        <div className="flex gap-2">
+                            <Button
+                                theme={theme.theme}
+                                size="sm"
+                                onClick={() => {
+                                    if (onEditSave) {
+                                        const content = isTextEditorNonEmpty(
+                                            localEditContent,
+                                        )
+                                            ? localEditContent
+                                            : (editingContent as unknown as TextEditorContent);
+                                        onEditSave(
+                                            content as unknown as Record<
+                                                string,
+                                                unknown
+                                            >,
+                                        );
+                                    }
+                                }}
+                                disabled={
+                                    !isTextEditorNonEmpty(localEditContent) &&
+                                    !isTextEditorNonEmpty(
+                                        editingContent as unknown as TextEditorContent,
+                                    )
+                                }
+                            >
+                                {COURSE_DISCUSSIONS_SAVE}
+                            </Button>
+                            <Button
+                                theme={theme.theme}
+                                variant="secondary"
+                                size="sm"
+                                onClick={onEditCancel}
+                            >
+                                {COURSE_DISCUSSIONS_CANCEL}
+                            </Button>
+                        </div>
+                    </div>
                 ) : (
                     <TextRenderer json={item.content} theme={theme.theme} />
                 )}
             </div>
-            {!item.deleted && (
+            {!item.deleted && !isEditing && (
                 <div className="flex items-center gap-3 pt-1">
                     <ShadcnButton
                         variant="ghost"

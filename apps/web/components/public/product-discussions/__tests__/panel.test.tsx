@@ -178,6 +178,7 @@ jest.mock("lucide-react", () => ({
     Trash2: () => null,
     X: () => null,
     Reply: () => null,
+    Pencil: () => null,
 }));
 
 const address = { backend: "http://localhost:3000", frontend: "" };

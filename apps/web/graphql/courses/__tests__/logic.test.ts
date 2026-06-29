@@ -40,6 +40,8 @@ import {
     listDiscussionReplies,
     toggleDiscussionLike,
     updateDiscussionReportStatus,
+    updateDiscussionComment,
+    updateDiscussionReply,
     DiscussionActivityEventType,
 } from "../../product-discussions/logic";
 import {
@@ -263,6 +265,13 @@ describe("product discussion persistence foundation", () => {
         expect(
             schema.getMutationType()?.getFields()
                 .updateProductDiscussionReportStatus,
+        ).toBeDefined();
+        expect(
+            schema.getMutationType()?.getFields()
+                .updateProductDiscussionComment,
+        ).toBeDefined();
+        expect(
+            schema.getMutationType()?.getFields().updateProductDiscussionReply,
         ).toBeDefined();
     });
 });
@@ -2835,5 +2844,290 @@ describe("public API product read helpers", () => {
         expect(members.map((member) => member.userId).sort()).toEqual(
             [matchingByEmail.userId, matchingByName.userId].sort(),
         );
+    });
+});
+
+const EDIT_SUITE_PREFIX = `edit-discussion-${Date.now()}`;
+const editId = (s: string) => `${EDIT_SUITE_PREFIX}-${s}`;
+const editEmail = (s: string) => `${s}-${EDIT_SUITE_PREFIX}@example.com`;
+const editDoc = (text: string): any => ({
+    type: "doc",
+    content: [{ type: "paragraph", content: [{ type: "text", text }] }],
+});
+
+describe("updateDiscussionComment / updateDiscussionReply", () => {
+    let testDomain: any;
+    let authorUser: any;
+    let otherUser: any;
+    let course: any;
+    let lesson: any;
+    let authorCtx: any;
+    let otherCtx: any;
+
+    beforeAll(async () => {
+        testDomain = await DomainModel.create({
+            name: editId("domain"),
+            email: editEmail("domain"),
+        });
+
+        authorUser = await UserModel.create({
+            domain: testDomain._id,
+            userId: editId("author"),
+            email: editEmail("author"),
+            name: "Author",
+            permissions: [constants.permissions.enrollInCourse],
+            active: true,
+            unsubscribeToken: editId("author-token"),
+            purchases: [
+                {
+                    courseId: editId("course"),
+                    completedLessons: [],
+                    accessibleGroups: [editId("group")],
+                },
+            ],
+        });
+
+        otherUser = await UserModel.create({
+            domain: testDomain._id,
+            userId: editId("other"),
+            email: editEmail("other"),
+            name: "Other",
+            permissions: [constants.permissions.enrollInCourse],
+            active: true,
+            unsubscribeToken: editId("other-token"),
+            purchases: [
+                {
+                    courseId: editId("course"),
+                    completedLessons: [],
+                    accessibleGroups: [editId("group")],
+                },
+            ],
+        });
+
+        course = await CourseModel.create({
+            domain: testDomain._id,
+            courseId: editId("course"),
+            title: editId("course-title"),
+            creatorId: authorUser.userId,
+            groups: [
+                {
+                    _id: editId("group"),
+                    name: "Section",
+                    rank: 1,
+                    lessonsOrder: [editId("lesson")],
+                },
+            ],
+            lessons: [editId("lesson")],
+            type: "course",
+            privacy: "public",
+            costType: "free",
+            cost: 0,
+            slug: editId("course-slug"),
+            published: true,
+            discussions: true,
+        });
+
+        lesson = await LessonModel.create({
+            domain: testDomain._id,
+            lessonId: editId("lesson"),
+            title: "Edit Lesson",
+            type: "text",
+            creatorId: authorUser.userId,
+            courseId: editId("course"),
+            groupId: editId("group"),
+            published: true,
+        });
+
+        authorCtx = { subdomain: testDomain, user: authorUser, address: "" };
+        otherCtx = { subdomain: testDomain, user: otherUser, address: "" };
+    });
+
+    afterEach(async () => {
+        await RateLimitEventModel.deleteMany({ domain: testDomain._id });
+    });
+
+    afterAll(async () => {
+        await Promise.all([
+            ProductDiscussionCommentModel.deleteMany({
+                domain: testDomain._id,
+            }),
+            ProductDiscussionReplyModel.deleteMany({ domain: testDomain._id }),
+            RateLimitEventModel.deleteMany({ domain: testDomain._id }),
+            CourseModel.deleteMany({ domain: testDomain._id }),
+            LessonModel.deleteMany({ domain: testDomain._id }),
+            UserModel.deleteMany({ domain: testDomain._id }),
+            DomainModel.deleteOne({ _id: testDomain._id }),
+        ]);
+    });
+
+    it("allows the author to edit their own comment and sets isEdited", async () => {
+        const comment = await createDiscussionComment({
+            ctx: authorCtx,
+            productId: editId("course"),
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
+            entityId: editId("lesson"),
+            content: editDoc("original"),
+        });
+
+        const updated = await updateDiscussionComment({
+            ctx: authorCtx,
+            commentId: comment.commentId,
+            content: editDoc("updated"),
+        });
+
+        expect(updated.isEdited).toBe(true);
+        const persisted = await ProductDiscussionCommentModel.findOne({
+            commentId: comment.commentId,
+        });
+        expect(persisted?.isEdited).toBe(true);
+    });
+
+    it("rejects edit by a non-author", async () => {
+        const comment = await createDiscussionComment({
+            ctx: authorCtx,
+            productId: editId("course"),
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
+            entityId: editId("lesson"),
+            content: editDoc("author content"),
+        });
+
+        await expect(
+            updateDiscussionComment({
+                ctx: otherCtx,
+                commentId: comment.commentId,
+                content: editDoc("hijacked"),
+            }),
+        ).rejects.toThrow(responses.item_not_found);
+    });
+
+    it("rejects edit of a deleted comment", async () => {
+        const comment = await createDiscussionComment({
+            ctx: authorCtx,
+            productId: editId("course"),
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
+            entityId: editId("lesson"),
+            content: editDoc("to be deleted"),
+        });
+
+        await deleteDiscussionComment({
+            ctx: authorCtx,
+            commentId: comment.commentId,
+        });
+
+        await expect(
+            updateDiscussionComment({
+                ctx: authorCtx,
+                commentId: comment.commentId,
+                content: editDoc("edit after delete"),
+            }),
+        ).rejects.toThrow(responses.item_not_found);
+    });
+
+    it("rejects edit with invalid content", async () => {
+        const comment = await createDiscussionComment({
+            ctx: authorCtx,
+            productId: editId("course"),
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
+            entityId: editId("lesson"),
+            content: editDoc("valid"),
+        });
+
+        await expect(
+            updateDiscussionComment({
+                ctx: authorCtx,
+                commentId: comment.commentId,
+                content: { type: "paragraph" },
+            }),
+        ).rejects.toThrow(responses.invalid_input);
+    });
+
+    it("allows the author to edit their own reply and sets isEdited", async () => {
+        const comment = await createDiscussionComment({
+            ctx: authorCtx,
+            productId: editId("course"),
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
+            entityId: editId("lesson"),
+            content: editDoc("comment for reply edit"),
+        });
+
+        const reply = await createDiscussionReply({
+            ctx: authorCtx,
+            productId: editId("course"),
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
+            entityId: editId("lesson"),
+            commentId: comment.commentId,
+            content: editDoc("original reply"),
+        });
+
+        const updated = await updateDiscussionReply({
+            ctx: authorCtx,
+            replyId: reply.replyId,
+            content: editDoc("updated reply"),
+        });
+
+        expect(updated.isEdited).toBe(true);
+        const persisted = await ProductDiscussionReplyModel.findOne({
+            replyId: reply.replyId,
+        });
+        expect(persisted?.isEdited).toBe(true);
+    });
+
+    it("rejects reply edit by a non-author", async () => {
+        const comment = await createDiscussionComment({
+            ctx: authorCtx,
+            productId: editId("course"),
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
+            entityId: editId("lesson"),
+            content: editDoc("comment for non-author reply edit"),
+        });
+
+        const reply = await createDiscussionReply({
+            ctx: authorCtx,
+            productId: editId("course"),
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
+            entityId: editId("lesson"),
+            commentId: comment.commentId,
+            content: editDoc("author reply"),
+        });
+
+        await expect(
+            updateDiscussionReply({
+                ctx: otherCtx,
+                replyId: reply.replyId,
+                content: editDoc("hijacked reply"),
+            }),
+        ).rejects.toThrow(responses.item_not_found);
+    });
+
+    it("rejects edit of a deleted reply", async () => {
+        const comment = await createDiscussionComment({
+            ctx: authorCtx,
+            productId: editId("course"),
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
+            entityId: editId("lesson"),
+            content: editDoc("comment for deleted reply edit"),
+        });
+
+        const reply = await createDiscussionReply({
+            ctx: authorCtx,
+            productId: editId("course"),
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
+            entityId: editId("lesson"),
+            commentId: comment.commentId,
+            content: editDoc("reply to delete"),
+        });
+
+        await deleteDiscussionReply({
+            ctx: authorCtx,
+            replyId: reply.replyId,
+        });
+
+        await expect(
+            updateDiscussionReply({
+                ctx: authorCtx,
+                replyId: reply.replyId,
+                content: editDoc("edit after delete"),
+            }),
+        ).rejects.toThrow(responses.item_not_found);
     });
 });

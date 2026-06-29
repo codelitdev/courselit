@@ -9,6 +9,8 @@ import {
     deleteDiscussionReply,
     toggleDiscussionLike,
     updateDiscussionReportStatus,
+    updateDiscussionComment,
+    updateDiscussionReply,
 } from "./logic";
 import types from "./types";
 import {
@@ -185,6 +187,30 @@ const mutations = {
         },
         resolve: (_: any, { replyId }: { replyId: string }, ctx: GQLContext) =>
             deleteDiscussionReply({ ctx, replyId }),
+    },
+    updateProductDiscussionComment: {
+        type: types.productDiscussionComment,
+        args: {
+            commentId: { type: new GraphQLNonNull(GraphQLString) },
+            content: { type: new GraphQLNonNull(GraphQLJSONObject) },
+        },
+        resolve: (
+            _: any,
+            { commentId, content }: { commentId: string; content: unknown },
+            ctx: GQLContext,
+        ) => updateDiscussionComment({ ctx, commentId, content }),
+    },
+    updateProductDiscussionReply: {
+        type: types.productDiscussionReply,
+        args: {
+            replyId: { type: new GraphQLNonNull(GraphQLString) },
+            content: { type: new GraphQLNonNull(GraphQLJSONObject) },
+        },
+        resolve: (
+            _: any,
+            { replyId, content }: { replyId: string; content: unknown },
+            ctx: GQLContext,
+        ) => updateDiscussionReply({ ctx, replyId, content }),
     },
     updateProductDiscussionReportStatus: {
         type: types.productDiscussionReport,

@@ -79,12 +79,13 @@ Success means:
 1. As a product admin, I can enable discussions from the product manage screen so learners can discuss eligible discussion targets.
 2. As a course viewer participant, I can open the discussion panel while viewing a lesson and see comments for only that lesson.
 3. As a course viewer participant, I can reply to a top-level comment or to an existing reply, and my reply appears in that comment's reply list.
-4. As a course viewer participant, I can delete my own comment or reply without deleting the rest of the thread.
-5. As a course viewer participant, I can report a comment or reply for admin review.
-6. As a course viewer participant, I can like or unlike a comment or reply.
-7. As a product admin, I can review reported discussion content under `/dashboard/product/[id]/manage/...` and resolve or reject reports.
-8. As a notified participant, I can click an email or in-app notification and land on the relevant lesson with the discussion content highlighted.
-9. As a course viewer participant, I can open `/course/[slug]/[id]/discussions`, see lesson discussion counts for lessons available in my current viewer mode, and jump into the relevant lesson discussion.
+4. As a course viewer participant, I can edit my own comment or reply inline so I can fix mistakes without deleting and reposting.
+5. As a course viewer participant, I can delete my own comment or reply without deleting the rest of the thread.
+6. As a course viewer participant, I can report a comment or reply for admin review.
+7. As a course viewer participant, I can like or unlike a comment or reply.
+8. As a product admin, I can review reported discussion content under `/dashboard/product/[id]/manage/...` and resolve or reject reports.
+9. As a notified participant, I can click an email or in-app notification and land on the relevant lesson with the discussion content highlighted.
+10. As a course viewer participant, I can open `/course/[slug]/[id]/discussions`, see lesson discussion counts for lessons available in my current viewer mode, and jump into the relevant lesson discussion.
 
 ## Product Requirements
 
@@ -133,6 +134,12 @@ Success means:
 - The discussion composer must use `TextEditor` without showing the editor toolbar.
 - Comment and reply display must use `TextRenderer`.
 - Forms must use `react-hook-form`, `zod`, and refs for current form state in line with repo form conventions.
+- The original author of a comment or reply can edit their own content inline.
+- Editing replaces the `TextRenderer` with an inline `TextEditor` (no toolbar) with save and cancel affordances.
+- Only the original author (`userId` match) may edit; product admins and moderators cannot edit other users' content.
+- Deleted comments and replies cannot be edited.
+- A visible "edited" indicator must be shown after a comment or reply has been updated. This is driven by a dedicated `isEdited: Boolean` field (default `false`) on the record, set to `true` by the edit mutation — not inferred from timestamp comparison.
+- The edit mutation must revalidate content against the same Tiptap document shape, byte size, and plain-text length limits as creation.
 
 ### Threading Rules
 
@@ -569,6 +576,8 @@ Required operations:
 - create reply
 - like or unlike top-level comment
 - like or unlike reply
+- edit own comment (original author only)
+- edit own reply (original author only)
 - delete own comment
 - delete own reply
 - report comment or reply
@@ -607,6 +616,9 @@ Validation:
 - product admin report status updates that restore content must make the content visible in eligible course viewer contexts again and record `restoredBy` and `restoredAt`
 - summary counters must be updated when comments/replies are created, soft-deleted, or restored
 - lesson discussion subscriber records must be updated when comments/replies are created, soft-deleted, or restored
+- authors can edit their own non-deleted content; product admins and moderators cannot edit other users' content
+- edit mutations must apply the same Tiptap document shape, byte size, and plain-text length validation as create mutations
+- deleted comments and replies cannot be edited
 - authors can delete their own content
 - course viewer participants can like/unlike available, non-deleted comments and replies
 - product admins can report any manageable discussion content from the course viewer discussion panel
@@ -752,6 +764,7 @@ Required tests:
     - URL query/hash opening and highlight behavior
 - Moderation tests for report listing, status updates, duplicate reports, and permission checks.
 - Restore tests for report-gated admin restoration and course viewer visibility after restore.
+- Edit tests for author-only access, content revalidation, `isEdited` flag persistence, and rejection of edits on deleted content.
 - Rate-limit tests for comment, reply, like/unlike, report, and duplicate content windows.
 - Notification tests for href generation and recipient selection.
 
