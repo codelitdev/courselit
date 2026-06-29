@@ -18,6 +18,7 @@ import {
     checkIfAuthenticated,
     checkOwnershipWithoutModel,
 } from "@/lib/graphql";
+import { getMembershipStatus } from "../users/logic";
 
 const { permissions } = appConstants;
 
@@ -54,8 +55,16 @@ export function getProductProgress(ctx: GQLContext, productId: string) {
     );
 }
 
-export function isEnrolledInProduct(ctx: GQLContext, productId: string) {
-    return Boolean(getProductProgress(ctx, productId));
+export async function isEnrolledInProduct(
+    ctx: GQLContext,
+    productId: string,
+): Promise<boolean> {
+    const status = await getMembershipStatus({
+        entityType: Constants.MembershipEntityType.COURSE,
+        entityId: productId,
+        ctx,
+    });
+    return status === Constants.MembershipStatus.ACTIVE;
 }
 
 export async function validateDiscussionTargetForLearner({
@@ -100,7 +109,7 @@ export async function validateDiscussionTargetForLearner({
         throw new Error(responses.item_not_found);
     }
 
-    if (!isAdminOrCreator && !isEnrolledInProduct(ctx, productId)) {
+    if (!isAdminOrCreator && !(await isEnrolledInProduct(ctx, productId))) {
         throw new Error(responses.not_enrolled);
     }
 
