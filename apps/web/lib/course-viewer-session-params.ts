@@ -1,10 +1,13 @@
 export const COURSE_VIEWER_RETURN_TO_PARAM = "returnTo";
 export const COURSE_VIEWER_PREVIEW_PARAM = "preview";
+export const COURSE_VIEWER_DISCUSSION_PARAM = "discussion";
+export const COURSE_VIEWER_DISCUSSION_OPEN_VALUE = "open";
 export const COURSE_VIEWER_CURRENT_URL_HEADER = "x-courselit-course-viewer-url";
 export const DEFAULT_COURSE_VIEWER_EXIT_PATH = "/dashboard/my-content/products";
 
 export type CourseViewerSessionParams = {
     preview?: boolean;
+    discussion?: boolean;
     returnTo?: string | null;
 };
 
@@ -32,6 +35,9 @@ export const getCourseViewerReturnPath = (returnTo?: string | null) =>
 export const isCourseViewerPreviewRequested = (preview?: string | null) =>
     preview === "true";
 
+export const isCourseViewerDiscussionRequested = (discussion?: string | null) =>
+    discussion === COURSE_VIEWER_DISCUSSION_OPEN_VALUE;
+
 type ReadableSearchParams = {
     get: (name: string) => string | null;
 };
@@ -47,6 +53,9 @@ export const getCourseViewerSessionParams = (
     return {
         preview: isCourseViewerPreviewRequested(
             searchParams.get(COURSE_VIEWER_PREVIEW_PARAM),
+        ),
+        discussion: isCourseViewerDiscussionRequested(
+            searchParams.get(COURSE_VIEWER_DISCUSSION_PARAM),
         ),
         returnTo: isSafeCourseViewerReturnPath(returnTo) ? returnTo : null,
     };
@@ -75,7 +84,11 @@ export const appendCourseViewerSessionParamsToHref = (
         return href;
     }
 
-    if (!params.preview && !isSafeCourseViewerReturnPath(params.returnTo)) {
+    if (
+        !params.preview &&
+        !params.discussion &&
+        !isSafeCourseViewerReturnPath(params.returnTo)
+    ) {
         return href;
     }
 
@@ -86,8 +99,33 @@ export const appendCourseViewerSessionParamsToHref = (
         searchParams.set(COURSE_VIEWER_PREVIEW_PARAM, "true");
     }
 
+    if (params.discussion) {
+        searchParams.set(
+            COURSE_VIEWER_DISCUSSION_PARAM,
+            COURSE_VIEWER_DISCUSSION_OPEN_VALUE,
+        );
+    }
+
     if (isSafeCourseViewerReturnPath(params.returnTo)) {
         searchParams.set(COURSE_VIEWER_RETURN_TO_PARAM, params.returnTo!);
+    }
+
+    const serializedParams = searchParams.toString();
+    return serializedParams ? `${pathname}?${serializedParams}` : pathname;
+};
+
+export const setHrefQueryParam = (
+    href: string,
+    name: string,
+    value?: string | null,
+) => {
+    const [pathname, query = ""] = href.split("?");
+    const searchParams = new URLSearchParams(query);
+
+    if (value === null || value === undefined) {
+        searchParams.delete(name);
+    } else {
+        searchParams.set(name, value);
     }
 
     const serializedParams = searchParams.toString();

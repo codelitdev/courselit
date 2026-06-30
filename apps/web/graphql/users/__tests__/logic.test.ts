@@ -18,6 +18,7 @@ import mongoose from "mongoose";
 import {
     finalizeUserCreation,
     getCertificate,
+    getUser,
     updateUser,
     findMembership,
 } from "../logic";
@@ -39,6 +40,21 @@ const seedNotificationPreferencesForUserMock =
     seedNotificationPreferencesForUser as jest.Mock;
 const recordActivityMock = recordActivity as jest.Mock;
 const triggerSequencesMock = triggerSequences as jest.Mock;
+
+describe("getUser", () => {
+    const domainId = new mongoose.Types.ObjectId();
+
+    it("returns null for anonymous current-user lookups", async () => {
+        const result = await getUser(null, {
+            subdomain: {
+                _id: domainId,
+            },
+            user: null,
+        } as any);
+
+        expect(result).toBeNull();
+    });
+});
 
 describe("updateUser", () => {
     const domainId = new mongoose.Types.ObjectId();

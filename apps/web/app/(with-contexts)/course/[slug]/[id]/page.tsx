@@ -8,8 +8,6 @@ import {
     ENROLL_BUTTON_TEXT,
     BTN_VIEW_CERTIFICATE,
 } from "@ui-config/strings";
-import { checkPermission } from "@courselit/utils";
-import { Profile, UIConstants } from "@courselit/common-models";
 import {
     Link,
     getSymbolFromCurrency,
@@ -34,7 +32,7 @@ import {
     appendCourseViewerSessionParamsToHref,
 } from "@/lib/course-viewer-session-params";
 import { useSearchParams } from "next/navigation";
-const { permissions } = UIConstants;
+import type { Profile } from "@courselit/common-models";
 
 export default function ProductPage(props: {
     params: Promise<{ slug: string; id: string }>;
@@ -67,17 +65,13 @@ export default function ProductPage(props: {
             getUserProfile(address.backend).then((profile) => {
                 setProfile(profile);
                 setProgress(
-                    profile.purchases?.find(
+                    profile?.purchases?.find(
                         (purchase) => purchase.courseId === product.courseId,
                     ),
                 );
             });
         }
     }, [product]);
-
-    if (!profile) {
-        return null;
-    }
 
     if (!product || !siteInfo) {
         return null;
@@ -86,7 +80,10 @@ export default function ProductPage(props: {
     const descriptionJson = product.description
         ? JSON.parse(product.description)
         : TextEditorEmptyDoc;
-    const enrolled = isEnrolled(product.courseId, profile as Profile);
+    const viewerProfile = profile?.userId ? (profile as Profile) : undefined;
+    const enrolled = Boolean(
+        viewerProfile && isEnrolled(product.courseId, viewerProfile),
+    );
     const isPreview = Boolean(product.isPreview);
 
     return (
@@ -105,32 +102,28 @@ export default function ProductPage(props: {
                     </Button>
                 </Link>
             )}
-            {!enrolled &&
-                !isPreview &&
-                checkPermission(profile.permissions ?? [], [
-                    permissions.enrollInCourse,
-                ]) && (
-                    <div>
-                        <div className="flex justify-between items-center">
-                            <div className="font-medium flex items-center">
-                                {getSymbolFromCurrency(
-                                    siteInfo.currencyISOCode ?? "",
-                                )}
-                                {product.cost}
-                                <span className="text-sm text-muted-foreground ml-1">
-                                    {product.costType ?? ""}
-                                </span>
-                            </div>
-                            <Link
-                                href={`/checkout?type=course&id=${product.courseId}`}
-                            >
-                                <Button theme={theme.theme}>
-                                    {ENROLL_BUTTON_TEXT}
-                                </Button>
-                            </Link>
+            {!enrolled && !isPreview && (
+                <div>
+                    <div className="flex justify-between items-center">
+                        <div className="font-medium flex items-center">
+                            {getSymbolFromCurrency(
+                                siteInfo.currencyISOCode ?? "",
+                            )}
+                            {product.cost}
+                            <span className="text-sm text-muted-foreground ml-1">
+                                {product.costType ?? ""}
+                            </span>
                         </div>
+                        <Link
+                            href={`/checkout?type=course&id=${product.courseId}`}
+                        >
+                            <Button theme={theme.theme}>
+                                {ENROLL_BUTTON_TEXT}
+                            </Button>
+                        </Link>
                     </div>
-                )}
+                </div>
+            )}
             {product.featuredImage && (
                 <div className="flex justify-center">
                     <div className="mt-4 mb-8 w-full md:max-w-screen-md">

@@ -30,6 +30,8 @@ export interface EditorProps {
     autoFocus?: boolean;
     imageSizeLimit?: number;
     onError?: (...args: any[]) => void;
+    className?: string;
+    editorClassName?: string;
 }
 
 interface EditorType extends FC<PropsWithChildren<EditorProps>> {
@@ -50,6 +52,8 @@ const Editor: EditorType = Object.assign(
         autoFocus,
         imageSizeLimit,
         onError,
+        className,
+        editorClassName,
     }) => {
         const [isUploading, setIsUploading] = useState(false);
         const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -75,7 +79,7 @@ const Editor: EditorType = Object.assign(
                 editable,
                 editorProps: {
                     attributes: {
-                        class: "tiptap-content",
+                        class: `tiptap-content ${editorClassName ?? ""}`,
                         "data-placeholder": placeholder ?? "",
                     },
                 },
@@ -195,7 +199,9 @@ const Editor: EditorType = Object.assign(
         }
 
         return (
-            <div className="tiptap-editor flex flex-col gap-4 border">
+            <div
+                className={`tiptap-editor flex flex-col gap-4 border ${className ?? ""}`}
+            >
                 {editable && showToolbar && (
                     <div
                         className="sticky top-0 bg-background"
@@ -211,10 +217,16 @@ const Editor: EditorType = Object.assign(
                     </div>
                 )}
                 <div className="flex w-full justify-center">
-                    <div className="flex w-full max-w-3xl flex-col gap-4">
+                    <div
+                        className={`flex w-full flex-col gap-4 ${
+                            editorClassName?.includes("max-w-")
+                                ? ""
+                                : "max-w-3xl"
+                        }`}
+                    >
                         <EditorContent
                             editor={editor}
-                            className="min-h-[200px]"
+                            className={`${editorClassName ?? ""} ${editorClassName?.includes("min-h-") ? "" : "min-h-[200px]"}`}
                         />
                         <input
                             ref={fileInputRef}

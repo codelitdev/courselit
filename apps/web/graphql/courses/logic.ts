@@ -2,7 +2,10 @@
  * Business logic for managing courses.
  */
 import CourseModel from "@/models/Course";
-import { InternalCourse } from "@courselit/orm-models";
+import {
+    deleteProductDiscussionData,
+    InternalCourse,
+} from "@courselit/orm-models";
 import UserModel from "@/models/User";
 import { Media, User } from "@courselit/common-models";
 import { responses } from "@/config/strings";
@@ -47,6 +50,7 @@ import CertificateTemplateModel, {
 } from "@models/CertificateTemplate";
 import CertificateModel from "@models/Certificate";
 import ActivityModel from "@models/Activity";
+import NotificationModel from "@models/Notification";
 import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
 import { deletePageInternal } from "../pages/logic";
 import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
@@ -367,6 +371,17 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
             { entityId: course.courseId },
             { "metadata.courseId": course.courseId },
         ],
+    });
+    await NotificationModel.deleteMany({
+        domain: ctx.subdomain._id,
+        $or: [
+            { entityId: course.courseId },
+            { "metadata.courseId": course.courseId },
+        ],
+    });
+    await deleteProductDiscussionData({
+        domain: ctx.subdomain._id,
+        productId: course.courseId,
     });
     await deleteAllLessons(course.courseId, ctx);
     if (course.featuredImage) {

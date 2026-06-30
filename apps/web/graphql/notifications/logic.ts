@@ -276,6 +276,7 @@ async function formatNotification(
             entityId: notification.entityId,
             actorName: await getUserName(notification.userId),
             recipientUserId: ctx.user.userId,
+            recipientPermissions: ctx.user.permissions,
             entityTargetId: notification.entityTargetId,
             metadata: notification.metadata,
             domainId: ctx.subdomain._id,

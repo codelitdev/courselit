@@ -29,3 +29,4 @@ export const ActivitySchema = new mongoose.Schema<Activity>(
 );
 
 ActivitySchema.index({ domain: 1, type: 1, createdAt: 1 });
+ActivitySchema.index({ domain: 1, "metadata.courseId": 1 });
