@@ -617,6 +617,29 @@ describe("product discussion comment and reply logic", () => {
             purchases: [],
         });
 
+        await MembershipModel.create([
+            {
+                domain: testDomain._id,
+                membershipId: id("discussion-api-learner-membership"),
+                sessionId: id("discussion-api-learner-session"),
+                userId: learnerUser.userId,
+                paymentPlanId: id("discussion-api-learner-plan"),
+                entityId: courseId,
+                entityType: CommonConstants.MembershipEntityType.COURSE,
+                status: CommonConstants.MembershipStatus.ACTIVE,
+            },
+            {
+                domain: testDomain._id,
+                membershipId: id("discussion-api-second-learner-membership"),
+                sessionId: id("discussion-api-second-learner-session"),
+                userId: secondLearnerUser.userId,
+                paymentPlanId: id("discussion-api-second-learner-plan"),
+                entityId: courseId,
+                entityType: CommonConstants.MembershipEntityType.COURSE,
+                status: CommonConstants.MembershipStatus.ACTIVE,
+            },
+        ]);
+
         ctx = {
             subdomain: testDomain,
             user: learnerUser,
@@ -2937,6 +2960,29 @@ describe("updateDiscussionComment / updateDiscussionReply", () => {
             groupId: editId("group"),
             published: true,
         });
+
+        await MembershipModel.create([
+            {
+                domain: testDomain._id,
+                membershipId: editId("author-membership"),
+                sessionId: editId("author-session"),
+                userId: authorUser.userId,
+                paymentPlanId: editId("author-plan"),
+                entityId: editId("course"),
+                entityType: CommonConstants.MembershipEntityType.COURSE,
+                status: CommonConstants.MembershipStatus.ACTIVE,
+            },
+            {
+                domain: testDomain._id,
+                membershipId: editId("other-membership"),
+                sessionId: editId("other-session"),
+                userId: otherUser.userId,
+                paymentPlanId: editId("other-plan"),
+                entityId: editId("course"),
+                entityType: CommonConstants.MembershipEntityType.COURSE,
+                status: CommonConstants.MembershipStatus.ACTIVE,
+            },
+        ]);
 
         authorCtx = { subdomain: testDomain, user: authorUser, address: "" };
         otherCtx = { subdomain: testDomain, user: otherUser, address: "" };
