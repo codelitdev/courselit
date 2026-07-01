@@ -195,8 +195,10 @@ export async function getNotificationMessageAndHref({
                 return { message: "", href: "" };
             }
 
+            const emoji = (metadata?.emoji as string) || "👍";
+
             return {
-                message: `${actorName} liked your post '${truncate(post.title, 20).trim()}' in ${community.name}`,
+                message: `${actorName} reacted ${emoji} to your post '${truncate(post.title, 20).trim()}' in ${community.name}`,
                 href: toHref(
                     `/dashboard/community/${community.communityId}/${post.postId}`,
                     hrefPrefix,

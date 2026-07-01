@@ -138,20 +138,14 @@ export default function CommunityPostCard({
                 )}
             </CardContent>
             <CardFooter>
-                <div className="flex items-center gap-4">
-                    <ReactionsBar
-                        reactions={post.reactions || []}
-                        onReact={(emoji) => onReact?.(post.postId, emoji)}
-                    />
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-muted-foreground"
-                    >
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        {post.commentsCount}
-                    </Button>
-                </div>
+                <ReactionsBar
+                    reactions={post.reactions || []}
+                    onReact={(emoji) => onReact?.(post.postId, emoji)}
+                    compact
+                    showReplyButton
+                    onReply={() => onOpen(post.postId)}
+                    repliesCount={post.commentsCount}
+                />
             </CardFooter>
         </Card>
     );

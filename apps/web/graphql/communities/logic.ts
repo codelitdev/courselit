@@ -1554,7 +1554,7 @@ function toggleReactionInMap(
     const existing = reactionsMap.get(emoji) || [];
 
     if (existing.includes(userId)) {
-        // Remove user from this reaction
+        // Remove user from this reaction (toggle off)
         const filtered = existing.filter((id) => id !== userId);
         if (filtered.length === 0) {
             reactionsMap.delete(emoji);
@@ -1563,24 +1563,7 @@ function toggleReactionInMap(
         }
         return { added: false };
     } else {
-        // User might be in another reaction - remove from other reactions first
-        const keysToDelete: string[] = [];
-        const keysToUpdate: Map<string, string[]> = new Map();
-        reactionsMap.forEach(function (userIds: string[], key: string) {
-            if (key !== emoji && userIds.includes(userId)) {
-                const filtered = userIds.filter((id) => id !== userId);
-                if (filtered.length === 0) {
-                    keysToDelete.push(key);
-                } else {
-                    keysToUpdate.set(key, filtered);
-                }
-            }
-        });
-        keysToDelete.forEach((key) => reactionsMap.delete(key));
-        keysToUpdate.forEach(function (value, key) {
-            reactionsMap.set(key, value);
-        });
-        // Add to this reaction
+        // Add user to this reaction — allow multiple different emoji reactions per user
         existing.push(userId);
         reactionsMap.set(emoji, existing);
         return { added: true };
@@ -1707,6 +1690,7 @@ export async function togglePostReaction({
             metadata: {
                 communityId: community.communityId,
                 forUserIds: [post.userId],
+                emoji,
             },
         });
     }

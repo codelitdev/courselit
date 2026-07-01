@@ -21,6 +21,7 @@ import NotFound from "@components/admin/not-found";
 import { CommunityInfo } from "@components/community/info";
 import MembershipStatus from "@components/community/membership-status";
 import CommentSection from "@components/community/comment-section";
+import { ReactionsBar } from "@components/community/reactions-bar";
 import dynamic from "next/dynamic";
 import { useMediaLit, useToast } from "@courselit/components-library";
 import {
@@ -35,7 +36,6 @@ import {
     Trash,
     FlagTriangleRight,
     MessageSquare,
-    ThumbsUp,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -125,6 +125,20 @@ export default function CommunityPostPage({
                         }
                     }
                     likesCount
+                    reactions {
+                        emoji
+                        count
+                        hasReacted
+                        reactors {
+                            userId
+                            name
+                            avatar {
+                                mediaId
+                                file
+                                thumbnail
+                            }
+                        }
+                    }
                     commentsCount
                     updatedAt
                     hasLiked
@@ -207,6 +221,58 @@ export default function CommunityPostPage({
                 variant: "destructive",
             });
             loadPost();
+        }
+    };
+
+    const handleReact = async (targetPostId: string, emoji: string) => {
+        const query = `
+            mutation ($communityId: String!, $postId: String!, $emoji: String!) {
+                togglePostReaction(communityId: $communityId, postId: $postId, emoji: $emoji) {
+                    postId
+                    reactions {
+                        emoji
+                        count
+                        hasReacted
+                        reactors {
+                            userId
+                            name
+                            avatar {
+                                mediaId
+                                file
+                                thumbnail
+                            }
+                        }
+                    }
+                }
+            }
+        `;
+
+        try {
+            const fetch = new FetchBuilder()
+                .setUrl(`${address.backend}/api/graph`)
+                .setPayload({
+                    query,
+                    variables: { communityId, postId: targetPostId, emoji },
+                })
+                .setIsGraphQLEndpoint(true)
+                .build();
+            const response = await fetch.exec();
+            if (response.togglePostReaction) {
+                setPost((prev) =>
+                    prev && prev.postId === targetPostId
+                        ? {
+                              ...prev,
+                              reactions: response.togglePostReaction.reactions,
+                          }
+                        : prev,
+                );
+            }
+        } catch (err: any) {
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         }
     };
 
@@ -644,15 +710,12 @@ export default function CommunityPostPage({
                             </div>
                         )}
                         <div className="flex items-center gap-4">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className={`text-muted-foreground ${currentPost.hasLiked ? "bg-accent" : ""}`}
-                                onClick={() => handleLike(currentPost.postId)}
-                            >
-                                <ThumbsUp className="mr-2 h-4 w-4" />
-                                {currentPost.likesCount}
-                            </Button>
+                            <ReactionsBar
+                                reactions={currentPost.reactions || []}
+                                onReact={(emoji) =>
+                                    handleReact(currentPost.postId, emoji)
+                                }
+                            />
                             <Button
                                 variant="ghost"
                                 size="sm"

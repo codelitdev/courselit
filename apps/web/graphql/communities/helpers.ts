@@ -154,7 +154,7 @@ export const formatComment = (comment: any, userId: string) => {
         updatedAt: comment.updatedAt,
         media: comment.media,
         likesCount: computeLikesCount(reactionsMap),
-        reactions: [], // Populated by resolver with user details
+        reactions: Object.fromEntries(reactionsMap) as unknown as CommunityReaction[],
         replies: comment.replies.map((reply: any) => {
             const replyReactionsMap = getReactionsMap(reply);
             return {
@@ -167,7 +167,7 @@ export const formatComment = (comment: any, userId: string) => {
                 updatedAt: reply.updatedAt,
                 likesCount: computeLikesCount(replyReactionsMap),
                 hasLiked: computeHasLiked(replyReactionsMap, userId),
-                reactions: [], // Populated by resolver
+                reactions: Object.fromEntries(replyReactionsMap) as unknown as CommunityReaction[],
                 deleted: reply.deleted,
             };
         }),
@@ -191,7 +191,10 @@ export const formatPost = (
         likesCount: computeLikesCount(reactionsMap),
         updatedAt: post.updatedAt,
         hasLiked: computeHasLiked(reactionsMap, userId),
-        reactions: [], // Populated by resolver with user details
+        // Store raw reactions map so the GraphQL field resolver can
+        // access reactor details. Field resolver calls
+        // getReactionsForEntity which reads entity.reactions.
+        reactions: Object.fromEntries(reactionsMap) as unknown as CommunityReaction[],
         userId: post.userId,
     };
 };

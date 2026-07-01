@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { CommunityReaction } from "@courselit/common-models";
+import { SmilePlus, Reply } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { EmojiPicker } from "./emoji-picker";
 
 interface ReactionsBarProps {
@@ -12,12 +14,27 @@ interface ReactionsBarProps {
      * Defaults to false (full layout for post cards).
      */
     compact?: boolean;
+    /**
+     * Optional reply button rendered at the end of the bar (after reactions).
+     */
+    onReply?: () => void;
+    /**
+     * Whether to show the reply button. Defaults to false.
+     */
+    showReplyButton?: boolean;
+    /**
+     * Number of replies to show on the reply button (post only).
+     */
+    repliesCount?: number;
 }
 
 export function ReactionsBar({
     reactions,
     onReact,
     compact = false,
+    onReply,
+    showReplyButton = false,
+    repliesCount,
 }: ReactionsBarProps) {
     const [hoveredEmoji, setHoveredEmoji] = useState<string | null>(null);
     const [tooltipPos, setTooltipPos] = useState<{
@@ -60,22 +77,43 @@ export function ReactionsBar({
         };
     }, []);
 
+    const activeReactions = reactions.filter((r) => r.count > 0);
     const hoveredReaction = reactions.find((r) => r.emoji === hoveredEmoji);
 
     return (
-        <div className="flex items-center gap-1">
-            {reactions
-                .filter((r) => r.count > 0)
-                .map((reaction) => (
+        <>
+            <div className="flex flex-wrap gap-1 items-center">
+                {/* Emoji picker — always first */}
+                <EmojiPicker
+                    onEmojiSelect={(emoji) => {
+                        onReact(emoji);
+                    }}
+                >
+                    <button
+                        type="button"
+                        className={`inline-flex items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-accent ${
+                            compact ? "h-5 w-5" : "h-7 w-7"
+                        }`}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                        }}
+                    >
+                        <SmilePlus className="h-4 w-4" />
+                    </button>
+                </EmojiPicker>
+
+                {/* Active reaction pills — wrap as they accumulate */}
+                {activeReactions.map((reaction) => (
                     <button
                         key={reaction.emoji}
                         type="button"
-                        className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition-colors ${
+                        className={`inline-flex items-center justify-center gap-1 rounded-full border px-2 text-xs transition-colors ${
                             reaction.hasReacted
                                 ? "border-primary/40 bg-primary/10 text-primary"
                                 : "border-border text-muted-foreground hover:bg-accent"
-                        } ${compact ? "text-[10px] px-1.5 py-0" : ""}`}
+                        } ${compact ? "h-5 min-w-[2rem] py-0" : "h-7 min-w-[2.5rem]"}`}
                         onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             onReact(reaction.emoji);
                         }}
@@ -90,21 +128,27 @@ export function ReactionsBar({
                         </span>
                     </button>
                 ))}
-            <EmojiPicker
-                onEmojiSelect={(emoji) => {
-                    onReact(emoji);
-                }}
-            >
-                <button
-                    type="button"
-                    className={`inline-flex items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-accent ${
-                        compact ? "h-5 w-5 text-xs" : "h-6 w-6 text-sm"
-                    }`}
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    +
-                </button>
-            </EmojiPicker>
+                {showReplyButton && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground h-7 px-2"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onReply?.();
+                        }}
+                    >
+                        <Reply className="h-4 w-4 mr-1.5" />
+                        {repliesCount !== undefined && (
+                            <span className="text-xs tabular-nums">
+                                {repliesCount}
+                            </span>
+                        )}
+                    </Button>
+                )}
+            </div>
+
             {hoveredReaction && hoveredEmoji && tooltipPos && (
                 <div
                     ref={tooltipRef}
@@ -130,6 +174,6 @@ export function ReactionsBar({
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }

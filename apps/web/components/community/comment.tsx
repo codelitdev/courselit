@@ -7,6 +7,7 @@ import {
     MoreVertical,
     FlagTriangleRight,
     Trash,
+    Reply,
 } from "lucide-react";
 import {
     CommunityComment,
@@ -254,7 +255,7 @@ export function Comment({
                             comment.content
                         )}
                     </p>
-                    <div className="flex items-center gap-4 mt-2">
+                    <div className="flex flex-wrap gap-1 items-center min-w-0 mt-2">
                         <ReactionsBar
                             reactions={comment.reactions || []}
                             onReact={(emoji) => {
@@ -268,17 +269,9 @@ export function Comment({
                                     );
                                 }
                             }}
-                            compact
+                            showReplyButton
+                            onReply={() => setIsReplying(!isReplying)}
                         />
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-muted-foreground"
-                            onClick={() => setIsReplying(!isReplying)}
-                        >
-                            <MessageSquare className="h-4 w-4 mr-2" />
-                            Reply
-                        </Button>
                     </div>
                 </div>
             </div>

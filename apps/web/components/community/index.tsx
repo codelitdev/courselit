@@ -277,17 +277,6 @@ export function CommunityForum({
     ) => {
         e?.stopPropagation();
 
-        setPosts((prevPosts) =>
-            prevPosts.map((post) =>
-                post.postId === postId
-                    ? {
-                          ...post,
-                          hasLiked: true,
-                      }
-                    : post,
-            ),
-        );
-
         const query = `
             mutation ($communityId: String!, $postId: String!, $emoji: String!) {
                 togglePostReaction(communityId: $communityId, postId: $postId, emoji: $emoji) {

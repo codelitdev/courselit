@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getBackendAddress } from "@/app/actions";
-import { auth } from "./auth";
+import { getAuth } from "./auth";
 import { COURSE_VIEWER_CURRENT_URL_HEADER } from "./lib/course-viewer-session-params";
 
 export async function proxy(request: NextRequest) {
@@ -77,7 +77,7 @@ export async function proxy(request: NextRequest) {
         }
 
         if (request.nextUrl.pathname.startsWith("/dashboard")) {
-            const session = await auth.api.getSession({
+            const session = await getAuth(backend).api.getSession({
                 headers: requestHeaders,
             });
             if (!session) {

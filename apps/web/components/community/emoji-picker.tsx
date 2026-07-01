@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
     Popover,
@@ -15,8 +16,10 @@ interface EmojiPickerProps {
 }
 
 export function EmojiPicker({ onEmojiSelect, children }: EmojiPickerProps) {
+    const [open, setOpen] = useState(false);
+
     return (
-        <Popover>
+        <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 {children || (
                     <Button
@@ -37,6 +40,7 @@ export function EmojiPicker({ onEmojiSelect, children }: EmojiPickerProps) {
                             className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-lg transition-colors hover:bg-accent"
                             onClick={() => {
                                 onEmojiSelect(emoji);
+                                setOpen(false);
                             }}
                         >
                             {emoji}
