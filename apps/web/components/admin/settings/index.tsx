@@ -9,7 +9,7 @@ import {
     SITE_SETTINGS_CURRENCY,
     SITE_ADMIN_SETTINGS_STRIPE_SECRET,
     SITE_ADMIN_SETTINGS_RAZORPAY_SECRET,
-    SITE_ADMIN_SETTINGS_PAYPAL_SECRET,
+    SITE_ADMIN_SETTINGS_PAYPAL_CLIENT_SECRET,
     SITE_ADMIN_SETTINGS_PAYTM_SECRET,
     SITE_SETTINGS_SECTION_GENERAL,
     SITE_SETTINGS_SECTION_PAYMENT,
@@ -44,6 +44,10 @@ import {
     SITE_SETTINGS_LEMONSQUEEZY_ONETIME_TEXT,
     SITE_SETTINGS_LEMONSQUEEZY_SUB_MONTHLY_TEXT,
     SITE_SETTINGS_LEMONSQUEEZY_SUB_YEARLY_TEXT,
+    SITE_SETTINGS_PAYPAL_CLIENT_ID_TEXT,
+    SITE_SETTINGS_PAYPAL_PRODUCT_ID_TEXT,
+    SITE_SETTINGS_PAYPAL_MONTHLY_PLAN_ID_TEXT,
+    SITE_SETTINGS_PAYPAL_YEARLY_PLAN_ID_TEXT,
     SETTINGS_RESOURCE_PAYMENT,
     SITE_MISCELLANEOUS_SETTING_HEADER,
     BUTTON_CANCEL_TEXT,
@@ -159,6 +163,10 @@ const Settings = (props: SettingsProps) => {
                         paymentMethod,
                         stripeKey,
                         razorpayKey,
+                        paypalClientId,
+                        paypalProductId,
+                        paypalMonthlyPlanId,
+                        paypalYearlyPlanId,
                         lemonsqueezyStoreId,
                         lemonsqueezyOneTimeVariantId,
                         lemonsqueezySubscriptionMonthlyVariantId,
@@ -203,6 +211,10 @@ const Settings = (props: SettingsProps) => {
             paymentMethod: settingsResponse.paymentMethod || "",
             stripeKey: settingsResponse.stripeKey || "",
             razorpayKey: settingsResponse.razorpayKey || "",
+            paypalClientId: settingsResponse.paypalClientId || "",
+            paypalProductId: settingsResponse.paypalProductId || "",
+            paypalMonthlyPlanId: settingsResponse.paypalMonthlyPlanId || "",
+            paypalYearlyPlanId: settingsResponse.paypalYearlyPlanId || "",
             lemonsqueezyStoreId: settingsResponse.lemonsqueezyStoreId || "",
             codeInjectionHead: settingsResponse.codeInjectionHead || "",
             codeInjectionBody: settingsResponse.codeInjectionBody || "",
@@ -528,12 +540,17 @@ const Settings = (props: SettingsProps) => {
                 $paymentMethod: String, 
                 $stripeKey: String,
                 $stripeSecret: String,
+                $paypalClientId: String,
+                $paypalClientSecret: String,
+                $paypalProductId: String,
+                $paypalMonthlyPlanId: String,
+                $paypalYearlyPlanId: String,
                 $razorpayKey: String,
                 $razorpaySecret: String,
                 $razorpayWebhookSecret: String,
                 $lemonsqueezyKey: String,
                 $lemonsqueezyStoreId: String,
-                $lemonsqueezyWebhookSecret: String
+                $lemonsqueezyWebhookSecret: String,
                 $lemonsqueezyOneTimeVariantId: String,
                 $lemonsqueezySubscriptionMonthlyVariantId: String,
                 $lemonsqueezySubscriptionYearlyVariantId: String
@@ -543,6 +560,11 @@ const Settings = (props: SettingsProps) => {
                     paymentMethod: $paymentMethod,
                     stripeKey: $stripeKey,
                     stripeSecret: $stripeSecret,
+                    paypalClientId: $paypalClientId,
+                    paypalClientSecret: $paypalClientSecret,
+                    paypalProductId: $paypalProductId,
+                    paypalMonthlyPlanId: $paypalMonthlyPlanId,
+                    paypalYearlyPlanId: $paypalYearlyPlanId,
                     razorpayKey: $razorpayKey,
                     razorpaySecret: $razorpaySecret,
                     razorpayWebhookSecret: $razorpayWebhookSecret,
@@ -570,6 +592,10 @@ const Settings = (props: SettingsProps) => {
                         paymentMethod,
                         stripeKey,
                         razorpayKey,
+                        paypalClientId,
+                        paypalProductId,
+                        paypalMonthlyPlanId,
+                        paypalYearlyPlanId,
                         lemonsqueezyStoreId,
                         lemonsqueezyOneTimeVariantId,
                         lemonsqueezySubscriptionMonthlyVariantId,
@@ -592,6 +618,11 @@ const Settings = (props: SettingsProps) => {
                         paymentMethod: newSettings.paymentMethod,
                         stripeKey: newSettings.stripeKey,
                         stripeSecret: newSettings.stripeSecret,
+                        paypalClientId: newSettings.paypalClientId,
+                        paypalClientSecret: newSettings.paypalClientSecret,
+                        paypalProductId: newSettings.paypalProductId,
+                        paypalMonthlyPlanId: newSettings.paypalMonthlyPlanId,
+                        paypalYearlyPlanId: newSettings.paypalYearlyPlanId,
                         razorpayKey: newSettings.razorpayKey,
                         razorpaySecret: newSettings.razorpaySecret,
                         razorpayWebhookSecret:
@@ -694,9 +725,21 @@ const Settings = (props: SettingsProps) => {
         stripeSecret: getNewSettings
             ? newSettings.stripeSecret
             : settings.stripeSecret,
-        paypalSecret: getNewSettings
-            ? newSettings.paypalSecret
-            : settings.paypalSecret,
+        paypalClientId: getNewSettings
+            ? newSettings.paypalClientId
+            : settings.paypalClientId,
+        paypalClientSecret: getNewSettings
+            ? newSettings.paypalClientSecret
+            : settings.paypalClientSecret,
+        paypalProductId: getNewSettings
+            ? newSettings.paypalProductId
+            : settings.paypalProductId,
+        paypalMonthlyPlanId: getNewSettings
+            ? newSettings.paypalMonthlyPlanId
+            : settings.paypalMonthlyPlanId,
+        paypalYearlyPlanId: getNewSettings
+            ? newSettings.paypalYearlyPlanId
+            : settings.paypalYearlyPlanId,
         paytmSecret: getNewSettings
             ? newSettings.paytmSecret
             : settings.paytmSecret,
@@ -914,6 +957,10 @@ const Settings = (props: SettingsProps) => {
                                         ),
                                     },
                                     {
+                                        label: "PayPal",
+                                        value: PAYMENT_METHOD_PAYPAL,
+                                    },
+                                    {
                                         label: capitalize(
                                             PAYMENT_METHOD_LEMONSQUEEZY.toLowerCase(),
                                         ),
@@ -1104,14 +1151,48 @@ const Settings = (props: SettingsProps) => {
                         )}
                         {newSettings.paymentMethod ===
                             PAYMENT_METHOD_PAYPAL && (
-                            <FormField
-                                label={SITE_ADMIN_SETTINGS_PAYPAL_SECRET}
-                                name="paypalSecret"
-                                type="password"
-                                value={newSettings.paypalSecret || ""}
-                                onChange={onChangeData}
-                                disabled={true}
-                            />
+                            <>
+                                <FormField
+                                    label={SITE_SETTINGS_PAYPAL_CLIENT_ID_TEXT}
+                                    name="paypalClientId"
+                                    value={newSettings.paypalClientId || ""}
+                                    onChange={onChangeData}
+                                />
+                                <FormField
+                                    label={
+                                        SITE_ADMIN_SETTINGS_PAYPAL_CLIENT_SECRET
+                                    }
+                                    name="paypalClientSecret"
+                                    type="password"
+                                    value={newSettings.paypalClientSecret || ""}
+                                    onChange={onChangeData}
+                                    autoComplete="off"
+                                />
+                                <FormField
+                                    label={SITE_SETTINGS_PAYPAL_PRODUCT_ID_TEXT}
+                                    name="paypalProductId"
+                                    value={newSettings.paypalProductId || ""}
+                                    onChange={onChangeData}
+                                />
+                                <FormField
+                                    label={
+                                        SITE_SETTINGS_PAYPAL_MONTHLY_PLAN_ID_TEXT
+                                    }
+                                    name="paypalMonthlyPlanId"
+                                    value={
+                                        newSettings.paypalMonthlyPlanId || ""
+                                    }
+                                    onChange={onChangeData}
+                                />
+                                <FormField
+                                    label={
+                                        SITE_SETTINGS_PAYPAL_YEARLY_PLAN_ID_TEXT
+                                    }
+                                    name="paypalYearlyPlanId"
+                                    value={newSettings.paypalYearlyPlanId || ""}
+                                    onChange={onChangeData}
+                                />
+                            </>
                         )}
                         {newSettings.paymentMethod === PAYMENT_METHOD_PAYTM && (
                             <FormField
