@@ -152,26 +152,16 @@ export const ActivityType = {
     COMMUNITY_REPLY_LIKED: "community_reply_liked",
     COMMUNITY_MEMBERSHIP_REQUESTED: "community_membership_requested",
     COMMUNITY_MEMBERSHIP_GRANTED: "community_membership_granted",
+    COURSE_DISCUSSION_COMMENT_CREATED: "course_discussion_comment_created",
+    COURSE_DISCUSSION_REACTED: "course_discussion_reacted",
 } as const;
 export const ActivityPermissionMap = {
     [ActivityType.ENROLLED]: "course:manage_any",
     [ActivityType.PURCHASED]: "course:manage_any",
     [ActivityType.DOWNLOADED]: "course:manage_any",
-    // [ActivityType.LESSON_STARTED]: "course:manage_any",
-    // [ActivityType.LESSON_COMPLETED]: "course:manage_any",
-    // [ActivityType.COURSE_COMPLETED]: "course:manage_any",
-    // [ActivityType.QUIZ_ATTEMPTED]: "course:manage_any",
-    // [ActivityType.QUIZ_PASSED]: "course:manage_any",
-    // [ActivityType.VIDEO_STARTED]: "course:manage_any",
-    // [ActivityType.VIDEO_FINISHED]: "course:manage_any",
-    // [ActivityType.CERTIFICATE_ISSUED]: "course:manage_any",
-    // [ActivityType.CERTIFICATE_DOWNLOADED]: "course:manage_any",
-    // [ActivityType.REVIEWED]: "course:manage_any",
     [ActivityType.NEWSLETTER_SUBSCRIBED]: "user:manage",
     [ActivityType.NEWSLETTER_UNSUBSCRIBED]: "user:manage",
     [ActivityType.USER_CREATED]: "user:manage",
-    // [ActivityType.TAG_ADDED]: "user:manage",
-    // [ActivityType.TAG_REMOVED]: "user:manage",
     [ActivityType.COMMUNITY_JOINED]: "community:manage",
     [ActivityType.COMMUNITY_LEFT]: "community:manage",
     [ActivityType.COMMUNITY_POST_CREATED]: "",
@@ -183,6 +173,8 @@ export const ActivityPermissionMap = {
     [ActivityType.COMMUNITY_REPLY_LIKED]: "",
     [ActivityType.COMMUNITY_MEMBERSHIP_REQUESTED]: "community:manage",
     [ActivityType.COMMUNITY_MEMBERSHIP_GRANTED]: "",
+    [ActivityType.COURSE_DISCUSSION_COMMENT_CREATED]: "",
+    [ActivityType.COURSE_DISCUSSION_REACTED]: "",
 } as const;
 export const CourseType = {
     COURSE: "course",
@@ -235,4 +227,21 @@ export const Features = {
     SSO: "sso",
     API: "api",
     LOG: "log",
+} as const;
+export const ProductDiscussionEntityType = {
+    LESSON: "lesson",
+    PRODUCT: "product",
+} as const;
+export const ProductDiscussionContentType = {
+    COMMENT: "comment",
+    REPLY: "reply",
+} as const;
+export const ProductDiscussionDeletedByRole = {
+    AUTHOR: "author",
+    COURSE_ADMIN: "course_admin",
+} as const;
+export const ProductDiscussionReportStatus = {
+    PENDING: "pending",
+    ACCEPTED: "accepted",
+    REJECTED: "rejected",
 } as const;

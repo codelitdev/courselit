@@ -10,8 +10,10 @@ import NotificationPreferenceModel from "@models/NotificationPreference";
 import NotificationModel from "@models/Notification";
 import CommunityModel from "@models/Community";
 import CommunityPostModel from "@models/CommunityPost";
+import CourseModel from "@models/Course";
 import constants from "@/config/constants";
 import { Constants } from "@courselit/common-models";
+import { DiscussionActivityEventType } from "@/graphql/product-discussions/logic";
 
 const SUITE_PREFIX = `notification-preferences-${Date.now()}`;
 const id = (suffix: string) => `${SUITE_PREFIX}-${suffix}`;
@@ -56,12 +58,14 @@ describe("Notification Preferences", () => {
         await NotificationModel.deleteMany({ domain: domain._id });
         await CommunityPostModel.deleteMany({ domain: domain._id });
         await CommunityModel.deleteMany({ domain: domain._id });
+        await CourseModel.deleteMany({ domain: domain._id });
     });
 
     afterAll(async () => {
         await NotificationModel.deleteMany({ domain: domain._id });
         await CommunityPostModel.deleteMany({ domain: domain._id });
         await CommunityModel.deleteMany({ domain: domain._id });
+        await CourseModel.deleteMany({ domain: domain._id });
         await NotificationPreferenceModel.deleteMany({ domain: domain._id });
         await UserModel.deleteMany({ domain: domain._id });
         await DomainModel.deleteOne({ _id: domain._id });
@@ -101,9 +105,27 @@ describe("Notification Preferences", () => {
                 preference.activityType ===
                 Constants.ActivityType.COMMUNITY_POST_CREATED,
         );
+        const courseDiscussionCommentPreference = preferences.find(
+            (preference) =>
+                preference.activityType ===
+                Constants.ActivityType.COURSE_DISCUSSION_COMMENT_CREATED,
+        );
+        const courseDiscussionReactionPreference = preferences.find(
+            (preference) =>
+                preference.activityType ===
+                Constants.ActivityType.COURSE_DISCUSSION_REACTED,
+        );
 
         expect(generalPreference).toBeTruthy();
         expect(generalPreference?.channels).toEqual([
+            Constants.NotificationChannel.APP,
+            Constants.NotificationChannel.EMAIL,
+        ]);
+        expect(courseDiscussionCommentPreference?.channels).toEqual([
+            Constants.NotificationChannel.APP,
+            Constants.NotificationChannel.EMAIL,
+        ]);
+        expect(courseDiscussionReactionPreference?.channels).toEqual([
             Constants.NotificationChannel.APP,
             Constants.NotificationChannel.EMAIL,
         ]);
@@ -290,6 +312,112 @@ describe("Notification Preferences", () => {
         );
         expect(response?.message).toContain("created a post");
         expect(response?.message).toContain("Community A");
+    });
+
+    it("should add preview mode to unpublished course discussion notification hrefs for managers only", async () => {
+        const course = await CourseModel.create({
+            domain: domain._id,
+            courseId: id("discussion-course"),
+            title: "Discussion Course",
+            slug: id("discussion-course-slug"),
+            cost: 0,
+            costType: "free",
+            privacy: "public",
+            type: "course",
+            creatorId: manager.userId,
+            published: false,
+            discussions: true,
+        });
+
+        const notification = await NotificationModel.create({
+            domain: domain._id,
+            notificationId: id("discussion-notification"),
+            userId: learner.userId,
+            forUserId: manager.userId,
+            activityType:
+                Constants.ActivityType.COURSE_DISCUSSION_COMMENT_CREATED,
+            entityId: id("comment"),
+            metadata: {
+                eventType: DiscussionActivityEventType.COMMENT_CREATED,
+                courseId: course.courseId,
+                entityType: Constants.ProductDiscussionEntityType.LESSON,
+                entityId: id("lesson"),
+                commentId: id("comment"),
+            },
+        });
+
+        const response = await getNotification({
+            ctx: {
+                user: manager,
+                subdomain: domain,
+            } as any,
+            notificationId: notification.notificationId,
+        });
+
+        expect(response).toBeTruthy();
+        expect(response?.href).toBe(
+            `/course/${course.slug}/${course.courseId}/${id(
+                "lesson",
+            )}?discussion=open&preview=true#discussion-comment-${id("comment")}`,
+        );
+        expect(response?.message).toContain("commented on Discussion Course");
+
+        const learnerNotification = await NotificationModel.create({
+            domain: domain._id,
+            notificationId: id("learner-discussion-notification"),
+            userId: manager.userId,
+            forUserId: learner.userId,
+            activityType:
+                Constants.ActivityType.COURSE_DISCUSSION_COMMENT_CREATED,
+            entityId: id("comment"),
+            metadata: notification.metadata,
+        });
+        const learnerResponse = await getNotification({
+            ctx: {
+                user: learner,
+                subdomain: domain,
+            } as any,
+            notificationId: learnerNotification.notificationId,
+        });
+
+        expect(learnerResponse?.href).toBe(
+            `/course/${course.slug}/${course.courseId}/${id(
+                "lesson",
+            )}?discussion=open#discussion-comment-${id("comment")}`,
+        );
+
+        const reactionNotification = await NotificationModel.create({
+            domain: domain._id,
+            notificationId: id("discussion-reaction-notification"),
+            userId: learner.userId,
+            forUserId: manager.userId,
+            activityType: Constants.ActivityType.COURSE_DISCUSSION_REACTED,
+            entityId: id("reply"),
+            metadata: {
+                courseId: course.courseId,
+                entityType: Constants.ProductDiscussionEntityType.LESSON,
+                entityId: id("lesson"),
+                contentType: Constants.ProductDiscussionContentType.REPLY,
+                commentId: id("comment"),
+                replyId: id("reply"),
+            },
+        });
+        const reactionResponse = await getNotification({
+            ctx: {
+                user: manager,
+                subdomain: domain,
+            } as any,
+            notificationId: reactionNotification.notificationId,
+        });
+
+        expect(reactionResponse?.message).toContain(
+            "reacted to your reply on Discussion Course",
+        );
+        expect(reactionResponse?.href).toBe(
+            `/course/${course.slug}/${course.courseId}/${id(
+                "lesson",
+            )}?discussion=open&preview=true#discussion-reply-${id("reply")}`,
+        );
     });
 
     it("should return empty message and href when entity cannot be resolved", async () => {

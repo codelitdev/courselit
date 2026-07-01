@@ -8,22 +8,38 @@ import {
     getCommunitiesCount,
     getFeed,
     getFeedCount,
+    getCommunityReports,
+    reportCommunityContent,
 } from "../logic";
 import CommunityModel from "@models/Community";
 import CommunityPostModel from "@models/CommunityPost";
 import CommunityCommentModel from "@models/CommunityComment";
+import CommunityReportModel from "@models/CommunityReport";
 import MembershipModel from "@models/Membership";
 import PaymentPlanModel from "@models/PaymentPlan";
 import PageModel from "@models/Page";
 import DomainModel from "@models/Domain";
 import UserModel from "@models/User";
 import constants from "@/config/constants";
-import { Constants } from "@courselit/common-models";
+import { Constants, TextEditorContent } from "@courselit/common-models";
 
 jest.mock("@/services/queue");
 
 // Ensure generateUniqueId is not mocked
 jest.unmock("@courselit/utils");
+
+const doc = (text: string): TextEditorContent => ({
+    type: "doc",
+    content: [
+        {
+            type: "paragraph",
+            content: [{ type: "text", text }],
+        },
+        {
+            type: "paragraph",
+        },
+    ],
+});
 
 describe("Community Logic - Comment Count Tests", () => {
     let testDomain: any;
@@ -161,6 +177,10 @@ describe("Community Logic - Comment Count Tests", () => {
             domain: testDomain._id,
             communityId: community.communityId,
         });
+        await CommunityReportModel.deleteMany({
+            domain: testDomain._id,
+            communityId: community.communityId,
+        });
     });
 
     afterAll(async () => {
@@ -169,6 +189,7 @@ describe("Community Logic - Comment Count Tests", () => {
             CommunityModel.deleteMany({ domain: testDomain._id }),
             CommunityPostModel.deleteMany({ domain: testDomain._id }),
             CommunityCommentModel.deleteMany({ domain: testDomain._id }),
+            CommunityReportModel.deleteMany({ domain: testDomain._id }),
             MembershipModel.deleteMany({ domain: testDomain._id }),
             PaymentPlanModel.deleteMany({ domain: testDomain._id }),
             PageModel.deleteMany({ domain: testDomain._id }),
@@ -361,6 +382,43 @@ describe("Community Logic - Comment Count Tests", () => {
             const count = await getCommentsCount(post, mockCtx);
             // Deleted parent comment is not counted, but active reply is counted
             expect(count).toBe(1);
+        });
+    });
+
+    describe("getCommunityReports", () => {
+        it("returns a string preview for reported rich-text posts", async () => {
+            const richTextPost = await CommunityPostModel.create({
+                domain: testDomain._id,
+                communityId: community.communityId,
+                postId: "reported-rich-text-post",
+                userId: adminUser.userId,
+                title: "Reported Rich Text Post",
+                content: doc("This is good man"),
+                category: "General",
+            });
+
+            await reportCommunityContent({
+                ctx: {
+                    user: regularUser,
+                    subdomain: testDomain,
+                } as any,
+                communityId: community.communityId,
+                contentId: richTextPost.postId,
+                type: Constants.CommunityReportType.POST,
+                reason: "Needs review",
+            });
+
+            const reports = await Promise.all(
+                await getCommunityReports({
+                    ctx: mockCtx,
+                    communityId: community.communityId,
+                    page: 1,
+                    limit: 10,
+                }),
+            );
+
+            expect(reports).toHaveLength(1);
+            expect(reports[0].content.content).toBe("This is good man");
         });
     });
 });

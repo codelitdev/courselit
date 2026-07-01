@@ -1,31 +1,26 @@
-import constants from "@/config/constants";
-import { checkOwnershipWithoutModel } from "@/lib/graphql";
 import GQLContext from "@/models/GQLContext";
-import { checkPermission } from "@courselit/utils";
+import {
+    getCourseManagementAccess as getSharedCourseManagementAccess,
+    type CourseManagementAccess,
+} from "@courselit/common-logic";
 import mongoose from "mongoose";
-
-const { permissions } = constants;
 
 export function getCourseManagementAccess(
     course: { creatorId: mongoose.Types.ObjectId | string },
     ctx: GQLContext,
-): { canManage: boolean; isOwner: boolean } {
-    if (!ctx.user) {
-        return { canManage: false, isOwner: false };
-    }
+): CourseManagementAccess {
+    // effectively using the same checks as checkOwnershipWithoutModel
+    const userId = ctx.user
+        ? mongoose.Types.ObjectId.isValid(course.creatorId)
+            ? ctx.user._id.toString()
+            : ctx.user.userId.toString()
+        : undefined;
 
-    if (checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
-        return { canManage: true, isOwner: true };
-    }
-
-    const isOwner = checkOwnershipWithoutModel(course, ctx);
-
-    return {
-        canManage:
-            isOwner &&
-            checkPermission(ctx.user.permissions, [permissions.manageCourse]),
-        isOwner,
-    };
+    return getSharedCourseManagementAccess({
+        creatorId: course.creatorId.toString(),
+        userId,
+        permissions: ctx.user?.permissions,
+    });
 }
 
 export function canManageCourseInContext(

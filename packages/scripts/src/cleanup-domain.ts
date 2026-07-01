@@ -32,6 +32,7 @@ import {
     DownloadLinkSchema,
     ApiKeySchema,
     UserThemeSchema,
+    deleteProductDiscussionData,
 } from "@courselit/orm-models";
 import type {
     InternalCertificateTemplate,
@@ -202,6 +203,10 @@ async function deleteProduct({
     await CertificateTemplateModel.deleteOne({
         domain,
         courseId: product.courseId,
+    });
+    await deleteProductDiscussionData({
+        domain,
+        productId: product.courseId,
     });
     await deleteLessons(product.courseId, domain);
     if (product.featuredImage) {

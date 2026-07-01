@@ -43,6 +43,7 @@ function makePayload(overrides: Partial<any> = {}): any {
             email: "student@example.com",
             unsubscribeToken: "unsubscribe-token",
             subscribedToUpdates: true,
+            permissions: ["course:manage_any"],
         },
         activityType: Constants.ActivityType.ENROLLED,
         entityId: "entity-id",
@@ -69,6 +70,12 @@ describe("EmailChannel", () => {
 
     it("renders a notification email with actor avatar, CTA, footer unsubscribe, branding, and unsubscribe headers", async () => {
         await new EmailChannel().send(makePayload());
+
+        expect(mockedGetNotificationMessageAndHref).toHaveBeenCalledWith(
+            expect.objectContaining({
+                recipientPermissions: ["course:manage_any"],
+            }),
+        );
 
         expect(mockedAddMailJob).toHaveBeenCalledTimes(1);
         const mail = mockedAddMailJob.mock.calls[0][0];

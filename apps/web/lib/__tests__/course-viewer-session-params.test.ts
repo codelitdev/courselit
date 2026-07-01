@@ -1,12 +1,14 @@
 import {
     appendCourseViewerReturnToHref,
     appendCourseViewerSessionParamsToHref,
+    COURSE_VIEWER_DISCUSSION_PARAM,
     COURSE_VIEWER_PREVIEW_PARAM,
     DEFAULT_COURSE_VIEWER_EXIT_PATH,
     getCourseViewerReturnPath,
     getCourseViewerSessionParams,
     getCourseViewerSessionParamsFromUrl,
     isSafeCourseViewerReturnPath,
+    setHrefQueryParam,
 } from "../course-viewer-session-params";
 
 describe("course-viewer-session-params", () => {
@@ -70,16 +72,30 @@ describe("course-viewer-session-params", () => {
         );
     });
 
-    it("drops unknown viewer params while reading session params", () => {
+    it("reads registered viewer params and drops unknown params", () => {
         const params = new URLSearchParams({
             [COURSE_VIEWER_PREVIEW_PARAM]: "true",
+            [COURSE_VIEWER_DISCUSSION_PARAM]: "open",
             returnTo: "/dashboard/product/product-1",
-            discussion: "open",
+            unrelated: "ignored",
         });
 
         expect(getCourseViewerSessionParams(params)).toEqual({
             preview: true,
+            discussion: true,
             returnTo: "/dashboard/product/product-1",
+        });
+    });
+
+    it("does not treat unknown discussion values as open", () => {
+        const params = new URLSearchParams({
+            [COURSE_VIEWER_DISCUSSION_PARAM]: "closed",
+        });
+
+        expect(getCourseViewerSessionParams(params)).toEqual({
+            preview: false,
+            discussion: false,
+            returnTo: null,
         });
     });
 
@@ -90,7 +106,43 @@ describe("course-viewer-session-params", () => {
             ),
         ).toEqual({
             preview: true,
+            discussion: false,
             returnTo: "/dashboard/product/product-1",
         });
+    });
+
+    it("propagates discussion state through course viewer links", () => {
+        expect(
+            appendCourseViewerSessionParamsToHref(
+                "/course/test-course/course-1/lesson-2",
+                {
+                    discussion: true,
+                },
+            ),
+        ).toBe("/course/test-course/course-1/lesson-2?discussion=open");
+    });
+
+    it("sets a query param without dropping existing viewer session params", () => {
+        expect(
+            setHrefQueryParam(
+                "/course/test/course-1/lesson-1?preview=true&returnTo=%2Fdashboard%2Fproduct%2Fproduct-1",
+                "discussion",
+                "open",
+            ),
+        ).toBe(
+            "/course/test/course-1/lesson-1?preview=true&returnTo=%2Fdashboard%2Fproduct%2Fproduct-1&discussion=open",
+        );
+    });
+
+    it("removes a query param without dropping existing viewer session params", () => {
+        expect(
+            setHrefQueryParam(
+                "/course/test/course-1/lesson-1?preview=true&returnTo=%2Fdashboard%2Fproduct%2Fproduct-1&discussion=open",
+                "discussion",
+                null,
+            ),
+        ).toBe(
+            "/course/test/course-1/lesson-1?preview=true&returnTo=%2Fdashboard%2Fproduct%2Fproduct-1",
+        );
     });
 });

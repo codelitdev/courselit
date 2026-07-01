@@ -1,10 +1,30 @@
+let mockPathname = "/course/test-course/course-1";
+let mockSearchParams = new URLSearchParams();
+let mockIsEnrolled = true;
+
 jest.mock("next/navigation", () => ({
-    usePathname: () => "/course/test-course/course-1",
-    useSearchParams: () => new URLSearchParams(),
+    usePathname: () => mockPathname,
+    useRouter: () => ({ push: jest.fn() }),
+    useSearchParams: () => mockSearchParams,
 }));
 
 jest.mock("next/link", () => {
-    return ({ children }: { children: React.ReactNode }) => children;
+    function MockLink({
+        children,
+        href,
+        ...props
+    }: {
+        children: React.ReactNode;
+        href: string;
+    }) {
+        return (
+            <a href={href} {...props}>
+                {children}
+            </a>
+        );
+    }
+
+    return MockLink;
 });
 
 jest.mock("@components/contexts", () => {
@@ -25,6 +45,10 @@ jest.mock("@components/contexts", () => {
         ThemeContext: React.createContext({
             theme: {},
         }),
+        AddressContext: React.createContext({
+            backend: "http://localhost:3000",
+            frontend: "http://localhost:3000",
+        }),
     };
 });
 
@@ -41,7 +65,12 @@ jest.mock("@components/ui/sidebar", () => ({
     SidebarMenuItem: ({ children }: any) => children,
     SidebarProvider: ({ children }: any) => children,
     SidebarTrigger: () => null,
-    useSidebar: () => ({ openMobile: false }),
+    useSidebar: () => ({
+        open: false,
+        openMobile: false,
+        isMobile: false,
+        setOpenMobile: jest.fn(),
+    }),
 }));
 
 jest.mock("@components/ui/tooltip", () => ({
@@ -63,8 +92,19 @@ jest.mock("@components/ui/button", () => ({
 
 jest.mock("@components/admin/next-theme-switcher", () => () => null);
 
+jest.mock("@/components/public/product-discussions/panel", () => () => null);
+
 jest.mock("@courselit/components-library", () => ({
     Image: () => null,
+}));
+
+jest.mock("@courselit/page-blocks", () => ({
+    TextRenderer: () => null,
+}));
+
+jest.mock("@courselit/text-editor", () => ({
+    Editor: () => null,
+    emptyDoc: {},
 }));
 
 jest.mock("@courselit/icons", () => ({
@@ -77,7 +117,9 @@ jest.mock("lucide-react", () => ({
     BookOpen: () => null,
     ChevronRight: () => null,
     Clock: () => null,
+    Folder: () => null,
     LogOutIcon: () => null,
+    MessageSquare: () => null,
 }));
 
 jest.mock("@courselit/page-primitives", () => ({
@@ -86,7 +128,7 @@ jest.mock("@courselit/page-primitives", () => ({
 
 jest.mock("@ui-lib/utils", () => ({
     formattedLocaleDate: () => "Mar 22, 2026",
-    isEnrolled: () => true,
+    isEnrolled: () => mockIsEnrolled,
     isLessonCompleted: () => false,
 }));
 
@@ -95,12 +137,16 @@ import ProductPage, { generateSideBarItems } from "../layout-with-sidebar";
 import { CourseFrontend } from "../helpers";
 import constants from "@/config/constants";
 import { render, screen } from "@testing-library/react";
+import { ProfileContext } from "@components/contexts";
 
 describe("generateSideBarItems", () => {
     const originalDateNow = Date.now;
     const originalRelativeDripUnitInMillis = constants.relativeDripUnitInMillis;
 
     beforeEach(() => {
+        mockPathname = "/course/test-course/course-1";
+        mockSearchParams = new URLSearchParams();
+        mockIsEnrolled = true;
         Date.now = jest.fn(() =>
             new Date("2026-03-22T00:00:00.000Z").getTime(),
         );
@@ -794,9 +840,59 @@ describe("generateSideBarItems", () => {
         expect(items[1].badge).toBeUndefined();
         expect(items[1].items?.[0].icon).toBeUndefined();
     });
+
+    it("does not bypass learner drip rules for course managers outside preview mode", () => {
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "admin-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: false,
+            groups: [
+                {
+                    id: "group-1",
+                    name: "Dripped Section",
+                    lessons: [],
+                    drip: {
+                        status: true,
+                        type: Constants.dripType[0].split("-")[0].toUpperCase(),
+                        delayInMillis: 2,
+                    },
+                },
+            ],
+        } as unknown as CourseFrontend;
+
+        const profile = {
+            userId: "admin-1",
+            permissions: [constants.permissions.manageCourse],
+            purchases: [],
+        } as unknown as Profile;
+
+        const items = generateSideBarItems(
+            course,
+            profile,
+            "/course/test-course/course-1",
+        );
+
+        expect(items[1].badge?.text).toBe("2 days");
+    });
 });
 
 describe("Course viewer layout", () => {
+    beforeEach(() => {
+        mockPathname = "/course/test-course/course-1";
+        mockSearchParams = new URLSearchParams();
+        mockIsEnrolled = true;
+    });
+
     it("renders the preview badge in the viewer header when preview mode is active", () => {
         const course = {
             title: "Course",
@@ -822,5 +918,311 @@ describe("Course viewer layout", () => {
         );
 
         expect(screen.getByText("Preview")).toBeInTheDocument();
+    });
+
+    it("shows the discussions sidebar item only when discussions are enabled", () => {
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            groups: [],
+            discussions: false,
+        } as unknown as CourseFrontend;
+
+        const profile = {
+            userId: "user-1",
+            purchases: [
+                {
+                    courseId: "course-1",
+                    accessibleGroups: [],
+                },
+            ],
+        } as unknown as Profile;
+
+        expect(
+            generateSideBarItems(
+                course,
+                profile,
+                "/course/test-course/course-1",
+            ).some((item) => item.title === "Discussions"),
+        ).toBe(false);
+
+        expect(
+            generateSideBarItems(
+                { ...course, discussions: true } as CourseFrontend,
+                profile,
+                "/course/test-course/course-1/discussions",
+            ).find((item) => item.title === "Discussions"),
+        ).toMatchObject({
+            href: "/course/test-course/course-1/discussions",
+            isActive: true,
+        });
+    });
+
+    it("hides discussion sidebar and header actions for guests", () => {
+        mockPathname = "/course/test-course/course-1/lesson-1";
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: false,
+            groups: [],
+            discussions: true,
+        } as unknown as CourseFrontend;
+
+        expect(
+            generateSideBarItems(
+                course,
+                {} as Profile,
+                "/course/test-course/course-1/discussions",
+            ).some((item) => item.title === "Discussions"),
+        ).toBe(false);
+
+        render(
+            <ProfileContext.Provider value={{ profile: {} } as any}>
+                <ProductPage product={course}>
+                    <div>Public lesson body</div>
+                </ProductPage>
+            </ProfileContext.Provider>,
+        );
+
+        expect(screen.getByText("Public lesson body")).toBeInTheDocument();
+        expect(screen.queryByLabelText("Discussions")).not.toBeInTheDocument();
+    });
+
+    it("hides discussion sidebar and header actions for logged-in non-enrolled users", () => {
+        mockPathname = "/course/test-course/course-1/lesson-1";
+        mockIsEnrolled = false;
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: false,
+            groups: [],
+            discussions: true,
+        } as unknown as CourseFrontend;
+        const profile = {
+            userId: "user-1",
+            purchases: [],
+        } as unknown as Profile;
+
+        expect(
+            generateSideBarItems(
+                course,
+                profile,
+                "/course/test-course/course-1/discussions",
+            ).some((item) => item.title === "Discussions"),
+        ).toBe(false);
+
+        render(
+            <ProductPage product={course}>
+                <div>Public lesson body</div>
+            </ProductPage>,
+        );
+
+        expect(screen.getByText("Public lesson body")).toBeInTheDocument();
+        expect(screen.queryByLabelText("Discussions")).not.toBeInTheDocument();
+    });
+
+    it("does not show a discussions header action on the course overview page", () => {
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: false,
+            groups: [],
+            discussions: true,
+        } as unknown as CourseFrontend;
+
+        render(
+            <ProductPage product={course}>
+                <div>Course body</div>
+            </ProductPage>,
+        );
+
+        expect(screen.queryByLabelText("Discussions")).not.toBeInTheDocument();
+    });
+
+    it("does not show a discussions header action on the discussions hub page", () => {
+        mockPathname = "/course/test-course/course-1/discussions";
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: false,
+            groups: [],
+            discussions: true,
+        } as unknown as CourseFrontend;
+
+        render(
+            <ProductPage product={course}>
+                <div>Discussions body</div>
+            </ProductPage>,
+        );
+
+        expect(screen.queryByLabelText("Discussions")).not.toBeInTheDocument();
+    });
+
+    it("opens the discussion panel from lesson pages", () => {
+        mockPathname = "/course/test-course/course-1/lesson-1";
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: false,
+            groups: [],
+            discussions: true,
+        } as unknown as CourseFrontend;
+
+        render(
+            <ProductPage product={course}>
+                <div>Lesson body</div>
+            </ProductPage>,
+        );
+
+        expect(screen.getByLabelText("Discussions")).toHaveAttribute(
+            "href",
+            "/course/test-course/course-1/lesson-1?discussion=open",
+        );
+    });
+
+    it("preserves preview session params when opening the discussion panel", () => {
+        mockPathname = "/course/test-course/course-1/lesson-1";
+        mockSearchParams = new URLSearchParams(
+            "preview=true&returnTo=%2Fdashboard%2Fproduct%2Fcourse-1",
+        );
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: true,
+            groups: [],
+            discussions: true,
+        } as unknown as CourseFrontend;
+
+        render(
+            <ProductPage product={course}>
+                <div>Lesson body</div>
+            </ProductPage>,
+        );
+
+        expect(screen.getByLabelText("Discussions")).toHaveAttribute(
+            "href",
+            "/course/test-course/course-1/lesson-1?preview=true&returnTo=%2Fdashboard%2Fproduct%2Fcourse-1&discussion=open",
+        );
+    });
+
+    it("preserves the open discussion panel while navigating lesson links", () => {
+        mockPathname = "/course/test-course/course-1/lesson-1";
+        mockSearchParams = new URLSearchParams("discussion=open");
+        const course = {
+            title: "Course",
+            description: "",
+            featuredImage: undefined,
+            updatedAt: new Date().toISOString(),
+            creatorId: "creator-1",
+            slug: "test-course",
+            cost: 0,
+            courseId: "course-1",
+            tags: [],
+            paymentPlans: [],
+            defaultPaymentPlan: "",
+            firstLesson: "lesson-1",
+            isPreview: false,
+            groups: [
+                {
+                    id: "group-1",
+                    name: "Section",
+                    lessons: [
+                        {
+                            lessonId: "lesson-1",
+                            title: "Lesson 1",
+                            requiresEnrollment: false,
+                        },
+                        {
+                            lessonId: "lesson-2",
+                            title: "Lesson 2",
+                            requiresEnrollment: false,
+                        },
+                    ],
+                },
+            ],
+            discussions: true,
+        } as unknown as CourseFrontend;
+
+        const { container } = render(
+            <ProductPage product={course}>
+                <div>Lesson body</div>
+            </ProductPage>,
+        );
+
+        expect(
+            container.querySelector(
+                'a[href="/course/test-course/course-1/lesson-2?discussion=open"]',
+            ),
+        ).toBeInTheDocument();
     });
 });

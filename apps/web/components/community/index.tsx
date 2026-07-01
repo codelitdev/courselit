@@ -1001,7 +1001,7 @@ export function CommunityForum({
                         onOpenChange={setShowDeleteConfirmation}
                     >
                         <DialogContent>
-                            <DialogTitle>Delete Post</DialogTitle>
+                            <DialogTitle>Delete post</DialogTitle>
                             <DialogDescription>
                                 Are you sure you want to delete this post? This
                                 action cannot be undone.

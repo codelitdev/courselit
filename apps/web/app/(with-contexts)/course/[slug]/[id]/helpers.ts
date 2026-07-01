@@ -6,6 +6,7 @@ export type CourseFrontend = CourseWithoutGroups & {
     groups: GroupWithLessons[];
     firstLesson: string;
     isPreview: boolean;
+    discussions: boolean;
 };
 
 export type GroupWithLessons = Group & { lessons: Lesson[] };
@@ -49,6 +50,7 @@ export const getProduct = async (
                         cost,
                         courseId,
                         isPreview,
+                        discussions,
                         groups {
                             id,
                             name,
@@ -134,6 +136,7 @@ export function formatCourse(
         isPreview: Boolean(
             (post as Course & { isPreview?: boolean }).isPreview,
         ),
+        discussions: Boolean(post.discussions),
         groups: groupsWithLessons as GroupWithLessons[],
         tags: post.tags,
         firstLesson: post.firstLesson,

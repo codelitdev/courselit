@@ -11,46 +11,13 @@ import {
     CommunityPost,
     Membership,
 } from "@courselit/common-models";
-
-const HASH_HIGHLIGHT_CLASSES = [
-    "border-border",
-    "bg-accent/40",
-    "shadow-sm",
-    "ring-1",
-    "ring-ring/20",
-];
-
-const scrollToHashTarget = () => {
-    const hash = window.location.hash.slice(1);
-
-    if (!hash) {
-        return false;
-    }
-
-    const el = document.getElementById(hash);
-
-    if (!el) {
-        return false;
-    }
-
-    el.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-    });
-    el.classList.add(...HASH_HIGHLIGHT_CLASSES);
-    window.setTimeout(
-        () => el.classList.remove(...HASH_HIGHLIGHT_CLASSES),
-        2200,
-    );
-
-    return true;
-};
+import { focusHashTarget, scrollToHashTarget } from "@/lib/hash-target";
 
 const focusCommentTarget = (targetId: string) => {
-    const url = new URL(window.location.href);
-    url.hash = targetId;
-    window.history.pushState({}, "", url.toString());
-    window.dispatchEvent(new Event("community-comment-target-change"));
+    focusHashTarget({
+        targetId,
+        eventName: "community-comment-target-change",
+    });
 };
 
 const REACTIONS_FRAGMENT = `
