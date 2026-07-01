@@ -35,7 +35,8 @@ CourseLit offers integrations with the following payment platforms:
     - In the destination type, select `Webhook endpoint`.
     - In the destination, enter your CourseLit school's webhook endpoint (listed in the same payment screen in your school).
       ![Stripe webhook destination](/assets/schools/stripe-courselit-webhook-entry.png)
-9. That's it! Your Stripe configuration is complete, and you are ready to receive payments.
+9. Copy the webhook signing secret from Stripe and paste it into `Stripe Webhook Secret` in your CourseLit payment settings.
+10. That's it! Your Stripe configuration is complete, and you are ready to receive payments.
 
 ## Razorpay setup
 

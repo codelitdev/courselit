@@ -74,7 +74,11 @@ export const checkForInvalidPaymentMethodSettings = (
 
     if (
         siteInfo.paymentMethod === UIConstants.PAYMENT_METHOD_STRIPE &&
-        !(siteInfo.stripeSecret && siteInfo.stripeKey)
+        !(
+            siteInfo.stripeSecret &&
+            siteInfo.stripeKey &&
+            siteInfo.stripeWebhookSecret
+        )
     ) {
         failedPaymentMethod = UIConstants.PAYMENT_METHOD_STRIPE;
     }

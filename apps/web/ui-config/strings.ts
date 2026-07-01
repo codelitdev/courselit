@@ -101,6 +101,8 @@ export const HEADER_COURSELIT = "About CourseLit";
 export const MEDIA_SELECTOR_UPLOAD_BTN_CAPTION = "Upload a picture";
 export const MEDIA_SELECTOR_REMOVE_BTN_CAPTION = "Remove picture";
 export const SITE_ADMIN_SETTINGS_STRIPE_SECRET = "Stripe Secret Key";
+export const SITE_ADMIN_SETTINGS_STRIPE_WEBHOOK_SECRET =
+    "Stripe Webhook Secret";
 export const SITE_ADMIN_SETTINGS_RAZORPAY_SECRET = "Razorpay Secret Key";
 export const SITE_ADMIN_SETTINGS_RAZORPAY_WEBHOOK_SECRET =
     "Razorpay Webhook Secret";

@@ -33,6 +33,10 @@ export default class StripePayment implements Payment {
             throw new Error(`${this.name} ${paymentInvalidSettings}`);
         }
 
+        if (!this.siteinfo.stripeWebhookSecret) {
+            throw new Error(`${this.name} ${paymentInvalidSettings}`);
+        }
+
         this.stripe = new Stripe(this.siteinfo.stripeSecret, {
             typescript: true,
         });
@@ -77,7 +81,28 @@ export default class StripePayment implements Payment {
         return this.siteinfo.currencyISOCode!;
     }
 
-    async verify(event: Stripe.Event) {
+    async verify(
+        event: Stripe.Event,
+        context?: { rawBody?: string; signature?: string | null },
+    ) {
+        if (
+            !context?.rawBody ||
+            !context.signature ||
+            !this.siteinfo.stripeWebhookSecret
+        ) {
+            return false;
+        }
+
+        try {
+            event = this.stripe.webhooks.constructEvent(
+                context.rawBody,
+                context.signature,
+                this.siteinfo.stripeWebhookSecret,
+            );
+        } catch {
+            return false;
+        }
+
         if (!event) {
             return false;
         }
