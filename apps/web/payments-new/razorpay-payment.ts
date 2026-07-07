@@ -3,6 +3,7 @@ import Payment, { InitiateProps } from "./payment";
 import { responses } from "@config/strings";
 import Razorpay from "razorpay";
 import { getUnitAmount } from "./helpers";
+import crypto from "crypto";
 
 const {
     payment_invalid_settings: paymentInvalidSettings,
@@ -13,6 +14,7 @@ export default class RazorpayPayment implements Payment {
     public siteinfo: SiteInfo;
     public name: string;
     public razorpay: any;
+    private webhookSecret: string | undefined;
 
     constructor(siteinfo: SiteInfo) {
         this.siteinfo = siteinfo;
@@ -33,6 +35,8 @@ export default class RazorpayPayment implements Payment {
             key_secret: this.siteinfo.razorpaySecret,
         });
 
+        this.webhookSecret = this.siteinfo.razorpayWebhookSecret;
+
         return this;
     }
 
@@ -45,10 +49,40 @@ export default class RazorpayPayment implements Payment {
         return order.id;
     }
 
-    async verify(event) {
+    async verify(
+        event: any,
+        rawBody: string,
+        headers: Record<string, string | null>,
+    ) {
         if (!event) {
             return false;
         }
+
+        const signature = headers["x-razorpay-signature"];
+        if (!signature || !this.webhookSecret) {
+            return false;
+        }
+
+        const expectedSignature = crypto
+            .createHmac("sha256", this.webhookSecret)
+            .update(rawBody)
+            .digest("hex");
+        try {
+            const expected = Buffer.from(expectedSignature);
+            const received = Buffer.from(signature);
+            if (
+                expected.length !== received.length ||
+                !crypto.timingSafeEqual(
+                    new Uint8Array(expected),
+                    new Uint8Array(received),
+                )
+            ) {
+                return false;
+            }
+        } catch {
+            return false;
+        }
+
         if (
             event.event === "order.paid" &&
             event.payload.order.entity.notes.membershipId
