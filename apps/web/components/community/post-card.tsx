@@ -15,7 +15,7 @@ import {
 } from "@courselit/page-blocks";
 import { CommunityMedia, CommunityPost } from "@courselit/common-models";
 import { capitalize, truncate } from "@courselit/utils";
-import { Pin } from "lucide-react";
+import { MessageSquare, Pin } from "lucide-react";
 import Link from "next/link";
 import { useContext } from "react";
 import { ThemeContext } from "@components/contexts";

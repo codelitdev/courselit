@@ -18,7 +18,6 @@ export default class StripePayment implements Payment {
     public siteinfo: SiteInfo;
     public name: string;
     public stripe: any;
-    private webhookSecret: string | undefined;
 
     constructor(siteinfo: SiteInfo) {
         this.siteinfo = siteinfo;
@@ -37,8 +36,6 @@ export default class StripePayment implements Payment {
         this.stripe = new Stripe(this.siteinfo.stripeSecret, {
             typescript: true,
         });
-
-        this.webhookSecret = this.siteinfo.stripeWebhookSecret;
 
         return this;
     }
@@ -80,27 +77,10 @@ export default class StripePayment implements Payment {
         return this.siteinfo.currencyISOCode!;
     }
 
-    async verify(
-        _event: any,
-        rawBody: string,
-        headers: Record<string, string | null>,
-    ) {
-        const signature = headers["stripe-signature"];
-        if (!signature || !this.webhookSecret) {
+    async verify(event: Stripe.Event) {
+        if (!event) {
             return false;
         }
-
-        let event: Stripe.Event;
-        try {
-            event = this.stripe.webhooks.constructEvent(
-                rawBody,
-                signature,
-                this.webhookSecret,
-            );
-        } catch {
-            return false;
-        }
-
         if (
             event.type === "checkout.session.completed" &&
             (event.data.object as any).payment_status === "paid"

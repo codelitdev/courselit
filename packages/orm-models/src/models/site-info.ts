@@ -9,7 +9,6 @@ export const SettingsSchema = new mongoose.Schema<SiteInfo>({
     currencyISOCode: { type: String, maxlength: 3 },
     paymentMethod: { type: String, enum: Constants.paymentMethods },
     stripeKey: { type: String },
-    stripeWebhookSecret: { type: String },
     codeInjectionHead: { type: String },
     codeInjectionBody: { type: String },
     stripeSecret: { type: String },
