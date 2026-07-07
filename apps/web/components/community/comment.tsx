@@ -2,13 +2,7 @@ import { useContext, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-    MessageSquare,
-    MoreVertical,
-    FlagTriangleRight,
-    Trash,
-    Reply,
-} from "lucide-react";
+import { MoreVertical, FlagTriangleRight, Trash } from "lucide-react";
 import {
     CommunityComment,
     CommunityCommentReply,
