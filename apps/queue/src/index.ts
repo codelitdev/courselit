@@ -1,6 +1,7 @@
 import express from "express";
 import jobRoutes from "./job/routes";
 import sseRoutes from "./sse/routes";
+import inboundEmailRoutes from "./inbound-email/routes";
 
 // start workers
 import "./domain/worker";
@@ -23,6 +24,7 @@ app.use(express.json());
 
 app.use("/job", verifyJWTMiddleware, jobRoutes);
 app.use("/sse", sseRoutes);
+app.use("/inbound-email", inboundEmailRoutes);
 
 app.get("/healthy", (req, res) => {
     res.status(200).json({ status: "ok", uptime: process.uptime() });
