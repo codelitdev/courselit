@@ -1,0 +1,6 @@
+clcomp.taile2f1.ts.net {
+    reverse_proxy /sse/* localhost:4000
+    reverse_proxy /job/* localhost:4000
+    reverse_proxy /healthy localhost:4000
+    reverse_proxy /* localhost:3000
+}
