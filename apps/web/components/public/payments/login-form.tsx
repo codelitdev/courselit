@@ -158,7 +158,7 @@ export function LoginForm({
     const requestCode = async function (email: string) {
         setLoading(true);
 
-        if (!validateRecaptcha()) {
+        if (!(await validateRecaptcha())) {
             return;
         }
 
