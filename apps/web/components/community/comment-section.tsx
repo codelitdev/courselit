@@ -2,7 +2,7 @@ import { AddressContext, ProfileContext } from "@components/contexts";
 import { Button } from "@components/ui/button";
 import { Textarea } from "@components/ui/textarea";
 import { FetchBuilder } from "@courselit/utils";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Link, useToast } from "@courselit/components-library";
 import { Comment } from "./comment";
 import {
@@ -11,6 +11,14 @@ import {
     CommunityPost,
     Membership,
 } from "@courselit/common-models";
+import { focusHashTarget, scrollToHashTarget } from "@/lib/hash-target";
+
+const focusCommentTarget = (targetId: string) => {
+    focusHashTarget({
+        targetId,
+        eventName: "community-comment-target-change",
+    });
+};
 
 export default function CommentSection({
     communityId,
@@ -25,16 +33,11 @@ export default function CommentSection({
 }) {
     const [comments, setComments] = useState<CommunityComment[]>([]);
     const [content, setContent] = useState("");
-    const commentsEndRef = useRef<HTMLDivElement>(null);
     const address = useContext(AddressContext);
     const [post, setPost] = useState<CommunityPost>();
     const { profile } = useContext(ProfileContext);
     const { toast } = useToast();
     const [isPosting, setIsPosting] = useState(false);
-
-    const scrollToBottom = () => {
-        commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
 
     useEffect(() => {
         loadPost();
@@ -42,8 +45,33 @@ export default function CommentSection({
     }, []);
 
     useEffect(() => {
-        scrollToBottom();
+        if (comments.length === 0) return;
+        if (scrollToHashTarget()) return;
     }, [comments]);
+
+    useEffect(() => {
+        if (comments.length === 0) {
+            return;
+        }
+
+        const handleTargetChange = () => {
+            scrollToHashTarget();
+        };
+
+        window.addEventListener("hashchange", handleTargetChange);
+        window.addEventListener(
+            "community-comment-target-change",
+            handleTargetChange,
+        );
+
+        return () => {
+            window.removeEventListener("hashchange", handleTargetChange);
+            window.removeEventListener(
+                "community-comment-target-change",
+                handleTargetChange,
+            );
+        };
+    }, [comments.length]);
 
     useEffect(() => {
         if (post && typeof post.commentsCount !== "undefined") {
@@ -233,6 +261,7 @@ export default function CommentSection({
                     response.comment,
                 ]);
                 setContent("");
+                focusCommentTarget(response.comment.commentId);
                 setPost((prevPost) => {
                     if (prevPost) {
                         return {
@@ -326,6 +355,11 @@ export default function CommentSection({
             const response = await fetch.exec();
             if (response.comment) {
                 replaceComment(response.comment);
+                const latestReply =
+                    response.comment.replies[
+                        response.comment.replies.length - 1
+                    ];
+                focusCommentTarget(latestReply?.replyId || commentId);
                 setPost((prevPost) => {
                     if (prevPost) {
                         return {
@@ -619,7 +653,6 @@ export default function CommentSection({
                         isPosting={isPosting}
                     />
                 ))}
-                <div ref={commentsEndRef} />
             </div>
             {!profile?.name && (
                 <div className="text-center text-gray-500">

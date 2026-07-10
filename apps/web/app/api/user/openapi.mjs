@@ -23,8 +23,6 @@ export const userApiOpenApi = {
             post: {
                 tags: ["Users"],
                 summary: "Create a user",
-                description:
-                    "Creates a user in the current school. Call this endpoint on the school domain, for example `https://school.courselit.app/api/user`, and authenticate with `x-api-key`. The legacy `apikey` field in the request body is still accepted for backward compatibility.",
                 operationId: "createUser",
                 security: [
                     {
@@ -155,8 +153,6 @@ export const userApiOpenApi = {
             patch: {
                 tags: ["Users"],
                 summary: "Update a user",
-                description:
-                    "Updates a user in the current school. Call this endpoint on the school domain, for example `https://school.courselit.app/api/user`, and authenticate with `x-api-key`. CourseLit proxy infrastructure resolves the school and injects the internal `domain` header automatically. The legacy `apikey` field in the request body is still accepted for backward compatibility.",
                 operationId: "updateUser",
                 security: [
                     {

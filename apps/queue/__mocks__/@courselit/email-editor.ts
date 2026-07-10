@@ -5,8 +5,10 @@ export type {
     EmailBlock,
     EmailMeta,
     EmailStyle,
-    BlockComponent,
 } from "../../../../packages/email-editor/src/types/email-editor";
-export type { BlockRegistry } from "../../../../packages/email-editor/src/types/block-registry";
+export type {
+    BlockComponent,
+    BlockRegistry,
+} from "../../../../packages/email-editor/src/types/block-registry";
 export { renderEmailToHtml } from "../../../../packages/email-editor/src/lib/email-renderer";
 export { defaultEmail } from "../../../../packages/email-editor/src/lib/default-email";

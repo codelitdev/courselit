@@ -54,6 +54,7 @@ export const SIDEBAR: Sidebar = {
             { text: "Introduction", link: "en/courses/introduction" },
             { text: "Create a course", link: "en/courses/create" },
             { text: "Publish", link: "en/courses/publish" },
+            { text: "Preview a course", link: "en/courses/preview" },
             { text: "Set a price", link: "en/courses/set-a-price-for-product" },
             { text: "Control visibility", link: "en/courses/visibility" },
             { text: "Add content", link: "en/courses/add-content" },
@@ -61,6 +62,7 @@ export const SIDEBAR: Sidebar = {
             { text: "Invite customers", link: "en/products/invite-customers" },
             { text: "Certificates", link: "en/courses/certificates" },
             { text: "Customer reports", link: "en/products/reports" },
+            { text: "Discussions", link: "en/courses/discussions" },
         ],
         "Digital downloads": [
             { text: "Introduction", link: "en/downloads/introduction" },
@@ -138,6 +140,14 @@ export const SIDEBAR: Sidebar = {
         Developers: [
             { text: "Introduction", link: "en/developers/introduction" },
             { text: "Managing users", link: "en/developers/manage-users" },
+            {
+                text: "Products and content",
+                link: "en/developers/products-and-content",
+            },
+            {
+                text: "Customers and progress",
+                link: "en/developers/customers-and-progress",
+            },
         ],
         "Self hosting": [
             { text: "Why self host?", link: "en/self-hosting/introduction" },

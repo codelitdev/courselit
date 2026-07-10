@@ -32,7 +32,7 @@ export default function useProduct(id?: string | null): {
         async (courseId: string) => {
             const query = `
             query {
-                course: getCourse(id: "${courseId}") {
+                course: getCourse(id: "${courseId}", preview: true) {
                     title,
                     description,
                     type,
@@ -70,6 +70,7 @@ export default function useProduct(id?: string | null): {
                         }
                     },
                     courseId,
+                    discussions,
                     cost,
                     costType,
                     featuredImage {

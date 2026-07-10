@@ -150,6 +150,14 @@ const courseType = new GraphQLObjectType({
         slug: { type: new GraphQLNonNull(GraphQLString) },
         description: { type: GraphQLString },
         leadMagnet: { type: GraphQLBoolean },
+        isPreview: {
+            type: new GraphQLNonNull(GraphQLBoolean),
+            resolve: (course) => Boolean((course as any).isPreview),
+        },
+        discussions: {
+            type: new GraphQLNonNull(GraphQLBoolean),
+            resolve: (course) => Boolean(course.discussions),
+        },
         featuredImage: {
             type: mediaTypes.mediaType,
             resolve: (course, _, context, __) => getMedia(course.featuredImage),
@@ -196,6 +204,7 @@ const courseUpdateInput = new GraphQLInputObjectType({
         featuredImage: { type: mediaTypes.mediaInputType },
         leadMagnet: { type: GraphQLBoolean },
         certificate: { type: GraphQLBoolean },
+        discussions: { type: GraphQLBoolean },
     },
 });
 

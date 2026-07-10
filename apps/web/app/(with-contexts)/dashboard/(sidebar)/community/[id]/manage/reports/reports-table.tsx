@@ -193,42 +193,21 @@ export function ReportsTable({ communityId }: { communityId: string }) {
     const getStatusBadge = (status: CommunityReportStatus) => {
         switch (status) {
             case "pending":
-                return (
-                    <Badge
-                        variant="secondary"
-                        className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100"
-                    >
-                        PENDING
-                    </Badge>
-                );
+                return <Badge variant="secondary">PENDING</Badge>;
             case "accepted":
-                return (
-                    <Badge
-                        variant="default"
-                        className="bg-red-100 text-red-700 hover:bg-red-100"
-                    >
-                        ACCEPTED
-                    </Badge>
-                );
+                return <Badge variant="default">ACCEPTED</Badge>;
             case "rejected":
-                return (
-                    <Badge
-                        variant="outline"
-                        className="bg-gray-100 text-gray-700 hover:bg-gray-100"
-                    >
-                        REJECTED
-                    </Badge>
-                );
+                return <Badge variant="outline">REJECTED</Badge>;
             default:
                 return null;
         }
     };
 
     return (
-        <div className="rounded-md bg-white">
-            <div className="py-4 pr-4 border-b">
+        <div className="space-y-4">
+            <div>
                 <Select value={filter} onValueChange={setFilter}>
-                    <SelectTrigger className="w-[180px] bg-white">
+                    <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="All" />
                     </SelectTrigger>
                     <SelectContent>
@@ -239,7 +218,7 @@ export function ReportsTable({ communityId }: { communityId: string }) {
                     </SelectContent>
                 </Select>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-md border">
                 <PaginatedTable
                     page={page}
                     totalPages={Math.ceil(totalReports / itemsPerPage)}
@@ -247,49 +226,32 @@ export function ReportsTable({ communityId }: { communityId: string }) {
                 >
                     <Table>
                         <TableHeader>
-                            <TableRow className="bg-gray-50/50">
-                                <TableHead className="text-sm font-medium text-gray-500">
-                                    Content
-                                </TableHead>
-                                <TableHead className="text-sm font-medium text-gray-500">
-                                    Type
-                                </TableHead>
-                                <TableHead className="text-sm font-medium text-gray-500">
-                                    Reason
-                                </TableHead>
-                                <TableHead className="text-sm font-medium text-gray-500">
-                                    Status
-                                </TableHead>
-                                <TableHead className="text-sm font-medium text-gray-500">
-                                    Rejection Reason
-                                </TableHead>
-                                <TableHead className="text-sm font-medium text-gray-500">
-                                    Actions
-                                </TableHead>
+                            <TableRow>
+                                <TableHead>Content</TableHead>
+                                <TableHead>Type</TableHead>
+                                <TableHead>Reason</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Rejection Reason</TableHead>
+                                <TableHead>Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {reports.map((report) => (
-                                <TableRow
-                                    key={report.reportId}
-                                    className="border-b"
-                                >
-                                    <TableCell className="text-sm text-gray-600 max-w-[200px] truncate">
+                                <TableRow key={report.reportId}>
+                                    <TableCell className="max-w-[200px] truncate">
                                         {report.content.content}
                                     </TableCell>
-                                    <TableCell className="text-sm text-gray-600">
+                                    <TableCell>
                                         {report.type.charAt(0).toUpperCase() +
                                             report.type.slice(1).toLowerCase()}
                                     </TableCell>
-                                    <TableCell className="text-sm text-gray-600">
-                                        {report.reason}
-                                    </TableCell>
+                                    <TableCell>{report.reason}</TableCell>
                                     <TableCell>
                                         {getStatusBadge(
                                             report.status.toLowerCase() as CommunityReportStatus,
                                         )}
                                     </TableCell>
-                                    <TableCell className="text-sm text-gray-500">
+                                    <TableCell>
                                         {report.rejectionReason || "-"}
                                     </TableCell>
                                     <TableCell>

@@ -7,13 +7,37 @@ import DomainModel, { Domain } from "@models/Domain";
 import { auth } from "@/auth";
 import { error } from "@/services/logger";
 import { MediaLit } from "medialit";
+import { validatePublicApiRequest } from "@/app/api/public-api";
 
-export async function POST(req: NextRequest) {
+function hasApiKey(req: NextRequest) {
+    return !!(req.headers.get("x-api-key") ?? req.headers.get("X-API-Key"));
+}
+
+async function getUserAndDomain(req: NextRequest) {
+    if (hasApiKey(req)) {
+        const apiAuth = await validatePublicApiRequest(req);
+        if (apiAuth.error) {
+            return {
+                error: apiAuth.error,
+            };
+        }
+
+        return {
+            domain: apiAuth.domain,
+            user: apiAuth.user,
+        };
+    }
+
     const domain = await DomainModel.findOne<Domain>({
         name: req.headers.get("domain"),
     });
     if (!domain) {
-        return Response.json({ message: "Domain not found" }, { status: 404 });
+        return {
+            error: Response.json(
+                { message: "Domain not found" },
+                { status: 404 },
+            ),
+        };
     }
 
     const session = await auth.api.getSession({
@@ -30,8 +54,20 @@ export async function POST(req: NextRequest) {
     }
 
     if (!user) {
-        return Response.json({}, { status: 401 });
+        return {
+            error: Response.json({}, { status: 401 }),
+        };
     }
+
+    return { domain, user };
+}
+
+export async function POST(req: NextRequest) {
+    const authResult = await getUserAndDomain(req);
+    if (authResult.error) {
+        return authResult.error;
+    }
+    const { domain, user } = authResult;
 
     if (
         !checkPermission(user!.permissions, [constants.permissions.manageMedia])

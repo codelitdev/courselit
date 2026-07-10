@@ -1,4 +1,5 @@
 import { CommunityMedia } from "./community-media";
+import { TextEditorContent } from "./text-editor-content";
 import User from "./user";
 
 export interface CommunityPost {
@@ -6,7 +7,7 @@ export interface CommunityPost {
     communityId: string;
     postId: string;
     title: string;
-    content: string;
+    content: TextEditorContent;
     category: string;
     media?: CommunityMedia[];
     pinned: boolean;

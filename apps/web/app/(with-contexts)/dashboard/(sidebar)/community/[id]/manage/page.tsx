@@ -4,6 +4,7 @@ import DashboardContent from "@components/admin/dashboard-content";
 import { AddressContext, ProfileContext } from "@components/contexts";
 import {
     COMMUNITY_HEADER,
+    COMMUNITY_REPORTS_HEADER,
     COMMUNITY_SETTINGS,
     DANGER_ZONE_HEADER,
     MEDIA_SELECTOR_REMOVE_BTN_CAPTION,
@@ -19,7 +20,9 @@ import {
     PaymentPlanType,
     Profile,
     Media,
+    UIConstants,
 } from "@courselit/common-models";
+import { checkPermission } from "@courselit/utils";
 import {
     Badge,
     Form,
@@ -526,13 +529,19 @@ export default function Page(props: {
                             {COMMUNITY_SETTINGS}
                         </h1>
                         <div className="flex gap-2">
-                            <Link
-                                href={`/dashboard/page/${pageId}?redirectTo=/dashboard/community/${id}/manage`}
-                            >
-                                <Button variant="outline" className="">
-                                    <Edit className="w-4 h-4" /> Edit page
-                                </Button>
-                            </Link>
+                            {profile &&
+                                checkPermission(profile.permissions!, [
+                                    UIConstants.permissions.manageSite,
+                                ]) && (
+                                    <Link
+                                        href={`/dashboard/page/${pageId}?redirectTo=/dashboard/community/${id}/manage`}
+                                    >
+                                        <Button variant="outline" className="">
+                                            <Edit className="w-4 h-4" /> Edit
+                                            page
+                                        </Button>
+                                    </Link>
+                                )}
                             <Link
                                 href={`/dashboard/community/${id}/manage/memberships`}
                             >
@@ -545,7 +554,7 @@ export default function Page(props: {
                             >
                                 <Button variant="outline" className="">
                                     <FlagTriangleRight className="w-4 h-4" />{" "}
-                                    Reported content
+                                    {COMMUNITY_REPORTS_HEADER}
                                 </Button>
                             </Link>
                         </div>

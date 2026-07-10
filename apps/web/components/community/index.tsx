@@ -8,25 +8,7 @@ import {
     useCallback,
     useMemo,
 } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardFooter,
-    CardHeader,
-} from "@/components/ui/card";
-import {
-    MessageSquare,
-    ThumbsUp,
-    Pin,
-    MoreVertical,
-    Trash,
-    FlagTriangleRight,
-    Maximize2,
-    ArrowLeft,
-    Download,
-} from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -34,9 +16,8 @@ import {
     DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog";
-import { Comment as CommentType } from "./mock-data";
 import { useRouter } from "next/navigation";
-import { capitalize, FetchBuilder, truncate } from "@courselit/utils";
+import { FetchBuilder } from "@courselit/utils";
 import { AddressContext, ProfileContext } from "@components/contexts";
 import {
     PaginatedTable,
@@ -53,21 +34,12 @@ import {
 import LoadingSkeleton from "./loading-skeleton";
 import { formattedLocaleDate, hasCommunityPermission } from "@ui-lib/utils";
 import { MediaItem } from "./media-item";
-import Image from "next/image";
 import MembershipStatus from "./membership-status";
 import {
     MANAGE_LINK_TEXT,
     TOAST_TITLE_ERROR,
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import CommentSection from "./comment-section";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useCommunity } from "@/hooks/use-community";
 import { useMembership } from "@/hooks/use-membership";
 import NotFound from "@components/admin/not-found";
@@ -76,6 +48,8 @@ import Banner from "./banner";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import CommunityPostCard from "./post-card";
+import CommunityPostMediaPreview from "./post-media-preview";
 
 const CreatePostDialog = dynamic(() => import("./create-post-dialog"));
 
@@ -91,11 +65,6 @@ export function CommunityForum({
     const router = useRouter();
     const [showAllCategories, setShowAllCategories] = useState(false);
     const [posts, setPosts] = useState<CommunityPost[]>([]);
-    const [openPostId, setOpenPostId] = useState<string | null>(null);
-    const openPost = useMemo(
-        () => posts.find((p) => p.postId === openPostId) || null,
-        [posts, openPostId],
-    );
     const commentsEndRef = useRef<HTMLDivElement>(null);
     const address = useContext(AddressContext);
     const { toast } = useToast();
@@ -104,8 +73,6 @@ export function CommunityForum({
         () => categories.filter((x) => x !== "All"),
         [categories],
     );
-    const [fullscreenMedia, setFullscreenMedia] =
-        useState<CommunityMedia | null>(null);
     const [page, setPage] = useState(1);
     const [totalPosts, setTotalPosts] = useState(0);
     const [postToDelete, setPostToDelete] = useState<CommunityPost | null>(
@@ -367,60 +334,6 @@ export function CommunityForum({
         }
     };
 
-    const likeComment = (
-        comments: CommentType[],
-        commentId: number,
-    ): CommentType[] => {
-        return comments.map((comment) =>
-            comment.id === commentId
-                ? {
-                      ...comment,
-                      likes: comment.hasLiked
-                          ? comment.likes - 1
-                          : comment.likes + 1,
-                      hasLiked: !comment.hasLiked,
-                  }
-                : {
-                      ...comment,
-                      replies: likeComment(comment.replies, commentId),
-                  },
-        );
-    };
-
-    const addReplyToComment = (
-        comments: CommentType[],
-        parentCommentId: number,
-        content: string,
-    ): CommentType[] => {
-        return comments.map((comment) =>
-            comment.id === parentCommentId
-                ? {
-                      ...comment,
-                      replies: [
-                          ...comment.replies,
-                          {
-                              id: Date.now(),
-                              author: "Current User",
-                              avatar: "/placeholder.svg",
-                              content,
-                              likes: 0,
-                              hasLiked: false,
-                              time: "Just now",
-                              replies: [],
-                          },
-                      ],
-                  }
-                : {
-                      ...comment,
-                      replies: addReplyToComment(
-                          comment.replies,
-                          parentCommentId,
-                          content,
-                      ),
-                  },
-        );
-    };
-
     const createPost = useCallback(
         async (
             newPost: Pick<CommunityPost, "title" | "content" | "category"> & {
@@ -439,7 +352,7 @@ export function CommunityForum({
                 const isEdit = !!effectivePostId;
                 const mutation = isEdit
                     ? `
-                mutation ($communityId: String!, $postId: String!, $title: String, $content: String, $category: String, $media: [CommunityPostInputMedia]) {
+                mutation ($communityId: String!, $postId: String!, $title: String, $content: JSONObject, $category: String, $media: [CommunityPostInputMedia]) {
                     post: updateCommunityPost(
                         communityId: $communityId,
                         postId: $postId,
@@ -483,7 +396,7 @@ export function CommunityForum({
                 }
             `
                     : `
-                mutation ($id: String!, $title: String!, $content: String!, $category: String!, $media: [CommunityPostInputMedia]) {
+                mutation ($id: String!, $title: String!, $content: JSONObject!, $category: String!, $media: [CommunityPostInputMedia]) {
                     post: createCommunityPost(
                         id: $id,
                         title: $title,
@@ -622,171 +535,9 @@ export function CommunityForum({
         return media;
     };
 
-    const renderMediaPreview = (
-        media: CommunityMedia,
-        options?: {
-            renderActualFile?: boolean;
-        },
-    ) => {
-        if (!media) return null;
-
-        switch (media.type) {
-            case "image":
-                if (media.media) {
-                    const imgSrc =
-                        (options && options.renderActualFile) ||
-                        media.media?.file?.endsWith(".gif")
-                            ? media.media.file!
-                            : media.media.thumbnail;
-                    return (
-                        <div className="relative group">
-                            <Image
-                                src={imgSrc}
-                                alt="Post media"
-                                className="w-48 h-48 object-cover rounded-md"
-                                width={96}
-                                height={96}
-                            />
-                            {options?.renderActualFile && media.media.file && (
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setFullscreenMedia(media);
-                                    }}
-                                    className="absolute top-2 right-2 rounded-md bg-black/60 text-white p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80"
-                                    aria-label="View full screen"
-                                >
-                                    <Maximize2 className="h-4 w-4" />
-                                </button>
-                            )}
-                        </div>
-                    );
-                } else {
-                    return null;
-                }
-            case "gif":
-                return (
-                    <img
-                        src={media.url}
-                        alt="GIF"
-                        className="w-48 h-48 object-cover rounded-md"
-                    />
-                );
-            case "video":
-                if (media.media) {
-                    return (
-                        <video
-                            src={media.media.file}
-                            poster={media.media.thumbnail}
-                            className="h-48 aspect-video object-cover rounded-md"
-                            controls
-                            controlsList="nodownload"
-                            onContextMenu={(e) => e.preventDefault()}
-                        >
-                            Your browser does not support the video tag.
-                        </video>
-                    );
-                } else {
-                    return null;
-                }
-            case "youtube":
-                if (options && options.renderActualFile) {
-                    return (
-                        <iframe
-                            width="100%"
-                            height="100%"
-                            src={media.url}
-                            title="YouTube video player"
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                        ></iframe>
-                    );
-                }
-                if (!media.url) {
-                    return null;
-                }
-                return (
-                    <div className="relative w-full aspect-video">
-                        <img
-                            src={`https://img.youtube.com/vi/${media.url.split("/").pop()}/hqdefault.jpg`}
-                            alt="YouTube thumbnail"
-                            className="w-full h-full object-cover rounded-md"
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 68 48"
-                                width="68"
-                                height="48"
-                            >
-                                <path
-                                    className="ytp-large-play-button-bg"
-                                    fill="#f00"
-                                    d="M.66,37.2C1.15,38.8,2.4,40,4,40.5c3.5,1,17,1,30,1s26.5,0,30-1c1.6-.5,2.85-1.7,3.34-3.3.9-3.5,1-11.5,1-15.5s-.1-12-1-15.5C62.85,1.7,61.6.5,60,.1,56.5-.9,43-.9,30-.9S3.5-.9,0,.1C-1.6.5-2.85,1.7-3.34,3.3c-.9,3.5-1,11.5-1,15.5s.1,12,1,15.5Z"
-                                />
-                                <path fill="#fff" d="M 45,24 27,14 27,34" />
-                            </svg>
-                        </div>
-                    </div>
-                );
-            case "pdf":
-                if (options && options.renderActualFile) {
-                    // embed pdf
-                    return (
-                        <div
-                            className="relative group w-full h-48"
-                            onContextMenu={(e) => e.preventDefault()}
-                        >
-                            <div className="absolute inset-0 z-10" />
-                            <iframe
-                                src={`${media.media?.file}#toolbar=0&view=FitH`}
-                                className="w-full h-full pointer-events-none"
-                                onContextMenu={(e) => e.preventDefault()}
-                            ></iframe>
-                            <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                                {media.media?.mediaId && (
-                                    <a
-                                        href={`/api/media/${encodeURIComponent(media.media.mediaId)}`}
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="rounded-md bg-black/60 text-white p-1.5 hover:bg-black/80"
-                                        aria-label="Download"
-                                    >
-                                        <Download className="h-4 w-4" />
-                                    </a>
-                                )}
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setFullscreenMedia(media);
-                                    }}
-                                    className="rounded-md bg-black/60 text-white p-1.5 hover:bg-black/80"
-                                    aria-label="View full screen"
-                                >
-                                    <Maximize2 className="h-4 w-4" />
-                                </button>
-                            </div>
-                        </div>
-                    );
-                }
-                return (
-                    <div className="w-36 h-48 rounded bg-red-500 flex flex-col justify-between">
-                        <div>
-                            <div className="p-1 mt-1 ml-1 rounded bg-gray-900 text-xs text-white inline-block">
-                                PDF
-                            </div>
-                        </div>
-                        <div className="text-sm p-1 truncate text-white">
-                            {media.media?.originalFileName}
-                        </div>
-                    </div>
-                );
-            default:
-                return null;
-        }
-    };
+    const renderMediaPreview = (media: CommunityMedia) => (
+        <CommunityPostMediaPreview media={media} />
+    );
 
     const handleDeletePost = (post: CommunityPost) => {
         setPostToDelete(post);
@@ -1185,133 +936,27 @@ export function CommunityForum({
                         <div className="flex flex-col gap-4 mb-4">
                             {posts.length > 0 ? (
                                 posts.map((post) => (
-                                    <Card
+                                    <CommunityPostCard
                                         key={post.postId}
-                                        className="cursor-pointer hover:bg-accent/50 transition-colors"
-                                        onClick={() =>
-                                            setOpenPostId(post.postId)
+                                        post={post}
+                                        canModerate={
+                                            !!membership &&
+                                            hasCommunityPermission(
+                                                membership,
+                                                Constants.MembershipRole
+                                                    .MODERATE,
+                                            )
                                         }
-                                    >
-                                        <CardHeader className="flex flex-row items-start space-y-0 gap-4">
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <Avatar className="h-10 w-10 flex-shrink-0">
-                                                        <AvatarImage
-                                                            src={
-                                                                post.user.avatar
-                                                                    ?.file ||
-                                                                "/courselit_backdrop_square.webp"
-                                                            }
-                                                            alt={`${post.user.name}'s avatar`}
-                                                        />
-                                                        <AvatarFallback>
-                                                            {post.user.name &&
-                                                                post.user.name
-                                                                    .split(" ")
-                                                                    .map(
-                                                                        (n) =>
-                                                                            n[0],
-                                                                    )
-                                                                    .join("")}
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="truncate text-sm">
-                                                            {post.user.name ||
-                                                                post.user.email}
-                                                        </div>
-                                                        <div className="text-xs text-muted-foreground">
-                                                            {formatTimestamp(
-                                                                post.updatedAt,
-                                                            )}{" "}
-                                                            •{" "}
-                                                            {capitalize(
-                                                                post.category,
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {membership &&
-                                                hasCommunityPermission(
-                                                    membership,
-                                                    Constants.MembershipRole
-                                                        .MODERATE,
-                                                ) && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className={`flex-shrink-0 rounded-full ${post.pinned ? "bg-accent" : ""}`}
-                                                        onClick={(e) =>
-                                                            togglePin(
-                                                                post.postId,
-                                                                e,
-                                                            )
-                                                        }
-                                                    >
-                                                        <Pin className="h-4 w-4" />
-                                                        <span className="sr-only">
-                                                            Pin post
-                                                        </span>
-                                                    </Button>
-                                                )}
-                                        </CardHeader>
-                                        <CardContent>
-                                            <p className="text-base mb-4 font-semibold line-clamp-3">
-                                                {post.title}
-                                            </p>
-                                            <p className="text-sm mb-4 whitespace-pre-wrap">
-                                                {truncate(post.content, 500)}
-                                            </p>
-                                            {post.media && (
-                                                <div className="flex gap-2 overflow-x-auto">
-                                                    {post.media.map(
-                                                        (media, index) => (
-                                                            <div
-                                                                className="flex-shrink-0"
-                                                                key={
-                                                                    media.media
-                                                                        ?.mediaId ||
-                                                                    media.url ||
-                                                                    `${media.type}:${media.title || "untitled"}:${index}`
-                                                                }
-                                                            >
-                                                                {renderMediaPreview(
-                                                                    media,
-                                                                )}
-                                                            </div>
-                                                        ),
-                                                    )}
-                                                </div>
-                                            )}
-                                        </CardContent>
-                                        <CardFooter>
-                                            <div className="flex items-center gap-4">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className={`text-muted-foreground ${post.hasLiked ? "bg-accent" : ""}`}
-                                                    onClick={(e) =>
-                                                        handleLike(
-                                                            post.postId,
-                                                            e,
-                                                        )
-                                                    }
-                                                >
-                                                    <ThumbsUp className="h-4 w-4 mr-2" />
-                                                    {post.likesCount}
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="text-muted-foreground"
-                                                >
-                                                    <MessageSquare className="h-4 w-4 mr-2" />
-                                                    {post.commentsCount}
-                                                </Button>
-                                            </div>
-                                        </CardFooter>
-                                    </Card>
+                                        formatTimestamp={formatTimestamp}
+                                        renderMediaPreview={renderMediaPreview}
+                                        onOpen={(postId) =>
+                                            router.push(
+                                                `/dashboard/community/${id}/${postId}`,
+                                            )
+                                        }
+                                        onTogglePin={togglePin}
+                                        onLike={handleLike}
+                                    />
                                 ))
                             ) : (
                                 <div className="text-center py-8">
@@ -1325,7 +970,7 @@ export function CommunityForum({
                         onOpenChange={setShowDeleteConfirmation}
                     >
                         <DialogContent>
-                            <DialogTitle>Delete Post</DialogTitle>
+                            <DialogTitle>Delete post</DialogTitle>
                             <DialogDescription>
                                 Are you sure you want to delete this post? This
                                 action cannot be undone.
@@ -1403,255 +1048,6 @@ export function CommunityForum({
                             }
                         }}
                     />
-                    <Dialog
-                        open={!!openPost}
-                        onOpenChange={(open) => {
-                            if (!open) {
-                                setOpenPostId(null);
-                                setFullscreenMedia(null);
-                            }
-                        }}
-                    >
-                        <DialogContent
-                            className="sm:max-w-4xl w-full overflow-y-auto max-h-[90vh] my-8"
-                            aria-describedby={undefined}
-                        >
-                            <VisuallyHidden>
-                                <DialogTitle>Post&apos; content</DialogTitle>
-                            </VisuallyHidden>
-                            {openPost && fullscreenMedia ? (
-                                <div className="flex flex-col items-center gap-4 w-full">
-                                    <div className="flex w-full justify-start">
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setFullscreenMedia(null)
-                                            }
-                                            className="rounded-md bg-muted text-muted-foreground p-1.5 hover:bg-accent transition-colors"
-                                            aria-label="Back to post"
-                                        >
-                                            <ArrowLeft className="h-5 w-5" />
-                                        </button>
-                                    </div>
-                                    {fullscreenMedia.type === "pdf" ? (
-                                        <div className="w-full h-[70vh] relative">
-                                            <iframe
-                                                src={`${fullscreenMedia.media?.file}#toolbar=0&view=FitH`}
-                                                className="w-full h-full rounded-md"
-                                            />
-                                        </div>
-                                    ) : (
-                                        <img
-                                            src={fullscreenMedia.media?.file}
-                                            alt="Full size preview"
-                                            className="max-w-full max-h-[65vh] object-contain rounded-md"
-                                        />
-                                    )}
-                                </div>
-                            ) : openPost ? (
-                                <div className="grid gap-4">
-                                    <div className="flex items-center gap-2 justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <Avatar className="h-10 w-10">
-                                                <AvatarImage
-                                                    src={
-                                                        openPost.user.avatar
-                                                            ?.file ||
-                                                        "/courselit_backdrop_square.webp"
-                                                    }
-                                                    alt={`${openPost.user.name}'s avatar`}
-                                                />
-                                                <AvatarFallback>
-                                                    {openPost.user.name &&
-                                                        openPost.user.name
-                                                            .split(" ")
-                                                            .map((n) => n[0])
-                                                            .join("")}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <div className="font-semibold">
-                                                    {openPost.user.name ||
-                                                        openPost.user.email}
-                                                </div>
-                                                <div className="text-sm text-muted-foreground">
-                                                    {formatTimestamp(
-                                                        openPost.updatedAt,
-                                                    )}{" "}
-                                                    • {openPost.category}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-8 w-8 p-0"
-                                                >
-                                                    <span className="sr-only">
-                                                        Open menu
-                                                    </span>
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                {membership &&
-                                                    hasCommunityPermission(
-                                                        membership,
-                                                        Constants.MembershipRole
-                                                            .MODERATE,
-                                                    ) && (
-                                                        <DropdownMenuItem
-                                                            className="cursor-pointer hover:bg-accent hover:text-accent-foreground"
-                                                            onClick={() =>
-                                                                togglePin(
-                                                                    openPost.postId,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Pin className="h-4 w-4" />
-                                                            {openPost.pinned
-                                                                ? "Unpin"
-                                                                : "Pin"}
-                                                        </DropdownMenuItem>
-                                                    )}
-                                                {profile.userId !==
-                                                    openPost.user.userId && (
-                                                    <DropdownMenuItem
-                                                        className="cursor-pointer hover:bg-accent hover:text-accent-foreground"
-                                                        onClick={() =>
-                                                            handleReportPost(
-                                                                openPost,
-                                                            )
-                                                        }
-                                                    >
-                                                        <FlagTriangleRight className="h-4 w-4" />{" "}
-                                                        Report
-                                                    </DropdownMenuItem>
-                                                )}
-                                                {profile.userId ===
-                                                    openPost.user.userId && (
-                                                    <DropdownMenuItem
-                                                        className="cursor-pointer hover:bg-accent hover:text-accent-foreground"
-                                                        onClick={() => {
-                                                            setOpenPostId(null);
-                                                            setPostToEdit(
-                                                                openPost,
-                                                            );
-                                                            setIsEditModalOpen(
-                                                                true,
-                                                            );
-                                                        }}
-                                                    >
-                                                        <MessageSquare className="h-4 w-4" />
-                                                        Edit
-                                                    </DropdownMenuItem>
-                                                )}
-                                                {((membership &&
-                                                    hasCommunityPermission(
-                                                        membership,
-                                                        Constants.MembershipRole
-                                                            .MODERATE,
-                                                    )) ||
-                                                    openPost.user.userId ===
-                                                        profile.userId) && (
-                                                    <DropdownMenuItem
-                                                        className="cursor-pointer hover:bg-accent hover:text-accent-foreground"
-                                                        onClick={() =>
-                                                            handleDeletePost(
-                                                                openPost,
-                                                            )
-                                                        }
-                                                    >
-                                                        <Trash className="h-4 w-4" />
-                                                        Delete
-                                                    </DropdownMenuItem>
-                                                )}
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </div>
-                                    <div>
-                                        <p className="text-base mb-4 font-semibold">
-                                            {openPost.title}
-                                        </p>
-                                        <p className="text-sm mb-4 whitespace-pre-wrap">
-                                            {openPost.content}
-                                        </p>
-                                    </div>
-                                    {openPost.media && (
-                                        <div className="flex gap-2 overflow-x-auto">
-                                            {openPost.media.map(
-                                                (media, index) => (
-                                                    <div
-                                                        className="flex-shrink-0"
-                                                        key={
-                                                            media.media
-                                                                ?.mediaId ||
-                                                            media.url ||
-                                                            `${media.type}:${media.title || "untitled"}:${index}`
-                                                        }
-                                                    >
-                                                        {renderMediaPreview(
-                                                            media,
-                                                            {
-                                                                renderActualFile:
-                                                                    true,
-                                                            },
-                                                        )}
-                                                    </div>
-                                                ),
-                                            )}
-                                        </div>
-                                    )}
-                                    <div className="flex items-center gap-4">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className={`text-muted-foreground ${openPost.hasLiked ? "bg-accent" : ""}`}
-                                            onClick={() =>
-                                                handleLike(openPost.postId)
-                                            }
-                                        >
-                                            <ThumbsUp className="h-4 w-4 mr-2" />
-                                            {openPost.likesCount}
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="text-muted-foreground"
-                                        >
-                                            <MessageSquare className="h-4 w-4 mr-2" />
-                                            {openPost.commentsCount}
-                                        </Button>
-                                    </div>
-                                    {membership && (
-                                        <CommentSection
-                                            membership={membership}
-                                            postId={openPost.postId}
-                                            communityId={id!}
-                                            onPostUpdated={(
-                                                postId: string,
-                                                count: number,
-                                            ) => {
-                                                setPosts((prevPosts) =>
-                                                    prevPosts.map((p) =>
-                                                        p.postId === postId
-                                                            ? {
-                                                                  ...p,
-                                                                  commentsCount:
-                                                                      count,
-                                                              }
-                                                            : p,
-                                                    ),
-                                                );
-                                            }}
-                                        />
-                                    )}
-                                </div>
-                            ) : null}
-                        </DialogContent>
-                    </Dialog>
                 </div>
                 <div className="lg:col-start-3 lg:row-start-1">
                     {community && (

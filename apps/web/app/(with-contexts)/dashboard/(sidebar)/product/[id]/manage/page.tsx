@@ -11,8 +11,6 @@ import {
     COURSE_SETTINGS_CARD_HEADER,
     MANAGE_COURSES_PAGE_HEADING,
 } from "@ui-config/strings";
-
-// Import the new components
 import ProductDetails from "./components/product-details";
 import ProductFeaturedImage from "./components/product-featured-image";
 import PaymentPlans from "./components/payment-plans";
@@ -20,6 +18,7 @@ import DownloadOptions from "./components/download-options";
 import ProductPublishing from "./components/product-publishing";
 import Certificates from "./components/certificates";
 import ProductDeletion from "./components/product-deletion";
+import ProductDiscussions from "./components/product-discussions";
 
 const { permissions } = UIConstants;
 
@@ -107,6 +106,7 @@ export default function SettingsPage() {
                     }}
                     loading={loading}
                 />
+                <ProductDiscussions product={product} />
                 <DownloadOptions
                     product={product}
                     paymentPlans={paymentPlans}

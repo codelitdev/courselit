@@ -1,20 +1,24 @@
 import { generateUniqueId } from "@courselit/utils";
 import mongoose from "mongoose";
-import { CommunityPost } from "@courselit/common-models";
+import { CommunityPost, TextEditorContent } from "@courselit/common-models";
 import CommunityMediaSchema from "./CommunityMedia";
 
 export interface InternalCommunityPost
-    extends Pick<
-        CommunityPost,
-        | "title"
-        | "communityId"
-        | "postId"
-        | "content"
-        | "category"
-        | "media"
-        | "pinned"
-        | "deleted"
+    extends Omit<
+        Pick<
+            CommunityPost,
+            | "title"
+            | "communityId"
+            | "postId"
+            | "content"
+            | "category"
+            | "media"
+            | "pinned"
+            | "deleted"
+        >,
+        "content"
     > {
+    content: TextEditorContent | string;
     domain: mongoose.Types.ObjectId;
     userId: string;
     likes: string[];
@@ -34,7 +38,7 @@ const CommunityPostSchema = new mongoose.Schema<InternalCommunityPost>(
             default: generateUniqueId,
         },
         title: { type: String, required: true },
-        content: { type: String, required: true },
+        content: { type: mongoose.Schema.Types.Mixed, required: true },
         category: String,
         media: [CommunityMediaSchema],
         pinned: { type: Boolean, default: false },

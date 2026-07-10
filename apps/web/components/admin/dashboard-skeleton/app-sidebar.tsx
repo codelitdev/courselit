@@ -335,7 +335,7 @@ function getSidebarItems({
             name: MY_CONTENT_HEADER,
             url: "/dashboard/my-content",
             icon: LibraryBig,
-            isActive: path === "/dashboard/my-content",
+            isActive: !!path && path.startsWith("/dashboard/my-content"),
         },
     ];
 

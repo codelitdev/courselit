@@ -4,8 +4,11 @@
     gap: 0.75rem;
 }
 
-.tiptap-editor .ProseMirror {
+.tiptap-editor .ProseMirror:not([class*="min-h-"]) {
     min-height: 12.5rem;
+}
+
+.tiptap-editor .ProseMirror {
     padding: 1rem;
     border-radius: 0.5rem;
     outline: none;
@@ -151,6 +154,7 @@
 }
 
 .tiptap-editor .bubble-menu {
+    position: absolute;
     display: flex;
     align-items: center;
     gap: 0.375rem;

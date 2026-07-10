@@ -15,7 +15,13 @@ jest.mock("@/lib/trigger-sequences", () => ({
 }));
 
 import mongoose from "mongoose";
-import { finalizeUserCreation, getCertificate } from "../logic";
+import {
+    finalizeUserCreation,
+    getCertificate,
+    getUser,
+    updateUser,
+    findMembership,
+} from "../logic";
 import CertificateModel from "@models/Certificate";
 import UserModel from "@models/User";
 import CourseModel from "@models/Course";
@@ -25,7 +31,7 @@ import Domain from "@models/Domain";
 import PageModel from "@models/Page";
 import MembershipModel from "@models/Membership";
 import CommunityModel from "@models/Community";
-import { Constants } from "@courselit/common-models";
+import { Constants, UIConstants } from "@courselit/common-models";
 import { seedNotificationPreferencesForUser } from "../../notifications/logic";
 import { recordActivity } from "@/lib/record-activity";
 import { triggerSequences } from "@/lib/trigger-sequences";
@@ -34,6 +40,127 @@ const seedNotificationPreferencesForUserMock =
     seedNotificationPreferencesForUser as jest.Mock;
 const recordActivityMock = recordActivity as jest.Mock;
 const triggerSequencesMock = triggerSequences as jest.Mock;
+
+describe("getUser", () => {
+    const domainId = new mongoose.Types.ObjectId();
+
+    it("returns null for anonymous current-user lookups", async () => {
+        const result = await getUser(null, {
+            subdomain: {
+                _id: domainId,
+            },
+            user: null,
+        } as any);
+
+        expect(result).toBeNull();
+    });
+});
+
+describe("updateUser", () => {
+    const domainId = new mongoose.Types.ObjectId();
+    const ownerEmail = "owner-permissions@example.com";
+
+    const ctx = {
+        subdomain: {
+            _id: domainId,
+            email: ownerEmail,
+            tags: [],
+            save: jest.fn(),
+        },
+        user: {
+            userId: "admin",
+            email: "admin@example.com",
+            permissions: [UIConstants.permissions.manageUsers],
+        },
+    } as any;
+
+    afterEach(async () => {
+        await UserModel.deleteMany({ domain: domainId });
+        ctx.subdomain.tags = [];
+        jest.clearAllMocks();
+    });
+
+    it("prevents changing permissions for the school owner", async () => {
+        await UserModel.create({
+            userId: "owner",
+            email: ownerEmail,
+            domain: domainId,
+            permissions: [UIConstants.permissions.manageUsers],
+        });
+
+        await expect(
+            updateUser(
+                {
+                    id: "owner",
+                    permissions: [],
+                },
+                ctx,
+            ),
+        ).rejects.toThrow(responses.action_not_allowed);
+
+        const owner = await UserModel.findOne({
+            userId: "owner",
+            domain: domainId,
+        }).lean();
+        expect(owner?.permissions).toEqual([
+            UIConstants.permissions.manageUsers,
+        ]);
+    });
+
+    it("continues to allow non-permission updates for the school owner", async () => {
+        await UserModel.create({
+            userId: "owner",
+            email: ownerEmail,
+            name: "Old Owner",
+            domain: domainId,
+            active: true,
+            permissions: [UIConstants.permissions.manageUsers],
+        });
+
+        await updateUser(
+            {
+                id: "owner",
+                name: "Updated Owner",
+            },
+            ctx,
+        );
+
+        const owner = await UserModel.findOne({
+            userId: "owner",
+            domain: domainId,
+        }).lean();
+        expect(owner?.name).toBe("Updated Owner");
+        expect(owner?.permissions).toEqual([
+            UIConstants.permissions.manageUsers,
+        ]);
+    });
+
+    it("prevents deactivating the school owner", async () => {
+        await UserModel.create({
+            userId: "owner",
+            email: ownerEmail,
+            domain: domainId,
+            active: true,
+            permissions: [UIConstants.permissions.manageUsers],
+        });
+
+        await expect(
+            updateUser(
+                {
+                    id: "owner",
+                    active: false,
+                },
+                ctx,
+            ),
+        ).rejects.toThrow(responses.action_not_allowed);
+
+        const owner = await UserModel.findOne({
+            userId: "owner",
+            domain: domainId,
+        }).lean();
+        expect(owner?.active).toBe(true);
+    });
+});
 
 describe("finalizeUserCreation", () => {
     const domainId = new mongoose.Types.ObjectId();
@@ -816,5 +943,85 @@ describe("Certificate generation", () => {
         );
 
         expect(result.productPageId).toBe(null);
+    });
+});
+
+describe("findMembership", () => {
+    const fId = (suffix: string) => `fm-${Date.now()}-${suffix}`;
+    let testDomain: any;
+    let testUser: any;
+    let testCourse: any;
+
+    beforeAll(async () => {
+        testDomain = await Domain.create({
+            name: fId("domain"),
+            email: `${fId("owner")}@example.com`,
+        });
+
+        testUser = await UserModel.create({
+            userId: fId("user"),
+            email: `${fId("user")}@example.com`,
+            name: "Test User",
+            domain: testDomain._id,
+            active: true,
+            permissions: [],
+            purchases: [],
+            unsubscribeToken: fId("unsubscribe"),
+        });
+
+        testCourse = await CourseModel.create({
+            domain: testDomain._id,
+            courseId: fId("course"),
+            title: "Test Course",
+            creatorId: testUser.userId,
+            groups: [],
+            lessons: [],
+            type: Constants.CourseType.COURSE,
+            privacy: "unlisted",
+            costType: "free",
+            cost: 0,
+            slug: fId("course-slug"),
+        });
+    });
+
+    afterAll(async () => {
+        await MembershipModel.deleteMany({ domain: testDomain._id });
+        await CourseModel.deleteMany({ domain: testDomain._id });
+        await UserModel.deleteMany({ domain: testDomain._id });
+        await Domain.deleteOne({ _id: testDomain._id });
+    });
+
+    it("returns the membership when it exists", async () => {
+        await MembershipModel.create({
+            domain: testDomain._id,
+            membershipId: fId("membership"),
+            sessionId: fId("session"),
+            userId: testUser.userId,
+            paymentPlanId: fId("plan"),
+            entityId: testCourse.courseId,
+            entityType: Constants.MembershipEntityType.COURSE,
+            status: Constants.MembershipStatus.ACTIVE,
+        });
+
+        const result = await findMembership({
+            domainId: testDomain._id,
+            userId: testUser.userId,
+            entityId: testCourse.courseId,
+        });
+
+        expect(result).not.toBeNull();
+        expect(result!.userId).toBe(testUser.userId);
+        expect(result!.entityId).toBe(testCourse.courseId);
+        expect(result!.status).toBe(Constants.MembershipStatus.ACTIVE);
+    });
+
+    it("returns null when no membership exists", async () => {
+        const result = await findMembership({
+            domainId: testDomain._id,
+            userId: "nonexistent-user",
+            entityId: testCourse.courseId,
+        });
+
+        expect(result).toBeNull();
     });
 });

@@ -22,9 +22,34 @@ interface TextRendererProps {
     theme?: ThemeStyle;
 }
 
+function removeEmptyTextNodes(node: any): any {
+    if (!node || typeof node !== "object") {
+        return node;
+    }
+
+    if (node.type === "text" && node.text === "") {
+        return undefined;
+    }
+
+    if (!Array.isArray(node.content)) {
+        return node;
+    }
+
+    const content = node.content
+        .map(removeEmptyTextNodes)
+        .filter((child: any) => child !== undefined);
+
+    return {
+        ...node,
+        content,
+    };
+}
+
 export function TextRenderer({ json, className, theme }: TextRendererProps) {
     const extensions = createExtensions();
-    const content = (json as any) ?? (emptyDoc as any);
+    const content = removeEmptyTextNodes(
+        (json as any) ?? (emptyDoc as any),
+    ) as TextEditorContent;
 
     const rendered = renderToReactElement({
         extensions,
@@ -41,6 +66,7 @@ export function TextRenderer({ json, className, theme }: TextRendererProps) {
                     }
                     return <p>{children}</p>;
                 },
+                hardBreak: () => <br />,
                 heading: ({ node, children }) => {
                     const level = node?.attrs?.level ?? 1;
                     // Extract text from the node structure (same as extractHeadings does)

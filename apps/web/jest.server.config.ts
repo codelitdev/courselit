@@ -12,6 +12,10 @@ const config: Config = {
         "@courselit/orm-models": "<rootDir>/../../packages/orm-models/src",
         "@courselit/page-primitives":
             "<rootDir>/../../packages/page-primitives/src",
+        "@courselit/components-library":
+            "<rootDir>/../../packages/components-library/src",
+        "@courselit/icons": "<rootDir>/../../packages/icons/src",
+        "@courselit/text-editor": "<rootDir>/../../packages/text-editor/src",
         nanoid: "<rootDir>/__mocks__/nanoid.ts",
         "better-auth": "<rootDir>/__mocks__/better-auth.ts",
         "^slugify$": "<rootDir>/__mocks__/slugify.ts",
@@ -26,10 +30,12 @@ const config: Config = {
         "@/lib/(.*)": "<rootDir>/lib/$1",
         "@/services/(.*)": "<rootDir>/services/$1",
         "@/templates/(.*)": "<rootDir>/templates/$1",
+        "@/hooks/(.*)": "<rootDir>/hooks/$1",
         "@/app/(.*)": "<rootDir>/app/$1",
         "@ui-lib/(.*)": "<rootDir>/ui-lib/$1",
         "@config/(.*)": "<rootDir>/config/$1",
         "@/models/(.*)": "<rootDir>/models/$1",
+        "@components/(.*)": "<rootDir>/components/$1",
         "\\.(css|less|scss|sass)$": "identity-obj-proxy",
     },
     transform: {
@@ -51,6 +57,8 @@ const config: Config = {
         "/.next/",
         // Exclude component tests - they should run in the regular config
         ".*/components/.*/__tests__/.*\\.test\\.(tsx|ts)$",
+        // Exclude browser-only app tests - they should run in the client config
+        ".*/app/.*/__tests__/my-content-tabs\\.test\\.(tsx|ts)$",
     ],
     moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
 };

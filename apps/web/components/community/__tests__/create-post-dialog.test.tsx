@@ -6,8 +6,33 @@ import {
     waitFor,
     act,
 } from "@testing-library/react";
-import CreatePostDialog from "../create-post-dialog";
 import { ProfileContext } from "@components/contexts";
+
+jest.mock("@courselit/text-editor", () => ({
+    Editor: ({ onChange, value }: any) => (
+        <textarea
+            aria-label="editor"
+            value={JSON.stringify(value)}
+            onChange={(event) =>
+                onChange({
+                    type: "doc",
+                    content: [
+                        {
+                            type: "paragraph",
+                            content: [
+                                {
+                                    type: "text",
+                                    text: event.target.value,
+                                },
+                            ],
+                        },
+                    ],
+                })
+            }
+        />
+    ),
+    emptyDoc: { type: "doc", content: [] },
+}));
 
 jest.mock("../../ui/button", () => ({
     Button: ({ children, ...props }: any) => (
@@ -70,17 +95,17 @@ jest.mock("../../ui/select", () => ({
     SelectValue: () => null,
 }));
 
-jest.mock("../emoji-picker", () => ({
-    EmojiPicker: () => <div>EmojiPicker</div>,
-}));
-
 jest.mock("../gif-selector", () => ({
     GifSelector: () => <div>GifSelector</div>,
 }));
 
 jest.mock("../media-preview", () => ({
-    MediaPreview: () => <div>MediaPreview</div>,
+    MediaPreview: ({ items }: any) => (
+        <div data-testid="media-preview">{JSON.stringify(items)}</div>
+    ),
 }));
+
+import CreatePostDialog from "../create-post-dialog";
 
 const renderDialog = (
     createPost: any,
@@ -129,7 +154,7 @@ describe("CreatePostDialog", () => {
         fireEvent.change(screen.getByPlaceholderText("Title"), {
             target: { value: "My title" },
         });
-        fireEvent.change(screen.getByPlaceholderText("What's on your mind?"), {
+        fireEvent.change(screen.getByLabelText("editor"), {
             target: { value: "My content" },
         });
         expect(postButton).toBeDisabled();
@@ -158,7 +183,7 @@ describe("CreatePostDialog", () => {
         fireEvent.change(screen.getByPlaceholderText("Title"), {
             target: { value: "My title" },
         });
-        fireEvent.change(screen.getByPlaceholderText("What's on your mind?"), {
+        fireEvent.change(screen.getByLabelText("editor"), {
             target: { value: "My content" },
         });
         fireEvent.change(screen.getByLabelText("category"), {
@@ -184,6 +209,27 @@ describe("CreatePostDialog", () => {
 
         await waitFor(() => {
             expect(screen.getByRole("button", { name: "Post" })).toBeDisabled();
+        });
+    });
+
+    it("treats protocol-less YouTube URLs as video attachments", async () => {
+        const createPost = jest.fn().mockResolvedValue(undefined);
+
+        renderDialog(createPost, { category: "General" });
+        await flushMicrotasks();
+
+        fireEvent.change(
+            screen.getByPlaceholderText("https://youtube.com/watch?v="),
+            {
+                target: { value: "youtu.be/abc123xyz" },
+            },
+        );
+        fireEvent.click(screen.getByRole("button", { name: "Add Video" }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId("media-preview")).toHaveTextContent(
+                "https://www.youtube.com/embed/abc123xyz",
+            );
         });
     });
 });

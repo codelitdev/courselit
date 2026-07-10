@@ -21,6 +21,7 @@ import { deleteMedia, sealMedia } from "../../services/medialit";
 import { recordProgress } from "../users/logic";
 import {
     Constants,
+    Media,
     Progress,
     Quiz,
     ScormContent,
@@ -36,8 +37,22 @@ import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
 import ActivityModel from "@/models/Activity";
 import UserModel from "../../models/User";
 import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
+import { canManageCourseInContext } from "../courses/permissions";
 
 const { permissions, quiz, scorm } = constants;
+
+async function canManageLessonCourse(lesson: Lesson, ctx: GQLContext) {
+    if (!ctx.user) {
+        return false;
+    }
+
+    const course = await CourseModel.findOne({
+        courseId: lesson.courseId,
+        domain: ctx.subdomain._id,
+    }).select("creatorId");
+
+    return course ? canManageCourseInContext(course, ctx) : false;
+}
 
 export const canViewUnpublished = (ctx: GQLContext, entity: any): boolean => {
     return (
@@ -47,16 +62,22 @@ export const canViewUnpublished = (ctx: GQLContext, entity: any): boolean => {
     );
 };
 
-const getLessonOrThrow = async (
+export const getLessonOrThrow = async (
     id: string,
     ctx: GQLContext,
+    options?: { courseId?: string },
 ): Promise<Lesson> => {
     checkIfAuthenticated(ctx);
 
-    const lesson = await LessonModel.findOne({
+    const query: Record<string, unknown> = {
         lessonId: id,
         domain: ctx.subdomain._id,
-    });
+    };
+    if (options?.courseId) {
+        query.courseId = options.courseId;
+    }
+
+    const lesson = await LessonModel.findOne(query);
 
     if (!lesson) {
         throw new Error(responses.item_not_found);
@@ -87,6 +108,7 @@ export const getLessonDetails = async (
     id: string,
     ctx: GQLContext,
     courseId?: string,
+    preview: boolean = false,
 ) => {
     const query: any = {
         lessonId: id,
@@ -97,11 +119,18 @@ export const getLessonDetails = async (
     }
     const lesson = await LessonModel.findOne(query);
 
-    if (!lesson || !lesson.published) {
+    if (!lesson) {
+        throw new Error(responses.item_not_found);
+    }
+
+    const isPreview = preview && (await canManageLessonCourse(lesson, ctx));
+
+    if (!lesson.published && !isPreview) {
         throw new Error(responses.item_not_found);
     }
 
     if (
+        !isPreview &&
         lesson.requiresEnrollment &&
         (!ctx.user ||
             !ctx.user.purchases.some(
@@ -111,7 +140,7 @@ export const getLessonDetails = async (
         throw new Error(responses.not_enrolled);
     }
 
-    if (await isPartOfDripGroup(lesson, ctx.subdomain._id)) {
+    if (!isPreview && (await isPartOfDripGroup(lesson, ctx.subdomain._id))) {
         if (!ctx.user) {
             throw new Error(responses.drip_not_released);
         }
@@ -131,7 +160,7 @@ export const getLessonDetails = async (
         lesson.courseId,
         ctx.subdomain._id,
         lesson.lessonId,
-        true,
+        !isPreview,
     );
     lesson.prevLesson = prevLesson;
     lesson.nextLesson = nextLesson;
@@ -146,6 +175,20 @@ export const getLessonDetails = async (
 export type LessonWithStringContent = Omit<Lesson, "content"> & {
     content: string;
 };
+
+async function sealLessonMedia(media?: Partial<Media> | null) {
+    if (!media?.mediaId) {
+        return undefined;
+    }
+
+    const sealedMedia = await sealMedia(media.mediaId);
+    if (!sealedMedia) {
+        return media as Media;
+    }
+
+    delete sealedMedia.file;
+    return sealedMedia;
+}
 
 export const createLesson = async (
     lessonData: LessonWithStringContent,
@@ -166,6 +209,13 @@ export const createLesson = async (
         if (!course) throw new Error(responses.item_not_found);
         if (course.isBlog) throw new Error(responses.cannot_add_to_blogs); // TODO: refactor this
 
+        const group = course.groups?.find(
+            (group) => (group as any)._id === lessonData.groupId,
+        );
+        if (!group) {
+            throw new Error(responses.group_not_found);
+        }
+
         const lesson = await LessonModel.create({
             domain: ctx.subdomain._id,
             title: lessonData.title,
@@ -173,7 +223,7 @@ export const createLesson = async (
             content: await replaceTempMediaWithSealedMediaInProseMirrorDoc(
                 lessonData.content || "",
             ),
-            media: lessonData.media,
+            media: await sealLessonMedia(lessonData.media),
             downloadable: lessonData.downloadable,
             creatorId: ctx.user.userId,
             courseId: course.courseId,
@@ -183,11 +233,7 @@ export const createLesson = async (
         });
 
         course.lessons.push(lesson.lessonId);
-        const group = course.groups?.find(
-            (group) =>
-                ((group as any)._id?.toString() ?? "") === lessonData.groupId,
-        );
-        group?.lessonsOrder.push(lesson.lessonId);
+        group.lessonsOrder.push(lesson.lessonId);
         await (course as any).save();
 
         return lesson;
@@ -214,8 +260,38 @@ export const updateLesson = async (
     delete (lessonData as any).id;
 
     lessonData.type = lesson.type;
+
+    const contentUpdated = Object.prototype.hasOwnProperty.call(
+        lessonData,
+        "content",
+    );
+
+    // Build the complete lesson state for validation by merging existing + update data.
+    // The validator expects content as a string.
+    const completeLessonData: LessonWithStringContent = {
+        id: lesson.id,
+        domain: lesson.domain,
+        lessonId: lesson.lessonId,
+        creatorId: lesson.creatorId,
+        courseId: lesson.courseId,
+        groupId: lesson.groupId,
+        title: lessonData.title ?? lesson.title,
+        content: contentUpdated
+            ? lessonData.content!
+            : JSON.stringify(lesson.content || ""),
+        media: lessonData.media ?? lesson.media,
+        downloadable: lessonData.downloadable ?? lesson.downloadable,
+        requiresEnrollment:
+            lessonData.requiresEnrollment ?? lesson.requiresEnrollment,
+        published: lessonData.published ?? lesson.published,
+        type: lessonData.type,
+    };
+
+    lessonValidator(completeLessonData);
+
+    // Now apply the partial updates to the lesson document
     const contentMediaIdsMarkedForDeletion: string[] = [];
-    if (Object.prototype.hasOwnProperty.call(lessonData, "content")) {
+    if (contentUpdated) {
         const nextContent = (lessonData.content ?? "") as string;
         contentMediaIdsMarkedForDeletion.push(
             ...getDeletedMediaIds(
@@ -224,8 +300,6 @@ export const updateLesson = async (
             ),
         );
     }
-
-    lessonValidator(lessonData);
 
     for (const key of Object.keys(lessonData)) {
         if (key === "content") {
@@ -236,12 +310,8 @@ export const updateLesson = async (
                       )
                     : JSON.parse(lessonData.content);
         } else if (key === "media" && lessonData.media) {
-            const media = await sealMedia(lessonData.media.mediaId);
-            if (media) {
-                delete media.file;
-                lesson.media = media;
-            }
-        } else {
+            lesson.media = await sealLessonMedia(lessonData.media);
+        } else if (key !== "lessonId" && key !== "id") {
             lesson[key] = lessonData[key];
         }
     }
@@ -370,7 +440,10 @@ export const markLessonCompleted = async (
 ) => {
     checkIfAuthenticated(ctx);
 
-    const lesson = await LessonModel.findOne<Lesson>({ lessonId });
+    const lesson = await LessonModel.findOne<Lesson>({
+        domain: ctx.subdomain._id,
+        lessonId,
+    });
     if (!lesson || !lesson.published) {
         throw new Error(responses.item_not_found);
     }
@@ -469,7 +542,10 @@ const checkAndRecordCourseCompletion = async (
     courseId: string,
     ctx: GQLContext,
 ) => {
-    const course = await CourseModel.findOne({ courseId });
+    const course = await CourseModel.findOne({
+        domain: ctx.subdomain._id,
+        courseId,
+    });
     if (!course) {
         throw new Error(responses.item_not_found);
     }
@@ -572,8 +648,13 @@ export const evaluateLesson = async (
     answers: { answers: number[][] },
     ctx: GQLContext,
 ) => {
-    const lesson = await LessonModel.findOne<Lesson>({ lessonId });
-    if (!lesson) {
+    checkIfAuthenticated(ctx);
+
+    const lesson = await LessonModel.findOne<Lesson>({
+        domain: ctx.subdomain._id,
+        lessonId,
+    });
+    if (!lesson || !lesson.published) {
         throw new Error(responses.item_not_found);
     }
 
@@ -583,6 +664,16 @@ export const evaluateLesson = async (
 
     if (enrolledItemIndex === -1) {
         throw new Error(responses.not_enrolled);
+    }
+
+    if (await isPartOfDripGroup(lesson, ctx.subdomain._id)) {
+        const groupIsNotInAccessibleGroups =
+            ctx.user.purchases[enrolledItemIndex].accessibleGroups.indexOf(
+                lesson.groupId,
+            ) === -1;
+        if (groupIsNotInAccessibleGroups) {
+            throw new Error(responses.drip_not_released);
+        }
     }
 
     if (lesson.type !== quiz) {

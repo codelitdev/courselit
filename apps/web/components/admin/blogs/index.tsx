@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
-import { Course, SiteInfo } from "@courselit/common-models";
-import { FetchBuilder } from "@courselit/utils";
+import { Course, SiteInfo, UIConstants } from "@courselit/common-models";
+import { FetchBuilder, checkPermission } from "@courselit/utils";
 import {
     BLOG_TABLE_HEADER_NAME,
     BTN_NEW_BLOG,
@@ -23,7 +23,11 @@ import {
     useToast,
 } from "@courselit/components-library";
 import { usePathname } from "next/navigation";
-import { AddressContext, SiteInfoContext } from "@components/contexts";
+import {
+    AddressContext,
+    SiteInfoContext,
+    ProfileContext,
+} from "@components/contexts";
 
 const BlogItem = dynamic(() => import("./blog-item"));
 
@@ -31,6 +35,7 @@ export default function Blogs() {
     const [loading, setLoading] = useState(false);
     const address = useContext(AddressContext);
     const siteinfo = useContext(SiteInfoContext);
+    const { profile } = useContext(ProfileContext);
     const [coursesPaginationOffset, setCoursesPaginationOffset] = useState(1);
     const [creatorCourses, setCreatorCourses] = useState<
         (Course & { published: boolean })[]
@@ -105,16 +110,21 @@ export default function Blogs() {
                     <Link href={`/dashboard/blog/new`}>
                         <Button>{BTN_NEW_BLOG}</Button>
                     </Link>
-                    <Menu2 icon={<MoreVert />} variant="soft">
-                        <MenuItem>
-                            <Link
-                                href={`/dashboard/page/blog?redirectTo=/dashboard/blogs`}
-                                className="flex w-full"
-                            >
-                                {PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE}
-                            </Link>
-                        </MenuItem>
-                    </Menu2>
+                    {profile &&
+                        checkPermission(profile.permissions!, [
+                            UIConstants.permissions.manageSite,
+                        ]) && (
+                            <Menu2 icon={<MoreVert />} variant="soft">
+                                <MenuItem>
+                                    <Link
+                                        href={`/dashboard/page/blog?redirectTo=/dashboard/blogs`}
+                                        className="flex w-full"
+                                    >
+                                        {PRODUCT_TABLE_CONTEXT_MENU_EDIT_PAGE}
+                                    </Link>
+                                </MenuItem>
+                            </Menu2>
+                        )}
                 </div>
             </div>
             <Table aria-label="Products">

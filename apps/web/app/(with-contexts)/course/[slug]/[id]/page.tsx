@@ -8,8 +8,6 @@ import {
     ENROLL_BUTTON_TEXT,
     BTN_VIEW_CERTIFICATE,
 } from "@ui-config/strings";
-import { checkPermission } from "@courselit/utils";
-import { Profile, UIConstants } from "@courselit/common-models";
 import {
     Link,
     getSymbolFromCurrency,
@@ -29,7 +27,12 @@ import { BadgeCheck } from "lucide-react";
 import { emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
 import WidgetErrorBoundary from "@components/public/base-layout/template/widget-error-boundary";
 import { Button, Header1 } from "@courselit/page-primitives";
-const { permissions } = UIConstants;
+import {
+    getCourseViewerSessionParams,
+    appendCourseViewerSessionParamsToHref,
+} from "@/lib/course-viewer-session-params";
+import { useSearchParams } from "next/navigation";
+import type { Profile } from "@courselit/common-models";
 
 export default function ProductPage(props: {
     params: Promise<{ slug: string; id: string }>;
@@ -40,33 +43,35 @@ export default function ProductPage(props: {
     const { profile, setProfile } = useContext(ProfileContext);
     const siteInfo = useContext(SiteInfoContext);
     const address = useContext(AddressContext);
+    const searchParams = useSearchParams();
+    const viewerSessionParams = getCourseViewerSessionParams(searchParams);
     const [progress, setProgress] = useState<any>(null);
     const { theme } = useContext(ThemeContext);
 
     useEffect(() => {
         if (id) {
-            getProduct(id, address.backend).then((product) => {
+            getProduct(
+                id,
+                address.backend,
+                Boolean(viewerSessionParams.preview),
+            ).then((product) => {
                 setProduct(product);
             });
         }
-    }, [id]);
+    }, [id, viewerSessionParams.preview]);
 
     useEffect(() => {
         if (product) {
             getUserProfile(address.backend).then((profile) => {
                 setProfile(profile);
                 setProgress(
-                    profile.purchases?.find(
+                    profile?.purchases?.find(
                         (purchase) => purchase.courseId === product.courseId,
                     ),
                 );
             });
         }
     }, [product]);
-
-    if (!profile) {
-        return null;
-    }
 
     if (!product || !siteInfo) {
         return null;
@@ -75,6 +80,11 @@ export default function ProductPage(props: {
     const descriptionJson = product.description
         ? JSON.parse(product.description)
         : TextEditorEmptyDoc;
+    const viewerProfile = profile?.userId ? (profile as Profile) : undefined;
+    const enrolled = Boolean(
+        viewerProfile && isEnrolled(product.courseId, viewerProfile),
+    );
+    const isPreview = Boolean(product.isPreview);
 
     return (
         <div className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
@@ -92,31 +102,28 @@ export default function ProductPage(props: {
                     </Button>
                 </Link>
             )}
-            {!isEnrolled(product.courseId, profile as Profile) &&
-                checkPermission(profile.permissions ?? [], [
-                    permissions.enrollInCourse,
-                ]) && (
-                    <div>
-                        <div className="flex justify-between items-center">
-                            <div className="font-medium flex items-center">
-                                {getSymbolFromCurrency(
-                                    siteInfo.currencyISOCode ?? "",
-                                )}
-                                {product.cost}
-                                <span className="text-sm text-muted-foreground ml-1">
-                                    {product.costType ?? ""}
-                                </span>
-                            </div>
-                            <Link
-                                href={`/checkout?type=course&id=${product.courseId}`}
-                            >
-                                <Button theme={theme.theme}>
-                                    {ENROLL_BUTTON_TEXT}
-                                </Button>
-                            </Link>
+            {!enrolled && !isPreview && (
+                <div>
+                    <div className="flex justify-between items-center">
+                        <div className="font-medium flex items-center">
+                            {getSymbolFromCurrency(
+                                siteInfo.currencyISOCode ?? "",
+                            )}
+                            {product.cost}
+                            <span className="text-sm text-muted-foreground ml-1">
+                                {product.costType ?? ""}
+                            </span>
                         </div>
+                        <Link
+                            href={`/checkout?type=course&id=${product.courseId}`}
+                        >
+                            <Button theme={theme.theme}>
+                                {ENROLL_BUTTON_TEXT}
+                            </Button>
+                        </Link>
                     </div>
-                )}
+                </div>
+            )}
             {product.featuredImage && (
                 <div className="flex justify-center">
                     <div className="mt-4 mb-8 w-full md:max-w-screen-md">
@@ -143,22 +150,24 @@ export default function ProductPage(props: {
                     </WidgetErrorBoundary>
                 </div>
             </div>
-            {isEnrolled(product.courseId, profile as Profile) &&
-                product.firstLesson && (
-                    <div className="self-end">
-                        <Link
-                            href={`/course/${product.slug}/${product.courseId}/${product.firstLesson}`}
+            {(enrolled || isPreview) && product.firstLesson && (
+                <div className="self-end">
+                    <Link
+                        href={appendCourseViewerSessionParamsToHref(
+                            `/course/${product.slug}/${product.courseId}/${product.firstLesson}`,
+                            viewerSessionParams,
+                        )}
+                    >
+                        <Button
+                            theme={theme.theme}
+                            className="flex gap-1 items-center"
                         >
-                            <Button
-                                theme={theme.theme}
-                                className="flex gap-1 items-center"
-                            >
-                                {COURSE_PROGRESS_START}
-                                <ArrowRight />
-                            </Button>
-                        </Link>
-                    </div>
-                )}
+                            {COURSE_PROGRESS_START}
+                            <ArrowRight />
+                        </Button>
+                    </Link>
+                </div>
+            )}
         </div>
     );
 }

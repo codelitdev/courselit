@@ -33,6 +33,7 @@ export const MEDIA_UPLOAD_BUTTON_TEXT = "Upload";
 export const MEDIA_UPLOADING = "Uploading...";
 export const MEDIA_ADD_NEW_BUTTON_TEXT = "Add new";
 export const BUTTON_CANCEL_TEXT = "Cancel";
+export const BUTTON_CONFIRM_TEXT = "Confirm";
 export const BUTTON_CANCEL_SCHEDULED_MAIL = "Cancel sending";
 export const MEDIA_SEARCH_INPUT_PLACEHOLDER = "Search your media";
 export const LOAD_MORE_TEXT = "Load more";
@@ -135,6 +136,70 @@ export const SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_DESCRIPTION =
 export const SITE_SETTINGS_PAYMENT_METHOD_RESET_CONFIRM_ACTION = "Reset";
 export const FREE_COST = "FREE";
 export const SIDEBAR_TEXT_COURSE_ABOUT = "Introduction";
+export const SIDEBAR_TEXT_COURSE_DISCUSSIONS = "Discussions";
+export const COURSE_DISCUSSIONS_TITLE = "Discussions";
+export const COURSE_DISCUSSIONS_TOOLTIP = "Discussions";
+export const COURSE_DISCUSSIONS_DESCRIPTION =
+    "Enable lesson-specific discussions for this course";
+export const DISCUSSIONS_DISABLED_MESSAGE =
+    "Discussions are disabled for this product.";
+export const DISCUSSIONS_ENABLED_MESSAGE =
+    "Discussions are enabled for this product.";
+export const COURSE_DISCUSSIONS_VIEW_ALL = "View all discussions";
+export const COURSE_DISCUSSIONS_EMPTY = "No discussions yet";
+export const COURSE_DISCUSSIONS_COMMENT_PLACEHOLDER = "Add a comment...";
+export const COURSE_DISCUSSIONS_REPLY_PLACEHOLDER = "Add a reply...";
+export const COURSE_DISCUSSIONS_POST_COMMENT = "Post Comment";
+export const COURSE_DISCUSSIONS_POST_REPLY = "Post Reply";
+export const COURSE_DISCUSSIONS_REPLY = "Reply";
+export const COURSE_DISCUSSIONS_REPORT = "Report";
+export const COURSE_DISCUSSIONS_DELETE = "Delete";
+export const COURSE_DISCUSSIONS_DELETED = "Deleted";
+export const COURSE_DISCUSSIONS_DELETE_CONFIRM_TITLE = "Delete discussion";
+export const COURSE_DISCUSSIONS_DELETE_CONFIRM =
+    "Are you sure you want to delete this?";
+export const COURSE_DISCUSSIONS_DELETE_CONFIRM_DESCRIPTION =
+    "This action cannot be undone.";
+export const COURSE_DISCUSSIONS_DELETE_CANCEL = "Cancel";
+export const COURSE_DISCUSSIONS_REPORT_REASON = "Why are you reporting this?";
+export const COURSE_DISCUSSIONS_REPORTED = "Reported";
+export const COURSE_DISCUSSIONS_CONTENT_REQUIRED = "Add a comment first.";
+export const COURSE_DISCUSSIONS_CONTENT_TOO_LONG =
+    "Discussion content is too long.";
+export const COURSE_DISCUSSIONS_ADMIN_REPORTS = "Reports";
+export const COURSE_DISCUSSIONS_ADMIN_VIEW_REPORTS = "Manage reported content";
+export const COURSE_DISCUSSIONS_ADMIN_NO_REPORTS = "No reports";
+export const COURSE_DISCUSSIONS_ADMIN_NO_REPORTS_DESCRIPTION =
+    "Reported discussion comments will appear here.";
+export const COURSE_DISCUSSIONS_ADMIN_STATUS = "Status";
+export const COURSE_DISCUSSIONS_ADMIN_REASON = "Reason";
+export const COURSE_DISCUSSIONS_ADMIN_TARGET = "Target";
+export const COURSE_DISCUSSIONS_ADMIN_REPORTED_BY = "Reported by";
+export const COURSE_DISCUSSIONS_ADMIN_LESSON = "Lesson";
+export const COURSE_DISCUSSIONS_ADMIN_CONTENT = "Content";
+export const COURSE_DISCUSSIONS_ADMIN_AUTHOR = "Author";
+export const COURSE_DISCUSSIONS_ADMIN_DATE = "Date";
+export const COURSE_DISCUSSIONS_ADMIN_FILTER_ALL = "All";
+export const COURSE_DISCUSSIONS_ADMIN_STATUS_PENDING = "pending";
+export const COURSE_DISCUSSIONS_ADMIN_STATUS_ACCEPTED = "accepted";
+export const COURSE_DISCUSSIONS_ADMIN_STATUS_REJECTED = "rejected";
+export const COURSE_DISCUSSIONS_ADMIN_REJECTION_REASON_DEFAULT =
+    "Rejected by moderator";
+export const COURSE_DISCUSSIONS_ADMIN_REJECTION_DIALOG_TITLE =
+    "Enter Rejection Reason";
+export const COURSE_DISCUSSIONS_ADMIN_REJECTION_DIALOG_DESCRIPTION =
+    "Please provide a reason for rejecting this report. This is optional but recommended.";
+export const COURSE_DISCUSSIONS_ADMIN_REJECTION_DIALOG_LABEL = "Reason";
+export const COURSE_DISCUSSIONS_REPORT_DIALOG_TITLE = "Report post";
+export const COURSE_DISCUSSIONS_REPORT_DIALOG_DESCRIPTION =
+    "Please provide a reason for reporting this post.";
+export const COURSE_DISCUSSIONS_REPORT_DIALOG_PLACEHOLDER =
+    "Reason for reporting...";
+export const COURSE_DISCUSSIONS_REPORT_DIALOG_SUBMIT = "Submit";
+export const COURSE_DISCUSSIONS_EDIT = "Edit";
+export const COURSE_DISCUSSIONS_EDITED_LABEL = "edited";
+export const COURSE_DISCUSSIONS_SAVE = "Save";
+export const COURSE_DISCUSSIONS_CANCEL = "Cancel";
 export const REACT_COMPONENT_CRASHED =
     "We've encountered a problem in showing the content";
 export const CHECKOUT_PAGE_TITLE = "Checkout";
@@ -316,6 +381,20 @@ export const HEADER_YOUR_PROFILE = "Your Profile";
 export const PROFILE_PAGE_MESSAGE_NOT_LOGGED_IN = "to see your profile.";
 export const PROFILE_PAGE_HEADER = "Profile";
 export const MY_CONTENT_HEADER = "My content";
+export const MY_CONTENT_PRODUCTS_TAB = "Products";
+export const MY_CONTENT_FEED_TAB = "Feed";
+export const MY_CONTENT_EMPTY_PRODUCTS =
+    "You haven't enrolled in any products yet.";
+export const MY_CONTENT_EMPTY_COMMUNITIES =
+    "You haven't joined any communities yet.";
+export const MY_CONTENT_BROWSE_PRODUCTS = "Browse products";
+export const MY_CONTENT_BROWSE_COMMUNITIES = "Browse communities";
+export const MY_CONTENT_FEED_EMPTY_TITLE = "No posts in your feed yet";
+export const MY_CONTENT_FEED_EMPTY_DESCRIPTION =
+    "Join communities and participate in discussions to see posts here.";
+export const MY_CONTENT_FEED_COMMUNITIES_TITLE = "Your communities";
+export const MY_CONTENT_FEED_COMMUNITIES_EMPTY =
+    "You haven't joined any communities yet.";
 export const NOTIFICATION_SETTINGS_PAGE_HEADER = "Notifications";
 export const NOTIFICATION_SETTINGS_PAGE_DESCRIPTION =
     "Manage how you receive notifications for each activity.";
@@ -500,6 +579,7 @@ export const PAGE_TITLE_VIEW_PAGE = "View";
 export const PAGE_HEADER_EDIT_PAGE = "Edit page";
 export const EDIT_PAGE_MENU_ITEM = "Edit page";
 export const VIEW_PAGE_MENU_ITEM = "View page";
+export const PREVIEW_COURSE_MENU_ITEM = "Preview";
 export const EDIT_PAGE_BUTTON_UPDATE = "Publish";
 export const EDIT_PAGE_BUTTON_VIEW = "View";
 export const EDIT_PAGE_BUTTON_DONE = "Exit";
@@ -513,6 +593,8 @@ export const COURSE_PROGRESS_INTRO = "Introduction";
 export const COURSE_PROGRESS_NEXT = "Complete and continue";
 export const COURSE_PROGRESS_START = "Start";
 export const COURSE_PROGRESS_FINISH = "Complete and finish";
+export const COURSE_PROGRESS_MARK_COMPLETED = "Mark as completed";
+export const COURSE_PROGRESS_COMPLETED = "Completed";
 export const BTN_NEW_BLOG = "New blog";
 export const MANAGE_BLOG_PAGE_HEADING = "Blogs";
 export const BLOG_TABLE_HEADER_NAME = "Title";
@@ -726,7 +808,7 @@ export const USER_DELETE_DIALOG_DELETION_HEADING = "What will be deleted";
 export const USER_DELETE_DIALOG_DELETION_ITEM_COMMUNICATION =
     "Notifications, mail statuses, lesson evaluations, download links, certificates, and activity logs.";
 export const USER_DELETE_DIALOG_DELETION_ITEM_COMMUNITY =
-    "Community posts, comments, replies, subscriptions, reports, and related likes.";
+    "Community posts, comments, replies, subscriptions, reports, and related likes. Product discussion likes, subscriptions, and reports (written comments and replies will be anonymized).";
 export const USER_DELETE_DIALOG_DELETION_ITEM_COMMERCE =
     "Memberships, invoices, course enrollments, and marketing sequence entries.";
 export const USER_DELETE_DIALOG_DELETION_ITEM_ACCOUNT =

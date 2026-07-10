@@ -42,7 +42,7 @@ import {
     TOAST_MAIL_SENT,
     TOAST_TITLE_SUCCESS,
 } from "@ui-config/strings";
-import { Email as EmailContent } from "@courselit/email-editor";
+import type { Email as EmailContent } from "@courselit/email-editor";
 import { useSequence } from "@/hooks/use-sequence";
 import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
 import FilterContainer from "@components/admin/users/filter-container";

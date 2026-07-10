@@ -86,13 +86,21 @@ const communityPostInputMedia = new GraphQLInputObjectType({
     },
 });
 
+const feedCommunity = new GraphQLObjectType({
+    name: "FeedCommunity",
+    fields: {
+        id: { type: new GraphQLNonNull(GraphQLString) },
+        title: { type: new GraphQLNonNull(GraphQLString) },
+    },
+});
+
 const communityPost = new GraphQLObjectType({
     name: "CommunityPost",
     fields: {
         communityId: { type: new GraphQLNonNull(GraphQLString) },
         postId: { type: new GraphQLNonNull(GraphQLString) },
         title: { type: new GraphQLNonNull(GraphQLString) },
-        content: { type: new GraphQLNonNull(GraphQLString) },
+        content: { type: new GraphQLNonNull(GraphQLJSONObject) },
         category: { type: new GraphQLNonNull(GraphQLString) },
         pinned: { type: new GraphQLNonNull(GraphQLBoolean) },
         media: { type: new GraphQLList(communityPostMedia) },
@@ -109,6 +117,7 @@ const communityPost = new GraphQLObjectType({
         },
         updatedAt: { type: new GraphQLNonNull(GraphQLString) },
         hasLiked: { type: new GraphQLNonNull(GraphQLBoolean) },
+        community: { type: feedCommunity },
     },
 });
 
@@ -202,6 +211,7 @@ const communityReport = new GraphQLObjectType({
 const types = {
     community,
     communityPost,
+    feedCommunity,
     communityMemberStatus,
     communityPostInputMedia,
     communityComment,

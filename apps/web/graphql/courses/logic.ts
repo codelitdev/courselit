@@ -2,15 +2,14 @@
  * Business logic for managing courses.
  */
 import CourseModel from "@/models/Course";
-import { InternalCourse } from "@courselit/orm-models";
+import {
+    deleteProductDiscussionData,
+    InternalCourse,
+} from "@courselit/orm-models";
 import UserModel from "@/models/User";
 import { Media, User } from "@courselit/common-models";
 import { responses } from "@/config/strings";
-import {
-    checkIfAuthenticated,
-    validateOffset,
-    checkOwnershipWithoutModel,
-} from "@/lib/graphql";
+import { checkIfAuthenticated, validateOffset } from "@/lib/graphql";
 import constants from "@/config/constants";
 import {
     getPaginatedCoursesForAdmin,
@@ -43,19 +42,23 @@ import {
 } from "../paymentplans/logic";
 import MembershipModel from "@models/Membership";
 import { getActivities } from "../activities/logic";
-import { ActivityType } from "@courselit/common-models/dist/constants";
 import { verifyMandatoryTags } from "../mails/helpers";
-import { Email } from "@courselit/email-editor";
+import type { Email } from "@courselit/email-editor";
 import PaymentPlanModel from "@models/PaymentPlan";
 import CertificateTemplateModel, {
     CertificateTemplate,
 } from "@models/CertificateTemplate";
 import CertificateModel from "@models/Certificate";
 import ActivityModel from "@models/Activity";
+import NotificationModel from "@models/Notification";
 import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
 import { deletePageInternal } from "../pages/logic";
 import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
 import { validateSlug, isDuplicateKeyError } from "../pages/helpers";
+import {
+    canManageCourseInContext,
+    getCourseManagementAccess,
+} from "./permissions";
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
@@ -83,18 +86,14 @@ export const getCourseOrThrow = async (
         throw new Error(responses.item_not_found);
     }
 
-    if (!checkPermission(ctx.user.permissions, [permissions.manageAnyCourse])) {
-        if (!checkOwnershipWithoutModel(course, ctx)) {
+    const access = getCourseManagementAccess(course, ctx);
+
+    if (!access.canManage) {
+        if (!access.isOwner) {
             throw new Error(responses.item_not_found);
-        } else {
-            if (
-                !checkPermission(ctx.user.permissions, [
-                    permissions.manageCourse,
-                ])
-            ) {
-                throw new Error(responses.action_not_allowed);
-            }
         }
+
+        throw new Error(responses.action_not_allowed);
     }
 
     return course;
@@ -104,6 +103,7 @@ async function formatCourse(
     courseId: string,
     ctx: GQLContext,
     includeUnpublishedLessons: boolean = false,
+    isPreview: boolean = false,
 ) {
     const course: InternalCourse | null = (await CourseModel.findOne({
         courseId,
@@ -132,7 +132,7 @@ async function formatCourse(
     const sortedGroups = course!.groups
         ?.map((group: any) => ({
             ...group,
-            id: group._id.toString(),
+            id: group._id,
         }))
         .sort(
             (groupA: any, groupB: any) =>
@@ -144,6 +144,7 @@ async function formatCourse(
         ...course,
         groups: sortedGroups,
         paymentPlans,
+        isPreview,
     };
     return result;
 }
@@ -152,6 +153,7 @@ export const getCourse = async (
     id: string,
     ctx: GQLContext,
     asGuest: boolean = false,
+    preview: boolean = false,
 ) => {
     const course: InternalCourse | null = (await CourseModel.findOne({
         courseId: id,
@@ -162,19 +164,20 @@ export const getCourse = async (
         throw new Error(responses.item_not_found);
     }
 
-    if (ctx.user && !asGuest) {
-        const isOwner =
-            checkPermission(ctx.user.permissions, [
-                permissions.manageAnyCourse,
-            ]) || checkOwnershipWithoutModel(course, ctx);
+    const isPreview =
+        !asGuest && preview && canManageCourseInContext(course, ctx);
 
-        if (isOwner) {
-            return await formatCourse(course.courseId, ctx, true);
-        }
+    if (isPreview) {
+        return await formatCourse(course.courseId, ctx, true, true);
     }
 
     if (course.published) {
-        const formattedCourse = await formatCourse(course.courseId, ctx);
+        const formattedCourse = await formatCourse(
+            course.courseId,
+            ctx,
+            false,
+            false,
+        );
         return asGuest
             ? { ...formattedCourse, __forcePublishedLessons: true }
             : formattedCourse;
@@ -369,6 +372,17 @@ export const deleteCourse = async (id: string, ctx: GQLContext) => {
             { "metadata.courseId": course.courseId },
         ],
     });
+    await NotificationModel.deleteMany({
+        domain: ctx.subdomain._id,
+        $or: [
+            { entityId: course.courseId },
+            { "metadata.courseId": course.courseId },
+        ],
+    });
+    await deleteProductDiscussionData({
+        domain: ctx.subdomain._id,
+        productId: course.courseId,
+    });
     await deleteAllLessons(course.courseId, ctx);
     if (course.featuredImage) {
         try {
@@ -462,7 +476,7 @@ export const getCoursesAsAdmin = async ({
         sales: (
             await getActivities({
                 entityId: course.courseId,
-                type: ActivityType.PURCHASED,
+                type: Constants.ActivityType.PURCHASED,
                 duration: "lifetime",
                 ctx: context,
             })
@@ -557,6 +571,8 @@ const getProductsQuery = (
     tags?: string[],
     ids?: string[],
     publicView: boolean = false,
+    published?: boolean,
+    searchText?: string,
 ) => {
     const query: Record<string, unknown> = {
         domain: ctx.subdomain._id,
@@ -598,6 +614,14 @@ const getProductsQuery = (
         };
     }
 
+    if (!publicView && typeof published === "boolean") {
+        query.published = published;
+    }
+
+    if (searchText) {
+        query.$text = { $search: searchText };
+    }
+
     return query;
 };
 
@@ -610,6 +634,8 @@ export const getProducts = async ({
     ids,
     publicView,
     sort = -1,
+    published,
+    searchText,
 }: {
     ctx: GQLContext;
     page?: number;
@@ -619,8 +645,18 @@ export const getProducts = async ({
     ids?: string[];
     publicView?: boolean;
     sort?: number;
+    published?: boolean;
+    searchText?: string;
 }): Promise<InternalCourse[]> => {
-    const query = getProductsQuery(ctx, filterBy, tags, ids, publicView);
+    const query = getProductsQuery(
+        ctx,
+        filterBy,
+        tags,
+        ids,
+        publicView,
+        published,
+        searchText,
+    );
 
     const courses = await (CourseModel as any).paginatedFind(query, {
         page,
@@ -652,7 +688,7 @@ export const getProducts = async ({
                 ? (
                       await getActivities({
                           entityId: course.courseId,
-                          type: ActivityType.PURCHASED,
+                          type: Constants.ActivityType.PURCHASED,
                           duration: "lifetime",
                           ctx,
                       })
@@ -827,8 +863,7 @@ export const updateGroup = async ({
 
     const $set = {};
     if (name) {
-        const existingName = (group) =>
-            group.name === name && group._id.toString() !== id;
+        const existingName = (group) => group.name === name && group._id !== id;
 
         if (course.groups?.some(existingName)) {
             throw new Error(responses.existing_group);
@@ -859,33 +894,58 @@ export const updateGroup = async ({
             $set["groups.$.drip.type"] = drip.type;
         }
         if (effectiveDripType === Constants.dripType[0]) {
+            if (
+                drip.type === Constants.dripType[0] &&
+                typeof drip.delayInMillis !== "number"
+            ) {
+                throw new Error(
+                    "Relative-date drip requires a numeric delayInMillis",
+                );
+            }
             if (typeof drip.delayInMillis === "number") {
                 $set["groups.$.drip.delayInMillis"] =
                     drip.delayInMillis * constants.relativeDripUnitInMillis;
             }
-            $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
-        }
-        if (effectiveDripType === Constants.dripType[1]) {
-            $set["groups.$.drip.delayInMillis"] = null;
-            if (drip.dateInUTC) {
+            if (drip.type === Constants.dripType[0]) {
+                $set["groups.$.drip.dateInUTC"] = null;
+            } else if (typeof drip.dateInUTC === "number") {
                 $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
             }
         }
-        if (drip.email) {
-            if (!drip.email.content || !drip.email.subject) {
-                throw new Error(responses.invalid_drip_email);
+        if (effectiveDripType === Constants.dripType[1]) {
+            if (
+                drip.type === Constants.dripType[1] &&
+                typeof drip.dateInUTC !== "number"
+            ) {
+                throw new Error("Exact-date drip requires a numeric dateInUTC");
             }
-            const parsedContent: Email = JSON.parse(drip.email.content);
-            verifyMandatoryTags(parsedContent.content);
+            if (drip.type === Constants.dripType[1]) {
+                $set["groups.$.drip.delayInMillis"] = null;
+            } else if (typeof drip.delayInMillis === "number") {
+                $set["groups.$.drip.delayInMillis"] =
+                    drip.delayInMillis * constants.relativeDripUnitInMillis;
+            }
+            if (typeof drip.dateInUTC === "number") {
+                $set["groups.$.drip.dateInUTC"] = drip.dateInUTC;
+            }
+        }
+        if (Object.prototype.hasOwnProperty.call(drip, "email")) {
+            if (drip.email) {
+                if (!drip.email.content || !drip.email.subject) {
+                    throw new Error(responses.invalid_drip_email);
+                }
+                const parsedContent: Email = JSON.parse(drip.email.content);
+                verifyMandatoryTags(parsedContent.content);
 
-            $set["groups.$.drip.email"] = {
-                content: parsedContent,
-                subject: drip.email.subject,
-                published: true,
-                delayInMillis: 0,
-            };
-        } else {
-            $set["groups.$.drip.email"] = null;
+                $set["groups.$.drip.email"] = {
+                    content: parsedContent,
+                    subject: drip.email.subject,
+                    published: true,
+                    delayInMillis: 0,
+                };
+            } else {
+                $set["groups.$.drip.email"] = null;
+            }
         }
     }
 
@@ -950,7 +1010,7 @@ export const moveLesson = async ({
 
     const destinationGroupIndex = normalizedGroups.findIndex((group: any) => {
         const groupId = group._id ?? group.id;
-        return groupId?.toString() === destinationGroupId;
+        return groupId === destinationGroupId;
     });
     if (destinationGroupIndex === -1) {
         throw new Error(responses.invalid_input);
@@ -1048,12 +1108,14 @@ export const getMembers = async ({
     page = 1,
     limit = 10,
     status,
+    searchText,
 }: {
     ctx: GQLContext;
     courseId: string;
     page?: number;
     limit?: number;
     status?: MembershipStatus;
+    searchText?: string;
 }): Promise<
     (Pick<
         Membership,
@@ -1076,6 +1138,28 @@ export const getMembers = async ({
 
     if (status) {
         query.status = status;
+    }
+
+    const normalizedSearchText = searchText?.trim();
+    if (normalizedSearchText) {
+        const escapedSearchText = normalizedSearchText.replace(
+            /[.*+?^${}()|[\]\\]/g,
+            "\\$&",
+        );
+        const matchingUsers = await UserModel.find<User>({
+            domain: ctx.subdomain._id,
+            $or: [
+                { name: { $regex: escapedSearchText, $options: "i" } },
+                { email: { $regex: escapedSearchText, $options: "i" } },
+            ],
+        }).select("userId");
+        const matchingUserIds = matchingUsers.map((user) => user.userId);
+
+        if (!matchingUserIds.length) {
+            return [];
+        }
+
+        query.userId = { $in: matchingUserIds };
     }
 
     const members: Membership[] = await (MembershipModel as any).paginatedFind(

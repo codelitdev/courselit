@@ -1,5 +1,6 @@
 import { useEffect, useState, startTransition } from "react";
-import { Email, renderEmailToHtml } from "@courselit/email-editor";
+import { renderEmailToHtml } from "@courselit/email-editor";
+import type { Email } from "@courselit/email-editor";
 import { Edit } from "lucide-react";
 import Link from "next/link";
 

@@ -15,6 +15,8 @@ import {
     COURSE_PROGRESS_INTRO,
     COURSE_PROGRESS_NEXT,
     COURSE_PROGRESS_PREV,
+    COURSE_PROGRESS_MARK_COMPLETED,
+    COURSE_PROGRESS_COMPLETED,
     ENROLL_BUTTON_TEXT,
     TOAST_TITLE_ERROR,
     NOT_ENROLLED_HEADER,
@@ -29,9 +31,9 @@ import {
     type Profile,
     type Quiz,
 } from "@courselit/common-models";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, ArrowDownward } from "@courselit/icons";
-import { isEnrolled } from "../../../ui-lib/utils";
+import { isEnrolled, isLessonCompleted } from "../../../ui-lib/utils";
 import LessonEmbedViewer from "./embed-viewer";
 import QuizViewer from "./quiz-viewer";
 import ScormViewer from "./scorm-viewer";
@@ -39,6 +41,13 @@ import { getUserProfile } from "@/app/(with-contexts)/helpers";
 import WidgetErrorBoundary from "../base-layout/template/widget-error-boundary";
 import { Button, Header1, Text1 } from "@courselit/page-primitives";
 import { ThemeContext } from "@components/contexts";
+import NextLink from "next/link";
+import { BookOpen, Check } from "lucide-react";
+import {
+    appendCourseViewerSessionParamsToHref,
+    getCourseViewerSessionParams,
+    getCourseViewerReturnPath,
+} from "@/lib/course-viewer-session-params";
 
 interface CaptionProps {
     text: string;
@@ -60,7 +69,7 @@ interface LessonViewerProps {
     slug: string;
     lessonId: string;
     productId: string;
-    profile: Profile;
+    profile?: Partial<Profile> | null;
     setProfile: (profile: Profile) => void;
     address: Address;
     path?: string;
@@ -76,11 +85,28 @@ export const LessonViewer = ({
     path = "/course",
 }: LessonViewerProps) => {
     const [lesson, setLesson] = useState<Lesson>();
+    const [courseTitle, setCourseTitle] = useState<string>("");
+    const [isPreview, setIsPreview] = useState(false);
     const [error, setError] = useState();
-    const router = useRouter();
+    const searchParams = useSearchParams();
+    const viewerSessionParams = getCourseViewerSessionParams(searchParams);
     const [loading, setLoading] = useState(false);
+    const exitPath = getCourseViewerReturnPath(viewerSessionParams.returnTo);
     const { toast } = useToast();
     const { theme } = useContext(ThemeContext);
+    const viewerProfile = profile?.userId ? (profile as Profile) : undefined;
+    const isViewerEnrolled = Boolean(
+        lesson && viewerProfile && isEnrolled(lesson.courseId, viewerProfile),
+    );
+
+    const isCompleted =
+        lesson && viewerProfile?.purchases
+            ? isLessonCompleted({
+                  courseId: lesson.courseId,
+                  lessonId: lesson.lessonId,
+                  profile: viewerProfile,
+              })
+            : false;
 
     useEffect(() => {
         setError(undefined);
@@ -88,12 +114,16 @@ export const LessonViewer = ({
         if (lessonId) {
             loadLesson(lessonId);
         }
-    }, [lessonId]);
+    }, [lessonId, viewerSessionParams.preview]);
 
     const loadLesson = async (id: string) => {
         const query = `
-            query {
-                lesson: getLessonDetails(id: "${id}", courseId: "${productId}") {
+            query ($productId: String!, $lessonId: String!, $preview: Boolean) {
+                course: getCourse(id: $productId, preview: $preview) {
+                    title
+                    isPreview
+                }
+                lesson: getLessonDetails(id: $lessonId, courseId: $productId, preview: $preview) {
                     lessonId,
                     title,
                     downloadable,
@@ -114,7 +144,14 @@ export const LessonViewer = ({
 
         const fetch = new FetchBuilder()
             .setUrl(`${address.backend}/api/graph`)
-            .setPayload(query)
+            .setPayload({
+                query,
+                variables: {
+                    productId,
+                    lessonId: id,
+                    preview: viewerSessionParams.preview,
+                },
+            })
             .setIsGraphQLEndpoint(true)
             .build();
 
@@ -122,6 +159,10 @@ export const LessonViewer = ({
             setLoading(true);
             const response = await fetch.exec();
 
+            if (response.course) {
+                setCourseTitle(response.course.title || "");
+                setIsPreview(Boolean(response.course.isPreview));
+            }
             if (response.lesson) {
                 setLesson(response.lesson);
             }
@@ -132,10 +173,11 @@ export const LessonViewer = ({
         }
     };
 
-    const markCompleteAndNext = async () => {
+    const markAsCompleted = async () => {
+        if (!lesson) return;
         const query = `
         mutation {
-            result: markLessonCompleted(id: "${lesson!.lessonId}")
+            result: markLessonCompleted(id: "${lesson.lessonId}")
         }
         `;
         const fetch = new FetchBuilder()
@@ -149,16 +191,7 @@ export const LessonViewer = ({
             const response = await fetch.exec();
 
             if (response.result) {
-                if (lesson!.nextLesson) {
-                    await updateUserProfile();
-                    router.push(
-                        `${path}/${slug}/${lesson!.courseId}/${
-                            lesson!.nextLesson
-                        }`,
-                    );
-                } else {
-                    router.push(`/dashboard/my-content`);
-                }
+                await updateUserProfile();
             }
         } catch (err: any) {
             toast({
@@ -191,7 +224,7 @@ export const LessonViewer = ({
 
     return (
         <div className="text-foreground">
-            <article className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto">
+            <article className="flex flex-col pb-[100px] lg:max-w-[40rem] xl:max-w-[48rem] mx-auto w-full px-4 pt-4">
                 {!lesson && !error && (
                     <div className="flex flex-col">
                         <Skeleton className="h-12 w-full mb-8" />
@@ -225,7 +258,19 @@ export const LessonViewer = ({
                 )}
                 {lesson && !error && (
                     <>
-                        <header className="mb-8">
+                        <header className="mb-8 flex flex-col gap-1">
+                            {courseTitle && (
+                                <NextLink
+                                    href={appendCourseViewerSessionParamsToHref(
+                                        `/course/${slug}/${productId}`,
+                                        viewerSessionParams,
+                                    )}
+                                    className="flex items-center gap-2 text-sm text-muted-foreground font-semibold hover:text-foreground transition-colors w-fit mb-1"
+                                >
+                                    <BookOpen className="h-4 w-4 shrink-0" />
+                                    <span>{courseTitle}</span>
+                                </NextLink>
+                            )}
                             <Header1 theme={theme.theme}>
                                 {lesson.title}
                             </Header1>
@@ -324,7 +369,9 @@ export const LessonViewer = ({
                             lesson.content && (
                                 <LessonEmbedViewer
                                     content={
-                                        lesson.content as { value: string }
+                                        lesson.content as {
+                                            value: string;
+                                        }
                                     }
                                 />
                             )}
@@ -367,55 +414,105 @@ export const LessonViewer = ({
                                     }
                                 />
                             )}
+                        {isViewerEnrolled && !isPreview && (
+                            <div className="mt-8 flex flex-col gap-4">
+                                <div className="flex justify-start">
+                                    {isCompleted ? (
+                                        <Button
+                                            theme={theme.theme}
+                                            disabled
+                                            className="flex gap-1.5 items-center"
+                                        >
+                                            <Check className="h-4 w-4 text-current" />
+                                            {COURSE_PROGRESS_COMPLETED}
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            theme={theme.theme}
+                                            onClick={markAsCompleted}
+                                            disabled={loading}
+                                            className="flex gap-1.5 items-center"
+                                        >
+                                            {COURSE_PROGRESS_MARK_COMPLETED}
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </>
                 )}
-            </article>
-            {lesson && isEnrolled(lesson.courseId, profile) && (
-                <div className="bg-background fixed bottom-0 left-0 w-full p-4 flex justify-end">
-                    <div className="mr-2">
-                        {!lesson.prevLesson && (
-                            <Link href={`${path}/${slug}/${lesson.courseId}`}>
-                                <Button
-                                    theme={theme.theme}
-                                    variant="secondary"
-                                    className="flex gap-1 items-center"
-                                    disabled={loading}
+                {lesson && (isViewerEnrolled || isPreview) && (
+                    <div className="sticky bottom-6 z-20 pointer-events-none w-full flex justify-end pointer-events-auto mt-auto pb-6 pr-6">
+                        <div className="flex gap-2">
+                            {lesson.prevLesson ? (
+                                <Link
+                                    href={appendCourseViewerSessionParamsToHref(
+                                        `${path}/${slug}/${lesson.courseId}/${lesson.prevLesson}`,
+                                        viewerSessionParams,
+                                    )}
                                 >
-                                    <ArrowLeft />
-                                    {COURSE_PROGRESS_INTRO}
-                                </Button>
-                            </Link>
-                        )}
-                        {lesson.prevLesson && (
-                            <Link
-                                href={`${path}/${slug}/${lesson.courseId}/${lesson.prevLesson}`}
-                            >
-                                <Button
-                                    theme={theme.theme}
-                                    variant="secondary"
-                                    className="flex gap-1 items-center"
-                                    disabled={loading}
+                                    <Button
+                                        theme={theme.theme}
+                                        variant="secondary"
+                                        size="icon"
+                                        disabled={loading}
+                                        aria-label={COURSE_PROGRESS_PREV}
+                                    >
+                                        <ArrowLeft className="h-4 w-4" />
+                                    </Button>
+                                </Link>
+                            ) : (
+                                <Link
+                                    href={appendCourseViewerSessionParamsToHref(
+                                        `${path}/${slug}/${lesson.courseId}`,
+                                        viewerSessionParams,
+                                    )}
                                 >
-                                    <ArrowLeft /> {COURSE_PROGRESS_PREV}
-                                </Button>
-                            </Link>
-                        )}
+                                    <Button
+                                        theme={theme.theme}
+                                        variant="secondary"
+                                        size="icon"
+                                        disabled={loading}
+                                        aria-label={COURSE_PROGRESS_INTRO}
+                                    >
+                                        <ArrowLeft className="h-4 w-4" />
+                                    </Button>
+                                </Link>
+                            )}
+                            {lesson.nextLesson ? (
+                                <Link
+                                    href={appendCourseViewerSessionParamsToHref(
+                                        `${path}/${slug}/${lesson.courseId}/${lesson.nextLesson}`,
+                                        viewerSessionParams,
+                                    )}
+                                >
+                                    <Button
+                                        theme={theme.theme}
+                                        variant="secondary"
+                                        size="icon"
+                                        disabled={loading}
+                                        aria-label={COURSE_PROGRESS_NEXT}
+                                    >
+                                        <ArrowRight className="h-4 w-4" />
+                                    </Button>
+                                </Link>
+                            ) : (
+                                <Link href={exitPath}>
+                                    <Button
+                                        theme={theme.theme}
+                                        variant="secondary"
+                                        size="icon"
+                                        disabled={loading}
+                                        aria-label={COURSE_PROGRESS_FINISH}
+                                    >
+                                        <ArrowRight className="h-4 w-4" />
+                                    </Button>
+                                </Link>
+                            )}
+                        </div>
                     </div>
-                    <Button
-                        theme={theme.theme}
-                        onClick={markCompleteAndNext}
-                        disabled={loading}
-                    >
-                        {lesson.nextLesson ? (
-                            <div className="flex gap-1 items-center">
-                                {COURSE_PROGRESS_NEXT} <ArrowRight />
-                            </div>
-                        ) : (
-                            COURSE_PROGRESS_FINISH
-                        )}
-                    </Button>
-                </div>
-            )}
+                )}
+            </article>
         </div>
     );
 };

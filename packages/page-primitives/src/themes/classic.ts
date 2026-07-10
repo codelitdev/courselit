@@ -205,7 +205,7 @@ const themeStyles: ThemeStyle = {
             custom: "",
         },
         link: {
-            custom: "",
+            custom: "underline",
             disabled: {
                 color: "gray-400",
                 cursor: "cursor-not-allowed",

@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useContext } from "react";
+import { ReactNode, useContext, useEffect, useRef } from "react";
 import constants from "@/config/constants";
 import {
     formattedLocaleDate,
@@ -10,13 +10,16 @@ import {
 import { CheckCircled, Circle, Lock } from "@courselit/icons";
 import {
     BTN_EXIT_COURSE_TOOLTIP,
+    PREVIEW_COURSE_MENU_ITEM,
     SIDEBAR_TEXT_COURSE_ABOUT,
+    SIDEBAR_TEXT_COURSE_DISCUSSIONS,
 } from "@ui-config/strings";
 import { Profile, Constants } from "@courselit/common-models";
 import {
     ProfileContext,
     SiteInfoContext,
     ThemeContext,
+    AddressContext,
 } from "@components/contexts";
 import { CourseFrontend, GroupWithLessons } from "./helpers";
 import {
@@ -32,12 +35,20 @@ import {
     SidebarMenuItem,
     SidebarProvider,
     SidebarTrigger,
+    useSidebar,
 } from "@components/ui/sidebar";
 import { Image } from "@courselit/components-library";
 import Link from "next/link";
 import { truncate } from "@courselit/utils";
 import { Button } from "@components/ui/button";
-import { ChevronRight, Clock, LogOutIcon } from "lucide-react";
+import {
+    BookOpen,
+    ChevronRight,
+    Clock,
+    Folder,
+    LogOutIcon,
+    MessageSquare,
+} from "lucide-react";
 import {
     Tooltip,
     TooltipContent,
@@ -49,9 +60,52 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@components/ui/collapsible";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Caption } from "@courselit/page-primitives";
 import NextThemeSwitcher from "@components/admin/next-theme-switcher";
+import {
+    appendCourseViewerSessionParamsToHref,
+    getCourseViewerSessionParams,
+    getCourseViewerReturnPath,
+    setHrefQueryParam,
+} from "@/lib/course-viewer-session-params";
+import { Badge } from "@/components/ui/badge";
+import ProductDiscussionPanel from "@/components/public/product-discussions/panel";
+
+function MobileStateSync() {
+    const { open, setOpenMobile, isMobile } = useSidebar();
+    useEffect(() => {
+        setOpenMobile(open);
+    }, [open, isMobile, setOpenMobile]);
+    return null;
+}
+
+function DiscussionSidebarSync({
+    pathname,
+    router,
+    searchParams,
+}: {
+    pathname: string | null;
+    router: ReturnType<typeof useRouter>;
+    searchParams: ReturnType<typeof useSearchParams>;
+}) {
+    const { openMobile, isMobile } = useSidebar();
+    const prevOpenMobile = useRef(openMobile);
+    useEffect(() => {
+        if (isMobile && prevOpenMobile.current && !openMobile) {
+            const params = new URLSearchParams(searchParams?.toString() || "");
+            if (params.has("discussion")) {
+                params.delete("discussion");
+                const newPath = params.toString()
+                    ? `${pathname}?${params.toString()}`
+                    : pathname;
+                router.push(newPath || "");
+            }
+        }
+        prevOpenMobile.current = openMobile;
+    }, [openMobile, isMobile, searchParams, pathname, router]);
+    return null;
+}
 
 export default function ProductPage({
     product,
@@ -61,10 +115,31 @@ export default function ProductPage({
     children: React.ReactNode;
 }) {
     const { profile } = useContext(ProfileContext);
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const viewerSessionParams = getCourseViewerSessionParams(searchParams);
+    const exitPath = getCourseViewerReturnPath(viewerSessionParams.returnTo);
+    const isDiscussionOpen = searchParams?.get("discussion") === "open";
+    const router = useRouter();
+    const address = useContext(AddressContext);
 
-    if (!profile) {
-        return null;
-    }
+    const pathSegments = pathname.split("/").filter(Boolean);
+    const isLessonPage =
+        pathSegments.length === 4 && pathSegments[0] === "course";
+    const isActualLessonPage =
+        isLessonPage && pathSegments[3] !== "discussions";
+    const viewerProfile = profile?.userId ? (profile as Profile) : undefined;
+    const canUseDiscussions = Boolean(
+        viewerProfile &&
+            product.discussions &&
+            (product.isPreview || isEnrolled(product.courseId, viewerProfile)),
+    );
+    const showDiscussionsAction = canUseDiscussions && isActualLessonPage;
+    const discussionsHref = getDiscussionHref({
+        pathname,
+        searchParams,
+        isDiscussionOpen,
+    });
 
     return (
         <SidebarProvider
@@ -76,16 +151,52 @@ export default function ProductPage({
             }
             className="courselit-theme"
         >
-            <AppSidebar course={product} profile={profile} />
+            <AppSidebar
+                course={product}
+                profile={profile || {}}
+                viewerSessionParams={viewerSessionParams}
+            />
             <SidebarInset>
-                <header className="flex h-16 shrink-0 items-center gap-2 px-4 justify-between text-foreground">
+                <header className="flex h-16 shrink-0 items-center gap-2 px-4 justify-between text-foreground transition-all duration-200">
                     <SidebarTrigger className="-ml-1" />
                     <div className="flex items-center gap-2">
+                        {product.isPreview && (
+                            <Badge variant="secondary">
+                                {PREVIEW_COURSE_MENU_ITEM}
+                            </Badge>
+                        )}
+                        {showDiscussionsAction && (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant={
+                                            isDiscussionOpen
+                                                ? "secondary"
+                                                : "ghost"
+                                        }
+                                        size="icon"
+                                        asChild
+                                    >
+                                        <Link
+                                            href={discussionsHref}
+                                            aria-label={
+                                                SIDEBAR_TEXT_COURSE_DISCUSSIONS
+                                            }
+                                        >
+                                            <MessageSquare className="h-4 w-4" />
+                                        </Link>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    {SIDEBAR_TEXT_COURSE_DISCUSSIONS}
+                                </TooltipContent>
+                            </Tooltip>
+                        )}
                         <NextThemeSwitcher variant="ghost" />
                         <Tooltip>
                             <TooltipTrigger>
                                 <Button variant="ghost" size="icon" asChild>
-                                    <Link href="/dashboard/my-content">
+                                    <Link href={exitPath}>
                                         <LogOutIcon />
                                     </Link>
                                 </Button>
@@ -96,26 +207,102 @@ export default function ProductPage({
                         </Tooltip>
                     </div>
                 </header>
-                <div className="p-4">{children}</div>
+                <div className="flex flex-1 flex-col min-h-0 min-w-0 p-4">
+                    {children}
+                </div>
             </SidebarInset>
+            {isActualLessonPage && canUseDiscussions && (
+                <SidebarProvider
+                    open={isDiscussionOpen}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            const params = new URLSearchParams(
+                                searchParams?.toString() || "",
+                            );
+                            params.delete("discussion");
+                            const newPath = params.toString()
+                                ? `${pathname}?${params.toString()}`
+                                : pathname;
+                            router.push(newPath || "");
+                        }
+                    }}
+                    style={
+                        {
+                            "--sidebar-width": "20rem",
+                            "--sidebar-width-mobile": "28rem",
+                        } as React.CSSProperties
+                    }
+                    className="min-h-0 w-auto"
+                >
+                    <MobileStateSync />
+                    <DiscussionSidebarSync
+                        pathname={pathname}
+                        router={router}
+                        searchParams={searchParams}
+                    />
+                    <Sidebar
+                        side="right"
+                        collapsible="offcanvas"
+                        className="z-40"
+                    >
+                        <ProductDiscussionPanel
+                            address={address}
+                            productId={product.courseId}
+                            slug={product.slug}
+                            entityId={pathSegments[3]}
+                            className="w-full"
+                            onClose={() => {
+                                const params = new URLSearchParams(
+                                    searchParams?.toString() || "",
+                                );
+                                params.delete("discussion");
+                                const newPath = params.toString()
+                                    ? `${pathname}?${params.toString()}`
+                                    : pathname;
+                                router.push(newPath || "");
+                            }}
+                        />
+                    </Sidebar>
+                </SidebarProvider>
+            )}
         </SidebarProvider>
+    );
+}
+
+function getDiscussionHref({
+    pathname,
+    searchParams,
+    isDiscussionOpen,
+}: {
+    pathname: string;
+    searchParams: ReturnType<typeof useSearchParams>;
+    isDiscussionOpen: boolean;
+}) {
+    const currentSearch = searchParams?.toString() || "";
+    return setHrefQueryParam(
+        currentSearch ? `${pathname}?${currentSearch}` : pathname,
+        "discussion",
+        isDiscussionOpen ? null : "open",
     );
 }
 
 export function AppSidebar({
     course,
     profile,
+    viewerSessionParams,
     ...rest
 }: {
     course: CourseFrontend;
     profile: Partial<Profile>;
+    viewerSessionParams?: ReturnType<typeof getCourseViewerSessionParams>;
 } & React.ComponentProps<typeof Sidebar>) {
     const siteinfo = useContext(SiteInfoContext);
     const pathname = usePathname();
     const sideBarItems = generateSideBarItems(
         course,
-        profile as Profile,
+        profile,
         pathname,
+        viewerSessionParams,
     );
     const { theme } = useContext(ThemeContext);
 
@@ -165,19 +352,22 @@ export function AppSidebar({
                                                 <TooltipProvider
                                                     delayDuration={1000}
                                                 >
-                                                    <Tooltip>
-                                                        <TooltipTrigger className="text-foreground">
-                                                            {truncate(
-                                                                item.title,
-                                                                item.badge
-                                                                    ? 15
-                                                                    : 26,
-                                                            )}
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            {item.title}
-                                                        </TooltipContent>
-                                                    </Tooltip>
+                                                    <span className="flex min-w-0 items-center gap-2">
+                                                        <Folder className="h-4 w-4 shrink-0 text-foreground" />
+                                                        <Tooltip>
+                                                            <TooltipTrigger className="min-w-0 truncate text-foreground">
+                                                                {truncate(
+                                                                    item.title,
+                                                                    item.badge
+                                                                        ? 15
+                                                                        : 26,
+                                                                )}
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>
+                                                                {item.title}
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </span>
                                                 </TooltipProvider>
                                                 {item.badge?.text && (
                                                     <Tooltip>
@@ -226,12 +416,15 @@ export function AppSidebar({
                                                                 }
                                                                 className="text-foreground"
                                                             >
-                                                                <span>
+                                                                <span className="flex items-center gap-2 w-full">
+                                                                    {
+                                                                        item.leadingIcon
+                                                                    }
                                                                     <Link
                                                                         href={
                                                                             item.href
                                                                         }
-                                                                        className="w-full"
+                                                                        className="flex-1"
                                                                     >
                                                                         <TooltipProvider
                                                                             delayDuration={
@@ -276,6 +469,7 @@ export function AppSidebar({
                                         className="text-foreground"
                                     >
                                         <Link href={item.href}>
+                                            {item.icon}
                                             {item.title}
                                         </Link>
                                     </SidebarMenuButton>
@@ -305,6 +499,7 @@ export function AppSidebar({
 interface SidebarItem {
     title: string;
     href: string;
+    icon?: ReactNode;
     badge?: {
         text: string;
         description: string;
@@ -314,24 +509,49 @@ interface SidebarItem {
         title: string;
         href: string;
         icon?: ReactNode;
+        leadingIcon?: ReactNode;
         isActive?: boolean;
     }[];
 }
 
 export function generateSideBarItems(
     course: CourseFrontend,
-    profile: Profile,
+    profile: Partial<Profile>,
     pathname: string,
+    viewerSessionParams?: ReturnType<typeof getCourseViewerSessionParams>,
 ): SidebarItem[] {
     if (!course) return [];
 
+    const isPreview = Boolean(course.isPreview);
     const items: SidebarItem[] = [
         {
             title: SIDEBAR_TEXT_COURSE_ABOUT,
-            href: `/course/${course.slug}/${course.courseId}`,
+            href: appendCourseViewerSessionParamsToHref(
+                `/course/${course.slug}/${course.courseId}`,
+                viewerSessionParams,
+            ),
+            icon: <BookOpen className="h-4 w-4 shrink-0" />,
             isActive: pathname === `/course/${course.slug}/${course.courseId}`,
         },
     ];
+
+    if (
+        course.discussions &&
+        profile?.userId &&
+        (course.isPreview || isEnrolled(course.courseId, profile as Profile))
+    ) {
+        items.push({
+            title: SIDEBAR_TEXT_COURSE_DISCUSSIONS,
+            href: appendCourseViewerSessionParamsToHref(
+                `/course/${course.slug}/${course.courseId}/discussions`,
+                viewerSessionParams,
+            ),
+            icon: <MessageSquare className="h-4 w-4 shrink-0" />,
+            isActive:
+                pathname ===
+                `/course/${course.slug}/${course.courseId}/discussions`,
+        });
+    }
 
     let lastGroupDripDateInMillis = getRelativeDripAnchorMillis(
         course,
@@ -348,6 +568,7 @@ export function generateSideBarItems(
                 group,
                 profile,
                 lastGroupDripDateInMillis,
+                isPreview,
             }),
             items: [],
         };
@@ -359,28 +580,37 @@ export function generateSideBarItems(
             if (isActive) {
                 groupItem.isActive = true;
             }
+            let lessonStatusIcon: ReactNode;
+            if (!isPreview) {
+                if (!profile?.userId) {
+                    lessonStatusIcon = lesson.requiresEnrollment ? (
+                        <Lock />
+                    ) : undefined;
+                } else if (isEnrolled(course.courseId, profile as Profile)) {
+                    lessonStatusIcon = isLessonCompleted({
+                        courseId: course.courseId,
+                        lessonId: lesson.lessonId,
+                        profile: profile as Profile,
+                    }) ? (
+                        <CheckCircled />
+                    ) : (
+                        <Circle />
+                    );
+                } else {
+                    lessonStatusIcon = lesson.requiresEnrollment ? (
+                        <Lock />
+                    ) : undefined;
+                }
+            }
             groupItem.items!.push({
                 title: lesson.title,
-                href: `/course/${course.slug}/${course.courseId}/${lesson.lessonId}`,
+                href: appendCourseViewerSessionParamsToHref(
+                    `/course/${course.slug}/${course.courseId}/${lesson.lessonId}`,
+                    viewerSessionParams,
+                ),
                 isActive,
-                icon:
-                    profile && profile.userId ? (
-                        isEnrolled(course.courseId, profile) ? (
-                            isLessonCompleted({
-                                courseId: course.courseId,
-                                lessonId: lesson.lessonId,
-                                profile,
-                            }) ? (
-                                <CheckCircled />
-                            ) : (
-                                <Circle />
-                            )
-                        ) : lesson.requiresEnrollment ? (
-                            <Lock />
-                        ) : undefined
-                    ) : lesson.requiresEnrollment ? (
-                        <Lock />
-                    ) : undefined,
+                leadingIcon: <BookOpen className="h-4 w-4 shrink-0" />,
+                icon: lessonStatusIcon,
             });
         }
 
@@ -393,7 +623,8 @@ export function generateSideBarItems(
             group.drip.status &&
             group.drip.type ===
                 Constants.dripType[0].split("-")[0].toUpperCase() &&
-            !isGroupAccessibleToUser(course, profile as Profile, group)
+            !isPreview &&
+            !isGroupAccessibleToUser(course, profile, group)
         ) {
             lastGroupDripDateInMillis += group?.drip?.delayInMillis ?? 0;
         }
@@ -407,16 +638,19 @@ function getDripLabel({
     group,
     profile,
     lastGroupDripDateInMillis,
+    isPreview,
 }: {
     course: CourseFrontend;
     group: GroupWithLessons;
-    profile: Profile;
+    profile: Partial<Profile>;
     lastGroupDripDateInMillis: number;
+    isPreview: boolean;
 }): { text: string; description: string } | undefined {
-    if (
-        group.drip?.status &&
-        isGroupAccessibleToUser(course, profile as Profile, group)
-    ) {
+    if (isPreview) {
+        return undefined;
+    }
+
+    if (group.drip?.status && isGroupAccessibleToUser(course, profile, group)) {
         return undefined;
     }
 
@@ -435,8 +669,9 @@ function getDripLabel({
             );
             availableLabel =
                 daysUntilAvailable &&
-                !isGroupAccessibleToUser(course, profile as Profile, group)
-                    ? isEnrolled(course.courseId, profile)
+                !isGroupAccessibleToUser(course, profile, group)
+                    ? profile?.userId &&
+                      isEnrolled(course.courseId, profile as Profile)
                         ? `Available in ${daysUntilAvailable} days`
                         : `Available ${daysUntilAvailable} days after enrollment`
                     : "";
@@ -464,9 +699,9 @@ function getDripLabel({
 
 function getRelativeDripAnchorMillis(
     course: CourseFrontend,
-    profile: Profile,
+    profile: Partial<Profile>,
 ): number {
-    const purchase = profile.purchases?.find(
+    const purchase = profile?.purchases?.find(
         (purchase) => purchase.courseId === course.courseId,
     );
 
@@ -506,12 +741,12 @@ function normalizeTimestamp(value: string | number | Date): number {
 
 export function isGroupAccessibleToUser(
     course: CourseFrontend,
-    profile: Profile,
+    profile: Partial<Profile>,
     group: GroupWithLessons,
 ): boolean {
     if (!group.drip || !group.drip.status) return true;
 
-    if (!Array.isArray(profile.purchases)) return false;
+    if (!Array.isArray(profile?.purchases)) return false;
     const groupId = getGroupId(group);
     if (!groupId) return false;
 

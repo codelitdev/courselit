@@ -1,6 +1,7 @@
 import GQLContext from "@models/GQLContext";
 import types from "./types";
 import {
+    GraphQLBoolean,
     GraphQLInt,
     GraphQLList,
     GraphQLNonNull,
@@ -17,6 +18,8 @@ import {
     getMembers,
     getMembersCount,
     getPost,
+    getFeed,
+    getFeedCount,
     getPosts,
     getPostsCount,
 } from "./logic";
@@ -46,12 +49,19 @@ const queries = {
             limit: {
                 type: GraphQLInt,
             },
+            publicOnly: {
+                type: GraphQLBoolean,
+            },
         },
         resolve: (
             _: any,
-            { page, limit }: { page?: number; limit?: number },
+            {
+                page,
+                limit,
+                publicOnly,
+            }: { page?: number; limit?: number; publicOnly?: boolean },
             ctx: GQLContext,
-        ) => getCommunities({ ctx, page, limit }),
+        ) => getCommunities({ ctx, page, limit, publicOnly }),
     },
     getMembers: {
         type: new GraphQLList(types.communityMemberStatus),
@@ -87,8 +97,16 @@ const queries = {
     },
     getCommunitiesCount: {
         type: GraphQLInt,
-        resolve: (_: any, __: any, ctx: GQLContext) =>
-            getCommunitiesCount({ ctx }),
+        args: {
+            publicOnly: {
+                type: GraphQLBoolean,
+            },
+        },
+        resolve: (
+            _: any,
+            { publicOnly }: { publicOnly?: boolean },
+            ctx: GQLContext,
+        ) => getCommunitiesCount({ ctx, publicOnly }),
     },
     getMembersCount: {
         type: GraphQLInt,
@@ -178,6 +196,26 @@ const queries = {
             },
             ctx: GQLContext,
         ) => getPosts({ ctx, communityId, page, limit, category }),
+    },
+    getFeed: {
+        type: new GraphQLList(types.communityPost),
+        args: {
+            page: {
+                type: GraphQLInt,
+            },
+            limit: {
+                type: GraphQLInt,
+            },
+        },
+        resolve: (
+            _: any,
+            { page, limit }: { page?: number; limit?: number },
+            ctx: GQLContext,
+        ) => getFeed({ ctx, page, limit }),
+    },
+    getFeedCount: {
+        type: GraphQLInt,
+        resolve: (_: any, __: any, ctx: GQLContext) => getFeedCount({ ctx }),
     },
     getPostsCount: {
         type: GraphQLInt,

@@ -24,7 +24,7 @@ import {
     use,
     startTransition,
 } from "react";
-import { Email as EmailContent } from "@courselit/email-editor";
+import type { Email as EmailContent } from "@courselit/email-editor";
 import { useGraphQLFetch } from "@/hooks/use-graphql-fetch";
 import { Email } from "@courselit/common-models";
 import EmailViewer from "@components/admin/mails/email-viewer";
