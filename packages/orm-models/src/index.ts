@@ -35,3 +35,6 @@ export * from "./models/notification-preference";
 export * from "./models/download-link";
 export * from "./models/apikey";
 export * from "./models/user-theme";
+export * from "./models/product-discussion";
+export * from "./models/rate-limit-event";
+export * from "./product-discussion-cleanup";

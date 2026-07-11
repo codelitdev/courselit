@@ -69,7 +69,7 @@ interface LessonViewerProps {
     slug: string;
     lessonId: string;
     productId: string;
-    profile: Profile;
+    profile?: Partial<Profile> | null;
     setProfile: (profile: Profile) => void;
     address: Address;
     path?: string;
@@ -94,13 +94,17 @@ export const LessonViewer = ({
     const exitPath = getCourseViewerReturnPath(viewerSessionParams.returnTo);
     const { toast } = useToast();
     const { theme } = useContext(ThemeContext);
+    const viewerProfile = profile?.userId ? (profile as Profile) : undefined;
+    const isViewerEnrolled = Boolean(
+        lesson && viewerProfile && isEnrolled(lesson.courseId, viewerProfile),
+    );
 
     const isCompleted =
-        lesson && profile && profile.purchases
+        lesson && viewerProfile?.purchases
             ? isLessonCompleted({
                   courseId: lesson.courseId,
                   lessonId: lesson.lessonId,
-                  profile: profile as Profile,
+                  profile: viewerProfile,
               })
             : false;
 
@@ -410,7 +414,7 @@ export const LessonViewer = ({
                                     }
                                 />
                             )}
-                        {isEnrolled(lesson.courseId, profile) && !isPreview && (
+                        {isViewerEnrolled && !isPreview && (
                             <div className="mt-8 flex flex-col gap-4">
                                 <div className="flex justify-start">
                                     {isCompleted ? (
@@ -437,78 +441,77 @@ export const LessonViewer = ({
                         )}
                     </>
                 )}
-                {lesson &&
-                    (isEnrolled(lesson.courseId, profile) || isPreview) && (
-                        <div className="sticky bottom-6 z-20 pointer-events-none w-full flex justify-end pointer-events-auto mt-auto pb-6 pr-6">
-                            <div className="flex gap-2">
-                                {lesson.prevLesson ? (
-                                    <Link
-                                        href={appendCourseViewerSessionParamsToHref(
-                                            `${path}/${slug}/${lesson.courseId}/${lesson.prevLesson}`,
-                                            viewerSessionParams,
-                                        )}
+                {lesson && (isViewerEnrolled || isPreview) && (
+                    <div className="sticky bottom-6 z-20 pointer-events-none w-full flex justify-end pointer-events-auto mt-auto pb-6 pr-6">
+                        <div className="flex gap-2">
+                            {lesson.prevLesson ? (
+                                <Link
+                                    href={appendCourseViewerSessionParamsToHref(
+                                        `${path}/${slug}/${lesson.courseId}/${lesson.prevLesson}`,
+                                        viewerSessionParams,
+                                    )}
+                                >
+                                    <Button
+                                        theme={theme.theme}
+                                        variant="secondary"
+                                        size="icon"
+                                        disabled={loading}
+                                        aria-label={COURSE_PROGRESS_PREV}
                                     >
-                                        <Button
-                                            theme={theme.theme}
-                                            variant="secondary"
-                                            size="icon"
-                                            disabled={loading}
-                                            aria-label={COURSE_PROGRESS_PREV}
-                                        >
-                                            <ArrowLeft className="h-4 w-4" />
-                                        </Button>
-                                    </Link>
-                                ) : (
-                                    <Link
-                                        href={appendCourseViewerSessionParamsToHref(
-                                            `${path}/${slug}/${lesson.courseId}`,
-                                            viewerSessionParams,
-                                        )}
+                                        <ArrowLeft className="h-4 w-4" />
+                                    </Button>
+                                </Link>
+                            ) : (
+                                <Link
+                                    href={appendCourseViewerSessionParamsToHref(
+                                        `${path}/${slug}/${lesson.courseId}`,
+                                        viewerSessionParams,
+                                    )}
+                                >
+                                    <Button
+                                        theme={theme.theme}
+                                        variant="secondary"
+                                        size="icon"
+                                        disabled={loading}
+                                        aria-label={COURSE_PROGRESS_INTRO}
                                     >
-                                        <Button
-                                            theme={theme.theme}
-                                            variant="secondary"
-                                            size="icon"
-                                            disabled={loading}
-                                            aria-label={COURSE_PROGRESS_INTRO}
-                                        >
-                                            <ArrowLeft className="h-4 w-4" />
-                                        </Button>
-                                    </Link>
-                                )}
-                                {lesson.nextLesson ? (
-                                    <Link
-                                        href={appendCourseViewerSessionParamsToHref(
-                                            `${path}/${slug}/${lesson.courseId}/${lesson.nextLesson}`,
-                                            viewerSessionParams,
-                                        )}
+                                        <ArrowLeft className="h-4 w-4" />
+                                    </Button>
+                                </Link>
+                            )}
+                            {lesson.nextLesson ? (
+                                <Link
+                                    href={appendCourseViewerSessionParamsToHref(
+                                        `${path}/${slug}/${lesson.courseId}/${lesson.nextLesson}`,
+                                        viewerSessionParams,
+                                    )}
+                                >
+                                    <Button
+                                        theme={theme.theme}
+                                        variant="secondary"
+                                        size="icon"
+                                        disabled={loading}
+                                        aria-label={COURSE_PROGRESS_NEXT}
                                     >
-                                        <Button
-                                            theme={theme.theme}
-                                            variant="secondary"
-                                            size="icon"
-                                            disabled={loading}
-                                            aria-label={COURSE_PROGRESS_NEXT}
-                                        >
-                                            <ArrowRight className="h-4 w-4" />
-                                        </Button>
-                                    </Link>
-                                ) : (
-                                    <Link href={exitPath}>
-                                        <Button
-                                            theme={theme.theme}
-                                            variant="secondary"
-                                            size="icon"
-                                            disabled={loading}
-                                            aria-label={COURSE_PROGRESS_FINISH}
-                                        >
-                                            <ArrowRight className="h-4 w-4" />
-                                        </Button>
-                                    </Link>
-                                )}
-                            </div>
+                                        <ArrowRight className="h-4 w-4" />
+                                    </Button>
+                                </Link>
+                            ) : (
+                                <Link href={exitPath}>
+                                    <Button
+                                        theme={theme.theme}
+                                        variant="secondary"
+                                        size="icon"
+                                        disabled={loading}
+                                        aria-label={COURSE_PROGRESS_FINISH}
+                                    >
+                                        <ArrowRight className="h-4 w-4" />
+                                    </Button>
+                                </Link>
+                            )}
                         </div>
-                    )}
+                    </div>
+                )}
             </article>
         </div>
     );

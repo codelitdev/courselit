@@ -32,6 +32,7 @@ export class EmailChannel implements NotificationChannel {
             entityId: payload.entityId,
             actorName,
             recipientUserId: payload.recipient.userId,
+            recipientPermissions: payload.recipient.permissions || [],
             entityTargetId: payload.entityTargetId,
             metadata: payload.metadata,
             hrefPrefix: getSiteUrl(payload.domain),

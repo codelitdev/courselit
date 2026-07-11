@@ -14,3 +14,4 @@ export { isVideo } from "./is-video";
 export { extractMediaIDs } from "./extract-media-ids";
 export { default as extractVideoId } from "./extract-video-id";
 export { default as normalizeTextEditorContent } from "./normalize-text-editor-content";
+export { default as extractTextFromTextEditorContent } from "./extract-text-from-text-editor-content";

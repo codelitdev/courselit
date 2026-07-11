@@ -30,6 +30,11 @@ import MembershipModel from "@models/Membership";
 import CommunityModel from "@models/Community";
 import LessonModel from "@models/Lesson";
 import DomainModel from "@models/Domain";
+import ProductDiscussionCommentModel from "@models/ProductDiscussionComment";
+import ProductDiscussionReplyModel from "@models/ProductDiscussionReply";
+import ProductDiscussionLikeModel from "@models/ProductDiscussionLike";
+import ProductDiscussionSubscriberModel from "@models/ProductDiscussionSubscriber";
+import ProductDiscussionReportModel from "@models/ProductDiscussionReport";
 import { responses, internal } from "@/config/strings";
 import constants from "@/config/constants";
 import { Constants } from "@courselit/common-models";
@@ -152,6 +157,15 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             MembershipModel.deleteMany({ domain: testDomain._id }),
             CommunityModel.deleteMany({ domain: testDomain._id }),
             LessonModel.deleteMany({ domain: testDomain._id }),
+            ProductDiscussionCommentModel.deleteMany({
+                domain: testDomain._id,
+            }),
+            ProductDiscussionReplyModel.deleteMany({ domain: testDomain._id }),
+            ProductDiscussionLikeModel.deleteMany({ domain: testDomain._id }),
+            ProductDiscussionSubscriberModel.deleteMany({
+                domain: testDomain._id,
+            }),
+            ProductDiscussionReportModel.deleteMany({ domain: testDomain._id }),
         ]);
 
         jest.clearAllMocks();
@@ -734,6 +748,109 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 userId: targetUser.userId,
             });
             expect(subscribers).toHaveLength(0);
+        });
+
+        it("should delete product discussion likes, subscriptions, and reports", async () => {
+            await Promise.all([
+                ProductDiscussionLikeModel.create({
+                    domain: testDomain._id,
+                    productId: "course-123",
+                    entityType: Constants.ProductDiscussionEntityType.LESSON,
+                    entityId: "lesson-123",
+                    contentType: Constants.ProductDiscussionContentType.COMMENT,
+                    contentId: "comment-123",
+                    userId: targetUser.userId,
+                }),
+                ProductDiscussionSubscriberModel.create({
+                    domain: testDomain._id,
+                    productId: "course-123",
+                    entityType: Constants.ProductDiscussionEntityType.LESSON,
+                    entityId: "lesson-123",
+                    subscriptionId: "sub-123",
+                    userId: targetUser.userId,
+                    subscription: true,
+                }),
+                ProductDiscussionReportModel.create({
+                    domain: testDomain._id,
+                    productId: "course-123",
+                    entityType: Constants.ProductDiscussionEntityType.LESSON,
+                    entityId: "lesson-123",
+                    reportId: "report-123",
+                    contentType: Constants.ProductDiscussionContentType.COMMENT,
+                    contentId: "comment-123",
+                    userId: targetUser.userId,
+                    reason: "spam",
+                }),
+            ]);
+
+            await deleteUser(targetUser.userId, mockCtx);
+
+            const [likes, subscribers, reports] = await Promise.all([
+                ProductDiscussionLikeModel.find({ userId: targetUser.userId }),
+                ProductDiscussionSubscriberModel.find({
+                    userId: targetUser.userId,
+                }),
+                ProductDiscussionReportModel.find({
+                    userId: targetUser.userId,
+                }),
+            ]);
+
+            expect(likes).toHaveLength(0);
+            expect(subscribers).toHaveLength(0);
+            expect(reports).toHaveLength(0);
+        });
+
+        it("should anonymize and redact product discussion comments and replies", async () => {
+            const comment = await ProductDiscussionCommentModel.create({
+                domain: testDomain._id,
+                productId: "course-123",
+                entityType: Constants.ProductDiscussionEntityType.LESSON,
+                entityId: "lesson-123",
+                commentId: "comment-user-123",
+                userId: targetUser.userId,
+                content: {
+                    type: "doc",
+                    content: [{ type: "paragraph", text: "My secret data" }],
+                },
+            });
+
+            const reply = await ProductDiscussionReplyModel.create({
+                domain: testDomain._id,
+                productId: "course-123",
+                entityType: Constants.ProductDiscussionEntityType.LESSON,
+                entityId: "lesson-123",
+                commentId: "comment-user-123",
+                replyId: "reply-user-123",
+                userId: targetUser.userId,
+                content: {
+                    type: "doc",
+                    content: [{ type: "paragraph", text: "My secret reply" }],
+                },
+            });
+
+            await deleteUser(targetUser.userId, mockCtx);
+
+            const anonymizedComment =
+                await ProductDiscussionCommentModel.findOne({
+                    commentId: comment.commentId,
+                });
+            const anonymizedReply = await ProductDiscussionReplyModel.findOne({
+                replyId: reply.replyId,
+            });
+
+            expect(anonymizedComment?.userId).toBe("deleted");
+            expect(anonymizedComment?.deleted).toBe(true);
+            expect(anonymizedComment?.content).toEqual({
+                type: "doc",
+                content: [],
+            });
+
+            expect(anonymizedReply?.userId).toBe("deleted");
+            expect(anonymizedReply?.deleted).toBe(true);
+            expect(anonymizedReply?.content).toEqual({
+                type: "doc",
+                content: [],
+            });
         });
 
         it("should call deleteCommunityPosts for user's posts and comments", async () => {

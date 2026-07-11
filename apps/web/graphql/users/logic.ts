@@ -79,6 +79,10 @@ export const getUser = async (
         user = await UserModel.findOne({ userId, domain: ctx.subdomain._id });
     }
 
+    if (!user && !userId) {
+        return null;
+    }
+
     if (!user) {
         throw new Error(responses.item_not_found);
     }
