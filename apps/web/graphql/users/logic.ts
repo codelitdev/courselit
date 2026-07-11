@@ -10,8 +10,12 @@ import { Domain } from "@models/Domain";
 import { checkPermission, getEmailFrom, getPlanPrice } from "@courselit/utils";
 import UserSegmentModel from "@models/UserSegment";
 import {
+    CourseRepository,
+    CommunityRepository,
     InternalCourse,
     InternalUser,
+    MembershipRepository,
+    UserRepository,
     UserSegment,
 } from "@courselit/orm-models";
 import { Course, UIConstants, User } from "@courselit/common-models";
@@ -46,6 +50,11 @@ import {
 } from "../paymentplans/logic";
 import { convertFiltersToDBConditions } from "@courselit/common-logic";
 import { InternalMembership } from "@courselit/orm-models";
+
+const userRepo = new UserRepository(UserModel);
+const membershipRepo = new MembershipRepository(MembershipModel);
+const courseRepo = new CourseRepository(CourseModel);
+const communityRepo = new CommunityRepository(CommunityModel);
 import CertificateModel from "@models/Certificate";
 import CertificateTemplateModel, {
     CertificateTemplate,
@@ -76,7 +85,7 @@ export const getUser = async (
     let user: any = ctx.user;
 
     if (userId) {
-        user = await UserModel.findOne({ userId, domain: ctx.subdomain._id });
+        user = await userRepo.findOne({ userId, domain: ctx.subdomain._id });
     }
 
     if (!user && !userId) {
@@ -131,7 +140,7 @@ export const updateUser = async (userData: UserData, ctx: GQLContext) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    let user = await UserModel.findOne({
+    let user = await userRepo.findOne({
         userId: id,
         domain: ctx.subdomain._id,
     });
@@ -197,7 +206,7 @@ export const inviteCustomer = async (
     }
 
     const sanitizedEmail = sanitizeEmail(email);
-    let user = await UserModel.findOne({
+    let user = await userRepo.findOne({
         email: sanitizedEmail,
         domain: ctx.subdomain._id,
     });
@@ -266,7 +275,7 @@ export const deleteUser = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    const userToDelete = await UserModel.findOne<InternalUser>({
+    const userToDelete = await userRepo.findOne({
         domain: ctx.subdomain._id,
         userId,
     });
@@ -283,7 +292,7 @@ export const deleteUser = async (
     }
 
     const deleterUser =
-        (await UserModel.findOne<InternalUser>({
+        (await userRepo.findOne({
             domain: ctx.subdomain._id,
             userId: ctx.user.userId,
         })) || (ctx.user as InternalUser);
@@ -343,7 +352,7 @@ export const getUsersCount = async (ctx: GQLContext, filters?: string) => {
     }
 
     const query = await buildQueryFromSearchData(ctx.subdomain._id, filters);
-    return await UserModel.countDocuments(query);
+    return await userRepo.count(query);
 };
 
 const buildQueryFromSearchData = async (
@@ -702,7 +711,7 @@ export const getUserContent = async (
         id = userId;
     }
 
-    const user = await UserModel.findOne({
+    const user = await userRepo.findOne({
         userId: id,
         domain: ctx.subdomain._id,
     });
@@ -715,7 +724,7 @@ export const getUserContent = async (
 };
 
 async function getUserContentInternal(ctx: GQLContext, user: User) {
-    const memberships = await MembershipModel.find<Membership>({
+    const memberships = await membershipRepo.find({
         domain: ctx.subdomain._id,
         userId: user.userId,
         status: Constants.MembershipStatus.ACTIVE,
@@ -735,7 +744,7 @@ async function getUserContentInternal(ctx: GQLContext, user: User) {
                 continue;
             }
 
-            const course = await CourseModel.findOne({
+            const course = await courseRepo.findOne({
                 courseId: membership.entityId,
                 domain: ctx.subdomain._id,
             });
@@ -783,7 +792,7 @@ async function getUserContentInternal(ctx: GQLContext, user: User) {
         if (
             membership.entityType === Constants.MembershipEntityType.COMMUNITY
         ) {
-            const community = await CommunityModel.findOne({
+            const community = await communityRepo.findOne({
                 communityId: membership.entityId,
                 domain: ctx.subdomain._id,
                 deleted: false,
@@ -816,7 +825,7 @@ export const getMembershipStatus = async ({
 }): Promise<MembershipStatus | null> => {
     checkIfAuthenticated(ctx);
 
-    const membership: Membership | null = await MembershipModel.findOne({
+    const membership: Membership | null = await membershipRepo.findOne({
         domain: ctx.subdomain._id,
         entityId,
         entityType,
@@ -858,8 +867,7 @@ export const getMembership = async ({
     entityId: string;
     planId: string;
 }): Promise<InternalMembership> => {
-    const existingMembership =
-        await MembershipModel.findOne<InternalMembership>({
+    const existingMembership = await membershipRepo.findOne({
             domain: domainId,
             userId,
             entityType,
@@ -868,7 +876,7 @@ export const getMembership = async ({
 
     let membership: InternalMembership =
         existingMembership ||
-        (await MembershipModel.create({
+        (await membershipRepo.create({
             domain: domainId,
             userId,
             paymentPlanId: planId,
@@ -891,7 +899,7 @@ export async function findMembership({
     entityId: string;
     entityType?: MembershipEntityType;
 }): Promise<InternalMembership | null> {
-    return MembershipModel.findOne<InternalMembership>({
+    return membershipRepo.findOne({
         domain: domainId,
         userId,
         entityType,
@@ -908,7 +916,7 @@ export async function runPostMembershipTasks({
     membership: Membership;
     paymentPlan: PaymentPlan;
 }) {
-    const user = await UserModel.findOne<InternalUser>({
+    const user = await userRepo.findOne({
         userId: membership.userId,
     });
     if (!user) {
@@ -942,7 +950,7 @@ export async function runPostMembershipTasks({
         event = Constants.EventType.COMMUNITY_JOINED as unknown as Event;
     }
     if (membership.entityType === Constants.MembershipEntityType.COURSE) {
-        const product = await CourseModel.findOne<InternalCourse>({
+        const product = await courseRepo.findOne({
             courseId: membership.entityId,
         });
         if (product) {

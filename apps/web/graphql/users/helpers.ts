@@ -6,8 +6,9 @@ import constants from "@/config/constants";
 import GQLContext from "@/models/GQLContext";
 import {
     InternalUser,
-    InternalMembership,
     InternalCourse,
+    MembershipRepository,
+    UserRepository,
 } from "@courselit/orm-models";
 import { Constants, UIConstants } from "@courselit/common-models";
 import CourseModel from "@models/Course";
@@ -47,6 +48,9 @@ import Account from "@models/Account";
 
 const { permissions } = UIConstants;
 
+const userRepo = new UserRepository(UserModel);
+const membershipRepo = new MembershipRepository(MembershipModel);
+
 const CRITICAL_PERMISSIONS = [
     permissions.manageSite,
     permissions.manageSettings,
@@ -67,7 +71,7 @@ export async function validateUserDeletion(
 ): Promise<void> {
     for (const permission of CRITICAL_PERMISSIONS) {
         if (userToDelete.permissions?.includes(permission)) {
-            const otherUsersWithPermission = await UserModel.countDocuments({
+            const otherUsersWithPermission = await userRepo.count({
                 domain: ctx.subdomain._id,
                 userId: { $ne: userToDelete.userId },
                 permissions: permission,
@@ -199,7 +203,7 @@ export async function migrateBusinessEntities(
     // ==========================================
     // COMMUNITY MODERATOR ROLE MIGRATION
     // ==========================================
-    const creatorMemberships = await MembershipModel.find<InternalMembership>({
+    const creatorMemberships = await membershipRepo.find({
         domain: ctx.subdomain._id,
         userId: userToDelete.userId,
         entityType: Constants.MembershipEntityType.COMMUNITY,
@@ -212,8 +216,7 @@ export async function migrateBusinessEntities(
     for (const membership of creatorMemberships) {
         communityIds.add(membership.entityId);
 
-        const existingMembership =
-            await MembershipModel.findOne<InternalMembership>({
+        const existingMembership = await membershipRepo.findOne({
                 domain: ctx.subdomain._id,
                 userId: deleterUser.userId,
                 entityId: membership.entityId,
@@ -371,7 +374,7 @@ export async function cleanupPersonalData(
     );
 
     // Delete memberships and cancel subscriptions
-    const memberships = await MembershipModel.find<InternalMembership>({
+    const memberships = await membershipRepo.find({
         domain: ctx.subdomain._id,
         userId: userToDelete.userId,
     });

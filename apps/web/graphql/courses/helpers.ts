@@ -7,8 +7,15 @@ import { slugify } from "@courselit/utils";
 import { addGroup } from "./logic";
 import { Constants, Course, Progress, User } from "@courselit/common-models";
 import { getPlans } from "../paymentplans/logic";
-import { InternalCourse } from "@courselit/orm-models";
+import {
+    CourseRepository,
+    InternalCourse,
+    PageRepository,
+} from "@courselit/orm-models";
 import { generateUniquePageId, isDuplicateKeyError } from "../pages/helpers";
+
+const courseRepo = new CourseRepository(CourseModel);
+const pageRepo = new PageRepository(Page);
 
 export const validateCourse = async (
     courseData: InternalCourse,
@@ -130,14 +137,14 @@ export const setupCourse = async ({
     let page;
     let course;
     try {
-        page = await Page.create({
+        page = await pageRepo.create({
             domain: ctx.subdomain._id,
             name: title,
             creatorId: ctx.user.userId,
             pageId,
         });
 
-        course = await CourseModel.create({
+        course = await courseRepo.create({
             domain: ctx.subdomain._id,
             title: title,
             cost: 0,
@@ -176,7 +183,7 @@ export const setupBlog = async ({
     ctx: GQLContext;
 }) => {
     try {
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: ctx.subdomain._id,
             title: title,
             cost: 0,

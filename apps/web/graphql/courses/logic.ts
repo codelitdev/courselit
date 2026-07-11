@@ -5,6 +5,10 @@ import CourseModel from "@/models/Course";
 import {
     deleteProductDiscussionData,
     InternalCourse,
+    CourseRepository,
+    LessonRepository,
+    MembershipRepository,
+    UserRepository,
 } from "@courselit/orm-models";
 import UserModel from "@/models/User";
 import { Media, User } from "@courselit/common-models";
@@ -62,6 +66,11 @@ import {
 
 const { open, itemsPerPage, blogPostSnippetLength, permissions } = constants;
 
+const courseRepo = new CourseRepository(CourseModel);
+const lessonRepo = new LessonRepository(LessonModel);
+const membershipRepo = new MembershipRepository(MembershipModel);
+const userRepo = new UserRepository(UserModel);
+
 export const getCourseOrThrow = async (
     id: mongoose.Types.ObjectId | undefined,
     ctx: GQLContext,
@@ -77,7 +86,7 @@ export const getCourseOrThrow = async (
               _id: id,
           };
 
-    const course = await CourseModel.findOne({
+    const course = await courseRepo.findOne({
         ...query,
         domain: ctx.subdomain._id,
     });
@@ -468,7 +477,7 @@ export const getCoursesAsAdmin = async ({
 
     return courses.map(async (course) => ({
         ...course,
-        customers: await (MembershipModel as any).countDocuments({
+        customers: await membershipRepo.count({
             entityId: course.courseId,
             entityType: Constants.MembershipEntityType.COURSE,
             domain: context.subdomain._id,
@@ -676,7 +685,7 @@ export const getProducts = async ({
     for (const course of courses) {
         const customers =
             hasManagePerm && course.type !== constants.blog
-                ? await (MembershipModel as any).countDocuments({
+                ? await membershipRepo.count({
                       entityId: course.courseId,
                       entityType: Constants.MembershipEntityType.COURSE,
                       domain: ctx.subdomain._id,
@@ -736,7 +745,7 @@ export const getProductsCount = async ({
 }) => {
     const query = getProductsQuery(ctx, filterBy, tags, ids, publicView);
 
-    return await (CourseModel as any).countDocuments(query);
+    return await courseRepo.count(query);
 };
 
 export const addGroup = async ({
@@ -800,7 +809,7 @@ export const removeGroup = async (
         throw new Error(responses.download_course_last_group_cannot_be_removed);
     }
 
-    const countOfAssociatedLessons = await LessonModel.countDocuments({
+    const countOfAssociatedLessons = await lessonRepo.count({
         courseId,
         groupId: group.id,
         domain: ctx.subdomain._id,
@@ -974,10 +983,10 @@ export const moveLesson = async ({
     ctx: GQLContext;
 }) => {
     const course = await getCourseOrThrow(undefined, ctx, courseId);
-    const lesson = await LessonModel.findOne({
-        domain: ctx.subdomain._id,
+    const lesson = await lessonRepo.findByLessonIdAndDomain(
+        ctx.subdomain._id,
         lessonId,
-    });
+    );
 
     if (!lesson || lesson.courseId !== course.courseId) {
         throw new Error(responses.item_not_found);
@@ -1172,7 +1181,7 @@ export const getMembers = async ({
 
     return await Promise.all(
         members.map(async (member) => {
-            const user = await UserModel.findOne<User>({
+            const user = await userRepo.findOne({
                 domain: ctx.subdomain._id,
                 userId: member.userId,
             });
