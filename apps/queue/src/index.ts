@@ -2,13 +2,12 @@ import express from "express";
 import jobRoutes from "./job/routes";
 import sseRoutes from "./sse/routes";
 
-// start workers
-import "./domain/worker";
-import "./notifications/worker/notification";
-import "./notifications/worker/dispatch-notification";
-
 // start loops
 import { startEmailAutomation } from "./start-email-automation";
+import { startSequenceWorker } from "./domain/process-ongoing-sequences";
+import { startMailWorker } from "./domain/worker";
+import { startNotificationWorker } from "./notifications/worker/notification";
+import { startDispatchNotificationWorker } from "./notifications/worker/dispatch-notification";
 import { verifyJWTMiddleware } from "./middlewares/verify-jwt";
 import {
     captureError,
@@ -17,6 +16,37 @@ import {
 } from "./observability/posthog";
 import { initPosthogLogs } from "./observability/logs";
 import { logger } from "./logger";
+
+const workers =
+    process.env.NODE_ENV === "test"
+        ? []
+        : [
+              startMailWorker(),
+              startNotificationWorker(),
+              startDispatchNotificationWorker(),
+              startSequenceWorker(),
+          ];
+
+async function closeWorkers() {
+    await Promise.allSettled(workers.map((worker) => worker.close()));
+}
+
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+    process.once(signal, () => {
+        closeWorkers()
+            .catch((err) => {
+                logger.error(err);
+                captureError({
+                    error: err,
+                    source: "service.shutdown",
+                    domainId: getDomainId(),
+                });
+            })
+            .finally(() => {
+                process.kill(process.pid, signal);
+            });
+    });
+}
 
 const app = express();
 app.use(express.json());
