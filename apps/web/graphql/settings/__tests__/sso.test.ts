@@ -23,6 +23,10 @@ import {
     LOGIN_PROVIDER_SSO_BUTTON,
     LOGIN_PROVIDER_SSO_LABEL,
 } from "../../../ui-config/strings";
+import { DomainRepository, UserRepository } from "@courselit/orm-models";
+
+const domainRepo = new DomainRepository(DomainModel);
+const userRepo = new UserRepository(UserModel);
 
 jest.mock("@/lib/domain-cache", () => ({
     invalidateDomainCache: jest.fn(),
@@ -46,7 +50,7 @@ describe("SSO Logic Tests", () => {
 
     beforeAll(async () => {
         // Create test domain with SSO feature enabled
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: id("domain"),
             email: email("domain"),
             features: [Constants.Features.SSO],
@@ -56,7 +60,7 @@ describe("SSO Logic Tests", () => {
         });
 
         // Create admin user with manageSettings permission
-        adminUser = await UserModel.create({
+        adminUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("admin"),
             email: email("admin"),
@@ -68,7 +72,7 @@ describe("SSO Logic Tests", () => {
         });
 
         // Create regular user without permissions
-        regularUser = await UserModel.create({
+        regularUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("regular"),
             email: email("regular"),
@@ -99,7 +103,7 @@ describe("SSO Logic Tests", () => {
             },
         );
         // Refresh local domain object
-        const updatedDomain = await DomainModel.findById(testDomain._id);
+        const updatedDomain = await domainRepo.findById(testDomain._id);
         mockCtx.subdomain = updatedDomain;
     });
 
@@ -177,7 +181,7 @@ describe("SSO Logic Tests", () => {
             );
 
             // Check if domain settings updated (refresh context first or check DB)
-            const domain = await DomainModel.findById(testDomain._id);
+            const domain = await domainRepo.findById(testDomain._id);
             expect(domain!.settings.ssoTrustedDomain).toBe(
                 new URL(validConfig.entryPoint).origin,
             );
@@ -355,7 +359,7 @@ describe("SSO Logic Tests", () => {
             expect(provider).toBeNull();
 
             // Verify login disabled
-            const domain = await DomainModel.findById(testDomain._id);
+            const domain = await domainRepo.findById(testDomain._id);
             expect(domain!.settings.logins).not.toContain(
                 Constants.LoginProvider.SSO,
             );
@@ -394,7 +398,7 @@ describe("SSO Logic Tests", () => {
             });
             expect(provider).toBeNull();
 
-            const domain = await DomainModel.findById(testDomain._id);
+            const domain = await domainRepo.findById(testDomain._id);
             expect(domain!.settings.logins).not.toContain(
                 Constants.LoginProvider.GOOGLE,
             );

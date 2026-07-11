@@ -868,11 +868,11 @@ export const getMembership = async ({
     planId: string;
 }): Promise<InternalMembership> => {
     const existingMembership = await membershipRepo.findOne({
-            domain: domainId,
-            userId,
-            entityType,
-            entityId,
-        });
+        domain: domainId,
+        userId,
+        entityType,
+        entityId,
+    });
 
     let membership: InternalMembership =
         existingMembership ||

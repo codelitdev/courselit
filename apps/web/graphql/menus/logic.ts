@@ -6,6 +6,10 @@ import DomainModel, { Domain } from "../../models/Domain";
 import { responses } from "../../config/strings";
 import constants from "../../config/constants";
 import { checkPermission } from "@courselit/utils";
+import { DomainRepository } from "@courselit/orm-models";
+
+const domainRepo = new DomainRepository(DomainModel);
+
 const { permissions } = constants;
 
 type DomainWithLinks = Domain &
@@ -23,7 +27,7 @@ export const saveLink = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    const domain = (await DomainModel.findById(
+    const domain = (await domainRepo.findById(
         ctx.subdomain._id,
     )) as DomainWithLinks | null;
     if (!domain) {
@@ -70,7 +74,7 @@ export const deleteLink = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    const domain = (await DomainModel.findById(
+    const domain = (await domainRepo.findById(
         ctx.subdomain._id,
     )) as DomainWithLinks | null;
     if (!domain) {

@@ -13,6 +13,23 @@ import UserModel from "@models/User";
 import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
 import constants from "@/config/constants";
 import { Constants, TextEditorContent } from "@courselit/common-models";
+import {
+    CommunityPostRepository,
+    UserRepository,
+    MembershipRepository,
+    PaymentPlanRepository,
+    PageRepository,
+    CommunityRepository,
+    DomainRepository,
+} from "@courselit/orm-models";
+
+const communityPostRepo = new CommunityPostRepository(CommunityPostModel);
+const communityRepo = new CommunityRepository(CommunityModel);
+const domainRepo = new DomainRepository(DomainModel);
+const membershipRepo = new MembershipRepository(MembershipModel);
+const pageRepo = new PageRepository(PageModel);
+const paymentPlanRepo = new PaymentPlanRepository(PaymentPlanModel);
+const userRepo = new UserRepository(UserModel);
 
 jest.mock("@/services/medialit");
 jest.mock("@/services/queue");
@@ -48,12 +65,12 @@ describe("updateCommunityPost", () => {
     let existingPost: any;
 
     beforeAll(async () => {
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: id("domain"),
             email: email("domain"),
         });
 
-        adminUser = await UserModel.create({
+        adminUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("admin"),
             email: email("admin"),
@@ -63,7 +80,7 @@ describe("updateCommunityPost", () => {
             unsubscribeToken: id("unsub-admin"),
         });
 
-        regularUser = await UserModel.create({
+        regularUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("regular"),
             email: email("regular"),
@@ -73,7 +90,7 @@ describe("updateCommunityPost", () => {
             unsubscribeToken: id("unsub-regular"),
         });
 
-        otherMemberUser = await UserModel.create({
+        otherMemberUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("other"),
             email: email("other"),
@@ -84,7 +101,7 @@ describe("updateCommunityPost", () => {
         });
 
         // Internal payment plan (required by the system)
-        await PaymentPlanModel.create({
+        await paymentPlanRepo.create({
             domain: testDomain._id,
             planId: id("internal-plan"),
             userId: adminUser.userId,
@@ -98,7 +115,7 @@ describe("updateCommunityPost", () => {
             currencyISOCode: "USD",
         });
 
-        community = await CommunityModel.create({
+        community = await communityRepo.create({
             domain: testDomain._id,
             communityId: id("community"),
             name: "Test Community",
@@ -109,7 +126,7 @@ describe("updateCommunityPost", () => {
             categories: ["General", "Announcements"],
         });
 
-        await PageModel.create({
+        await pageRepo.create({
             domain: testDomain._id,
             pageId: community.pageId,
             type: constants.communityPage,
@@ -119,7 +136,7 @@ describe("updateCommunityPost", () => {
         });
 
         // Free payment plan for the community
-        await PaymentPlanModel.create({
+        await paymentPlanRepo.create({
             domain: testDomain._id,
             planId: id("free-plan"),
             userId: adminUser.userId,
@@ -133,7 +150,7 @@ describe("updateCommunityPost", () => {
         });
 
         // Admin membership (MODERATE role)
-        await MembershipModel.create({
+        await membershipRepo.create({
             domain: testDomain._id,
             membershipId: id("admin-membership"),
             userId: adminUser.userId,
@@ -146,7 +163,7 @@ describe("updateCommunityPost", () => {
         });
 
         // Regular user membership (POST role)
-        await MembershipModel.create({
+        await membershipRepo.create({
             domain: testDomain._id,
             membershipId: id("regular-membership"),
             userId: regularUser.userId,
@@ -159,7 +176,7 @@ describe("updateCommunityPost", () => {
         });
 
         // Other member membership (POST role)
-        await MembershipModel.create({
+        await membershipRepo.create({
             domain: testDomain._id,
             membershipId: id("other-membership"),
             userId: otherMemberUser.userId,
@@ -228,7 +245,7 @@ describe("updateCommunityPost", () => {
         });
 
         it("should throw action_not_allowed for a user with no membership", async () => {
-            const noMemberUser = await UserModel.create({
+            const noMemberUser = await userRepo.create({
                 domain: testDomain._id,
                 userId: id("no-member"),
                 email: email("no-member"),
@@ -309,7 +326,7 @@ describe("updateCommunityPost", () => {
             expect(result.content).toEqual(doc("Updated Content"));
             expect(result.category).toBe("Announcements");
 
-            const dbPost = await CommunityPostModel.findOne({
+            const dbPost = await communityPostRepo.findOne({
                 postId: existingPost.postId,
             });
             expect(dbPost!.title).toBe("Updated Title");
@@ -330,7 +347,7 @@ describe("updateCommunityPost", () => {
             expect(result.category).toBe("General");
 
             // media undefined means do not touch media
-            const dbPost = await CommunityPostModel.findOne({
+            const dbPost = await communityPostRepo.findOne({
                 postId: existingPost.postId,
             });
             expect(dbPost!.media).toEqual([]);
@@ -476,7 +493,7 @@ describe("updateCommunityPost", () => {
 
             expect(medialit.deleteMedia).toHaveBeenCalledWith("old-media-1");
 
-            const dbPost = await CommunityPostModel.findOne({
+            const dbPost = await communityPostRepo.findOne({
                 postId: existingPost.postId,
             });
             expect(dbPost!.media.length).toBe(0);

@@ -22,6 +22,27 @@ import DomainModel from "@models/Domain";
 import UserModel from "@models/User";
 import constants from "@/config/constants";
 import { Constants, TextEditorContent } from "@courselit/common-models";
+import {
+    UserRepository,
+    DomainRepository,
+    CommunityPostRepository,
+    MembershipRepository,
+    CommunityRepository,
+    CommunityCommentRepository,
+    PaymentPlanRepository,
+    PageRepository,
+} from "@courselit/orm-models";
+
+const communityCommentRepo = new CommunityCommentRepository(
+    CommunityCommentModel,
+);
+const communityPostRepo = new CommunityPostRepository(CommunityPostModel);
+const communityRepo = new CommunityRepository(CommunityModel);
+const domainRepo = new DomainRepository(DomainModel);
+const membershipRepo = new MembershipRepository(MembershipModel);
+const pageRepo = new PageRepository(PageModel);
+const paymentPlanRepo = new PaymentPlanRepository(PaymentPlanModel);
+const userRepo = new UserRepository(UserModel);
 
 jest.mock("@/services/queue");
 
@@ -51,13 +72,13 @@ describe("Community Logic - Comment Count Tests", () => {
 
     beforeAll(async () => {
         // Create unique test domain
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: `test-domain-logic-${Date.now()}`,
             email: "test@example.com",
         });
 
         // Create admin user
-        adminUser = await UserModel.create({
+        adminUser = await userRepo.create({
             domain: testDomain._id,
             userId: "admin-user-logic",
             email: "admin@example.com",
@@ -68,7 +89,7 @@ describe("Community Logic - Comment Count Tests", () => {
         });
 
         // Create regular user
-        regularUser = await UserModel.create({
+        regularUser = await userRepo.create({
             domain: testDomain._id,
             userId: "regular-user-logic",
             email: "regular@example.com",
@@ -79,7 +100,7 @@ describe("Community Logic - Comment Count Tests", () => {
         });
 
         // Create internal payment plan (required for membership)
-        await PaymentPlanModel.create({
+        await paymentPlanRepo.create({
             domain: testDomain._id,
             planId: "internal-plan-logic",
             userId: adminUser.userId,
@@ -99,7 +120,7 @@ describe("Community Logic - Comment Count Tests", () => {
         } as any;
 
         // Create community manually
-        community = await CommunityModel.create({
+        community = await communityRepo.create({
             domain: testDomain._id,
             communityId: "test-comm-logic",
             name: "Test Community Logic",
@@ -111,7 +132,7 @@ describe("Community Logic - Comment Count Tests", () => {
         });
 
         // Create page for community
-        await PageModel.create({
+        await pageRepo.create({
             domain: testDomain._id,
             pageId: community.pageId,
             type: constants.communityPage,
@@ -121,7 +142,7 @@ describe("Community Logic - Comment Count Tests", () => {
         });
 
         // Create free payment plan for the community
-        await PaymentPlanModel.create({
+        await paymentPlanRepo.create({
             domain: testDomain._id,
             planId: "free-plan-logic",
             userId: adminUser.userId,
@@ -135,7 +156,7 @@ describe("Community Logic - Comment Count Tests", () => {
         });
 
         // Create memberships manually for both users
-        await MembershipModel.create({
+        await membershipRepo.create({
             domain: testDomain._id,
             membershipId: "admin-membership-logic",
             userId: adminUser.userId,
@@ -147,7 +168,7 @@ describe("Community Logic - Comment Count Tests", () => {
             role: Constants.MembershipRole.MODERATE,
         });
 
-        await MembershipModel.create({
+        await membershipRepo.create({
             domain: testDomain._id,
             membershipId: "regular-membership-logic",
             userId: regularUser.userId,
@@ -160,7 +181,7 @@ describe("Community Logic - Comment Count Tests", () => {
         });
 
         // Create a test post
-        post = await CommunityPostModel.create({
+        post = await communityPostRepo.create({
             domain: testDomain._id,
             communityId: community.communityId,
             postId: "test-post-logic",
@@ -206,7 +227,7 @@ describe("Community Logic - Comment Count Tests", () => {
 
         it("should count top-level comments correctly", async () => {
             // Add 3 top-level comments
-            await CommunityCommentModel.create({
+            await communityCommentRepo.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: post.postId,
@@ -215,7 +236,7 @@ describe("Community Logic - Comment Count Tests", () => {
                 content: "First comment",
             });
 
-            await CommunityCommentModel.create({
+            await communityCommentRepo.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: post.postId,
@@ -224,7 +245,7 @@ describe("Community Logic - Comment Count Tests", () => {
                 content: "Second comment",
             });
 
-            await CommunityCommentModel.create({
+            await communityCommentRepo.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: post.postId,
@@ -239,7 +260,7 @@ describe("Community Logic - Comment Count Tests", () => {
 
         it("should include replies in the comment count", async () => {
             // Create a comment with replies
-            await CommunityCommentModel.create({
+            await communityCommentRepo.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: post.postId,
@@ -271,7 +292,7 @@ describe("Community Logic - Comment Count Tests", () => {
 
         it("should count multiple comments with multiple replies", async () => {
             // First comment with 2 replies
-            await CommunityCommentModel.create({
+            await communityCommentRepo.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: post.postId,
@@ -297,7 +318,7 @@ describe("Community Logic - Comment Count Tests", () => {
             });
 
             // Second comment with 1 reply
-            await CommunityCommentModel.create({
+            await communityCommentRepo.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: post.postId,
@@ -316,7 +337,7 @@ describe("Community Logic - Comment Count Tests", () => {
             });
 
             // Third comment with no replies
-            await CommunityCommentModel.create({
+            await communityCommentRepo.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: post.postId,
@@ -332,7 +353,7 @@ describe("Community Logic - Comment Count Tests", () => {
 
         it("should exclude deleted comments from count", async () => {
             // Create a deleted comment
-            await CommunityCommentModel.create({
+            await communityCommentRepo.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: post.postId,
@@ -343,7 +364,7 @@ describe("Community Logic - Comment Count Tests", () => {
             });
 
             // Create a non-deleted comment
-            await CommunityCommentModel.create({
+            await communityCommentRepo.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: post.postId,
@@ -360,7 +381,7 @@ describe("Community Logic - Comment Count Tests", () => {
 
         it("should count non-deleted replies even when parent comment is deleted", async () => {
             // Create a deleted comment with non-deleted replies
-            await CommunityCommentModel.create({
+            await communityCommentRepo.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: post.postId,
@@ -387,7 +408,7 @@ describe("Community Logic - Comment Count Tests", () => {
 
     describe("getCommunityReports", () => {
         it("returns a string preview for reported rich-text posts", async () => {
-            const richTextPost = await CommunityPostModel.create({
+            const richTextPost = await communityPostRepo.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: "reported-rich-text-post",
@@ -432,12 +453,12 @@ describe("Community Logic - Feed Tests", () => {
     let mockCtx: any;
 
     beforeAll(async () => {
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: `test-domain-feed-${Date.now()}`,
             email: "feed@example.com",
         });
 
-        adminUser = await UserModel.create({
+        adminUser = await userRepo.create({
             domain: testDomain._id,
             userId: "admin-user-feed",
             email: "admin-feed@example.com",
@@ -447,7 +468,7 @@ describe("Community Logic - Feed Tests", () => {
             unsubscribeToken: "unsubscribe-admin-feed",
         });
 
-        regularUser = await UserModel.create({
+        regularUser = await userRepo.create({
             domain: testDomain._id,
             userId: "regular-user-feed",
             email: "regular-feed@example.com",
@@ -457,7 +478,7 @@ describe("Community Logic - Feed Tests", () => {
             unsubscribeToken: "unsubscribe-regular-feed",
         });
 
-        communityOne = await CommunityModel.create({
+        communityOne = await communityRepo.create({
             domain: testDomain._id,
             communityId: "community-feed-1",
             name: "Community Feed One",
@@ -467,7 +488,7 @@ describe("Community Logic - Feed Tests", () => {
             deleted: false,
         });
 
-        communityTwo = await CommunityModel.create({
+        communityTwo = await communityRepo.create({
             domain: testDomain._id,
             communityId: "community-feed-2",
             name: "Community Feed Two",
@@ -572,7 +593,7 @@ describe("Community Logic - Feed Tests", () => {
     });
 
     it("does not include posts from inactive memberships", async () => {
-        await MembershipModel.create({
+        await membershipRepo.create({
             domain: testDomain._id,
             membershipId: "feed-membership-pending",
             userId: regularUser.userId,
@@ -584,7 +605,7 @@ describe("Community Logic - Feed Tests", () => {
             role: Constants.MembershipRole.POST,
         });
 
-        await CommunityPostModel.create({
+        await communityPostRepo.create({
             domain: testDomain._id,
             userId: adminUser.userId,
             communityId: communityOne.communityId,
@@ -610,12 +631,12 @@ describe("Community Logic - Enabled Communities Count Tests", () => {
     let mockCtx: any;
 
     beforeAll(async () => {
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: `test-domain-enabled-count-${Date.now()}`,
             email: "enabled-count@example.com",
         });
 
-        adminUser = await UserModel.create({
+        adminUser = await userRepo.create({
             domain: testDomain._id,
             userId: "enabled-count-admin",
             email: "enabled-count-admin@example.com",

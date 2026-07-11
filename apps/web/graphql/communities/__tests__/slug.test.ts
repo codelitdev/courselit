@@ -11,6 +11,19 @@ import DomainModel from "@models/Domain";
 import UserModel from "@models/User";
 import constants from "@/config/constants";
 import { Constants } from "@courselit/common-models";
+import {
+    PageRepository,
+    CommunityRepository,
+    PaymentPlanRepository,
+    UserRepository,
+    DomainRepository,
+} from "@courselit/orm-models";
+
+const communityRepo = new CommunityRepository(CommunityModel);
+const domainRepo = new DomainRepository(DomainModel);
+const pageRepo = new PageRepository(PageModel);
+const paymentPlanRepo = new PaymentPlanRepository(PaymentPlanModel);
+const userRepo = new UserRepository(UserModel);
 
 jest.mock("@/services/queue");
 jest.mock("nanoid", () => ({
@@ -38,12 +51,12 @@ describe("Community Slug Tests", () => {
     let mockCtx: any;
 
     beforeAll(async () => {
-        domain = await DomainModel.create({
+        domain = await domainRepo.create({
             name: id("domain"),
             email: email("domain"),
         });
 
-        adminUser = await UserModel.create({
+        adminUser = await userRepo.create({
             domain: domain._id,
             userId: id("admin"),
             email: email("admin"),
@@ -54,7 +67,7 @@ describe("Community Slug Tests", () => {
         });
 
         // Internal payment plan (required by createCommunity)
-        await PaymentPlanModel.create({
+        await paymentPlanRepo.create({
             domain: domain._id,
             planId: id("internal-plan"),
             userId: adminUser.userId,
@@ -99,7 +112,7 @@ describe("Community Slug Tests", () => {
 
             expect(result.slug).toBe("my-test-community");
 
-            const community = await CommunityModel.findOne({
+            const community = await communityRepo.findOne({
                 communityId: result.communityId,
             });
             expect(community?.slug).toBe(community?.pageId);
@@ -140,13 +153,13 @@ describe("Community Slug Tests", () => {
 
             expect(updated.slug).toBe("new-custom-slug");
 
-            const community = await CommunityModel.findOne({
+            const community = await communityRepo.findOne({
                 communityId: created.communityId,
             });
             expect(community?.slug).toBe("new-custom-slug");
             expect(community?.pageId).toBe("new-custom-slug");
 
-            const page = await PageModel.findOne({
+            const page = await pageRepo.findOne({
                 entityId: created.communityId,
                 domain: domain._id,
             });

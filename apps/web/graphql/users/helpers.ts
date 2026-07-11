@@ -217,11 +217,11 @@ export async function migrateBusinessEntities(
         communityIds.add(membership.entityId);
 
         const existingMembership = await membershipRepo.findOne({
-                domain: ctx.subdomain._id,
-                userId: deleterUser.userId,
-                entityId: membership.entityId,
-                entityType: Constants.MembershipEntityType.COMMUNITY,
-            });
+            domain: ctx.subdomain._id,
+            userId: deleterUser.userId,
+            entityId: membership.entityId,
+            entityType: Constants.MembershipEntityType.COMMUNITY,
+        });
 
         if (existingMembership) {
             // Update existing membership to moderator role

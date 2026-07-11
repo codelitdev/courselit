@@ -27,7 +27,11 @@ import MailRequestStatusModel, {
 } from "@models/MailRequestStatus";
 import { getPlans } from "../paymentplans/logic";
 import { activateMembership } from "@/app/api/payment/helpers";
-import { AdminSequence, InternalCourse } from "@courselit/orm-models";
+import {
+    AdminSequence,
+    InternalCourse,
+    UserRepository,
+} from "@courselit/orm-models";
 import { User } from "@courselit/common-models";
 import EmailDeliveryModel from "@models/EmailDelivery";
 import EmailEventModel from "@models/EmailEvent";
@@ -35,6 +39,8 @@ import EmailTemplateModel from "@models/EmailTemplate";
 import { defaultEmail } from "./default-email";
 import { sanitizeEmail } from "@/lib/sanitize-email";
 import { isDuplicateKeyError } from "../pages/helpers";
+
+const userRepo = new UserRepository(UserModel);
 
 const { permissions } = constants;
 
@@ -123,7 +129,7 @@ export async function createSubscription(
 ): Promise<boolean> {
     try {
         const sanitizedEmail = sanitizeEmail(email);
-        let dbUser: User | null = await UserModel.findOne({
+        let dbUser: User | null = await userRepo.findOne({
             email: sanitizedEmail,
             domain: ctx.subdomain._id,
         });
@@ -651,7 +657,7 @@ export async function sendCourseOverMail(
         throw new Error(responses.item_not_found);
     }
 
-    let dbUser: User | null = await UserModel.findOne({
+    let dbUser: User | null = await userRepo.findOne({
         email,
         domain: ctx.subdomain._id,
     });
@@ -1095,7 +1101,7 @@ export async function getSubscribersCount({
         throw new Error(responses.item_not_found);
     }
 
-    const count = await UserModel.countDocuments({
+    const count = await userRepo.count({
         domain: ctx.subdomain._id,
         userId: { $in: sequence.entrants },
     });

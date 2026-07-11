@@ -14,6 +14,21 @@ import CourseModel from "@models/Course";
 import constants from "@/config/constants";
 import { Constants } from "@courselit/common-models";
 import { DiscussionActivityEventType } from "@/graphql/product-discussions/logic";
+import {
+    NotificationRepository,
+    CourseRepository,
+    CommunityPostRepository,
+    CommunityRepository,
+    UserRepository,
+    DomainRepository,
+} from "@courselit/orm-models";
+
+const communityPostRepo = new CommunityPostRepository(CommunityPostModel);
+const communityRepo = new CommunityRepository(CommunityModel);
+const courseRepo = new CourseRepository(CourseModel);
+const domainRepo = new DomainRepository(DomainModel);
+const notificationRepo = new NotificationRepository(NotificationModel);
+const userRepo = new UserRepository(UserModel);
 
 const SUITE_PREFIX = `notification-preferences-${Date.now()}`;
 const id = (suffix: string) => `${SUITE_PREFIX}-${suffix}`;
@@ -25,12 +40,12 @@ describe("Notification Preferences", () => {
     let manager: any;
 
     beforeAll(async () => {
-        domain = await DomainModel.create({
+        domain = await domainRepo.create({
             name: id("domain"),
             email: email("domain"),
         });
 
-        learner = await UserModel.create({
+        learner = await userRepo.create({
             domain: domain._id,
             userId: id("learner"),
             email: email("learner"),
@@ -41,7 +56,7 @@ describe("Notification Preferences", () => {
             unsubscribeToken: id("unsub-learner"),
         });
 
-        manager = await UserModel.create({
+        manager = await userRepo.create({
             domain: domain._id,
             userId: id("manager"),
             email: email("manager"),
@@ -271,7 +286,7 @@ describe("Notification Preferences", () => {
     });
 
     it("should format notification message and href using shared formatter", async () => {
-        const community = await CommunityModel.create({
+        const community = await communityRepo.create({
             domain: domain._id,
             communityId: id("community"),
             name: "Community A",
@@ -279,7 +294,7 @@ describe("Notification Preferences", () => {
             slug: id("community-page"),
         });
 
-        const post = await CommunityPostModel.create({
+        const post = await communityPostRepo.create({
             domain: domain._id,
             postId: id("post"),
             communityId: community.communityId,
@@ -289,7 +304,7 @@ describe("Notification Preferences", () => {
             category: "General",
         });
 
-        const notification = await NotificationModel.create({
+        const notification = await notificationRepo.create({
             domain: domain._id,
             notificationId: id("notification"),
             userId: learner.userId,
@@ -315,7 +330,7 @@ describe("Notification Preferences", () => {
     });
 
     it("should add preview mode to unpublished course discussion notification hrefs for managers only", async () => {
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: domain._id,
             courseId: id("discussion-course"),
             title: "Discussion Course",
@@ -329,7 +344,7 @@ describe("Notification Preferences", () => {
             discussions: true,
         });
 
-        const notification = await NotificationModel.create({
+        const notification = await notificationRepo.create({
             domain: domain._id,
             notificationId: id("discussion-notification"),
             userId: learner.userId,
@@ -362,7 +377,7 @@ describe("Notification Preferences", () => {
         );
         expect(response?.message).toContain("commented on Discussion Course");
 
-        const learnerNotification = await NotificationModel.create({
+        const learnerNotification = await notificationRepo.create({
             domain: domain._id,
             notificationId: id("learner-discussion-notification"),
             userId: manager.userId,
@@ -386,7 +401,7 @@ describe("Notification Preferences", () => {
             )}?discussion=open#discussion-comment-${id("comment")}`,
         );
 
-        const reactionNotification = await NotificationModel.create({
+        const reactionNotification = await notificationRepo.create({
             domain: domain._id,
             notificationId: id("discussion-reaction-notification"),
             userId: learner.userId,
@@ -421,7 +436,7 @@ describe("Notification Preferences", () => {
     });
 
     it("should return empty message and href when entity cannot be resolved", async () => {
-        const notification = await NotificationModel.create({
+        const notification = await notificationRepo.create({
             domain: domain._id,
             notificationId: id("missing-entity-notification"),
             userId: learner.userId,
@@ -445,7 +460,7 @@ describe("Notification Preferences", () => {
 
     it("should require activityType on notification documents", async () => {
         await expect(
-            NotificationModel.create({
+            notificationRepo.create({
                 domain: domain._id,
                 notificationId: id("invalid-notification"),
                 userId: learner.userId,

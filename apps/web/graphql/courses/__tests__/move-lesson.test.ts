@@ -5,6 +5,17 @@ import LessonModel from "@models/Lesson";
 import constants from "@/config/constants";
 import { responses } from "@/config/strings";
 import { moveLesson } from "../logic";
+import {
+    LessonRepository,
+    CourseRepository,
+    UserRepository,
+    DomainRepository,
+} from "@courselit/orm-models";
+
+const courseRepo = new CourseRepository(CourseModel);
+const domainRepo = new DomainRepository(DomainModel);
+const lessonRepo = new LessonRepository(LessonModel);
+const userRepo = new UserRepository(UserModel);
 
 const SUITE_PREFIX = `move-lesson-${Date.now()}`;
 const id = (suffix: string) => `${SUITE_PREFIX}-${suffix}`;
@@ -17,12 +28,12 @@ describe("moveLesson", () => {
     let otherUserWithManageCourse: any;
 
     beforeAll(async () => {
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: id("domain"),
             email: email("domain"),
         });
 
-        adminUser = await UserModel.create({
+        adminUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("admin-user"),
             email: email("admin"),
@@ -33,7 +44,7 @@ describe("moveLesson", () => {
             purchases: [],
         });
 
-        ownerWithManageCourse = await UserModel.create({
+        ownerWithManageCourse = await userRepo.create({
             domain: testDomain._id,
             userId: id("owner-manage-course"),
             email: email("owner-manage-course"),
@@ -44,7 +55,7 @@ describe("moveLesson", () => {
             purchases: [],
         });
 
-        otherUserWithManageCourse = await UserModel.create({
+        otherUserWithManageCourse = await userRepo.create({
             domain: testDomain._id,
             userId: id("other-manage-course"),
             email: email("other-manage-course"),
@@ -73,7 +84,7 @@ describe("moveLesson", () => {
         const lesson1 = id("lesson-1");
         const lesson2 = id("lesson-2");
         const lesson3 = id("lesson-3");
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-same-group"),
             title: id("course-title-same-group"),
@@ -157,7 +168,7 @@ describe("moveLesson", () => {
         const groupId2 = id("group-2");
         const lesson1 = id("lesson-1");
         const lesson2 = id("lesson-2");
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-cross-group"),
             title: id("course-title-cross-group"),
@@ -238,7 +249,7 @@ describe("moveLesson", () => {
     it("rejects move when lesson id is not part of course.lessons", async () => {
         const groupId = id("group-1");
         const lessonId = id("lesson-not-listed");
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-invalid-membership"),
             title: id("course-title-invalid-membership"),
@@ -260,7 +271,7 @@ describe("moveLesson", () => {
             slug: id("course-slug-invalid-membership"),
         });
 
-        await LessonModel.create({
+        await lessonRepo.create({
             domain: testDomain._id,
             lessonId,
             title: "Lesson 1",
@@ -290,7 +301,7 @@ describe("moveLesson", () => {
         const groupId = id("group-1");
         const unknownGroup = id("group-unknown");
         const lessonId = id("lesson-1");
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-unknown-group"),
             title: id("course-title-unknown-group"),
@@ -312,7 +323,7 @@ describe("moveLesson", () => {
             slug: id("course-slug-unknown-group"),
         });
 
-        await LessonModel.create({
+        await lessonRepo.create({
             domain: testDomain._id,
             lessonId,
             title: "Lesson 1",
@@ -340,7 +351,7 @@ describe("moveLesson", () => {
 
     it("rejects unknown lesson ids", async () => {
         const groupId = id("group-1");
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-unknown-lesson"),
             title: id("course-title-unknown-lesson"),
@@ -380,7 +391,7 @@ describe("moveLesson", () => {
     it("rejects unknown courses", async () => {
         const lessonId = id("lesson-for-missing-course");
 
-        await LessonModel.create({
+        await lessonRepo.create({
             domain: testDomain._id,
             lessonId,
             title: "Lesson 1",
@@ -410,7 +421,7 @@ describe("moveLesson", () => {
         const groupId1 = id("group-1");
         const groupId2 = id("group-2");
         const lessonId = id("lesson-1");
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-duplicate-order"),
             title: id("course-title-duplicate-order"),
@@ -439,7 +450,7 @@ describe("moveLesson", () => {
             slug: id("course-slug-duplicate-order"),
         });
 
-        await LessonModel.create({
+        await lessonRepo.create({
             domain: testDomain._id,
             lessonId,
             title: "Lesson 1",
@@ -473,7 +484,7 @@ describe("moveLesson", () => {
     it("rejects non-owner users without manageAnyCourse permission", async () => {
         const groupId = id("group-1");
         const lessonId = id("lesson-1");
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-non-owner"),
             title: id("course-title-non-owner"),
@@ -495,7 +506,7 @@ describe("moveLesson", () => {
             slug: id("course-slug-non-owner"),
         });
 
-        await LessonModel.create({
+        await lessonRepo.create({
             domain: testDomain._id,
             lessonId,
             title: "Lesson 1",

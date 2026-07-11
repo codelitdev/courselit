@@ -5,6 +5,10 @@ import CourseModel from "../../models/Course";
 import { Group, Question, Quiz } from "@courselit/common-models";
 import mongoose from "mongoose";
 import { LessonWithStringContent } from "./logic";
+import { CourseRepository } from "@courselit/orm-models";
+
+const courseRepo = new CourseRepository(CourseModel);
+
 const { text, audio, video, pdf, embed, quiz, file } = constants;
 
 type LessonValidatorProps = Pick<
@@ -89,7 +93,7 @@ export const getGroupedLessons = async (
     publishedOnly: boolean = false,
     select?: Record<string, number>,
 ): Promise<any[]> => {
-    const course = await CourseModel.findOne({
+    const course = await courseRepo.findOne({
         courseId: courseId,
         domain: domainId,
     });
@@ -203,7 +207,7 @@ export async function isPartOfDripGroup(
     lesson: Lesson,
     domain: mongoose.Types.ObjectId,
 ) {
-    const course = await CourseModel.findOne({
+    const course = await courseRepo.findOne({
         courseId: lesson.courseId,
         domain,
     });

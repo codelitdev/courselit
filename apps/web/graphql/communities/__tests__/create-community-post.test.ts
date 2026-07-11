@@ -13,6 +13,23 @@ import UserModel from "@models/User";
 import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
 import constants from "@/config/constants";
 import { Constants, TextEditorContent } from "@courselit/common-models";
+import {
+    CommunityPostRepository,
+    UserRepository,
+    MembershipRepository,
+    PaymentPlanRepository,
+    PageRepository,
+    CommunityRepository,
+    DomainRepository,
+} from "@courselit/orm-models";
+
+const communityPostRepo = new CommunityPostRepository(CommunityPostModel);
+const communityRepo = new CommunityRepository(CommunityModel);
+const domainRepo = new DomainRepository(DomainModel);
+const membershipRepo = new MembershipRepository(MembershipModel);
+const pageRepo = new PageRepository(PageModel);
+const paymentPlanRepo = new PaymentPlanRepository(PaymentPlanModel);
+const userRepo = new UserRepository(UserModel);
 
 jest.mock("@/services/medialit");
 jest.mock("@/services/queue");
@@ -47,12 +64,12 @@ describe("createCommunityPost", () => {
     let commentOnlyCtx: any;
 
     beforeAll(async () => {
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: id("domain"),
             email: email("domain"),
         });
 
-        adminUser = await UserModel.create({
+        adminUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("admin"),
             email: email("admin"),
@@ -62,7 +79,7 @@ describe("createCommunityPost", () => {
             unsubscribeToken: id("unsub-admin"),
         });
 
-        regularUser = await UserModel.create({
+        regularUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("regular"),
             email: email("regular"),
@@ -72,7 +89,7 @@ describe("createCommunityPost", () => {
             unsubscribeToken: id("unsub-regular"),
         });
 
-        commentOnlyUser = await UserModel.create({
+        commentOnlyUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("comment-only"),
             email: email("comment-only"),
@@ -83,7 +100,7 @@ describe("createCommunityPost", () => {
         });
 
         // Internal payment plan (required by the system)
-        await PaymentPlanModel.create({
+        await paymentPlanRepo.create({
             domain: testDomain._id,
             planId: id("internal-plan"),
             userId: adminUser.userId,
@@ -97,7 +114,7 @@ describe("createCommunityPost", () => {
             currencyISOCode: "USD",
         });
 
-        community = await CommunityModel.create({
+        community = await communityRepo.create({
             domain: testDomain._id,
             communityId: id("community"),
             name: "Test Community",
@@ -108,7 +125,7 @@ describe("createCommunityPost", () => {
             categories: ["General", "Announcements"],
         });
 
-        await PageModel.create({
+        await pageRepo.create({
             domain: testDomain._id,
             pageId: community.pageId,
             type: constants.communityPage,
@@ -118,7 +135,7 @@ describe("createCommunityPost", () => {
         });
 
         // Free payment plan for the community
-        await PaymentPlanModel.create({
+        await paymentPlanRepo.create({
             domain: testDomain._id,
             planId: id("free-plan"),
             userId: adminUser.userId,
@@ -132,7 +149,7 @@ describe("createCommunityPost", () => {
         });
 
         // Admin membership (MODERATE role)
-        await MembershipModel.create({
+        await membershipRepo.create({
             domain: testDomain._id,
             membershipId: id("admin-membership"),
             userId: adminUser.userId,
@@ -145,7 +162,7 @@ describe("createCommunityPost", () => {
         });
 
         // Regular user membership (POST role)
-        await MembershipModel.create({
+        await membershipRepo.create({
             domain: testDomain._id,
             membershipId: id("regular-membership"),
             userId: regularUser.userId,
@@ -158,7 +175,7 @@ describe("createCommunityPost", () => {
         });
 
         // Comment-only user membership (COMMENT role — cannot post)
-        await MembershipModel.create({
+        await membershipRepo.create({
             domain: testDomain._id,
             membershipId: id("comment-membership"),
             userId: commentOnlyUser.userId,
@@ -229,7 +246,7 @@ describe("createCommunityPost", () => {
         });
 
         it("should throw action_not_allowed for a user with no membership", async () => {
-            const noMemberUser = await UserModel.create({
+            const noMemberUser = await userRepo.create({
                 domain: testDomain._id,
                 userId: id("no-member"),
                 email: email("no-member"),
@@ -313,7 +330,7 @@ describe("createCommunityPost", () => {
                 ctx: regularCtx,
             });
 
-            const dbPost = await CommunityPostModel.findOne({
+            const dbPost = await communityPostRepo.findOne({
                 domain: testDomain._id,
                 postId: result.postId,
             });

@@ -35,6 +35,15 @@ import { Constants, UIConstants } from "@courselit/common-models";
 import { seedNotificationPreferencesForUser } from "../../notifications/logic";
 import { recordActivity } from "@/lib/record-activity";
 import { triggerSequences } from "@/lib/trigger-sequences";
+import {
+    MembershipRepository,
+    CourseRepository,
+    UserRepository,
+} from "@courselit/orm-models";
+
+const courseRepo = new CourseRepository(CourseModel);
+const membershipRepo = new MembershipRepository(MembershipModel);
+const userRepo = new UserRepository(UserModel);
 
 const seedNotificationPreferencesForUserMock =
     seedNotificationPreferencesForUser as jest.Mock;
@@ -81,7 +90,7 @@ describe("updateUser", () => {
     });
 
     it("prevents changing permissions for the school owner", async () => {
-        await UserModel.create({
+        await userRepo.create({
             userId: "owner",
             email: ownerEmail,
             domain: domainId,
@@ -108,7 +117,7 @@ describe("updateUser", () => {
     });
 
     it("continues to allow non-permission updates for the school owner", async () => {
-        await UserModel.create({
+        await userRepo.create({
             userId: "owner",
             email: ownerEmail,
             name: "Old Owner",
@@ -136,7 +145,7 @@ describe("updateUser", () => {
     });
 
     it("prevents deactivating the school owner", async () => {
-        await UserModel.create({
+        await userRepo.create({
             userId: "owner",
             email: ownerEmail,
             domain: domainId,
@@ -336,7 +345,7 @@ describe("Certificate generation", () => {
 
     it("should generate demo certificate when courseId is provided", async () => {
         // Create a test course
-        await CourseModel.create({
+        await courseRepo.create({
             courseId: "course-123",
             title: "Test Course",
             creatorId: "creator-123",
@@ -370,7 +379,7 @@ describe("Certificate generation", () => {
 
     it("should generate certificate with complete data", async () => {
         // Create test data
-        await UserModel.create({
+        await userRepo.create({
             userId: "user-123",
             name: "John Doe",
             email: "john@example.com",
@@ -386,7 +395,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-123",
         });
 
-        await UserModel.create({
+        await userRepo.create({
             userId: "creator-123",
             name: "Jane Smith",
             email: "jane@example.com",
@@ -394,7 +403,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-creator",
         });
 
-        await CourseModel.create({
+        await courseRepo.create({
             courseId: "course-123",
             title: "Advanced Course",
             creatorId: "creator-123",
@@ -470,7 +479,7 @@ describe("Certificate generation", () => {
 
     it("should throw error when course is not found", async () => {
         // Create a certificate but no corresponding course
-        await UserModel.create({
+        await userRepo.create({
             userId: "user-123",
             name: "John Doe",
             email: "john@example.com",
@@ -493,7 +502,7 @@ describe("Certificate generation", () => {
 
     it("should use fallback values when template is missing", async () => {
         // Create test data without template
-        await UserModel.create({
+        await userRepo.create({
             userId: "user-123",
             name: "John Doe",
             email: "john@example.com",
@@ -502,7 +511,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-user",
         });
 
-        await UserModel.create({
+        await userRepo.create({
             userId: "creator-123",
             name: "Jane Smith",
             email: "jane@example.com",
@@ -510,7 +519,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-creator",
         });
 
-        await CourseModel.create({
+        await courseRepo.create({
             courseId: "course-123",
             title: "Test Course",
             creatorId: "creator-123",
@@ -552,7 +561,7 @@ describe("Certificate generation", () => {
 
     it("should use fallback values when template has partial data", async () => {
         // Create test data with partial template
-        await UserModel.create({
+        await userRepo.create({
             userId: "user-123",
             name: "John Doe",
             email: "john@example.com",
@@ -561,7 +570,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-user",
         });
 
-        await UserModel.create({
+        await userRepo.create({
             userId: "creator-123",
             name: "Jane Smith",
             email: "jane@example.com",
@@ -569,7 +578,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-creator",
         });
 
-        await CourseModel.create({
+        await courseRepo.create({
             courseId: "course-123",
             title: "Test Course",
             creatorId: "creator-123",
@@ -624,7 +633,7 @@ describe("Certificate generation", () => {
 
     it("should use user email as fallback when user name is missing", async () => {
         // Create test data with user having no name
-        await UserModel.create({
+        await userRepo.create({
             userId: "user-123",
             name: null,
             email: "john@example.com",
@@ -633,7 +642,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-user",
         });
 
-        await UserModel.create({
+        await userRepo.create({
             userId: "creator-123",
             name: "Jane Smith",
             email: "jane@example.com",
@@ -641,7 +650,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-creator",
         });
 
-        await CourseModel.create({
+        await courseRepo.create({
             courseId: "course-123",
             title: "Test Course",
             creatorId: "creator-123",
@@ -669,7 +678,7 @@ describe("Certificate generation", () => {
 
     it("should use creator name as fallback when template signatureName is missing", async () => {
         // Create test data with template missing signatureName
-        await UserModel.create({
+        await userRepo.create({
             userId: "user-123",
             name: "John Doe",
             email: "john@example.com",
@@ -678,7 +687,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-user",
         });
 
-        await UserModel.create({
+        await userRepo.create({
             userId: "creator-123",
             name: "Jane Smith",
             email: "jane@example.com",
@@ -686,7 +695,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-creator",
         });
 
-        await CourseModel.create({
+        await courseRepo.create({
             courseId: "course-123",
             title: "Test Course",
             creatorId: "creator-123",
@@ -724,7 +733,7 @@ describe("Certificate generation", () => {
 
     it("should use domain logo as fallback when template logo is missing", async () => {
         // Create test data with template missing logo
-        await UserModel.create({
+        await userRepo.create({
             userId: "user-123",
             name: "John Doe",
             email: "john@example.com",
@@ -733,7 +742,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-user",
         });
 
-        await UserModel.create({
+        await userRepo.create({
             userId: "creator-123",
             name: "Jane Smith",
             email: "jane@example.com",
@@ -741,7 +750,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-creator",
         });
 
-        await CourseModel.create({
+        await courseRepo.create({
             courseId: "course-123",
             title: "Test Course",
             creatorId: "creator-123",
@@ -798,7 +807,7 @@ describe("Certificate generation", () => {
         } as any;
 
         // Create test data
-        await UserModel.create({
+        await userRepo.create({
             userId: "user-123",
             name: "John Doe",
             email: "john@example.com",
@@ -807,7 +816,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-user",
         });
 
-        await UserModel.create({
+        await userRepo.create({
             userId: "creator-123",
             name: "Jane Smith",
             email: "jane@example.com",
@@ -815,7 +824,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-creator",
         });
 
-        await CourseModel.create({
+        await courseRepo.create({
             courseId: "course-123",
             title: "Test Course",
             creatorId: "creator-123",
@@ -858,7 +867,7 @@ describe("Certificate generation", () => {
     it("should handle missing creator gracefully", async () => {
         // Create test data with missing creator
         const uniqueId = Date.now();
-        await UserModel.create({
+        await userRepo.create({
             userId: "user-123",
             name: "John Doe",
             email: "john@example.com",
@@ -867,7 +876,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-user",
         });
 
-        await CourseModel.create({
+        await courseRepo.create({
             courseId: "course-123",
             title: "Test Course",
             creatorId: "nonexistent-creator",
@@ -899,7 +908,7 @@ describe("Certificate generation", () => {
     it("should handle missing course pageId gracefully", async () => {
         // Create test data with course missing pageId
         const uniqueId = Date.now();
-        await UserModel.create({
+        await userRepo.create({
             userId: "user-123",
             name: "John Doe",
             email: "john@example.com",
@@ -908,7 +917,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-user",
         });
 
-        await UserModel.create({
+        await userRepo.create({
             userId: "creator-123",
             name: "Jane Smith",
             email: "jane@example.com",
@@ -916,7 +925,7 @@ describe("Certificate generation", () => {
             unsubscribeToken: "unsubscribe-token-creator",
         });
 
-        await CourseModel.create({
+        await courseRepo.create({
             courseId: "course-123",
             title: "Test Course",
             creatorId: "creator-123",
@@ -958,7 +967,7 @@ describe("findMembership", () => {
             email: `${fId("owner")}@example.com`,
         });
 
-        testUser = await UserModel.create({
+        testUser = await userRepo.create({
             userId: fId("user"),
             email: `${fId("user")}@example.com`,
             name: "Test User",
@@ -969,7 +978,7 @@ describe("findMembership", () => {
             unsubscribeToken: fId("unsubscribe"),
         });
 
-        testCourse = await CourseModel.create({
+        testCourse = await courseRepo.create({
             domain: testDomain._id,
             courseId: fId("course"),
             title: "Test Course",
@@ -992,7 +1001,7 @@ describe("findMembership", () => {
     });
 
     it("returns the membership when it exists", async () => {
-        await MembershipModel.create({
+        await membershipRepo.create({
             domain: testDomain._id,
             membershipId: fId("membership"),
             sessionId: fId("session"),

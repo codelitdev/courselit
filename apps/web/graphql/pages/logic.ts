@@ -21,6 +21,16 @@ import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
 import { deleteMedia, sealMedia } from "@/services/medialit";
 import CommunityModel from "@models/Community";
 import { replaceTempMediaWithSealedMediaInPageLayout } from "@/lib/replace-temp-media-with-sealed-media-in-page-layout";
+import {
+    PageRepository,
+    CommunityRepository,
+    CourseRepository,
+} from "@courselit/orm-models";
+
+const communityRepo = new CommunityRepository(CommunityModel);
+const courseRepo = new CourseRepository(Course);
+const pageRepo = new PageRepository(PageModel);
+
 const { product, site, blogPage, communityPage, permissions, defaultPages } =
     constants;
 const { pageNames } = Constants;
@@ -95,7 +105,7 @@ export async function getPage({
         if (!page) return;
 
         if (page.type === product) {
-            const course = await Course.findOne({
+            const course = await courseRepo.findOne({
                 courseId: page.entityId,
                 domain: ctx.subdomain._id,
                 published: true,
@@ -106,7 +116,7 @@ export async function getPage({
         }
 
         if (page.type === communityPage) {
-            const community = await CommunityModel.findOne({
+            const community = await communityRepo.findOne({
                 domain: ctx.subdomain._id,
                 communityId: page.entityId,
                 enabled: true,
@@ -141,7 +151,7 @@ export const updatePage = async ({
     if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
         throw new Error(responses.action_not_allowed);
     }
-    const page: Page | null = await PageModel.findOne({
+    const page: Page | null = await pageRepo.findOne({
         pageId,
         domain: ctx.subdomain._id,
     });
@@ -246,7 +256,7 @@ export const publish = async (
     if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
         throw new Error(responses.action_not_allowed);
     }
-    const page: Page | null = await PageModel.findOne({
+    const page: Page | null = await pageRepo.findOne({
         pageId,
         domain: ctx.subdomain._id,
     });
@@ -462,7 +472,7 @@ export const createPage = async ({
     );
 
     try {
-        const page: Page = await PageModel.create({
+        const page: Page = await pageRepo.create({
             domain: ctx.subdomain._id,
             pageId: uniquePageId,
             type: site,
@@ -546,7 +556,7 @@ export const deleteBlock = async ({
     if (!checkPermission(ctx.user.permissions, [permissions.manageSite])) {
         throw new Error(responses.action_not_allowed);
     }
-    const page: Page | null = await PageModel.findOne({
+    const page: Page | null = await pageRepo.findOne({
         pageId,
         domain: ctx.subdomain._id,
     });

@@ -17,6 +17,9 @@ import {
     updateEmailTemplate,
 } from "../logic";
 import SequenceModel from "@/models/Sequence";
+import { DomainRepository } from "@courselit/orm-models";
+
+const domainRepo = new DomainRepository(DomainModel);
 
 const { permissions } = constants;
 
@@ -25,7 +28,7 @@ describe("createEmailTemplate", () => {
     let ctx: GQLContext;
 
     beforeAll(async () => {
-        domain = await DomainModel.create({
+        domain = await domainRepo.create({
             name: `mail-template-domain-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
             email: "owner@example.com",
         });
