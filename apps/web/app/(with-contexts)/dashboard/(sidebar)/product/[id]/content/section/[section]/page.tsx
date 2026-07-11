@@ -134,7 +134,7 @@ export default function SectionPage(props: {
                                     blockType: "text",
                                     settings: {
                                         content:
-                                            "{{address}}\n\n{{unsubscribe_link}}",
+                                            "{{address}}\n\n[Unsubscribe]({{unsubscribe_link}})",
                                         alignment: "center",
                                         fontSize: "12px",
                                         foregroundColor: "#64748b",

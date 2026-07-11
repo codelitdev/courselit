@@ -4,7 +4,6 @@ import {
     Constants,
     NotificationChannel as NotificationChannelType,
 } from "@courselit/common-models";
-import redis from "../../redis";
 import { logger } from "../../logger";
 import UserModel from "../../domain/model/user";
 import DomainModel from "../../domain/model/domain";
@@ -18,6 +17,7 @@ import {
     NotificationChannel,
 } from "../services/channels/types";
 import { captureError, getDomainId } from "../../observability/posthog";
+import { registerWorkerEvents, workerOptions } from "../../bullmq";
 
 interface DispatchNotificationJob {
     domain: string | mongoose.Types.ObjectId;
@@ -33,31 +33,35 @@ const channelRegistry: Record<string, NotificationChannel> = {
     [Constants.NotificationChannel.EMAIL]: new EmailChannel(),
 };
 
-const worker = new Worker(
-    "dispatch-notification",
-    async (job) => {
-        const payload = job.data as DispatchNotificationJob;
-        try {
-            await processDispatchNotificationJob(payload);
-        } catch (err: any) {
-            logger.error(err);
-            captureError({
-                error: err,
-                source: "worker.dispatch_notification",
-                domainId: getDomainId(payload?.domain),
-                context: {
-                    queue_name: "dispatch-notification",
-                    job_id: String(job.id),
-                    activity_type: payload?.activityType,
-                },
-            });
-            throw err;
-        }
-    },
-    { connection: redis },
-);
+export function startDispatchNotificationWorker() {
+    const worker = new Worker(
+        "dispatch-notification",
+        async (job) => {
+            const payload = job.data as DispatchNotificationJob;
+            try {
+                await processDispatchNotificationJob(payload);
+            } catch (err: any) {
+                logger.error(err);
+                captureError({
+                    error: err,
+                    source: "worker.dispatch_notification",
+                    domainId: getDomainId(payload?.domain),
+                    context: {
+                        queue_name: "dispatch-notification",
+                        job_id: String(job.id),
+                        activity_type: payload?.activityType,
+                    },
+                });
+                throw err;
+            }
+        },
+        workerOptions,
+    );
 
-export default worker;
+    registerWorkerEvents(worker, "dispatch-notification");
+
+    return worker;
+}
 
 async function processDispatchNotificationJob(job: DispatchNotificationJob) {
     if (!Object.values(Constants.ActivityType).includes(job.activityType)) {

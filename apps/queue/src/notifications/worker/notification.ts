@@ -1,32 +1,37 @@
 import { Worker } from "bullmq";
-import redis from "../../redis";
 import { logger } from "../../logger";
 import { notificationEmitter } from "../utils/emitter";
 import { captureError, getDomainId } from "../../observability/posthog";
+import { registerWorkerEvents, workerOptions } from "../../bullmq";
 
-const worker = new Worker(
-    "notification",
-    async (job) => {
-        const notification = job.data;
-        try {
-            deliverInAppNotification(notification);
-        } catch (err: any) {
-            logger.error(err);
-            captureError({
-                error: err,
-                source: "worker.notification",
-                domainId: getDomainId(notification?.domain),
-                context: {
-                    queue_name: "notification",
-                    job_id: String(job.id),
-                },
-            });
-        }
-    },
-    { connection: redis },
-);
+export function startNotificationWorker() {
+    const worker = new Worker(
+        "notification",
+        async (job) => {
+            const notification = job.data;
+            try {
+                deliverInAppNotification(notification);
+            } catch (err: any) {
+                logger.error(err);
+                captureError({
+                    error: err,
+                    source: "worker.notification",
+                    domainId: getDomainId(notification?.domain),
+                    context: {
+                        queue_name: "notification",
+                        job_id: String(job.id),
+                    },
+                });
+                throw err;
+            }
+        },
+        workerOptions,
+    );
 
-export default worker;
+    registerWorkerEvents(worker, "notification");
+
+    return worker;
+}
 
 function deliverInAppNotification(notification) {
     notificationEmitter.emit("newNotification", notification);

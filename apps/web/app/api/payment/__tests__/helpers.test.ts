@@ -56,7 +56,7 @@ describe("payment helpers", () => {
         );
 
         expect(membership.status).toBe(Constants.MembershipStatus.ACTIVE);
-        expect(membership.role).toBe(Constants.MembershipRole.POST);
+        expect((membership as any).role).toBe(Constants.MembershipRole.POST);
         expect(membership.save).toHaveBeenCalled();
         expect(addIncludedProductsMemberships).toHaveBeenCalledWith({
             domain: domain._id,
