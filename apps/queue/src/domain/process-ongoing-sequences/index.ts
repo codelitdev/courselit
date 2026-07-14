@@ -1,18 +1,18 @@
 import { logger } from "../../logger";
 import { getDueOngoingSequences } from "../queries";
 import { Worker } from "bullmq";
-import redis from "../../redis";
 import sequenceQueue from "../sequence-queue";
 import { processOngoingSequence } from "./process-ongoing-sequence";
 import { captureError, getDomainId } from "../../observability/posthog";
+import { registerWorkerEvents, workerOptions } from "../../bullmq";
 
 interface SequenceWorkerData {
     ongoingSequenceId: string;
     domainId?: string;
 }
 
-if (process.env.NODE_ENV !== "test") {
-    new Worker(
+export function startSequenceWorker() {
+    const worker = new Worker(
         "sequence",
         async (job) => {
             const payload = job.data as SequenceWorkerData | string;
@@ -38,10 +38,15 @@ if (process.env.NODE_ENV !== "test") {
                         ongoing_sequence_id: String(ongoingSequenceId),
                     },
                 });
+                throw err;
             }
         },
-        { connection: redis },
+        workerOptions,
     );
+
+    registerWorkerEvents(worker, "sequence");
+
+    return worker;
 }
 
 export async function processOngoingSequences(): Promise<void> {

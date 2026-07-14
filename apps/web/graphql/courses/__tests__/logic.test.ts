@@ -2056,7 +2056,7 @@ describe("updateCourse", () => {
         await updateCourse(
             {
                 description: JSON.stringify(updatedDescription),
-                id: course.courseId,
+                id: course.courseId as any,
             },
             {
                 subdomain: testDomain,
@@ -2111,7 +2111,7 @@ describe("updateCourse", () => {
         const updatedCourse = await updateCourse(
             {
                 description: JSON.stringify(descriptionWithTempMedia),
-                id: course.courseId,
+                id: course.courseId as any,
             },
             {
                 subdomain: testDomain,
