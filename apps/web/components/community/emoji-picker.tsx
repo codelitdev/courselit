@@ -7,8 +7,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-
-const COMMON_EMOJIS = ["👍", "❤️", "😄", "🎉", "😢", "😮"];
+import { COMMUNITY_REACTION_EMOJIS } from "@courselit/common-models";
 
 interface EmojiPickerProps {
     onEmojiSelect: (emoji: string) => void;
@@ -33,7 +32,7 @@ export function EmojiPicker({ onEmojiSelect, children }: EmojiPickerProps) {
             </PopoverTrigger>
             <PopoverContent align="start" side="top" className="w-auto p-2">
                 <div className="flex gap-1">
-                    {COMMON_EMOJIS.map((emoji) => (
+                    {COMMUNITY_REACTION_EMOJIS.map((emoji) => (
                         <button
                             key={emoji}
                             type="button"

@@ -9,9 +9,76 @@ import {
     CommunityComment,
     CommunityCommentReply,
     CommunityPost,
+    CommunityReaction,
+    compareCommunityReactionsStable,
     Membership,
 } from "@courselit/common-models";
 import { focusHashTarget, scrollToHashTarget } from "@/lib/hash-target";
+
+function toggleReactionLocally(
+    reactions: CommunityReaction[] | undefined,
+    emoji: string,
+    userId: string,
+    userName?: string,
+): CommunityReaction[] {
+    const list = [...(reactions || [])];
+    const idx = list.findIndex((r) => r.emoji === emoji);
+
+    if (idx === -1) {
+        const next: CommunityReaction[] = [
+            ...list,
+            {
+                emoji,
+                count: 1,
+                hasReacted: true,
+                reactors: [
+                    {
+                        userId,
+                        name: userName,
+                        avatar: {} as CommunityReaction["reactors"][number]["avatar"],
+                    },
+                ],
+            },
+        ];
+        return next.sort(compareCommunityReactionsStable);
+    }
+
+    const existing = list[idx];
+    if (existing.hasReacted) {
+        const nextCount = existing.count - 1;
+        if (nextCount <= 0) {
+            return list.filter((_, i) => i !== idx);
+        }
+        return list.map((r, i) =>
+            i === idx
+                ? {
+                      ...r,
+                      count: nextCount,
+                      hasReacted: false,
+                      reactors: r.reactors.filter((x) => x.userId !== userId),
+                  }
+                : r,
+        );
+    }
+
+    return list.map((r, i) =>
+        i === idx
+            ? {
+                  ...r,
+                  count: r.count + 1,
+                  hasReacted: true,
+                  reactors: [
+                      ...r.reactors,
+                      {
+                          userId,
+                          name: userName,
+                          avatar: {} as CommunityReaction["reactors"][number]["avatar"],
+                      },
+                  ],
+              }
+            : r,
+    );
+}
 
 const focusCommentTarget = (targetId: string) => {
     focusHashTarget({
@@ -322,6 +389,26 @@ export default function CommentSection({
     };
 
     const handleCommentReact = async (commentId: string, emoji: string) => {
+        const userId = profile?.userId;
+        if (!userId) return;
+
+        // Optimistic update so the pill appears immediately
+        setComments((prev) =>
+            prev.map((c) =>
+                c.commentId === commentId
+                    ? {
+                          ...c,
+                          reactions: toggleReactionLocally(
+                              c.reactions,
+                              emoji,
+                              userId,
+                              profile?.name,
+                          ),
+                      }
+                    : c,
+            ),
+        );
+
         const query = `
             mutation ($communityId: String!, $postId: String!, $commentId: String!, $emoji: String!) {
                 comment: toggleCommentReaction(communityId: $communityId, postId: $postId, commentId: $commentId, emoji: $emoji) {
@@ -349,6 +436,8 @@ export default function CommentSection({
                 replaceComment(response.comment);
             }
         } catch (err: any) {
+            // Re-sync from server on failure
+            loadComments();
             toast({
                 title: "Error",
                 description: err.message,
@@ -361,6 +450,32 @@ export default function CommentSection({
         emoji: string,
         replyId: string,
     ) => {
+        const userId = profile?.userId;
+        if (!userId) return;
+
+        // Optimistic update on the specific reply
+        setComments((prev) =>
+            prev.map((c) => {
+                if (c.commentId !== commentId) return c;
+                return {
+                    ...c,
+                    replies: (c.replies || []).map((r) =>
+                        r.replyId === replyId
+                            ? {
+                                  ...r,
+                                  reactions: toggleReactionLocally(
+                                      r.reactions,
+                                      emoji,
+                                      userId,
+                                      profile?.name,
+                                  ),
+                              }
+                            : r,
+                    ),
+                };
+            }),
+        );
+
         const query = `
             mutation ($communityId: String!, $postId: String!, $commentId: String!, $replyId: String!, $emoji: String!) {
                 comment: toggleCommentReplyReaction(communityId: $communityId, postId: $postId, commentId: $commentId, replyId: $replyId, emoji: $emoji) {
@@ -389,6 +504,7 @@ export default function CommentSection({
                 replaceComment(response.comment);
             }
         } catch (err: any) {
+            loadComments();
             toast({
                 title: "Error",
                 description: err.message,
@@ -439,7 +555,18 @@ export default function CommentSection({
     const replaceComment = (comment: CommunityComment) => {
         setComments((prevComments) =>
             prevComments.map((c) =>
-                c.commentId === comment.commentId ? comment : c,
+                c.commentId === comment.commentId
+                    ? {
+                          ...comment,
+                          // Ensure new array identity so nested reply bars re-render
+                          replies: comment.replies
+                              ? comment.replies.map((r) => ({ ...r }))
+                              : [],
+                          reactions: comment.reactions
+                              ? [...comment.reactions]
+                              : [],
+                      }
+                    : c,
             ),
         );
     };

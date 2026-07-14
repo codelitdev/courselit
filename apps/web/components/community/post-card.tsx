@@ -15,7 +15,7 @@ import {
 } from "@courselit/page-blocks";
 import { CommunityMedia, CommunityPost } from "@courselit/common-models";
 import { capitalize, truncate } from "@courselit/utils";
-import { MessageSquare, Pin } from "lucide-react";
+import { Pin } from "lucide-react";
 import Link from "next/link";
 import { useContext } from "react";
 import { ThemeContext } from "@components/contexts";
@@ -141,7 +141,6 @@ export default function CommunityPostCard({
                 <ReactionsBar
                     reactions={post.reactions || []}
                     onReact={(emoji) => onReact?.(post.postId, emoji)}
-                    compact
                     showReplyButton
                     onReply={() => onOpen(post.postId)}
                     repliesCount={post.commentsCount}

@@ -10,11 +10,6 @@ interface ReactionsBarProps {
     reactions: CommunityReaction[];
     onReact: (emoji: string) => void;
     /**
-     * Optional flag to show reactions in a compact layout (for comments/replies).
-     * Defaults to false (full layout for post cards).
-     */
-    compact?: boolean;
-    /**
      * Optional reply button rendered at the end of the bar (after reactions).
      */
     onReply?: () => void;
@@ -31,7 +26,6 @@ interface ReactionsBarProps {
 export function ReactionsBar({
     reactions,
     onReact,
-    compact = false,
     onReply,
     showReplyButton = false,
     repliesCount,
@@ -82,36 +76,17 @@ export function ReactionsBar({
 
     return (
         <>
-            <div className="flex flex-wrap gap-1 items-center">
-                {/* Emoji picker — always first */}
-                <EmojiPicker
-                    onEmojiSelect={(emoji) => {
-                        onReact(emoji);
-                    }}
-                >
-                    <button
-                        type="button"
-                        className={`inline-flex items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-accent ${
-                            compact ? "h-5 w-5" : "h-7 w-7"
-                        }`}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                        }}
-                    >
-                        <SmilePlus className="h-4 w-4" />
-                    </button>
-                </EmojiPicker>
-
-                {/* Active reaction pills — wrap as they accumulate */}
+            <div className="flex flex-wrap gap-1.5 items-center">
+                {/* Active reaction pills — left of the emoji picker */}
                 {activeReactions.map((reaction) => (
                     <button
                         key={reaction.emoji}
                         type="button"
-                        className={`inline-flex items-center justify-center gap-1 rounded-full border px-2 text-xs transition-colors ${
+                        className={`inline-flex h-8 min-w-[2.75rem] items-center justify-center gap-1.5 rounded-full border px-2.5 text-sm transition-colors ${
                             reaction.hasReacted
                                 ? "border-primary/40 bg-primary/10 text-primary"
                                 : "border-border text-muted-foreground hover:bg-accent"
-                        } ${compact ? "h-5 min-w-[2rem] py-0" : "h-7 min-w-[2.5rem]"}`}
+                        }`}
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -122,17 +97,37 @@ export function ReactionsBar({
                         }
                         onMouseLeave={handleMouseLeave}
                     >
-                        <span className="leading-none">{reaction.emoji}</span>
-                        <span className="leading-none tabular-nums">
+                        <span className="leading-none text-base">
+                            {reaction.emoji}
+                        </span>
+                        <span className="leading-none tabular-nums text-xs">
                             {reaction.count}
                         </span>
                     </button>
                 ))}
+
+                <EmojiPicker
+                    onEmojiSelect={(emoji) => {
+                        onReact(emoji);
+                    }}
+                >
+                    <button
+                        type="button"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-accent"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                        }}
+                        aria-label="Add reaction"
+                    >
+                        <SmilePlus className="h-4 w-4" />
+                    </button>
+                </EmojiPicker>
+
                 {showReplyButton && (
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="text-muted-foreground h-7 px-2"
+                        className="text-muted-foreground h-8 px-2.5"
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -141,7 +136,7 @@ export function ReactionsBar({
                     >
                         <Reply className="h-4 w-4 mr-1.5" />
                         {repliesCount !== undefined && (
-                            <span className="text-xs tabular-nums">
+                            <span className="text-sm tabular-nums">
                                 {repliesCount}
                             </span>
                         )}
@@ -164,8 +159,7 @@ export function ReactionsBar({
                     }}
                     onMouseLeave={handleMouseLeave}
                 >
-                    <div className="font-medium">{hoveredEmoji}</div>
-                    <div className="mt-0.5 max-w-[200px]">
+                    <div className="max-w-[200px]">
                         {hoveredReaction.reactors.length > 0
                             ? hoveredReaction.reactors
                                   .map((r) => r.name || r.userId)

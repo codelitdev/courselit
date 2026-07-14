@@ -100,14 +100,8 @@ const communityReaction = new GraphQLObjectType({
         emoji: { type: new GraphQLNonNull(GraphQLString) },
         count: { type: new GraphQLNonNull(GraphQLInt) },
         hasReacted: { type: new GraphQLNonNull(GraphQLBoolean) },
-        reactors: {
-            type: new GraphQLList(userTypes.userType),
-            resolve: (reaction, _, ctx: GQLContext, __) => {
-                return reaction.reactors.map((reactor: any) =>
-                    getUser(reactor.userId, ctx),
-                );
-            },
-        },
+        // Populated by formatReactions (batched user lookup)
+        reactors: { type: new GraphQLList(userTypes.userType) },
     },
 });
 
@@ -138,7 +132,7 @@ const communityPost = new GraphQLObjectType({
             type: new GraphQLList(communityReaction),
             resolve: async (post: CommunityPost, _, ctx: GQLContext, __) =>
                 getReactionsForEntity({
-                    entityType: "post",
+                    entityType: Constants.CommunityReactionEntityType.POST,
                     entity: post,
                     ctx,
                 }),
@@ -183,7 +177,7 @@ const communityCommentReply = new GraphQLObjectType({
             type: new GraphQLList(communityReaction),
             resolve: async (reply, _, ctx: GQLContext, __) =>
                 getReactionsForEntity({
-                    entityType: "reply",
+                    entityType: Constants.CommunityReactionEntityType.REPLY,
                     entity: reply,
                     ctx,
                 }),
@@ -212,7 +206,7 @@ const communityComment = new GraphQLObjectType({
             type: new GraphQLList(communityReaction),
             resolve: async (comment, _, ctx: GQLContext, __) =>
                 getReactionsForEntity({
-                    entityType: "comment",
+                    entityType: Constants.CommunityReactionEntityType.COMMENT,
                     entity: comment,
                     ctx,
                 }),

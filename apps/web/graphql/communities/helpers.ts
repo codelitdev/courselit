@@ -2,8 +2,11 @@ import {
     CommunityMedia,
     CommunityPost,
     CommunityReaction,
+    CommunityReactionEntityType,
     CommunityReport,
     CommunityReportType,
+    COMMUNITY_HEART_EMOJI,
+    compareCommunityReactionsStable,
     Constants,
     Membership,
     TextEditorContent,
@@ -14,6 +17,7 @@ import CommunityCommentModel, {
 import CommunityPostModel, {
     InternalCommunityPost,
 } from "@models/CommunityPost";
+import CommunityReactionModel from "@models/CommunityReaction";
 import GQLContext from "@models/GQLContext";
 import { deleteMedia } from "@/services/medialit";
 import { responses } from "@/config/strings";
@@ -38,104 +42,196 @@ export type PublicPost = Omit<
     userId: string;
 };
 
-const HEART_EMOJI = "❤️";
+type ReactionRow = {
+    entityType: CommunityReactionEntityType;
+    entityId: string;
+    emoji: string;
+    userId: string;
+};
 
 /**
- * Get reactions from an entity that may have either `reactions` (Map) or legacy `likes` (string[]).
- * Returns a Map<string, string[]>.
- */
-function getReactionsMap(entity: any): Map<string, string[]> {
-    if (entity.reactions && typeof entity.reactions === "object") {
-        // New format: reactions is a Map or object
-        if (entity.reactions instanceof Map) {
-            if (entity.reactions.size > 0) {
-                return entity.reactions;
-            }
-        } else {
-            // Plain object from lean() / serialization
-            const entries = Object.entries(entity.reactions) as [
-                string,
-                string[],
-            ][];
-            if (entries.length > 0) {
-                return new Map(entries);
-            }
-        }
-    }
-    // Legacy format: likes is a string[]
-    if (Array.isArray(entity.likes) && entity.likes.length > 0) {
-        return new Map([[HEART_EMOJI, [...entity.likes]]]);
-    }
-    return new Map();
-}
-
-/**
- * Convert a Map<string, string[]> to a CommunityReaction[] array with reactor details.
+ * Convert emoji → userIds map to CommunityReaction[] with reactor details.
  */
 export async function formatReactions(
     reactionsMap: Map<string, string[]>,
     userId: string,
 ): Promise<CommunityReaction[]> {
-    const reactions: CommunityReaction[] = [];
-
     const entries: [string, string[]][] = [];
     reactionsMap.forEach((value, key) => {
-        entries.push([key, value]);
+        if (value.length > 0) {
+            entries.push([key, value]);
+        }
     });
 
-    for (let i = 0; i < entries.length; i++) {
-        const [emoji, userIds] = entries[i];
-        if (userIds.length === 0) continue;
-
-        const reactors = await UserModel.find(
-            { userId: { $in: userIds } },
-            { userId: 1, name: 1, avatar: 1, _id: 0 },
-        ).lean();
-
-        reactions.push({
-            emoji,
-            count: userIds.length,
-            hasReacted: userIds.includes(userId),
-            reactors: reactors.map((r: any) => ({
-                userId: r.userId,
-                name: r.name,
-                avatar: r.avatar || {},
-            })),
-        });
+    if (entries.length === 0) {
+        return [];
     }
 
-    // Sort reactions: user's reactions first, then by count descending
-    reactions.sort((a, b) => {
-        if (a.hasReacted !== b.hasReacted) return a.hasReacted ? -1 : 1;
-        return b.count - a.count;
-    });
+    const allUserIds = Array.from(new Set(entries.flatMap(([, ids]) => ids)));
+
+    const users = await UserModel.find(
+        { userId: { $in: allUserIds } },
+        { userId: 1, name: 1, avatar: 1, _id: 0 },
+    ).lean();
+
+    const usersById = new Map(users.map((u: any) => [u.userId, u]));
+
+    const reactions: CommunityReaction[] = entries.map(([emoji, userIds]) => ({
+        emoji,
+        count: userIds.length,
+        hasReacted: userIds.includes(userId),
+        reactors: userIds.map((id) => {
+            const user = usersById.get(id);
+            return {
+                userId: id,
+                name: user?.name,
+                avatar: user?.avatar || ({} as any),
+            };
+        }),
+    }));
+
+    // Stable order: fixed picker order (not hasReacted / count) to avoid layout shift
+    reactions.sort(compareCommunityReactionsStable);
 
     return reactions;
 }
 
-/**
- * Compute likesCount from reactions (sum of all reaction counts for backward compat).
- */
-function computeLikesCount(reactionsMap: Map<string, string[]>): number {
-    let count = 0;
-    reactionsMap.forEach(function (userIds: string[]) {
-        count += userIds.length;
-    });
-    return count;
+function heartLikesCount(reactions: CommunityReaction[]): number {
+    return reactions.find((r) => r.emoji === COMMUNITY_HEART_EMOJI)?.count ?? 0;
+}
+
+function hasHeartReaction(
+    reactions: CommunityReaction[],
+    userId: string,
+): boolean {
+    return (
+        reactions.find((r) => r.emoji === COMMUNITY_HEART_EMOJI)?.hasReacted ??
+        false
+    );
 }
 
 /**
- * Compute hasLiked from reactions (user is in any reaction).
+ * Load and format reactions for a single entity from the reactions collection.
  */
-function computeHasLiked(
-    reactionsMap: Map<string, string[]>,
-    userId: string,
-): boolean {
-    let found = false;
-    reactionsMap.forEach(function (userIds: string[]) {
-        if (userIds.includes(userId)) found = true;
-    });
-    return found;
+export async function loadReactionsForEntity({
+    domain,
+    entityType,
+    entityId,
+    userId,
+}: {
+    domain: mongoose.Types.ObjectId;
+    entityType: CommunityReactionEntityType;
+    entityId: string;
+    userId: string;
+}): Promise<CommunityReaction[]> {
+    const rows = await CommunityReactionModel.find({
+        domain,
+        entityType,
+        entityId,
+    })
+        .select({ emoji: 1, userId: 1, _id: 0 })
+        .lean();
+
+    const map = new Map<string, string[]>();
+    for (const row of rows) {
+        const list = map.get(row.emoji) || [];
+        list.push(row.userId);
+        map.set(row.emoji, list);
+    }
+    return formatReactions(map, userId);
+}
+
+/**
+ * Batch-load reactions. Returns Map keyed by `${entityType}:${entityId}`.
+ */
+export async function loadReactionsForEntities({
+    domain,
+    filter,
+    userId,
+}: {
+    domain: mongoose.Types.ObjectId;
+    filter: Record<string, unknown>;
+    userId: string;
+}): Promise<Map<string, CommunityReaction[]>> {
+    const rows = (await CommunityReactionModel.find({
+        domain,
+        ...filter,
+    })
+        .select({ entityType: 1, entityId: 1, emoji: 1, userId: 1, _id: 0 })
+        .lean()) as ReactionRow[];
+
+    const nested = new Map<string, Map<string, string[]>>();
+    for (const row of rows) {
+        const key = `${row.entityType}:${row.entityId}`;
+        let emojiMap = nested.get(key);
+        if (!emojiMap) {
+            emojiMap = new Map();
+            nested.set(key, emojiMap);
+        }
+        const users = emojiMap.get(row.emoji) || [];
+        users.push(row.userId);
+        emojiMap.set(row.emoji, users);
+    }
+
+    const result = new Map<string, CommunityReaction[]>();
+    for (const [key, emojiMap] of nested) {
+        result.set(key, await formatReactions(emojiMap, userId));
+    }
+    return result;
+}
+
+/**
+ * Toggle a user's emoji reaction on an entity (insert or delete one row).
+ */
+export async function toggleCommunityReaction({
+    domain,
+    communityId,
+    entityType,
+    entityId,
+    postId,
+    commentId,
+    emoji,
+    userId,
+}: {
+    domain: mongoose.Types.ObjectId;
+    communityId: string;
+    entityType: CommunityReactionEntityType;
+    entityId: string;
+    postId: string;
+    commentId?: string;
+    emoji: string;
+    userId: string;
+}): Promise<{ added: boolean }> {
+    const filter = {
+        domain,
+        entityType,
+        entityId,
+        userId,
+        emoji,
+    };
+
+    const existing = await CommunityReactionModel.findOne(filter);
+    if (existing) {
+        await existing.deleteOne();
+        return { added: false };
+    }
+
+    try {
+        await CommunityReactionModel.create({
+            ...filter,
+            communityId,
+            postId,
+            ...(commentId ? { commentId } : {}),
+        });
+        return { added: true };
+    } catch (err: any) {
+        // Concurrent double-toggle: unique index → treat as already on, turn off
+        if (err?.code === 11000) {
+            await CommunityReactionModel.deleteOne(filter);
+            return { added: false };
+        }
+        throw err;
+    }
 }
 
 export function normalizeCommunityPostContent(
@@ -144,24 +240,29 @@ export function normalizeCommunityPostContent(
     return normalizeTextEditorContent(content);
 }
 
-export const formatComment = (comment: any, userId: string) => {
-    const reactionsMap = getReactionsMap(comment);
-    return {
-        communityId: comment.communityId,
-        postId: comment.postId,
-        userId: comment.userId,
-        commentId: comment.commentId,
-        content: comment.content,
-        hasLiked: computeHasLiked(reactionsMap, userId),
-        createdAt: comment.createdAt,
-        updatedAt: comment.updatedAt,
-        media: comment.media,
-        likesCount: computeLikesCount(reactionsMap),
-        reactions: Object.fromEntries(
-            reactionsMap,
-        ) as unknown as CommunityReaction[],
-        replies: comment.replies.map((reply: any) => {
-            const replyReactionsMap = getReactionsMap(reply);
+export const formatComment = async (
+    comment: any,
+    userId: string,
+    domain: mongoose.Types.ObjectId,
+) => {
+    const commentId = comment.commentId as string;
+    const domainId = domain || comment.domain;
+
+    const reactions = await loadReactionsForEntity({
+        domain: domainId,
+        entityType: Constants.CommunityReactionEntityType.COMMENT,
+        entityId: commentId,
+        userId,
+    });
+
+    const replies = await Promise.all(
+        (comment.replies || []).map(async (reply: any) => {
+            const replyReactions = await loadReactionsForEntity({
+                domain: domainId,
+                entityType: Constants.CommunityReactionEntityType.REPLY,
+                entityId: reply.replyId,
+                userId,
+            });
             return {
                 replyId: reply.replyId,
                 userId: reply.userId,
@@ -170,23 +271,43 @@ export const formatComment = (comment: any, userId: string) => {
                 parentReplyId: reply.parentReplyId,
                 createdAt: reply.createdAt,
                 updatedAt: reply.updatedAt,
-                likesCount: computeLikesCount(replyReactionsMap),
-                hasLiked: computeHasLiked(replyReactionsMap, userId),
-                reactions: Object.fromEntries(
-                    replyReactionsMap,
-                ) as unknown as CommunityReaction[],
+                likesCount: heartLikesCount(replyReactions),
+                hasLiked: hasHeartReaction(replyReactions, userId),
+                reactions: replyReactions,
                 deleted: reply.deleted,
             };
         }),
+    );
+
+    return {
+        communityId: comment.communityId,
+        postId: comment.postId,
+        userId: comment.userId,
+        commentId: comment.commentId,
+        content: comment.content,
+        hasLiked: hasHeartReaction(reactions, userId),
+        createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt,
+        media: comment.media,
+        likesCount: heartLikesCount(reactions),
+        reactions,
+        replies,
         deleted: comment.deleted,
     };
 };
 
-export const formatPost = (
-    post: InternalCommunityPost,
+export const formatPost = async (
+    post: InternalCommunityPost | any,
     userId: string,
-): PublicPost => {
-    const reactionsMap = getReactionsMap(post);
+): Promise<PublicPost> => {
+    const domain = post.domain as mongoose.Types.ObjectId;
+    const reactions = await loadReactionsForEntity({
+        domain,
+        entityType: Constants.CommunityReactionEntityType.POST,
+        entityId: post.postId,
+        userId,
+    });
+
     return {
         communityId: post.communityId,
         postId: post.postId,
@@ -195,18 +316,22 @@ export const formatPost = (
         category: post.category,
         media: post.media,
         pinned: post.pinned,
-        likesCount: computeLikesCount(reactionsMap),
+        likesCount: heartLikesCount(reactions),
         updatedAt: post.updatedAt,
-        hasLiked: computeHasLiked(reactionsMap, userId),
-        // Store raw reactions map so the GraphQL field resolver can
-        // access reactor details. Field resolver calls
-        // getReactionsForEntity which reads entity.reactions.
-        reactions: Object.fromEntries(
-            reactionsMap,
-        ) as unknown as CommunityReaction[],
+        hasLiked: hasHeartReaction(reactions, userId),
+        reactions,
         userId: post.userId,
     };
 };
+
+/** Format many posts (loads reactions per post; simple and correct). */
+export async function formatPosts(
+    posts: any[],
+    userId: string,
+    _domain?: mongoose.Types.ObjectId,
+): Promise<PublicPost[]> {
+    return Promise.all(posts.map((post) => formatPost(post, userId)));
+}
 
 export async function toggleContentVisibility(
     contentId: string,
@@ -294,6 +419,11 @@ export async function deleteCommunityData(
     communityId: string,
 ) {
     await CommunityCommentModel.deleteMany({
+        domain: ctx.subdomain._id,
+        communityId,
+    });
+
+    await CommunityReactionModel.deleteMany({
         domain: ctx.subdomain._id,
         communityId,
     });

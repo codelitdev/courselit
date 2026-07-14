@@ -13,8 +13,6 @@ export interface InternalCommunityComment
     > {
     domain: mongoose.Types.ObjectId;
     userId: string;
-    likes: string[];
-    reactions: Map<string, string[]>;
     replies: InternalReply[];
     deleted: boolean;
 }
@@ -25,8 +23,6 @@ export interface InternalReply
         "likesCount" | "hasLiked" | "reactions"
     > {
     userId: string;
-    likes: string[];
-    reactions: Map<string, string[]>;
 }
 
 export const ReplySchema = new mongoose.Schema(
@@ -36,8 +32,6 @@ export const ReplySchema = new mongoose.Schema(
         media: [CommunityMediaSchema],
         replyId: { type: String, required: true, default: generateUniqueId },
         parentReplyId: { type: String, default: null },
-        likes: [String],
-        reactions: { type: Map, of: [String], default: {} },
         deleted: { type: Boolean, default: false },
     },
     {
@@ -60,8 +54,6 @@ export const CommunityCommentSchema =
             },
             content: { type: String, required: true },
             media: [CommunityMediaSchema],
-            likes: [String],
-            reactions: { type: Map, of: [String], default: {} },
             replies: [ReplySchema],
             deleted: { type: Boolean, required: true, default: false },
         },

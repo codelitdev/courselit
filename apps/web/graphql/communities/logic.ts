@@ -15,6 +15,10 @@ import {
     CommunityPost,
     CommunityComment,
     CommunityMedia,
+    CommunityReaction,
+    CommunityReactionEntityType,
+    COMMUNITY_HEART_EMOJI,
+    isAllowedCommunityReactionEmoji,
     Membership,
     Media,
     CommunityReportType,
@@ -54,13 +58,17 @@ import {
     CommunityReportPartial,
     formatComment,
     formatCommunityReport,
-    normalizeCommunityPostContent,
     formatPost,
+    formatPosts,
     getPostSubscribersExceptUserId,
     hasPermissionToDelete,
+    loadReactionsForEntity,
     PublicPost,
+    toggleCommunityReaction,
     toggleContentVisibility,
+    normalizeCommunityPostContent,
 } from "./helpers";
+import CommunityReactionModel from "@models/CommunityReaction";
 import { error } from "@/services/logger";
 import { hasActiveSubscription } from "../users/logic";
 import { internal } from "@config/strings";
@@ -883,6 +891,11 @@ export async function deleteCommunityPost({
         postId,
     });
 
+    await CommunityReactionModel.deleteMany({
+        domain: ctx.subdomain._id,
+        postId,
+    });
+
     await CommunityPostModel.deleteOne({
         domain: ctx.subdomain._id,
         communityId,
@@ -993,7 +1006,7 @@ export async function getPosts({
         posts.unshift(...pinnedPosts);
     }
 
-    return posts.map(async (post) => formatPost(post, ctx.user.userId));
+    return formatPosts(posts, ctx.user.userId, ctx.subdomain._id);
 }
 
 export async function getFeed({
@@ -1066,8 +1079,13 @@ export async function getFeed({
         .skip(skip)
         .limit(limit);
 
-    return posts.map((post) => ({
-        ...formatPost(post, ctx.user.userId),
+    const formatted = await formatPosts(
+        posts,
+        ctx.user.userId,
+        ctx.subdomain._id,
+    );
+    return formatted.map((post) => ({
+        ...post,
         community: communityMap.get(post.communityId)!,
     }));
 }
@@ -1506,67 +1524,46 @@ export async function updateMemberRole({
 }
 
 /**
- * Get reactions for an entity (post, comment, or reply) with full reactor details.
+ * Get reactions for an entity. Prefer pre-attached reactions from formatPost/Comment.
  */
 export async function getReactionsForEntity({
-    entityType,
     entity,
+    entityType,
     ctx,
 }: {
-    entityType: "post" | "comment" | "reply";
+    entityType?: CommunityReactionEntityType;
     entity: any;
     ctx: GQLContext;
-}): Promise<import("@courselit/common-models").CommunityReaction[]> {
-    const { formatReactions } = await import("./helpers");
-    let reactionsMap: Map<string, string[]>;
-
-    if (entityType === "reply") {
-        // For replies, the reactions are directly on the reply sub-document
-        reactionsMap = getReactionsMapFromEntity(entity);
-    } else if (entityType === "comment") {
-        reactionsMap = getReactionsMapFromEntity(entity);
-    } else {
-        reactionsMap = getReactionsMapFromEntity(entity);
+}): Promise<CommunityReaction[]> {
+    if (Array.isArray(entity?.reactions)) {
+        return entity.reactions;
     }
 
-    return formatReactions(reactionsMap, ctx.user?.userId || "");
+    // Fallback: load from collection when entity ids are available
+    if (entityType && entity && ctx.subdomain?._id) {
+        const EntityType = Constants.CommunityReactionEntityType;
+        const entityId =
+            entityType === EntityType.POST
+                ? entity.postId
+                : entityType === EntityType.COMMENT
+                  ? entity.commentId
+                  : entity.replyId;
+        if (entityId) {
+            return loadReactionsForEntity({
+                domain: ctx.subdomain._id,
+                entityType,
+                entityId,
+                userId: ctx.user?.userId || "",
+            });
+        }
+    }
+
+    return [];
 }
 
-function getReactionsMapFromEntity(entity: any): Map<string, string[]> {
-    if (entity.reactions && typeof entity.reactions === "object") {
-        if (entity.reactions instanceof Map) {
-            return entity.reactions;
-        }
-        return new Map(Object.entries(entity.reactions));
-    }
-    // Legacy: entity has likes array
-    if (Array.isArray(entity.likes)) {
-        return new Map([["❤️", [...entity.likes]]]);
-    }
-    return new Map();
-}
-
-function toggleReactionInMap(
-    reactionsMap: Map<string, string[]>,
-    emoji: string,
-    userId: string,
-): { added: boolean } {
-    const existing = reactionsMap.get(emoji) || [];
-
-    if (existing.includes(userId)) {
-        // Remove user from this reaction (toggle off)
-        const filtered = existing.filter((id) => id !== userId);
-        if (filtered.length === 0) {
-            reactionsMap.delete(emoji);
-        } else {
-            reactionsMap.set(emoji, filtered);
-        }
-        return { added: false };
-    } else {
-        // Add user to this reaction — allow multiple different emoji reactions per user
-        existing.push(userId);
-        reactionsMap.set(emoji, existing);
-        return { added: true };
+function assertAllowedReactionEmoji(emoji: string): void {
+    if (!isAllowedCommunityReactionEmoji(emoji)) {
+        throw new Error(responses.invalid_input);
     }
 }
 
@@ -1579,58 +1576,12 @@ export async function togglePostLike({
     communityId: string;
     postId: string;
 }): Promise<PublicPost> {
-    checkIfAuthenticated(ctx);
-
-    const community = await CommunityModel.findOne<InternalCommunity>(
-        getCommunityQuery(ctx, communityId),
-    );
-
-    if (!community) {
-        throw new Error(responses.item_not_found);
-    }
-
-    const post = await CommunityPostModel.findOne({
-        domain: ctx.subdomain._id,
+    return togglePostReaction({
+        ctx,
         communityId,
         postId,
-        deleted: false,
+        emoji: COMMUNITY_HEART_EMOJI,
     });
-
-    if (!post) {
-        throw new Error(responses.item_not_found);
-    }
-
-    const member = await getMembership(ctx, communityId);
-
-    if (!member) {
-        throw new Error(responses.action_not_allowed);
-    }
-
-    const reactionsMap = getReactionsMapFromEntity(post);
-    const { added: liked } = toggleReactionInMap(
-        reactionsMap,
-        "❤️",
-        ctx.user.userId,
-    );
-    // Convert Map back to plain object for MongoDB
-    post.reactions = Object.fromEntries(reactionsMap);
-
-    await post.save();
-
-    if (liked && post.userId !== ctx.user.userId) {
-        await recordActivity({
-            domain: ctx.subdomain._id,
-            userId: ctx.user.userId,
-            type: Constants.ActivityType.COMMUNITY_POST_LIKED,
-            entityId: post.postId,
-            metadata: {
-                communityId: community.communityId,
-                forUserIds: [post.userId],
-            },
-        });
-    }
-
-    return formatPost(post, ctx.user.userId);
 }
 
 export async function togglePostReaction({
@@ -1645,6 +1596,7 @@ export async function togglePostReaction({
     emoji: string;
 }): Promise<PublicPost> {
     checkIfAuthenticated(ctx);
+    assertAllowedReactionEmoji(emoji);
 
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
@@ -1671,15 +1623,15 @@ export async function togglePostReaction({
         throw new Error(responses.action_not_allowed);
     }
 
-    const reactionsMap = getReactionsMapFromEntity(post);
-    const { added: reacted } = toggleReactionInMap(
-        reactionsMap,
+    const { added: reacted } = await toggleCommunityReaction({
+        domain: ctx.subdomain._id,
+        communityId,
+        entityType: Constants.CommunityReactionEntityType.POST,
+        entityId: postId,
+        postId,
         emoji,
-        ctx.user.userId,
-    );
-    post.reactions = Object.fromEntries(reactionsMap);
-
-    await post.save();
+        userId: ctx.user.userId,
+    });
 
     if (reacted && post.userId !== ctx.user.userId) {
         await recordActivity({
@@ -1745,7 +1697,7 @@ export async function togglePinned({
     return formatPost(post, ctx.user.userId);
 }
 
-type PublicComment = Omit<CommunityComment, "user" | "likes"> & {
+type PublicComment = Omit<CommunityComment, "user"> & {
     userId: string;
 };
 
@@ -1873,7 +1825,7 @@ export async function postComment({
         postId: post.postId,
     });
 
-    return formatComment(comment, ctx.user.userId);
+    return formatComment(comment, ctx.user.userId, ctx.subdomain._id);
 }
 
 export async function getComments({
@@ -1917,7 +1869,11 @@ export async function getComments({
         },
     );
 
-    return comments.map((comment) => formatComment(comment, ctx.user.userId));
+    return Promise.all(
+        comments.map((comment) =>
+            formatComment(comment, ctx.user.userId, ctx.subdomain._id),
+        ),
+    );
 }
 
 export async function toggleCommentLike({
@@ -1931,57 +1887,13 @@ export async function toggleCommentLike({
     postId: string;
     commentId: string;
 }): Promise<PublicComment> {
-    checkIfAuthenticated(ctx);
-
-    const community = await CommunityModel.findOne<InternalCommunity>(
-        getCommunityQuery(ctx, communityId),
-    );
-
-    if (!community) {
-        throw new Error(responses.item_not_found);
-    }
-
-    const comment = await CommunityCommentModel.findOne({
-        domain: ctx.subdomain._id,
+    return toggleCommentReaction({
+        ctx,
         communityId,
         postId,
         commentId,
-        deleted: false,
+        emoji: COMMUNITY_HEART_EMOJI,
     });
-
-    if (!comment) {
-        throw new Error(responses.item_not_found);
-    }
-
-    const member = await getMembership(ctx, communityId);
-
-    if (!member || !hasPermission(member, Constants.MembershipRole.COMMENT)) {
-        throw new Error(responses.action_not_allowed);
-    }
-
-    let liked = false;
-    const reactionsMap = getReactionsMapFromEntity(comment);
-    const result = toggleReactionInMap(reactionsMap, "❤️", ctx.user.userId);
-    liked = result.added;
-    comment.reactions = Object.fromEntries(reactionsMap);
-
-    await comment.save();
-
-    if (liked && comment.userId !== ctx.user.userId) {
-        await recordActivity({
-            domain: ctx.subdomain._id,
-            userId: ctx.user.userId,
-            type: Constants.ActivityType.COMMUNITY_COMMENT_LIKED,
-            entityId: comment.commentId,
-            metadata: {
-                communityId: community.communityId,
-                postId,
-                forUserIds: [comment.userId],
-            },
-        });
-    }
-
-    return formatComment(comment, ctx.user.userId);
 }
 
 export async function toggleCommentReaction({
@@ -1998,6 +1910,7 @@ export async function toggleCommentReaction({
     emoji: string;
 }): Promise<PublicComment> {
     checkIfAuthenticated(ctx);
+    assertAllowedReactionEmoji(emoji);
 
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
@@ -2025,15 +1938,15 @@ export async function toggleCommentReaction({
         throw new Error(responses.action_not_allowed);
     }
 
-    const reactionsMap = getReactionsMapFromEntity(comment);
-    const { added: reacted } = toggleReactionInMap(
-        reactionsMap,
+    const { added: reacted } = await toggleCommunityReaction({
+        domain: ctx.subdomain._id,
+        communityId,
+        entityType: Constants.CommunityReactionEntityType.COMMENT,
+        entityId: commentId,
+        postId,
         emoji,
-        ctx.user.userId,
-    );
-    comment.reactions = Object.fromEntries(reactionsMap);
-
-    await comment.save();
+        userId: ctx.user.userId,
+    });
 
     if (reacted && comment.userId !== ctx.user.userId) {
         await recordActivity({
@@ -2045,11 +1958,12 @@ export async function toggleCommentReaction({
                 communityId: community.communityId,
                 postId,
                 forUserIds: [comment.userId],
+                emoji,
             },
         });
     }
 
-    return formatComment(comment, ctx.user.userId);
+    return formatComment(comment, ctx.user.userId, ctx.subdomain._id);
 }
 
 export async function toggleCommentReplyLike({
@@ -2065,65 +1979,14 @@ export async function toggleCommentReplyLike({
     commentId: string;
     replyId: string;
 }): Promise<PublicComment> {
-    checkIfAuthenticated(ctx);
-
-    const community = await CommunityModel.findOne<InternalCommunity>(
-        getCommunityQuery(ctx, communityId),
-    );
-
-    if (!community) {
-        throw new Error(responses.item_not_found);
-    }
-
-    const comment = await CommunityCommentModel.findOne({
-        domain: ctx.subdomain._id,
+    return toggleCommentReplyReaction({
+        ctx,
         communityId,
         postId,
         commentId,
-        deleted: false,
+        replyId,
+        emoji: COMMUNITY_HEART_EMOJI,
     });
-
-    if (!comment) {
-        throw new Error(responses.item_not_found);
-    }
-
-    const member = await getMembership(ctx, communityId);
-
-    if (!member || !hasPermission(member, Constants.MembershipRole.COMMENT)) {
-        throw new Error(responses.action_not_allowed);
-    }
-
-    const reply = comment.replies.find((r) => r.replyId === replyId);
-
-    if (!reply) {
-        throw new Error(responses.item_not_found);
-    }
-
-    let liked = false;
-    const reactionsMap = getReactionsMapFromEntity(reply);
-    const result = toggleReactionInMap(reactionsMap, "❤️", ctx.user.userId);
-    liked = result.added;
-    reply.reactions = Object.fromEntries(reactionsMap);
-
-    await comment.save();
-
-    if (liked && reply.userId !== ctx.user.userId) {
-        await recordActivity({
-            domain: ctx.subdomain._id,
-            userId: ctx.user.userId,
-            type: Constants.ActivityType.COMMUNITY_REPLY_LIKED,
-            entityId: reply.replyId,
-            metadata: {
-                communityId: community.communityId,
-                postId,
-                commentId: comment.commentId,
-                entityTargetId: comment.commentId,
-                forUserIds: [reply.userId],
-            },
-        });
-    }
-
-    return formatComment(comment, ctx.user.userId);
 }
 
 export async function toggleCommentReplyReaction({
@@ -2142,6 +2005,7 @@ export async function toggleCommentReplyReaction({
     emoji: string;
 }): Promise<PublicComment> {
     checkIfAuthenticated(ctx);
+    assertAllowedReactionEmoji(emoji);
 
     const community = await CommunityModel.findOne<InternalCommunity>(
         getCommunityQuery(ctx, communityId),
@@ -2175,15 +2039,16 @@ export async function toggleCommentReplyReaction({
         throw new Error(responses.item_not_found);
     }
 
-    const reactionsMap = getReactionsMapFromEntity(reply);
-    const { added: reacted } = toggleReactionInMap(
-        reactionsMap,
+    const { added: reacted } = await toggleCommunityReaction({
+        domain: ctx.subdomain._id,
+        communityId,
+        entityType: Constants.CommunityReactionEntityType.REPLY,
+        entityId: replyId,
+        postId,
+        commentId,
         emoji,
-        ctx.user.userId,
-    );
-    reply.reactions = Object.fromEntries(reactionsMap);
-
-    await comment.save();
+        userId: ctx.user.userId,
+    });
 
     if (reacted && reply.userId !== ctx.user.userId) {
         await recordActivity({
@@ -2197,11 +2062,12 @@ export async function toggleCommentReplyReaction({
                 commentId: comment.commentId,
                 entityTargetId: comment.commentId,
                 forUserIds: [reply.userId],
+                emoji,
             },
         });
     }
 
-    return formatComment(comment, ctx.user.userId);
+    return formatComment(comment, ctx.user.userId, ctx.subdomain._id);
 }
 
 export async function deleteComment({
@@ -2257,6 +2123,7 @@ export async function deleteComment({
 
     if (replyId) {
         if (comment.replies.some((r) => r.parentReplyId === replyId)) {
+            // Soft-delete: keep reaction rows (see soft-delete retention in docs)
             const replyIndex = comment.replies.findIndex(
                 (r) => r.replyId === replyId,
             );
@@ -2264,18 +2131,31 @@ export async function deleteComment({
                 comment.replies[replyIndex].deleted = true;
             }
         } else {
+            // Hard-delete leaf reply: remove from array and purge reaction rows
             comment.replies = comment.replies.filter(
                 (r) => r.replyId !== replyId,
             );
+            await CommunityReactionModel.deleteMany({
+                domain: ctx.subdomain._id,
+                entityType: Constants.CommunityReactionEntityType.REPLY,
+                entityId: replyId,
+            });
         }
         await comment.save();
     } else {
         if (comment.replies.length) {
+            // Soft-delete parent with replies: keep reaction rows
             if (!comment.deleted) {
                 comment.deleted = true;
                 await comment.save();
             }
         } else {
+            // Hard-delete leaf comment: remove document and purge reaction rows
+            await CommunityReactionModel.deleteMany({
+                domain: ctx.subdomain._id,
+                entityType: Constants.CommunityReactionEntityType.COMMENT,
+                entityId: commentId,
+            });
             await comment.deleteOne({
                 domain: ctx.subdomain._id,
                 communityId,
@@ -2288,7 +2168,9 @@ export async function deleteComment({
 
     // await post.save();
 
-    return comment ? formatComment(comment, ctx.user.userId) : null;
+    return comment
+        ? formatComment(comment, ctx.user.userId, ctx.subdomain._id)
+        : null;
 }
 
 export async function leaveCommunity({
@@ -2443,6 +2325,36 @@ export async function deleteCommunityPosts(
                   userId: id,
               };
     await CommunityCommentModel.deleteMany(query);
+
+    // Drop reactions for deleted posts/comments/replies
+    if (by === "community") {
+        await CommunityReactionModel.deleteMany({
+            domain: ctx.subdomain._id,
+            communityId: id,
+        });
+    } else {
+        // Reactions authored by the user
+        await CommunityReactionModel.deleteMany({
+            domain: ctx.subdomain._id,
+            userId: id,
+        });
+        // Reactions on content the user authored will be cleaned when posts are deleted;
+        // also clear by postId for those posts before delete.
+        const userPosts = await CommunityPostModel.find({
+            domain: ctx.subdomain._id,
+            userId: id,
+        })
+            .select({ postId: 1, _id: 0 })
+            .lean();
+        const postIds = userPosts.map((p) => p.postId);
+        if (postIds.length > 0) {
+            await CommunityReactionModel.deleteMany({
+                domain: ctx.subdomain._id,
+                postId: { $in: postIds },
+            });
+        }
+    }
+
     const mediaTypesToDelete = [
         CommunityMediaTypes.IMAGE,
         CommunityMediaTypes.VIDEO,

@@ -200,7 +200,7 @@ export async function getNotificationMessageAndHref({
                 return { message: "", href: "" };
             }
 
-            const emoji = (metadata?.emoji as string) || "👍";
+            const emoji = (metadata?.emoji as string) || "❤️";
 
             return {
                 message: `${actorName} reacted ${emoji} to your post '${truncate(post.title, 20).trim()}' in ${community.name}`,
@@ -225,8 +225,10 @@ export async function getNotificationMessageAndHref({
                 return { message: "", href: "" };
             }
 
+            const emoji = (metadata?.emoji as string) || "❤️";
+
             return {
-                message: `${actorName} liked your comment '${truncate(comment.content, 20).trim()}' on '${truncate(post.title, 20).trim()}' in ${community.name}`,
+                message: `${actorName} reacted ${emoji} to your comment '${truncate(comment.content, 20).trim()}' on '${truncate(post.title, 20).trim()}' in ${community.name}`,
                 href: toHref(
                     `/dashboard/community/${community.communityId}/${post.postId}#${entityId}`,
                     hrefPrefix,
@@ -262,8 +264,10 @@ export async function getNotificationMessageAndHref({
                 return { message: "", href: "" };
             }
 
+            const emoji = (metadata?.emoji as string) || "❤️";
+
             return {
-                message: `${actorName} liked your reply '${truncate(reply.content, 20).trim()}' on '${truncate(post.title, 20).trim()}' in ${community.name}`,
+                message: `${actorName} reacted ${emoji} to your reply '${truncate(reply.content, 20).trim()}' on '${truncate(post.title, 20).trim()}' in ${community.name}`,
                 href: toHref(
                     `/dashboard/community/${community.communityId}/${post.postId}#${entityId}`,
                     hrefPrefix,

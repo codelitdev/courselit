@@ -183,47 +183,6 @@ export default function CommunityPostPage({
         loadPost();
     }, [loadPost]);
 
-    const handleLike = async (targetPostId: string) => {
-        setPost((prev) =>
-            prev && prev.postId === targetPostId
-                ? {
-                      ...prev,
-                      likesCount: prev.hasLiked
-                          ? prev.likesCount - 1
-                          : prev.likesCount + 1,
-                      hasLiked: !prev.hasLiked,
-                  }
-                : prev,
-        );
-
-        const query = `
-            mutation ($communityId: String!, $postId: String!) {
-                togglePostLike(communityId: $communityId, postId: $postId) {
-                    postId
-                }
-            }
-        `;
-
-        try {
-            const fetch = new FetchBuilder()
-                .setUrl(`${address.backend}/api/graph`)
-                .setPayload({
-                    query,
-                    variables: { communityId, postId: targetPostId },
-                })
-                .setIsGraphQLEndpoint(true)
-                .build();
-            await fetch.exec();
-        } catch (err: any) {
-            toast({
-                title: TOAST_TITLE_ERROR,
-                description: err.message,
-                variant: "destructive",
-            });
-            loadPost();
-        }
-    };
-
     const handleReact = async (targetPostId: string, emoji: string) => {
         const query = `
             mutation ($communityId: String!, $postId: String!, $emoji: String!) {
@@ -709,41 +668,43 @@ export default function CommunityPostPage({
                                 ))}
                             </div>
                         )}
-                        <div className="flex items-center gap-4">
-                            <ReactionsBar
-                                reactions={currentPost.reactions || []}
-                                onReact={(emoji) =>
-                                    handleReact(currentPost.postId, emoji)
-                                }
-                            />
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-muted-foreground"
-                            >
-                                <MessageSquare className="mr-2 h-4 w-4" />
-                                {currentPost.commentsCount}
-                            </Button>
-                        </div>
+                        <ReactionsBar
+                            reactions={currentPost.reactions || []}
+                            onReact={(emoji) =>
+                                handleReact(currentPost.postId, emoji)
+                            }
+                            showReplyButton
+                            repliesCount={currentPost.commentsCount}
+                            onReply={() => {
+                                document
+                                    .getElementById("community-post-comments")
+                                    ?.scrollIntoView({
+                                        behavior: "smooth",
+                                        block: "start",
+                                    });
+                            }}
+                        />
                         {membership && (
-                            <CommentSection
-                                membership={membership}
-                                postId={currentPost.postId}
-                                communityId={communityId}
-                                onPostUpdated={(
-                                    targetPostId: string,
-                                    count: number,
-                                ) => {
-                                    setPost((prev) =>
-                                        prev && prev.postId === targetPostId
-                                            ? {
-                                                  ...prev,
-                                                  commentsCount: count,
-                                              }
-                                            : prev,
-                                    );
-                                }}
-                            />
+                            <div id="community-post-comments">
+                                <CommentSection
+                                    membership={membership}
+                                    postId={currentPost.postId}
+                                    communityId={communityId}
+                                    onPostUpdated={(
+                                        targetPostId: string,
+                                        count: number,
+                                    ) => {
+                                        setPost((prev) =>
+                                            prev && prev.postId === targetPostId
+                                                ? {
+                                                      ...prev,
+                                                      commentsCount: count,
+                                                  }
+                                                : prev,
+                                        );
+                                    }}
+                                />
+                            </div>
                         )}
                     </div>
 

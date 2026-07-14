@@ -236,6 +236,12 @@ export const ProductDiscussionContentType = {
     COMMENT: "comment",
     REPLY: "reply",
 } as const;
+/** Community multi-emoji reaction targets (posts, comments, replies). */
+export const CommunityReactionEntityType = {
+    POST: "post",
+    COMMENT: "comment",
+    REPLY: "reply",
+} as const;
 export const ProductDiscussionDeletedByRole = {
     AUTHOR: "author",
     COURSE_ADMIN: "course_admin",

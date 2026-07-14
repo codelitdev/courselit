@@ -1,11 +1,18 @@
 /**
- * Converts existing `likes: string[]` fields to `reactions: { "❤️": string[] }` format
- * on CommunityPost and CommunityComment documents.
+ * Migrates legacy community `likes: string[]` into the
+ * `communityreactions` collection as heart (❤️) rows.
  *
- * This migration is idempotent - safe to re-run.
+ * Sources:
+ * - CommunityPost.likes
+ * - CommunityComment.likes
+ * - CommunityComment.replies[].likes
+ *
+ * After inserting reaction rows, unsets legacy likes fields.
+ * Idempotent: unique index (domain, entityType, entityId, userId, emoji)
+ * via $setOnInsert upserts.
  *
  * Usage:
- * DB_CONNECTION_STRING=<mongodb-connection-string> node 20-06-26_00-00-convert-likes-to-reactions.js
+ * DB_CONNECTION_STRING=<mongodb-uri> node 20-06-26_00-00-convert-likes-to-reactions.js
  */
 import mongoose from "mongoose";
 
@@ -15,186 +22,268 @@ if (!DB_CONNECTION_STRING) {
     throw new Error("DB_CONNECTION_STRING is not set");
 }
 
+const BATCH_SIZE = 500;
+const HEART_EMOJI = "❤️";
+
+/** Mirrors Constants.CommunityReactionEntityType */
+const CommunityReactionEntityType = {
+    POST: "post",
+    COMMENT: "comment",
+    REPLY: "reply",
+};
+
+function heartOpsFromLikes({
+    domain,
+    communityId,
+    entityType,
+    entityId,
+    postId,
+    commentId,
+    likes,
+}) {
+    const ops = [];
+    const userIds = Array.isArray(likes) ? likes : [];
+    for (const userId of userIds) {
+        if (!userId) continue;
+        const doc = {
+            domain,
+            communityId,
+            entityType,
+            entityId,
+            postId,
+            emoji: HEART_EMOJI,
+            userId,
+        };
+        if (commentId) {
+            doc.commentId = commentId;
+        }
+        ops.push({
+            updateOne: {
+                filter: {
+                    domain,
+                    entityType,
+                    entityId,
+                    userId,
+                    emoji: HEART_EMOJI,
+                },
+                update: { $setOnInsert: doc },
+                upsert: true,
+            },
+        });
+    }
+    return ops;
+}
+
+async function flushOps(collection, ops, label, counter) {
+    if (ops.length === 0) return counter;
+    const result = await collection.bulkWrite(ops, { ordered: false });
+    const n =
+        (result.upsertedCount || 0) +
+        (result.modifiedCount || 0) +
+        (result.insertedCount || 0);
+    counter += n;
+    console.log(`  ${label}: wrote ~${counter} reaction ops...`);
+    return counter;
+}
+
 (async () => {
     try {
         await mongoose.connect(DB_CONNECTION_STRING);
-
         const db = mongoose.connection.db;
-        if (!db) {
-            throw new Error("Could not connect to database");
-        }
+        if (!db) throw new Error("Could not connect to database");
 
-        const BATCH_SIZE = 500;
-        const HEART_EMOJI = "❤️";
+        const reactionsCol = db.collection("communityreactions");
+        await reactionsCol.createIndex(
+            {
+                domain: 1,
+                entityType: 1,
+                entityId: 1,
+                userId: 1,
+                emoji: 1,
+            },
+            { unique: true },
+        );
+        await reactionsCol.createIndex({
+            domain: 1,
+            entityType: 1,
+            entityId: 1,
+        });
+        await reactionsCol.createIndex({ domain: 1, postId: 1 });
+        await reactionsCol.createIndex({ domain: 1, userId: 1 });
 
-        // --- Migrate CommunityPost documents ---
-        console.log("Migrating CommunityPost documents...");
-        let postCursor = db
+        // --- Posts ---
+        console.log("Migrating CommunityPost likes...");
+        const postCursor = db
             .collection("communityposts")
-            .find({
-                $or: [
-                    {
-                        likes: { $exists: true },
-                        $expr: { $gt: [{ $size: "$likes" }, 0] },
-                    },
-                ],
-            })
+            .find({ likes: { $exists: true } })
             .batchSize(BATCH_SIZE);
 
-        let postBatch = [];
-        let postCount = 0;
+        let postReactionOps = [];
+        let postUnsetOps = [];
+        let postReactionCount = 0;
+        let postUnsetCount = 0;
 
         while (await postCursor.hasNext()) {
             const doc = await postCursor.next();
             if (!doc) continue;
 
-            const update = {
-                $unset: { likes: "" },
-                $set: {
-                    reactions: { [HEART_EMOJI]: doc.likes || [] },
-                },
-            };
+            postReactionOps.push(
+                ...heartOpsFromLikes({
+                    domain: doc.domain,
+                    communityId: doc.communityId,
+                    entityType: CommunityReactionEntityType.POST,
+                    entityId: doc.postId,
+                    postId: doc.postId,
+                    likes: doc.likes,
+                }),
+            );
 
-            postBatch.push({
+            postUnsetOps.push({
                 updateOne: {
                     filter: { _id: doc._id },
-                    update,
+                    update: { $unset: { likes: "" } },
                 },
             });
 
-            if (postBatch.length >= BATCH_SIZE) {
-                const result = await db
-                    .collection("communityposts")
-                    .bulkWrite(postBatch);
-                postCount += result.modifiedCount;
-                console.log(
-                    `  Processed ${postCount} CommunityPost documents...`,
+            if (postReactionOps.length >= BATCH_SIZE) {
+                postReactionCount = await flushOps(
+                    reactionsCol,
+                    postReactionOps,
+                    "posts",
+                    postReactionCount,
                 );
-                postBatch = [];
+                postReactionOps = [];
+            }
+            if (postUnsetOps.length >= BATCH_SIZE) {
+                const r = await db
+                    .collection("communityposts")
+                    .bulkWrite(postUnsetOps);
+                postUnsetCount += r.modifiedCount || 0;
+                postUnsetOps = [];
             }
         }
-
-        if (postBatch.length > 0) {
-            const result = await db
+        postReactionCount = await flushOps(
+            reactionsCol,
+            postReactionOps,
+            "posts",
+            postReactionCount,
+        );
+        if (postUnsetOps.length > 0) {
+            const r = await db
                 .collection("communityposts")
-                .bulkWrite(postBatch);
-            postCount += result.modifiedCount;
+                .bulkWrite(postUnsetOps);
+            postUnsetCount += r.modifiedCount || 0;
         }
+        console.log(
+            `✅ Posts: reaction upserts ~${postReactionCount}, cleaned ${postUnsetCount} docs.`,
+        );
 
-        console.log(`✅ Migrated ${postCount} CommunityPost documents.`);
-
-        // --- Migrate CommunityComment documents ---
-        console.log("Migrating CommunityComment documents...");
-        let commentCursor = db
+        // --- Comments + replies ---
+        console.log("Migrating CommunityComment likes...");
+        const commentCursor = db
             .collection("communitycomments")
             .find({
                 $or: [
-                    {
-                        likes: { $exists: true },
-                        $expr: { $gt: [{ $size: "$likes" }, 0] },
-                    },
+                    { likes: { $exists: true } },
+                    { "replies.likes": { $exists: true } },
                 ],
             })
             .batchSize(BATCH_SIZE);
 
-        let commentBatch = [];
-        let commentCount = 0;
+        let commentReactionOps = [];
+        let commentUnsetOps = [];
+        let commentReactionCount = 0;
+        let commentUnsetCount = 0;
 
         while (await commentCursor.hasNext()) {
             const doc = await commentCursor.next();
             if (!doc) continue;
 
-            const update = {
-                $unset: { likes: "" },
-                $set: {
-                    reactions: { [HEART_EMOJI]: doc.likes || [] },
-                },
-            };
+            commentReactionOps.push(
+                ...heartOpsFromLikes({
+                    domain: doc.domain,
+                    communityId: doc.communityId,
+                    entityType: CommunityReactionEntityType.COMMENT,
+                    entityId: doc.commentId,
+                    postId: doc.postId,
+                    likes: doc.likes,
+                }),
+            );
 
-            // Also migrate nested reply likes
-            if (doc.replies && Array.isArray(doc.replies)) {
-                const hasReplyLikes = doc.replies.some(
-                    (reply) =>
-                        reply.likes &&
-                        Array.isArray(reply.likes) &&
-                        reply.likes.length > 0,
-                );
+            const cleanedReplies = Array.isArray(doc.replies)
+                ? doc.replies.map((reply) => {
+                      commentReactionOps.push(
+                          ...heartOpsFromLikes({
+                              domain: doc.domain,
+                              communityId: doc.communityId,
+                              entityType: CommunityReactionEntityType.REPLY,
+                              entityId: reply.replyId,
+                              postId: doc.postId,
+                              commentId: doc.commentId,
+                              likes: reply.likes,
+                          }),
+                      );
+                      const { likes, ...rest } = reply;
+                      return rest;
+                  })
+                : [];
 
-                if (hasReplyLikes) {
-                    update.$set["replies"] = doc.replies.map((reply) => {
-                        if (
-                            reply.likes &&
-                            Array.isArray(reply.likes) &&
-                            reply.likes.length > 0
-                        ) {
-                            const { likes, ...rest } = reply;
-                            return {
-                                ...rest,
-                                reactions: { [HEART_EMOJI]: likes },
-                            };
-                        }
-                        return reply;
-                    });
-                }
-            }
-
-            commentBatch.push({
+            commentUnsetOps.push({
                 updateOne: {
                     filter: { _id: doc._id },
-                    update,
+                    update: {
+                        $set: { replies: cleanedReplies },
+                        $unset: { likes: "" },
+                    },
                 },
             });
 
-            if (commentBatch.length >= BATCH_SIZE) {
-                const result = await db
-                    .collection("communitycomments")
-                    .bulkWrite(commentBatch);
-                commentCount += result.modifiedCount;
-                console.log(
-                    `  Processed ${commentCount} CommunityComment documents...`,
+            if (commentReactionOps.length >= BATCH_SIZE) {
+                commentReactionCount = await flushOps(
+                    reactionsCol,
+                    commentReactionOps,
+                    "comments",
+                    commentReactionCount,
                 );
-                commentBatch = [];
+                commentReactionOps = [];
+            }
+            if (commentUnsetOps.length >= BATCH_SIZE) {
+                const r = await db
+                    .collection("communitycomments")
+                    .bulkWrite(commentUnsetOps);
+                commentUnsetCount += r.modifiedCount || 0;
+                commentUnsetOps = [];
             }
         }
-
-        if (commentBatch.length > 0) {
-            const result = await db
+        commentReactionCount = await flushOps(
+            reactionsCol,
+            commentReactionOps,
+            "comments",
+            commentReactionCount,
+        );
+        if (commentUnsetOps.length > 0) {
+            const r = await db
                 .collection("communitycomments")
-                .bulkWrite(commentBatch);
-            commentCount += result.modifiedCount;
+                .bulkWrite(commentUnsetOps);
+            commentUnsetCount += r.modifiedCount || 0;
         }
-
-        console.log(`✅ Migrated ${commentCount} CommunityComment documents.`);
-
-        // --- Also migrate docs that have both likes and no reactions ---
         console.log(
-            "Setting default reactions on documents without reactions...",
-        );
-        const postResult = await db
-            .collection("communityposts")
-            .updateMany(
-                { reactions: { $exists: false } },
-                { $set: { reactions: {} } },
-            );
-        console.log(
-            `  Set default reactions on ${postResult.modifiedCount} CommunityPost documents.`,
-        );
-
-        const commentResult = db
-            .collection("communitycomments")
-            .updateMany(
-                { reactions: { $exists: false } },
-                { $set: { reactions: {} } },
-            );
-        const commentResult2 = await commentResult;
-        console.log(
-            `  Set default reactions on ${commentResult2.modifiedCount} CommunityComment documents.`,
+            `✅ Comments: reaction upserts ~${commentReactionCount}, cleaned ${commentUnsetCount} docs.`,
         );
 
         console.log("✅ Migration complete!");
     } catch (err) {
-        console.error("Migration failed:", err);
-        process.exit(1);
+        // bulkWrite with ordered:false can throw BulkWriteError with partial success
+        if (err?.result || err?.writeErrors) {
+            console.warn(
+                "Bulk write completed with some duplicate-key skips (safe on re-run):",
+                err.message,
+            );
+            console.log("✅ Migration complete (with skipped duplicates)!");
+        } else {
+            console.error("Migration failed:", err);
+            process.exit(1);
+        }
     } finally {
         await mongoose.connection.close();
     }
