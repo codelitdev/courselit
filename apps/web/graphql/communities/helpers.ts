@@ -174,7 +174,8 @@ export async function loadReactionsForEntities({
     }
 
     const result = new Map<string, CommunityReaction[]>();
-    for (const [key, emojiMap] of nested) {
+    // Array.from avoids downlevelIteration requirement for Map iteration.
+    for (const [key, emojiMap] of Array.from(nested.entries())) {
         result.set(key, await formatReactions(emojiMap, userId));
     }
     return result;

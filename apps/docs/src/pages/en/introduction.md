@@ -42,6 +42,6 @@ You can also stay updated by following us on [X](https://x.com/courselit).
 
 ## Learn More
 
-<a href="https://honey-oviraptor-4b7.notion.site/4a82d434ff2e485c8eb4b22f13252fef?v=9873e6e4812c420ab6a5cd81eca11356" target="_blank">CourseLit Roadmap</a>
+<a href="https://github.com/orgs/codelitdev/projects/1/views/1" target="_blank">CourseLit Roadmap</a>
 
 <a href="https://github.com/codelitdev/courselit" target="_blank">CourseLit GitHub Repo</a>
