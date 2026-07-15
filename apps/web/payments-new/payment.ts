@@ -14,6 +14,8 @@ export interface InitiateProps {
 interface Metadata {
     membershipId: string;
     invoiceId: string;
+    currencyISOCode?: string;
+    domainName?: string;
 }
 
 export default interface Payment {
