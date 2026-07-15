@@ -11,7 +11,6 @@ import {
     getCommunityReports,
     reportCommunityContent,
     togglePostReaction,
-    togglePostLike,
     toggleCommentReaction,
     toggleCommentReplyReaction,
     getReactionsForEntity,
@@ -569,10 +568,11 @@ describe("Community Logic - Feed Tests", () => {
             },
         ]);
 
-        await togglePostLike({
+        await togglePostReaction({
             ctx: mockCtx,
             communityId: communityTwo.communityId,
             postId: "feed-post-2",
+            emoji: COMMUNITY_HEART_EMOJI,
         });
 
         const feed = await getFeed({ ctx: mockCtx, page: 1, limit: 1 });
@@ -943,11 +943,12 @@ describe("Community Logic - Reactions", () => {
         expect(after.find((r) => r.emoji === "👍")).toBeUndefined();
     });
 
-    it("maps togglePostLike to the heart reaction and derives likesCount/hasLiked", async () => {
-        const liked = await togglePostLike({
+    it("derives likesCount/hasLiked from the heart reaction", async () => {
+        const liked = await togglePostReaction({
             ctx: regularCtx,
             communityId: community.communityId,
             postId: post.postId,
+            emoji: COMMUNITY_HEART_EMOJI,
         });
 
         expect(liked.hasLiked).toBe(true);
@@ -961,10 +962,11 @@ describe("Community Logic - Reactions", () => {
         expect(heart?.count).toBe(1);
         expect(heart?.hasReacted).toBe(true);
 
-        await togglePostLike({
+        await togglePostReaction({
             ctx: regularCtx,
             communityId: community.communityId,
             postId: post.postId,
+            emoji: COMMUNITY_HEART_EMOJI,
         });
     });
 

@@ -17,7 +17,6 @@ import {
     CommunityMedia,
     CommunityReaction,
     CommunityReactionEntityType,
-    COMMUNITY_HEART_EMOJI,
     isAllowedCommunityReactionEmoji,
     Membership,
     Media,
@@ -1567,23 +1566,6 @@ function assertAllowedReactionEmoji(emoji: string): void {
     }
 }
 
-export async function togglePostLike({
-    ctx,
-    communityId,
-    postId,
-}: {
-    ctx: GQLContext;
-    communityId: string;
-    postId: string;
-}): Promise<PublicPost> {
-    return togglePostReaction({
-        ctx,
-        communityId,
-        postId,
-        emoji: COMMUNITY_HEART_EMOJI,
-    });
-}
-
 export async function togglePostReaction({
     ctx,
     communityId,
@@ -1876,26 +1858,6 @@ export async function getComments({
     );
 }
 
-export async function toggleCommentLike({
-    ctx,
-    communityId,
-    postId,
-    commentId,
-}: {
-    ctx: GQLContext;
-    communityId: string;
-    postId: string;
-    commentId: string;
-}): Promise<PublicComment> {
-    return toggleCommentReaction({
-        ctx,
-        communityId,
-        postId,
-        commentId,
-        emoji: COMMUNITY_HEART_EMOJI,
-    });
-}
-
 export async function toggleCommentReaction({
     ctx,
     communityId,
@@ -1964,29 +1926,6 @@ export async function toggleCommentReaction({
     }
 
     return formatComment(comment, ctx.user.userId, ctx.subdomain._id);
-}
-
-export async function toggleCommentReplyLike({
-    ctx,
-    communityId,
-    postId,
-    commentId,
-    replyId,
-}: {
-    ctx: GQLContext;
-    communityId: string;
-    postId: string;
-    commentId: string;
-    replyId: string;
-}): Promise<PublicComment> {
-    return toggleCommentReplyReaction({
-        ctx,
-        communityId,
-        postId,
-        commentId,
-        replyId,
-        emoji: COMMUNITY_HEART_EMOJI,
-    });
 }
 
 export async function toggleCommentReplyReaction({

@@ -15,13 +15,10 @@ import {
     updateCommunityPost,
     joinCommunity,
     updateMemberStatus,
-    togglePostLike,
     togglePostReaction,
     togglePinned,
     postComment,
-    toggleCommentLike,
     toggleCommentReaction,
-    toggleCommentReplyLike,
     toggleCommentReplyReaction,
     deleteComment,
     leaveCommunity,
@@ -277,18 +274,6 @@ const mutations = {
                 ctx,
             }),
     },
-    togglePostLike: {
-        type: types.communityPost,
-        args: {
-            communityId: { type: new GraphQLNonNull(GraphQLString) },
-            postId: { type: new GraphQLNonNull(GraphQLString) },
-        },
-        resolve: async (
-            _: any,
-            { communityId, postId }: { communityId: string; postId: string },
-            ctx: GQLContext,
-        ) => togglePostLike({ communityId, postId, ctx }),
-    },
     togglePinned: {
         type: types.communityPost,
         args: {
@@ -337,54 +322,6 @@ const mutations = {
                 media,
                 parentCommentId,
                 parentReplyId,
-                ctx,
-            }),
-    },
-    toggleCommentLike: {
-        type: types.communityComment,
-        args: {
-            communityId: { type: new GraphQLNonNull(GraphQLString) },
-            postId: { type: new GraphQLNonNull(GraphQLString) },
-            commentId: { type: new GraphQLNonNull(GraphQLString) },
-        },
-        resolve: async (
-            _: any,
-            {
-                communityId,
-                postId,
-                commentId,
-            }: { communityId: string; postId: string; commentId: string },
-            ctx: GQLContext,
-        ) => toggleCommentLike({ communityId, postId, commentId, ctx }),
-    },
-    toggleCommentReplyLike: {
-        type: types.communityComment,
-        args: {
-            communityId: { type: new GraphQLNonNull(GraphQLString) },
-            postId: { type: new GraphQLNonNull(GraphQLString) },
-            commentId: { type: new GraphQLNonNull(GraphQLString) },
-            replyId: { type: new GraphQLNonNull(GraphQLString) },
-        },
-        resolve: async (
-            _: any,
-            {
-                communityId,
-                postId,
-                commentId,
-                replyId,
-            }: {
-                communityId: string;
-                postId: string;
-                commentId: string;
-                replyId: string;
-            },
-            ctx: GQLContext,
-        ) =>
-            toggleCommentReplyLike({
-                communityId,
-                postId,
-                commentId,
-                replyId,
                 ctx,
             }),
     },
