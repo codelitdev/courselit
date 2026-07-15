@@ -31,6 +31,7 @@ import CertificateModel from "@models/Certificate";
 import ActivityModel from "@models/Activity";
 import EmailEventModel from "@models/EmailEvent";
 import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
+import CommunityReactionModel from "@models/CommunityReaction";
 import ProductDiscussionCommentModel from "@models/ProductDiscussionComment";
 import ProductDiscussionReplyModel from "@models/ProductDiscussionReply";
 import ProductDiscussionLikeModel from "@models/ProductDiscussionLike";
@@ -256,8 +257,6 @@ async function removeUserFromCommunityReactions(
     domainId: any,
     userId: string,
 ): Promise<void> {
-    const CommunityReactionModel = (await import("@models/CommunityReaction"))
-        .default;
     await CommunityReactionModel.deleteMany({
         domain: domainId,
         userId,
