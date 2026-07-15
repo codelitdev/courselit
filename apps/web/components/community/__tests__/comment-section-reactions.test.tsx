@@ -177,7 +177,6 @@ describe("CommentSection reactions", () => {
         });
 
         // Open picker on the comment (first add-reaction control)
-        const addButtons = screen.getAllByLabelText("Add reaction");
         // Click via mocked popover emoji button for 👍
         // Emoji picker renders emoji buttons; click 👍 from the first picker set
         const thumbsButtons = screen.getAllByRole("button", { name: "👍" });
