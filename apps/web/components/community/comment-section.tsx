@@ -13,7 +13,11 @@ import {
     compareCommunityReactionsStable,
     Membership,
 } from "@courselit/common-models";
-import { focusHashTarget, scrollToHashTarget } from "@/lib/hash-target";
+import {
+    focusHashTarget,
+    getCurrentHashTargetId,
+    scrollToHashTarget,
+} from "@/lib/hash-target";
 
 function toggleReactionLocally(
     reactions: CommunityReaction[] | undefined,
@@ -174,6 +178,12 @@ export default function CommentSection({
     const { profile } = useContext(ProfileContext);
     const { toast } = useToast();
     const [isPosting, setIsPosting] = useState(false);
+    // Track hash target in state so notification / reply focus can re-scroll
+    // without depending on the full `comments` array (reaction updates would
+    // re-scroll and cause layout jump if we keyed off array identity).
+    const [hashTargetId, setHashTargetId] = useState(() =>
+        getCurrentHashTargetId(),
+    );
 
     useEffect(() => {
         loadPost();
@@ -181,33 +191,56 @@ export default function CommentSection({
     }, []);
 
     useEffect(() => {
-        if (comments.length === 0) return;
-        if (scrollToHashTarget()) return;
-    }, [comments]);
-
-    useEffect(() => {
-        if (comments.length === 0) {
-            return;
-        }
-
-        const handleTargetChange = () => {
-            scrollToHashTarget();
+        const syncFromHash = () => {
+            setHashTargetId(getCurrentHashTargetId());
         };
 
-        window.addEventListener("hashchange", handleTargetChange);
+        // Client navigations / pushState may set the hash after mount.
+        syncFromHash();
+        window.addEventListener("hashchange", syncFromHash);
+        // pushState does not fire hashchange; notifications use this event.
         window.addEventListener(
             "community-comment-target-change",
-            handleTargetChange,
+            syncFromHash,
         );
 
         return () => {
-            window.removeEventListener("hashchange", handleTargetChange);
+            window.removeEventListener("hashchange", syncFromHash);
             window.removeEventListener(
                 "community-comment-target-change",
-                handleTargetChange,
+                syncFromHash,
             );
         };
-    }, [comments.length]);
+    }, []);
+
+    useEffect(() => {
+        if (!hashTargetId || comments.length === 0) {
+            return;
+        }
+
+        // Defer until after paint so nested reply nodes are in the DOM.
+        let cancelled = false;
+        const frame = window.requestAnimationFrame(() => {
+            if (cancelled) {
+                return;
+            }
+            if (!scrollToHashTarget({ targetId: hashTargetId })) {
+                // Retry once for nested replies that paint a frame later.
+                window.requestAnimationFrame(() => {
+                    if (!cancelled) {
+                        scrollToHashTarget({ targetId: hashTargetId });
+                    }
+                });
+            }
+        });
+
+        return () => {
+            cancelled = true;
+            window.cancelAnimationFrame(frame);
+        };
+        // Intentionally depend on comments.length (not `comments`) so reaction
+        // optimistic updates — which keep the same count — do not re-scroll.
+    }, [hashTargetId, comments.length]);
 
     useEffect(() => {
         if (post && typeof post.commentsCount !== "undefined") {
@@ -308,9 +341,10 @@ export default function CommentSection({
         try {
             const response = await fetch.exec();
             if (response.comment) {
+                // Newest first — match getComments sort and keep new posts near the composer.
                 setComments((prevComments) => [
-                    ...prevComments,
                     response.comment,
+                    ...prevComments,
                 ]);
                 setContent("");
                 focusCommentTarget(response.comment.commentId);
@@ -579,6 +613,27 @@ export default function CommentSection({
 
     return (
         <div className="flex flex-col gap-4">
+            {!profile?.name && (
+                <div className="text-center text-gray-500">
+                    Complete your{" "}
+                    <span className="underline">
+                        <Link href={"/dashboard/profile"}>profile</Link>
+                    </span>{" "}
+                    to join this community or post here
+                </div>
+            )}
+            {profile?.name && (
+                <div className="flex flex-col gap-2">
+                    <Textarea
+                        placeholder="Add a comment..."
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                    />
+                    <Button onClick={handlePostComment} disabled={isPosting}>
+                        {isPosting ? "Posting..." : "Post Comment"}
+                    </Button>
+                </div>
+            )}
             <div className="space-y-4 overflow-y-auto">
                 {comments.map((comment) => (
                     <Comment
@@ -609,27 +664,6 @@ export default function CommentSection({
                     />
                 ))}
             </div>
-            {!profile?.name && (
-                <div className="text-center text-gray-500">
-                    Complete your{" "}
-                    <span className="underline">
-                        <Link href={"/dashboard/profile"}>profile</Link>
-                    </span>{" "}
-                    to join this community or post here
-                </div>
-            )}
-            {profile?.name && (
-                <div className="flex flex-col gap-2">
-                    <Textarea
-                        placeholder="Add a comment..."
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                    />
-                    <Button onClick={handlePostComment} disabled={isPosting}>
-                        {isPosting ? "Posting..." : "Post Comment"}
-                    </Button>
-                </div>
-            )}
         </div>
     );
 }

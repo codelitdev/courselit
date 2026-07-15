@@ -70,6 +70,10 @@ CommunityCommentSchema.statics.paginatedFind = async function (
     const limit = options.limit || 10;
     const skip = (page - 1) * limit;
 
-    const docs = await this.find(filter).skip(skip).limit(limit).exec();
+    const docs = await this.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec();
     return docs;
 };
