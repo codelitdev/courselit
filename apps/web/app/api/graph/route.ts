@@ -3,10 +3,9 @@ import schema from "@/graphql";
 import { graphql } from "graphql";
 import { getAddress } from "@/lib/utils";
 import User from "@models/User";
-import { getAuth } from "@/auth";
+import { auth } from "@/auth";
 import { als } from "@/async-local-storage";
 import { getCachedDomain } from "@/lib/domain-cache";
-import { getBackendAddress } from "@/app/actions";
 
 async function updateLastActive(user: any) {
     const dateNow = new Date();
@@ -29,12 +28,9 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    const backendAddress = await getBackendAddress(req.headers);
-    const currentAuth = getAuth(backendAddress);
-
     const [domain, session, body] = await Promise.all([
         getCachedDomain(domainName),
-        currentAuth.api.getSession({ headers: req.headers }),
+        auth.api.getSession({ headers: req.headers }),
         req.json(),
     ]);
 
