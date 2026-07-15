@@ -30,7 +30,11 @@ import {
 import LessonEvaluation from "../../models/LessonEvaluation";
 import { checkPermission, extractMediaIDs } from "@courselit/utils";
 import { recordActivity } from "../../lib/record-activity";
-import { InternalCourse } from "@courselit/orm-models";
+import {
+    InternalCourse,
+    LessonRepository,
+    CourseRepository,
+} from "@courselit/orm-models";
 import CertificateModel from "../../models/Certificate";
 import { error } from "@/services/logger";
 import getDeletedMediaIds from "@/lib/get-deleted-media-ids";
@@ -38,6 +42,9 @@ import ActivityModel from "@/models/Activity";
 import UserModel from "../../models/User";
 import { replaceTempMediaWithSealedMediaInProseMirrorDoc } from "@/lib/replace-temp-media-with-sealed-media-in-prosemirror-doc";
 import { canManageCourseInContext } from "../courses/permissions";
+
+const courseRepo = new CourseRepository(CourseModel);
+const lessonRepo = new LessonRepository(LessonModel);
 
 const { permissions, quiz, scorm } = constants;
 
@@ -77,7 +84,7 @@ export const getLessonOrThrow = async (
         query.courseId = options.courseId;
     }
 
-    const lesson = await LessonModel.findOne(query);
+    const lesson = await lessonRepo.findOne(query);
 
     if (!lesson) {
         throw new Error(responses.item_not_found);
@@ -117,7 +124,7 @@ export const getLessonDetails = async (
     if (courseId) {
         query.courseId = courseId;
     }
-    const lesson = await LessonModel.findOne(query);
+    const lesson = await lessonRepo.findOne(query);
 
     if (!lesson) {
         throw new Error(responses.item_not_found);
@@ -202,7 +209,7 @@ export const createLesson = async (
     lessonValidator(lessonData);
 
     try {
-        const course: InternalCourse | null = await CourseModel.findOne({
+        const course: InternalCourse | null = await courseRepo.findOne({
             courseId: lessonData.courseId,
             domain: ctx.subdomain._id,
         });
@@ -216,7 +223,7 @@ export const createLesson = async (
             throw new Error(responses.group_not_found);
         }
 
-        const lesson = await LessonModel.create({
+        const lesson = await lessonRepo.create({
             domain: ctx.subdomain._id,
             title: lessonData.title,
             type: lessonData.type,
@@ -425,7 +432,7 @@ export const getAllLessons = async (
 };
 
 export const deleteAllLessons = async (courseId: string, ctx: GQLContext) => {
-    const allLessons = await LessonModel.find<Lesson>({
+    const allLessons = await lessonRepo.find({
         domain: ctx.subdomain._id,
         courseId,
     });
@@ -440,7 +447,7 @@ export const markLessonCompleted = async (
 ) => {
     checkIfAuthenticated(ctx);
 
-    const lesson = await LessonModel.findOne<Lesson>({
+    const lesson = await lessonRepo.findOne({
         domain: ctx.subdomain._id,
         lessonId,
     });
@@ -542,7 +549,7 @@ const checkAndRecordCourseCompletion = async (
     courseId: string,
     ctx: GQLContext,
 ) => {
-    const course = await CourseModel.findOne({
+    const course = await courseRepo.findOne({
         domain: ctx.subdomain._id,
         courseId,
     });
@@ -650,7 +657,7 @@ export const evaluateLesson = async (
 ) => {
     checkIfAuthenticated(ctx);
 
-    const lesson = await LessonModel.findOne<Lesson>({
+    const lesson = await lessonRepo.findOne({
         domain: ctx.subdomain._id,
         lessonId,
     });

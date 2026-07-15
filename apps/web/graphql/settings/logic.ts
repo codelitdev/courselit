@@ -26,6 +26,9 @@ import {
     RuntimeLoginProvider,
 } from "@/lib/login-providers";
 import { invalidateDomainCache } from "@/lib/domain-cache";
+import { DomainRepository } from "@courselit/orm-models";
+
+const domainRepo = new DomainRepository(DomainModel);
 
 const { permissions } = constants;
 
@@ -149,7 +152,7 @@ export const updateSiteInfo = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    const domain: Domain | null = await DomainModel.findById(ctx.subdomain._id);
+    const domain: Domain | null = await domainRepo.findById(ctx.subdomain._id);
     if (!domain) {
         return null;
     }
@@ -199,7 +202,7 @@ export const updateDraftTypefaces = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    const domain: Domain | null = await DomainModel.findById(ctx.subdomain._id);
+    const domain: Domain | null = await domainRepo.findById(ctx.subdomain._id);
     if (!domain) {
         return null;
     }
@@ -221,7 +224,7 @@ export const updatePaymentInfo = async (
         throw new Error(responses.action_not_allowed);
     }
 
-    const domain: Domain | null = await DomainModel.findById(ctx.subdomain._id);
+    const domain: Domain | null = await domainRepo.findById(ctx.subdomain._id);
     if (!domain) {
         return null;
     }
@@ -264,7 +267,7 @@ export const resetPaymentMethod = async (ctx: GQLContext) => {
         throw new Error(responses.action_not_allowed);
     }
 
-    const domain: Domain | null = await DomainModel.findById(ctx.subdomain._id);
+    const domain: Domain | null = await domainRepo.findById(ctx.subdomain._id);
     if (!domain) {
         return null;
     }
@@ -642,7 +645,7 @@ export const removeGoogleProvider = async (ctx: GQLContext) => {
 };
 
 export const getFeatures = async (ctx: GQLContext) => {
-    await DomainModel.findOne({
+    await domainRepo.findOne({
         _id: ctx.subdomain._id,
     });
 

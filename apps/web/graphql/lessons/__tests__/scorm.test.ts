@@ -4,6 +4,17 @@ import UserModel from "@/models/User";
 import CourseModel from "@/models/Course";
 import DomainModel from "@/models/Domain";
 import { Constants } from "@courselit/common-models";
+import {
+    UserRepository,
+    LessonRepository,
+    CourseRepository,
+    DomainRepository,
+} from "@courselit/orm-models";
+
+const courseRepo = new CourseRepository(CourseModel);
+const domainRepo = new DomainRepository(DomainModel);
+const lessonRepo = new LessonRepository(LessonModel);
+const userRepo = new UserRepository(UserModel);
 
 const SUITE_PREFIX = `scorm-tests-${Date.now()}`;
 const id = (suffix: string) => `${SUITE_PREFIX}-${suffix}`;
@@ -18,14 +29,14 @@ describe("SCORM Logic Integration", () => {
 
     beforeAll(async () => {
         // Create Domain
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: id("domain"),
             email: email("domain"),
             features: [],
         });
 
         // Create User
-        user = await UserModel.create({
+        user = await userRepo.create({
             domain: testDomain._id,
             userId: id("user"),
             email: email("user"),
@@ -39,7 +50,7 @@ describe("SCORM Logic Integration", () => {
         const groupId = id("group-1");
 
         // Create Course
-        course = await CourseModel.create({
+        course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course"),
             title: "SCORM Course",
@@ -67,7 +78,7 @@ describe("SCORM Logic Integration", () => {
         });
 
         // Create SCORM Lesson
-        scormLesson = await LessonModel.create({
+        scormLesson = await lessonRepo.create({
             domain: testDomain._id,
             courseId: course.courseId,
             lessonId: id("lesson-scorm"),
@@ -114,7 +125,7 @@ describe("SCORM Logic Integration", () => {
 
     beforeEach(async () => {
         // Reset user progress for the lesson
-        const u = await UserModel.findById(user._id);
+        const u = await userRepo.findById(user._id);
         const purchase = u!.purchases.find(
             (p: any) => p.courseId === course.courseId,
         );
@@ -143,7 +154,7 @@ describe("SCORM Logic Integration", () => {
 
     it("should fail if SCORM 1.2 status is incomplete", async () => {
         // Update user with incomplete status
-        const u = await UserModel.findById(user._id);
+        const u = await userRepo.findById(user._id);
         const purchase = u!.purchases.find(
             (p: any) => p.courseId === course.courseId,
         );
@@ -167,7 +178,7 @@ describe("SCORM Logic Integration", () => {
 
     it("should succeed if SCORM 1.2 status is completed", async () => {
         // Update user with completed status
-        const u = await UserModel.findById(user._id);
+        const u = await userRepo.findById(user._id);
         const purchase = u!.purchases.find(
             (p: any) => p.courseId === course.courseId,
         );
@@ -188,7 +199,7 @@ describe("SCORM Logic Integration", () => {
         expect(result).toBe(true);
 
         // Verify it was marked as completed in progress
-        const updatedUser = await UserModel.findById(user._id);
+        const updatedUser = await userRepo.findById(user._id);
         const p = updatedUser!.purchases.find(
             (p: any) => p.courseId === course.courseId,
         );
@@ -196,7 +207,7 @@ describe("SCORM Logic Integration", () => {
     });
 
     it("should succeed if SCORM 2004 completion_status is completed", async () => {
-        const u = await UserModel.findById(user._id);
+        const u = await userRepo.findById(user._id);
         const purchase = u!.purchases.find(
             (p: any) => p.courseId === course.courseId,
         );
@@ -216,7 +227,7 @@ describe("SCORM Logic Integration", () => {
     });
 
     it("should succeed via fallback if interaction data exists", async () => {
-        const u = await UserModel.findById(user._id);
+        const u = await userRepo.findById(user._id);
         const purchase = u!.purchases.find(
             (p: any) => p.courseId === course.courseId,
         );

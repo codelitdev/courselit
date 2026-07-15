@@ -13,6 +13,27 @@ import UserModel from "@models/User";
 import InvoiceModel from "@models/Invoice";
 import constants from "@/config/constants";
 import { Constants } from "@courselit/common-models";
+import {
+    CommunityRepository,
+    PageRepository,
+    PaymentPlanRepository,
+    MembershipRepository,
+    CommunityCommentRepository,
+    CommunityPostRepository,
+    UserRepository,
+    DomainRepository,
+} from "@courselit/orm-models";
+
+const communityCommentRepo = new CommunityCommentRepository(
+    CommunityCommentModel,
+);
+const communityPostRepo = new CommunityPostRepository(CommunityPostModel);
+const communityRepo = new CommunityRepository(CommunityModel);
+const domainRepo = new DomainRepository(DomainModel);
+const membershipRepo = new MembershipRepository(MembershipModel);
+const pageRepo = new PageRepository(PageModel);
+const paymentPlanRepo = new PaymentPlanRepository(PaymentPlanModel);
+const userRepo = new UserRepository(UserModel);
 
 jest.mock("@/services/medialit");
 jest.mock("@/services/queue");
@@ -30,13 +51,13 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
 
     beforeAll(async () => {
         // Create unique test domain
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: `test-domain-dc-${Date.now()}`,
             email: "test@example.com",
         });
 
         // Create admin user
-        adminUser = await UserModel.create({
+        adminUser = await userRepo.create({
             domain: testDomain._id,
             userId: "admin-user",
             email: "admin@example.com",
@@ -47,7 +68,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
         });
 
         // Create internal payment plan (required by deleteMemberships)
-        await PaymentPlanModel.create({
+        await paymentPlanRepo.create({
             domain: testDomain._id,
             planId: "internal-plan",
             userId: adminUser.userId,
@@ -102,7 +123,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
         });
 
         it("should require manageCommunity permission", async () => {
-            const regularUser = await UserModel.create({
+            const regularUser = await userRepo.create({
                 domain: testDomain._id,
                 userId: "regular-user",
                 email: "regular@example.com",
@@ -131,7 +152,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
         });
 
         it("should not delete disabled community without permission", async () => {
-            const community = await CommunityModel.create({
+            const community = await communityRepo.create({
                 domain: testDomain._id,
                 communityId: "dc-disabled-comm",
                 name: "Disabled Community",
@@ -141,7 +162,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 deleted: false,
             });
 
-            const regularUser = await UserModel.create({
+            const regularUser = await userRepo.create({
                 domain: testDomain._id,
                 userId: "regular-user-2",
                 email: "regular2@example.com",
@@ -166,7 +187,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
 
     describe("Community Content Cleanup", () => {
         it("should delete all community posts", async () => {
-            const community = await CommunityModel.create({
+            const community = await communityRepo.create({
                 domain: testDomain._id,
                 communityId: "dc-comm-posts",
                 name: "Community with Posts",
@@ -176,7 +197,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 deleted: false,
             });
 
-            await PageModel.create({
+            await pageRepo.create({
                 domain: testDomain._id,
                 pageId: community.pageId,
                 type: constants.communityPage,
@@ -185,7 +206,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 entityId: community.communityId,
             });
 
-            await CommunityPostModel.create({
+            await communityPostRepo.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: "post-1",
@@ -197,7 +218,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
 
             await deleteCommunity({ ctx: mockCtx, id: community.communityId });
 
-            const posts = await CommunityPostModel.find({
+            const posts = await communityPostRepo.find({
                 domain: testDomain._id,
                 communityId: community.communityId,
             });
@@ -205,7 +226,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
         });
 
         it("should delete all community comments", async () => {
-            const community = await CommunityModel.create({
+            const community = await communityRepo.create({
                 domain: testDomain._id,
                 communityId: "dc-comm-comments",
                 name: "Community with Comments",
@@ -215,7 +236,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 deleted: false,
             });
 
-            await PageModel.create({
+            await pageRepo.create({
                 domain: testDomain._id,
                 pageId: community.pageId,
                 type: constants.communityPage,
@@ -224,7 +245,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 entityId: community.communityId,
             });
 
-            const post = await CommunityPostModel.create({
+            const post = await communityPostRepo.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: "post-2",
@@ -234,7 +255,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 category: "general",
             });
 
-            await CommunityCommentModel.create({
+            await communityCommentRepo.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: post.postId,
@@ -245,7 +266,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
 
             await deleteCommunity({ ctx: mockCtx, id: community.communityId });
 
-            const comments = await CommunityCommentModel.find({
+            const comments = await communityCommentRepo.find({
                 domain: testDomain._id,
                 communityId: community.communityId,
             });
@@ -253,7 +274,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
         });
 
         it("should delete all community reports", async () => {
-            const community = await CommunityModel.create({
+            const community = await communityRepo.create({
                 domain: testDomain._id,
                 communityId: "dc-comm-reports",
                 name: "Community with Reports",
@@ -263,7 +284,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 deleted: false,
             });
 
-            await PageModel.create({
+            await pageRepo.create({
                 domain: testDomain._id,
                 pageId: community.pageId,
                 type: constants.communityPage,
@@ -292,7 +313,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
         });
 
         it("should delete post subscriptions", async () => {
-            const community = await CommunityModel.create({
+            const community = await communityRepo.create({
                 domain: testDomain._id,
                 communityId: "dc-comm-subs",
                 name: "Community with Subscriptions",
@@ -302,7 +323,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 deleted: false,
             });
 
-            await PageModel.create({
+            await pageRepo.create({
                 domain: testDomain._id,
                 pageId: community.pageId,
                 type: constants.communityPage,
@@ -311,7 +332,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 entityId: community.communityId,
             });
 
-            const post = await CommunityPostModel.create({
+            const post = await communityPostRepo.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: "post-3",
@@ -340,7 +361,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
 
     describe("Membership & Payment Plan Cleanup", () => {
         it("should delete all community memberships", async () => {
-            const community = await CommunityModel.create({
+            const community = await communityRepo.create({
                 domain: testDomain._id,
                 communityId: "dc-comm-members",
                 name: "Community with Members",
@@ -350,7 +371,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 deleted: false,
             });
 
-            await PageModel.create({
+            await pageRepo.create({
                 domain: testDomain._id,
                 pageId: community.pageId,
                 type: constants.communityPage,
@@ -359,7 +380,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 entityId: community.communityId,
             });
 
-            const plan = await PaymentPlanModel.create({
+            const plan = await paymentPlanRepo.create({
                 domain: testDomain._id,
                 planId: "plan-1",
                 userId: adminUser.userId,
@@ -372,7 +393,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 currencyISOCode: "USD",
             });
 
-            await MembershipModel.create({
+            await membershipRepo.create({
                 domain: testDomain._id,
                 membershipId: "membership-1",
                 userId: adminUser.userId,
@@ -385,7 +406,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
 
             await deleteCommunity({ ctx: mockCtx, id: community.communityId });
 
-            const memberships = await MembershipModel.find({
+            const memberships = await membershipRepo.find({
                 domain: testDomain._id,
                 entityId: community.communityId,
                 entityType: Constants.MembershipEntityType.COMMUNITY,
@@ -400,7 +421,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 cancel: mockCancel,
             });
 
-            const community = await CommunityModel.create({
+            const community = await communityRepo.create({
                 domain: testDomain._id,
                 communityId: "dc-comm-subscriptions",
                 name: "Community with Subscriptions",
@@ -410,7 +431,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 deleted: false,
             });
 
-            await PageModel.create({
+            await pageRepo.create({
                 domain: testDomain._id,
                 pageId: community.pageId,
                 type: constants.communityPage,
@@ -419,7 +440,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 entityId: community.communityId,
             });
 
-            const plan = await PaymentPlanModel.create({
+            const plan = await paymentPlanRepo.create({
                 domain: testDomain._id,
                 planId: "plan-subscription",
                 userId: adminUser.userId,
@@ -432,7 +453,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 currencyISOCode: "USD",
             });
 
-            const membership = await MembershipModel.create({
+            const membership = await membershipRepo.create({
                 domain: testDomain._id,
                 membershipId: "membership-subscription",
                 userId: adminUser.userId,
@@ -462,7 +483,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
             expect(mockCancel).toHaveBeenCalledWith("sub_stripe_456");
 
             // Verify membership was deleted
-            const memberships = await MembershipModel.find({
+            const memberships = await membershipRepo.find({
                 domain: testDomain._id,
                 entityId: community.communityId,
                 entityType: Constants.MembershipEntityType.COMMUNITY,
@@ -478,7 +499,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
         });
 
         it("should delete all payment plans", async () => {
-            const community = await CommunityModel.create({
+            const community = await communityRepo.create({
                 domain: testDomain._id,
                 communityId: "dc-comm-plans",
                 name: "Community with Plans",
@@ -488,7 +509,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 deleted: false,
             });
 
-            await PageModel.create({
+            await pageRepo.create({
                 domain: testDomain._id,
                 pageId: community.pageId,
                 type: constants.communityPage,
@@ -497,7 +518,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 entityId: community.communityId,
             });
 
-            await PaymentPlanModel.create({
+            await paymentPlanRepo.create({
                 domain: testDomain._id,
                 planId: "plan-2",
                 userId: adminUser.userId,
@@ -512,7 +533,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
 
             await deleteCommunity({ ctx: mockCtx, id: community.communityId });
 
-            const plans = await PaymentPlanModel.find({
+            const plans = await paymentPlanRepo.find({
                 domain: testDomain._id,
                 entityId: community.communityId,
                 entityType: Constants.MembershipEntityType.COMMUNITY,
@@ -521,7 +542,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
         });
 
         it("should delete memberships with included products", async () => {
-            const community = await CommunityModel.create({
+            const community = await communityRepo.create({
                 domain: testDomain._id,
                 communityId: "dc-comm-included",
                 name: "Community with Included Products",
@@ -531,7 +552,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 deleted: false,
             });
 
-            await PageModel.create({
+            await pageRepo.create({
                 domain: testDomain._id,
                 pageId: community.pageId,
                 type: constants.communityPage,
@@ -540,7 +561,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 entityId: community.communityId,
             });
 
-            const plan = await PaymentPlanModel.create({
+            const plan = await paymentPlanRepo.create({
                 domain: testDomain._id,
                 planId: "plan-included",
                 userId: adminUser.userId,
@@ -554,7 +575,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 includedProducts: ["course-1", "course-2"],
             });
 
-            await MembershipModel.create({
+            await membershipRepo.create({
                 domain: testDomain._id,
                 membershipId: "membership-included",
                 userId: adminUser.userId,
@@ -578,7 +599,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
 
             await deleteCommunity({ ctx: mockCtx, id: community.communityId });
 
-            const courseMemberships = await MembershipModel.find({
+            const courseMemberships = await membershipRepo.find({
                 domain: testDomain._id,
                 paymentPlanId: plan.planId,
                 isIncludedInPlan: true,
@@ -596,7 +617,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
 
     describe("Page & Media Cleanup", () => {
         it("should delete community page", async () => {
-            const community = await CommunityModel.create({
+            const community = await communityRepo.create({
                 domain: testDomain._id,
                 communityId: "dc-comm-page",
                 name: "Community with Page",
@@ -606,7 +627,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 deleted: false,
             });
 
-            await PageModel.create({
+            await pageRepo.create({
                 domain: testDomain._id,
                 pageId: community.pageId,
                 type: constants.communityPage,
@@ -617,7 +638,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
 
             await deleteCommunity({ ctx: mockCtx, id: community.communityId });
 
-            const page = await PageModel.findOne({
+            const page = await pageRepo.findOne({
                 domain: testDomain._id,
                 pageId: community.pageId,
             });
@@ -625,7 +646,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
         });
 
         it("should delete community media", async () => {
-            const community = await CommunityModel.create({
+            const community = await communityRepo.create({
                 domain: testDomain._id,
                 communityId: "dc-comm-media",
                 name: "Community with Media",
@@ -645,7 +666,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 },
             });
 
-            await PageModel.create({
+            await pageRepo.create({
                 domain: testDomain._id,
                 pageId: community.pageId,
                 type: constants.communityPage,
@@ -663,7 +684,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
 
     describe("Community Document Cleanup", () => {
         it("should delete the community document", async () => {
-            const community = await CommunityModel.create({
+            const community = await communityRepo.create({
                 domain: testDomain._id,
                 communityId: "dc-comm-delete",
                 name: "Community to Delete",
@@ -673,7 +694,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 deleted: false,
             });
 
-            await PageModel.create({
+            await pageRepo.create({
                 domain: testDomain._id,
                 pageId: community.pageId,
                 type: constants.communityPage,
@@ -684,7 +705,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
 
             await deleteCommunity({ ctx: mockCtx, id: community.communityId });
 
-            const deletedCommunity = await CommunityModel.findOne({
+            const deletedCommunity = await communityRepo.findOne({
                 domain: testDomain._id,
                 communityId: community.communityId,
             });
@@ -694,7 +715,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
 
     describe("Integration Tests", () => {
         it("should handle complex scenario with all entities", async () => {
-            const community = await CommunityModel.create({
+            const community = await communityRepo.create({
                 domain: testDomain._id,
                 communityId: "dc-comm-complex",
                 name: "Complex Community",
@@ -714,7 +735,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 },
             });
 
-            await PageModel.create({
+            await pageRepo.create({
                 domain: testDomain._id,
                 pageId: community.pageId,
                 type: constants.communityPage,
@@ -723,7 +744,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 entityId: community.communityId,
             });
 
-            const plan = await PaymentPlanModel.create({
+            const plan = await paymentPlanRepo.create({
                 domain: testDomain._id,
                 planId: "plan-complex",
                 userId: adminUser.userId,
@@ -736,7 +757,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 currencyISOCode: "USD",
             });
 
-            await MembershipModel.create({
+            await membershipRepo.create({
                 domain: testDomain._id,
                 membershipId: "membership-complex",
                 userId: adminUser.userId,
@@ -747,7 +768,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 sessionId: "session-complex",
             });
 
-            const post = await CommunityPostModel.create({
+            const post = await communityPostRepo.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: "post-complex",
@@ -757,7 +778,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 category: "general",
             });
 
-            await CommunityCommentModel.create({
+            await communityCommentRepo.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: post.postId,
@@ -796,15 +817,15 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 remainingPlans,
                 remainingPage,
             ] = await Promise.all([
-                CommunityModel.findOne({
+                communityRepo.findOne({
                     domain: testDomain._id,
                     communityId: community.communityId,
                 }),
-                CommunityPostModel.find({
+                communityPostRepo.find({
                     domain: testDomain._id,
                     communityId: community.communityId,
                 }),
-                CommunityCommentModel.find({
+                communityCommentRepo.find({
                     domain: testDomain._id,
                     communityId: community.communityId,
                 }),
@@ -816,17 +837,17 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                     domain: testDomain._id,
                     postId: post.postId,
                 }),
-                MembershipModel.find({
+                membershipRepo.find({
                     domain: testDomain._id,
                     entityId: community.communityId,
                     entityType: Constants.MembershipEntityType.COMMUNITY,
                 }),
-                PaymentPlanModel.find({
+                paymentPlanRepo.find({
                     domain: testDomain._id,
                     entityId: community.communityId,
                     entityType: Constants.MembershipEntityType.COMMUNITY,
                 }),
-                PageModel.findOne({
+                pageRepo.findOne({
                     domain: testDomain._id,
                     pageId: community.pageId,
                 }),
@@ -844,7 +865,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
         });
 
         it("should successfully delete empty community", async () => {
-            const community = await CommunityModel.create({
+            const community = await communityRepo.create({
                 domain: testDomain._id,
                 communityId: "dc-comm-empty",
                 name: "Empty Community",
@@ -854,7 +875,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
                 deleted: false,
             });
 
-            await PageModel.create({
+            await pageRepo.create({
                 domain: testDomain._id,
                 pageId: community.pageId,
                 type: constants.communityPage,
@@ -865,7 +886,7 @@ describe("deleteCommunity - Comprehensive Test Suite", () => {
 
             await deleteCommunity({ ctx: mockCtx, id: community.communityId });
 
-            const deletedCommunity = await CommunityModel.findOne({
+            const deletedCommunity = await communityRepo.findOne({
                 domain: testDomain._id,
                 communityId: community.communityId,
             });

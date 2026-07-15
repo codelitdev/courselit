@@ -14,6 +14,27 @@ import UserModel from "@models/User";
 import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
 import constants from "@/config/constants";
 import { Constants } from "@courselit/common-models";
+import {
+    CommunityPostRepository,
+    CommunityCommentRepository,
+    UserRepository,
+    MembershipRepository,
+    PaymentPlanRepository,
+    PageRepository,
+    CommunityRepository,
+    DomainRepository,
+} from "@courselit/orm-models";
+
+const communityCommentRepo = new CommunityCommentRepository(
+    CommunityCommentModel,
+);
+const communityPostRepo = new CommunityPostRepository(CommunityPostModel);
+const communityRepo = new CommunityRepository(CommunityModel);
+const domainRepo = new DomainRepository(DomainModel);
+const membershipRepo = new MembershipRepository(MembershipModel);
+const pageRepo = new PageRepository(PageModel);
+const paymentPlanRepo = new PaymentPlanRepository(PaymentPlanModel);
+const userRepo = new UserRepository(UserModel);
 
 jest.mock("@/services/medialit");
 jest.mock("@/services/queue");
@@ -40,12 +61,12 @@ describe("deleteCommunityPost", () => {
     let existingPost: any;
 
     beforeAll(async () => {
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: id("domain"),
             email: email("domain"),
         });
 
-        adminUser = await UserModel.create({
+        adminUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("admin"),
             email: email("admin"),
@@ -55,7 +76,7 @@ describe("deleteCommunityPost", () => {
             unsubscribeToken: id("unsub-admin"),
         });
 
-        regularUser = await UserModel.create({
+        regularUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("regular"),
             email: email("regular"),
@@ -65,7 +86,7 @@ describe("deleteCommunityPost", () => {
             unsubscribeToken: id("unsub-regular"),
         });
 
-        otherMemberUser = await UserModel.create({
+        otherMemberUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("other"),
             email: email("other"),
@@ -76,7 +97,7 @@ describe("deleteCommunityPost", () => {
         });
 
         // Internal payment plan (required by the system)
-        await PaymentPlanModel.create({
+        await paymentPlanRepo.create({
             domain: testDomain._id,
             planId: id("internal-plan"),
             userId: adminUser.userId,
@@ -90,7 +111,7 @@ describe("deleteCommunityPost", () => {
             currencyISOCode: "USD",
         });
 
-        community = await CommunityModel.create({
+        community = await communityRepo.create({
             domain: testDomain._id,
             communityId: id("community"),
             name: "Test Community",
@@ -101,7 +122,7 @@ describe("deleteCommunityPost", () => {
             categories: ["General", "Announcements"],
         });
 
-        await PageModel.create({
+        await pageRepo.create({
             domain: testDomain._id,
             pageId: community.pageId,
             type: constants.communityPage,
@@ -111,7 +132,7 @@ describe("deleteCommunityPost", () => {
         });
 
         // Free payment plan for the community
-        await PaymentPlanModel.create({
+        await paymentPlanRepo.create({
             domain: testDomain._id,
             planId: id("free-plan"),
             userId: adminUser.userId,
@@ -125,7 +146,7 @@ describe("deleteCommunityPost", () => {
         });
 
         // Admin membership (MODERATE role)
-        await MembershipModel.create({
+        await membershipRepo.create({
             domain: testDomain._id,
             membershipId: id("admin-membership"),
             userId: adminUser.userId,
@@ -138,7 +159,7 @@ describe("deleteCommunityPost", () => {
         });
 
         // Regular user membership (POST role)
-        await MembershipModel.create({
+        await membershipRepo.create({
             domain: testDomain._id,
             membershipId: id("regular-membership"),
             userId: regularUser.userId,
@@ -151,7 +172,7 @@ describe("deleteCommunityPost", () => {
         });
 
         // Other member membership (POST role)
-        await MembershipModel.create({
+        await membershipRepo.create({
             domain: testDomain._id,
             membershipId: id("other-membership"),
             userId: otherMemberUser.userId,
@@ -218,7 +239,7 @@ describe("deleteCommunityPost", () => {
         });
 
         it("should throw action_not_allowed if missing membership", async () => {
-            const noMemberUser = await UserModel.create({
+            const noMemberUser = await userRepo.create({
                 domain: testDomain._id,
                 userId: id("no-member-del"),
                 email: email("no-member-del"),
@@ -263,7 +284,7 @@ describe("deleteCommunityPost", () => {
                 ctx: regularCtx,
             });
 
-            const dbPost = await CommunityPostModel.findOne({
+            const dbPost = await communityPostRepo.findOne({
                 postId: existingPost.postId,
             });
             expect(dbPost).toBeNull();
@@ -276,14 +297,14 @@ describe("deleteCommunityPost", () => {
                 ctx: adminCtx,
             });
 
-            const dbPost = await CommunityPostModel.findOne({
+            const dbPost = await communityPostRepo.findOne({
                 postId: existingPost.postId,
             });
             expect(dbPost).toBeNull();
         });
 
         it("should delete associated comments", async () => {
-            await CommunityCommentModel.create({
+            await communityCommentRepo.create({
                 domain: testDomain._id,
                 communityId: community.communityId,
                 postId: existingPost.postId,
@@ -298,7 +319,7 @@ describe("deleteCommunityPost", () => {
                 ctx: regularCtx,
             });
 
-            const dbComments = await CommunityCommentModel.find({
+            const dbComments = await communityCommentRepo.find({
                 postId: existingPost.postId,
             });
             expect(dbComments.length).toBe(0);
@@ -349,7 +370,7 @@ describe("deleteCommunityPost", () => {
             );
 
             // Post should be deleted regardless of deleteMedia failure
-            const dbPost = await CommunityPostModel.findOne({
+            const dbPost = await communityPostRepo.findOne({
                 postId: existingPost.postId,
             });
             expect(dbPost).toBeNull();
@@ -391,7 +412,7 @@ describe("deleteCommunityPost", () => {
 
             expect(medialit.deleteMedia).toHaveBeenCalledWith("media-success");
 
-            const dbPost = await CommunityPostModel.findOne({
+            const dbPost = await communityPostRepo.findOne({
                 postId: existingPost.postId,
             });
             expect(dbPost).toBeNull();

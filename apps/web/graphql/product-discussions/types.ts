@@ -16,6 +16,11 @@ import UserModel from "@/models/User";
 import userTypes from "../users/types";
 import { extractTextFromTextEditorContent } from "@courselit/utils";
 import { Constants } from "@courselit/common-models";
+import { UserRepository, LessonRepository } from "@courselit/orm-models";
+
+const lessonRepo = new LessonRepository(LessonModel);
+const userRepo = new UserRepository(UserModel);
+
 const {
     ProductDiscussionEntityType,
     ProductDiscussionContentType,
@@ -105,7 +110,7 @@ const productDiscussionReply = new GraphQLObjectType({
         user: {
             type: userTypes.userType,
             resolve: async (reply, _, ctx) => {
-                return await UserModel.findOne({
+                return await userRepo.findOne({
                     domain: ctx.subdomain._id,
                     userId: reply.userId,
                 });
@@ -196,7 +201,7 @@ const productDiscussionComment = new GraphQLObjectType({
         user: {
             type: userTypes.userType,
             resolve: async (comment, _, ctx) => {
-                return await UserModel.findOne({
+                return await userRepo.findOne({
                     domain: ctx.subdomain._id,
                     userId: comment.userId,
                 });
@@ -295,7 +300,7 @@ const productDiscussionReport = new GraphQLObjectType({
             resolve: async (report, _, ctx) => {
                 if (report.entityType !== ProductDiscussionEntityType.LESSON)
                     return null;
-                const lesson = await LessonModel.findOne({
+                const lesson = await lessonRepo.findOne({
                     domain: ctx.subdomain._id,
                     lessonId: report.entityId,
                 });
@@ -333,7 +338,7 @@ const productDiscussionReport = new GraphQLObjectType({
                               replyId: report.contentId,
                           });
                 if (!item) return null;
-                const user = await UserModel.findOne({
+                const user = await userRepo.findOne({
                     domain: ctx.subdomain._id,
                     userId: item.userId,
                 });
@@ -343,7 +348,7 @@ const productDiscussionReport = new GraphQLObjectType({
         reporterName: {
             type: GraphQLString,
             resolve: async (report, _, ctx) => {
-                const user = await UserModel.findOne({
+                const user = await userRepo.findOne({
                     domain: ctx.subdomain._id,
                     userId: report.userId,
                 });

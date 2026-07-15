@@ -12,7 +12,13 @@ import constants from "@config/constants";
 import { checkPermission } from "@courselit/utils";
 import PaymentPlanModel, { InternalPaymentPlan } from "@models/PaymentPlan";
 import { Domain } from "@models/Domain";
-import { InternalCourse } from "@courselit/orm-models";
+import {
+    InternalCourse,
+    MembershipRepository,
+    CourseRepository,
+    PaymentPlanRepository,
+    CommunityRepository,
+} from "@courselit/orm-models";
 import GQLContext from "@models/GQLContext";
 import {
     checkDuplicatePlan,
@@ -23,6 +29,12 @@ import mongoose from "mongoose";
 import MembershipModel from "@models/Membership";
 import { runPostMembershipTasks } from "../users/logic";
 import ActivityModel from "@models/Activity";
+
+const communityRepo = new CommunityRepository(CommunityModel);
+const courseRepo = new CourseRepository(CourseModel);
+const membershipRepo = new MembershipRepository(MembershipModel);
+const paymentPlanRepo = new PaymentPlanRepository(PaymentPlanModel);
+
 const { MembershipEntityType: membershipEntityType } = Constants;
 const { permissions } = constants;
 
@@ -32,12 +44,12 @@ async function fetchEntity(
     ctx: any,
 ): Promise<InternalCourse | InternalCommunity | null> {
     if (entityType === membershipEntityType.COURSE) {
-        return (await CourseModel.findOne({
+        return (await courseRepo.findOne({
             domain: ctx.subdomain._id,
             courseId: entityId,
         })) as InternalCourse;
     } else if (entityType === membershipEntityType.COMMUNITY) {
-        return (await CommunityModel.findOne({
+        return (await communityRepo.findOne({
             domain: ctx.subdomain._id,
             communityId: entityId,
             deleted: false,
@@ -73,7 +85,7 @@ function checkEntityManagementPermission(
 export async function getPlan({ planId, ctx }: { planId: string; ctx: any }) {
     checkIfAuthenticated(ctx);
 
-    const plan = await PaymentPlanModel.findOne({
+    const plan = await paymentPlanRepo.findOne({
         domain: ctx.subdomain._id,
         planId,
         archived: false,
@@ -196,7 +208,7 @@ export async function createPlan({
     await checkDuplicatePlan(paymentPlanPayload);
     await checkIncludedProducts(ctx.subdomain._id, paymentPlanPayload);
 
-    const paymentPlan = await PaymentPlanModel.create(paymentPlanPayload);
+    const paymentPlan = await paymentPlanRepo.create(paymentPlanPayload);
 
     if (!entity.defaultPaymentPlan) {
         (entity as InternalCourse | InternalCommunity).defaultPaymentPlan =
@@ -234,7 +246,7 @@ export async function updatePlan({
 }): Promise<PaymentPlan> {
     checkIfAuthenticated(ctx);
 
-    const paymentPlan = await PaymentPlanModel.findOne({
+    const paymentPlan = await paymentPlanRepo.findOne({
         domain: ctx.subdomain._id,
         planId,
         archived: false,
@@ -288,7 +300,7 @@ export async function archivePaymentPlan({
 }): Promise<PaymentPlan> {
     checkIfAuthenticated(ctx);
 
-    const paymentPlan = await PaymentPlanModel.findOne({
+    const paymentPlan = await paymentPlanRepo.findOne({
         domain: ctx.subdomain._id,
         planId,
         archived: false,
@@ -344,7 +356,7 @@ export async function changeDefaultPlan({
 
     checkEntityManagementPermission(entityType, ctx);
 
-    const paymentPlan = await PaymentPlanModel.findOne({
+    const paymentPlan = await paymentPlanRepo.findOne({
         domain: ctx.subdomain._id,
         planId,
         archived: false,
@@ -362,7 +374,7 @@ export async function changeDefaultPlan({
 }
 
 export async function getInternalPaymentPlan(ctx: any) {
-    return await PaymentPlanModel.findOne({
+    return await paymentPlanRepo.findOne({
         domain: ctx.subdomain._id,
         internal: true,
     });
@@ -372,7 +384,7 @@ export async function createInternalPaymentPlan(
     domain: Domain,
     userId: string,
 ) {
-    return await PaymentPlanModel.create({
+    return await paymentPlanRepo.create({
         domain: domain._id,
         name: constants.internalPaymentPlanName,
         type: Constants.PaymentPlanType.FREE,
@@ -428,14 +440,14 @@ export async function addIncludedProductsMemberships({
     paymentPlan: PaymentPlan;
     sessionId: string;
 }) {
-    const courses = await CourseModel.find({
+    const courses = await courseRepo.find({
         domain,
         courseId: { $in: paymentPlan.includedProducts },
         published: true,
     });
 
     for (const course of courses) {
-        const membership = await MembershipModel.create({
+        const membership = await membershipRepo.create({
             domain,
             userId,
             entityId: course.courseId,

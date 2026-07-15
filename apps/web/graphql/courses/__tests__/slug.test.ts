@@ -8,6 +8,17 @@ import PageModel from "@models/Page";
 import DomainModel from "@models/Domain";
 import UserModel from "@models/User";
 import constants from "@/config/constants";
+import {
+    PageRepository,
+    CourseRepository,
+    UserRepository,
+    DomainRepository,
+} from "@courselit/orm-models";
+
+const courseRepo = new CourseRepository(CourseModel);
+const domainRepo = new DomainRepository(DomainModel);
+const pageRepo = new PageRepository(PageModel);
+const userRepo = new UserRepository(UserModel);
 
 jest.mock("@/services/medialit", () => ({
     deleteMedia: jest.fn().mockResolvedValue(true),
@@ -44,12 +55,12 @@ describe("Course Slug Tests", () => {
     let mockCtx: any;
 
     beforeAll(async () => {
-        domain = await DomainModel.create({
+        domain = await domainRepo.create({
             name: id("domain"),
             email: email("domain"),
         });
 
-        adminUser = await UserModel.create({
+        adminUser = await userRepo.create({
             domain: domain._id,
             userId: id("admin"),
             email: email("admin"),
@@ -112,7 +123,7 @@ describe("Course Slug Tests", () => {
 
         it("should auto-suffix slug on page collision for courses", async () => {
             // Create a page that will collide
-            await PageModel.create({
+            await pageRepo.create({
                 domain: domain._id,
                 pageId: "colliding-course",
                 name: "Existing Page",
@@ -142,13 +153,13 @@ describe("Course Slug Tests", () => {
 
             expect(updated.slug).toBe("new-course-slug");
 
-            const course = await CourseModel.findOne({
+            const course = await courseRepo.findOne({
                 courseId: created.courseId,
             });
             expect(course?.slug).toBe("new-course-slug");
             expect(course?.pageId).toBe("new-course-slug");
 
-            const page = await PageModel.findOne({
+            const page = await pageRepo.findOne({
                 entityId: created.courseId,
                 domain: domain._id,
             });

@@ -4,6 +4,15 @@ import CourseModel from "@models/Course";
 import constants from "@/config/constants";
 import { responses } from "@/config/strings";
 import { reorderGroups } from "../logic";
+import {
+    CourseRepository,
+    UserRepository,
+    DomainRepository,
+} from "@courselit/orm-models";
+
+const courseRepo = new CourseRepository(CourseModel);
+const domainRepo = new DomainRepository(DomainModel);
+const userRepo = new UserRepository(UserModel);
 
 const SUITE_PREFIX = `reorder-groups-${Date.now()}`;
 const id = (suffix: string) => `${SUITE_PREFIX}-${suffix}`;
@@ -17,12 +26,12 @@ describe("reorderGroups", () => {
     let otherUserWithManageCourse: any;
 
     beforeAll(async () => {
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: id("domain"),
             email: email("domain"),
         });
 
-        adminUser = await UserModel.create({
+        adminUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("admin-user"),
             email: email("admin"),
@@ -33,7 +42,7 @@ describe("reorderGroups", () => {
             purchases: [],
         });
 
-        ownerWithManageCourse = await UserModel.create({
+        ownerWithManageCourse = await userRepo.create({
             domain: testDomain._id,
             userId: id("owner-manage-course"),
             email: email("owner-manage-course"),
@@ -44,7 +53,7 @@ describe("reorderGroups", () => {
             purchases: [],
         });
 
-        ownerWithoutManageCourse = await UserModel.create({
+        ownerWithoutManageCourse = await userRepo.create({
             domain: testDomain._id,
             userId: id("owner-without-manage-course"),
             email: email("owner-without-manage-course"),
@@ -55,7 +64,7 @@ describe("reorderGroups", () => {
             purchases: [],
         });
 
-        otherUserWithManageCourse = await UserModel.create({
+        otherUserWithManageCourse = await userRepo.create({
             domain: testDomain._id,
             userId: id("other-manage-course"),
             email: email("other-manage-course"),
@@ -81,7 +90,7 @@ describe("reorderGroups", () => {
         const groupId1 = id("group-1");
         const groupId2 = id("group-2");
         const groupId3 = id("group-3");
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course"),
             title: id("course-title"),
@@ -154,7 +163,7 @@ describe("reorderGroups", () => {
         const groupId1 = id("group-dupe-1");
         const groupId2 = id("group-dupe-2");
         const groupId3 = id("group-dupe-3");
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-dupe"),
             title: id("course-title-dupe"),
@@ -207,7 +216,7 @@ describe("reorderGroups", () => {
         const groupId1 = id("group-count-1");
         const groupId2 = id("group-count-2");
         const groupId3 = id("group-count-3");
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-count"),
             title: id("course-title-count"),
@@ -261,7 +270,7 @@ describe("reorderGroups", () => {
         const groupId2 = id("group-unknown-2");
         const groupId3 = id("group-unknown-3");
         const unknownGroupId = id("group-unknown-missing");
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-unknown"),
             title: id("course-title-unknown"),
@@ -313,7 +322,7 @@ describe("reorderGroups", () => {
     it("allows owners with manageCourse and rejects owners without permissions", async () => {
         const groupId1 = id("group-owner-1");
         const groupId2 = id("group-owner-2");
-        const ownerCourse = await CourseModel.create({
+        const ownerCourse = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-owner"),
             title: id("course-title-owner"),
@@ -354,7 +363,7 @@ describe("reorderGroups", () => {
             }),
         ).resolves.toBeTruthy();
 
-        const ownerNoPermissionCourse = await CourseModel.create({
+        const ownerNoPermissionCourse = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-owner-no-permission"),
             title: id("course-title-owner-no-permission"),
@@ -401,7 +410,7 @@ describe("reorderGroups", () => {
     it("rejects non-owner users with manageCourse", async () => {
         const groupId1 = id("group-non-owner-1");
         const groupId2 = id("group-non-owner-2");
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-non-owner"),
             title: id("course-title-non-owner"),

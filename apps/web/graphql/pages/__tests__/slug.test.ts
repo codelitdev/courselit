@@ -9,6 +9,10 @@ import {
 } from "../helpers";
 import PageModel from "@models/Page";
 import DomainModel from "@models/Domain";
+import { PageRepository, DomainRepository } from "@courselit/orm-models";
+
+const domainRepo = new DomainRepository(DomainModel);
+const pageRepo = new PageRepository(PageModel);
 
 jest.mock("@/services/queue");
 jest.mock("nanoid", () => ({
@@ -34,7 +38,7 @@ describe("Slug helpers", () => {
     let domain: any;
 
     beforeAll(async () => {
-        domain = await DomainModel.create({
+        domain = await domainRepo.create({
             name: id("domain"),
             email: `${id("domain")}@example.com`,
         });
@@ -89,7 +93,7 @@ describe("Slug helpers", () => {
         });
 
         it("should append -1 suffix on first collision", async () => {
-            await PageModel.create({
+            await pageRepo.create({
                 domain: domain._id,
                 pageId: "colliding-title",
                 name: "Colliding Title",
@@ -104,19 +108,19 @@ describe("Slug helpers", () => {
         });
 
         it("should increment suffix on multiple collisions", async () => {
-            await PageModel.create({
+            await pageRepo.create({
                 domain: domain._id,
                 pageId: "multi-collide",
                 name: "Multi Collide",
                 creatorId: "creator-1",
             });
-            await PageModel.create({
+            await pageRepo.create({
                 domain: domain._id,
                 pageId: "multi-collide-1",
                 name: "Multi Collide 1",
                 creatorId: "creator-1",
             });
-            await PageModel.create({
+            await pageRepo.create({
                 domain: domain._id,
                 pageId: "multi-collide-2",
                 name: "Multi Collide 2",
@@ -131,7 +135,7 @@ describe("Slug helpers", () => {
         });
 
         it("should throw on collision when useSuffixOnCollision=false", async () => {
-            await PageModel.create({
+            await pageRepo.create({
                 domain: domain._id,
                 pageId: "no-suffix",
                 name: "No Suffix",
@@ -144,12 +148,12 @@ describe("Slug helpers", () => {
         });
 
         it("should not collide with pages from different domains", async () => {
-            const otherDomain = await DomainModel.create({
+            const otherDomain = await domainRepo.create({
                 name: id("other-domain"),
                 email: `${id("other-domain")}@example.com`,
             });
 
-            await PageModel.create({
+            await pageRepo.create({
                 domain: otherDomain._id,
                 pageId: "cross-domain",
                 name: "Cross Domain",

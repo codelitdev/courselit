@@ -17,6 +17,10 @@ import {
     getAllowedActivityTypesForPermissions,
     isActivityAllowedForPermissions,
 } from "./helpers";
+import { UserRepository, NotificationRepository } from "@courselit/orm-models";
+
+const notificationRepo = new NotificationRepository(NotificationModel);
+const userRepo = new UserRepository(UserModel);
 
 interface NotificationDocument {
     notificationId: string;
@@ -242,7 +246,7 @@ export async function getNotifications({
             .skip(skip)
             .limit(safeLimit)
             .lean(),
-        NotificationModel.countDocuments(query),
+        notificationRepo.count(query),
     ]);
 
     if (!notifications.length) {
@@ -287,7 +291,7 @@ async function formatNotification(
 }
 
 async function getUserName(userId: string): Promise<string> {
-    const user = await UserModel.findOne({ userId });
+    const user = await userRepo.findOne({ userId });
     return user?.name || user?.email || "Someone";
 }
 

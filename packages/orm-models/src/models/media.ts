@@ -1,7 +1,7 @@
 import { Constants, Media } from "@courselit/common-models";
 import mongoose from "mongoose";
 
-type MediaWithOwner = Media & { userId: string };
+export type MediaWithOwner = Media & { userId: string };
 
 export const MediaSchema = new mongoose.Schema<MediaWithOwner>({
     mediaId: { type: String, required: true },

@@ -35,6 +35,9 @@ import {
     validateDiscussionTargetForLearner,
     getNextReportStatus,
 } from "./helpers";
+import { CourseRepository } from "@courselit/orm-models";
+
+const courseRepo = new CourseRepository(CourseModel);
 
 export const COURSE_DISCUSSION_RATE_LIMITS = {
     commentsPerMinute: { window: 60 * 1000, limit: 5 },
@@ -1629,7 +1632,7 @@ async function validateProductDiscussionAdmin({
 }) {
     checkIfAuthenticated(ctx);
 
-    const product = await CourseModel.findOne({
+    const product = await courseRepo.findOne({
         domain: ctx.subdomain._id,
         courseId: productId,
     });
@@ -1661,7 +1664,7 @@ async function getAccessibleDiscussionLessonIds({
     productId: string;
     preview?: boolean;
 }) {
-    const product = await CourseModel.findOne({
+    const product = await courseRepo.findOne({
         domain: ctx.subdomain._id,
         courseId: productId,
         type: Constants.CourseType.COURSE,

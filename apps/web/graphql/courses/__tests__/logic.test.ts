@@ -53,6 +53,19 @@ import {
 import { assertRateLimit } from "@/lib/assert-rate-limit";
 import { recordActivity } from "@/lib/record-activity";
 import { deleteMedia, sealMedia } from "@/services/medialit";
+import {
+    LessonRepository,
+    CourseRepository,
+    UserRepository,
+    DomainRepository,
+    PageRepository,
+} from "@courselit/orm-models";
+
+const courseRepo = new CourseRepository(CourseModel);
+const domainRepo = new DomainRepository(DomainModel);
+const lessonRepo = new LessonRepository(LessonModel);
+const pageRepo = new PageRepository(PageModel);
+const userRepo = new UserRepository(UserModel);
 
 jest.mock("@/services/medialit", () => ({
     deleteMedia: jest.fn().mockResolvedValue(true),
@@ -281,12 +294,12 @@ describe("product discussion validation foundation", () => {
     let learnerUser: any;
 
     beforeAll(async () => {
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: id("discussion-domain"),
             email: email("discussion-domain"),
         });
 
-        learnerUser = await UserModel.create({
+        learnerUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("discussion-learner"),
             email: email("discussion-learner"),
@@ -338,7 +351,7 @@ describe("product discussion validation foundation", () => {
     });
 
     it("rejects lesson discussion writes when discussions are disabled", async () => {
-        await CourseModel.create({
+        await courseRepo.create({
             domain: testDomain._id,
             courseId: id("discussion-course"),
             title: id("discussion-course-title"),
@@ -360,7 +373,7 @@ describe("product discussion validation foundation", () => {
             published: true,
             discussions: false,
         });
-        await LessonModel.create({
+        await lessonRepo.create({
             domain: testDomain._id,
             lessonId: id("discussion-lesson"),
             title: "Discussion Lesson",
@@ -464,7 +477,7 @@ describe("product discussion validation foundation", () => {
     });
 
     it("rejects lesson discussions on unpublished courses for learners but allows for creators/admins", async () => {
-        await CourseModel.create({
+        await courseRepo.create({
             domain: testDomain._id,
             courseId: id("discussion-course-unpublished"),
             title: id("discussion-course-unpublished-title"),
@@ -486,7 +499,7 @@ describe("product discussion validation foundation", () => {
             published: false,
             discussions: true,
         });
-        await LessonModel.create({
+        await lessonRepo.create({
             domain: testDomain._id,
             lessonId: id("discussion-lesson-unpublished"),
             title: "Discussion Lesson",
@@ -513,7 +526,7 @@ describe("product discussion validation foundation", () => {
         ).rejects.toThrow(responses.item_not_found);
 
         // 2. Creator (who is owner/creator of the course) should be allowed:
-        const creatorUser = await UserModel.create({
+        const creatorUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("another-creator"),
             email: email("another-creator"),
@@ -559,12 +572,12 @@ describe("product discussion comment and reply logic", () => {
     });
 
     beforeAll(async () => {
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: id("discussion-api-domain"),
             email: email("discussion-api-domain"),
         });
 
-        learnerUser = await UserModel.create({
+        learnerUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("discussion-api-learner"),
             email: email("discussion-api-learner"),
@@ -580,7 +593,7 @@ describe("product discussion comment and reply logic", () => {
                 },
             ],
         });
-        secondLearnerUser = await UserModel.create({
+        secondLearnerUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("discussion-api-second-learner"),
             email: email("discussion-api-second-learner"),
@@ -596,7 +609,7 @@ describe("product discussion comment and reply logic", () => {
                 },
             ],
         });
-        nonEnrolledUser = await UserModel.create({
+        nonEnrolledUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("discussion-api-non-enrolled"),
             email: email("discussion-api-non-enrolled"),
@@ -606,7 +619,7 @@ describe("product discussion comment and reply logic", () => {
             unsubscribeToken: id("discussion-api-non-enrolled-token"),
             purchases: [],
         });
-        productAdminUser = await UserModel.create({
+        productAdminUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("discussion-api-admin"),
             email: email("discussion-api-admin"),
@@ -667,7 +680,7 @@ describe("product discussion comment and reply logic", () => {
         ]);
         recordActivityMock.mockClear();
 
-        await CourseModel.create({
+        await courseRepo.create({
             domain: testDomain._id,
             courseId,
             title: id("discussion-api-course-title"),
@@ -689,7 +702,7 @@ describe("product discussion comment and reply logic", () => {
             published: true,
             discussions: true,
         });
-        await LessonModel.create({
+        await lessonRepo.create({
             domain: testDomain._id,
             lessonId,
             title: "Discussion API Lesson",
@@ -1820,7 +1833,7 @@ describe("product discussion comment and reply logic", () => {
                 },
             },
         );
-        await LessonModel.create({
+        await lessonRepo.create({
             domain: testDomain._id,
             lessonId: lockedLessonId,
             title: "Locked Discussion API Lesson",
@@ -1946,13 +1959,13 @@ describe("updateCourse", () => {
     let page: any;
 
     beforeAll(async () => {
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: id("domain"),
             email: email("domain"),
         });
 
         // Create admin user with course management permissions
-        adminUser = await UserModel.create({
+        adminUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("admin-user"),
             email: email("admin"),
@@ -1963,7 +1976,7 @@ describe("updateCourse", () => {
             purchases: [],
         });
 
-        page = await PageModel.create({
+        page = await pageRepo.create({
             domain: testDomain._id,
             pageId: "test-page-perm",
             name: "Test Page",
@@ -2015,7 +2028,7 @@ describe("updateCourse", () => {
             ],
         };
 
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-unique"),
             title: id("course-title"),
@@ -2088,7 +2101,7 @@ describe("updateCourse", () => {
             ],
         };
 
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-unique-2"),
             title: id("course-title-2"),
@@ -2146,7 +2159,7 @@ describe("updateCourse", () => {
     });
 
     it("updates one property on an incomplete draft blog", async () => {
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("draft-blog"),
             title: id("draft-blog-title"),
@@ -2178,7 +2191,7 @@ describe("updateCourse", () => {
     });
 
     it("updates a draft blog description with serialized Tiptap content", async () => {
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("draft-blog-description"),
             title: id("draft-blog-description-title"),
@@ -2227,7 +2240,7 @@ describe("updateCourse", () => {
     });
 
     it("validates the overall state when publishing an incomplete blog", async () => {
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("publish-incomplete-blog"),
             title: id("publish-incomplete-blog-title"),
@@ -2270,12 +2283,12 @@ describe("getCourse", () => {
     let ownerWithoutManagePermission: any;
 
     beforeAll(async () => {
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: getCourseId("domain"),
             email: getCourseEmail("domain"),
         });
 
-        adminUser = await UserModel.create({
+        adminUser = await userRepo.create({
             domain: testDomain._id,
             userId: getCourseId("admin-user"),
             email: getCourseEmail("admin"),
@@ -2286,7 +2299,7 @@ describe("getCourse", () => {
             purchases: [],
         });
 
-        ownerManager = await UserModel.create({
+        ownerManager = await userRepo.create({
             domain: testDomain._id,
             userId: getCourseId("owner-manager"),
             email: getCourseEmail("owner-manager"),
@@ -2297,7 +2310,7 @@ describe("getCourse", () => {
             purchases: [],
         });
 
-        ownerWithoutManagePermission = await UserModel.create({
+        ownerWithoutManagePermission = await userRepo.create({
             domain: testDomain._id,
             userId: getCourseId("owner-without-manage"),
             email: getCourseEmail("owner-without-manage"),
@@ -2323,7 +2336,7 @@ describe("getCourse", () => {
         const groupId1 = getCourseId("group-1");
         const groupId2 = getCourseId("group-2");
         const groupId3 = getCourseId("group-3");
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: getCourseId("course"),
             title: getCourseId("course-title"),
@@ -2378,7 +2391,7 @@ describe("getCourse", () => {
     });
 
     it("does not allow course managers to preview unpublished courses without preview mode", async () => {
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: getCourseId("unpublished-course-no-preview"),
             title: getCourseId("unpublished-course-no-preview-title"),
@@ -2403,7 +2416,7 @@ describe("getCourse", () => {
     });
 
     it("allows course managers to preview unpublished courses in preview mode", async () => {
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: getCourseId("unpublished-course"),
             title: getCourseId("unpublished-course-title"),
@@ -2434,7 +2447,7 @@ describe("getCourse", () => {
     });
 
     it("returns non-preview course responses for managers outside preview mode", async () => {
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: getCourseId("published-manager-course"),
             title: getCourseId("published-manager-course-title"),
@@ -2460,7 +2473,7 @@ describe("getCourse", () => {
     });
 
     it("does not allow course owners without manage permission to preview unpublished courses", async () => {
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: getCourseId("unpublished-owner-course"),
             title: getCourseId("unpublished-owner-course-title"),
@@ -2498,12 +2511,12 @@ describe("public API product read helpers", () => {
         `public-api-read-${Date.now()}-${suffix}`;
 
     beforeAll(async () => {
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: helperId("domain"),
             email: `${helperId("domain")}@example.com`,
         });
 
-        adminUser = await UserModel.create({
+        adminUser = await userRepo.create({
             domain: testDomain._id,
             userId: helperId("admin-user"),
             email: `${helperId("admin")}@example.com`,
@@ -2565,7 +2578,7 @@ describe("public API product read helpers", () => {
     });
 
     it("returns owned dashboard products for course:manage users", async () => {
-        const courseManageUser = await UserModel.create({
+        const courseManageUser = await userRepo.create({
             domain: testDomain._id,
             userId: helperId("dashboard-manage-user"),
             email: `${helperId("dashboard-manage")}@example.com`,
@@ -2576,7 +2589,7 @@ describe("public API product read helpers", () => {
             purchases: [],
         });
 
-        const ownedCourse = await CourseModel.create({
+        const ownedCourse = await courseRepo.create({
             domain: testDomain._id,
             courseId: helperId("dashboard-owned-course"),
             title: "Dashboard Owned Course",
@@ -2590,7 +2603,7 @@ describe("public API product read helpers", () => {
             slug: helperId("dashboard-owned-course-slug"),
         });
 
-        const otherCourse = await CourseModel.create({
+        const otherCourse = await courseRepo.create({
             domain: testDomain._id,
             courseId: helperId("dashboard-other-course"),
             title: "Dashboard Other Course",
@@ -2624,7 +2637,7 @@ describe("public API product read helpers", () => {
     });
 
     it("restricts overview metrics to owned products for course:manage users", async () => {
-        const courseManageUser = await UserModel.create({
+        const courseManageUser = await userRepo.create({
             domain: testDomain._id,
             userId: helperId("manage-user-2"),
             email: `${helperId("manage2")}@example.com`,
@@ -2635,7 +2648,7 @@ describe("public API product read helpers", () => {
             purchases: [],
         });
 
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: helperId("owned-course"),
             title: "Owned Course",
@@ -2649,7 +2662,7 @@ describe("public API product read helpers", () => {
             slug: helperId("owned-course-slug"),
         });
 
-        const otherCourse = await CourseModel.create({
+        const otherCourse = await courseRepo.create({
             domain: testDomain._id,
             courseId: helperId("other-course"),
             title: "Other Course",
@@ -2724,7 +2737,7 @@ describe("public API product read helpers", () => {
     });
 
     it("rejects course-scoped lesson reads when the lesson belongs to another product", async () => {
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: helperId("course"),
             title: "Course",
@@ -2737,7 +2750,7 @@ describe("public API product read helpers", () => {
             cost: 0,
             slug: helperId("course-slug"),
         });
-        const otherCourse = await CourseModel.create({
+        const otherCourse = await courseRepo.create({
             domain: testDomain._id,
             courseId: helperId("other-course"),
             title: "Other Course",
@@ -2751,7 +2764,7 @@ describe("public API product read helpers", () => {
             slug: helperId("other-course-slug"),
         });
         const lessonId = helperId("other-course-lesson");
-        await LessonModel.create({
+        await lessonRepo.create({
             domain: testDomain._id,
             lessonId,
             title: "Other Course Lesson",
@@ -2776,7 +2789,7 @@ describe("public API product read helpers", () => {
     });
 
     it("filters product members by user name or email inside GraphQL logic", async () => {
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: helperId("member-course"),
             title: "Course",
@@ -2789,7 +2802,7 @@ describe("public API product read helpers", () => {
             cost: 0,
             slug: helperId("member-course-slug"),
         });
-        const matchingByName = await UserModel.create({
+        const matchingByName = await userRepo.create({
             domain: testDomain._id,
             userId: helperId("matching-name-user"),
             email: `${helperId("matching-name")}@example.com`,
@@ -2799,7 +2812,7 @@ describe("public API product read helpers", () => {
             unsubscribeToken: helperId("matching-name-unsubscribe"),
             purchases: [{ courseId: course.courseId, completedLessons: [] }],
         });
-        const matchingByEmail = await UserModel.create({
+        const matchingByEmail = await userRepo.create({
             domain: testDomain._id,
             userId: helperId("matching-email-user"),
             email: `student-${helperId("matching-email")}@example.com`,
@@ -2809,7 +2822,7 @@ describe("public API product read helpers", () => {
             unsubscribeToken: helperId("matching-email-unsubscribe"),
             purchases: [{ courseId: course.courseId, completedLessons: [] }],
         });
-        const nonMatchingUser = await UserModel.create({
+        const nonMatchingUser = await userRepo.create({
             domain: testDomain._id,
             userId: helperId("non-matching-user"),
             email: `${helperId("other")}@example.com`,
@@ -2888,12 +2901,12 @@ describe("updateDiscussionComment / updateDiscussionReply", () => {
     let otherCtx: any;
 
     beforeAll(async () => {
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: editId("domain"),
             email: editEmail("domain"),
         });
 
-        authorUser = await UserModel.create({
+        authorUser = await userRepo.create({
             domain: testDomain._id,
             userId: editId("author"),
             email: editEmail("author"),
@@ -2910,7 +2923,7 @@ describe("updateDiscussionComment / updateDiscussionReply", () => {
             ],
         });
 
-        otherUser = await UserModel.create({
+        otherUser = await userRepo.create({
             domain: testDomain._id,
             userId: editId("other"),
             email: editEmail("other"),
@@ -2927,7 +2940,7 @@ describe("updateDiscussionComment / updateDiscussionReply", () => {
             ],
         });
 
-        course = await CourseModel.create({
+        course = await courseRepo.create({
             domain: testDomain._id,
             courseId: editId("course"),
             title: editId("course-title"),
@@ -2950,7 +2963,7 @@ describe("updateDiscussionComment / updateDiscussionReply", () => {
             discussions: true,
         });
 
-        lesson = await LessonModel.create({
+        lesson = await lessonRepo.create({
             domain: testDomain._id,
             lessonId: editId("lesson"),
             title: "Edit Lesson",

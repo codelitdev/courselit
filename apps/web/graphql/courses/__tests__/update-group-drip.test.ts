@@ -5,6 +5,15 @@ import constants from "@/config/constants";
 import { responses } from "@/config/strings";
 import { Constants } from "@courselit/common-models";
 import { updateGroup } from "../logic";
+import {
+    CourseRepository,
+    UserRepository,
+    DomainRepository,
+} from "@courselit/orm-models";
+
+const courseRepo = new CourseRepository(CourseModel);
+const domainRepo = new DomainRepository(DomainModel);
+const userRepo = new UserRepository(UserModel);
 
 const SUITE_PREFIX = `update-group-drip-${Date.now()}`;
 const id = (suffix: string) => `${SUITE_PREFIX}-${suffix}`;
@@ -15,12 +24,12 @@ describe("updateGroup drip status updates", () => {
     let adminUser: any;
 
     beforeAll(async () => {
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: id("domain"),
             email: email("domain"),
         });
 
-        adminUser = await UserModel.create({
+        adminUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("admin-user"),
             email: email("admin"),
@@ -44,7 +53,7 @@ describe("updateGroup drip status updates", () => {
 
     it("persists drip.status=false when disabling scheduled release", async () => {
         const groupId = id("group");
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course"),
             title: id("course-title"),
@@ -98,7 +107,7 @@ describe("updateGroup drip status updates", () => {
 
     it("rejects status-only drip updates when the group has no drip type yet", async () => {
         const groupId = id("group-without-drip");
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-without-drip"),
             title: id("course-title-without-drip"),
@@ -145,7 +154,7 @@ describe("updateGroup drip status updates", () => {
 
     it("rejects relative-date drip when delayInMillis is missing", async () => {
         const groupId = id("group-no-delay");
-        await CourseModel.create({
+        await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-no-delay"),
             title: id("course-title-no-delay"),
@@ -188,7 +197,7 @@ describe("updateGroup drip status updates", () => {
 
     it("rejects exact-date drip when dateInUTC is missing", async () => {
         const groupId = id("group-no-date");
-        await CourseModel.create({
+        await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-no-date"),
             title: id("course-title-no-date"),
@@ -229,7 +238,7 @@ describe("updateGroup drip status updates", () => {
 
     it("clears dateInUTC when switching from exact-date to relative-date", async () => {
         const groupId = id("group-switch-to-relative");
-        await CourseModel.create({
+        await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-switch-to-relative"),
             title: id("title-switch-to-relative"),
@@ -286,7 +295,7 @@ describe("updateGroup drip status updates", () => {
 
     it("clears delayInMillis when switching from relative-date to exact-date", async () => {
         const groupId = id("group-switch-to-exact");
-        await CourseModel.create({
+        await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course-switch-to-exact"),
             title: id("title-switch-to-exact"),

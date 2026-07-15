@@ -28,6 +28,15 @@ import {
     extractTextFromTextEditorContent,
     normalizeTextEditorContent,
 } from "@courselit/utils";
+import {
+    CommunityPostRepository,
+    CommunityCommentRepository,
+} from "@courselit/orm-models";
+
+const communityCommentRepo = new CommunityCommentRepository(
+    CommunityCommentModel,
+);
+const communityPostRepo = new CommunityPostRepository(CommunityPostModel);
 
 export type PublicPost = Omit<
     CommunityPost,
@@ -130,19 +139,19 @@ export async function getCommunityReportContent({
     let content: any = undefined;
 
     if (type === Constants.CommunityReportType.POST) {
-        content = await CommunityPostModel.findOne({
+        content = await communityPostRepo.findOne({
             domain,
             communityId,
             postId: contentId,
         });
     } else if (type === Constants.CommunityReportType.COMMENT) {
-        content = await CommunityCommentModel.findOne({
+        content = await communityCommentRepo.findOne({
             domain,
             communityId,
             commentId: contentId,
         });
     } else if (type === Constants.CommunityReportType.REPLY) {
-        const comment = await CommunityCommentModel.findOne({
+        const comment = await communityCommentRepo.findOne({
             domain,
             communityId,
             commentId: contentParentId,
@@ -175,7 +184,7 @@ export async function deleteCommunityData(
         communityId,
     });
 
-    const posts = await CommunityPostModel.find<CommunityPost>({
+    const posts = await communityPostRepo.find({
         domain: ctx.subdomain._id,
         communityId,
     });

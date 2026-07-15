@@ -11,6 +11,17 @@ import constants from "@/config/constants";
 import { deleteMedia, sealMedia } from "@/services/medialit";
 import GQLContext from "@/models/GQLContext";
 import { responses } from "@/config/strings";
+import {
+    PageRepository,
+    DomainRepository,
+    CommunityRepository,
+    CourseRepository,
+} from "@courselit/orm-models";
+
+const communityRepo = new CommunityRepository(CommunityModel);
+const courseRepo = new CourseRepository(Course);
+const domainRepo = new DomainRepository(DomainModel);
+const pageRepo = new PageRepository(PageModel);
 
 jest.mock("@/services/medialit", () => ({
     deleteMedia: jest.fn().mockResolvedValue(true),
@@ -60,7 +71,7 @@ describe("updatePage media handling", () => {
     const orphanUrl = "https://cdn.test/uploads/orphan-block/main.png";
 
     beforeAll(async () => {
-        domain = await DomainModel.create({
+        domain = await domainRepo.create({
             name: `protected-media-domain-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
             email: "owner@test.com",
             sharedWidgets: {},
@@ -94,7 +105,7 @@ describe("updatePage media handling", () => {
     });
 
     it("skips deleting media that still exists in the published layout", async () => {
-        const page = await PageModel.create({
+        const page = await pageRepo.create({
             domain: ctx.subdomain._id,
             pageId: "layout-protection",
             type: constants.site,
@@ -164,7 +175,7 @@ describe("updatePage media handling", () => {
     });
 
     it("still deletes media that is no longer referenced anywhere", async () => {
-        const page = await PageModel.create({
+        const page = await pageRepo.create({
             domain: ctx.subdomain._id,
             pageId: "layout-cleanup",
             type: constants.site,
@@ -203,7 +214,7 @@ describe("updatePage media handling", () => {
     });
 
     it("throws when requester lacks permission", async () => {
-        const page = await PageModel.create({
+        const page = await pageRepo.create({
             domain: ctx.subdomain._id,
             pageId: "permission-check",
             type: constants.site,
@@ -241,7 +252,7 @@ describe("getPage entity validation", () => {
     let ctx: GQLContext;
 
     beforeAll(async () => {
-        domain = await DomainModel.create({
+        domain = await domainRepo.create({
             name: `entity-validation-domain-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
             email: "owner@test.com",
             sharedWidgets: {},
@@ -279,7 +290,7 @@ describe("getPage entity validation", () => {
         it("returns the page when course exists and is published", async () => {
             const courseId = "test-course-id";
 
-            await Course.create({
+            await courseRepo.create({
                 courseId,
                 domain: ctx.subdomain._id,
                 published: true,
@@ -292,7 +303,7 @@ describe("getPage entity validation", () => {
                 cost: 0,
             });
 
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "product-page-1",
                 type: constants.product,
@@ -309,7 +320,7 @@ describe("getPage entity validation", () => {
         });
 
         it("returns undefined when course does not exist", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "product-page-2",
                 type: constants.product,
@@ -327,7 +338,7 @@ describe("getPage entity validation", () => {
         it("returns undefined when course exists but is not published", async () => {
             const courseId = "unpublished-course-id";
 
-            await Course.create({
+            await courseRepo.create({
                 courseId,
                 domain: ctx.subdomain._id,
                 published: false,
@@ -340,7 +351,7 @@ describe("getPage entity validation", () => {
                 cost: 0,
             });
 
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "product-page-3",
                 type: constants.product,
@@ -356,7 +367,7 @@ describe("getPage entity validation", () => {
         });
 
         it("returns undefined when course belongs to different domain", async () => {
-            const otherDomain = await DomainModel.create({
+            const otherDomain = await domainRepo.create({
                 name: "other-domain",
                 email: "other@test.com",
                 sharedWidgets: {},
@@ -365,7 +376,7 @@ describe("getPage entity validation", () => {
 
             const courseId = "different-domain-course";
 
-            await Course.create({
+            await courseRepo.create({
                 courseId,
                 domain: otherDomain._id,
                 published: true,
@@ -378,7 +389,7 @@ describe("getPage entity validation", () => {
                 cost: 0,
             });
 
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "product-page-4",
                 type: constants.product,
@@ -402,7 +413,7 @@ describe("getPage entity validation", () => {
         it("returns the page when community exists and is enabled", async () => {
             const communityId = "test-community-id";
 
-            await CommunityModel.create({
+            await communityRepo.create({
                 communityId,
                 domain: ctx.subdomain._id,
                 enabled: true,
@@ -411,7 +422,7 @@ describe("getPage entity validation", () => {
                 slug: "community-page-1",
             });
 
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "community-page-1",
                 type: constants.communityPage,
@@ -428,7 +439,7 @@ describe("getPage entity validation", () => {
         });
 
         it("returns undefined when community does not exist", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "community-page-2",
                 type: constants.communityPage,
@@ -446,7 +457,7 @@ describe("getPage entity validation", () => {
         it("returns undefined when community exists but is not enabled", async () => {
             const communityId = "disabled-community-id";
 
-            await CommunityModel.create({
+            await communityRepo.create({
                 communityId,
                 domain: ctx.subdomain._id,
                 enabled: false,
@@ -455,7 +466,7 @@ describe("getPage entity validation", () => {
                 slug: "community-page-3",
             });
 
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "community-page-3",
                 type: constants.communityPage,
@@ -471,7 +482,7 @@ describe("getPage entity validation", () => {
         });
 
         it("returns undefined when community belongs to different domain", async () => {
-            const otherDomain = await DomainModel.create({
+            const otherDomain = await domainRepo.create({
                 name: "other-community-domain",
                 email: "other-community@test.com",
                 sharedWidgets: {},
@@ -480,7 +491,7 @@ describe("getPage entity validation", () => {
 
             const communityId = "different-domain-community";
 
-            await CommunityModel.create({
+            await communityRepo.create({
                 communityId,
                 domain: otherDomain._id,
                 enabled: true,
@@ -489,7 +500,7 @@ describe("getPage entity validation", () => {
                 slug: "community-page-4",
             });
 
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "community-page-4",
                 type: constants.communityPage,
@@ -513,7 +524,7 @@ describe("getPage entity validation", () => {
         it("admin can view unpublished product page", async () => {
             const courseId = "admin-course-id";
 
-            await Course.create({
+            await courseRepo.create({
                 courseId,
                 domain: ctx.subdomain._id,
                 published: false,
@@ -526,7 +537,7 @@ describe("getPage entity validation", () => {
                 cost: 0,
             });
 
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "admin-product-page",
                 type: constants.product,
@@ -554,7 +565,7 @@ describe("getPage entity validation", () => {
         it("admin can view disabled community page", async () => {
             const communityId = "admin-community-id";
 
-            await CommunityModel.create({
+            await communityRepo.create({
                 communityId,
                 domain: ctx.subdomain._id,
                 enabled: false,
@@ -563,7 +574,7 @@ describe("getPage entity validation", () => {
                 slug: "admin-community-page",
             });
 
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "admin-community-page",
                 type: constants.communityPage,
@@ -615,7 +626,7 @@ describe("Media cleanup", () => {
     };
 
     beforeAll(async () => {
-        domain = await DomainModel.create({
+        domain = await domainRepo.create({
             name: `media-cleanup-domain-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
             email: "owner@test.com",
             sharedWidgets: {},
@@ -645,7 +656,7 @@ describe("Media cleanup", () => {
 
     it("updating title will not call deleteMedia", async () => {
         // Setup: Page with media in draft layout
-        const page = await PageModel.create({
+        const page = await pageRepo.create({
             domain: ctx.subdomain._id,
             pageId: "bug-partial-update",
             type: constants.site,
@@ -680,7 +691,7 @@ describe("Media cleanup", () => {
 
     it("orphans social image when replaced", async () => {
         // Setup: Page with social image ONLY in draft
-        const page = await PageModel.create({
+        const page = await pageRepo.create({
             domain: ctx.subdomain._id,
             pageId: "bug-social-image-orphan",
             type: constants.site,
@@ -705,7 +716,7 @@ describe("Media cleanup", () => {
 
     it("existing social image is deleted when publishing", async () => {
         // Setup: Page with media1 as socialImage, and layout awaiting publish with media2 as new socialImage
-        const page = await PageModel.create({
+        const page = await pageRepo.create({
             domain: ctx.subdomain._id,
             pageId: "bug-publish-social-orphan",
             type: constants.site,
@@ -726,7 +737,7 @@ describe("Media cleanup", () => {
 
     describe("updatePage media cleanup", () => {
         it("deletes media removed from draft layout when not in published layout", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "update-removes-media",
                 type: constants.site,
@@ -759,7 +770,7 @@ describe("Media cleanup", () => {
         });
 
         it("does NOT delete media still present in published layout", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "update-protects-published",
                 type: constants.site,
@@ -802,7 +813,7 @@ describe("Media cleanup", () => {
         });
 
         it("deletes old draftSocialImage when replaced with new one", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "update-replaces-social",
                 type: constants.site,
@@ -823,7 +834,7 @@ describe("Media cleanup", () => {
         });
 
         it("does NOT delete draftSocialImage if it is the same as published socialImage", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "update-protects-published-social",
                 type: constants.site,
@@ -845,7 +856,7 @@ describe("Media cleanup", () => {
         });
 
         it("sets draftSocialImage to null when socialImage is null", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "update-clears-draft-social-image",
                 type: constants.site,
@@ -862,7 +873,7 @@ describe("Media cleanup", () => {
                 socialImage: null,
             });
 
-            const refreshedPage = await PageModel.findOne({
+            const refreshedPage = await pageRepo.findOne({
                 _id: page._id,
             });
 
@@ -871,7 +882,7 @@ describe("Media cleanup", () => {
         });
 
         it("does NOT delete the cleared draftSocialImage if published socialImage still uses it", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "update-clears-draft-but-protects-published-social",
                 type: constants.site,
@@ -889,7 +900,7 @@ describe("Media cleanup", () => {
                 socialImage: null,
             });
 
-            const refreshedPage = await PageModel.findOne({
+            const refreshedPage = await pageRepo.findOne({
                 _id: page._id,
             });
 
@@ -898,7 +909,7 @@ describe("Media cleanup", () => {
         });
 
         it("does not delete the existing draftSocialImage when sealing the new social image fails", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "update-social-image-seal-failure",
                 type: constants.site,
@@ -923,7 +934,7 @@ describe("Media cleanup", () => {
 
             expect(deleteMedia).not.toHaveBeenCalledWith(media1);
 
-            const refreshedPage = await PageModel.findOne({
+            const refreshedPage = await pageRepo.findOne({
                 _id: page._id,
             });
 
@@ -931,7 +942,7 @@ describe("Media cleanup", () => {
         });
 
         it("handles multiple media in a single widget", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "update-multiple-media",
                 type: constants.site,
@@ -975,7 +986,7 @@ describe("Media cleanup", () => {
         });
 
         it("handles deeply nested media in widget settings", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "update-nested-media",
                 type: constants.site,
@@ -1018,7 +1029,7 @@ describe("Media cleanup", () => {
         });
 
         it("does not delete any media when updating only metadata (title/description)", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "update-metadata-only",
                 type: constants.site,
@@ -1061,7 +1072,7 @@ describe("Media cleanup", () => {
 
     describe("publish media cleanup", () => {
         it("deletes media from old published layout not in new published layout", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "publish-removes-media",
                 type: constants.site,
@@ -1087,7 +1098,7 @@ describe("Media cleanup", () => {
         });
 
         it("does NOT delete media that exists in both old and new layouts", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "publish-keeps-shared",
                 type: constants.site,
@@ -1131,7 +1142,7 @@ describe("Media cleanup", () => {
         });
 
         it("deletes old socialImage when replaced during publish", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "publish-replaces-social",
                 type: constants.site,
@@ -1150,7 +1161,7 @@ describe("Media cleanup", () => {
         });
 
         it("does NOT delete socialImage if it still exists in draftLayout", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "publish-social-in-layout",
                 type: constants.site,
@@ -1178,7 +1189,7 @@ describe("Media cleanup", () => {
         });
 
         it("clears published socialImage when draftSocialImage is null", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "publish-clears-social-image",
                 type: constants.site,
@@ -1192,7 +1203,7 @@ describe("Media cleanup", () => {
 
             await publish(page.pageId, ctx);
 
-            const refreshedPage = await PageModel.findOne({
+            const refreshedPage = await pageRepo.findOne({
                 _id: page._id,
             });
 
@@ -1204,7 +1215,7 @@ describe("Media cleanup", () => {
             // Note: When draftLayout is empty, the layout is NOT copied (checked via `if (page.draftLayout.length)`)
             // However, the media diff computation still happens: currentPublished - nextPublished
             // With empty draftLayout, nextPublishedMedia is empty, so ALL currentPublishedMedia is deleted
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "publish-empty-layouts",
                 type: constants.site,
@@ -1231,7 +1242,7 @@ describe("Media cleanup", () => {
         });
 
         it("deletes multiple media removed during publish", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "publish-removes-multiple",
                 type: constants.site,
@@ -1278,7 +1289,7 @@ describe("Media cleanup", () => {
 
     describe("edge cases", () => {
         it("handles widget with no media settings", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "no-media-widget",
                 type: constants.site,
@@ -1309,7 +1320,7 @@ describe("Media cleanup", () => {
         });
 
         it("handles media URL with different file extensions", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "media-extensions",
                 type: constants.site,
@@ -1350,7 +1361,7 @@ describe("Media cleanup", () => {
         });
 
         it("does not crash when draftLayout is empty array", async () => {
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "empty-draft-layout",
                 type: constants.site,
@@ -1383,7 +1394,7 @@ describe("Media cleanup", () => {
 
         it("correctly identifies media IDs from complex URLs", async () => {
             const complexMediaId = "abc123def456";
-            const page = await PageModel.create({
+            const page = await pageRepo.create({
                 domain: ctx.subdomain._id,
                 pageId: "complex-url",
                 type: constants.site,

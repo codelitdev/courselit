@@ -8,6 +8,9 @@ import { generateUniqueId, slugify } from "@courselit/utils";
 import { getPlans } from "../paymentplans/logic";
 import mongoose from "mongoose";
 import { responses } from "../../config/strings";
+import { PageRepository } from "@courselit/orm-models";
+
+const pageRepo = new PageRepository(PageModel);
 
 const MAX_SLUG_ATTEMPTS = 100;
 const MAX_SLUG_LENGTH = 200;
@@ -46,7 +49,7 @@ export async function generateUniquePageId(
     let suffix = 0;
 
     while (suffix < MAX_SLUG_ATTEMPTS) {
-        const existing = await PageModel.findOne({
+        const existing = await pageRepo.findOne({
             domain: domainId,
             pageId: candidate,
         });

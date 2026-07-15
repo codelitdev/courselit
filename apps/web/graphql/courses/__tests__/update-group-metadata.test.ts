@@ -3,6 +3,15 @@ import UserModel from "@models/User";
 import CourseModel from "@models/Course";
 import constants from "@/config/constants";
 import { updateGroup } from "../logic";
+import {
+    CourseRepository,
+    UserRepository,
+    DomainRepository,
+} from "@courselit/orm-models";
+
+const courseRepo = new CourseRepository(CourseModel);
+const domainRepo = new DomainRepository(DomainModel);
+const userRepo = new UserRepository(UserModel);
 
 const SUITE_PREFIX = `update-group-metadata-${Date.now()}`;
 const id = (suffix: string) => `${SUITE_PREFIX}-${suffix}`;
@@ -13,12 +22,12 @@ describe("updateGroup metadata updates", () => {
     let adminUser: any;
 
     beforeAll(async () => {
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: id("domain"),
             email: email("domain"),
         });
 
-        adminUser = await UserModel.create({
+        adminUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("admin-user"),
             email: email("admin"),
@@ -42,7 +51,7 @@ describe("updateGroup metadata updates", () => {
 
     it("updates group name, rank and collapsed without touching lessonsOrder", async () => {
         const groupId = id("group");
-        const course = await CourseModel.create({
+        const course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course"),
             title: id("course-title"),

@@ -4,6 +4,10 @@ import { responses } from "@/config/strings";
 import DomainModel from "@/models/Domain";
 import UserModel from "@/models/User";
 import { resetPaymentMethod } from "../logic";
+import { DomainRepository, UserRepository } from "@courselit/orm-models";
+
+const domainRepo = new DomainRepository(DomainModel);
+const userRepo = new UserRepository(UserModel);
 
 const SUITE_PREFIX = `payment-settings-${Date.now()}`;
 const id = (suffix: string) => `${SUITE_PREFIX}-${suffix}`;
@@ -16,7 +20,7 @@ describe("Payment settings", () => {
     let mockCtx: any;
 
     beforeAll(async () => {
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: id("domain"),
             email: email("domain"),
             settings: {
@@ -26,7 +30,7 @@ describe("Payment settings", () => {
             },
         });
 
-        adminUser = await UserModel.create({
+        adminUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("admin"),
             email: email("admin"),
@@ -37,7 +41,7 @@ describe("Payment settings", () => {
             purchases: [],
         });
 
-        regularUser = await UserModel.create({
+        regularUser = await userRepo.create({
             domain: testDomain._id,
             userId: id("regular"),
             email: email("regular"),
@@ -94,7 +98,7 @@ describe("Payment settings", () => {
             UIConstants.PAYMENT_METHOD_NONE,
         );
 
-        const updatedDomain = await DomainModel.findById(testDomain._id);
+        const updatedDomain = await domainRepo.findById(testDomain._id);
         expect(updatedDomain?.settings?.paymentMethod).toBe(
             UIConstants.PAYMENT_METHOD_NONE,
         );

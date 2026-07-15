@@ -13,6 +13,17 @@ import {
 } from "../logic";
 import { responses } from "@/config/strings";
 import { sealMedia } from "@/services/medialit";
+import {
+    UserRepository,
+    LessonRepository,
+    CourseRepository,
+    DomainRepository,
+} from "@courselit/orm-models";
+
+const courseRepo = new CourseRepository(CourseModel);
+const domainRepo = new DomainRepository(DomainModel);
+const lessonRepo = new LessonRepository(LessonModel);
+const userRepo = new UserRepository(UserModel);
 
 jest.mock("@/services/medialit", () => ({
     deleteMedia: jest.fn(),
@@ -47,13 +58,13 @@ describe("Lesson visibility and progress", () => {
     let otherManagerCtx: any;
 
     beforeAll(async () => {
-        testDomain = await DomainModel.create({
+        testDomain = await domainRepo.create({
             name: id("domain"),
             email: email("domain"),
             features: [],
         });
 
-        creator = await UserModel.create({
+        creator = await userRepo.create({
             domain: testDomain._id,
             userId: id("creator"),
             email: email("creator"),
@@ -64,7 +75,7 @@ describe("Lesson visibility and progress", () => {
             purchases: [],
         });
 
-        student = await UserModel.create({
+        student = await userRepo.create({
             domain: testDomain._id,
             userId: id("student"),
             email: email("student"),
@@ -75,7 +86,7 @@ describe("Lesson visibility and progress", () => {
             purchases: [],
         });
 
-        manageAnyAdmin = await UserModel.create({
+        manageAnyAdmin = await userRepo.create({
             domain: testDomain._id,
             userId: id("manage-any-admin"),
             email: email("manage-any-admin"),
@@ -86,7 +97,7 @@ describe("Lesson visibility and progress", () => {
             purchases: [],
         });
 
-        ownerManager = await UserModel.create({
+        ownerManager = await userRepo.create({
             domain: testDomain._id,
             userId: id("owner-manager"),
             email: email("owner-manager"),
@@ -97,7 +108,7 @@ describe("Lesson visibility and progress", () => {
             purchases: [],
         });
 
-        otherManager = await UserModel.create({
+        otherManager = await userRepo.create({
             domain: testDomain._id,
             userId: id("other-manager"),
             email: email("other-manager"),
@@ -112,7 +123,7 @@ describe("Lesson visibility and progress", () => {
         quizGroupId = id("quiz-group");
         quizDripGroupId = id("quiz-drip-group");
 
-        course = await CourseModel.create({
+        course = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("course"),
             title: "Visibility Course",
@@ -139,7 +150,7 @@ describe("Lesson visibility and progress", () => {
             ],
         });
 
-        quizCourse = await CourseModel.create({
+        quizCourse = await courseRepo.create({
             domain: testDomain._id,
             courseId: id("quiz-course"),
             title: "Quiz Visibility Course",
@@ -177,7 +188,7 @@ describe("Lesson visibility and progress", () => {
             ],
         });
 
-        publishedLessonOne = await LessonModel.create({
+        publishedLessonOne = await lessonRepo.create({
             domain: testDomain._id,
             courseId: course.courseId,
             lessonId: id("published-1"),
@@ -193,7 +204,7 @@ describe("Lesson visibility and progress", () => {
             groupId,
         });
 
-        unpublishedLesson = await LessonModel.create({
+        unpublishedLesson = await lessonRepo.create({
             domain: testDomain._id,
             courseId: course.courseId,
             lessonId: id("unpublished"),
@@ -209,7 +220,7 @@ describe("Lesson visibility and progress", () => {
             groupId,
         });
 
-        publishedLessonTwo = await LessonModel.create({
+        publishedLessonTwo = await lessonRepo.create({
             domain: testDomain._id,
             courseId: course.courseId,
             lessonId: id("published-2"),
@@ -239,7 +250,7 @@ describe("Lesson visibility and progress", () => {
             passingGrade: 70,
         };
 
-        unpublishedQuizLesson = await LessonModel.create({
+        unpublishedQuizLesson = await lessonRepo.create({
             domain: testDomain._id,
             courseId: quizCourse.courseId,
             lessonId: id("unpublished-quiz"),
@@ -252,7 +263,7 @@ describe("Lesson visibility and progress", () => {
             groupId: quizGroupId,
         });
 
-        dripQuizLesson = await LessonModel.create({
+        dripQuizLesson = await lessonRepo.create({
             domain: testDomain._id,
             courseId: quizCourse.courseId,
             lessonId: id("drip-quiz"),
@@ -333,7 +344,7 @@ describe("Lesson visibility and progress", () => {
     });
 
     beforeEach(async () => {
-        const freshStudent = await UserModel.findById(student._id);
+        const freshStudent = await userRepo.findById(student._id);
         const purchase = freshStudent?.purchases.find(
             (item: any) => item.courseId === course.courseId,
         );

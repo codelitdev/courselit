@@ -19,6 +19,10 @@ import {
     checkOwnershipWithoutModel,
 } from "@/lib/graphql";
 import { getMembershipStatus } from "../users/logic";
+import { LessonRepository, CourseRepository } from "@courselit/orm-models";
+
+const courseRepo = new CourseRepository(CourseModel);
+const lessonRepo = new LessonRepository(LessonModel);
 
 const { permissions } = appConstants;
 
@@ -84,7 +88,7 @@ export async function validateDiscussionTargetForLearner({
         throw new Error(responses.action_not_allowed);
     }
 
-    const product = await CourseModel.findOne({
+    const product = await courseRepo.findOne({
         domain: ctx.subdomain._id,
         courseId: productId,
     });
@@ -115,7 +119,7 @@ export async function validateDiscussionTargetForLearner({
 
     let lesson;
     if (isAdminOrCreator) {
-        lesson = await LessonModel.findOne({
+        lesson = await lessonRepo.findOne({
             lessonId: entityId,
             domain: ctx.subdomain._id,
             courseId: productId,
