@@ -29,6 +29,11 @@ interface CommunityPostCardProps {
     formatTimestamp: (value?: string) => string;
     renderMediaPreview: (media: CommunityMedia) => React.ReactNode;
     onOpen: (postId: string) => void;
+    /**
+     * Navigate to the post focused on the comment composer (e.g. ?reply=1).
+     * Falls back to `onOpen` when omitted.
+     */
+    onReply?: (postId: string) => void;
     onTogglePin?: (postId: string, e?: React.MouseEvent) => void;
     onReact?: (postId: string, emoji: string, e?: React.MouseEvent) => void;
 }
@@ -41,6 +46,7 @@ export default function CommunityPostCard({
     formatTimestamp,
     renderMediaPreview,
     onOpen,
+    onReply,
     onTogglePin,
     onReact,
 }: CommunityPostCardProps) {
@@ -142,7 +148,7 @@ export default function CommunityPostCard({
                     reactions={post.reactions || []}
                     onReact={(emoji) => onReact?.(post.postId, emoji)}
                     showReplyButton
-                    onReply={() => onOpen(post.postId)}
+                    onReply={() => (onReply ?? onOpen)(post.postId)}
                     repliesCount={post.commentsCount}
                 />
             </CardFooter>

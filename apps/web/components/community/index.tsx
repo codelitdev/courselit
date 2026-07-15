@@ -50,6 +50,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import CommunityPostCard from "./post-card";
 import CommunityPostMediaPreview from "./post-media-preview";
+import { communityPostHref } from "@/lib/community-post-navigation";
 
 const CreatePostDialog = dynamic(() => import("./create-post-dialog"));
 
@@ -982,7 +983,14 @@ export function CommunityForum({
                                         renderMediaPreview={renderMediaPreview}
                                         onOpen={(postId) =>
                                             router.push(
-                                                `/dashboard/community/${id}/${postId}`,
+                                                communityPostHref(id!, postId),
+                                            )
+                                        }
+                                        onReply={(postId) =>
+                                            router.push(
+                                                communityPostHref(id!, postId, {
+                                                    reply: true,
+                                                }),
                                             )
                                         }
                                         onTogglePin={togglePin}

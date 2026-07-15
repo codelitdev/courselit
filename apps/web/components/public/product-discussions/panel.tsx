@@ -77,11 +77,7 @@ import {
     appendCourseViewerSessionParamsToHref,
     getCourseViewerSessionParams,
 } from "@/lib/course-viewer-session-params";
-import {
-    focusHashTarget,
-    getCurrentHashTargetId,
-    scrollToHashTarget,
-} from "@/lib/hash-target";
+import { useHashTargetScroll } from "@/hooks/use-hash-target-scroll";
 import {
     Dialog,
     DialogContent,
@@ -303,9 +299,10 @@ export default function ProductDiscussionPanel({
         string,
         unknown
     > | null>(null);
-    const [hashTargetId, setHashTargetId] = useState(() =>
-        getCurrentHashTargetId(),
-    );
+    const { hashTargetId, focusTarget } = useHashTargetScroll({
+        contentReady: comments.length > 0,
+        scopeKey: `${productId}:${entityId}`,
+    });
     const locallyCreatedTargetIdRef = useRef<string | null>(null);
     const highlightedTarget = useMemo(
         () => getDiscussionTargetFromHash(hashTargetId),
@@ -313,21 +310,9 @@ export default function ProductDiscussionPanel({
     );
 
     useEffect(() => {
-        function syncTargetIdFromHash() {
-            setHashTargetId(getCurrentHashTargetId());
-        }
-
-        syncTargetIdFromHash();
-        window.addEventListener("hashchange", syncTargetIdFromHash);
-        return () =>
-            window.removeEventListener("hashchange", syncTargetIdFromHash);
-    }, []);
-
-    useEffect(() => {
         setComments([]);
         setNextCursor(undefined);
         setHasMore(false);
-        setHashTargetId(getCurrentHashTargetId());
     }, [productId, entityId]);
 
     useEffect(
@@ -346,14 +331,6 @@ export default function ProductDiscussionPanel({
             highlightedTarget?.contentId,
         ],
     );
-
-    useEffect(() => {
-        if (!hashTargetId) {
-            return;
-        }
-
-        scrollToHashTarget({ targetId: hashTargetId });
-    }, [hashTargetId, comments.length]);
 
     useEffect(() => {
         if (!replyingTo || !replyComposerRef.current) {
@@ -387,8 +364,7 @@ export default function ProductDiscussionPanel({
 
     function focusCreatedContent(targetId: string) {
         locallyCreatedTargetIdRef.current = targetId;
-        focusHashTarget({ targetId });
-        setHashTargetId(targetId);
+        focusTarget(targetId);
     }
 
     async function loadComments(cursor?: string) {

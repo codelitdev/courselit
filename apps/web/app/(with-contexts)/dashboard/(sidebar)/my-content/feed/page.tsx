@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import {
     CommunityMedia,
     CommunityPost,
@@ -14,7 +14,7 @@ import PostCardSkeleton from "@components/community/post-card-skeleton";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import AdminEmptyState from "@components/admin/empty-state";
-import { PaginatedTable } from "@courselit/components-library";
+import { PaginatedTable, useToast } from "@courselit/components-library";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,9 @@ import {
     MY_CONTENT_FEED_COMMUNITIES_EMPTY,
     MY_CONTENT_FEED_COMMUNITIES_TITLE,
     MY_CONTENT_FEED_EMPTY_TITLE,
+    TOAST_TITLE_ERROR,
 } from "@ui-config/strings";
+import { communityPostHref } from "@/lib/community-post-navigation";
 
 type FeedPost = CommunityPost & {
     community: {
@@ -90,6 +92,7 @@ export default function Page() {
     const { profile } = useContext(ProfileContext);
     const address = useContext(AddressContext);
     const router = useRouter();
+    const { toast } = useToast();
     const { hasEnabledCommunities, loading: enabledCommunitiesLoading } =
         useEnabledCommunities();
 
@@ -131,6 +134,20 @@ export default function Page() {
                             }
                         }
                         likesCount
+                        reactions {
+                            emoji
+                            count
+                            hasReacted
+                            reactors {
+                                userId
+                                name
+                                avatar {
+                                    mediaId
+                                    file
+                                    thumbnail
+                                }
+                            }
+                        }
                         commentsCount
                         updatedAt
                         hasLiked
@@ -223,6 +240,69 @@ export default function Page() {
     ]);
 
     const formatTimestamp = (value?: string) => formattedLocaleDate(value);
+
+    const handleReact = useCallback(
+        async (
+            communityId: string,
+            postId: string,
+            emoji: string,
+            e?: React.MouseEvent,
+        ) => {
+            e?.stopPropagation();
+
+            const query = `
+                mutation ($communityId: String!, $postId: String!, $emoji: String!) {
+                    togglePostReaction(communityId: $communityId, postId: $postId, emoji: $emoji) {
+                        postId
+                        reactions {
+                            emoji
+                            count
+                            hasReacted
+                            reactors {
+                                userId
+                                name
+                                avatar {
+                                    mediaId
+                                    file
+                                    thumbnail
+                                }
+                            }
+                        }
+                    }
+                }
+            `;
+            try {
+                const fetch = new FetchBuilder()
+                    .setUrl(`${address.backend}/api/graph`)
+                    .setPayload({
+                        query,
+                        variables: { postId, communityId, emoji },
+                    })
+                    .setIsGraphQLEndpoint(true)
+                    .build();
+                const response = await fetch.exec();
+                if (response.togglePostReaction) {
+                    setPosts((prevPosts) =>
+                        prevPosts.map((p) =>
+                            p.postId === postId
+                                ? {
+                                      ...p,
+                                      reactions:
+                                          response.togglePostReaction.reactions,
+                                  }
+                                : p,
+                        ),
+                    );
+                }
+            } catch (err: any) {
+                toast({
+                    title: TOAST_TITLE_ERROR,
+                    description: err.message,
+                });
+            }
+        },
+        [address.backend, toast],
+    );
 
     const communitiesPanel = (
         <Card className="h-fit">
@@ -395,8 +475,23 @@ export default function Page() {
                             renderMediaPreview={renderMediaPreview}
                             onOpen={(postId) =>
                                 router.push(
-                                    `/dashboard/community/${post.community.id}/${postId}`,
+                                    communityPostHref(
+                                        post.community.id,
+                                        postId,
+                                    ),
                                 )
+                            }
+                            onReply={(postId) =>
+                                router.push(
+                                    communityPostHref(
+                                        post.community.id,
+                                        postId,
+                                        { reply: true },
+                                    ),
+                                )
+                            }
+                            onReact={(postId, emoji, e) =>
+                                handleReact(post.community.id, postId, emoji, e)
                             }
                         />
                     ))}
@@ -424,8 +519,23 @@ export default function Page() {
                             renderMediaPreview={renderMediaPreview}
                             onOpen={(postId) =>
                                 router.push(
-                                    `/dashboard/community/${post.community.id}/${postId}`,
+                                    communityPostHref(
+                                        post.community.id,
+                                        postId,
+                                    ),
                                 )
+                            }
+                            onReply={(postId) =>
+                                router.push(
+                                    communityPostHref(
+                                        post.community.id,
+                                        postId,
+                                        { reply: true },
+                                    ),
+                                )
+                            }
+                            onReact={(postId, emoji, e) =>
+                                handleReact(post.community.id, postId, emoji, e)
                             }
                         />
                     ))}

@@ -29,7 +29,17 @@ jest.mock("@courselit/utils", () => {
 
 jest.mock("@/lib/hash-target", () => ({
     focusHashTarget: jest.fn(),
+    getCurrentHashTargetId: jest.fn(() => ""),
     scrollToHashTarget: jest.fn(() => false),
+    scheduleScrollToHashTarget: jest.fn(() => () => {}),
+}));
+
+jest.mock("next/navigation", () => ({
+    useRouter: () => ({
+        replace: jest.fn(),
+        push: jest.fn(),
+    }),
+    useSearchParams: () => new URLSearchParams(""),
 }));
 
 jest.mock("../../ui/button", () => ({

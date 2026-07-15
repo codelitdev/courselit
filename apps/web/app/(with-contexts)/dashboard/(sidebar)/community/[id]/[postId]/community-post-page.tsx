@@ -22,6 +22,7 @@ import { CommunityInfo } from "@components/community/info";
 import MembershipStatus from "@components/community/membership-status";
 import CommentSection from "@components/community/comment-section";
 import { ReactionsBar } from "@components/community/reactions-bar";
+import { focusCommunityPostCommentComposer } from "@/lib/community-post-navigation";
 import dynamic from "next/dynamic";
 import { useMediaLit, useToast } from "@courselit/components-library";
 import {
@@ -676,12 +677,7 @@ export default function CommunityPostPage({
                             showReplyButton
                             repliesCount={currentPost.commentsCount}
                             onReply={() => {
-                                document
-                                    .getElementById("community-post-comments")
-                                    ?.scrollIntoView({
-                                        behavior: "smooth",
-                                        block: "start",
-                                    });
+                                focusCommunityPostCommentComposer();
                             }}
                         />
                         {membership && (

@@ -13,11 +13,14 @@ import {
     compareCommunityReactionsStable,
     Membership,
 } from "@courselit/common-models";
+import { useHashTargetScroll } from "@/hooks/use-hash-target-scroll";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
-    focusHashTarget,
-    getCurrentHashTargetId,
-    scrollToHashTarget,
-} from "@/lib/hash-target";
+    COMMUNITY_POST_COMMENT_COMPOSER_ID,
+    focusCommunityPostCommentComposer,
+    shouldFocusCommunityPostComposer,
+    stripCommunityPostReplyFromUrl,
+} from "@/lib/community-post-navigation";
 
 function toggleReactionLocally(
     reactions: CommunityReaction[] | undefined,
@@ -84,12 +87,8 @@ function toggleReactionLocally(
     );
 }
 
-const focusCommentTarget = (targetId: string) => {
-    focusHashTarget({
-        targetId,
-        eventName: "community-comment-target-change",
-    });
-};
+/** pushState does not fire hashchange; notifications listen for this event. */
+const COMMUNITY_COMMENT_TARGET_CHANGE_EVENT = "community-comment-target-change";
 
 const REACTIONS_FRAGMENT = `
     reactions {
@@ -178,69 +177,51 @@ export default function CommentSection({
     const { profile } = useContext(ProfileContext);
     const { toast } = useToast();
     const [isPosting, setIsPosting] = useState(false);
-    // Track hash target in state so notification / reply focus can re-scroll
-    // without depending on the full `comments` array (reaction updates would
-    // re-scroll and cause layout jump if we keyed off array identity).
-    const [hashTargetId, setHashTargetId] = useState(() =>
-        getCurrentHashTargetId(),
-    );
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const focusComposerFromQuery =
+        shouldFocusCommunityPostComposer(searchParams);
+
+    // Shared with product discussions: hash = content target only.
+    // contentReady uses comments.length so reaction updates do not re-scroll.
+    const { focusTarget } = useHashTargetScroll({
+        contentReady: comments.length > 0,
+        syncEvents: [COMMUNITY_COMMENT_TARGET_CHANGE_EVENT],
+        scopeKey: `${communityId}:${postId}`,
+    });
+
+    const focusCommentTarget = (targetId: string) => {
+        focusTarget(targetId, {
+            eventName: COMMUNITY_COMMENT_TARGET_CHANGE_EVENT,
+        });
+    };
 
     useEffect(() => {
         loadPost();
         loadComments();
     }, []);
 
+    // Feed/community Reply uses ?reply=1 (not hash) so notification hashes stay free.
     useEffect(() => {
-        const syncFromHash = () => {
-            setHashTargetId(getCurrentHashTargetId());
-        };
-
-        // Client navigations / pushState may set the hash after mount.
-        syncFromHash();
-        window.addEventListener("hashchange", syncFromHash);
-        // pushState does not fire hashchange; notifications use this event.
-        window.addEventListener(
-            "community-comment-target-change",
-            syncFromHash,
-        );
-
-        return () => {
-            window.removeEventListener("hashchange", syncFromHash);
-            window.removeEventListener(
-                "community-comment-target-change",
-                syncFromHash,
-            );
-        };
-    }, []);
-
-    useEffect(() => {
-        if (!hashTargetId || comments.length === 0) {
+        if (!focusComposerFromQuery || !profile?.name) {
             return;
         }
 
-        // Defer until after paint so nested reply nodes are in the DOM.
-        let cancelled = false;
-        const frame = window.requestAnimationFrame(() => {
-            if (cancelled) {
-                return;
-            }
-            if (!scrollToHashTarget({ targetId: hashTargetId })) {
-                // Retry once for nested replies that paint a frame later.
-                window.requestAnimationFrame(() => {
-                    if (!cancelled) {
-                        scrollToHashTarget({ targetId: hashTargetId });
-                    }
-                });
-            }
+        return focusCommunityPostCommentComposer({
+            stillWanted: () =>
+                shouldFocusCommunityPostComposer(
+                    new URLSearchParams(window.location.search),
+                ),
+            onFocused: () => {
+                // Consume-once: strip reply=1 so refresh/remount does not re-focus
+                // and notification #commentId deep-links are never blocked.
+                const next = stripCommunityPostReplyFromUrl(
+                    window.location.href,
+                );
+                router.replace(next, { scroll: false });
+            },
         });
-
-        return () => {
-            cancelled = true;
-            window.cancelAnimationFrame(frame);
-        };
-        // Intentionally depend on comments.length (not `comments`) so reaction
-        // optimistic updates — which keep the same count — do not re-scroll.
-    }, [hashTargetId, comments.length]);
+    }, [focusComposerFromQuery, profile?.name, router]);
 
     useEffect(() => {
         if (post && typeof post.commentsCount !== "undefined") {
@@ -623,7 +604,10 @@ export default function CommentSection({
                 </div>
             )}
             {profile?.name && (
-                <div className="flex flex-col gap-2">
+                <div
+                    id={COMMUNITY_POST_COMMENT_COMPOSER_ID}
+                    className="flex flex-col gap-2"
+                >
                     <Textarea
                         placeholder="Add a comment..."
                         value={content}
