@@ -15,11 +15,11 @@ import {
     updateCommunityPost,
     joinCommunity,
     updateMemberStatus,
-    togglePostLike,
+    togglePostReaction,
     togglePinned,
     postComment,
-    toggleCommentLike,
-    toggleCommentReplyLike,
+    toggleCommentReaction,
+    toggleCommentReplyReaction,
     deleteComment,
     leaveCommunity,
     deleteCommunity,
@@ -274,18 +274,6 @@ const mutations = {
                 ctx,
             }),
     },
-    togglePostLike: {
-        type: types.communityPost,
-        args: {
-            communityId: { type: new GraphQLNonNull(GraphQLString) },
-            postId: { type: new GraphQLNonNull(GraphQLString) },
-        },
-        resolve: async (
-            _: any,
-            { communityId, postId }: { communityId: string; postId: string },
-            ctx: GQLContext,
-        ) => togglePostLike({ communityId, postId, ctx }),
-    },
     togglePinned: {
         type: types.communityPost,
         args: {
@@ -334,54 +322,6 @@ const mutations = {
                 media,
                 parentCommentId,
                 parentReplyId,
-                ctx,
-            }),
-    },
-    toggleCommentLike: {
-        type: types.communityComment,
-        args: {
-            communityId: { type: new GraphQLNonNull(GraphQLString) },
-            postId: { type: new GraphQLNonNull(GraphQLString) },
-            commentId: { type: new GraphQLNonNull(GraphQLString) },
-        },
-        resolve: async (
-            _: any,
-            {
-                communityId,
-                postId,
-                commentId,
-            }: { communityId: string; postId: string; commentId: string },
-            ctx: GQLContext,
-        ) => toggleCommentLike({ communityId, postId, commentId, ctx }),
-    },
-    toggleCommentReplyLike: {
-        type: types.communityComment,
-        args: {
-            communityId: { type: new GraphQLNonNull(GraphQLString) },
-            postId: { type: new GraphQLNonNull(GraphQLString) },
-            commentId: { type: new GraphQLNonNull(GraphQLString) },
-            replyId: { type: new GraphQLNonNull(GraphQLString) },
-        },
-        resolve: async (
-            _: any,
-            {
-                communityId,
-                postId,
-                commentId,
-                replyId,
-            }: {
-                communityId: string;
-                postId: string;
-                commentId: string;
-                replyId: string;
-            },
-            ctx: GQLContext,
-        ) =>
-            toggleCommentReplyLike({
-                communityId,
-                postId,
-                commentId,
-                replyId,
                 ctx,
             }),
     },
@@ -486,6 +426,89 @@ const mutations = {
                 communityId,
                 reportId,
                 rejectionReason,
+                ctx,
+            }),
+    },
+    togglePostReaction: {
+        type: types.communityPost,
+        args: {
+            communityId: { type: new GraphQLNonNull(GraphQLString) },
+            postId: { type: new GraphQLNonNull(GraphQLString) },
+            emoji: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (
+            _: any,
+            {
+                communityId,
+                postId,
+                emoji,
+            }: { communityId: string; postId: string; emoji: string },
+            ctx: GQLContext,
+        ) => togglePostReaction({ communityId, postId, emoji, ctx }),
+    },
+    toggleCommentReaction: {
+        type: types.communityComment,
+        args: {
+            communityId: { type: new GraphQLNonNull(GraphQLString) },
+            postId: { type: new GraphQLNonNull(GraphQLString) },
+            commentId: { type: new GraphQLNonNull(GraphQLString) },
+            emoji: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (
+            _: any,
+            {
+                communityId,
+                postId,
+                commentId,
+                emoji,
+            }: {
+                communityId: string;
+                postId: string;
+                commentId: string;
+                emoji: string;
+            },
+            ctx: GQLContext,
+        ) =>
+            toggleCommentReaction({
+                communityId,
+                postId,
+                commentId,
+                emoji,
+                ctx,
+            }),
+    },
+    toggleCommentReplyReaction: {
+        type: types.communityComment,
+        args: {
+            communityId: { type: new GraphQLNonNull(GraphQLString) },
+            postId: { type: new GraphQLNonNull(GraphQLString) },
+            commentId: { type: new GraphQLNonNull(GraphQLString) },
+            replyId: { type: new GraphQLNonNull(GraphQLString) },
+            emoji: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        resolve: async (
+            _: any,
+            {
+                communityId,
+                postId,
+                commentId,
+                replyId,
+                emoji,
+            }: {
+                communityId: string;
+                postId: string;
+                commentId: string;
+                replyId: string;
+                emoji: string;
+            },
+            ctx: GQLContext,
+        ) =>
+            toggleCommentReplyReaction({
+                communityId,
+                postId,
+                commentId,
+                replyId,
+                emoji,
                 ctx,
             }),
     },

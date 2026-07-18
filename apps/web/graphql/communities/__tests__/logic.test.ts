@@ -10,10 +10,18 @@ import {
     getFeedCount,
     getCommunityReports,
     reportCommunityContent,
+    togglePostReaction,
+    toggleCommentReaction,
+    toggleCommentReplyReaction,
+    getReactionsForEntity,
+    deleteCommunityPost,
+    deleteCommunityPosts,
+    deleteComment,
 } from "../logic";
 import CommunityModel from "@models/Community";
 import CommunityPostModel from "@models/CommunityPost";
 import CommunityCommentModel from "@models/CommunityComment";
+import CommunityReactionModel from "@models/CommunityReaction";
 import CommunityReportModel from "@models/CommunityReport";
 import MembershipModel from "@models/Membership";
 import PaymentPlanModel from "@models/PaymentPlan";
@@ -21,7 +29,11 @@ import PageModel from "@models/Page";
 import DomainModel from "@models/Domain";
 import UserModel from "@models/User";
 import constants from "@/config/constants";
-import { Constants, TextEditorContent } from "@courselit/common-models";
+import {
+    COMMUNITY_HEART_EMOJI,
+    Constants,
+    TextEditorContent,
+} from "@courselit/common-models";
 
 jest.mock("@/services/queue");
 
@@ -251,14 +263,14 @@ describe("Community Logic - Comment Count Tests", () => {
                         replyId: "reply-1",
                         userId: adminUser.userId,
                         content: "First reply",
-                        likes: [],
+                        reactions: {},
                         deleted: false,
                     },
                     {
                         replyId: "reply-2",
                         userId: regularUser.userId,
                         content: "Second reply",
-                        likes: [],
+                        reactions: {},
                         deleted: false,
                     },
                 ],
@@ -283,14 +295,14 @@ describe("Community Logic - Comment Count Tests", () => {
                         replyId: "reply-1-1",
                         userId: adminUser.userId,
                         content: "Reply to first",
-                        likes: [],
+                        reactions: {},
                         deleted: false,
                     },
                     {
                         replyId: "reply-1-2",
                         userId: regularUser.userId,
                         content: "Another reply to first",
-                        likes: [],
+                        reactions: {},
                         deleted: false,
                     },
                 ],
@@ -309,7 +321,7 @@ describe("Community Logic - Comment Count Tests", () => {
                         replyId: "reply-2-1",
                         userId: regularUser.userId,
                         content: "Reply to second",
-                        likes: [],
+                        reactions: {},
                         deleted: false,
                     },
                 ],
@@ -373,7 +385,7 @@ describe("Community Logic - Comment Count Tests", () => {
                         replyId: "reply-active",
                         userId: adminUser.userId,
                         content: "Active reply",
-                        likes: [],
+                        reactions: {},
                         deleted: false,
                     },
                 ],
@@ -484,6 +496,7 @@ describe("Community Logic - Feed Tests", () => {
     });
 
     afterEach(async () => {
+        await CommunityReactionModel.deleteMany({ domain: testDomain._id });
         await CommunityCommentModel.deleteMany({ domain: testDomain._id });
         await CommunityPostModel.deleteMany({ domain: testDomain._id });
         await MembershipModel.deleteMany({
@@ -493,6 +506,7 @@ describe("Community Logic - Feed Tests", () => {
     });
 
     afterAll(async () => {
+        await CommunityReactionModel.deleteMany({ domain: testDomain._id });
         await CommunityCommentModel.deleteMany({ domain: testDomain._id });
         await CommunityPostModel.deleteMany({ domain: testDomain._id });
         await MembershipModel.deleteMany({ domain: testDomain._id });
@@ -538,7 +552,6 @@ describe("Community Logic - Feed Tests", () => {
                 title: "Older post",
                 content: "Older content",
                 category: "General",
-                likes: [],
                 deleted: false,
                 updatedAt: new Date("2026-01-01T00:00:00.000Z"),
             },
@@ -550,11 +563,17 @@ describe("Community Logic - Feed Tests", () => {
                 title: "Newest post",
                 content: "Newest content",
                 category: "General",
-                likes: [regularUser.userId],
                 deleted: false,
                 updatedAt: new Date("2026-02-01T00:00:00.000Z"),
             },
         ]);
+
+        await togglePostReaction({
+            ctx: mockCtx,
+            communityId: communityTwo.communityId,
+            postId: "feed-post-2",
+            emoji: COMMUNITY_HEART_EMOJI,
+        });
 
         const feed = await getFeed({ ctx: mockCtx, page: 1, limit: 1 });
         const count = await getFeedCount({ ctx: mockCtx });
@@ -592,7 +611,7 @@ describe("Community Logic - Feed Tests", () => {
             title: "Pending membership post",
             content: "Should not appear",
             category: "General",
-            likes: [],
+            reactions: {},
             deleted: false,
         });
 
@@ -759,5 +778,711 @@ describe("Community Logic - Enabled Communities Count Tests", () => {
             communities.map((community) => community.communityId).sort(),
         ).toEqual(["admin-disabled-community", "admin-enabled-community"]);
         expect(count).toBe(2);
+    });
+});
+
+describe("Community Logic - Reactions", () => {
+    let testDomain: any;
+    let adminUser: any;
+    let regularUser: any;
+    let community: any;
+    let post: any;
+    let adminCtx: any;
+    let regularCtx: any;
+
+    beforeAll(async () => {
+        const suffix = `rxn-${Date.now()}`;
+        testDomain = await DomainModel.create({
+            name: `test-domain-${suffix}`,
+            email: `rxn-${suffix}@example.com`,
+        });
+
+        adminUser = await UserModel.create({
+            domain: testDomain._id,
+            userId: `admin-${suffix}`,
+            email: `admin-${suffix}@example.com`,
+            name: "Admin User",
+            permissions: [constants.permissions.manageCommunity],
+            active: true,
+            unsubscribeToken: `unsub-admin-${suffix}`,
+        });
+
+        regularUser = await UserModel.create({
+            domain: testDomain._id,
+            userId: `regular-${suffix}`,
+            email: `regular-${suffix}@example.com`,
+            name: "Regular User",
+            permissions: [],
+            active: true,
+            unsubscribeToken: `unsub-regular-${suffix}`,
+        });
+
+        await PaymentPlanModel.create({
+            domain: testDomain._id,
+            planId: `plan-${suffix}`,
+            userId: adminUser.userId,
+            entityId: "internal",
+            entityType: Constants.MembershipEntityType.COURSE,
+            type: "free",
+            name: constants.internalPaymentPlanName,
+            internal: true,
+            interval: "monthly",
+            cost: 0,
+            currencyISOCode: "USD",
+        });
+
+        await PageModel.create({
+            domain: testDomain._id,
+            pageId: `page-${suffix}`,
+            type: constants.communityPage,
+            name: "Community Page",
+            entityId: `comm-${suffix}`,
+            layout: [],
+            creatorId: adminUser.userId,
+        });
+
+        community = await CommunityModel.create({
+            domain: testDomain._id,
+            communityId: `comm-${suffix}`,
+            name: "Reactions Community",
+            pageId: `page-${suffix}`,
+            slug: `comm-${suffix}`,
+            enabled: true,
+            categories: ["General"],
+            autoAcceptMembers: true,
+        });
+
+        await MembershipModel.create([
+            {
+                domain: testDomain._id,
+                membershipId: `mem-admin-${suffix}`,
+                userId: adminUser.userId,
+                entityId: community.communityId,
+                entityType: Constants.MembershipEntityType.COMMUNITY,
+                paymentPlanId: `plan-${suffix}`,
+                sessionId: `session-admin-${suffix}`,
+                status: Constants.MembershipStatus.ACTIVE,
+                role: Constants.MembershipRole.MODERATE,
+            },
+            {
+                domain: testDomain._id,
+                membershipId: `mem-regular-${suffix}`,
+                userId: regularUser.userId,
+                entityId: community.communityId,
+                entityType: Constants.MembershipEntityType.COMMUNITY,
+                paymentPlanId: `plan-${suffix}`,
+                sessionId: `session-regular-${suffix}`,
+                status: Constants.MembershipStatus.ACTIVE,
+                role: Constants.MembershipRole.POST,
+            },
+        ]);
+
+        post = await CommunityPostModel.create({
+            domain: testDomain._id,
+            userId: adminUser.userId,
+            communityId: community.communityId,
+            postId: `post-${suffix}`,
+            title: "Reaction post",
+            content: doc("React to me"),
+            category: "General",
+            reactions: {},
+            deleted: false,
+        });
+
+        adminCtx = { user: adminUser, subdomain: testDomain } as any;
+        regularCtx = { user: regularUser, subdomain: testDomain } as any;
+    });
+
+    afterAll(async () => {
+        await CommunityReactionModel.deleteMany({ domain: testDomain._id });
+        await CommunityPostModel.deleteMany({ domain: testDomain._id });
+        await CommunityCommentModel.deleteMany({ domain: testDomain._id });
+        await MembershipModel.deleteMany({ domain: testDomain._id });
+        await CommunityModel.deleteMany({ domain: testDomain._id });
+        await PageModel.deleteMany({ domain: testDomain._id });
+        await PaymentPlanModel.deleteMany({ domain: testDomain._id });
+        await UserModel.deleteMany({ domain: testDomain._id });
+        await DomainModel.deleteMany({ _id: testDomain._id });
+    });
+
+    it("toggles a post reaction and reports hasReacted / count", async () => {
+        const reacted = await togglePostReaction({
+            ctx: regularCtx,
+            communityId: community.communityId,
+            postId: post.postId,
+            emoji: "👍",
+        });
+
+        expect(reacted.likesCount).toBe(0);
+        expect(reacted.hasLiked).toBe(false);
+
+        const reactions = await getReactionsForEntity({
+            entity: reacted,
+            ctx: regularCtx,
+        });
+        const thumbs = reactions.find((r) => r.emoji === "👍");
+        expect(thumbs).toMatchObject({
+            emoji: "👍",
+            count: 1,
+            hasReacted: true,
+        });
+        expect(thumbs?.reactors.map((r) => r.userId)).toContain(
+            regularUser.userId,
+        );
+
+        const unreacted = await togglePostReaction({
+            ctx: regularCtx,
+            communityId: community.communityId,
+            postId: post.postId,
+            emoji: "👍",
+        });
+        const after = await getReactionsForEntity({
+            entity: unreacted,
+            ctx: regularCtx,
+        });
+        expect(after.find((r) => r.emoji === "👍")).toBeUndefined();
+    });
+
+    it("derives likesCount/hasLiked from the heart reaction", async () => {
+        const liked = await togglePostReaction({
+            ctx: regularCtx,
+            communityId: community.communityId,
+            postId: post.postId,
+            emoji: COMMUNITY_HEART_EMOJI,
+        });
+
+        expect(liked.hasLiked).toBe(true);
+        expect(liked.likesCount).toBe(1);
+
+        const reactions = await getReactionsForEntity({
+            entity: liked,
+            ctx: regularCtx,
+        });
+        const heart = reactions.find((r) => r.emoji === COMMUNITY_HEART_EMOJI);
+        expect(heart?.count).toBe(1);
+        expect(heart?.hasReacted).toBe(true);
+
+        await togglePostReaction({
+            ctx: regularCtx,
+            communityId: community.communityId,
+            postId: post.postId,
+            emoji: COMMUNITY_HEART_EMOJI,
+        });
+    });
+
+    it("allows multiple different emojis from the same user", async () => {
+        await togglePostReaction({
+            ctx: regularCtx,
+            communityId: community.communityId,
+            postId: post.postId,
+            emoji: COMMUNITY_HEART_EMOJI,
+        });
+        await togglePostReaction({
+            ctx: regularCtx,
+            communityId: community.communityId,
+            postId: post.postId,
+            emoji: "🎉",
+        });
+
+        const rows = await CommunityReactionModel.find({
+            domain: testDomain._id,
+            entityType: Constants.CommunityReactionEntityType.POST,
+            entityId: post.postId,
+            userId: regularUser.userId,
+        }).lean();
+        const emojis = rows.map((r) => r.emoji).sort();
+        expect(emojis).toEqual(["🎉", COMMUNITY_HEART_EMOJI].sort());
+
+        // cleanup
+        await togglePostReaction({
+            ctx: regularCtx,
+            communityId: community.communityId,
+            postId: post.postId,
+            emoji: COMMUNITY_HEART_EMOJI,
+        });
+        await togglePostReaction({
+            ctx: regularCtx,
+            communityId: community.communityId,
+            postId: post.postId,
+            emoji: "🎉",
+        });
+    });
+
+    it("rejects disallowed emojis", async () => {
+        await expect(
+            togglePostReaction({
+                ctx: regularCtx,
+                communityId: community.communityId,
+                postId: post.postId,
+                emoji: "🚀",
+            }),
+        ).rejects.toThrow("Invalid input");
+    });
+
+    it("toggles comment and reply reactions", async () => {
+        const comment = await CommunityCommentModel.create({
+            domain: testDomain._id,
+            communityId: community.communityId,
+            postId: post.postId,
+            commentId: `comment-rxn-${Date.now()}`,
+            userId: adminUser.userId,
+            content: "Comment body",
+            replies: [
+                {
+                    replyId: `reply-rxn-${Date.now()}`,
+                    userId: adminUser.userId,
+                    content: "Reply body",
+                    deleted: false,
+                },
+            ],
+        });
+
+        const afterComment = await toggleCommentReaction({
+            ctx: regularCtx,
+            communityId: community.communityId,
+            postId: post.postId,
+            commentId: comment.commentId,
+            emoji: "😄",
+        });
+        expect(afterComment.likesCount).toBe(0);
+        const commentReactions = await getReactionsForEntity({
+            entity: afterComment,
+            ctx: regularCtx,
+        });
+        expect(commentReactions.find((r) => r.emoji === "😄")?.count).toBe(1);
+
+        const replyId = comment.replies[0].replyId;
+        const afterReply = await toggleCommentReplyReaction({
+            ctx: regularCtx,
+            communityId: community.communityId,
+            postId: post.postId,
+            commentId: comment.commentId,
+            replyId,
+            emoji: COMMUNITY_HEART_EMOJI,
+        });
+        const reply = afterReply.replies.find(
+            (r: any) => r.replyId === replyId,
+        );
+        expect(reply?.likesCount).toBe(1);
+        expect(reply?.hasLiked).toBe(true);
+
+        const replyReactions = await getReactionsForEntity({
+            entity: reply,
+            ctx: regularCtx,
+        });
+        expect(
+            replyReactions.find((r) => r.emoji === COMMUNITY_HEART_EMOJI)
+                ?.hasReacted,
+        ).toBe(true);
+
+        // Critical: reply reactions live in the collection and survive re-format
+        const dbRows = await CommunityReactionModel.find({
+            domain: testDomain._id,
+            entityType: Constants.CommunityReactionEntityType.REPLY,
+            entityId: replyId,
+        }).lean();
+        expect(dbRows.map((r) => r.userId)).toContain(regularUser.userId);
+        expect(dbRows.map((r) => r.emoji)).toContain(COMMUNITY_HEART_EMOJI);
+
+        // Toggle off and confirm row is gone
+        await toggleCommentReplyReaction({
+            ctx: regularCtx,
+            communityId: community.communityId,
+            postId: post.postId,
+            commentId: comment.commentId,
+            replyId,
+            emoji: COMMUNITY_HEART_EMOJI,
+        });
+        const afterOff = await CommunityReactionModel.find({
+            domain: testDomain._id,
+            entityType: Constants.CommunityReactionEntityType.REPLY,
+            entityId: replyId,
+            emoji: COMMUNITY_HEART_EMOJI,
+        });
+        expect(afterOff).toHaveLength(0);
+    });
+
+    it("rejects unauthenticated reaction toggles", async () => {
+        const unauthCtx = { user: null, subdomain: testDomain } as any;
+        await expect(
+            togglePostReaction({
+                ctx: unauthCtx,
+                communityId: community.communityId,
+                postId: post.postId,
+                emoji: "👍",
+            }),
+        ).rejects.toThrow();
+    });
+
+    it("rejects reaction when user is not a community member", async () => {
+        const outsider = await UserModel.create({
+            domain: testDomain._id,
+            userId: `outsider-${Date.now()}`,
+            email: `outsider-${Date.now()}@example.com`,
+            name: "Outsider",
+            permissions: [],
+            active: true,
+            unsubscribeToken: `unsub-out-${Date.now()}`,
+        });
+        const outsiderCtx = { user: outsider, subdomain: testDomain } as any;
+
+        await expect(
+            togglePostReaction({
+                ctx: outsiderCtx,
+                communityId: community.communityId,
+                postId: post.postId,
+                emoji: "👍",
+            }),
+        ).rejects.toThrow();
+    });
+
+    it("rejects comment reaction when membership is COMMENT-ineligible", async () => {
+        // Create a user with no membership at all for comment path
+        const stranger = await UserModel.create({
+            domain: testDomain._id,
+            userId: `stranger-${Date.now()}`,
+            email: `stranger-${Date.now()}@example.com`,
+            name: "Stranger",
+            permissions: [],
+            active: true,
+            unsubscribeToken: `unsub-str-${Date.now()}`,
+        });
+        const strangerCtx = { user: stranger, subdomain: testDomain } as any;
+
+        const comment = await CommunityCommentModel.create({
+            domain: testDomain._id,
+            communityId: community.communityId,
+            postId: post.postId,
+            commentId: `comment-auth-${Date.now()}`,
+            userId: adminUser.userId,
+            content: "Auth check",
+            replies: [],
+        });
+
+        await expect(
+            toggleCommentReaction({
+                ctx: strangerCtx,
+                communityId: community.communityId,
+                postId: post.postId,
+                commentId: comment.commentId,
+                emoji: "👍",
+            }),
+        ).rejects.toThrow();
+    });
+
+    it("rejects reaction on missing post / comment / reply", async () => {
+        await expect(
+            togglePostReaction({
+                ctx: regularCtx,
+                communityId: community.communityId,
+                postId: "does-not-exist",
+                emoji: "👍",
+            }),
+        ).rejects.toThrow();
+
+        await expect(
+            toggleCommentReaction({
+                ctx: regularCtx,
+                communityId: community.communityId,
+                postId: post.postId,
+                commentId: "missing-comment",
+                emoji: "👍",
+            }),
+        ).rejects.toThrow();
+
+        const comment = await CommunityCommentModel.create({
+            domain: testDomain._id,
+            communityId: community.communityId,
+            postId: post.postId,
+            commentId: `comment-missing-reply-${Date.now()}`,
+            userId: adminUser.userId,
+            content: "Has no reply",
+            replies: [],
+        });
+
+        await expect(
+            toggleCommentReplyReaction({
+                ctx: regularCtx,
+                communityId: community.communityId,
+                postId: post.postId,
+                commentId: comment.commentId,
+                replyId: "missing-reply",
+                emoji: "👍",
+            }),
+        ).rejects.toThrow();
+    });
+
+    it("deletes reaction rows when a post is deleted", async () => {
+        const doomedPost = await CommunityPostModel.create({
+            domain: testDomain._id,
+            userId: adminUser.userId,
+            communityId: community.communityId,
+            postId: `post-doom-${Date.now()}`,
+            title: "Doomed",
+            content: doc("bye"),
+            category: "General",
+            deleted: false,
+        });
+
+        await togglePostReaction({
+            ctx: regularCtx,
+            communityId: community.communityId,
+            postId: doomedPost.postId,
+            emoji: "👍",
+        });
+
+        const comment = await CommunityCommentModel.create({
+            domain: testDomain._id,
+            communityId: community.communityId,
+            postId: doomedPost.postId,
+            commentId: `comment-doom-${Date.now()}`,
+            userId: adminUser.userId,
+            content: "on doomed post",
+            replies: [
+                {
+                    replyId: `reply-doom-${Date.now()}`,
+                    userId: adminUser.userId,
+                    content: "reply",
+                    deleted: false,
+                },
+            ],
+        });
+
+        await toggleCommentReaction({
+            ctx: regularCtx,
+            communityId: community.communityId,
+            postId: doomedPost.postId,
+            commentId: comment.commentId,
+            emoji: "😄",
+        });
+        await toggleCommentReplyReaction({
+            ctx: regularCtx,
+            communityId: community.communityId,
+            postId: doomedPost.postId,
+            commentId: comment.commentId,
+            replyId: comment.replies[0].replyId,
+            emoji: COMMUNITY_HEART_EMOJI,
+        });
+
+        const before = await CommunityReactionModel.countDocuments({
+            domain: testDomain._id,
+            postId: doomedPost.postId,
+        });
+        expect(before).toBeGreaterThanOrEqual(3);
+
+        await deleteCommunityPost({
+            ctx: adminCtx,
+            communityId: community.communityId,
+            postId: doomedPost.postId,
+        });
+
+        const after = await CommunityReactionModel.countDocuments({
+            domain: testDomain._id,
+            postId: doomedPost.postId,
+        });
+        expect(after).toBe(0);
+    });
+
+    it("purges reaction rows when a leaf comment is hard-deleted", async () => {
+        const leaf = await CommunityCommentModel.create({
+            domain: testDomain._id,
+            communityId: community.communityId,
+            postId: post.postId,
+            commentId: `comment-leaf-${Date.now()}`,
+            userId: adminUser.userId,
+            content: "Leaf comment",
+            replies: [],
+        });
+
+        await toggleCommentReaction({
+            ctx: regularCtx,
+            communityId: community.communityId,
+            postId: post.postId,
+            commentId: leaf.commentId,
+            emoji: "👍",
+        });
+
+        expect(
+            await CommunityReactionModel.countDocuments({
+                domain: testDomain._id,
+                entityType: Constants.CommunityReactionEntityType.COMMENT,
+                entityId: leaf.commentId,
+            }),
+        ).toBe(1);
+
+        await deleteComment({
+            ctx: adminCtx,
+            communityId: community.communityId,
+            postId: post.postId,
+            commentId: leaf.commentId,
+        });
+
+        expect(
+            await CommunityReactionModel.countDocuments({
+                domain: testDomain._id,
+                entityType: Constants.CommunityReactionEntityType.COMMENT,
+                entityId: leaf.commentId,
+            }),
+        ).toBe(0);
+    });
+
+    it("purges reaction rows when a leaf reply is hard-deleted", async () => {
+        const replyId = `reply-leaf-${Date.now()}`;
+        const parent = await CommunityCommentModel.create({
+            domain: testDomain._id,
+            communityId: community.communityId,
+            postId: post.postId,
+            commentId: `comment-parent-${Date.now()}`,
+            userId: adminUser.userId,
+            content: "Parent",
+            replies: [
+                {
+                    replyId,
+                    userId: adminUser.userId,
+                    content: "Leaf reply",
+                    deleted: false,
+                },
+            ],
+        });
+
+        await toggleCommentReplyReaction({
+            ctx: regularCtx,
+            communityId: community.communityId,
+            postId: post.postId,
+            commentId: parent.commentId,
+            replyId,
+            emoji: "🎉",
+        });
+
+        expect(
+            await CommunityReactionModel.countDocuments({
+                domain: testDomain._id,
+                entityType: Constants.CommunityReactionEntityType.REPLY,
+                entityId: replyId,
+            }),
+        ).toBe(1);
+
+        await deleteComment({
+            ctx: adminCtx,
+            communityId: community.communityId,
+            postId: post.postId,
+            commentId: parent.commentId,
+            replyId,
+        });
+
+        expect(
+            await CommunityReactionModel.countDocuments({
+                domain: testDomain._id,
+                entityType: Constants.CommunityReactionEntityType.REPLY,
+                entityId: replyId,
+            }),
+        ).toBe(0);
+    });
+
+    it("keeps reaction rows when a comment is soft-deleted", async () => {
+        const replyId = `reply-soft-${Date.now()}`;
+        const soft = await CommunityCommentModel.create({
+            domain: testDomain._id,
+            communityId: community.communityId,
+            postId: post.postId,
+            commentId: `comment-soft-${Date.now()}`,
+            userId: adminUser.userId,
+            content: "Soft delete me",
+            replies: [
+                {
+                    replyId,
+                    userId: adminUser.userId,
+                    content: "child",
+                    deleted: false,
+                },
+            ],
+        });
+
+        await toggleCommentReaction({
+            ctx: regularCtx,
+            communityId: community.communityId,
+            postId: post.postId,
+            commentId: soft.commentId,
+            emoji: "😢",
+        });
+
+        await deleteComment({
+            ctx: adminCtx,
+            communityId: community.communityId,
+            postId: post.postId,
+            commentId: soft.commentId,
+        });
+
+        // Soft-deleted: document remains, reactions retained
+        const stillThere = await CommunityCommentModel.findOne({
+            commentId: soft.commentId,
+        });
+        expect(stillThere?.deleted).toBe(true);
+        expect(
+            await CommunityReactionModel.countDocuments({
+                domain: testDomain._id,
+                entityType: Constants.CommunityReactionEntityType.COMMENT,
+                entityId: soft.commentId,
+            }),
+        ).toBe(1);
+    });
+
+    it("deletes reaction rows when community posts are bulk-deleted", async () => {
+        const bulkCommunityId = `comm-bulk-${Date.now()}`;
+        await CommunityModel.create({
+            domain: testDomain._id,
+            communityId: bulkCommunityId,
+            name: "Bulk delete community",
+            pageId: `page-bulk-${Date.now()}`,
+            slug: `slug-bulk-${Date.now()}`,
+            enabled: true,
+            categories: ["General"],
+            autoAcceptMembers: true,
+        });
+        await MembershipModel.create({
+            domain: testDomain._id,
+            membershipId: `mem-bulk-${Date.now()}`,
+            userId: regularUser.userId,
+            entityId: bulkCommunityId,
+            entityType: Constants.MembershipEntityType.COMMUNITY,
+            paymentPlanId: `plan-bulk`,
+            sessionId: `session-bulk`,
+            status: Constants.MembershipStatus.ACTIVE,
+            role: Constants.MembershipRole.POST,
+        });
+
+        const bulkPost = await CommunityPostModel.create({
+            domain: testDomain._id,
+            userId: adminUser.userId,
+            communityId: bulkCommunityId,
+            postId: `post-bulk-${Date.now()}`,
+            title: "Bulk doomed",
+            content: doc("bulk"),
+            category: "General",
+            deleted: false,
+        });
+
+        await togglePostReaction({
+            ctx: regularCtx,
+            communityId: bulkCommunityId,
+            postId: bulkPost.postId,
+            emoji: "🎉",
+        });
+
+        expect(
+            await CommunityReactionModel.countDocuments({
+                domain: testDomain._id,
+                postId: bulkPost.postId,
+            }),
+        ).toBe(1);
+
+        await deleteCommunityPosts(adminCtx, "community", bulkCommunityId);
+
+        expect(
+            await CommunityReactionModel.countDocuments({
+                domain: testDomain._id,
+                communityId: bulkCommunityId,
+            }),
+        ).toBe(0);
     });
 });

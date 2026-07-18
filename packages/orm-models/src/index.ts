@@ -27,6 +27,7 @@ export * from "./models/community-post-subscriber";
 export * from "./models/community-comment";
 export * from "./models/community-media";
 export * from "./models/community-post";
+export * from "./models/community-reaction";
 export * from "./models/invoice";
 export * from "./models/theme";
 export * from "./models/ongoing-sequence";
