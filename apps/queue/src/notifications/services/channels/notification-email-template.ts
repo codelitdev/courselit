@@ -6,6 +6,13 @@ interface NotificationEmailTemplateInput {
     message: string;
     notificationUrl: string;
     unsubscribeUrl: string;
+    commentText?: string;
+    parentText?: string;
+    parentAuthorName?: string;
+    threadTitle?: string;
+    conversationLabel?: string;
+    isConversation?: boolean;
+    showReplyByEmailHint?: boolean;
     hideCourseLitBranding?: boolean;
 }
 
@@ -13,6 +20,10 @@ function encodePlainTextForMarkdown(value: string) {
     return Array.from(value)
         .map((character) => `&#${character.codePointAt(0)};`)
         .join("");
+}
+
+function encodePlainTextWithLineBreaks(value: string) {
+    return value.split(/\r?\n/).map(encodePlainTextForMarkdown).join("  \n");
 }
 
 function getSafeAvatarUrl(actorAvatarUrl?: string) {
@@ -40,6 +51,13 @@ export function buildNotificationEmailTemplate({
     message,
     notificationUrl,
     unsubscribeUrl,
+    commentText,
+    parentText,
+    parentAuthorName,
+    threadTitle,
+    conversationLabel,
+    isConversation,
+    showReplyByEmailHint,
     hideCourseLitBranding,
 }: NotificationEmailTemplateInput): Email {
     const safeActorAvatarUrl = getSafeAvatarUrl(actorAvatarUrl);
@@ -63,18 +81,21 @@ export function buildNotificationEmailTemplate({
         });
     }
 
-    content.push(
-        {
-            blockType: "text",
-            settings: {
-                content: `**${encodePlainTextForMarkdown(actorName)}**`,
-                fontSize: "14px",
-                lineHeight: "1.4",
-                paddingTop: safeActorAvatarUrl ? "0px" : "24px",
-                paddingBottom: "10px",
-            },
+    content.push({
+        blockType: "text",
+        settings: {
+            content: isConversation
+                ? `**${encodePlainTextForMarkdown(actorName)}** · ${encodePlainTextForMarkdown(conversationLabel || "New activity")}`
+                : `**${encodePlainTextForMarkdown(actorName)}**`,
+            fontSize: "14px",
+            lineHeight: "1.4",
+            paddingTop: safeActorAvatarUrl ? "0px" : "24px",
+            paddingBottom: isConversation ? "4px" : "10px",
         },
-        {
+    });
+
+    if (!isConversation) {
+        content.push({
             blockType: "text",
             settings: {
                 content: encodePlainTextForMarkdown(message),
@@ -83,11 +104,88 @@ export function buildNotificationEmailTemplate({
                 paddingTop: "8px",
                 paddingBottom: "8px",
             },
-        },
+        });
+    }
+
+    if (threadTitle) {
+        content.push({
+            blockType: "text",
+            settings: {
+                content: isConversation
+                    ? `**${encodePlainTextForMarkdown(threadTitle)}**`
+                    : encodePlainTextForMarkdown(threadTitle),
+                fontSize: isConversation ? "18px" : "14px",
+                lineHeight: "1.5",
+                foregroundColor: isConversation ? "#000000" : "#666666",
+                paddingTop: isConversation ? "0px" : "12px",
+                paddingBottom: isConversation ? "20px" : "16px",
+            },
+        });
+    }
+
+    if (parentText) {
+        const parentLabel = parentAuthorName
+            ? `${parentAuthorName} · Earlier comment`
+            : "Earlier comment";
+        content.push({
+            blockType: "text",
+            settings: {
+                content: parentAuthorName
+                    ? `**${encodePlainTextForMarkdown(parentAuthorName)}** · ${encodePlainTextForMarkdown("Earlier comment")}`
+                    : encodePlainTextForMarkdown(parentLabel),
+                fontSize: "13px",
+                lineHeight: "1.5",
+                foregroundColor: "#666666",
+                backgroundColor: "#f7f7f7",
+                paddingTop: "16px",
+                paddingBottom: "4px",
+            },
+        });
+        content.push({
+            blockType: "text",
+            settings: {
+                content: encodePlainTextWithLineBreaks(parentText),
+                fontSize: "14px",
+                lineHeight: "1.5",
+                foregroundColor: "#666666",
+                backgroundColor: "#f7f7f7",
+                paddingTop: "0px",
+                paddingBottom: "16px",
+            },
+        });
+    }
+
+    if (commentText) {
+        content.push({
+            blockType: "text",
+            settings: {
+                content: encodePlainTextWithLineBreaks(commentText),
+                fontSize: "16px",
+                lineHeight: "1.6",
+                paddingTop: parentText ? "24px" : "8px",
+                paddingBottom: "16px",
+            },
+        });
+    }
+
+    if (showReplyByEmailHint) {
+        content.push({
+            blockType: "text",
+            settings: {
+                content: "You can reply to this email to respond directly",
+                fontSize: "13px",
+                foregroundColor: "#666666",
+                paddingTop: "8px",
+                paddingBottom: "4px",
+            },
+        });
+    }
+
+    content.push(
         {
             blockType: "link",
             settings: {
-                text: "View notification",
+                text: isConversation ? "View discussion" : "View notification",
                 url: notificationUrl,
                 alignment: "center",
                 isButton: true,
@@ -97,7 +195,7 @@ export function buildNotificationEmailTemplate({
                 buttonPaddingX: "18px",
                 buttonPaddingY: "10px",
                 paddingTop: "12px",
-                paddingBottom: "56px",
+                paddingBottom: isConversation ? "32px" : "56px",
             },
         },
         {

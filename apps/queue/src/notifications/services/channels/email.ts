@@ -1,4 +1,4 @@
-import { getNotificationMessageAndHref } from "@courselit/common-logic";
+import { getNotificationEmailContent } from "@courselit/common-logic";
 import { renderEmailToHtml } from "@courselit/email-editor";
 import { getEmailFrom } from "@courselit/utils";
 import { addMailJob } from "../../../domain/handler";
@@ -7,6 +7,7 @@ import { getUnsubLink } from "../../../utils/get-unsub-link";
 import { ChannelPayload, NotificationChannel } from "./types";
 import { getDomainId } from "../../../observability/posthog";
 import { buildNotificationEmailTemplate } from "./notification-email-template";
+import UserModel from "../../../domain/model/user";
 
 function getActorAvatarUrl(actor: ChannelPayload["actor"]) {
     return actor?.avatar?.file || actor?.avatar?.thumbnail || undefined;
@@ -27,7 +28,7 @@ export class EmailChannel implements NotificationChannel {
             payload.actor?.email ||
             payload.actor?.userId ||
             "Someone";
-        const notificationDetails = await getNotificationMessageAndHref({
+        const notificationDetails = await getNotificationEmailContent({
             activityType: payload.activityType,
             entityId: payload.entityId,
             actorName,
@@ -37,6 +38,16 @@ export class EmailChannel implements NotificationChannel {
             metadata: payload.metadata,
             hrefPrefix: getSiteUrl(payload.domain),
             domainId: payload.domain?._id,
+            resolveUserName: async (userId) => {
+                const user = await (UserModel as any)
+                    .findOne(
+                        { domain: payload.domain?._id, userId },
+                        { _id: 0, name: 1 },
+                    )
+                    .lean();
+
+                return user?.name as string | undefined;
+            },
         });
 
         if (!notificationDetails.message || !notificationDetails.href) {
@@ -54,6 +65,12 @@ export class EmailChannel implements NotificationChannel {
                 message: notificationDetails.message,
                 notificationUrl: notificationDetails.href,
                 unsubscribeUrl,
+                commentText: notificationDetails.commentText,
+                parentText: notificationDetails.parentText,
+                parentAuthorName: notificationDetails.parentAuthorName,
+                threadTitle: notificationDetails.threadTitle,
+                conversationLabel: notificationDetails.conversationLabel,
+                isConversation: Boolean(notificationDetails.replyContext),
                 hideCourseLitBranding:
                     payload.domain.settings?.hideCourseLitBranding,
             }),
@@ -66,7 +83,7 @@ export class EmailChannel implements NotificationChannel {
                 email: process.env.EMAIL_FROM || "",
             }),
             domainId: getDomainId(payload.domain?._id),
-            subject: notificationDetails.message,
+            subject: notificationDetails.subject,
             body,
             headers: {
                 "List-Unsubscribe": `<${unsubscribeUrl}>`,

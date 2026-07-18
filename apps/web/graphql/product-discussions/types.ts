@@ -316,7 +316,7 @@ const productDiscussionReport = new GraphQLObjectType({
                               replyId: report.contentId,
                           });
                 if (!item) return null;
-                return extractTextFromTextEditorContent(item.content);
+                return extractTextFromTextEditorContent(item.content).trim();
             },
         },
         authorName: {

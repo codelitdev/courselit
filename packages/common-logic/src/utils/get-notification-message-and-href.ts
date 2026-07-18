@@ -2,6 +2,7 @@ import {
     ActivityType,
     COMMUNITY_HEART_EMOJI,
     Constants,
+    type ProductDiscussionEntityType,
 } from "@courselit/common-models";
 import { truncate } from "@courselit/utils";
 import { createNotificationEntityResolver } from "./notification-entity-resolver";
@@ -12,6 +13,7 @@ export interface NotificationReplyEntity {
     userId: string;
     content: string;
     parentReplyId?: string;
+    deleted?: boolean;
 }
 
 export interface NotificationCommentEntity {
@@ -28,6 +30,7 @@ export interface NotificationPostEntity {
     title: string;
     userId: string;
     communityId: string;
+    content?: unknown;
 }
 
 export interface NotificationCommunityEntity {
@@ -40,6 +43,21 @@ export interface NotificationCourseEntity {
     title: string;
     slug?: string;
     creatorId?: string;
+}
+
+export interface NotificationDiscussionCommentEntity {
+    commentId: string;
+    userId: string;
+    productId: string;
+    entityType: ProductDiscussionEntityType;
+    entityId: string;
+    content: unknown;
+}
+
+export interface NotificationDiscussionReplyEntity
+    extends NotificationDiscussionCommentEntity {
+    replyId: string;
+    parentReplyId?: string;
 }
 
 export interface NotificationEntityResolver {
@@ -59,6 +77,14 @@ export interface NotificationEntityResolver {
         courseId: string,
         domainId?: unknown,
     ): Promise<NotificationCourseEntity | null>;
+    getDiscussionComment?(
+        commentId: string,
+        domainId?: unknown,
+    ): Promise<NotificationDiscussionCommentEntity | null>;
+    getDiscussionReply?(
+        replyId: string,
+        domainId?: unknown,
+    ): Promise<NotificationDiscussionReplyEntity | null>;
 }
 
 const defaultNotificationEntityResolver = createNotificationEntityResolver();
@@ -156,13 +182,17 @@ export async function getNotificationMessageAndHref({
                 return { message: "", href: "" };
             }
 
-            const reply = comment.replies.find((r) => r.replyId === entityId);
+            const reply = comment.replies.find(
+                (r) => r.replyId === entityId && !r.deleted,
+            );
             if (!reply) {
                 return { message: "", href: "" };
             }
 
             const parentReply = reply.parentReplyId
-                ? comment.replies.find((r) => r.replyId === reply.parentReplyId)
+                ? comment.replies.find(
+                      (r) => r.replyId === reply.parentReplyId && !r.deleted,
+                  )
                 : undefined;
 
             const [post, community] = await Promise.all([

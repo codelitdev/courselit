@@ -15,6 +15,7 @@ import PageModel from "@models/Page";
 import constants from "@/config/constants";
 import { responses } from "@/config/strings";
 import { Constants as CommonConstants } from "@courselit/common-models";
+import { extractTextFromTextEditorContent } from "@courselit/utils";
 import {
     getCourse,
     getCoursesAsAdmin,
@@ -434,6 +435,28 @@ describe("product discussion validation foundation", () => {
                 ],
             }),
         ).toThrow(responses.invalid_input);
+    });
+
+    it("preserves paragraph and hard-break boundaries when extracting editor text", () => {
+        expect(
+            extractTextFromTextEditorContent({
+                type: "doc",
+                content: [
+                    {
+                        type: "paragraph",
+                        content: [
+                            { type: "text", text: "First line" },
+                            { type: "hardBreak" },
+                            { type: "text", text: "Second line" },
+                        ],
+                    },
+                    {
+                        type: "paragraph",
+                        content: [{ type: "text", text: "Third paragraph" }],
+                    },
+                ],
+            }),
+        ).toBe("First line\nSecond line\n\nThird paragraph");
     });
 
     it("records allowed rate limit events and rejects actions over the limit", async () => {
@@ -1305,6 +1328,38 @@ describe("product discussion comment and reply logic", () => {
                 entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
                 entityId: lessonId,
                 content: doc("Duplicate content"),
+            }),
+        ).rejects.toThrow(responses.action_not_allowed);
+    });
+
+    it("rejects duplicate discussion content with different paragraph formatting", async () => {
+        await createDiscussionComment({
+            ctx,
+            productId: courseId,
+            entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
+            entityId: lessonId,
+            content: doc("Duplicate content"),
+        });
+
+        await expect(
+            createDiscussionComment({
+                ctx,
+                productId: courseId,
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
+                entityId: lessonId,
+                content: {
+                    type: "doc",
+                    content: [
+                        {
+                            type: "paragraph",
+                            content: [{ type: "text", text: "Duplicate" }],
+                        },
+                        {
+                            type: "paragraph",
+                            content: [{ type: "text", text: "content" }],
+                        },
+                    ],
+                },
             }),
         ).rejects.toThrow(responses.action_not_allowed);
     });
