@@ -151,8 +151,8 @@ export function validateDiscussionContent(content: unknown): TextEditorContent {
         throw new Error(responses.invalid_input);
     }
 
-    const text = extractTextFromTextEditorContent(doc);
-    if (!text.trim() || text.length > MAX_DISCUSSION_TEXT_LENGTH) {
+    const text = extractTextFromTextEditorContent(doc).trim();
+    if (!text || text.length > MAX_DISCUSSION_TEXT_LENGTH) {
         throw new Error(responses.invalid_input);
     }
 

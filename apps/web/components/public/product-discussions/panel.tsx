@@ -1117,7 +1117,7 @@ function getComposerContentError(content: TextEditorContent) {
     }
 
     if (
-        extractTextFromTextEditorContent(content).length >
+        extractTextFromTextEditorContent(content).trim().length >
         MAX_DISCUSSION_TEXT_LENGTH
     ) {
         return COURSE_DISCUSSIONS_CONTENT_TOO_LONG;

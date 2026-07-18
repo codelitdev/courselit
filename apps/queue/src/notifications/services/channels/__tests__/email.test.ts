@@ -3,20 +3,21 @@
  */
 
 import { Constants } from "@courselit/common-models";
-import { getNotificationMessageAndHref } from "@courselit/common-logic";
+import { getNotificationEmailContent } from "@courselit/common-logic";
+import { JSDOM } from "jsdom";
 import { addMailJob } from "../../../../domain/handler";
 import { EmailChannel } from "../email";
 
 jest.mock("@courselit/common-logic", () => ({
-    getNotificationMessageAndHref: jest.fn(),
+    getNotificationEmailContent: jest.fn(),
 }));
 
 jest.mock("../../../../domain/handler", () => ({
     addMailJob: jest.fn(),
 }));
 
-const mockedGetNotificationMessageAndHref =
-    getNotificationMessageAndHref as jest.Mock;
+const mockedGetNotificationEmailContent =
+    getNotificationEmailContent as jest.Mock;
 const mockedAddMailJob = addMailJob as jest.Mock;
 
 function makePayload(overrides: Partial<any> = {}): any {
@@ -53,6 +54,21 @@ function makePayload(overrides: Partial<any> = {}): any {
     };
 }
 
+function getVisibleEmailDocument(html: string) {
+    const document = new JSDOM(html).window.document;
+    document
+        .querySelectorAll("[data-skip-in-text]")
+        .forEach((element) => element.remove());
+    document
+        .querySelectorAll("br")
+        .forEach((element) => element.replaceWith(" "));
+    return document;
+}
+
+function getVisibleEmailText(document: Document) {
+    return document.body.textContent?.replace(/\s+/g, " ").trim() || "";
+}
+
 describe("EmailChannel", () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -61,7 +77,9 @@ describe("EmailChannel", () => {
         process.env.MULTITENANT = "true";
         process.env.EMAIL_FROM = "hello@courselit.test";
 
-        mockedGetNotificationMessageAndHref.mockResolvedValue({
+        mockedGetNotificationEmailContent.mockResolvedValue({
+            subject:
+                "Test Instructor granted your request to join Test Course community",
             message:
                 "Test Instructor granted your request to join Test Course community",
             href: "https://school.courselit.test/community/post",
@@ -71,7 +89,7 @@ describe("EmailChannel", () => {
     it("renders a notification email with actor avatar, CTA, footer unsubscribe, branding, and unsubscribe headers", async () => {
         await new EmailChannel().send(makePayload());
 
-        expect(mockedGetNotificationMessageAndHref).toHaveBeenCalledWith(
+        expect(mockedGetNotificationEmailContent).toHaveBeenCalledWith(
             expect.objectContaining({
                 recipientPermissions: ["course:manage_any"],
             }),
@@ -134,7 +152,9 @@ describe("EmailChannel", () => {
     });
 
     it("renders dynamic notification text as text instead of Markdown links", async () => {
-        mockedGetNotificationMessageAndHref.mockResolvedValue({
+        mockedGetNotificationEmailContent.mockResolvedValue({
+            subject:
+                "Test Instructor replied to [a post](https://evil.example)",
             message:
                 "Test Instructor replied to [a post](https://evil.example)",
             href: "https://school.courselit.test/community/post",
@@ -243,7 +263,8 @@ describe("EmailChannel", () => {
     });
 
     it("does not send when notification details do not include a message and href", async () => {
-        mockedGetNotificationMessageAndHref.mockResolvedValue({
+        mockedGetNotificationEmailContent.mockResolvedValue({
+            subject: "",
             message: "",
             href: "",
         });
@@ -251,5 +272,84 @@ describe("EmailChannel", () => {
         await new EmailChannel().send(makePayload());
 
         expect(mockedAddMailJob).not.toHaveBeenCalled();
+    });
+
+    it("renders conversation details and uses a discussion CTA", async () => {
+        mockedGetNotificationEmailContent.mockResolvedValue({
+            subject: "Test Instructor commented on a post",
+            message: "Test Instructor commented on a post",
+            href: "https://school.courselit.test/community/post",
+            threadTitle: "A discussion title",
+            parentAuthorName: "Jamie",
+            parentText: "The parent comment",
+            commentText: "A new comment\nwith another line",
+            conversationLabel: "New reply",
+            replyContext: {
+                community: {
+                    communityId: "community-id",
+                    postId: "post-id",
+                    parentCommentId: "comment-id",
+                },
+            },
+        });
+
+        await new EmailChannel().send(makePayload());
+
+        const mail = mockedAddMailJob.mock.calls[0][0];
+        const document = getVisibleEmailDocument(mail.body);
+        const visibleText = getVisibleEmailText(document);
+
+        expect(mail.subject).toBe("Test Instructor commented on a post");
+        expect(visibleText).toContain("Test Instructor · New reply");
+        expect(visibleText).toContain("Jamie · Earlier comment");
+        expect(visibleText).toContain("The parent comment");
+        expect(visibleText).toContain("A new comment with another line");
+        expect(visibleText).not.toContain(
+            "Test Instructor commented on a post",
+        );
+        expect(
+            Array.from(document.querySelectorAll("div")).some(
+                (element) =>
+                    element.textContent?.includes("Earlier comment") &&
+                    element
+                        .getAttribute("style")
+                        ?.includes("background-color:#f7f7f7"),
+            ),
+        ).toBe(true);
+        expect(visibleText).toContain("View discussion");
+        expect(visibleText).not.toContain("View notification");
+    });
+
+    it("labels original post context in new-comment emails", async () => {
+        mockedGetNotificationEmailContent.mockResolvedValue({
+            subject: "Test Instructor commented on your post",
+            message: "Test Instructor commented on your post",
+            href: "https://school.courselit.test/community/post",
+            threadTitle: "A discussion title",
+            parentAuthorName: "Jamie",
+            parentText: "The original post body",
+            parentLabel: "Original post",
+            commentText: "A new comment",
+            conversationLabel: "New comment",
+            replyContext: {
+                community: {
+                    communityId: "community-id",
+                    postId: "post-id",
+                    parentCommentId: "comment-id",
+                },
+            },
+        });
+
+        await new EmailChannel().send(makePayload());
+
+        const mail = mockedAddMailJob.mock.calls[0][0];
+        const visibleText = getVisibleEmailText(
+            getVisibleEmailDocument(mail.body),
+        );
+
+        expect(visibleText).toContain("Jamie · Original post");
+        expect(visibleText).toContain("The original post body");
+        expect(visibleText).toContain("A new comment");
+        expect(visibleText).not.toContain("Earlier comment");
     });
 });

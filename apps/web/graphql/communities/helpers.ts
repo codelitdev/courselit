@@ -409,7 +409,7 @@ export async function getCommunityReportContent({
     }
 
     return {
-        content: extractTextFromTextEditorContent(content.content),
+        content: extractTextFromTextEditorContent(content.content).trim(),
         id: contentId,
         media: content.media,
     };

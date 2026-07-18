@@ -70,6 +70,7 @@ export * from "./notification-preference";
 export * from "./course";
 export * from "./activity-type";
 export * from "./email-event-action";
+export type { ReplyByEmailContext } from "./email-reply-context";
 export * from "./login-provider";
 export * from "./features";
 export * from "./product-discussion";

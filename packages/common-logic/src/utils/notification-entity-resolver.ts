@@ -4,7 +4,10 @@ import {
     CommunityPostSchema,
     CommunitySchema,
     CourseSchema,
+    ProductDiscussionCommentSchema,
+    ProductDiscussionReplySchema,
 } from "@courselit/orm-models";
+import type { ProductDiscussionEntityType } from "@courselit/common-models";
 import type { NotificationEntityResolver } from "./get-notification-message-and-href";
 
 export interface CreateNotificationEntityResolverOptions {
@@ -38,6 +41,7 @@ export function createNotificationEntityResolver(
                     {
                         ...getDomainQuery(domainId ?? defaultDomainId),
                         postId,
+                        deleted: false,
                     },
                     {
                         _id: 0,
@@ -45,6 +49,7 @@ export function createNotificationEntityResolver(
                         title: 1,
                         userId: 1,
                         communityId: 1,
+                        content: 1,
                     },
                 )
                 .lean<{
@@ -52,6 +57,7 @@ export function createNotificationEntityResolver(
                     title: string;
                     userId: string;
                     communityId: string;
+                    content?: unknown;
                 } | null>();
         },
         async getComment(commentId, domainId) {
@@ -60,6 +66,7 @@ export function createNotificationEntityResolver(
                     {
                         ...getDomainQuery(domainId ?? defaultDomainId),
                         commentId,
+                        deleted: false,
                     },
                     {
                         _id: 0,
@@ -82,6 +89,7 @@ export function createNotificationEntityResolver(
                         userId: string;
                         content: string;
                         parentReplyId?: string;
+                        deleted?: boolean;
                     }>;
                 } | null>();
 
@@ -95,12 +103,14 @@ export function createNotificationEntityResolver(
                 content: comment.content,
                 postId: comment.postId,
                 communityId: comment.communityId,
-                replies: (comment.replies || []).map((reply) => ({
-                    replyId: reply.replyId,
-                    userId: reply.userId,
-                    content: reply.content,
-                    parentReplyId: reply.parentReplyId,
-                })),
+                replies: (comment.replies || [])
+                    .filter((reply) => !reply.deleted)
+                    .map((reply) => ({
+                        replyId: reply.replyId,
+                        userId: reply.userId,
+                        content: reply.content,
+                        parentReplyId: reply.parentReplyId,
+                    })),
             };
         },
         async getCourse(courseId, domainId) {
@@ -123,6 +133,64 @@ export function createNotificationEntityResolver(
                     title: string;
                     slug?: string;
                     creatorId?: string;
+                } | null>();
+        },
+        async getDiscussionComment(commentId, domainId) {
+            return await getProductDiscussionCommentModel()
+                .findOne(
+                    {
+                        ...getDomainQuery(domainId ?? defaultDomainId),
+                        commentId,
+                        deleted: false,
+                    },
+                    {
+                        _id: 0,
+                        commentId: 1,
+                        userId: 1,
+                        productId: 1,
+                        entityType: 1,
+                        entityId: 1,
+                        content: 1,
+                    },
+                )
+                .lean<{
+                    commentId: string;
+                    userId: string;
+                    productId: string;
+                    entityType: ProductDiscussionEntityType;
+                    entityId: string;
+                    content: unknown;
+                } | null>();
+        },
+        async getDiscussionReply(replyId, domainId) {
+            return await getProductDiscussionReplyModel()
+                .findOne(
+                    {
+                        ...getDomainQuery(domainId ?? defaultDomainId),
+                        replyId,
+                        deleted: false,
+                    },
+                    {
+                        _id: 0,
+                        replyId: 1,
+                        commentId: 1,
+                        parentReplyId: 1,
+                        userId: 1,
+                        productId: 1,
+                        entityType: 1,
+                        entityId: 1,
+                        content: 1,
+                    },
+                )
+                .lean<{
+                    replyId: string;
+                    commentId: string;
+                    parentReplyId?: string;
+                    userId: string;
+                    productId: string;
+                    entityType: ProductDiscussionEntityType;
+                    entityId: string;
+                    content: unknown;
                 } | null>();
         },
     };
@@ -162,4 +230,20 @@ function getCommunityCommentModel(): mongoose.Model<any> {
 function getCourseModel(): mongoose.Model<any> {
     return (mongoose.models.Course ||
         mongoose.model("Course", CourseSchema)) as mongoose.Model<any>;
+}
+
+function getProductDiscussionCommentModel(): mongoose.Model<any> {
+    return (mongoose.models.ProductDiscussionComment ||
+        mongoose.model(
+            "ProductDiscussionComment",
+            ProductDiscussionCommentSchema,
+        )) as mongoose.Model<any>;
+}
+
+function getProductDiscussionReplyModel(): mongoose.Model<any> {
+    return (mongoose.models.ProductDiscussionReply ||
+        mongoose.model(
+            "ProductDiscussionReply",
+            ProductDiscussionReplySchema,
+        )) as mongoose.Model<any>;
 }

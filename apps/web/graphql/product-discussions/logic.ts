@@ -1333,7 +1333,11 @@ async function incrementLikesCount({
 
 function getContentFingerprint(content: TextEditorContent) {
     return Buffer.from(
-        extractTextFromTextEditorContent(content).trim().toLowerCase(),
+        extractTextFromTextEditorContent(content)
+            .normalize("NFKC")
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, " "),
     ).toString("base64");
 }
 
