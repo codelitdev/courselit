@@ -416,10 +416,14 @@ describe("getNotificationEmailContent", () => {
             actorName: "Alex",
             recipientUserId: "recipient-1",
             resolver: createResolver(),
+            resolveUserName: jest.fn().mockResolvedValue("Post author"),
         });
 
         expect(content).toMatchObject({
             commentText: "A parent comment",
+            parentText: "The full post body",
+            parentAuthorName: "Post author",
+            parentLabel: "Original post",
             threadTitle: "Welcome to the community",
             conversationLabel: "New comment",
             replyContext: {

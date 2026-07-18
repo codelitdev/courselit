@@ -319,4 +319,37 @@ describe("EmailChannel", () => {
         expect(visibleText).toContain("View discussion");
         expect(visibleText).not.toContain("View notification");
     });
+
+    it("labels original post context in new-comment emails", async () => {
+        mockedGetNotificationEmailContent.mockResolvedValue({
+            subject: "Test Instructor commented on your post",
+            message: "Test Instructor commented on your post",
+            href: "https://school.courselit.test/community/post",
+            threadTitle: "A discussion title",
+            parentAuthorName: "Jamie",
+            parentText: "The original post body",
+            parentLabel: "Original post",
+            commentText: "A new comment",
+            conversationLabel: "New comment",
+            replyContext: {
+                community: {
+                    communityId: "community-id",
+                    postId: "post-id",
+                    parentCommentId: "comment-id",
+                },
+            },
+        });
+
+        await new EmailChannel().send(makePayload());
+
+        const mail = mockedAddMailJob.mock.calls[0][0];
+        const visibleText = getVisibleEmailText(
+            getVisibleEmailDocument(mail.body),
+        );
+
+        expect(visibleText).toContain("Jamie · Original post");
+        expect(visibleText).toContain("The original post body");
+        expect(visibleText).toContain("A new comment");
+        expect(visibleText).not.toContain("Earlier comment");
+    });
 });

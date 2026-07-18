@@ -23,6 +23,7 @@ export interface NotificationEmailContent {
     commentText?: string;
     parentText?: string;
     parentAuthorName?: string;
+    parentLabel?: string;
     threadTitle?: string;
     conversationLabel?: "New post" | "New comment" | "New reply";
     replyContext?: ReplyByEmailContext;
@@ -98,6 +99,11 @@ export async function getNotificationEmailContent(
             return {
                 ...content,
                 commentText: excerpt(comment.content, COMMENT_TEXT_LIMIT),
+                parentText: excerpt(post.content, PARENT_TEXT_LIMIT),
+                parentAuthorName: options.resolveUserName
+                    ? await options.resolveUserName(post.userId)
+                    : undefined,
+                parentLabel: "Original post",
                 threadTitle: post.title,
                 conversationLabel: "New comment",
                 replyContext: {

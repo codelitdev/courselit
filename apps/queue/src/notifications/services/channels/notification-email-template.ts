@@ -9,6 +9,7 @@ interface NotificationEmailTemplateInput {
     commentText?: string;
     parentText?: string;
     parentAuthorName?: string;
+    parentLabel?: string;
     threadTitle?: string;
     conversationLabel?: string;
     isConversation?: boolean;
@@ -54,6 +55,7 @@ export function buildNotificationEmailTemplate({
     commentText,
     parentText,
     parentAuthorName,
+    parentLabel,
     threadTitle,
     conversationLabel,
     isConversation,
@@ -124,15 +126,13 @@ export function buildNotificationEmailTemplate({
     }
 
     if (parentText) {
-        const parentLabel = parentAuthorName
-            ? `${parentAuthorName} · Earlier comment`
-            : "Earlier comment";
+        const contextLabel = parentLabel || "Earlier comment";
         content.push({
             blockType: "text",
             settings: {
                 content: parentAuthorName
-                    ? `**${encodePlainTextForMarkdown(parentAuthorName)}** · ${encodePlainTextForMarkdown("Earlier comment")}`
-                    : encodePlainTextForMarkdown(parentLabel),
+                    ? `**${encodePlainTextForMarkdown(parentAuthorName)}** · ${encodePlainTextForMarkdown(contextLabel)}`
+                    : encodePlainTextForMarkdown(contextLabel),
                 fontSize: "13px",
                 lineHeight: "1.5",
                 foregroundColor: "#666666",

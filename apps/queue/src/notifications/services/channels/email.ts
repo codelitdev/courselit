@@ -68,6 +68,7 @@ export class EmailChannel implements NotificationChannel {
                 commentText: notificationDetails.commentText,
                 parentText: notificationDetails.parentText,
                 parentAuthorName: notificationDetails.parentAuthorName,
+                parentLabel: notificationDetails.parentLabel,
                 threadTitle: notificationDetails.threadTitle,
                 conversationLabel: notificationDetails.conversationLabel,
                 isConversation: Boolean(notificationDetails.replyContext),
