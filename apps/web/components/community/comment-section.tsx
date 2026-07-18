@@ -9,16 +9,155 @@ import {
     CommunityComment,
     CommunityCommentReply,
     CommunityPost,
+    CommunityReaction,
+    compareCommunityReactionsStable,
     Membership,
 } from "@courselit/common-models";
-import { focusHashTarget, scrollToHashTarget } from "@/lib/hash-target";
+import { useHashTargetScroll } from "@/hooks/use-hash-target-scroll";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+    COMMUNITY_POST_COMMENT_COMPOSER_ID,
+    focusCommunityPostCommentComposer,
+    shouldFocusCommunityPostComposer,
+    stripCommunityPostReplyFromUrl,
+} from "@/lib/community-post-navigation";
 
-const focusCommentTarget = (targetId: string) => {
-    focusHashTarget({
-        targetId,
-        eventName: "community-comment-target-change",
-    });
-};
+function toggleReactionLocally(
+    reactions: CommunityReaction[] | undefined,
+    emoji: string,
+    userId: string,
+    userName?: string,
+): CommunityReaction[] {
+    const list = [...(reactions || [])];
+    const idx = list.findIndex((r) => r.emoji === emoji);
+
+    if (idx === -1) {
+        const next: CommunityReaction[] = [
+            ...list,
+            {
+                emoji,
+                count: 1,
+                hasReacted: true,
+                reactors: [
+                    {
+                        userId,
+                        name: userName,
+                        avatar: {} as CommunityReaction["reactors"][number]["avatar"],
+                    },
+                ],
+            },
+        ];
+        return next.sort(compareCommunityReactionsStable);
+    }
+
+    const existing = list[idx];
+    if (existing.hasReacted) {
+        const nextCount = existing.count - 1;
+        if (nextCount <= 0) {
+            return list.filter((_, i) => i !== idx);
+        }
+        return list.map((r, i) =>
+            i === idx
+                ? {
+                      ...r,
+                      count: nextCount,
+                      hasReacted: false,
+                      reactors: r.reactors.filter((x) => x.userId !== userId),
+                  }
+                : r,
+        );
+    }
+
+    return list.map((r, i) =>
+        i === idx
+            ? {
+                  ...r,
+                  count: r.count + 1,
+                  hasReacted: true,
+                  reactors: [
+                      ...r.reactors,
+                      {
+                          userId,
+                          name: userName,
+                          avatar: {} as CommunityReaction["reactors"][number]["avatar"],
+                      },
+                  ],
+              }
+            : r,
+    );
+}
+
+/** pushState does not fire hashchange; notifications listen for this event. */
+const COMMUNITY_COMMENT_TARGET_CHANGE_EVENT = "community-comment-target-change";
+
+const REACTIONS_FRAGMENT = `
+    reactions {
+        emoji
+        count
+        hasReacted
+        reactors {
+            userId
+            name
+            avatar {
+                mediaId
+                file
+                thumbnail
+            }
+        }
+    }
+`;
+
+const REPLY_FIELDS = `
+    replyId
+    content
+    user {
+        userId
+        name
+        avatar {
+            mediaId
+            file
+            thumbnail
+        }
+    }
+    updatedAt
+    likesCount
+    hasLiked
+    ${REACTIONS_FRAGMENT}
+    deleted
+`;
+
+const COMMENT_FIELDS = `
+    communityId
+    postId
+    commentId
+    content
+    user {
+        userId
+        name
+        avatar {
+            mediaId
+            file
+            thumbnail
+        }
+    }
+    media {
+        type
+        media {
+            mediaId
+            file
+            thumbnail
+            size
+        }
+    }
+    likesCount
+    ${REACTIONS_FRAGMENT}
+    replies {
+        ${REPLY_FIELDS}
+    }
+    hasLiked
+    updatedAt
+    deleted
+`;
 
 export default function CommentSection({
     communityId,
@@ -38,40 +177,51 @@ export default function CommentSection({
     const { profile } = useContext(ProfileContext);
     const { toast } = useToast();
     const [isPosting, setIsPosting] = useState(false);
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const focusComposerFromQuery =
+        shouldFocusCommunityPostComposer(searchParams);
+
+    // Shared with product discussions: hash = content target only.
+    // contentReady uses comments.length so reaction updates do not re-scroll.
+    const { focusTarget } = useHashTargetScroll({
+        contentReady: comments.length > 0,
+        syncEvents: [COMMUNITY_COMMENT_TARGET_CHANGE_EVENT],
+        scopeKey: `${communityId}:${postId}`,
+    });
+
+    const focusCommentTarget = (targetId: string) => {
+        focusTarget(targetId, {
+            eventName: COMMUNITY_COMMENT_TARGET_CHANGE_EVENT,
+        });
+    };
 
     useEffect(() => {
         loadPost();
         loadComments();
     }, []);
 
+    // Feed/community Reply uses ?reply=1 (not hash) so notification hashes stay free.
     useEffect(() => {
-        if (comments.length === 0) return;
-        if (scrollToHashTarget()) return;
-    }, [comments]);
-
-    useEffect(() => {
-        if (comments.length === 0) {
+        if (!focusComposerFromQuery || !profile?.name) {
             return;
         }
 
-        const handleTargetChange = () => {
-            scrollToHashTarget();
-        };
-
-        window.addEventListener("hashchange", handleTargetChange);
-        window.addEventListener(
-            "community-comment-target-change",
-            handleTargetChange,
-        );
-
-        return () => {
-            window.removeEventListener("hashchange", handleTargetChange);
-            window.removeEventListener(
-                "community-comment-target-change",
-                handleTargetChange,
-            );
-        };
-    }, [comments.length]);
+        return focusCommunityPostCommentComposer({
+            stillWanted: () =>
+                shouldFocusCommunityPostComposer(
+                    new URLSearchParams(window.location.search),
+                ),
+            onFocused: () => {
+                // Consume-once: strip reply=1 so refresh/remount does not re-focus
+                // and notification #commentId deep-links are never blocked.
+                const next = stripCommunityPostReplyFromUrl(
+                    window.location.href,
+                );
+                router.replace(next, { scroll: false });
+            },
+        });
+    }, [focusComposerFromQuery, profile?.name, router]);
 
     useEffect(() => {
         if (post && typeof post.commentsCount !== "undefined") {
@@ -116,49 +266,7 @@ export default function CommentSection({
         const query = `
             query ($communityId: String!, $postId: String!) {
                 comments: getComments(communityId: $communityId, postId: $postId) {
-                    communityId
-                    postId
-                    commentId
-                    content
-                    user {
-                        userId
-                        name
-                        avatar {
-                            mediaId
-                            file
-                            thumbnail
-                        }
-                    }
-                    media {
-                        type
-                        media {
-                            mediaId
-                            file
-                            thumbnail
-                            size
-                        }
-                    }
-                    likesCount
-                    replies {
-                        replyId
-                        content
-                        user {
-                            userId
-                            name
-                            avatar {
-                                mediaId
-                                file
-                                thumbnail
-                            }
-                        }
-                        updatedAt
-                        likesCount
-                        hasLiked
-                        deleted
-                    } 
-                    hasLiked
-                    updatedAt
-                    deleted
+                    ${COMMENT_FIELDS}
                 }
             }
         `;
@@ -193,49 +301,7 @@ export default function CommentSection({
         const query = `
             mutation ($communityId: String!, $postId: String!, $content: String!) {
                 comment: postComment(communityId: $communityId, postId: $postId, content: $content) {
-                    communityId
-                    postId
-                    commentId
-                    content
-                    user {
-                        userId
-                        name
-                        avatar {
-                            mediaId
-                            file
-                            thumbnail
-                        }
-                    }
-                    media {
-                        type
-                        media {
-                            mediaId
-                            file
-                            thumbnail
-                            size
-                        }
-                    }
-                    likesCount
-                    replies {
-                        replyId
-                        content
-                        user {
-                            userId
-                            name
-                            avatar {
-                                mediaId
-                                file
-                                thumbnail
-                            }
-                        }
-                        updatedAt
-                        likesCount
-                        hasLiked
-                        deleted
-                    } 
-                    hasLiked
-                    updatedAt
-                    deleted
+                    ${COMMENT_FIELDS}
                 }
             }
         `;
@@ -256,9 +322,10 @@ export default function CommentSection({
         try {
             const response = await fetch.exec();
             if (response.comment) {
+                // Newest first — match getComments sort and keep new posts near the composer.
                 setComments((prevComments) => [
-                    ...prevComments,
                     response.comment,
+                    ...prevComments,
                 ]);
                 setContent("");
                 focusCommentTarget(response.comment.commentId);
@@ -290,49 +357,7 @@ export default function CommentSection({
         const query = `
             mutation ($communityId: String!, $postId: String!, $commentId: String!, $content: String!, $parentReplyId: String, $media: [CommunityPostInputMedia]) {
                 comment: postComment(communityId: $communityId, postId: $postId, parentCommentId: $commentId, content: $content, parentReplyId: $parentReplyId, media: $media) {
-                    communityId
-                    postId
-                    commentId
-                    content
-                    user {
-                        userId
-                        name
-                        avatar {
-                            mediaId
-                            file
-                            thumbnail
-                        }
-                    }
-                    media {
-                        type
-                        media {
-                            mediaId
-                            file
-                            thumbnail
-                            size
-                        }
-                    }
-                    likesCount
-                    replies {
-                        replyId
-                        content
-                        user {
-                            userId
-                            name
-                            avatar {
-                                mediaId
-                                file
-                                thumbnail
-                            }
-                        }
-                        updatedAt
-                        likesCount
-                        hasLiked
-                        deleted
-                    } 
-                    hasLiked
-                    updatedAt
-                    deleted
+                    ${COMMENT_FIELDS}
                 }
             }
         `;
@@ -378,53 +403,31 @@ export default function CommentSection({
         }
     };
 
-    const handleCommentLike = async (commentId: string) => {
+    const handleCommentReact = async (commentId: string, emoji: string) => {
+        const userId = profile?.userId;
+        if (!userId) return;
+
+        // Optimistic update so the pill appears immediately
+        setComments((prev) =>
+            prev.map((c) =>
+                c.commentId === commentId
+                    ? {
+                          ...c,
+                          reactions: toggleReactionLocally(
+                              c.reactions,
+                              emoji,
+                              userId,
+                              profile?.name,
+                          ),
+                      }
+                    : c,
+            ),
+        );
+
         const query = `
-            mutation ($communityId: String!, $postId: String!, $commentId: String!) {
-                comment: toggleCommentLike(communityId: $communityId, postId: $postId, commentId: $commentId) {
-                    communityId
-                    postId
-                    commentId
-                    content
-                    user {
-                        userId
-                        name
-                        avatar {
-                            mediaId
-                            file
-                            thumbnail
-                        }
-                    }
-                    media {
-                        type
-                        media {
-                            mediaId
-                            file
-                            thumbnail
-                            size
-                        }
-                    }
-                    likesCount
-                    replies {
-                        replyId
-                        content
-                        user {
-                            userId
-                            name
-                            avatar {
-                                mediaId
-                                file
-                                thumbnail
-                            }
-                        }
-                        updatedAt
-                        likesCount
-                        hasLiked
-                        deleted
-                    } 
-                    hasLiked
-                    updatedAt
-                    deleted
+            mutation ($communityId: String!, $postId: String!, $commentId: String!, $emoji: String!) {
+                comment: toggleCommentReaction(communityId: $communityId, postId: $postId, commentId: $commentId, emoji: $emoji) {
+                    ${COMMENT_FIELDS}
                 }
             }
         `;
@@ -436,6 +439,7 @@ export default function CommentSection({
                     communityId,
                     postId,
                     commentId,
+                    emoji,
                 },
             })
             .setIsGraphQLEndpoint(true)
@@ -447,6 +451,8 @@ export default function CommentSection({
                 replaceComment(response.comment);
             }
         } catch (err: any) {
+            // Re-sync from server on failure
+            loadComments();
             toast({
                 title: "Error",
                 description: err.message,
@@ -454,52 +460,41 @@ export default function CommentSection({
         }
     };
 
-    const handleReplyLike = async (commentId: string, replyId: string) => {
+    const handleReplyReact = async (
+        commentId: string,
+        emoji: string,
+        replyId: string,
+    ) => {
+        const userId = profile?.userId;
+        if (!userId) return;
+
+        // Optimistic update on the specific reply
+        setComments((prev) =>
+            prev.map((c) => {
+                if (c.commentId !== commentId) return c;
+                return {
+                    ...c,
+                    replies: (c.replies || []).map((r) =>
+                        r.replyId === replyId
+                            ? {
+                                  ...r,
+                                  reactions: toggleReactionLocally(
+                                      r.reactions,
+                                      emoji,
+                                      userId,
+                                      profile?.name,
+                                  ),
+                              }
+                            : r,
+                    ),
+                };
+            }),
+        );
+
         const query = `
-            mutation ($communityId: String!, $postId: String!, $commentId: String!, $replyId: String!) {
-                comment: toggleCommentReplyLike(communityId: $communityId, postId: $postId, commentId: $commentId, replyId: $replyId) {
-                    communityId
-                    postId
-                    commentId
-                    content
-                    user {
-                        userId
-                        name
-                        avatar {
-                            mediaId
-                            file
-                            thumbnail
-                        }
-                    }
-                    media {
-                        type
-                        media {
-                            mediaId
-                            file
-                            thumbnail
-                        }
-                    }
-                    likesCount
-                    replies {
-                        replyId
-                        content
-                        user {
-                            userId
-                            name
-                            avatar {
-                                mediaId
-                                file
-                                thumbnail
-                            }
-                        }
-                        updatedAt
-                        likesCount
-                        hasLiked
-                        deleted
-                    } 
-                    hasLiked
-                    updatedAt
-                    deleted
+            mutation ($communityId: String!, $postId: String!, $commentId: String!, $replyId: String!, $emoji: String!) {
+                comment: toggleCommentReplyReaction(communityId: $communityId, postId: $postId, commentId: $commentId, replyId: $replyId, emoji: $emoji) {
+                    ${COMMENT_FIELDS}
                 }
             }
         `;
@@ -512,6 +507,7 @@ export default function CommentSection({
                     postId,
                     commentId,
                     replyId,
+                    emoji,
                 },
             })
             .setIsGraphQLEndpoint(true)
@@ -523,6 +519,7 @@ export default function CommentSection({
                 replaceComment(response.comment);
             }
         } catch (err: any) {
+            loadComments();
             toast({
                 title: "Error",
                 description: err.message,
@@ -536,49 +533,7 @@ export default function CommentSection({
         const query = `
             mutation ($communityId: String!, $postId: String!, $commentId: String!, $replyId: String) {
                 comment: deleteComment(communityId: $communityId, postId: $postId, commentId: $commentId, replyId: $replyId) {
-                    communityId
-                    postId
-                    commentId
-                    content
-                    user {
-                        userId
-                        name
-                        avatar {
-                            mediaId
-                            file
-                            thumbnail
-                        }
-                    }
-                    media {
-                        type
-                        media {
-                            mediaId
-                            file
-                            thumbnail
-                            size
-                        }
-                    }
-                    likesCount
-                    replies {
-                        replyId
-                        content
-                        user {
-                            userId
-                            name
-                            avatar {
-                                mediaId
-                                file
-                                thumbnail
-                            }
-                        }
-                        updatedAt
-                        likesCount
-                        hasLiked
-                        deleted
-                    } 
-                    hasLiked
-                    updatedAt
-                    deleted
+                    ${COMMENT_FIELDS}
                 }
             }
         `;
@@ -615,7 +570,18 @@ export default function CommentSection({
     const replaceComment = (comment: CommunityComment) => {
         setComments((prevComments) =>
             prevComments.map((c) =>
-                c.commentId === comment.commentId ? comment : c,
+                c.commentId === comment.commentId
+                    ? {
+                          ...comment,
+                          // Ensure new array identity so nested reply bars re-render
+                          replies: comment.replies
+                              ? comment.replies.map((r) => ({ ...r }))
+                              : [],
+                          reactions: comment.reactions
+                              ? [...comment.reactions]
+                              : [],
+                      }
+                    : c,
             ),
         );
     };
@@ -628,6 +594,30 @@ export default function CommentSection({
 
     return (
         <div className="flex flex-col gap-4">
+            {!profile?.name && (
+                <div className="text-center text-gray-500">
+                    Complete your{" "}
+                    <span className="underline">
+                        <Link href={"/dashboard/profile"}>profile</Link>
+                    </span>{" "}
+                    to join this community or post here
+                </div>
+            )}
+            {profile?.name && (
+                <div
+                    id={COMMUNITY_POST_COMMENT_COMPOSER_ID}
+                    className="flex flex-col gap-2"
+                >
+                    <Textarea
+                        placeholder="Add a comment..."
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                    />
+                    <Button onClick={handlePostComment} disabled={isPosting}>
+                        {isPosting ? "Posting..." : "Post Comment"}
+                    </Button>
+                </div>
+            )}
             <div className="space-y-4 overflow-y-auto">
                 {comments.map((comment) => (
                     <Comment
@@ -635,11 +625,15 @@ export default function CommentSection({
                         key={comment.commentId}
                         membership={membership}
                         comment={comment}
-                        onLike={(commentId: string, replyId?: string) => {
+                        onReact={(
+                            commentId: string,
+                            emoji: string,
+                            replyId?: string,
+                        ) => {
                             if (replyId) {
-                                handleReplyLike(commentId, replyId);
+                                handleReplyReact(commentId, emoji, replyId);
                             } else {
-                                handleCommentLike(commentId);
+                                handleCommentReact(commentId, emoji);
                             }
                         }}
                         onReply={(commentId, content, parentReplyId?: string) =>
@@ -654,27 +648,6 @@ export default function CommentSection({
                     />
                 ))}
             </div>
-            {!profile?.name && (
-                <div className="text-center text-gray-500">
-                    Complete your{" "}
-                    <span className="underline">
-                        <Link href={"/dashboard/profile"}>profile</Link>
-                    </span>{" "}
-                    to join this community or post here
-                </div>
-            )}
-            {profile?.name && (
-                <div className="flex flex-col gap-2">
-                    <Textarea
-                        placeholder="Add a comment..."
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                    />
-                    <Button onClick={handlePostComment} disabled={isPosting}>
-                        {isPosting ? "Posting..." : "Post Comment"}
-                    </Button>
-                </div>
-            )}
         </div>
     );
 }

@@ -82,7 +82,7 @@ describe("POST /api/media/presigned", () => {
     });
 
     it("continues to generate a media signature with a dashboard session", async () => {
-        (auth.api.getSession as jest.Mock).mockResolvedValue({
+        (auth.api.getSession as unknown as jest.Mock).mockResolvedValue({
             user: { email: "admin@example.com" },
         });
         (User.findOne as jest.Mock).mockResolvedValue({

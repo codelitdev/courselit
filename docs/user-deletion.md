@@ -64,12 +64,13 @@ This document provides a quick overview of how user deletion is implemented.
 |               |   |                             |   |              |   |                    |
 | * Notifs      |   | * Posts/Comments            |   | * Cancel     |   | * Sequence         |
 | * Mail Status |   |   (via helper)              |   |   Subscript. |   |   entrants         |
-| * Evaluations |   | * Community Likes/Subs      |   | * Delete     |   | * Course           |
-| * Downloads   |   | * Discussion Likes/Subs     |   |   Invoices   |   |   customers        |
-| * Reports     |   | * Discussion Reports        |   | * Delete     |   | * Avatar Media     |
-| * Certificates|   | * Discussion Comments/      |   |   Membership |   |                    |
-| * Activity    |   |   Replies (Anonymized)      |   |              |   |                    |
-| * Email Events|   |                             |   |              |   |                    |
+| * Evaluations |   | * Community reactions       |   | * Delete     |   | * Course           |
+| * Downloads   |   |   (collection + posts)      |   |   Invoices   |   |   customers        |
+| * Reports     |   | * Community post subs       |   | * Delete     |   | * Avatar Media     |
+| * Certificates|   | * Discussion likes/subs/    |   |   Membership |   |                    |
+| * Activity    |   |   reports                   |   |              |   |                    |
+| * Email Events|   | * Discussion comments/      |   |              |   |                    |
+|               |   |   replies (anonymized)      |   |              |   |                    |
 +---------------+   +-----------------------------+   +--------------+   +--------------------+
                               |
                               v
@@ -145,9 +146,8 @@ cleanupPersonalData(userToDelete, ctx)
 |   |-- Product discussion subscriptions
 |   `-- Product discussion reports
 |-- Clean community content
-|   |-- Delete posts & comments (via helper)
-|   |-- Remove from post likes
-|   `-- Remove from comment/reply likes
+|   |-- Delete posts & comments (deleteCommunityPosts by user; includes reactions on owned posts / by userId)
+|   `-- Delete remaining community reactions for userId (CommunityReactionModel)
 |-- Anonymize and redact product discussion comments and replies
 |-- Clean memberships
 |   |-- For each membership
@@ -178,26 +178,27 @@ deleteUser
 
 ## GDPR Compliance Matrix
 
-| Data Type                   | Action    | Location                                                                                 | GDPR Status   |
-| --------------------------- | --------- | ---------------------------------------------------------------------------------------- | ------------- |
-| User Profile                | Delete    | `UserModel.deleteOne()`                                                                  | [x] Compliant |
-| Notifications               | Delete    | `NotificationModel.deleteMany()`                                                         | [x] Compliant |
-| Activity Logs               | Delete    | `ActivityModel.deleteMany()`                                                             | [x] Compliant |
-| Email Events                | Delete    | `EmailEventModel.deleteMany()`                                                           | [x] Compliant |
-| Certificates                | Delete    | `CertificateModel.deleteMany()`                                                          | [x] Compliant |
-| Evaluations                 | Delete    | `LessonEvaluationModel.deleteMany()`                                                     | [x] Compliant |
-| Downloads                   | Delete    | `DownloadLinkModel.deleteMany()`                                                         | [x] Compliant |
-| Reports                     | Delete    | `CommunityReportModel.deleteMany()`                                                      | [x] Compliant |
-| Posts/Comments              | Delete    | `deleteCommunityPosts()`                                                                 | [x] Compliant |
-| Likes                       | Remove    | `$pull` operations                                                                       | [x] Compliant |
-| Memberships                 | Delete    | `MembershipModel.deleteOne()`                                                            | [x] Compliant |
-| Subscriptions               | Cancel    | Payment provider API                                                                     | [x] Compliant |
-| Invoices                    | Delete    | `InvoiceModel.deleteMany()`                                                              | [x] Compliant |
-| Avatar                      | Delete    | `deleteMedia()`                                                                          | [x] Compliant |
-| Discussion Likes            | Delete    | `ProductDiscussionLikeModel.deleteMany()`                                                | [x] Compliant |
-| Discussion Subs             | Delete    | `ProductDiscussionSubscriberModel.deleteMany()`                                          | [x] Compliant |
-| Discussion Reports          | Delete    | `ProductDiscussionReportModel.deleteMany()`                                              | [x] Compliant |
-| Discussion Comments/Replies | Anonymize | `ProductDiscussionCommentModel.updateMany()`, `ProductDiscussionReplyModel.updateMany()` | [x] Compliant |
-| Courses                     | Migrate   | `CourseModel.updateMany()`                                                               | [x] Preserved |
-| Templates                   | Migrate   | `EmailTemplateModel.updateMany()`                                                        | [x] Preserved |
-| Sequences                   | Migrate   | `SequenceModel.updateMany()`                                                             | [x] Preserved |
+| Data Type                    | Action    | Location                                                                                                                                                 | GDPR Status   |
+| ---------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| User Profile                 | Delete    | `UserModel.deleteOne()`                                                                                                                                  | [x] Compliant |
+| Notifications                | Delete    | `NotificationModel.deleteMany()`                                                                                                                         | [x] Compliant |
+| Activity Logs                | Delete    | `ActivityModel.deleteMany()`                                                                                                                             | [x] Compliant |
+| Email Events                 | Delete    | `EmailEventModel.deleteMany()`                                                                                                                           | [x] Compliant |
+| Certificates                 | Delete    | `CertificateModel.deleteMany()`                                                                                                                          | [x] Compliant |
+| Evaluations                  | Delete    | `LessonEvaluationModel.deleteMany()`                                                                                                                     | [x] Compliant |
+| Downloads                    | Delete    | `DownloadLinkModel.deleteMany()`                                                                                                                         | [x] Compliant |
+| Reports                      | Delete    | `CommunityReportModel.deleteMany()`                                                                                                                      | [x] Compliant |
+| Posts/Comments               | Delete    | `deleteCommunityPosts()`                                                                                                                                 | [x] Compliant |
+| Community reactions          | Delete    | `CommunityReactionModel.deleteMany()` by `userId` / owned posts; hard content delete purges entity rows; soft-delete retains until hard/user/post delete | [x] Compliant |
+| Community post subscriptions | Delete    | `CommunityPostSubscriberModel.deleteMany()`                                                                                                              | [x] Compliant |
+| Memberships                  | Delete    | `MembershipModel.deleteOne()`                                                                                                                            | [x] Compliant |
+| Subscriptions                | Cancel    | Payment provider API                                                                                                                                     | [x] Compliant |
+| Invoices                     | Delete    | `InvoiceModel.deleteMany()`                                                                                                                              | [x] Compliant |
+| Avatar                       | Delete    | `deleteMedia()`                                                                                                                                          | [x] Compliant |
+| Discussion Likes             | Delete    | `ProductDiscussionLikeModel.deleteMany()`                                                                                                                | [x] Compliant |
+| Discussion Subs              | Delete    | `ProductDiscussionSubscriberModel.deleteMany()`                                                                                                          | [x] Compliant |
+| Discussion Reports           | Delete    | `ProductDiscussionReportModel.deleteMany()`                                                                                                              | [x] Compliant |
+| Discussion Comments/Replies  | Anonymize | `ProductDiscussionCommentModel.updateMany()`, `ProductDiscussionReplyModel.updateMany()`                                                                 | [x] Compliant |
+| Courses                      | Migrate   | `CourseModel.updateMany()`                                                                                                                               | [x] Preserved |
+| Templates                    | Migrate   | `EmailTemplateModel.updateMany()`                                                                                                                        | [x] Preserved |
+| Sequences                    | Migrate   | `SequenceModel.updateMany()`                                                                                                                             | [x] Preserved |

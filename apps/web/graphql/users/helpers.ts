@@ -31,6 +31,7 @@ import CertificateModel from "@models/Certificate";
 import ActivityModel from "@models/Activity";
 import EmailEventModel from "@models/EmailEvent";
 import CommunityPostSubscriberModel from "@models/CommunityPostSubscriber";
+import CommunityReactionModel from "@models/CommunityReaction";
 import ProductDiscussionCommentModel from "@models/ProductDiscussionComment";
 import ProductDiscussionReplyModel from "@models/ProductDiscussionReply";
 import ProductDiscussionLikeModel from "@models/ProductDiscussionLike";
@@ -40,8 +41,6 @@ import {
     cancelAndDeleteMemberships,
     deleteCommunityPosts,
 } from "../communities/logic";
-import CommunityPostModel from "@models/CommunityPost";
-import CommunityCommentModel from "@models/CommunityComment";
 import { deleteMedia } from "@/services/medialit";
 import Account from "@models/Account";
 
@@ -254,6 +253,16 @@ export async function migrateBusinessEntities(
     }
 }
 
+async function removeUserFromCommunityReactions(
+    domainId: any,
+    userId: string,
+): Promise<void> {
+    await CommunityReactionModel.deleteMany({
+        domain: domainId,
+        userId,
+    });
+}
+
 /**
  * Cleans up personal data and user-specific records.
  * This ensures GDPR compliance by removing all personal information.
@@ -353,21 +362,10 @@ export async function cleanupPersonalData(
         },
     );
 
-    // Remove user from likes on posts
-    await CommunityPostModel.updateMany(
-        { domain: ctx.subdomain._id },
-        { $pull: { likes: userToDelete.userId } },
-    );
-
-    // Remove user from likes on comments and replies
-    await CommunityCommentModel.updateMany(
-        { domain: ctx.subdomain._id },
-        {
-            $pull: {
-                likes: userToDelete.userId,
-                "replies.$[].likes": userToDelete.userId,
-            },
-        },
+    // Remove user from community reactions (posts, comments, replies)
+    await removeUserFromCommunityReactions(
+        ctx.subdomain._id,
+        userToDelete.userId,
     );
 
     // Delete memberships and cancel subscriptions

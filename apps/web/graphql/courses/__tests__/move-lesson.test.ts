@@ -228,10 +228,10 @@ describe("moveLesson", () => {
         expect(updatedCourse?.groups?.[0]?.lessonsOrder).toEqual([lesson1]);
         expect(updatedCourse?.groups?.[1]?.lessonsOrder).toEqual([lesson2]);
 
-        const updatedLesson = await LessonModel.findOne({
+        const updatedLesson = (await LessonModel.findOne({
             domain: testDomain._id,
             lessonId: lesson2,
-        }).lean();
+        }).lean()) as any;
         expect(updatedLesson?.groupId).toBe(groupId2);
     });
 

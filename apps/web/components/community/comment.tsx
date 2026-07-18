@@ -2,13 +2,7 @@ import { useContext, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-    ThumbsUp,
-    MessageSquare,
-    MoreVertical,
-    FlagTriangleRight,
-    Trash,
-} from "lucide-react";
+import { MoreVertical, FlagTriangleRight, Trash } from "lucide-react";
 import {
     CommunityComment,
     CommunityCommentReply,
@@ -34,6 +28,7 @@ import { isCommunityComment } from "./utils";
 import { DELETED_COMMENT_PLACEHOLDER } from "@ui-config/strings";
 import { useToast } from "@courselit/components-library";
 import { FetchBuilder } from "@courselit/utils";
+import { ReactionsBar } from "./reactions-bar";
 
 type CommentOrReply =
     | CommunityComment
@@ -42,7 +37,7 @@ type CommentOrReply =
 interface CommentProps {
     communityId: string;
     comment: CommentOrReply;
-    onLike: (commentId: string, replyId?: string) => void;
+    onReact: (commentId: string, emoji: string, replyId?: string) => void;
     onReply: (
         commentId: string,
         content: string,
@@ -57,7 +52,7 @@ interface CommentProps {
 export function Comment({
     communityId,
     comment,
-    onLike,
+    onReact,
     onReply,
     onDelete,
     membership,
@@ -254,25 +249,23 @@ export function Comment({
                             comment.content
                         )}
                     </p>
-                    <div className="flex items-center gap-4 mt-2">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className={`text-muted-foreground ${comment.hasLiked ? "bg-accent" : ""}`}
-                            onClick={() => onLike(comment.commentId)}
-                        >
-                            <ThumbsUp className="h-4 w-4 mr-2" />
-                            {comment.likesCount}
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-muted-foreground"
-                            onClick={() => setIsReplying(!isReplying)}
-                        >
-                            <MessageSquare className="h-4 w-4 mr-2" />
-                            Reply
-                        </Button>
+                    <div className="flex flex-wrap gap-1 items-center min-w-0 mt-2">
+                        <ReactionsBar
+                            reactions={comment.reactions || []}
+                            onReact={(emoji) => {
+                                if (isCommunityComment(comment)) {
+                                    onReact(comment.commentId, emoji);
+                                } else {
+                                    onReact(
+                                        comment.commentId,
+                                        emoji,
+                                        comment.replyId,
+                                    );
+                                }
+                            }}
+                            showReplyButton
+                            onReply={() => setIsReplying(!isReplying)}
+                        />
                     </div>
                 </div>
             </div>
@@ -325,7 +318,9 @@ export function Comment({
                             ...reply,
                             commentId: comment.commentId,
                         }}
-                        onLike={() => onLike(comment.commentId, reply.replyId)}
+                        onReact={(commentId, emoji, replyId) =>
+                            onReact(commentId, emoji, reply.replyId)
+                        }
                         onReply={onReply}
                         onDelete={onDelete}
                         membership={membership}

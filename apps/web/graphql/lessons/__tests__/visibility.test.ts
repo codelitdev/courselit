@@ -419,10 +419,10 @@ describe("Lesson visibility and progress", () => {
         expect(lesson.media?.mediaId).toBe(tempMediaId);
         expect(lesson.media?.file).toBeUndefined();
 
-        const savedLesson = await LessonModel.findOne({
+        const savedLesson = (await LessonModel.findOne({
             lessonId: lesson.lessonId,
             domain: testDomain._id,
-        }).lean();
+        }).lean()) as any;
         expect(savedLesson?.media?.mediaId).toBe(tempMediaId);
         expect(savedLesson?.media?.file).toBeUndefined();
     });

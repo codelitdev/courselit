@@ -15,10 +15,11 @@ import {
 } from "@courselit/page-blocks";
 import { CommunityMedia, CommunityPost } from "@courselit/common-models";
 import { capitalize, truncate } from "@courselit/utils";
-import { MessageSquare, Pin, ThumbsUp } from "lucide-react";
+import { Pin } from "lucide-react";
 import Link from "next/link";
 import { useContext } from "react";
 import { ThemeContext } from "@components/contexts";
+import { ReactionsBar } from "./reactions-bar";
 
 interface CommunityPostCardProps {
     post: CommunityPost;
@@ -28,8 +29,13 @@ interface CommunityPostCardProps {
     formatTimestamp: (value?: string) => string;
     renderMediaPreview: (media: CommunityMedia) => React.ReactNode;
     onOpen: (postId: string) => void;
+    /**
+     * Navigate to the post focused on the comment composer (e.g. ?reply=1).
+     * Falls back to `onOpen` when omitted.
+     */
+    onReply?: (postId: string) => void;
     onTogglePin?: (postId: string, e?: React.MouseEvent) => void;
-    onLike?: (postId: string, e?: React.MouseEvent) => void;
+    onReact?: (postId: string, emoji: string, e?: React.MouseEvent) => void;
 }
 
 export default function CommunityPostCard({
@@ -40,8 +46,9 @@ export default function CommunityPostCard({
     formatTimestamp,
     renderMediaPreview,
     onOpen,
+    onReply,
     onTogglePin,
-    onLike,
+    onReact,
 }: CommunityPostCardProps) {
     const { theme } = useContext(ThemeContext);
 
@@ -137,25 +144,13 @@ export default function CommunityPostCard({
                 )}
             </CardContent>
             <CardFooter>
-                <div className="flex items-center gap-4">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`text-muted-foreground ${post.hasLiked ? "bg-accent" : ""}`}
-                        onClick={(e) => onLike?.(post.postId, e)}
-                    >
-                        <ThumbsUp className="mr-2 h-4 w-4" />
-                        {post.likesCount}
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-muted-foreground"
-                    >
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        {post.commentsCount}
-                    </Button>
-                </div>
+                <ReactionsBar
+                    reactions={post.reactions || []}
+                    onReact={(emoji) => onReact?.(post.postId, emoji)}
+                    showReplyButton
+                    onReply={() => (onReply ?? onOpen)(post.postId)}
+                    repliesCount={post.commentsCount}
+                />
             </CardFooter>
         </Card>
     );

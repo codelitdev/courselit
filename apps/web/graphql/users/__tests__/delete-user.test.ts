@@ -863,75 +863,52 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             );
         });
 
-        it("should remove user from post likes arrays", async () => {
-            await CommunityPostModel.create({
-                domain: testDomain._id,
-                postId: "post-123",
-                userId: DU_OTHER_USER_ID,
-                communityId: "comm-123",
-                title: "Test Post",
-                content: "Content",
-                likes: [targetUser.userId, DU_OTHER_USER_ID],
-            });
+        it("should remove user from community reactions collection", async () => {
+            const CommunityReactionModel = (
+                await import("@models/CommunityReaction")
+            ).default;
+
+            await CommunityReactionModel.create([
+                {
+                    domain: testDomain._id,
+                    communityId: "comm-123",
+                    entityType: Constants.CommunityReactionEntityType.POST,
+                    entityId: "post-123",
+                    postId: "post-123",
+                    emoji: "❤️",
+                    userId: targetUser.userId,
+                },
+                {
+                    domain: testDomain._id,
+                    communityId: "comm-123",
+                    entityType: Constants.CommunityReactionEntityType.POST,
+                    entityId: "post-123",
+                    postId: "post-123",
+                    emoji: "❤️",
+                    userId: DU_OTHER_USER_ID,
+                },
+                {
+                    domain: testDomain._id,
+                    communityId: "comm-123",
+                    entityType: Constants.CommunityReactionEntityType.COMMENT,
+                    entityId: "comment-123",
+                    postId: "post-123",
+                    emoji: "👍",
+                    userId: targetUser.userId,
+                },
+            ]);
 
             await deleteUser(targetUser.userId, mockCtx);
 
-            const post = await CommunityPostModel.findOne({
-                postId: "post-123",
-            });
-            expect(post?.likes).not.toContain(targetUser.userId);
-            expect(post?.likes).toContain(DU_OTHER_USER_ID);
-        });
-
-        it("should remove user from comment likes arrays", async () => {
-            await CommunityCommentModel.create({
+            const remaining = await CommunityReactionModel.find({
                 domain: testDomain._id,
-                commentId: "comment-123",
-                postId: "post-123",
-                communityId: "comm-123",
-                userId: DU_OTHER_USER_ID,
-                content: "Test Comment",
-                likes: [targetUser.userId, DU_OTHER_USER_ID],
-                replies: [],
-            });
-
-            await deleteUser(targetUser.userId, mockCtx);
-
-            const comment = await CommunityCommentModel.findOne({
-                commentId: "comment-123",
-            });
-            expect(comment?.likes).not.toContain(targetUser.userId);
-            expect(comment?.likes).toContain(DU_OTHER_USER_ID);
-        });
-
-        it("should remove user from reply likes arrays", async () => {
-            await CommunityCommentModel.create({
-                domain: testDomain._id,
-                commentId: "comment-123",
-                postId: "post-123",
-                communityId: "comm-123",
-                userId: DU_OTHER_USER_ID,
-                content: "Test Comment",
-                likes: [],
-                replies: [
-                    {
-                        replyId: "reply-123",
-                        userId: DU_OTHER_USER_ID,
-                        content: "Reply content",
-                        likes: [targetUser.userId, DU_OTHER_USER_ID],
-                        deleted: false,
-                    },
-                ],
-            });
-
-            await deleteUser(targetUser.userId, mockCtx);
-
-            const comment = await CommunityCommentModel.findOne({
-                commentId: "comment-123",
-            });
-            const reply = comment?.replies[0];
-            expect(reply?.likes).not.toContain(targetUser.userId);
-            expect(reply?.likes).toContain(DU_OTHER_USER_ID);
+            }).lean();
+            expect(remaining.every((r) => r.userId !== targetUser.userId)).toBe(
+                true,
+            );
+            expect(remaining.some((r) => r.userId === DU_OTHER_USER_ID)).toBe(
+                true,
+            );
         });
 
         it("should delete memberships and associated invoices", async () => {

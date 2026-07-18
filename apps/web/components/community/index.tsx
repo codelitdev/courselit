@@ -50,6 +50,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import CommunityPostCard from "./post-card";
 import CommunityPostMediaPreview from "./post-media-preview";
+import { communityPostHref } from "@/lib/community-post-navigation";
 
 const CreatePostDialog = dynamic(() => import("./create-post-dialog"));
 
@@ -160,6 +161,20 @@ export function CommunityForum({
                         }
                     }
                     likesCount
+                    reactions {
+                        emoji
+                        count
+                        hasReacted
+                        reactors {
+                            userId
+                            name
+                            avatar {
+                                mediaId
+                                file
+                                thumbnail
+                            }
+                        }
+                    }
                     commentsCount
                     updatedAt
                     hasLiked
@@ -256,27 +271,31 @@ export function CommunityForum({
         );
     };
 
-    const handleLike = async (postId: string, e?: React.MouseEvent) => {
+    const handleReact = async (
+        postId: string,
+        emoji: string,
+        e?: React.MouseEvent,
+    ) => {
         e?.stopPropagation();
 
-        setPosts((prevPosts) =>
-            prevPosts.map((post) =>
-                post.postId === postId
-                    ? {
-                          ...post,
-                          likesCount: post.hasLiked
-                              ? post.likesCount - 1
-                              : post.likesCount + 1,
-                          hasLiked: !post.hasLiked,
-                      }
-                    : post,
-            ),
-        );
-
         const query = `
-            mutation ($communityId: String!, $postId: String!) {
-                togglePostLike(communityId: $communityId, postId: $postId) {
+            mutation ($communityId: String!, $postId: String!, $emoji: String!) {
+                togglePostReaction(communityId: $communityId, postId: $postId, emoji: $emoji) {
                     postId
+                    reactions {
+                        emoji
+                        count
+                        hasReacted
+                        reactors {
+                            userId
+                            name
+                            avatar {
+                                mediaId
+                                file
+                                thumbnail
+                            }
+                        }
+                    }
                 }
             }
         `;
@@ -285,11 +304,24 @@ export function CommunityForum({
                 .setUrl(`${address.backend}/api/graph`)
                 .setPayload({
                     query,
-                    variables: { postId, communityId: id },
+                    variables: { postId, communityId: id, emoji },
                 })
                 .setIsGraphQLEndpoint(true)
                 .build();
-            await fetch.exec();
+            const response = await fetch.exec();
+            if (response.togglePostReaction) {
+                setPosts((prevPosts) =>
+                    prevPosts.map((post) =>
+                        post.postId === postId
+                            ? {
+                                  ...post,
+                                  reactions:
+                                      response.togglePostReaction.reactions,
+                              }
+                            : post,
+                    ),
+                );
+            }
         } catch (err) {
             console.error(err.message);
             toast({
@@ -951,11 +983,18 @@ export function CommunityForum({
                                         renderMediaPreview={renderMediaPreview}
                                         onOpen={(postId) =>
                                             router.push(
-                                                `/dashboard/community/${id}/${postId}`,
+                                                communityPostHref(id!, postId),
+                                            )
+                                        }
+                                        onReply={(postId) =>
+                                            router.push(
+                                                communityPostHref(id!, postId, {
+                                                    reply: true,
+                                                }),
                                             )
                                         }
                                         onTogglePin={togglePin}
-                                        onLike={handleLike}
+                                        onReact={handleReact}
                                     />
                                 ))
                             ) : (

@@ -75,3 +75,15 @@ export * from "./features";
 export * from "./product-discussion";
 export type { ScormContent } from "./scorm-content";
 export * from "./reply-token";
+export {
+    COMMUNITY_HEART_EMOJI,
+    COMMUNITY_REACTION_EMOJIS,
+    isAllowedCommunityReactionEmoji,
+    compareCommunityReactionsStable,
+} from "./community-reaction";
+export type {
+    CommunityReaction,
+    CommunityReactionEmoji,
+    CommunityReactionEntityType,
+    CommunityReactionRecord,
+} from "./community-reaction";

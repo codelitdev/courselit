@@ -1,4 +1,8 @@
-import { ActivityType, Constants } from "@courselit/common-models";
+import {
+    ActivityType,
+    COMMUNITY_HEART_EMOJI,
+    Constants,
+} from "@courselit/common-models";
 import { truncate } from "@courselit/utils";
 import { createNotificationEntityResolver } from "./notification-entity-resolver";
 import { getCourseManagementAccess } from "./course-management-access";
@@ -200,8 +204,10 @@ export async function getNotificationMessageAndHref({
                 return { message: "", href: "" };
             }
 
+            const emoji = (metadata?.emoji as string) || COMMUNITY_HEART_EMOJI;
+
             return {
-                message: `${actorName} liked your post '${truncate(post.title, 20).trim()}' in ${community.name}`,
+                message: `${actorName} reacted ${emoji} to your post '${truncate(post.title, 20).trim()}' in ${community.name}`,
                 href: toHref(
                     `/dashboard/community/${community.communityId}/${post.postId}`,
                     hrefPrefix,
@@ -223,8 +229,10 @@ export async function getNotificationMessageAndHref({
                 return { message: "", href: "" };
             }
 
+            const emoji = (metadata?.emoji as string) || COMMUNITY_HEART_EMOJI;
+
             return {
-                message: `${actorName} liked your comment '${truncate(comment.content, 20).trim()}' on '${truncate(post.title, 20).trim()}' in ${community.name}`,
+                message: `${actorName} reacted ${emoji} to your comment '${truncate(comment.content, 20).trim()}' on '${truncate(post.title, 20).trim()}' in ${community.name}`,
                 href: toHref(
                     `/dashboard/community/${community.communityId}/${post.postId}#${entityId}`,
                     hrefPrefix,
@@ -260,8 +268,10 @@ export async function getNotificationMessageAndHref({
                 return { message: "", href: "" };
             }
 
+            const emoji = (metadata?.emoji as string) || COMMUNITY_HEART_EMOJI;
+
             return {
-                message: `${actorName} liked your reply '${truncate(reply.content, 20).trim()}' on '${truncate(post.title, 20).trim()}' in ${community.name}`,
+                message: `${actorName} reacted ${emoji} to your reply '${truncate(reply.content, 20).trim()}' on '${truncate(post.title, 20).trim()}' in ${community.name}`,
                 href: toHref(
                     `/dashboard/community/${community.communityId}/${post.postId}#${entityId}`,
                     hrefPrefix,

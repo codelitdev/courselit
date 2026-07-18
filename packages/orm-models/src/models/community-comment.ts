@@ -13,15 +13,16 @@ export interface InternalCommunityComment
     > {
     domain: mongoose.Types.ObjectId;
     userId: string;
-    likes: string[];
     replies: InternalReply[];
     deleted: boolean;
 }
 
 export interface InternalReply
-    extends Omit<CommunityCommentReply, "likesCount" | "hasLiked"> {
+    extends Omit<
+        CommunityCommentReply,
+        "likesCount" | "hasLiked" | "reactions"
+    > {
     userId: string;
-    likes: string[];
 }
 
 export const ReplySchema = new mongoose.Schema(
@@ -31,7 +32,6 @@ export const ReplySchema = new mongoose.Schema(
         media: [CommunityMediaSchema],
         replyId: { type: String, required: true, default: generateUniqueId },
         parentReplyId: { type: String, default: null },
-        likes: [String],
         deleted: { type: Boolean, default: false },
     },
     {
@@ -54,7 +54,6 @@ export const CommunityCommentSchema =
             },
             content: { type: String, required: true },
             media: [CommunityMediaSchema],
-            likes: [String],
             replies: [ReplySchema],
             deleted: { type: Boolean, required: true, default: false },
         },
@@ -71,6 +70,10 @@ CommunityCommentSchema.statics.paginatedFind = async function (
     const limit = options.limit || 10;
     const skip = (page - 1) * limit;
 
-    const docs = await this.find(filter).skip(skip).limit(limit).exec();
+    const docs = await this.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec();
     return docs;
 };

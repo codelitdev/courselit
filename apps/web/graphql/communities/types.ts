@@ -10,13 +10,13 @@ import {
 } from "graphql";
 import { GraphQLJSONObject } from "graphql-type-json";
 import mediaTypes from "../media/types";
-import { Constants } from "@courselit/common-models";
+import { Constants, CommunityPost } from "@courselit/common-models";
 import userTypes from "../users/types";
 import { getUser } from "../users/logic";
 import GQLContext from "@models/GQLContext";
 import paymentPlansTypes from "../paymentplans/types";
 import { getPlans } from "../paymentplans/logic";
-import { getCommentsCount } from "./logic";
+import { getCommentsCount, getReactionsForEntity } from "./logic";
 
 const communityReportContentType = new GraphQLEnumType({
     name: "CommunityReportContentType",
@@ -94,6 +94,17 @@ const feedCommunity = new GraphQLObjectType({
     },
 });
 
+const communityReaction = new GraphQLObjectType({
+    name: "CommunityReaction",
+    fields: {
+        emoji: { type: new GraphQLNonNull(GraphQLString) },
+        count: { type: new GraphQLNonNull(GraphQLInt) },
+        hasReacted: { type: new GraphQLNonNull(GraphQLBoolean) },
+        // Populated by formatReactions (batched user lookup)
+        reactors: { type: new GraphQLList(userTypes.userType) },
+    },
+});
+
 const communityPost = new GraphQLObjectType({
     name: "CommunityPost",
     fields: {
@@ -117,6 +128,15 @@ const communityPost = new GraphQLObjectType({
         },
         updatedAt: { type: new GraphQLNonNull(GraphQLString) },
         hasLiked: { type: new GraphQLNonNull(GraphQLBoolean) },
+        reactions: {
+            type: new GraphQLList(communityReaction),
+            resolve: async (post: CommunityPost, _, ctx: GQLContext, __) =>
+                getReactionsForEntity({
+                    entityType: Constants.CommunityReactionEntityType.POST,
+                    entity: post,
+                    ctx,
+                }),
+        },
         community: { type: feedCommunity },
     },
 });
@@ -153,6 +173,15 @@ const communityCommentReply = new GraphQLObjectType({
         likesCount: { type: new GraphQLNonNull(GraphQLInt) },
         updatedAt: { type: new GraphQLNonNull(GraphQLString) },
         hasLiked: { type: new GraphQLNonNull(GraphQLBoolean) },
+        reactions: {
+            type: new GraphQLList(communityReaction),
+            resolve: async (reply, _, ctx: GQLContext, __) =>
+                getReactionsForEntity({
+                    entityType: Constants.CommunityReactionEntityType.REPLY,
+                    entity: reply,
+                    ctx,
+                }),
+        },
         deleted: { type: new GraphQLNonNull(GraphQLBoolean) },
     },
 });
@@ -173,6 +202,15 @@ const communityComment = new GraphQLObjectType({
         likesCount: { type: new GraphQLNonNull(GraphQLInt) },
         updatedAt: { type: new GraphQLNonNull(GraphQLString) },
         hasLiked: { type: new GraphQLNonNull(GraphQLBoolean) },
+        reactions: {
+            type: new GraphQLList(communityReaction),
+            resolve: async (comment, _, ctx: GQLContext, __) =>
+                getReactionsForEntity({
+                    entityType: Constants.CommunityReactionEntityType.COMMENT,
+                    entity: comment,
+                    ctx,
+                }),
+        },
         replies: { type: new GraphQLList(communityCommentReply) },
         deleted: { type: new GraphQLNonNull(GraphQLBoolean) },
     },
@@ -215,6 +253,7 @@ const types = {
     communityMemberStatus,
     communityPostInputMedia,
     communityComment,
+    communityReaction,
     communityReportContentType,
     communityReport,
     communityReportStatusType,
