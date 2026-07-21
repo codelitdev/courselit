@@ -1,5 +1,10 @@
 {
     "title": "Self hosting",
     "icon": "ServerCog",
-    "pages": ["introduction", "cloud-vs-self-hosting", "self-host"]
+    "pages": [
+        "introduction",
+        "cloud-vs-self-hosting",
+        "self-host",
+        "reply-by-email"
+    ]
 }

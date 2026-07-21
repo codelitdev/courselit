@@ -28,6 +28,7 @@ The following environment variables are used by the queue service:
 - `SEQUENCE_BOUNCE_LIMIT` - Maximum number of bounces allowed for email sequences (default: `3`)
 - `PROTOCOL` - Protocol used for generating site URLs (default: `https`)
 - `DOMAIN` - Base domain name for generating site URLs
+- `INBOUND_EMAIL_DOMAIN` - Dedicated inbound email domain. When set, conversation notifications receive an opaque reply token in their `Reply-To` address. Inbound processing requires a supported provider adapter in the web app.
 
 ## Running the app
 

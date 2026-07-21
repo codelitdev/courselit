@@ -71,6 +71,7 @@ export * from "./course";
 export * from "./activity-type";
 export * from "./email-event-action";
 export type { ReplyByEmailContext } from "./email-reply-context";
+export type { EmailReplyTokenKind } from "./email-reply-token-kind";
 export * from "./login-provider";
 export * from "./features";
 export * from "./product-discussion";
@@ -87,3 +88,5 @@ export type {
     CommunityReactionEntityType,
     CommunityReactionRecord,
 } from "./community-reaction";
+export type { InboundEmailReceiptStatus } from "./inbound-email-receipt-status";
+export type { InboundEmailProvider } from "./inbound-email-provider";

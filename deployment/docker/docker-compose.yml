@@ -50,22 +50,33 @@ services:
             # CourseLit uses MediaLit (our another open-source software) to manage files on
             # a AWS S3 compatible storage. MediaLit is available as a hosted service
             # at https://medialit.cloud. You can self host it as well.
-            # 
-            # Uncomment the following lines to use MediaLit as a hosted service. 
+            #
+            # Uncomment the following lines to use MediaLit as a hosted service.
             # The MEDIALIT_APIKEY can be obtained by signing up at https://medialit.cloud.
             # - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
             # - MEDIALIT_SERVER=https://api.medialit.cloud
-            # 
+            #
             # Uncomment the following lines to use MediaLit as a self hosted service.
             # The MEDIALIT_APIKEY can be obtained by running the medialit service locally and
             # checking the logs for the API key.
             # - MEDIALIT_APIKEY=${MEDIALIT_APIKEY}
             # - MEDIALIT_SERVER=http://medialit
-            # 
+            #
             # Google reCAPTCHA v3 is used to prevent abuse of the login functionality.
             # Uncomment the following lines to use reCAPTCHA.
             # - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
             # - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
+
+            # Reply by email (requires the queue service too). Set the same reply
+            # domain in the app and queue services. Then configure exactly one
+            # inbound provider as documented in apps/docs.
+            # - INBOUND_EMAIL_DOMAIN=${INBOUND_EMAIL_DOMAIN}
+            # - INBOUND_EMAIL_WEBHOOK_SECRET=${INBOUND_EMAIL_WEBHOOK_SECRET} # Postmark
+            # - MAILGUN_WEBHOOK_SIGNING_KEY=${MAILGUN_WEBHOOK_SIGNING_KEY} # Mailgun
+            # - INBOUND_EMAIL_SES_TOPIC_ARN=${INBOUND_EMAIL_SES_TOPIC_ARN} # Amazon SES
+            # - INBOUND_EMAIL_SES_BUCKET=${INBOUND_EMAIL_SES_BUCKET}
+            # - INBOUND_EMAIL_SES_REGION=${INBOUND_EMAIL_SES_REGION}
+            # - INBOUND_EMAIL_SES_OBJECT_PREFIX=${INBOUND_EMAIL_SES_OBJECT_PREFIX}
         expose:
             - "${PORT:-80}"
 
@@ -116,6 +127,9 @@ services:
     #     - EMAIL_USER=${EMAIL_USER?'EMAIL_USER environment variable is not defined'}
     #     - EMAIL_PASS=${EMAIL_PASS?'EMAIL_PASS environment variable is not defined'}
     #     - EMAIL_HOST=${EMAIL_HOST?'EMAIL_HOST environment variable is not defined'}
+    #     # Optional: enables reply tokens and Reply-To headers for conversation emails.
+    #     # The configured subdomain must be routed to a supported inbound provider.
+    #     - INBOUND_EMAIL_DOMAIN=${INBOUND_EMAIL_DOMAIN}
     #     # The following secret is used by CourseLit app to sign jobs sent to the queue.
     #     - COURSELIT_JWT_SECRET=${COURSELIT_JWT_SECRET?'COURSELIT_JWT_SECRET environment variable is not defined'}
     #     - REDIS_HOST=redis
@@ -159,12 +173,12 @@ services:
     #         - ENABLE_TRUST_PROXY=${ENABLE_TRUST_PROXY}
 
     #         # CloudFront configuration
-    #         - ACCESS_PRIVATE_BUCKET_VIA_CLOUDFRONT=${ACCESS_PRIVATE_BUCKET_VIA_CLOUDFRONT} 
-    #         - CLOUDFRONT_KEY_PAIR_ID=${CLOUDFRONT_KEY_PAIR_ID} 
+    #         - ACCESS_PRIVATE_BUCKET_VIA_CLOUDFRONT=${ACCESS_PRIVATE_BUCKET_VIA_CLOUDFRONT}
+    #         - CLOUDFRONT_KEY_PAIR_ID=${CLOUDFRONT_KEY_PAIR_ID}
     #         - CLOUDFRONT_PRIVATE_KEY=${CLOUDFRONT_PRIVATE_KEY}
     #         - CDN_MAX_AGE=${CDN_MAX_AGE}
 
-    #         # To make MediaLit work on local. This allows the medialit service 
+    #         # To make MediaLit work on local. This allows the medialit service
     #         # to be accessed from the host machine.
     #         - HOSTNAME_OVERRIDE=localhost:8000
     #     ports:

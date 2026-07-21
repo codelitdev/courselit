@@ -14,7 +14,7 @@ export const info = async (
             metadata,
         });
     } else {
-        console.log(severityError, message, metadata); // eslint-disable-line no-console
+        console.log(severityInfo, message, metadata); // eslint-disable-line no-console
     }
 };
 
@@ -29,7 +29,7 @@ export const warn = async (
             metadata,
         });
     } else {
-        console.warn(severityError, message, metadata);
+        console.warn(severityWarn, message, metadata);
     }
 };
 

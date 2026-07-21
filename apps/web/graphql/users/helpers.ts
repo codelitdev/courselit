@@ -26,6 +26,8 @@ import NotificationPreferenceModel from "@models/NotificationPreference";
 import MailRequestStatusModel from "@models/MailRequestStatus";
 import LessonEvaluationModel from "@models/LessonEvaluation";
 import DownloadLinkModel from "@models/DownloadLink";
+import EmailReplyTokenModel from "@models/EmailReplyToken";
+import InboundEmailReceiptModel from "@models/InboundEmailReceipt";
 import CommunityReportModel from "@models/CommunityReport";
 import CertificateModel from "@models/Certificate";
 import ActivityModel from "@models/Activity";
@@ -292,6 +294,14 @@ export async function cleanupPersonalData(
             userId: userToDelete.userId,
         }),
         DownloadLinkModel.deleteMany({
+            domain: ctx.subdomain._id,
+            userId: userToDelete.userId,
+        }),
+        EmailReplyTokenModel.deleteMany({
+            domain: ctx.subdomain._id,
+            userId: userToDelete.userId,
+        }),
+        InboundEmailReceiptModel.deleteMany({
             domain: ctx.subdomain._id,
             userId: userToDelete.userId,
         }),

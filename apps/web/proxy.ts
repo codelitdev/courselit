@@ -14,6 +14,16 @@ export async function proxy(request: NextRequest) {
         );
     }
 
+    // Inbound email is addressed to a shared reply domain. Its tenant is
+    // resolved from the opaque reply token, not the request host.
+    if (request.nextUrl.pathname.startsWith("/api/inbound-email/")) {
+        return NextResponse.next({
+            request: {
+                headers: requestHeaders,
+            },
+        });
+    }
+
     if (request.nextUrl.pathname.startsWith("/course/")) {
         requestHeaders.set(
             COURSE_VIEWER_CURRENT_URL_HEADER,

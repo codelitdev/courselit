@@ -6,6 +6,11 @@ import { Constants } from "@courselit/common-models";
 import { getNotificationEmailContent } from "@courselit/common-logic";
 import { JSDOM } from "jsdom";
 import { addMailJob } from "../../../../domain/handler";
+import {
+    buildReplyToAddress,
+    isReplyByEmailEnabled,
+    mintReplyToken,
+} from "../../email-reply-token";
 import { EmailChannel } from "../email";
 
 jest.mock("@courselit/common-logic", () => ({
@@ -16,9 +21,18 @@ jest.mock("../../../../domain/handler", () => ({
     addMailJob: jest.fn(),
 }));
 
+jest.mock("../../email-reply-token", () => ({
+    buildReplyToAddress: jest.fn(),
+    isReplyByEmailEnabled: jest.fn(),
+    mintReplyToken: jest.fn(),
+}));
+
 const mockedGetNotificationEmailContent =
     getNotificationEmailContent as jest.Mock;
 const mockedAddMailJob = addMailJob as jest.Mock;
+const mockedBuildReplyToAddress = buildReplyToAddress as jest.Mock;
+const mockedIsReplyByEmailEnabled = isReplyByEmailEnabled as jest.Mock;
+const mockedMintReplyToken = mintReplyToken as jest.Mock;
 
 function makePayload(overrides: Partial<any> = {}): any {
     return {
@@ -76,6 +90,13 @@ describe("EmailChannel", () => {
         process.env.DOMAIN = "courselit.test";
         process.env.MULTITENANT = "true";
         process.env.EMAIL_FROM = "hello@courselit.test";
+        delete process.env.INBOUND_EMAIL_DOMAIN;
+
+        mockedIsReplyByEmailEnabled.mockReturnValue(false);
+        mockedMintReplyToken.mockResolvedValue("reply-token");
+        mockedBuildReplyToAddress.mockReturnValue(
+            "reply+reply-token@replies.courselit.test",
+        );
 
         mockedGetNotificationEmailContent.mockResolvedValue({
             subject:
@@ -351,5 +372,85 @@ describe("EmailChannel", () => {
         expect(visibleText).toContain("The original post body");
         expect(visibleText).toContain("A new comment");
         expect(visibleText).not.toContain("Earlier comment");
+    });
+
+    it("adds Reply-To and a reply hint for an enabled conversation notification", async () => {
+        const replyContext = {
+            community: {
+                communityId: "community-id",
+                postId: "post-id",
+                parentCommentId: "comment-id",
+            },
+        };
+        mockedIsReplyByEmailEnabled.mockReturnValue(true);
+        mockedGetNotificationEmailContent.mockResolvedValue({
+            subject: "Test Instructor commented on a post",
+            message: "Test Instructor commented on a post",
+            href: "https://school.courselit.test/community/post",
+            threadTitle: "A discussion title",
+            commentText: "A new comment",
+            conversationLabel: "New comment",
+            replyContext,
+        });
+
+        await new EmailChannel().send(makePayload());
+
+        expect(mockedMintReplyToken).toHaveBeenCalledWith({
+            domainId: "domain-id",
+            userId: "recipient-id",
+            context: replyContext,
+        });
+        expect(mockedBuildReplyToAddress).toHaveBeenCalledWith("reply-token");
+        const mail = mockedAddMailJob.mock.calls[0][0];
+        expect(mail.headers).toEqual(
+            expect.objectContaining({
+                "Reply-To": "reply+reply-token@replies.courselit.test",
+                "List-Unsubscribe":
+                    "<https://school.courselit.test/api/unsubscribe/unsubscribe-token>",
+                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            }),
+        );
+        expect(
+            getVisibleEmailText(getVisibleEmailDocument(mail.body)),
+        ).toContain("You can reply to this email to respond directly");
+    });
+
+    it("does not mint a reply token for a non-conversation notification", async () => {
+        mockedIsReplyByEmailEnabled.mockReturnValue(true);
+
+        await new EmailChannel().send(makePayload());
+
+        expect(mockedMintReplyToken).not.toHaveBeenCalled();
+        expect(mockedBuildReplyToAddress).not.toHaveBeenCalled();
+        const mail = mockedAddMailJob.mock.calls[0][0];
+        expect(mail.headers).not.toHaveProperty("Reply-To");
+        expect(
+            getVisibleEmailText(getVisibleEmailDocument(mail.body)),
+        ).not.toContain("You can reply to this email to respond directly");
+    });
+
+    it("does not queue an email when reply token minting fails", async () => {
+        mockedIsReplyByEmailEnabled.mockReturnValue(true);
+        mockedMintReplyToken.mockRejectedValue(
+            new Error("database unavailable"),
+        );
+        mockedGetNotificationEmailContent.mockResolvedValue({
+            subject: "Test Instructor commented on a post",
+            message: "Test Instructor commented on a post",
+            href: "https://school.courselit.test/community/post",
+            commentText: "A new comment",
+            conversationLabel: "New comment",
+            replyContext: {
+                community: {
+                    communityId: "community-id",
+                    postId: "post-id",
+                },
+            },
+        });
+
+        await expect(new EmailChannel().send(makePayload())).rejects.toThrow(
+            "database unavailable",
+        );
+        expect(mockedAddMailJob).not.toHaveBeenCalled();
     });
 });

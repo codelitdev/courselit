@@ -1,0 +1,172 @@
+---
+title: Configure reply by email
+description: Configure Amazon SES, Postmark, or Mailgun so discussion notification emails can receive replies.
+---
+
+CourseLit can put a per-recipient `Reply-To` address on Community and product-discussion notifications. A reply sent to that address is added to the correct discussion as the notification recipient.
+
+This requires an active queue worker and one inbound-email provider. The providers supported out of the box are **Amazon SES**, **Postmark**, and **Mailgun**. Choose one provider for each inbound reply domain.
+
+## Before you configure a provider
+
+1. Use a dedicated subdomain, such as `replies.example.com`. Do not point the MX records for your primary school domain at this feature.
+2. Set the same `INBOUND_EMAIL_DOMAIN=replies.example.com` value in both the `app` and `queue` services. The queue service mints the reply address; the app service accepts inbound callbacks.
+3. Enable the `queue` service in the supplied Docker Compose file. If the queue does not receive `INBOUND_EMAIL_DOMAIN`, outgoing emails intentionally have no reply token or `Reply-To` header.
+4. Generate provider secrets with a password manager or `openssl rand -base64 32`. Keep them out of source control and webhook URLs except where a provider requires HTTP Basic authentication.
+
+The webhook endpoint is always `https://<your-app-host>/api/inbound-email/<provider>`. Your reverse proxy must expose this HTTPS path without adding tenant headers or requiring dashboard authentication. Outbound SMTP and inbound reply processing are independent, so they may use different providers. CourseLit validates the provider callback before it reads a reply. Attachments and HTML reply parsing are not supported; CourseLit stores up to 5,000 characters of the plain-text reply.
+
+## Environment variables
+
+Set the common value in **both** services, then set only the values for your chosen provider in the `app` service.
+
+```dotenv
+# app and queue
+INBOUND_EMAIL_DOMAIN=replies.example.com
+
+# app only — Postmark
+INBOUND_EMAIL_WEBHOOK_SECRET=replace-with-a-random-secret
+
+# app only — Mailgun
+MAILGUN_WEBHOOK_SIGNING_KEY=copy-from-mailgun-webhook-signing-key
+
+# app only — Amazon SES
+INBOUND_EMAIL_SES_TOPIC_ARN=arn:aws:sns:us-east-1:123456789012:courselit-inbound
+INBOUND_EMAIL_SES_BUCKET=courselit-inbound-email
+INBOUND_EMAIL_SES_REGION=us-east-1
+INBOUND_EMAIL_SES_OBJECT_PREFIX=inbound
+```
+
+`INBOUND_EMAIL_SES_OBJECT_PREFIX` is optional. If set, it must exactly match the S3 key prefix configured in the SES receipt rule, without leading or trailing slashes.
+
+## Amazon SES
+
+Amazon SES is a first-class option and is the recommended route for an AWS-hosted CourseLit deployment. Follow the [SES receiving setup guide](https://docs.aws.amazon.com/ses/latest/dg/receiving-email-setting-up.html) in an AWS Region that supports receiving email.
+
+First, verify `replies.example.com` in SES and publish the MX record that SES gives you. Its value is region-specific, for example `inbound-smtp.us-east-1.amazonaws.com`. Use the same AWS Region for the SES receipt rule, SNS topic, and S3 bucket.
+
+### Create the SES receipt rule
+
+1. In **Amazon SES → Email receiving**, create a receipt rule set.
+
+    ![Create an Amazon SES receipt rule set](/assets/self-host/aws-ses/create-rule-set.png)
+
+2. Open the new rule set and choose **Create rule**.
+
+    ![Create a receipt rule in the rule set](/assets/self-host/aws-ses/create-rule.png)
+
+3. Give the rule a descriptive name, leave it enabled, and enable spam and virus scanning. Requiring TLS is optional.
+
+    ![Configure the Amazon SES receipt rule](/assets/self-host/aws-ses/rule-wizard-step-1.png)
+
+4. Add `replies.example.com` as the recipient condition. Using the dedicated subdomain accepts every generated `reply+<token>` address beneath it.
+
+    ![Set the reply subdomain as the recipient condition](/assets/self-host/aws-ses/rule-wizard-step-2.png)
+
+5. Add a **Deliver to Amazon S3 bucket** action. Select an existing bucket or create a private bucket for inbound messages. If you set an object key prefix, copy the exact value to `INBOUND_EMAIL_SES_OBJECT_PREFIX` without leading or trailing slashes.
+
+    ![Create the S3 bucket for inbound email](/assets/self-host/aws-ses/rule-wizard-step-create-bucket-name.png)
+
+6. In the same S3 action, select an SNS topic or create a **Standard** topic. Copy its ARN to `INBOUND_EMAIL_SES_TOPIC_ARN`. Do not add a separate direct SNS action: the S3 action's SNS notification tells CourseLit which stored MIME message to fetch without imposing SNS's smaller mail-content limit.
+
+    ![Create the SNS topic used by the S3 action](/assets/self-host/aws-ses/rule-wizard-step-create-topic-name.png)
+
+7. Review the rule and create it.
+
+    ![Review and create the Amazon SES receipt rule](/assets/self-host/aws-ses/rule-wizard-step-4.png)
+
+8. Return to the rule set and choose **Set as active**. SES evaluates only the active receipt rule set, even when an individual rule says **Enabled**.
+
+    ![Set the Amazon SES receipt rule set as active](/assets/self-host/aws-ses/set-ruleset-active.png)
+
+    Confirm that the rule set now appears under **Active rule set**.
+
+    ![Active Amazon SES receipt rule set](/assets/self-host/aws-ses/email-receiving-activated-ruleset.png)
+
+### Subscribe CourseLit to the SNS topic
+
+1. In Amazon SNS, open the topic attached to the SES S3 action.
+
+    ![Select the inbound email SNS topic](/assets/self-host/aws-ses/sns-topic-select.png)
+
+2. Configure the topic to use **SNS SignatureVersion 2**. CourseLit requires the SHA-256 signature version and rejects SNS's legacy SignatureVersion 1 default. The SNS topic console does not expose this setting, so run the following in AWS CloudShell or with the AWS CLI (replace the placeholders):
+
+    ```bash
+    aws sns set-topic-attributes \
+      --region <aws-region> \
+      --topic-arn arn:aws:sns:<aws-region>:<aws-account-id>:<topic-name> \
+      --attribute-name SignatureVersion \
+      --attribute-value 2
+    ```
+
+    See [AWS's signature-version guidance](https://docs.aws.amazon.com/sns/latest/dg/sns-verify-signature-of-message-configure-message-signature.html).
+
+3. On the topic's **Subscriptions** tab, choose **Create subscription**.
+
+    ![Create an HTTPS subscription for the SNS topic](/assets/self-host/aws-ses/sns-topic-create-subscription.png)
+
+4. Select **HTTPS** and enter `https://<your-app-host>/api/inbound-email/ses`. Leave **Enable raw message delivery** off.
+
+    ![Add the CourseLit inbound email HTTPS endpoint](/assets/self-host/aws-ses/sns-topic-add-https-url.png)
+
+5. The subscription briefly shows **Pending confirmation**. CourseLit verifies the SNS signature and configured topic ARN, then confirms a valid request automatically. The app must be publicly reachable and have `INBOUND_EMAIL_SES_TOPIC_ARN` set before you create or re-request confirmation.
+
+    ![SNS subscription pending confirmation](/assets/self-host/aws-ses/sns-topic-pending-confirmation.png)
+
+    Refresh the page and verify that its status becomes **Confirmed**.
+
+    ![Confirmed CourseLit SNS subscription](/assets/self-host/aws-ses/sns-subscription-confirmed.png)
+
+Finally, give the CourseLit **web/app runtime** permission to read the stored messages, and add a short S3 lifecycle expiry for the raw MIME prefix. CourseLit reads each object only while processing the webhook and does not need to retain raw email. The queue service does not need S3 permission. SES needs separate permission to write the selected prefix and publish to the topic; use the policies AWS generates in the SES and SNS consoles where possible.
+
+The app checks SNS Signature Version 2, the AWS signing-certificate host, and the configured topic ARN before it reads the S3 object. It does not store message attachments.
+
+### Grant the web service access to the SES bucket
+
+Use a workload IAM role rather than static AWS access keys. Attach this least-privilege policy to the role, replacing the bucket name and narrowing the object path to your configured prefix when one is used:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "ReadInboundReplyEmails",
+            "Effect": "Allow",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::courselit-inbound-email/*"
+        }
+    ]
+}
+```
+
+- **EC2 / Docker Compose:** create an IAM role with the **EC2** trusted entity and this policy. In the EC2 console, select the instance, then choose **Actions → Security → Modify IAM role** and attach the role. The AWS SDK in the web container uses the instance role's temporary credentials automatically.
+- **ECS / Fargate:** create an IAM role with the **Elastic Container Service Task** trusted entity and this policy. Assign it as the **task role** for the web task definition. Do not use the task execution role, and do not assign this bucket-read permission to the queue task.
+
+Do not set `AWS_ACCESS_KEY_ID` or `AWS_SECRET_ACCESS_KEY` in production when using a workload role. If the SES bucket uses SSE-KMS, also grant the web role `kms:Decrypt` for that KMS key.
+
+## Postmark
+
+1. Create a Postmark inbound server and add its MX records for `replies.example.com` as described in [Postmark's inbound setup guide](https://postmarkapp.com/developer/user-guide/inbound/configure-an-inbound-server).
+2. Set its webhook URL to `https://courselit:<url-encoded-secret>@<your-app-host>/api/inbound-email/postmark`.
+3. Set `INBOUND_EMAIL_WEBHOOK_SECRET` in the app service to that same secret. The username may be any non-empty value; `courselit` is used above for clarity.
+4. Send a test message to the provider-generated inbound address. Postmark retries non-2xx responses, so do not disable the provider's retries.
+
+CourseLit uses Postmark's `StrippedTextReply` when supplied, and otherwise removes quoted text from the plain-text body.
+
+## Mailgun
+
+1. Add `replies.example.com` as a Mailgun receiving domain and publish the MX records Mailgun provides.
+2. Create a Mailgun route that forwards matching mail to `https://<your-app-host>/api/inbound-email/mailgun` using the `forward()` action. See [Mailgun's receiving-routes documentation](https://documentation.mailgun.com/docs/mailgun/user-manual/receive-forward-store/receive-http).
+3. Copy Mailgun's webhook signing key to `MAILGUN_WEBHOOK_SIGNING_KEY` in the app service.
+4. Keep the route payload as `multipart/form-data` or form data; CourseLit verifies Mailgun's timestamp, token, and HMAC signature before processing it.
+
+## Verify the setup
+
+1. Restart the app and queue services after changing environment variables.
+2. Trigger a Community or product-discussion notification. Inspect the delivered message headers: its `Reply-To` should be `reply+<opaque-token>@replies.example.com`.
+3. Reply from the same email address that received the notification. The reply should appear in the discussion and participants should receive the usual notifications.
+4. Try a different sender address. CourseLit accepts the webhook but silently discards that reply, so forwarded reply addresses cannot impersonate the original recipient.
+
+Provider retries are idempotent: a received provider message ID is retained for 30 days, so retry delivery does not create duplicate comments.
+
+To disable reply by email safely, remove `INBOUND_EMAIL_DOMAIN` from the queue service and restart it. New notifications will no longer include a `Reply-To` token; leave the app endpoint configuration in place until outstanding messages have expired or remove the provider route after the 30-day reply-token window.

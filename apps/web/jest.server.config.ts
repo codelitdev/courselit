@@ -51,6 +51,7 @@ const config: Config = {
     testMatch: [
         "**/graphql/**/__tests__/**/*.test.ts",
         "**/app/**/__tests__/**/*.test.ts",
+        "**/lib/inbound-email/**/__tests__/**/*.test.ts",
     ],
     testPathIgnorePatterns: [
         "/node_modules/",

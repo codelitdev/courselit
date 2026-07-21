@@ -18,6 +18,8 @@ import NotificationPreferenceModel from "@models/NotificationPreference";
 import MailRequestStatusModel from "@models/MailRequestStatus";
 import LessonEvaluationModel from "@models/LessonEvaluation";
 import DownloadLinkModel from "@models/DownloadLink";
+import EmailReplyTokenModel from "@models/EmailReplyToken";
+import InboundEmailReceiptModel from "@models/InboundEmailReceipt";
 import CommunityReportModel from "@models/CommunityReport";
 import CertificateModel from "@models/Certificate";
 import ActivityModel from "@models/Activity";
@@ -146,6 +148,8 @@ describe("deleteUser - Comprehensive Test Suite", () => {
             MailRequestStatusModel.deleteMany({ domain: testDomain._id }),
             LessonEvaluationModel.deleteMany({ domain: testDomain._id }),
             DownloadLinkModel.deleteMany({ domain: testDomain._id }),
+            EmailReplyTokenModel.deleteMany({ domain: testDomain._id }),
+            InboundEmailReceiptModel.deleteMany({ domain: testDomain._id }),
             CommunityReportModel.deleteMany({ domain: testDomain._id }),
             CertificateModel.deleteMany({ domain: testDomain._id }),
             ActivityModel.deleteMany({ domain: testDomain._id }),
@@ -664,6 +668,47 @@ describe("deleteUser - Comprehensive Test Suite", () => {
                 userId: targetUser.userId,
             });
             expect(links).toHaveLength(0);
+        });
+
+        it("should delete email reply tokens", async () => {
+            await EmailReplyTokenModel.create({
+                domain: testDomain._id,
+                token: "email-reply-token",
+                userId: targetUser.userId,
+                kind: "community",
+                community: {
+                    communityId: "community-123",
+                    postId: "post-123",
+                },
+                contextKey:
+                    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                expiresAt: new Date(Date.now() + 60_000),
+            });
+
+            await deleteUser(targetUser.userId, mockCtx);
+
+            const tokens = await EmailReplyTokenModel.find({
+                userId: targetUser.userId,
+            });
+            expect(tokens).toHaveLength(0);
+        });
+
+        it("should delete inbound email receipts", async () => {
+            await InboundEmailReceiptModel.create({
+                domain: testDomain._id,
+                userId: targetUser.userId,
+                provider: "postmark",
+                messageId: "inbound-message-id",
+                status: "accepted",
+                expiresAt: new Date(Date.now() + 60_000),
+            });
+
+            await deleteUser(targetUser.userId, mockCtx);
+
+            const receipts = await InboundEmailReceiptModel.find({
+                userId: targetUser.userId,
+            });
+            expect(receipts).toHaveLength(0);
         });
 
         it("should delete community reports", async () => {

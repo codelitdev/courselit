@@ -251,3 +251,16 @@ export const ProductDiscussionReportStatus = {
     ACCEPTED: "accepted",
     REJECTED: "rejected",
 } as const;
+export const InboundEmailReceiptStatus = {
+    PROCESSING: "processing",
+    ACCEPTED: "accepted",
+} as const;
+export const InboundEmailProvider = {
+    SES: "ses",
+    POSTMARK: "postmark",
+    MAILGUN: "mailgun",
+} as const;
+export const EmailReplyTokenKind = {
+    COMMUNITY: "community",
+    PRODUCT: "product",
+} as const;

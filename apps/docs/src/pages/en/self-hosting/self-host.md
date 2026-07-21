@@ -131,6 +131,10 @@ To self host, follow the following steps.
 
 6.  That's it! You now have a fully functioning LMS powered by CourseLit and MediaLit.
 
+### Enabling replies to discussion emails
+
+To let members reply directly to Community and product-discussion notification emails, configure an inbound-email provider and enable the queue service. See [Configure reply by email](./reply-by-email) for Amazon SES, Postmark, and Mailgun setup instructions.
+
 ## Hosted version
 
 If this is too technical for you to handle, CourseLit's hosted version is available at [CourseLit.app](https://courselit.app).
