@@ -25,7 +25,7 @@ jest.mock("@/graphql/product-discussions/logic", () => ({
     createDiscussionReply: jest.fn(),
 }));
 
-const replyToken = "hQAAQm5qfHSnw50pLfV4odS7Lkg";
+const replyToken = "test-inbound-reply-token";
 
 describe("processInboundEmail", () => {
     let domain: any;
