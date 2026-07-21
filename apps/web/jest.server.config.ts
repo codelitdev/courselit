@@ -20,6 +20,7 @@ const config: Config = {
         "better-auth": "<rootDir>/__mocks__/better-auth.ts",
         "^slugify$": "<rootDir>/__mocks__/slugify.ts",
         "^@sindresorhus/slugify$": "<rootDir>/__mocks__/slugify.ts",
+        "^email-reply-parser$": "<rootDir>/__mocks__/email-reply-parser.ts",
         "@models/(.*)": "<rootDir>/models/$1",
         "@/auth": "<rootDir>/auth.ts",
         "@/ba-multitenant-adapter": "<rootDir>/ba-multitenant-adapter",
