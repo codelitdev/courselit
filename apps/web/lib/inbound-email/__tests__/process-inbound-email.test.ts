@@ -191,6 +191,21 @@ describe("processInboundEmail", () => {
         await expect(CommunityCommentModel.countDocuments({})).resolves.toBe(0);
     });
 
+    it("marks transient rate-limit failures retryable", async () => {
+        await createCommunityToken();
+        const countDocuments = jest
+            .spyOn(RateLimitEventModel, "countDocuments")
+            .mockRejectedValueOnce(new Error("database unavailable"));
+
+        await expect(processEmail(email())).resolves.toEqual({
+            ok: false,
+            reason: "creation_failed",
+            retryable: true,
+        });
+        expect(countDocuments).toHaveBeenCalled();
+        countDocuments.mockRestore();
+    });
+
     it("creates a product-discussion reply with normalized rich text", async () => {
         await EmailReplyTokenModel.create({
             domain: domain._id,

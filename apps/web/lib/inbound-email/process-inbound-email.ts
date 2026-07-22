@@ -6,6 +6,7 @@ import InboundEmailReceiptModel from "@models/InboundEmailReceipt";
 import EmailReplyTokenModel from "@models/EmailReplyToken";
 import UserModel from "@models/User";
 import { normalizeTextEditorContent } from "@courselit/utils";
+import { responses } from "@/config/strings";
 import { randomUUID } from "crypto";
 import { InboundEmailError } from "./errors";
 import { extractReplyText } from "./extract-reply-text";
@@ -20,6 +21,14 @@ const INBOUND_EMAIL_RATE_LIMITS = {
 const REPLY_TOKEN_PATTERN = /^[A-Za-z0-9_-]{20,64}$/;
 const INBOUND_EMAIL_RECEIPT_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const INBOUND_EMAIL_PROCESSING_LEASE_MS = 5 * 60 * 1000; // 5 minutes
+const TERMINAL_REPLY_ERRORS = new Set([
+    responses.action_not_allowed,
+    responses.drip_not_released,
+    responses.invalid_input,
+    responses.item_not_found,
+    responses.not_enrolled,
+    responses.request_not_authenticated,
+]);
 
 export type InboundEmailProcessingResult =
     | { ok: true }
@@ -125,6 +134,10 @@ function isDuplicateKeyError(error: unknown) {
         "code" in error &&
         error.code === 11000
     );
+}
+
+function isTerminalReplyError(error: unknown) {
+    return error instanceof Error && TERMINAL_REPLY_ERRORS.has(error.message);
 }
 
 async function claimInboundEmailReceipt({
@@ -358,7 +371,7 @@ export async function processInboundEmail({
             }
             return { ok: false, reason: "invalid_token" };
         }
-    } catch {
+    } catch (caught) {
         if (processingId && email.messageId) {
             await releaseInboundEmailReceipt(
                 provider,
@@ -366,7 +379,11 @@ export async function processInboundEmail({
                 processingId,
             );
         }
-        return { ok: false, reason: "creation_failed" };
+        if (isTerminalReplyError(caught)) {
+            return { ok: false, reason: "creation_failed" };
+        }
+
+        return { ok: false, reason: "creation_failed", retryable: true };
     }
 
     if (processingId && email.messageId) {
