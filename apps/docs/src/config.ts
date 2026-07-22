@@ -152,6 +152,10 @@ export const SIDEBAR: Sidebar = {
         "Self hosting": [
             { text: "Why self host?", link: "en/self-hosting/introduction" },
             { text: "Self hosting guide", link: "en/self-hosting/self-host" },
+            {
+                text: "Configure reply by email",
+                link: "en/self-hosting/reply-by-email",
+            },
         ],
     },
 };

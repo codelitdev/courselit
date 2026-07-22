@@ -14,6 +14,8 @@ const config = {
         // Exclude MongoDB tests - they will be handled by the MongoDB config
         ".*/graphql/.*/__tests__/.*\\.test\\.(ts|tsx)$",
         ".*/api/.*/__tests__/.*\\.test\\.(ts|tsx)$",
+        // Inbound-email tests use server-only models and middleware.
+        ".*/lib/inbound-email/(?:.*/)?__tests__/.*\\.test\\.(ts|tsx)$",
     ],
     // collectCoverage: true,
     // collectCoverageFrom: [

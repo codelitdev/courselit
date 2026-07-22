@@ -8,6 +8,11 @@ import { ChannelPayload, NotificationChannel } from "./types";
 import { getDomainId } from "../../../observability/posthog";
 import { buildNotificationEmailTemplate } from "./notification-email-template";
 import UserModel from "../../../domain/model/user";
+import {
+    buildReplyToAddress,
+    isReplyByEmailEnabled,
+    mintReplyToken,
+} from "../email-reply-token";
 
 function getActorAvatarUrl(actor: ChannelPayload["actor"]) {
     return actor?.avatar?.file || actor?.avatar?.thumbnail || undefined;
@@ -54,6 +59,16 @@ export class EmailChannel implements NotificationChannel {
             return;
         }
 
+        let replyToAddress: string | undefined;
+        if (notificationDetails.replyContext && isReplyByEmailEnabled()) {
+            const replyToken = await mintReplyToken({
+                domainId: payload.domain._id,
+                userId: payload.recipient.userId,
+                context: notificationDetails.replyContext,
+            });
+            replyToAddress = buildReplyToAddress(replyToken);
+        }
+
         const unsubscribeUrl = getUnsubLink(
             payload.domain,
             payload.recipient.unsubscribeToken,
@@ -72,6 +87,7 @@ export class EmailChannel implements NotificationChannel {
                 threadTitle: notificationDetails.threadTitle,
                 conversationLabel: notificationDetails.conversationLabel,
                 isConversation: Boolean(notificationDetails.replyContext),
+                showReplyByEmailHint: Boolean(replyToAddress),
                 hideCourseLitBranding:
                     payload.domain.settings?.hideCourseLitBranding,
             }),
@@ -89,6 +105,7 @@ export class EmailChannel implements NotificationChannel {
             headers: {
                 "List-Unsubscribe": `<${unsubscribeUrl}>`,
                 "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+                ...(replyToAddress && { "Reply-To": replyToAddress }),
             },
         });
     }

@@ -209,6 +209,7 @@ export async function createDiscussionReply({
             entityId,
             commentId,
             replyId: parentReplyId,
+            deleted: false,
         }).select("_id");
         if (!parentReply) {
             throw new Error(responses.item_not_found);

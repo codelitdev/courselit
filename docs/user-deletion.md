@@ -137,6 +137,8 @@ cleanupPersonalData(userToDelete, ctx)
 |   |-- Mail request statuses
 |   |-- Lesson evaluations
 |   |-- Download links
+|   |-- Email reply tokens
+|   |-- Inbound email receipts
 |   |-- Community reports
 |   |-- Certificates
 |   |-- Activity logs
@@ -187,6 +189,8 @@ deleteUser
 | Certificates                 | Delete    | `CertificateModel.deleteMany()`                                                                                                                          | [x] Compliant |
 | Evaluations                  | Delete    | `LessonEvaluationModel.deleteMany()`                                                                                                                     | [x] Compliant |
 | Downloads                    | Delete    | `DownloadLinkModel.deleteMany()`                                                                                                                         | [x] Compliant |
+| Email reply tokens           | Delete    | `EmailReplyTokenModel.deleteMany()`                                                                                                                      | [x] Compliant |
+| Inbound email receipts       | Delete    | `InboundEmailReceiptModel.deleteMany()`                                                                                                                  | [x] Compliant |
 | Reports                      | Delete    | `CommunityReportModel.deleteMany()`                                                                                                                      | [x] Compliant |
 | Posts/Comments               | Delete    | `deleteCommunityPosts()`                                                                                                                                 | [x] Compliant |
 | Community reactions          | Delete    | `CommunityReactionModel.deleteMany()` by `userId` / owned posts; hard content delete purges entity rows; soft-delete retains until hard/user/post delete | [x] Compliant |

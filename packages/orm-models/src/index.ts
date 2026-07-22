@@ -11,6 +11,8 @@ export * from "./models/rule";
 export * from "./models/email";
 export * from "./models/email-delivery";
 export * from "./models/email-event";
+export * from "./models/email-reply-token";
+export * from "./models/inbound-email-receipt";
 export * from "./models/subscriber";
 export * from "./models/domain";
 export * from "./models/site-info";

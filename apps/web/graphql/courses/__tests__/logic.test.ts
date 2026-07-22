@@ -939,6 +939,21 @@ describe("product discussion comment and reply logic", () => {
         expect(secondReply.commentId).toBe(comment.commentId);
         expect(secondReply.parentReplyId).toBe(firstReply.replyId);
 
+        firstReply.deleted = true;
+        await firstReply.save();
+
+        await expect(
+            createDiscussionReply({
+                ctx,
+                productId: courseId,
+                entityType: CommonConstants.ProductDiscussionEntityType.LESSON,
+                entityId: lessonId,
+                commentId: comment.commentId,
+                parentReplyId: firstReply.replyId,
+                content: doc("Reply under deleted parent"),
+            }),
+        ).rejects.toThrow(responses.item_not_found);
+
         const comments = await listDiscussionComments({
             ctx,
             productId: courseId,
