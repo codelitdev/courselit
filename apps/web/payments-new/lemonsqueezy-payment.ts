@@ -1,5 +1,6 @@
 import Payment, { InitiateProps } from "./payment";
 import { responses } from "../config/strings";
+import crypto from "crypto";
 import {
     Constants,
     PaymentPlan,
@@ -20,7 +21,7 @@ export default class LemonSqueezyPayment implements Payment {
     public siteinfo: SiteInfo;
     public name: string;
     private apiKey: string;
-    // private webhookSecret: string;
+    private webhookSecret: string | undefined;
 
     constructor(siteinfo: SiteInfo) {
         this.siteinfo = siteinfo;
@@ -45,7 +46,7 @@ export default class LemonSqueezyPayment implements Payment {
         }
 
         this.apiKey = this.siteinfo.lemonsqueezyKey;
-        // this.webhookSecret = this.siteinfo.lemonsqueezyWebhookSecret;
+        this.webhookSecret = this.siteinfo.lemonsqueezyWebhookSecret;
 
         return this;
     }
@@ -134,8 +135,38 @@ export default class LemonSqueezyPayment implements Payment {
         return store.attributes.currency.toLowerCase();
     }
 
-    async verify(event: any) {
-        // if (!this.verifyWebhookSignature(event)) return false;
+    async verify(
+        event: any,
+        rawBody: string,
+        headers: Record<string, string | null>,
+    ) {
+        const signature = headers["x-signature"];
+        if (!signature || !this.webhookSecret) {
+            return false;
+        }
+
+        const digest = crypto
+            .createHmac("sha256", this.webhookSecret)
+            .update(rawBody)
+            .digest("hex");
+        const receivedHash = signature.startsWith("sha256=")
+            ? signature.slice(7)
+            : signature;
+        try {
+            const expected = Buffer.from(digest);
+            const received = Buffer.from(receivedHash);
+            if (
+                expected.length !== received.length ||
+                !crypto.timingSafeEqual(
+                    new Uint8Array(expected),
+                    new Uint8Array(received),
+                )
+            ) {
+                return false;
+            }
+        } catch {
+            return false;
+        }
 
         const eventType = event.meta.event_name;
         const attributes = event.data.attributes;
@@ -267,17 +298,4 @@ export default class LemonSqueezyPayment implements Payment {
         const { data } = await response.json();
         return data;
     }
-
-    // private verifyWebhookSignature(event: any) {
-    //     const signature = event.meta.signature;
-    //     const payload = JSON.stringify(event);
-
-    //     const hmac = crypto.createHmac("sha256", this.webhookSecret);
-    //     const digest = hmac.update(payload).digest("hex");
-
-    //     return crypto.timingSafeEqual(
-    //         Buffer.from(signature),
-    //         Buffer.from(digest)
-    //     );
-    // }
 }

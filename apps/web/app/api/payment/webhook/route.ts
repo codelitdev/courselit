@@ -17,7 +17,8 @@ import { activateMembership } from "../helpers";
 
 export async function POST(req: NextRequest) {
     try {
-        const body = await req.json();
+        const rawBody = await req.text();
+        const body = JSON.parse(rawBody);
         const domainName = req.headers.get("domain");
 
         const domain = await getDomain(domainName);
@@ -33,7 +34,13 @@ export async function POST(req: NextRequest) {
             return Response.json({ message: "Payment method not found" });
         }
 
-        if (!(await paymentMethod.verify(body))) {
+        const headers: Record<string, string | null> = {
+            "stripe-signature": req.headers.get("stripe-signature"),
+            "x-razorpay-signature": req.headers.get("x-razorpay-signature"),
+            "x-signature": req.headers.get("x-signature"),
+        };
+
+        if (!(await paymentMethod.verify(body, rawBody, headers))) {
             return Response.json({ message: "Payment not verified" });
         }
 
