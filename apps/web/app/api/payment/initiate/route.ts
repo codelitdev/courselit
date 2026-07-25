@@ -179,6 +179,7 @@ export async function POST(req: NextRequest) {
             membershipId: membership.membershipId,
             invoiceId,
             currencyISOCode,
+            domainName: domain.name,
         };
 
         const paymentTracker = await paymentMethod!.initiate({

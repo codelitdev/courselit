@@ -4,11 +4,10 @@ import DomainModel, { Domain } from "../models/Domain";
 import StripePayment from "./stripe-payment";
 import RazorpayPayment from "./razorpay-payment";
 import LemonSqueezyPayment from "./lemonsqueezy-payment";
+import PayPalPayment from "./paypal-payment";
 
-const {
-    error_unrecognised_payment_method: unrecognisedPaymentMethod,
-    error_payment_method_not_implemented: notYetSupported,
-} = internal;
+const { error_unrecognised_payment_method: unrecognisedPaymentMethod } =
+    internal;
 
 export const getPaymentMethod = async (domainName: string) => {
     const domain: Domain | null = await DomainModel.findOne({
@@ -29,7 +28,7 @@ export const getPaymentMethodFromSettings = async (
 
     switch (name || siteInfo.paymentMethod) {
         case UIConstants.PAYMENT_METHOD_PAYPAL:
-            throw new Error(notYetSupported);
+            return await new PayPalPayment(siteInfo).setup();
         case UIConstants.PAYMENT_METHOD_STRIPE:
             return await new StripePayment(siteInfo).setup();
         case UIConstants.PAYMENT_METHOD_RAZORPAY:
@@ -37,7 +36,7 @@ export const getPaymentMethodFromSettings = async (
         case UIConstants.PAYMENT_METHOD_LEMONSQUEEZY:
             return await new LemonSqueezyPayment(siteInfo).setup();
         case UIConstants.PAYMENT_METHOD_PAYTM:
-            throw new Error(notYetSupported);
+            throw new Error(internal.error_payment_method_not_implemented);
         default:
             throw new Error(unrecognisedPaymentMethod);
     }
