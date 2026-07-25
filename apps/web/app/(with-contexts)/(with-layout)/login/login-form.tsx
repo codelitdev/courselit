@@ -175,7 +175,7 @@ export default function LoginForm({
         setLoading(true);
         setError("");
 
-        if (!validateRecaptcha()) {
+        if (!(await validateRecaptcha())) {
             return;
         }
 
