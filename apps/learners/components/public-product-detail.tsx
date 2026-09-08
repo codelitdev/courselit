@@ -1,0 +1,163 @@
+"use client";
+
+import type { ThemeStyle } from "@frontlit/page-builder/models";
+import {
+  Caption,
+  Header1,
+  PageCardImage,
+  Text2,
+} from "@frontlit/page-builder/primitives";
+import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { learnerHeaders } from "@/lib/school";
+import { useSchoolThemeStyle } from "@/lib/school-theme-context";
+import {
+  ProductCurriculumBlock,
+  type ProductPlan,
+  ProductPurchaseBlock,
+} from "./product-page-blocks";
+
+type PublicProduct = {
+  id: string;
+  kind: "course" | "download";
+  title: string;
+  description: string;
+  enrolled: boolean;
+  featuredMedia: {
+    canonicalUrl: string;
+    thumbnailUrl: string | null;
+    altText: string;
+  } | null;
+  sections: Array<{ id: string; title: string }>;
+  lessons: Array<{ id: string; title: string; status: string }>;
+};
+
+function ProductDescription({ value, theme }: { value: string; theme: ThemeStyle }) {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(value) as TextEditorContent;
+    if (parsed.type === "doc" && Array.isArray(parsed.content)) {
+      return <TextRenderer json={parsed} theme={theme} className="lesson-rich-text" />;
+    }
+  } catch {
+    // Descriptions created before rich-text support are plain strings.
+  }
+  return <Text2 theme={theme}>{value}</Text2>;
+}
+
+export function PublicProductDetail({ productId }: { productId: string }) {
+  const theme = useSchoolThemeStyle();
+  const [product, setProduct] = useState<PublicProduct | null>(null);
+  const [plans, setPlans] = useState<ProductPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busyPlanId, setBusyPlanId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    void Promise.all([
+      fetch(`/api/v1/products/${encodeURIComponent(productId)}`, {
+        credentials: "include",
+        cache: "no-store",
+        headers: learnerHeaders(),
+      }),
+      fetch(`/api/v1/storefront/products/${encodeURIComponent(productId)}/plans`, {
+        credentials: "include",
+        cache: "no-store",
+        headers: learnerHeaders(),
+      }),
+    ])
+      .then(async ([productResponse, plansResponse]) => {
+        if (!active) return;
+        if (!productResponse.ok) {
+          setError("This product is not available.");
+          return;
+        }
+        setProduct((await productResponse.json()) as PublicProduct);
+        if (plansResponse.ok) {
+          const body = (await plansResponse.json()) as { items?: ProductPlan[] };
+          setPlans(body.items ?? []);
+        }
+      })
+      .catch(() => {
+        if (active) setError("Unable to load this product.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [productId]);
+
+  async function choosePlan(plan: ProductPlan) {
+    setError(null);
+    setBusyPlanId(plan.id);
+    try {
+      const response = await fetch("/api/v1/storefront/checkout-sessions", {
+        method: "POST",
+        credentials: "include",
+        headers: learnerHeaders({
+          "content-type": "application/json",
+        }),
+        body: JSON.stringify({ productId, planId: plan.id }),
+      });
+      if (!response.ok) throw new Error("Unable to start checkout.");
+      const body = (await response.json()) as { id?: string };
+      if (!body.id) throw new Error("Unable to create checkout session.");
+      window.location.assign(`/checkout?session=${encodeURIComponent(body.id)}`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to continue.");
+    } finally {
+      setBusyPlanId(null);
+    }
+  }
+
+  if (loading) return <Text2 theme={theme}>Loading product…</Text2>;
+  if (error || !product) {
+    return <Text2 theme={theme}>{error ?? "This product is not available."}</Text2>;
+  }
+
+  return (
+    <div className="flex flex-col gap-10">
+      <header className="flex flex-col gap-4">
+        <Caption theme={theme}>
+          {product.kind === "course" ? "Course" : "Digital download"}
+        </Caption>
+        <Header1 theme={theme}>{product.title}</Header1>
+        <ProductDescription value={product.description} theme={theme} />
+      </header>
+
+      {product.featuredMedia ? (
+        <PageCardImage
+          theme={theme}
+          src={product.featuredMedia.thumbnailUrl ?? product.featuredMedia.canonicalUrl}
+          alt={product.featuredMedia.altText || product.title}
+          className="w-full rounded-xl border object-cover"
+        />
+      ) : null}
+
+      <div
+        id="checkout"
+        className="grid scroll-mt-24 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]"
+      >
+        <ProductCurriculumBlock product={product} theme={theme} />
+        <ProductPurchaseBlock
+          productId={product.id}
+          plans={plans}
+          theme={theme}
+          busyPlanId={busyPlanId}
+          onChoosePlan={(plan) => void choosePlan(plan)}
+          enrolled={product.enrolled}
+        />
+      </div>
+      <Link href="/products" className="w-fit">
+        <Text2 theme={theme} className="hover:underline">
+          ← All products
+        </Text2>
+      </Link>
+    </div>
+  );
+}

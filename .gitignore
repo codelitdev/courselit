@@ -1,51 +1,20 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Dependencies
-node_modules
-
-# Jest coverage
-coverage
-
-# Text editors configurations
-.vscode
-.rgignore
-
-# Env file
-.env*.local
-
-# report files
-report*.json
-
-# yarn
-.yarn/*
-!.yarn/cache
-!.yarn/releases
-!.yarn/plugins
-!.yarn/sdks
-!.yarn/versions
-
-# uploads folder
-~
-
-# OS specific files
-.DS_Store
-
-# Dev tools files
+node_modules/
+dist/
+coverage/
+.nyc_output/
+.next/
+*.tsbuildinfo
+*.tgz
 .eslintcache
 
-.npmrc
+.env
+.env.*
+!.env.example
 
-# Jest files
-globalConfig.json
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.claude/settings.local.json
 
-# CourseLit files
-domains_to_delete.txt
-.codex
-
-# AI
-.agents
+.changeset/pre.json

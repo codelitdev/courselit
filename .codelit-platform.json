@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "templateVersion": "1.0.0",
+  "presetVersion": "0.1.0-alpha.1",
+  "capabilities": ["auth", "mcp", "observability", "billing"],
+  "managedFiles": {
+    "tooling/platform/config.ts": "5f18e36b65deb129ff9092ddef6b10f351b4d7709e66f2d939ee3bb145aafb70",
+    ".github/workflows/platform-conformance.yml": "2b7cad0f9aae404fb08bfaf12b0e0502ecd96d8334afe6d87c3a0787af8a354d"
+  },
+  "productOwnedGlobs": ["apps/**", "packages/api-contract/**"],
+  "appliedUpgrades": ["1.0.0"]
+}

@@ -1,0 +1,28 @@
+name: Platform conformance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.1
+      # `platform-cli create` intentionally does not resolve dependencies.
+      # Bootstrap the product lockfile on its first run; all subsequent CI
+      # installs are immutable and use the frozen lockfile below.
+      - run: bun install
+        if: ${{ !hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile
+      - run: bun run --filter "*/api" check:drift
+      - run: bun run test
+      - run: bun run typecheck
+      - run: bun run build

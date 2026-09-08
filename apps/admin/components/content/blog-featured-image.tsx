@@ -1,0 +1,140 @@
+"use client";
+
+import { ImageUploadDialog, type SelectedImage } from "@frontlit/media-uploader";
+import Image from "next/image";
+import { useState } from "react";
+import { Button } from "@/components/ui/codelit/button";
+import {
+  type CourseLitMedia,
+  filterCourseLitMediaAdapters,
+  mediaMatchesAcceptedTypes,
+  useCourseLitMediaUploader,
+} from "@/lib/course-media-uploader";
+
+const BLOG_IMAGE_ACCEPTED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+];
+
+type BlogFeaturedImageValue = Record<string, unknown>;
+
+function stringValue(value: unknown): string | null {
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function imageUrl(value: BlogFeaturedImageValue | null | undefined): string | null {
+  if (!value) return null;
+  return (
+    stringValue(value.thumbnailUrl) ??
+    stringValue(value.thumbnail) ??
+    stringValue(value.url) ??
+    stringValue(value.file)
+  );
+}
+
+function mediaToFeaturedImage(media: CourseLitMedia): BlogFeaturedImageValue {
+  return {
+    mediaId: media.id,
+    url: media.canonicalUrl,
+    file: media.canonicalUrl,
+    thumbnailUrl: media.thumbnailUrl,
+    thumbnail: media.thumbnailUrl,
+    alt: media.altText,
+    caption: media.caption || media.fileName,
+    originalFileName: media.fileName,
+  };
+}
+
+export function BlogFeaturedImage({
+  school,
+  value,
+  disabled = false,
+  onChange,
+}: {
+  school: { id: string };
+  value: BlogFeaturedImageValue | null | undefined;
+  disabled?: boolean;
+  onChange: (value: BlogFeaturedImageValue | null) => void;
+}) {
+  const [error, setError] = useState<string | null>(null);
+  const adapters = useCourseLitMediaUploader({
+    schoolId: school.id,
+    purpose: "blog_artwork",
+    accessPolicy: "public",
+  });
+  const filteredAdapters = filterCourseLitMediaAdapters(
+    adapters,
+    BLOG_IMAGE_ACCEPTED_TYPES,
+  );
+  const previewUrl = imageUrl(value);
+
+  function selectImage(selected: SelectedImage<CourseLitMedia>) {
+    if (!selected.media) {
+      setError("Featured images must be stored in the MediaLit library.");
+      return;
+    }
+    if (!mediaMatchesAcceptedTypes(selected.media, BLOG_IMAGE_ACCEPTED_TYPES)) {
+      setError("Featured images must be JPEG, PNG, GIF, or WebP images.");
+      return;
+    }
+    setError(null);
+    onChange(mediaToFeaturedImage(selected.media));
+  }
+
+  return (
+    <section className="border-t pt-6">
+      <div>
+        <h3 className="text-sm font-semibold">Featured image</h3>
+        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+          Shown on the public blog post and used for social previews.
+        </p>
+      </div>
+      {previewUrl ? (
+        <div className="mt-3 space-y-3">
+          <Image
+            src={previewUrl}
+            alt={stringValue(value?.alt) ?? stringValue(value?.caption) ?? ""}
+            width={640}
+            height={360}
+            unoptimized
+            className="aspect-video w-full rounded-md border object-cover"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={disabled}
+            onClick={() => onChange(null)}
+          >
+            Remove image
+          </Button>
+        </div>
+      ) : null}
+      <ImageUploadDialog<CourseLitMedia>
+        {...filteredAdapters}
+        title="Select blog featured image"
+        acceptedTypes={BLOG_IMAGE_ACCEPTED_TYPES}
+        allowUnsplash={false}
+        metadataMode="alt"
+        onSelect={selectImage}
+      >
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-3"
+          disabled={disabled}
+        >
+          {previewUrl ? "Change image" : "Select an image"}
+        </Button>
+      </ImageUploadDialog>
+      {error ? (
+        <p role="alert" className="mt-2 text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
+    </section>
+  );
+}

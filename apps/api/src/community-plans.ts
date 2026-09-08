@@ -1,0 +1,631 @@
+import {
+  type Clock,
+  createPlatformError,
+  createPublicId,
+  type PlatformError,
+  serializeDate,
+  uuidv7,
+} from "@codelitdev/platform";
+import { and, asc, eq, inArray } from "drizzle-orm";
+import * as schema from "./db/schema/index.js";
+import {
+  kindForSourceType,
+  type NormalizedPlan,
+  type PlanInput,
+  type StorefrontContext,
+  sourceAmountsForRow,
+  sourceTypeForKind,
+  validatePlan,
+} from "./storefront.js";
+import type { AppDb } from "./types.js";
+
+export type CommunityPlanDto = {
+  id: string;
+  schoolId: string;
+  communityId: string;
+  name: string;
+  description: string;
+  includedProducts: string[];
+  providerProductId: string | null;
+  type: "free" | "onetime" | "emi" | "subscription";
+  kind: "free" | "one_time" | "subscription" | "installment";
+  currency: string;
+  oneTimeAmount: number | null;
+  emiAmount: number | null;
+  emiTotalInstallments: number | null;
+  subscriptionMonthlyAmount: number | null;
+  subscriptionYearlyAmount: number | null;
+  amountMinor: number;
+  billingInterval: "month" | "year" | null;
+  installmentCount: number | null;
+  status: "active" | "archived";
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type Result<T> = { ok: true; value: T } | { ok: false; error: PlatformError };
+
+function canRead(context: StorefrontContext) {
+  return Boolean(
+    context.tenantId &&
+      (context.permissions.has("storefront:read") ||
+        context.permissions.has("communities:read") ||
+        context.permissions.has("school:admin")),
+  );
+}
+
+function canWrite(context: StorefrontContext) {
+  return Boolean(
+    context.tenantId &&
+      (context.permissions.has("storefront:write") ||
+        context.permissions.has("communities:write") ||
+        context.permissions.has("school:admin")),
+  );
+}
+
+function invalidPlan(reason: string): Result<never> {
+  return {
+    ok: false,
+    error: createPlatformError("validation_failed", {
+      safeDetails: { reason },
+    }),
+  };
+}
+
+function duplicatePlan(): Result<never> {
+  return {
+    ok: false,
+    error: createPlatformError("conflict", {
+      safeDetails: { reason: "duplicate_payment_plan" },
+    }),
+  };
+}
+
+function normalizeCurrency(value: string | null | undefined) {
+  const currency = value?.trim().toUpperCase();
+  return currency && /^[A-Z]{3}$/.test(currency) ? currency : "USD";
+}
+
+export function communityPlanToDto(
+  row: typeof schema.communityPaymentPlans.$inferSelect,
+  schoolPublicId: string,
+  communityPublicId: string,
+  currency: string,
+): CommunityPlanDto {
+  const sourceAmounts = sourceAmountsForRow(row);
+  return {
+    id: row.publicId,
+    schoolId: schoolPublicId,
+    communityId: communityPublicId,
+    name: row.name,
+    description: row.description,
+    includedProducts: row.includedProducts,
+    providerProductId: row.providerProductId,
+    type: sourceTypeForKind(row.kind),
+    kind: row.kind,
+    currency,
+    ...sourceAmounts,
+    amountMinor: row.amountMinor,
+    billingInterval: row.billingInterval,
+    installmentCount: row.installmentCount,
+    status: row.status,
+    isDefault: row.isDefault,
+    createdAt: serializeDate(row.createdAt),
+    updatedAt: serializeDate(row.updatedAt),
+  };
+}
+
+async function loadCommunity(db: AppDb, schoolId: string, publicId: string) {
+  const rows = await db
+    .select()
+    .from(schema.communities)
+    .where(
+      and(
+        eq(schema.communities.schoolId, schoolId),
+        eq(schema.communities.publicId, publicId),
+      ),
+    )
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+async function loadCommunityById(db: AppDb, schoolId: string, id: string) {
+  const rows = await db
+    .select()
+    .from(schema.communities)
+    .where(
+      and(eq(schema.communities.schoolId, schoolId), eq(schema.communities.id, id)),
+    )
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+async function loadSchool(db: AppDb, schoolId: string) {
+  const rows = await db
+    .select({ publicId: schema.schools.publicId, currency: schema.schools.currency })
+    .from(schema.schools)
+    .where(eq(schema.schools.id, schoolId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+async function validateIncludedProducts(
+  db: AppDb,
+  schoolId: string,
+  includedProducts: string[] | undefined,
+) {
+  const ids = includedProducts ?? [];
+  if (ids.length === 0) return true;
+  const rows = await db
+    .select({ publicId: schema.products.publicId })
+    .from(schema.products)
+    .where(
+      and(
+        eq(schema.products.schoolId, schoolId),
+        inArray(schema.products.publicId, ids),
+      ),
+    );
+  return new Set(rows.map((row) => row.publicId)).size === new Set(ids).size;
+}
+
+function isDuplicate(
+  candidate: NormalizedPlan,
+  existing: typeof schema.communityPaymentPlans.$inferSelect,
+  currentId?: string,
+) {
+  if (currentId && existing.id === currentId) return false;
+  if (
+    existing.status !== "active" ||
+    sourceTypeForKind(existing.kind) !== candidate.type
+  ) {
+    return false;
+  }
+  if (candidate.type !== "subscription") return true;
+  const amounts = sourceAmountsForRow(existing);
+  return candidate.subscriptionMonthlyAmount !== null
+    ? amounts.subscriptionMonthlyAmount !== null
+    : amounts.subscriptionYearlyAmount !== null;
+}
+
+export async function listCommunityPlans(
+  db: AppDb,
+  context: StorefrontContext,
+  schoolPublicId: string,
+  communityPublicId: string,
+): Promise<Result<CommunityPlanDto[]>> {
+  if (!canRead(context)) return { ok: false, error: createPlatformError("forbidden") };
+  const community = await loadCommunity(db, context.tenantId!, communityPublicId);
+  const school = await loadSchool(db, context.tenantId!);
+  if (!community || !school)
+    return { ok: false, error: createPlatformError("not_found") };
+  const rows = await db
+    .select()
+    .from(schema.communityPaymentPlans)
+    .where(
+      and(
+        eq(schema.communityPaymentPlans.schoolId, context.tenantId!),
+        eq(schema.communityPaymentPlans.communityId, community.id),
+      ),
+    )
+    .orderBy(asc(schema.communityPaymentPlans.createdAt));
+  return {
+    ok: true,
+    value: rows.map((row) =>
+      communityPlanToDto(
+        row,
+        schoolPublicId,
+        community.publicId,
+        normalizeCurrency(school.currency),
+      ),
+    ),
+  };
+}
+
+export async function listPublicCommunityPlans(
+  db: AppDb,
+  school: { schoolId: string; publicId: string },
+  communityPublicId: string,
+): Promise<Result<CommunityPlanDto[]>> {
+  const community = await loadCommunity(db, school.schoolId, communityPublicId);
+  const schoolRow = await loadSchool(db, school.schoolId);
+  if (!community?.enabled || community.deletedAt || !schoolRow) {
+    return { ok: false, error: createPlatformError("not_found") };
+  }
+  const rows = await db
+    .select()
+    .from(schema.communityPaymentPlans)
+    .where(
+      and(
+        eq(schema.communityPaymentPlans.schoolId, school.schoolId),
+        eq(schema.communityPaymentPlans.communityId, community.id),
+        eq(schema.communityPaymentPlans.status, "active"),
+      ),
+    )
+    .orderBy(asc(schema.communityPaymentPlans.createdAt));
+  return {
+    ok: true,
+    value: rows.map((row) =>
+      communityPlanToDto(
+        row,
+        school.publicId,
+        community.publicId,
+        normalizeCurrency(schoolRow.currency),
+      ),
+    ),
+  };
+}
+
+export async function createCommunityPlan(
+  db: AppDb,
+  context: StorefrontContext,
+  schoolPublicId: string,
+  communityPublicId: string,
+  input: PlanInput,
+  clock: Clock,
+): Promise<Result<CommunityPlanDto>> {
+  if (!canWrite(context)) return { ok: false, error: createPlatformError("forbidden") };
+  const community = await loadCommunity(db, context.tenantId!, communityPublicId);
+  const school = await loadSchool(db, context.tenantId!);
+  if (!community || !school)
+    return { ok: false, error: createPlatformError("not_found") };
+  const checked = validatePlan(input, { allowIncludedProducts: true });
+  if (!checked.ok) return checked;
+  if (
+    !(await validateIncludedProducts(db, context.tenantId!, input.includedProducts))
+  ) {
+    return invalidPlan("invalid_included_products");
+  }
+  const now = clock.now();
+  try {
+    return await db.transaction(async (tx) => {
+      const existing = await tx
+        .select()
+        .from(schema.communityPaymentPlans)
+        .where(
+          and(
+            eq(schema.communityPaymentPlans.communityId, community.id),
+            eq(schema.communityPaymentPlans.status, "active"),
+          ),
+        );
+      if (existing.some((plan) => isDuplicate(checked.value, plan)))
+        return duplicatePlan();
+      const row = {
+        id: uuidv7(clock),
+        publicId: createPublicId("pln", clock),
+        schoolId: context.tenantId!,
+        communityId: community.id,
+        name: input.name.trim(),
+        description: input.description ?? "",
+        includedProducts: input.includedProducts ?? [],
+        providerProductId: input.providerProductId?.trim() || null,
+        kind: checked.value.kind,
+        oneTimeAmount: checked.value.oneTimeAmount,
+        emiAmount: checked.value.emiAmount,
+        emiTotalInstallments: checked.value.emiTotalInstallments,
+        subscriptionMonthlyAmount: checked.value.subscriptionMonthlyAmount,
+        subscriptionYearlyAmount: checked.value.subscriptionYearlyAmount,
+        amountMinor: checked.value.amountMinor,
+        billingInterval: checked.value.billingInterval,
+        installmentCount: checked.value.installmentCount,
+        status: "active" as const,
+        isDefault: existing.every((plan) => !plan.isDefault),
+        createdBy: context.principalId,
+        createdAt: now,
+        updatedAt: now,
+      };
+      await tx.insert(schema.communityPaymentPlans).values(row);
+      await tx.insert(schema.auditEvents).values({
+        id: uuidv7(clock),
+        schoolId: context.tenantId!,
+        actorId: context.principalId,
+        action: "community_payment_plan.created",
+        resourceType: "community_payment_plan",
+        resourceId: row.publicId,
+        requestId: context.requestId,
+        createdAt: now,
+      });
+      return {
+        ok: true as const,
+        value: communityPlanToDto(
+          row,
+          schoolPublicId,
+          community.publicId,
+          normalizeCurrency(school.currency),
+        ),
+      };
+    });
+  } catch (error) {
+    if (String(error).includes("community_payment_plans_")) return duplicatePlan();
+    throw error;
+  }
+}
+
+export async function updateCommunityPlan(
+  db: AppDb,
+  context: StorefrontContext,
+  schoolPublicId: string,
+  planPublicId: string,
+  input: Partial<PlanInput>,
+  clock: Clock,
+): Promise<Result<CommunityPlanDto>> {
+  if (!canWrite(context)) return { ok: false, error: createPlatformError("forbidden") };
+  const rows = await db
+    .select()
+    .from(schema.communityPaymentPlans)
+    .where(
+      and(
+        eq(schema.communityPaymentPlans.schoolId, context.tenantId!),
+        eq(schema.communityPaymentPlans.publicId, planPublicId),
+      ),
+    )
+    .limit(1);
+  const existing = rows[0];
+  if (!existing) return { ok: false, error: createPlatformError("not_found") };
+  if (existing.status === "archived") {
+    return {
+      ok: false,
+      error: createPlatformError("conflict", {
+        safeDetails: { reason: "plan_archived" },
+      }),
+    };
+  }
+  const community = await loadCommunityById(
+    db,
+    context.tenantId!,
+    existing.communityId,
+  );
+  const school = await loadSchool(db, context.tenantId!);
+  if (!community || !school)
+    return { ok: false, error: createPlatformError("not_found") };
+  const current = sourceAmountsForRow(existing);
+  const nextType =
+    input.type ??
+    (input.kind ? sourceTypeForKind(input.kind) : sourceTypeForKind(existing.kind));
+  const preserve = nextType === sourceTypeForKind(existing.kind);
+  const nextProviderProductId =
+    input.providerProductId === undefined
+      ? existing.providerProductId
+      : input.providerProductId;
+  const checked = validatePlan(
+    {
+      name: input.name?.trim() ?? existing.name,
+      description: input.description ?? existing.description,
+      includedProducts: input.includedProducts ?? existing.includedProducts,
+      providerProductId: nextProviderProductId,
+      type: nextType,
+      kind: input.kind ?? (input.type ? kindForSourceType(input.type) : existing.kind),
+      oneTimeAmount:
+        input.oneTimeAmount ?? (preserve ? current.oneTimeAmount : undefined),
+      emiAmount: input.emiAmount ?? (preserve ? current.emiAmount : undefined),
+      emiTotalInstallments:
+        input.emiTotalInstallments ??
+        (preserve ? current.emiTotalInstallments : undefined),
+      subscriptionMonthlyAmount:
+        input.subscriptionMonthlyAmount ??
+        (preserve ? current.subscriptionMonthlyAmount : undefined),
+      subscriptionYearlyAmount:
+        input.subscriptionYearlyAmount ??
+        (preserve ? current.subscriptionYearlyAmount : undefined),
+      amountMinor: input.amountMinor,
+      billingInterval:
+        input.billingInterval !== undefined
+          ? input.billingInterval
+          : preserve
+            ? existing.billingInterval
+            : null,
+      installmentCount:
+        input.installmentCount !== undefined
+          ? input.installmentCount
+          : preserve
+            ? existing.installmentCount
+            : null,
+    },
+    { allowIncludedProducts: true },
+  );
+  if (!checked.ok) return checked;
+  if (
+    !(await validateIncludedProducts(
+      db,
+      context.tenantId!,
+      input.includedProducts ?? existing.includedProducts,
+    ))
+  ) {
+    return invalidPlan("invalid_included_products");
+  }
+  const existingPlans = await db
+    .select()
+    .from(schema.communityPaymentPlans)
+    .where(
+      and(
+        eq(schema.communityPaymentPlans.communityId, existing.communityId),
+        eq(schema.communityPaymentPlans.status, "active"),
+      ),
+    );
+  if (existingPlans.some((plan) => isDuplicate(checked.value, plan, existing.id))) {
+    return duplicatePlan();
+  }
+  const now = clock.now();
+  const next = {
+    name: input.name?.trim() ?? existing.name,
+    description: input.description ?? existing.description,
+    includedProducts: input.includedProducts ?? existing.includedProducts,
+    providerProductId: nextProviderProductId?.trim() || null,
+    kind: checked.value.kind,
+    oneTimeAmount: checked.value.oneTimeAmount,
+    emiAmount: checked.value.emiAmount,
+    emiTotalInstallments: checked.value.emiTotalInstallments,
+    subscriptionMonthlyAmount: checked.value.subscriptionMonthlyAmount,
+    subscriptionYearlyAmount: checked.value.subscriptionYearlyAmount,
+    amountMinor: checked.value.amountMinor,
+    billingInterval: checked.value.billingInterval,
+    installmentCount: checked.value.installmentCount,
+    updatedAt: now,
+  };
+  await db.transaction(async (tx) => {
+    await tx
+      .update(schema.communityPaymentPlans)
+      .set(next)
+      .where(eq(schema.communityPaymentPlans.id, existing.id));
+    await tx.insert(schema.auditEvents).values({
+      id: uuidv7(clock),
+      schoolId: context.tenantId!,
+      actorId: context.principalId,
+      action: "community_payment_plan.updated",
+      resourceType: "community_payment_plan",
+      resourceId: existing.publicId,
+      requestId: context.requestId,
+      createdAt: now,
+    });
+  });
+  return {
+    ok: true,
+    value: communityPlanToDto(
+      { ...existing, ...next },
+      schoolPublicId,
+      community.publicId,
+      normalizeCurrency(school.currency),
+    ),
+  };
+}
+
+export async function setDefaultCommunityPlan(
+  db: AppDb,
+  context: StorefrontContext,
+  schoolPublicId: string,
+  planPublicId: string,
+  clock: Clock,
+): Promise<Result<CommunityPlanDto>> {
+  if (!canWrite(context)) return { ok: false, error: createPlatformError("forbidden") };
+  return db.transaction(async (tx) => {
+    const rows = await tx
+      .select()
+      .from(schema.communityPaymentPlans)
+      .where(
+        and(
+          eq(schema.communityPaymentPlans.schoolId, context.tenantId!),
+          eq(schema.communityPaymentPlans.publicId, planPublicId),
+        ),
+      )
+      .limit(1);
+    const row = rows[0];
+    if (!row) return { ok: false as const, error: createPlatformError("not_found") };
+    if (row.status === "archived")
+      return { ok: false as const, error: createPlatformError("conflict") };
+    const now = clock.now();
+    await tx
+      .update(schema.communityPaymentPlans)
+      .set({ isDefault: false, updatedAt: now })
+      .where(
+        and(
+          eq(schema.communityPaymentPlans.communityId, row.communityId),
+          eq(schema.communityPaymentPlans.status, "active"),
+        ),
+      );
+    await tx
+      .update(schema.communityPaymentPlans)
+      .set({ isDefault: true, updatedAt: now })
+      .where(eq(schema.communityPaymentPlans.id, row.id));
+    const school = await loadSchool(tx, context.tenantId!);
+    if (!school) return { ok: false as const, error: createPlatformError("not_found") };
+    const communityRows = await tx
+      .select({ publicId: schema.communities.publicId })
+      .from(schema.communities)
+      .where(eq(schema.communities.id, row.communityId))
+      .limit(1);
+    const publicId = communityRows[0]?.publicId;
+    if (!publicId)
+      return { ok: false as const, error: createPlatformError("not_found") };
+    await tx.insert(schema.auditEvents).values({
+      id: uuidv7(clock),
+      schoolId: context.tenantId!,
+      actorId: context.principalId,
+      action: "community_payment_plan.defaulted",
+      resourceType: "community_payment_plan",
+      resourceId: row.publicId,
+      requestId: context.requestId,
+      createdAt: now,
+    });
+    return {
+      ok: true as const,
+      value: communityPlanToDto(
+        { ...row, isDefault: true, updatedAt: now },
+        schoolPublicId,
+        publicId,
+        normalizeCurrency(school.currency),
+      ),
+    };
+  });
+}
+
+export async function archiveCommunityPlan(
+  db: AppDb,
+  context: StorefrontContext,
+  schoolPublicId: string,
+  planPublicId: string,
+  clock: Clock,
+): Promise<Result<CommunityPlanDto>> {
+  if (!canWrite(context)) return { ok: false, error: createPlatformError("forbidden") };
+  const rows = await db
+    .select()
+    .from(schema.communityPaymentPlans)
+    .where(
+      and(
+        eq(schema.communityPaymentPlans.schoolId, context.tenantId!),
+        eq(schema.communityPaymentPlans.publicId, planPublicId),
+      ),
+    )
+    .limit(1);
+  const row = rows[0];
+  if (!row) return { ok: false, error: createPlatformError("not_found") };
+  if (row.status === "archived") {
+    return {
+      ok: false,
+      error: createPlatformError("conflict", {
+        safeDetails: { reason: "plan_archived" },
+      }),
+    };
+  }
+  if (row.isDefault) {
+    return {
+      ok: false,
+      error: createPlatformError("conflict", {
+        safeDetails: { reason: "default_plan_cannot_be_archived" },
+      }),
+    };
+  }
+  const now = clock.now();
+  const communityRows = await db
+    .select({ publicId: schema.communities.publicId })
+    .from(schema.communities)
+    .where(eq(schema.communities.id, row.communityId))
+    .limit(1);
+  const school = await loadSchool(db, context.tenantId!);
+  if (!school || !communityRows[0])
+    return { ok: false, error: createPlatformError("not_found") };
+  await db.transaction(async (tx) => {
+    await tx
+      .update(schema.communityPaymentPlans)
+      .set({ status: "archived", isDefault: false, updatedAt: now })
+      .where(eq(schema.communityPaymentPlans.id, row.id));
+    await tx.insert(schema.auditEvents).values({
+      id: uuidv7(clock),
+      schoolId: context.tenantId!,
+      actorId: context.principalId,
+      action: "community_payment_plan.archived",
+      resourceType: "community_payment_plan",
+      resourceId: row.publicId,
+      requestId: context.requestId,
+      createdAt: now,
+    });
+  });
+  return {
+    ok: true,
+      value: communityPlanToDto(
+      { ...row, status: "archived", isDefault: false, updatedAt: now },
+      schoolPublicId,
+      communityRows[0].publicId,
+      normalizeCurrency(school.currency),
+    ),
+  };
+}

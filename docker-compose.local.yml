@@ -1,0 +1,162 @@
+# Local development dependencies for CourseLit and its FrontLit/SendLit
+# integrations.
+#
+# FrontLit uses its published API image. Its local runtime settings are
+# supplied below; secrets can be overridden from the shell or a project .env
+# file without requiring a FrontLit checkout.
+#
+# CourseLit's API, admin app, and learners app continue to run on the host:
+#
+#   bun run dev:api
+#   bun run dev:admin
+#   bun run dev:learners
+#   bun run dev:worker
+#
+# Host ports:
+#   CourseLit Postgres: 5432
+#   FrontLit API:       4100
+#   SendLit API:        4101
+#
+# The host-run CourseLit API/worker should use FRONTLIT_SERVER=http://127.0.0.1:4100
+# and FRONTLIT_APIKEY=courselit-local-frontlit-provisioning-secret in
+# apps/api/.env (the latter matches the local FrontLit container default).
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: courselit
+      POSTGRES_PASSWORD: courselit
+      POSTGRES_DB: courselit
+    ports:
+      - "5432:5432"
+    volumes:
+      - courselit-local-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U courselit -d courselit"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Creates the sister-product databases on both fresh and existing volumes.
+  # This is a client-only helper; Postgres remains a single shared server.
+  frontlit-sendlit-db-init:
+    image: postgres:17-alpine
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: courselit
+    command:
+      - sh
+      - -ec
+      - |
+        for database in frontlit sendlit; do
+          if ! psql -h postgres -U courselit -d courselit -tAc "SELECT 1 FROM pg_database WHERE datname = '$$database'" | grep -q 1; then
+            psql -h postgres -U courselit -d courselit -v ON_ERROR_STOP=1 -c "CREATE DATABASE \"$$database\" OWNER courselit"
+          fi
+        done
+
+  sendlit-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - courselit-local-sendlit-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  sendlit-api:
+    image: codelit/sendlit-api:latest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      sendlit-redis:
+        condition: service_healthy
+      frontlit-sendlit-db-init:
+        condition: service_completed_successfully
+    command:
+      - sh
+      - -ec
+      - |
+        node apps/api/dist/db/migrate.js
+        exec node apps/api/dist/index.js
+    environment:
+      SENDLIT_DEPLOYMENT_MODE: "${SENDLIT_DEPLOYMENT_MODE:-oss}"
+      NODE_ENV: "${SENDLIT_NODE_ENV:-development}"
+      PORT: 3001
+      DB_CONNECTION_STRING: postgres://courselit:courselit@postgres:5432/sendlit
+      REDIS_HOST: sendlit-redis
+      REDIS_PORT: 6379
+      API_PUBLIC_URL: "${SENDLIT_API_PUBLIC_URL:-http://localhost:4101}"
+      WEB_CLIENT: "${SENDLIT_WEB_CLIENT:-http://localhost:4101}"
+      PROTOCOL: "${SENDLIT_PROTOCOL:-http}"
+      DOMAIN: "${SENDLIT_DOMAIN:-localhost:4101}"
+      BETTER_AUTH_SECRET: "${SENDLIT_BETTER_AUTH_SECRET:-courselit-local-sendlit-better-auth-secret}"
+      PIXEL_SIGNING_SECRET: "${SENDLIT_PIXEL_SIGNING_SECRET:-courselit-local-sendlit-pixel-signing}"
+      ESP_CREDENTIALS_ENCRYPTION_KEY: "${SENDLIT_ESP_CREDENTIALS_ENCRYPTION_KEY:-courselit-local-sendlit-esp-key-32b}"
+      SUPPRESSION_HASH_KEY: "${SENDLIT_SUPPRESSION_HASH_KEY:-courselit-local-sendlit-suppression}"
+      SUPER_ADMIN_EMAIL: "${SENDLIT_SUPER_ADMIN_EMAIL:-admin@example.com}"
+    ports:
+      - "${SENDLIT_API_PORT:-4101}:3001"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3001/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  frontlit-api:
+    image: codelit/frontlit-api:latest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      frontlit-sendlit-db-init:
+        condition: service_completed_successfully
+    command:
+      - sh
+      - -ec
+      - |
+        node apps/api/dist/db/migrate.js
+        exec node apps/api/dist/index.js
+    environment:
+      NODE_ENV: "${FRONTLIT_NODE_ENV:-development}"
+      PORT: 4000
+      DB_CONNECTION_STRING: postgres://courselit:courselit@postgres:5432/frontlit
+      MIGRATIONS_FOLDER: /app/apps/api/drizzle
+      API_PUBLIC_URL: "${FRONTLIT_API_PUBLIC_URL:-http://localhost:4100}"
+      WEB_CLIENT: "${FRONTLIT_WEB_CLIENT:-http://localhost:3000}"
+      WEB_BASE_URL: "${FRONTLIT_WEB_BASE_URL:-http://localhost:3000}"
+      SITES_BASE_URL: "${FRONTLIT_SITES_BASE_URL:-http://localhost:3001}"
+      PLATFORM_SITE_DOMAIN: "${FRONTLIT_PLATFORM_SITE_DOMAIN:-localhost}"
+      CUSTOM_DOMAIN_CNAME_TARGET: "${FRONTLIT_CUSTOM_DOMAIN_CNAME_TARGET:-sites.localhost}"
+      ENABLE_TRUST_PROXY: "${FRONTLIT_ENABLE_TRUST_PROXY:-false}"
+      AUTH_COOKIE_DOMAIN: "${FRONTLIT_AUTH_COOKIE_DOMAIN:-}"
+      SENDLIT_API_URL: http://sendlit-api:3001
+      SENDLIT_ORGANIZATION_API_KEY: "${SENDLIT_ORGANIZATION_API_KEY:-}"
+      MEDIALIT_APIKEY: "${MEDIALIT_APIKEY:-}"
+      MEDIALIT_SERVER: "${MEDIALIT_SERVER:-https://api.medialit.cloud}"
+      UNSPLASH_ACCESS_KEY: "${UNSPLASH_ACCESS_KEY:-}"
+      REVALIDATE_WEBHOOK_SECRET: "${FRONTLIT_REVALIDATE_WEBHOOK_SECRET:-}"
+      INTEGRATIONS_ENCRYPTION_KEY: "${FRONTLIT_INTEGRATIONS_ENCRYPTION_KEY:-}"
+      BETTER_AUTH_SECRET: "${FRONTLIT_BETTER_AUTH_SECRET:-courselit-local-frontlit-better-auth-secret}"
+      PROVISIONING_SECRET: "${FRONTLIT_PROVISIONING_SECRET:-courselit-local-frontlit-provisioning-secret}"
+      SUPER_ADMIN_EMAIL: "${FRONTLIT_SUPER_ADMIN_EMAIL:-admin@example.com}"
+      INBOX_AI_ENABLED: "${FRONTLIT_INBOX_AI_ENABLED:-false}"
+      INBOX_AI_DAILY_TOKEN_BUDGET: "${FRONTLIT_INBOX_AI_DAILY_TOKEN_BUDGET:-100000}"
+    ports:
+      - "${FRONTLIT_API_PORT:-4100}:4000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  courselit-local-postgres-data:
+  courselit-local-sendlit-redis-data:

@@ -1,0 +1,23 @@
+{
+  "name": "@courselit/api-contract",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@ts-rest/core": "3.52.1",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
+}

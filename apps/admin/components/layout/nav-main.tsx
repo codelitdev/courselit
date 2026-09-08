@@ -1,0 +1,133 @@
+"use client";
+
+import { ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+} from "@/components/ui/sidebar";
+import { isNavHrefActive, isNavItemActive } from "@/lib/nav-active";
+
+export interface NavItem {
+  href: string;
+  label: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  badge?: string;
+  items?: NavItem[];
+}
+
+function isGroupActive(pathname: string, search: string, item: NavItem): boolean {
+  if (item.items?.length) {
+    return item.items.some((child) => isNavHrefActive(pathname, child.href, search));
+  }
+  return isNavItemActive(pathname, item.href);
+}
+
+function NavCollapsibleItem({ item }: { item: NavItem }) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const search = searchParams ? searchParams.toString() : "";
+  const children = item.items ?? [];
+  const active = isGroupActive(pathname, search, item);
+  const [open, setOpen] = useState(active);
+
+  useEffect(() => {
+    if (active) setOpen(true);
+  }, [active]);
+
+  return (
+    <Collapsible
+      asChild
+      open={open}
+      onOpenChange={setOpen}
+      className="group/collapsible"
+    >
+      <SidebarMenuItem>
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton isActive={active} tooltip={item.label}>
+            {item.icon ? <item.icon /> : null}
+            <span>{item.label}</span>
+            {item.badge ? (
+              <span className="shrink-0 rounded border border-sidebar-border px-1 py-0.5 text-[10px] font-normal leading-none text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden">
+                {item.badge}
+              </span>
+            ) : null}
+            <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            {children.map((child) => {
+              const itemActive = isNavHrefActive(pathname, child.href, search);
+              return (
+                <SidebarMenuSubItem key={child.href}>
+                  <SidebarMenuSubButton asChild isActive={itemActive}>
+                    <Link href={child.href}>
+                      {child.icon ? <child.icon /> : null}
+                      <span>{child.label}</span>
+                    </Link>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              );
+            })}
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </SidebarMenuItem>
+    </Collapsible>
+  );
+}
+
+export function NavItems({ items }: { items: NavItem[] }) {
+  const pathname = usePathname();
+
+  return (
+    <>
+      {items.map((item) => {
+        if (item.items?.length) {
+          return <NavCollapsibleItem key={item.label} item={item} />;
+        }
+
+        const active = isNavItemActive(pathname, item.href);
+        return (
+          <SidebarMenuItem key={item.href}>
+            <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
+              <Link href={item.href}>
+                {item.icon ? <item.icon /> : null}
+                <span>{item.label}</span>
+                {item.badge ? (
+                  <span className="shrink-0 rounded border border-sidebar-border px-1 py-0.5 text-[10px] font-normal leading-none text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden">
+                    {item.badge}
+                  </span>
+                ) : null}
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        );
+      })}
+    </>
+  );
+}
+
+export function NavMain({ label, items }: { label?: string; items: NavItem[] }) {
+  return (
+    <SidebarGroup>
+      {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
+      <SidebarMenu>
+        <NavItems items={items} />
+      </SidebarMenu>
+    </SidebarGroup>
+  );
+}

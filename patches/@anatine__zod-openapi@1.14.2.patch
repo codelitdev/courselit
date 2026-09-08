@@ -1,0 +1,14 @@
+diff --git a/src/lib/zod-openapi.js b/src/lib/zod-openapi.js
+index cc71afb4d872b755908f03b9cf441112240405de..20b60b6e9a2f586f4d527eeecfff982909c46428 100644
+--- a/src/lib/zod-openapi.js
++++ b/src/lib/zod-openapi.js
+@@ -2,6 +2,9 @@
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.generateSchema = exports.extendApi = void 0;
+ const ts_deepmerge_1 = require("ts-deepmerge");
++// ts-deepmerge 8 exposes its CommonJS API as a named `merge` export.
++// Preserve compatibility with this package's generated default-import calls.
++ts_deepmerge_1.default ??= ts_deepmerge_1.merge;
+ const zod_1 = require("zod");
+ function extendApi(schema, SchemaObject = {}) {
+     schema.metaOpenApi = Object.assign(schema.metaOpenApi || {}, SchemaObject);
