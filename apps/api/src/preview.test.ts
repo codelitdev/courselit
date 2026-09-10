@@ -22,10 +22,10 @@ describe.serial("product preview grants", () => {
     });
     expect(lesson.status).toBe(201);
 
-    const beforeEnrollments = await runtime.db
+    const beforeMemberships = await runtime.db
       .select()
-      .from(schema.enrollments)
-      .where(eq(schema.enrollments.schoolId, world.schoolA.id));
+      .from(schema.learnerMemberships)
+      .where(eq(schema.learnerMemberships.schoolId, world.schoolA.id));
     const beforeProgress = await runtime.db
       .select()
       .from(schema.lessonProgress)
@@ -55,15 +55,15 @@ describe.serial("product preview grants", () => {
       lessons: [{ title: "Draft lesson", content: textDoc("private preview content") }],
     });
 
-    const afterEnrollments = await runtime.db
+    const afterMemberships = await runtime.db
       .select()
-      .from(schema.enrollments)
-      .where(eq(schema.enrollments.schoolId, world.schoolA.id));
+      .from(schema.learnerMemberships)
+      .where(eq(schema.learnerMemberships.schoolId, world.schoolA.id));
     const afterProgress = await runtime.db
       .select()
       .from(schema.lessonProgress)
       .where(eq(schema.lessonProgress.schoolId, world.schoolA.id));
-    expect(afterEnrollments).toHaveLength(beforeEnrollments.length);
+    expect(afterMemberships).toHaveLength(beforeMemberships.length);
     expect(afterProgress).toHaveLength(beforeProgress.length);
     await runtime.close();
   });

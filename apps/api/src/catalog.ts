@@ -479,42 +479,23 @@ export async function getProduct(
     }
   }
   let enrolled = false;
-  let enrollmentStartedAt: Date | null = null;
+  let membershipStartedAt: Date | null = null;
   if (viewer.kind === "learner") {
-    const enrollment = await db
-      .select({
-        id: schema.enrollments.id,
-        enrollmentCreatedAt: schema.enrollments.createdAt,
-        grantStartsAt: schema.enrollmentAccessGrants.startsAt,
-      })
-      .from(schema.enrollments)
-      .innerJoin(
-        schema.enrollmentAccessGrants,
-        eq(schema.enrollmentAccessGrants.enrollmentId, schema.enrollments.id),
-      )
+    const memberships = await db
+      .select({ createdAt: schema.learnerMemberships.createdAt })
+      .from(schema.learnerMemberships)
       .where(
         and(
-          eq(schema.enrollments.learnerId, viewer.learnerId),
-          eq(schema.enrollments.productId, product.id),
-          eq(schema.enrollments.schoolId, school.schoolId),
-          eq(schema.enrollments.status, "active"),
-          eq(schema.enrollmentAccessGrants.schoolId, school.schoolId),
-          eq(schema.enrollmentAccessGrants.status, "active"),
-          lte(schema.enrollmentAccessGrants.startsAt, now),
-          or(
-            isNull(schema.enrollmentAccessGrants.endsAt),
-            gt(schema.enrollmentAccessGrants.endsAt, now),
-          ),
+          eq(schema.learnerMemberships.learnerId, viewer.learnerId),
+          eq(schema.learnerMemberships.entityType, "product"),
+          eq(schema.learnerMemberships.entityId, product.publicId),
+          eq(schema.learnerMemberships.schoolId, school.schoolId),
+          eq(schema.learnerMemberships.status, "active"),
         ),
       )
       .limit(1);
-    enrolled = Boolean(enrollment[0]);
-    if (enrollment[0]) {
-      enrollmentStartedAt =
-        enrollment[0].enrollmentCreatedAt > enrollment[0].grantStartsAt
-          ? enrollment[0].enrollmentCreatedAt
-          : enrollment[0].grantStartsAt;
-    }
+    enrolled = Boolean(memberships[0]);
+    membershipStartedAt = memberships[0]?.createdAt ?? null;
   }
   const visible = hasAuthoringAccess
     ? lessonRows
@@ -548,7 +529,7 @@ export async function getProduct(
         altText: featuredMediaRow.altText,
       }
     : null;
-  const sectionUnlocks = sectionUnlockTimes(sectionRows, enrollmentStartedAt);
+  const sectionUnlocks = sectionUnlockTimes(sectionRows, membershipStartedAt);
   return {
     ok: true,
     value: {
@@ -563,8 +544,8 @@ export async function getProduct(
           ? (sectionUnlocks.get(row.sectionId) ?? null)
           : null;
         const availableAt = latestDate(
-          enrollmentStartedAt && row.status === "published"
-            ? lessonUnlockAt(row, enrollmentStartedAt)
+          membershipStartedAt && row.status === "published"
+            ? lessonUnlockAt(row, membershipStartedAt)
             : row.dripAt,
           sectionDripAt,
         );

@@ -17,7 +17,12 @@ import {
   type PaymentCheckoutResult,
   type PaymentProvider,
 } from "./payments.js";
-import { ensureLearnerProductAccess } from "./learners.js";
+import {
+  findLearnerMembership,
+  type LearnerMembershipRow,
+  upsertLearnerMembership,
+  revokeLearnerMembership,
+} from "./learner-memberships.js";
 import { amountMinorForPlan, sourceTypeForKind } from "./storefront.js";
 import type { AppDb } from "./types.js";
 
@@ -109,6 +114,33 @@ function checkoutToDto(
   } satisfies StorefrontCheckoutDto;
 }
 
+function completedMembershipCheckoutDto(
+  context: CheckoutContext,
+  product: typeof schema.products.$inferSelect,
+  plan: typeof schema.storefrontPlans.$inferSelect,
+  school: typeof schema.schools.$inferSelect,
+  membership: LearnerMembershipRow,
+): StorefrontCheckoutDto {
+  const provider = membership.subscriptionMethod;
+  return {
+    id: membership.publicId,
+    schoolId: context.publicSchoolId,
+    productId: product.publicId,
+    planId: plan.publicId,
+    provider:
+      provider === "stripe" || provider === "lemonsqueezy" || provider === "razorpay"
+        ? provider
+        : "free",
+    status: "paid",
+    currency: school.currency.toUpperCase(),
+    amountMinor: amountMinorForPlan(plan),
+    checkoutUrl: null,
+    checkoutData: null,
+    createdAt: serializeDate(membership.createdAt),
+    updatedAt: serializeDate(membership.updatedAt),
+  };
+}
+
 async function loadCheckoutPlan(db: AppDb, schoolId: string, planPublicId: string) {
   const rows = await db
     .select({
@@ -119,7 +151,10 @@ async function loadCheckoutPlan(db: AppDb, schoolId: string, planPublicId: strin
     .from(schema.storefrontPlans)
     .innerJoin(
       schema.products,
-      eq(schema.products.id, schema.storefrontPlans.productId),
+      and(
+        eq(schema.products.publicId, schema.storefrontPlans.entityId),
+        eq(schema.storefrontPlans.entityType, "product"),
+      ),
     )
     .innerJoin(schema.schools, eq(schema.schools.id, schema.storefrontPlans.schoolId))
     .where(
@@ -164,7 +199,10 @@ async function loadCheckoutSession(
     .from(schema.storefrontCheckoutSessions)
     .innerJoin(
       schema.storefrontPlans,
-      eq(schema.storefrontPlans.id, schema.storefrontCheckoutSessions.planId),
+      and(
+        eq(schema.storefrontPlans.id, schema.storefrontCheckoutSessions.planId),
+        eq(schema.storefrontPlans.entityType, "product"),
+      ),
     )
     .innerJoin(
       schema.products,
@@ -238,8 +276,7 @@ export async function createCheckoutSession(
   if (
     !selected ||
     selected.product.publicId !== input.productPublicId ||
-    selected.product.status !== "published" ||
-    selected.product.privacy !== "public"
+    selected.product.status !== "published"
   ) {
     return error("not_found");
   }
@@ -375,6 +412,11 @@ export async function startCheckoutSession(
         updatedAt: clock.now(),
       })
       .where(eq(schema.storefrontCheckoutSessions.id, row.session.id));
+  } else if (result.value.status === "paid") {
+    await db
+      .update(schema.storefrontCheckoutSessions)
+      .set({ status: "completed", updatedAt: clock.now() })
+      .where(eq(schema.storefrontCheckoutSessions.id, row.session.id));
   }
   return result;
 }
@@ -393,7 +435,10 @@ async function loadCheckoutById(
     .from(schema.storefrontCheckoutAttempts)
     .innerJoin(
       schema.storefrontPlans,
-      eq(schema.storefrontPlans.id, schema.storefrontCheckoutAttempts.planId),
+      and(
+        eq(schema.storefrontPlans.id, schema.storefrontCheckoutAttempts.planId),
+        eq(schema.storefrontPlans.entityType, "product"),
+      ),
     )
     .innerJoin(
       schema.products,
@@ -422,6 +467,7 @@ async function fulfillFreeCheckout(
   db: AppDb,
   row: CheckoutRow,
   product: typeof schema.products.$inferSelect,
+  plan: typeof schema.storefrontPlans.$inferSelect,
   context: CheckoutContext,
   clock: Clock,
 ): Promise<CheckoutRow> {
@@ -436,24 +482,29 @@ async function fulfillFreeCheckout(
     )[0];
     if (!current) throw new Error("storefront_checkout_missing");
     if (current.status === "paid") return current;
-    await ensureLearnerProductAccess(
+    const membership = await upsertLearnerMembership(
       tx as unknown as AppDb,
       {
         schoolId: context.schoolId,
-        publicSchoolId: context.publicSchoolId,
         learnerId: context.learnerId,
-        actorId: context.learnerPublicId,
-        product,
-        source: "storefront_purchase",
-        requestId: context.requestId,
+        entityType: "product",
+        entityId: product.publicId,
+        paymentPlanId: plan.publicId,
+        status: "active",
+        sessionId: current.publicId,
       },
       clock,
     );
+    await tx
+      .update(schema.storefrontCheckoutAttempts)
+      .set({ membershipId: membership.id, updatedAt: now })
+      .where(eq(schema.storefrontCheckoutAttempts.id, current.id));
     const providerPaymentId = `free_${current.publicId}`;
     const payment = {
       id: uuidv7(clock),
       publicId: createPublicId("pay", clock),
       checkoutId: current.id,
+      membershipId: membership.id,
       providerPaymentId,
       kind: "one_time" as const,
       status: "succeeded" as const,
@@ -469,6 +520,7 @@ async function fulfillFreeCheckout(
       publicId: createPublicId("inv", clock),
       paymentId: payment.id,
       checkoutId: current.id,
+      membershipId: membership.id,
       providerInvoiceId: null,
       status: "paid",
       currency: current.currency,
@@ -518,11 +570,11 @@ export async function startLearnerCheckout(
   } catch {
     return error("validation_failed", { reason: "invalid_return_url" });
   }
-  if (
-    parsedReturnUrl.protocol !== "https:" &&
-    parsedReturnUrl.hostname !== "localhost" &&
-    parsedReturnUrl.hostname !== "127.0.0.1"
-  ) {
+  const isLocalReturnHost =
+    parsedReturnUrl.hostname === "localhost" ||
+    parsedReturnUrl.hostname.endsWith(".localhost") ||
+    parsedReturnUrl.hostname === "127.0.0.1";
+  if (parsedReturnUrl.protocol !== "https:" && !isLocalReturnHost) {
     return error("validation_failed", { reason: "invalid_return_url" });
   }
   const existing = await db
@@ -567,6 +619,55 @@ export async function startLearnerCheckout(
   if (selected.plan.kind !== "free" && !paymentProvider) {
     return error("conflict", { reason: "provider_unavailable" });
   }
+  const existingMembership = await findLearnerMembership(db, {
+    schoolId: context.schoolId,
+    learnerId: context.learnerId,
+    entityType: "product",
+    entityId: selected.product.publicId,
+  });
+  if (existingMembership?.status === "rejected") {
+    return error("conflict", { reason: "membership_rejected" });
+  }
+  if (existingMembership?.status === "active") {
+    if (selected.plan.kind === "free") {
+      return {
+        ok: true,
+        value: completedMembershipCheckoutDto(
+          context,
+          selected.product,
+          selected.plan,
+          selected.school,
+          existingMembership,
+        ),
+      };
+    }
+    if (
+      (selected.plan.kind === "subscription" || selected.plan.kind === "installment") &&
+      existingMembership.subscriptionId &&
+      paymentProvider?.validateSubscription &&
+      (await paymentProvider.validateSubscription(existingMembership.subscriptionId))
+    ) {
+      return {
+        ok: true,
+        value: completedMembershipCheckoutDto(
+          context,
+          selected.product,
+          selected.plan,
+          selected.school,
+          existingMembership,
+        ),
+      };
+    }
+    if (
+      (selected.plan.kind === "subscription" || selected.plan.kind === "installment") &&
+      existingMembership.subscriptionId
+    ) {
+      await db
+        .update(schema.learnerMemberships)
+        .set({ status: "expired", updatedAt: clock.now() })
+        .where(eq(schema.learnerMemberships.id, existingMembership.id));
+    }
+  }
   const now = clock.now();
   const row = {
     id: uuidv7(clock),
@@ -587,6 +688,7 @@ export async function startLearnerCheckout(
     createdAt: now,
     updatedAt: now,
     completedAt: null,
+    membershipId: null,
   };
   try {
     await db.insert(schema.storefrontCheckoutAttempts).values(row);
@@ -596,8 +698,36 @@ export async function startLearnerCheckout(
     }
     throw caught;
   }
+  const membership = await upsertLearnerMembership(
+    db,
+    {
+      schoolId: context.schoolId,
+      learnerId: context.learnerId,
+      entityType: "product",
+      entityId: selected.product.publicId,
+      paymentPlanId: selected.plan.publicId,
+      status: "pending",
+      ...(selected.plan.kind === "free"
+        ? {}
+        : { subscriptionId: null, subscriptionMethod: null }),
+      sessionId: row.publicId,
+    },
+    clock,
+  );
+  await db
+    .update(schema.storefrontCheckoutAttempts)
+    .set({ membershipId: membership.id, updatedAt: clock.now() })
+    .where(eq(schema.storefrontCheckoutAttempts.id, row.id));
+  const linkedRow = { ...row, membershipId: membership.id };
   if (selected.plan.kind === "free") {
-    const paid = await fulfillFreeCheckout(db, row, selected.product, context, clock);
+    const paid = await fulfillFreeCheckout(
+      db,
+      linkedRow,
+      selected.product,
+      selected.plan,
+      context,
+      clock,
+    );
     return {
       ok: true,
       value: checkoutToDto(
@@ -632,6 +762,9 @@ export async function startLearnerCheckout(
     });
   } catch {
     await markCheckoutFailed(db, row.id, clock);
+    if (linkedRow.membershipId) {
+      await revokeLearnerMembership(db, linkedRow.membershipId, "payment_failed", clock);
+    }
     return error("conflict", { reason: "provider_unavailable" });
   }
   const updatedAt = clock.now();
@@ -643,12 +776,25 @@ export async function startLearnerCheckout(
       updatedAt,
     })
     .where(eq(schema.storefrontCheckoutAttempts.id, row.id));
+  await db.insert(schema.storefrontInvoices).values({
+    id: uuidv7(clock),
+    publicId: createPublicId("inv", clock),
+    paymentId: null,
+    checkoutId: row.id,
+    membershipId: linkedRow.membershipId,
+    providerInvoiceId: null,
+    status: "pending",
+    currency: row.currency,
+    amountMinor: row.amountMinor,
+    issuedAt: updatedAt,
+    updatedAt,
+  });
   return {
     ok: true,
     value: {
       ...checkoutToDto(
         {
-          ...row,
+          ...linkedRow,
           providerCheckoutId: checkout.checkoutId,
           providerCheckoutUrl: checkout.checkoutUrl,
           updatedAt,
@@ -717,7 +863,10 @@ async function findEventCheckout(db: AppDb, data: Record<string, unknown>) {
       .from(schema.storefrontCheckoutAttempts)
       .innerJoin(
         schema.storefrontPlans,
-        eq(schema.storefrontPlans.id, schema.storefrontCheckoutAttempts.planId),
+        and(
+          eq(schema.storefrontPlans.id, schema.storefrontCheckoutAttempts.planId),
+          eq(schema.storefrontPlans.entityType, "product"),
+        ),
       )
       .innerJoin(
         schema.products,
@@ -740,7 +889,10 @@ async function findEventCheckout(db: AppDb, data: Record<string, unknown>) {
     .from(schema.storefrontCheckoutAttempts)
     .innerJoin(
       schema.storefrontPlans,
-      eq(schema.storefrontPlans.id, schema.storefrontCheckoutAttempts.planId),
+      and(
+        eq(schema.storefrontPlans.id, schema.storefrontCheckoutAttempts.planId),
+        eq(schema.storefrontPlans.entityType, "product"),
+      ),
     )
     .innerJoin(
       schema.products,
@@ -756,33 +908,10 @@ async function revokeStorefrontAccess(
   attempt: CheckoutRow,
   clock: Clock,
   status: "expired" | "payment_failed",
+  options?: { cancelSubscription?: boolean; paymentProvider?: PaymentProvider | null },
 ) {
-  const rows = await tx
-    .select({ enrollment: schema.enrollments, grant: schema.enrollmentAccessGrants })
-    .from(schema.enrollments)
-    .leftJoin(
-      schema.enrollmentAccessGrants,
-      eq(schema.enrollmentAccessGrants.enrollmentId, schema.enrollments.id),
-    )
-    .where(
-      and(
-        eq(schema.enrollments.learnerId, attempt.learnerId),
-        eq(schema.enrollments.productId, attempt.productId),
-        eq(schema.enrollments.schoolId, attempt.schoolId),
-      ),
-    )
-    .limit(1);
-  const row = rows[0];
-  if (row?.grant?.source !== "storefront_purchase") return;
-  const now = clock.now();
-  await tx
-    .update(schema.enrollments)
-    .set({ status })
-    .where(eq(schema.enrollments.id, row.enrollment.id));
-  await tx
-    .update(schema.enrollmentAccessGrants)
-    .set({ status: "revoked", endsAt: now })
-    .where(eq(schema.enrollmentAccessGrants.id, row.grant.id));
+  if (!attempt.membershipId) return;
+  await revokeLearnerMembership(tx, attempt.membershipId, status, clock, options);
 }
 
 async function processPaymentEvent(
@@ -791,6 +920,7 @@ async function processPaymentEvent(
   data: Record<string, unknown>,
   clock: Clock,
   requestId: string,
+  paymentProvider?: PaymentProvider,
 ): Promise<"processed" | "ignored"> {
   const eventCheckout = await findEventCheckout(db, data);
   const paymentId = stringValue(data.payment_id);
@@ -815,6 +945,25 @@ async function processPaymentEvent(
           .limit(1)
       )[0];
       if (!current) throw new Error("storefront_checkout_missing");
+      const membership = await upsertLearnerMembership(
+        tx as unknown as AppDb,
+        {
+          schoolId: current.schoolId,
+          learnerId: current.learnerId,
+          entityType: "product",
+          entityId: eventCheckout.product.publicId,
+          paymentPlanId: eventCheckout.plan.publicId,
+          status: "active",
+          sessionId: current.publicId,
+        },
+        clock,
+      );
+      if (current.membershipId !== membership.id) {
+        await tx
+          .update(schema.storefrontCheckoutAttempts)
+          .set({ membershipId: membership.id, updatedAt: now })
+          .where(eq(schema.storefrontCheckoutAttempts.id, current.id));
+      }
       const existingPayment = (
         await tx
           .select()
@@ -830,6 +979,7 @@ async function processPaymentEvent(
           id: uuidv7(clock),
           publicId: createPublicId("pay", clock),
           checkoutId: current.id,
+          membershipId: membership.id,
           providerPaymentId: paymentId,
           kind:
             eventCheckout.plan.kind === "subscription"
@@ -858,15 +1008,38 @@ async function processPaymentEvent(
         await tx
           .select()
           .from(schema.storefrontInvoices)
-          .where(eq(schema.storefrontInvoices.paymentId, payment.id))
+          .where(
+            or(
+              eq(schema.storefrontInvoices.paymentId, payment.id),
+              and(
+                eq(schema.storefrontInvoices.checkoutId, current.id),
+                eq(schema.storefrontInvoices.status, "pending"),
+              ),
+            ),
+          )
           .limit(1)
       )[0];
-      if (!invoice) {
+      if (invoice) {
+        await tx
+          .update(schema.storefrontInvoices)
+          .set({
+            paymentId: payment.id,
+            membershipId: membership.id,
+            providerInvoiceId:
+              stringValue(data.invoice_id) ?? invoice.providerInvoiceId,
+            status: "paid",
+            currency,
+            amountMinor: amount,
+            updatedAt: now,
+          })
+          .where(eq(schema.storefrontInvoices.id, invoice.id));
+      } else {
         await tx.insert(schema.storefrontInvoices).values({
           id: uuidv7(clock),
           publicId: createPublicId("inv", clock),
           paymentId: payment.id,
           checkoutId: current.id,
+          membershipId: membership.id,
           providerInvoiceId: stringValue(data.invoice_id),
           status: "paid",
           currency,
@@ -876,19 +1049,6 @@ async function processPaymentEvent(
         });
       }
       if (current.status !== "paid") {
-        await ensureLearnerProductAccess(
-          tx as unknown as AppDb,
-          {
-            schoolId: current.schoolId,
-            publicSchoolId: current.schoolId,
-            learnerId: current.learnerId,
-            actorId: "payment:webhook",
-            product: eventCheckout.product,
-            source: "storefront_purchase",
-            requestId,
-          },
-          clock,
-        );
         await tx
           .update(schema.storefrontCheckoutAttempts)
           .set({
@@ -910,7 +1070,11 @@ async function processPaymentEvent(
         },
       }, clock);
       const subscriptionId = stringValue(data.subscription_id);
-      if (subscriptionId && eventCheckout.plan.kind === "subscription") {
+      if (
+        subscriptionId &&
+        (eventCheckout.plan.kind === "subscription" ||
+          eventCheckout.plan.kind === "installment")
+      ) {
         const subscription = (
           await tx
             .select()
@@ -925,6 +1089,7 @@ async function processPaymentEvent(
             id: uuidv7(clock),
             publicId: createPublicId("sub", clock),
             checkoutId: current.id,
+            membershipId: membership.id,
             providerSubscriptionId: subscriptionId,
             status: "active",
             currentPeriodEnd: null,
@@ -932,6 +1097,44 @@ async function processPaymentEvent(
             createdAt: now,
             updatedAt: now,
           });
+        }
+        await tx
+          .update(schema.learnerMemberships)
+          .set({
+            subscriptionId,
+            subscriptionMethod: current.provider,
+            updatedAt: now,
+          })
+          .where(eq(schema.learnerMemberships.id, membership.id));
+      }
+      if (
+        subscriptionId &&
+        eventCheckout.plan.kind === "installment" &&
+        eventCheckout.plan.installmentCount
+      ) {
+        const paidInvoices = await tx
+          .select({ id: schema.storefrontInvoices.id })
+          .from(schema.storefrontInvoices)
+          .where(
+            and(
+              eq(schema.storefrontInvoices.membershipId, membership.id),
+              eq(schema.storefrontInvoices.status, "paid"),
+            ),
+          );
+        if (paidInvoices.length >= eventCheckout.plan.installmentCount) {
+          if (!paymentProvider?.cancelSubscription) {
+            throw new Error("provider_unavailable");
+          }
+          await paymentProvider.cancelSubscription(subscriptionId);
+          await tx
+            .update(schema.storefrontSubscriptions)
+            .set({ status: "cancelled", cancelAt: now, updatedAt: now })
+            .where(
+              eq(
+                schema.storefrontSubscriptions.providerSubscriptionId,
+                subscriptionId,
+              ),
+            );
         }
       }
       await tx.insert(schema.auditEvents).values({
@@ -972,6 +1175,14 @@ async function processPaymentEvent(
           completedAt: now,
         })
         .where(eq(schema.storefrontCheckoutAttempts.id, current.id));
+      if (current.membershipId) {
+        await revokeLearnerMembership(
+          tx as unknown as AppDb,
+          current.membershipId,
+          "payment_failed",
+          clock,
+        );
+      }
     });
     return "processed";
   }
@@ -1015,7 +1226,13 @@ async function processPaymentEvent(
           updatedAt: now,
         })
         .where(eq(schema.storefrontCheckoutAttempts.id, current.id));
-      await revokeStorefrontAccess(tx as unknown as AppDb, current, clock, "expired");
+      await revokeStorefrontAccess(
+        tx as unknown as AppDb,
+        current,
+        clock,
+        "expired",
+        { paymentProvider },
+      );
     });
     return "processed";
   }
@@ -1083,6 +1300,7 @@ async function processPaymentEvent(
             current,
             clock,
             status === "past_due" ? "payment_failed" : "expired",
+            { cancelSubscription: false },
           );
       }
     });
@@ -1203,8 +1421,22 @@ export async function receivePaymentWebhook(
     throw caught;
   }
   try {
-    const communityStatus = await processCommunityPaymentEvent(db, event.eventType, event.data, clock, requestId);
-    const status = communityStatus ?? await processPaymentEvent(db, event.eventType, event.data, clock, requestId);
+    const communityStatus = await processCommunityPaymentEvent(
+      db,
+      event.eventType,
+      event.data,
+      clock,
+      requestId,
+      provider,
+    );
+    const status = communityStatus ?? await processPaymentEvent(
+      db,
+      event.eventType,
+      event.data,
+      clock,
+      requestId,
+      provider,
+    );
     await db.update(schema.storefrontWebhookEvents).set({ status, processedAt: clock.now() }).where(eq(schema.storefrontWebhookEvents.providerEventId, event.eventId));
     return { ok: true, duplicate: false, status };
   } catch (caught) {

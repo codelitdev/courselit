@@ -31,14 +31,14 @@ The target product has three primary runtime applications. The API workspace has
 The rewrite will use the Platform for common SaaS behavior and retain CourseLit ownership of its product behavior:
 
 - Platform-owned foundation: request context, admin authentication conventions, school membership authorization seams, API keys, invitations, SaaS billing composition, observability, REST/MCP composition, conformance, upgrades, and secure defaults.
-- CourseLit-owned behavior: schools, products, lessons, learner identities, enrollments, progress, communities, storefront commerce, sister-product integrations, and the learner experience.
+- CourseLit-owned behavior: schools, products, lessons, learner identities, learner memberships, progress, communities, storefront commerce, sister-product integrations, and the learner experience.
 - FrontLit-owned behavior: pages, blog posts, page composition, and public-site content management.
 - SendLit-owned behavior: marketing contacts, consent and suppression state, broadcasts, sequences, templates, and email delivery.
 - MediaLit-owned behavior: media upload and delivery.
 
 The first implementation goal is a thin, production-shaped vertical slice:
 
-> A school owner can create a school, invite a teammate, create and publish a free course, enroll a learner, and have that learner sign in and complete one lesson through the new stack. The same product read must work through REST and an authorized MCP client, and all requests must carry school-scoped audit and telemetry context.
+> A school owner can create a school, invite a teammate, create and publish a free course, grant a learner membership, and have that learner sign in and complete one lesson through the new stack. The same product read must work through REST and an authorized MCP client, and all requests must carry school-scoped audit and telemetry context.
 
 ## 2. Why rewrite
 
@@ -62,7 +62,7 @@ This makes the system hard to evolve safely and prevents CourseLit from consumin
 4. Make the CourseLit API the sole application service for admin, learner, REST, and MCP transports.
 5. Move application persistence from MongoDB/Mongoose to PostgreSQL/Drizzle with application-owned migrations.
 6. Bring school creation, team membership, CourseLit Cloud subscription management, and billing into the CourseLit API so `courselit-subscriptions` can be retired.
-7. Keep products, lessons, learners, enrollments, progress, communities, certificates, and storefront checkout CourseLit-owned.
+7. Keep products, lessons, learners, learner memberships, progress, communities, certificates, and storefront checkout CourseLit-owned.
 8. Replace CourseLit email marketing with SendLit and CourseLit page/blog management with FrontLit.
 9. Use MediaLit for media upload and delivery without exposing MediaLit credentials to browsers or clients.
 10. Offer a typed REST API, generated OpenAPI documentation, and an authenticated MCP surface from the same service methods.
@@ -92,8 +92,8 @@ The rewrite is successful when:
 - every active school resolves correctly by CourseLit subdomain and custom domain;
 - all active owners and team members can access the right schools with equivalent effective permissions;
 - learners can sign in with the methods configured by their school;
-- product structure, content, enrollments, progress, drip state, communities, purchases, invoices, and certificates reconcile with the legacy source;
-- checkout and payment webhooks are idempotent and do not create duplicate charges or access grants;
+- product structure, content, learner memberships, progress, drip state, communities, purchases, invoices, and certificates reconcile with the legacy source;
+- checkout and payment webhooks are idempotent and do not create duplicate charges or learner memberships;
 - public pages, blog content, contacts, and email automation have an explicit FrontLit or SendLit migration result;
 - no API, MCP, admin, learner, worker, or webhook path can cross school boundaries;
 - the runtime contract generates OpenAPI and the approved operations have tested REST/MCP parity;
@@ -112,11 +112,11 @@ The rewrite uses these terms consistently:
 | ------------------- | ----------------------------------------------------------------------------------------------------- |
 | School              | CourseLit tenant and billable Cloud entity; replaces the ambiguous use of `Domain` as the tenant noun |
 | Admin user          | A CourseLit account that can belong to one or more schools                                            |
-| School membership   | An admin user's role and permissions within one school                                                |
-| Learner             | A school-scoped CourseLit identity that can enroll in and consume products                            |
+| School membership   | An admin user's permissions within one school; legacy membership roles are transitional              |
+| Learner             | A school-scoped CourseLit identity that can hold memberships and consume products                    |
 | Contact             | A SendLit marketing record; not an authenticated CourseLit principal                                  |
-| Enrollment          | A learner's access to a product or community, including lifecycle and payment relationship            |
-| Progress            | Lesson completion, download, drip, quiz, SCORM, and certificate state associated with an enrollment   |
+| Learner membership  | A learner's access relationship to a product or community, including lifecycle and payment relationship |
+| Progress            | Lesson completion, download, drip, quiz, SCORM, and certificate state associated with a membership     |
 | Platform billing    | CodeLit charging a school for using CourseLit Cloud                                                   |
 | Storefront commerce | A school charging a learner for a CourseLit product or community                                      |
 
@@ -131,7 +131,7 @@ A person may be both an admin user and a learner, but those are distinct princip
 | School and admin membership  | CourseLit on Platform                 | Own school profile, invitations, roles, permissions, API keys, and lifecycle                                        |
 | CourseLit Cloud subscription | CourseLit using `@codelitdev/billing` | Own school/payer mapping, plan policy, trial, availability, UI, and provider configuration                          |
 | Products and lessons         | CourseLit                             | Own all authoring, publishing, ordering, access, drip, quiz, SCORM, and download behavior                           |
-| Learner identity and access  | CourseLit                             | Own school-scoped auth, learner record, enrollments, progress, and certificates                                     |
+| Learner identity and access  | CourseLit                             | Own school-scoped auth, learner record, learner memberships, progress, and certificates                           |
 | Communities                  | CourseLit                             | Own community content, memberships, moderation, discussions, reports, and notifications                             |
 | Storefront commerce          | CourseLit                             | Own payment plans, connected accounts/configuration, checkout, webhooks, invoices, refunds policy, and entitlements |
 | Pages and blog               | FrontLit                              | Store mapping, invoke FrontLit APIs, embed approved authoring components, and render published content              |
@@ -144,9 +144,9 @@ A person may be both an admin user and a learner, but those are distinct princip
 
 #### Learners versus SendLit contacts
 
-CourseLit owns learner authentication, canonical learner name/email, enrollment, progress, access, and certificates. SendLit owns marketing subscription state, suppression state, tags used for campaigns, segments, broadcasts, and sequences.
+CourseLit owns learner authentication, canonical learner name/email, learner memberships, progress, access, and certificates. SendLit owns marketing subscription state, suppression state, tags used for campaigns, segments, broadcasts, and sequences.
 
-Each school maps to a SendLit organization/team, and a CourseLit learner may map to a SendLit contact. Synchronization is asynchronous and idempotent. CourseLit profile changes synchronize outward; a divergent SendLit name or email never overwrites the CourseLit learner automatically. SendLit downtime must not prevent login, checkout, course access, or progress writes. Marketing consent must never be inferred from CourseLit enrollment alone.
+Each school maps to a SendLit organization/team, and a CourseLit learner may map to a SendLit contact. Synchronization is asynchronous and idempotent. CourseLit profile changes synchronize outward; a divergent SendLit name or email never overwrites the CourseLit learner automatically. SendLit downtime must not prevent login, checkout, course access, or progress writes. Marketing consent must never be inferred from CourseLit membership alone.
 
 #### Platform billing versus storefront commerce
 
@@ -154,7 +154,7 @@ The Platform billing package is used only for the commercial relationship betwee
 
 #### FrontLit content versus CourseLit products
 
-FrontLit owns pages, blog entries, page-builder content, and site theme data. CourseLit owns products and product access. A FrontLit page may reference a CourseLit product by stable public ID, but it cannot grant enrollment or determine product visibility.
+FrontLit owns pages, blog entries, page-builder content, and site theme data. CourseLit owns products and product access. A FrontLit page may reference a CourseLit product by stable public ID, but it cannot grant a learner membership or determine product visibility.
 
 ## 8. Target architecture
 
@@ -219,11 +219,11 @@ flowchart LR
 - Public learner-app routes remain outside the logged-in group: `/products`, `/product/[productId]` (where the stable public product ID uses the `prd_` prefix), `/communities`, `/communities/[communityId]`, `/blog`, `/blog/[blogId]`, the production-compatible `/blog/[slug]/[id]` article URL, `/checkout?session=...`, and `/certificates/[verificationId]`. Public community pages are discovery/detail surfaces; member feeds and participation remain under the protected dashboard community routes.
 - Public site routes and system-owned public content are composed like `frontlit/apps/sites`: resolve the school FrontLit page and team theme, render the published layout through `@frontlit/page-builder`, and provide CourseLit-owned dynamic content through named page-builder data slots.
 - Public-site-owned UI must use the published `@frontlit/page-builder` blocks, primitives, and components. Do not create a second public-site block or theme system in the learner app.
-- Treat the learner app as two explicit surface classes: public-site routes (guest storefront, public product/catalog pages, public pages, and blog) and learner workspace routes (authenticated dashboard, enrollment, progress, lesson viewing, checkout, downloads, communities, community posting/commenting/reactions/subscriptions, learner notifications, and certificates). The second class may use an application shell, but it still consumes the active school theme.
+- Treat the learner app as two explicit surface classes: public-site routes (guest storefront, public product/catalog pages, public pages, and blog) and learner workspace routes (authenticated dashboard, memberships, progress, lesson viewing, checkout, downloads, communities, community posting/commenting/reactions/subscriptions, learner notifications, and certificates). The second class may use an application shell, but it still consumes the active school theme.
 - Community functionality is intentionally split across applications. `apps/admin` owns community creation and settings, categories, learner membership approval and roles, payment plans, reports, moderation, and other administrative controls. `apps/learners` owns the member experience: discovering and joining communities, reading and creating posts, comments/replies, reactions, post subscriptions, reporting, and learner-facing notifications. Reuse the production `main` community components, hooks, validators, and tests where compatible, adapting only their transport, identity, and application-boundary seams.
 - The public `/products` route is a CourseLit system-owned catalog surface. It must be rendered inside the school’s active FrontLit theme using the homepage’s shared `header` and `footer` blocks plus an empty themed `Section` containing the CourseLit catalog. It must not require a persisted FrontLit `/products` page or become an isolated custom page with its own header, footer, theme tokens, or card system.
 - Public product detail/sales surfaces follow the same composition rule. If a system-owned route has no dedicated FrontLit page, it may fall back to the school homepage layout for shared chrome and inject its content through a named data slot. This does not make the CourseLit product model a FrontLit model: FrontLit owns presentation/layout, while CourseLit owns product visibility, pricing, enrollment, and access decisions.
-- The public checkout flow preserves the production sequence: `/products` links to `/product/:productId`; the product page renders CourseLit-owned, FrontLit-primitive blocks for the curriculum and purchase plans; selecting Buy now or Get access creates a short-lived server-side checkout intent; the browser continues at `/checkout?session=<opaque-session-id>`. The query value must not contain payment credentials, learner identity assertions, or trusted price data. If the learner is not authenticated, the checkout route returns through the configured learner login methods and then resumes the same intent. Free plans complete enrollment through the API; paid plans are created through the school's selected Stripe, Lemon Squeezy, or Razorpay adapter and return to the checkout route for status display. The API webhook, not the browser return, confirms payment and grants entitlement.
+- The public checkout flow preserves the production sequence: `/products` links to `/product/:productId`; the product page renders CourseLit-owned, FrontLit-primitive blocks for the curriculum and purchase plans; selecting Buy now or Get access creates a short-lived server-side checkout intent; the browser continues at `/checkout?session=<opaque-session-id>`. The query value must not contain payment credentials, learner identity assertions, or trusted price data. If the learner is not authenticated, the checkout route returns through the configured learner login methods and then resumes the same intent. Free plans activate a learner membership through the API; paid plans are created through the school's selected Stripe, Lemon Squeezy, or Razorpay adapter and return to the checkout route for status display. The API webhook, not the browser return, confirms payment and grants entitlement.
 - Use `@frontlit/page-builder` primitives for public CourseLit-owned headings, cards, images, badges, sections, text, and actions. Do not use `@codelitdev/design-system` or one-off HTML/CSS components for public-site-owned UI unless a required primitive is unavailable; record that intentional exception in the parity ledger.
 - Public data loaders must resolve the school from the request host and use only public/learner API contracts. Never select a school from a browser-supplied ID alone, and never expose admin credentials or sister-product secrets to public components.
 - Uses only learner/public API endpoints and never receives admin bearer tokens or Platform API keys.
@@ -317,7 +317,8 @@ The legacy application historically rendered some learner navigation in the same
 - An account can own or join multiple schools.
 - A school has a stable public ID, name, subdomain, optional verified custom domains, status, locale, currency, and integration mappings.
 - School creation is available to authorized Cloud accounts and follows billing policy.
-- Owners can invite team members by email, resend or revoke invitations, and assign bounded roles or permissions.
+- Owners and authorized team members can invite by email, resend or revoke invitations, and assign bounded permission scopes. Presets are dashboard conveniences; the stored authority is the effective scope set.
+- Invitation email links use a public invitation ID in the path and keep the one-time secret in the URL fragment. After sign-in, the invitee sees the school, inviter, expiry, and effective access scopes before accepting or rejecting the invitation.
 - Invitation expiry, email matching, consume-once behavior, idempotency, and last-owner protection follow Platform conformance requirements.
 - API keys are school-bound, displayed once, stored as digests, scope-limited, expirable, rotatable with bounded overlap, and immediately revocable.
 - Every admin action resolves an authenticated account and an authorized school membership. A caller-provided school ID never establishes tenancy by itself.
@@ -326,6 +327,8 @@ The legacy application historically rendered some learner navigation in the same
 ### 9.2 Admin authentication and authorization
 
 - Admin authentication uses the Platform Better Auth and OAuth server conventions.
+- The admin Better Auth realm is served at `/api/auth`, uses the admin auth
+  tables and `AUTH_SECRET`, and owns only admin/team sessions and identities.
 - Browser sessions are accepted only on admin browser routes.
 - REST accepts the credential kinds explicitly allowed by each operation.
 - MCP accepts an OAuth bearer token or an explicitly supported school API key; it does not accept browser session cookies.
@@ -339,7 +342,11 @@ The legacy application historically rendered some learner navigation in the same
 - Learner identity is always school-local. The rewrite does not create a global learner account shared across schools.
 - A school can enable supported methods such as email OTP, Google, and SAML/OIDC SSO.
 - Learner auth accounts, sessions, provider links, verification state, and SSO configuration are stored separately from admin auth tables.
-- Admin cookies and learner cookies use distinct names, paths/audiences, and session validation.
+- The learner Better Auth realm is served at `/api/learner-auth`, uses its own
+  auth tables and `LEARNER_AUTH_SECRET`, and uses the
+  `courselit-learner.*` cookie namespace. Admin cookies and learner cookies use
+  distinct names and session validation; the learner app proxy never forwards
+  admin cookies to learner-auth or learner API routes.
 - School host resolution occurs before learner authentication and is server-verified.
 - An identity from one school cannot be replayed against another school's host.
 - Account linking is explicit and audited. Email equality is not sufficient to link accounts.
@@ -385,7 +392,7 @@ CourseLit must support:
 - author ownership and explicit ownership transfer;
 - free, one-time, subscription, and installment storefront plans;
 - included-product entitlements;
-- preview without creating enrollment, progress, drip, payment, or certificate state.
+- preview without creating membership, progress, drip, payment, or certificate state.
 
 Text content will use TipTap/ProseMirror JSON through `@frontlit/text-editor`. Binary content remains in MediaLit. Product reads return an access-filtered representation; clients do not receive locked or unpublished content and then decide whether to hide it.
 
@@ -401,15 +408,15 @@ theme-resolution, block registry, or public card primitives. Authenticated
 routes, but they must use the school-resolved theme and must not be mistaken for
 the public-site rendering path.
 
-### 9.5 Learners, enrollments, and progress
+### 9.5 Learners, memberships, and progress
 
-- Replace the legacy `User.purchases` array with normalized learners, enrollments, enrollment access grants, and progress records.
-- Enrollment lifecycle preserves active, payment-failed, expired, pending, rejected, and paused states.
-- Enrollment records capture the source: free signup, admin grant, storefront purchase, included product, import, or integration.
-- Progress supports lesson started/completed, downloads, accessible dripped sections, last drip time, quiz attempts/results, SCORM runtime state, course completion, and certificate linkage.
+- Replace the legacy `User.purchases` array with normalized learners, learner memberships, and progress records.
+- `learner_memberships` is the single learner-to-product/community relationship and preserves active, payment-failed, expired, pending, rejected, and paused states.
+- Memberships capture the payment plan, subscription, joining/rejection information, and whether product access was included through a community plan.
+- Progress supports lesson started/completed, downloads, accessible dripped sections, last drip time, quiz attempts/results, SCORM runtime state, course completion, and certificate linkage, scoped by membership.
 - Progress writes are idempotent and concurrency-safe.
 - Course completion and certificate issuance are derived by CourseLit services, not trusted from client input.
-- Admins can invite, enroll, suspend, restore, and remove learners subject to commerce and retention rules.
+- Admins can invite, grant, suspend, restore, and remove learner memberships subject to commerce and retention rules.
 - When an admin is explicitly linked to a learner identity, admin-owned
   community memberships are reconciled into that learner's membership rather
   than producing a second member. A learner join request must therefore be
@@ -422,8 +429,8 @@ the public-site rendering path.
 - An authorized product manager requests a short-lived, single-purpose preview grant from the admin API.
 - The learner app consumes the grant for one school and product.
 - Preview can expose unpublished and dripped content only within the manager's authorization.
-- Preview never creates or mutates learner, enrollment, progress, certificate, checkout, or notification records.
-- An enrolled manager using normal learner authentication receives the ordinary learner experience unless a preview grant is active.
+- Preview never creates or mutates learner, membership, progress, certificate, checkout, or notification records.
+- A manager with a normal learner membership receives the ordinary learner experience unless a preview grant is active.
 
 ### 9.7 Communities and discussions
 
@@ -433,12 +440,12 @@ the public-site rendering path.
 - Preserve product/lesson discussions and their separate moderation workflow.
 - All listing APIs use cursor pagination with stable tie-breakers.
 - Soft deletion, anonymization, hard deletion, and report retention rules are explicit per entity.
-- Visibility is resolved on the server from school, learner, enrollment, drip, and preview context.
+- Visibility is resolved on the server from school, learner membership, drip, and preview context.
 
 ### 9.8 Storefront commerce
 
 - Preserve free, one-time, recurring subscription, and fixed-installment plans.
-- Preserve community approval behavior and included-product access grants.
+- Preserve community approval behavior and included-product membership fan-out and revocation.
 - School learner commerce supports Stripe, Lemon Squeezy, and Razorpay through one payment-provider contract. Each school selects one provider and stores its credentials encrypted at rest.
 - The provider adapters cover checkout, customer/subscription references, webhook signature verification, one-time purchases, recurring subscriptions, installments, cancellations, failed renewals, refunds, and disputes.
 - Provider configuration belongs to the school commerce domain and is independent of `@codelitdev/billing`, which controls CourseLit platform billing.
@@ -462,7 +469,7 @@ the public-site rendering path.
   `onetime`, and one `emi` plan, plus one monthly and one yearly `subscription` plan;
   plan names are not the uniqueness key. Product-owned plans reject `includedProducts`.
 - Checkout initiation is idempotent and binds school, learner, product/community, plan, currency, and an expected amount.
-- Public checkout intents are short-lived, school-scoped, and server-backed. They bind the selected published product and plan before learner authentication, are claimed by exactly one learner when checkout starts, and expire without creating enrollment or payment state. The checkout attempt created from the intent remains idempotent and learner-bound.
+- Public checkout intents are short-lived, school-scoped, and server-backed. They bind the selected published product and plan before learner authentication, are claimed by exactly one learner when checkout starts, and expire without creating membership or payment state. The checkout attempt created from the intent remains idempotent and learner-bound.
 - Webhooks verify provider signatures, store the provider event before processing, and process an event at most once.
 - Entitlements are granted from verified server-side payment state, never from the browser redirect alone.
 - Refund, cancellation, failed renewal, installment completion, and dispute effects are specified and tested per provider.
@@ -483,7 +490,7 @@ entitlement signal.
 - A new Cloud school receives a product-owned 14-day trial.
 - Trial expiry and subscription state place the school into read-only mode.
 - In read-only mode, public pages and already entitled course/community content remain readable. Admins can inspect/export data and access the billing recovery flow.
-- Read-only mode blocks authoring, invitations, API-key mutations, new enrollments, checkout, progress/quiz/SCORM writes, community writes, and new drip unlocks. Existing downloads remain readable when the learner already has access.
+- Read-only mode blocks authoring, invitations, API-key mutations, new memberships, checkout, progress/quiz/SCORM writes, community writes, and new drip unlocks. Existing downloads remain readable when the learner already has access.
 - Safety-critical system writes continue in read-only mode, including subscription/payment webhooks, audit records, authentication/session security actions, integration reconciliation, deletion/retention work, and the billing action that restores service.
 - REST and MCP mutations rejected by this policy return one stable `school_read_only` product error rather than transport-specific behavior.
 - OSS composition does not depend on a hosted provider and uses the billing package's supported OSS/fake-provider path.
@@ -516,7 +523,7 @@ entitlement signal.
 - FrontLit failure must not affect course viewing, learner progress, or checkout. Public content degradation behavior and cache TTL are documented.
 - School creation commits locally and enqueues FrontLit provisioning through the CourseLit outbox; a temporary FrontLit outage leaves the integration in a visible `pending` state rather than rolling back the school.
 - FrontLit provisioning is an asynchronous, idempotent CourseLit worker flow: it persists the returned one-time team key before follow-up calls, requests exactly the three non-deletable CourseLit pages (`/`, `/terms`, and `/privacy`) in the FrontLit provisioning payload, and claims the CourseLit school subdomain in FrontLit. The learner app does not require persisted FrontLit pages for `/blog`, `/products`, or `/communities`: these CourseLit system routes reuse the homepage’s published `header` and `footer` blocks and place their route-specific content inside an empty themed `Section` from `@frontlit/page-builder`. Blog content comes from published school blog posts; products and communities remain CourseLit-owned surfaces. CourseLit must not create or require FrontLit-specific Docs, Help, or Changelog pages during school creation; those remain owned by FrontLit. CourseLit must not copy FrontLit's private page seed/layout implementation or maintain a second page model. Existing teams provisioned before this scoped page list was supported are not destructively cleaned up by CourseLit; any cleanup must be an explicit, separately reviewed migration.
-- Every CourseLit product and community has a CourseLit-owned mapping to a FrontLit sales page. The mapping is created in the same local transaction as the product/community and is reconciled asynchronously after the school's FrontLit team becomes available; a FrontLit outage must not block authoring or checkout. Sales pages use a reserved CourseLit slug namespace and are omitted from the ordinary admin `/pages` list, while product/community settings expose an `Edit page` link to the page builder once the remote page is ready. The page layout uses FrontLit's existing `banner` block as the non-deletable sales hero followed by a locked `data-slot`, with the checkout/join action pointing at the CourseLit-owned product/community route. The learner route renders the published FrontLit sales-page layout and resolves that slot with the CourseLit-owned curriculum, purchase, or community content inside FrontLit's themed `Section`; a new CourseLit block is added only if the supported FrontLit block registry cannot express the required behavior.
+- Every CourseLit product and community owns the ID of its saved FrontLit sales page directly on the resource row. Creating a product/community commits the resource and a `provision_sales_page` outbox job in the same local transaction; reconciliation provisions or updates the page asynchronously after the school's FrontLit team becomes available, so a FrontLit outage must not block authoring or checkout. Sales pages use the resource's unique school-wide slug and are omitted from the ordinary admin `/pages` list by their owned page IDs, while product/community settings expose an `Edit page` link to the page builder once the remote page is ready. Product pages are seeded with the CourseLit banner block and course pages also receive the CourseLit curriculum block; community pages retain their CourseLit content slot. The learner route renders the published FrontLit sales-page layout and resolves CourseLit-owned content inside FrontLit's themed `Section`.
 - The public blog index is `/blog`; each published post is rendered at `/blog/:slug/:id`, where `slug` resolves the published article through the supported FrontLit public API and `id` must match the returned stable document ID. The detail view uses the same homepage `header`/`footer` chrome and themed `Section`, and renders article TipTap/ProseMirror content with `@frontlit/text-editor`.
 - CourseLit will provision and own each school's SendLit team independently in the SendLit integration milestone. FrontLit's optional SendLit connection is an internal FrontLit concern and must not be used as a prerequisite, fallback, or dependency for CourseLit school provisioning or learner-site operation.
 - Provisioning, credential rotation, webhook verification, deletion, retry, and reconciliation are automated and auditable.
@@ -536,6 +543,12 @@ SendLit boundary when implemented.
     ```dotenv
     SENDLIT_SERVER=
     SENDLIT_APIKEY=
+    SENDLIT_PLATFORM_TEAM_API_KEY=
+    EMAIL_HOST=
+    EMAIL_PORT=587
+    EMAIL_USER=
+    EMAIL_PASS=
+    EMAIL_FROM=
     ```
 
 - `SENDLIT_SERVER` is the SendLit API origin. `SENDLIT_APIKEY` is an organization API key with the required team-provisioning/lifecycle scopes. The authenticated key determines the SendLit organization; CourseLit must not accept an organization ID from a school or client.
@@ -543,9 +556,10 @@ SendLit boundary when implemented.
 - Provisioning is idempotent within the configured SendLit organization.
 - SendLit returns the team ID and an initial team API key only on first creation. CourseLit must persist that key immediately in the school's integration record, encrypted at rest. Replaying the provisioning request cannot recover it.
 - The deployment-level `SENDLIT_APIKEY` is used for team provisioning and lifecycle operations. The returned school-level team API key is used for that school's contacts, templates, broadcasts, sequences, and delivery APIs.
+- CourseLit-owned system email uses `SENDLIT_PLATFORM_TEAM_API_KEY` when it is configured. This deployment-level SendLit team key is used for OTPs, team invitations, and other essential transactional messages; it is independent of every school's marketing team key. If it is absent, CourseLit uses the SMTP settings `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS`, and `EMAIL_FROM`. If neither provider is configured, system messages are dumped to the API console.
 - School creation commits locally and enqueues SendLit provisioning through the CourseLit outbox; a temporary SendLit outage leaves the integration in a visible `pending` state rather than rolling back the school.
 - Server integration uses a stable, externally supported SendLit API. CourseLit must not import SendLit's private workspace contract or server modules.
-- CourseLit publishes learner/contact created, profile changed, consent changed, enrollment changed, purchase completed, course progress, and community membership events through a transactional outbox.
+- CourseLit publishes learner/contact created, profile changed, consent changed, learner membership changed, purchase completed, course progress, and community membership events through a transactional outbox.
 - Event payloads are versioned, school-scoped, minimal, and idempotent.
 - SendLit is authoritative for marketing opt-in, suppression, tags, segments, broadcasts, sequences, templates, and delivery history.
 - Authentication OTP and essential transactional messages use an explicitly approved transactional delivery path; they are not contingent on marketing consent.
@@ -555,7 +569,7 @@ SendLit boundary when implemented.
 
 ### 9.11.1 Shared provisioning credential rules
 
-- All four settings are deployment-level secrets. They are never returned through REST, MCP, OpenAPI examples, browser configuration, logs, audit payloads, or migration reports.
+- All deployment-level integration and system-mail settings are secrets. They are never returned through REST, MCP, OpenAPI examples, browser configuration, logs, audit payloads, or migration reports.
 - Development, staging, and production use different remote organizations/instances and credentials so non-production schools cannot be provisioned into production.
 - Startup validates setting syntax without making either sister product a startup-time network dependency. Connectivity and credential-scope checks are exposed through readiness diagnostics and operator tooling.
 - Provisioning jobs use bounded timeouts and retries. A permanent authentication or scope failure moves the integration to `action_required` instead of retrying forever.
@@ -634,7 +648,7 @@ The public media representation includes a usage count. `GET /media/:mediaId/ref
 
 - Course drip, certificate issuance, transactional notifications, outbox delivery, imports, and reconciliation are CourseLit jobs.
 - Email campaign sequencing and campaign delivery are SendLit jobs.
-- CourseLit records the production activity vocabulary for learner creation, enrollment, purchases, downloads, learning progress, quizzes, certificates, newsletter changes, tags, communities, and course discussions in a school-scoped activity log.
+- CourseLit records the production activity vocabulary for learner creation, membership changes, purchases, downloads, learning progress, quizzes, certificates, newsletter changes, tags, communities, and course discussions in a school-scoped activity log.
 - One-time activity events are idempotent; membership and subscription-style events remain repeatable. The admin overview aggregates sales, customers, new community members, and subscribers from this log with the same time-range and growth semantics as `main`.
 - Activity recording is independent of `@codelitdev/billing`; the former describes school learner behavior while the latter records CourseLit platform billing.
 - Jobs carry opaque school, actor, correlation, and causation IDs.
@@ -654,7 +668,7 @@ Initial contract groups are:
 - invitations and school memberships;
 - Platform billing;
 - products, sections, lessons, media library/upload grants, and previews;
-- learners, enrollments, progress, and certificates;
+- learners, learner memberships, progress, and certificates;
 - communities, discussions, and moderation;
 - storefront plans, checkout, invoices, and webhooks;
 - FrontLit, SendLit, and MediaLit integration status;
@@ -695,10 +709,10 @@ Initial contract groups are:
 | `Domain`                                                  | `schools`, domains, settings, feature policy | Preserve school slug/custom domain; validate owner email and deleted state              |
 | `User` with admin permissions                             | admin auth user plus school membership       | Split from learner role; map effective permissions and preserve ownership               |
 | `User` learner fields                                     | learner, profile, SendLit contact mapping    | Preserve normalized identity; migrate consent independently from access                 |
-| `User.purchases`                                          | enrollments and progress tables              | Preserve completion, downloads, accessible groups, drip, SCORM, and certificate links   |
+| `User.purchases`                                          | learners, learner memberships, and progress tables | Preserve completion, downloads, accessible groups, drip, SCORM, and certificate links   |
 | `Course`                                                  | products and product sections                | Preserve public ID, slug, type, publication, order, discussions, and ownership          |
 | `Lesson`                                                  | lessons and lesson content                   | Preserve type/content/media/publication/access and section order                        |
-| `Membership`                                              | product/community enrollments                | Preserve lifecycle, role, included-plan source, and provider subscription reference     |
+| `Membership`                                              | learner memberships                          | Preserve lifecycle, role, included-plan source, and provider subscription reference     |
 | `PaymentPlan` and `Invoice`                               | storefront commerce tables                   | Preserve source plan type and separate numeric amount fields; take transaction currency from school settings and snapshot it on checkout/payment/invoice records; derive provider minor units only at the payment adapter boundary |
 | Community collections                                     | community-owned relational tables            | Preserve threads, reply context, reactions, subscriptions, reports, and deletion state  |
 | Pages, themes, menus, blogs                               | FrontLit plus CourseLit mapping              | Import supported content; preserve unsupported blocks and render `Unsupported`          |
@@ -795,23 +809,23 @@ Deliverables:
 - REST/OpenAPI contracts and approved MCP tools;
 - Media library and picker plus MediaLit upload, sealing, reuse, reference reconciliation, safe deletion, and private-delivery flows;
 - preview-grant issuance and a minimal learner renderer;
-- migration fixture for representative courses, downloads, lesson types, and malformed legacy data.
+- migration fixture for representative courses, downloads, lesson types, learner memberships, and malformed legacy data.
 - port existing product-authoring behavior from `main` before introducing rewrite-specific UI or workflow changes; document intentional differences in the parity ledger.
 
 Exit gate: an authorized teammate can create, edit, preview, publish, and read a free course through admin, learner, REST, and MCP paths without tenant leakage. Every in-scope product-authoring route and screen on `main` has a completed feature porting brief, side-by-side parity evidence, and regression coverage; no field, control, validation rule, side effect, or background behavior is left without an explicit disposition.
 
-### Milestone 4 — Learners, enrollment, progress, and certificates
+### Milestone 4 — Learners, memberships, progress, and certificates
 
 Deliverables:
 
 - learner auth realm with OTP and the first supported external provider;
-- learner, enrollment, access grant, progress, quiz/SCORM state, activity, and certificate schemas;
-- free enrollment and admin enrollment;
+- learner, learner membership, progress, quiz/SCORM state, activity, and certificate schemas;
+- free membership activation and admin membership grants;
 - course viewer, downloads, progress writes, drip computation, and preview isolation;
 - migration and reconciliation for mixed admin/learner users and `User.purchases`.
 - port learner-facing behavior from `main` into `apps/learners`, including the aggregated Feed and enrolled Products surfaces; do not place learner navigation in `apps/admin`.
 
-Exit gate: a migrated and a newly created learner can authenticate, enroll, consume a course, resume progress, and earn a certificate with parity evidence.
+Exit gate: a migrated and a newly created learner can authenticate, obtain a membership, consume a course, resume progress, and earn a certificate with parity evidence.
 
 ### Milestone 5 — Storefront commerce
 
@@ -973,7 +987,7 @@ Every eligible legacy school displays a migration banner in its admin experience
 
 Opt-in is an idempotent request to the migration coordinator. The coordinator runs a preflight before disabling writes. A blocked preflight leaves the school on the legacy system and reports actionable issues such as unsupported content, ambiguous ownership, an unavailable payment provider, missing integration mappings, or an existing migration request.
 
-After preflight succeeds, the coordinator places both admin and learner surfaces for that school into maintenance mode and advances through an explicit state machine. During maintenance, school routes serve a migration-status page backed by the coordinator; authoring, learner progress, enrollment, checkout, and community writes are disabled. The owner can see progress and contact support without relying on either tenant database.
+After preflight succeeds, the coordinator places both admin and learner surfaces for that school into maintenance mode and advances through an explicit state machine. During maintenance, school routes serve a migration-status page backed by the coordinator; authoring, learner progress, membership, checkout, and community writes are disabled. The owner can see progress and contact support without relying on either tenant database.
 
 ```mermaid
 stateDiagram-v2
@@ -1097,4 +1111,4 @@ After this PRD is approved, the first engineering pull requests should be:
    plans must not gain a currency field because currency is owned by the school. All
    unsupported or lossy records must be rejected with reconciliation entries rather
    than silently dropped.
-8. Implement the first vertical slice: free course, one lesson, one learner, enrollment, completion, REST/MCP read parity, and audit/telemetry, using `main` as the behavior reference for any existing flow.
+8. Implement the first vertical slice: free course, one lesson, one learner, membership, completion, REST/MCP read parity, and audit/telemetry, using `main` as the behavior reference for any existing flow.

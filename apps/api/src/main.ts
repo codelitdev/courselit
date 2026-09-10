@@ -44,9 +44,12 @@ const publicApiUrl = process.env.PUBLIC_API_URL ?? `http://127.0.0.1:${port}`;
 const webOrigin = process.env.WEB_ORIGIN ?? "http://localhost:3000";
 const databaseUrl = process.env.DATABASE_URL;
 const authSecret = process.env.AUTH_SECRET;
+const learnerAuthSecret = process.env.LEARNER_AUTH_SECRET;
 const apiKeyPepper = process.env.API_KEY_PEPPER;
-if (!databaseUrl || !authSecret || !apiKeyPepper) {
-  throw new Error("DATABASE_URL_AUTH_SECRET_AND_API_KEY_PEPPER_REQUIRED");
+if (!databaseUrl || !authSecret || !learnerAuthSecret || !apiKeyPepper) {
+  throw new Error(
+    "DATABASE_URL_AUTH_SECRET_LEARNER_AUTH_SECRET_AND_API_KEY_PEPPER_REQUIRED",
+  );
 }
 const runtime = await createPostgresRuntime({
   logger,
@@ -55,6 +58,7 @@ const runtime = await createPostgresRuntime({
   webOrigin,
   databaseUrl,
   authSecret,
+  learnerAuthSecret,
   apiKeyPepper,
   serviceName: "courselit-api",
 });

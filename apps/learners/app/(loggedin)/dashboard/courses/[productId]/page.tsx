@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@codelitdev/design-system";
 // Course viewing is protected, except for explicit preview tokens.
 import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
 import Link from "next/link";
@@ -14,7 +13,17 @@ import {
   LessonContent,
   LessonMediaContent,
 } from "@/components/lesson-viewer";
+import {
+  LearnerButton as Button,
+  LearnerHeader1,
+  LearnerHeader4,
+  LearnerText2,
+  LearnerCard as PageCard,
+  LearnerCardContent as PageCardContent,
+  LearnerCardImage as PageCardImage,
+} from "@/components/themed-page-builder";
 import { learnerHeaders, writeSchoolId } from "@/lib/school";
+import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
 type Product = {
   id: string;
@@ -47,6 +56,7 @@ type Plan = {
 };
 
 function ProductDescription({ value }: { value: string }) {
+  const theme = useSchoolThemeStyle();
   if (!value) return null;
   try {
     const parsed = JSON.parse(value) as Record<string, unknown>;
@@ -54,6 +64,7 @@ function ProductDescription({ value }: { value: string }) {
       return (
         <TextRenderer
           json={parsed as unknown as TextEditorContent}
+          theme={theme}
           className="lesson-rich-text"
         />
       );
@@ -61,7 +72,7 @@ function ProductDescription({ value }: { value: string }) {
   } catch {
     // Descriptions saved before rich-text support remain plain strings.
   }
-  return <p className="subtitle">{value}</p>;
+  return <LearnerText2 className="mt-2 text-muted-foreground">{value}</LearnerText2>;
 }
 
 export default function CoursePage() {
@@ -69,7 +80,6 @@ export default function CoursePage() {
   const productId = params.productId;
   const [product, setProduct] = useState<Product | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [started, setStarted] = useState<Set<string>>(new Set());
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [certificate, setCertificate] = useState<{
     verificationId: string;
@@ -157,11 +167,9 @@ export default function CoursePage() {
           const progress = (await progressResponse.json()) as {
             items?: Array<{
               lessonId: string;
-              startedAt: string;
               completedAt: string | null;
             }>;
           };
-          setStarted(new Set((progress.items ?? []).map((item) => item.lessonId)));
           setCompleted(
             new Set(
               (progress.items ?? [])
@@ -193,7 +201,7 @@ export default function CoursePage() {
 
   async function enroll() {
     setError(null);
-    const response = await fetch("/api/v1/learner/enrollments", {
+    const response = await fetch("/api/v1/learner/memberships", {
       method: "POST",
       credentials: "include",
       headers: learnerHeaders({ "content-type": "application/json" }),
@@ -295,7 +303,6 @@ export default function CoursePage() {
       courseCompleted: boolean;
       certificateId: string | null;
     };
-    setStarted((current) => new Set(current).add(lessonId));
     setCompleted((current) => new Set(current).add(lessonId));
     if (progress.courseCompleted && progress.certificateId) {
       const certificatesResponse = await fetch("/api/v1/learner/certificates", {
@@ -317,25 +324,6 @@ export default function CoursePage() {
     }
   }
 
-  async function start(lessonId: string) {
-    setError(null);
-    const response = await fetch(`/api/v1/learner/lessons/${lessonId}/start`, {
-      method: "POST",
-      credentials: "include",
-      headers: learnerHeaders({ "content-type": "application/json" }),
-      body: JSON.stringify({}),
-    });
-    if (!response.ok) {
-      if (response.status === 401) {
-        window.location.assign("/login");
-        return;
-      }
-      setError("Unable to start the lesson.");
-      return;
-    }
-    setStarted((current) => new Set(current).add(lessonId));
-  }
-
   const firstAvailableLesson =
     product?.kind === "course"
       ? (product.lessons.find(
@@ -352,13 +340,13 @@ export default function CoursePage() {
       previewToken={previewToken}
       completedLessonIds={completed}
     >
-      <div className="page-shell">
-        <header className="app-header">
+      <div className="grid gap-7">
+        <header className="flex items-start justify-between gap-4">
           <div>
-            <p className="eyebrow">
+            <LearnerText2 className="text-muted-foreground">
               {product?.kind === "download" ? "Digital download" : "Course"}
-            </p>
-            <h1>{product?.title ?? "Product"}</h1>
+            </LearnerText2>
+            <LearnerHeader1>{product?.title ?? "Product"}</LearnerHeader1>
             {product?.description ? (
               <ProductDescription value={product.description} />
             ) : null}
@@ -382,147 +370,154 @@ export default function CoursePage() {
             </Link>
           ) : null}
         </header>
-        {error ? <p role="alert">{error}</p> : null}
-        <section className="card stack">
-          {previewToken ? <p className="eyebrow">Preview mode</p> : null}
-          {!previewToken ? (
-            <>
-              {product?.kind === "download" && me ? (
-                <Button type="button" onClick={() => void downloadProduct()}>
-                  Download files
-                </Button>
-              ) : null}
-              {(product?.plans ?? []).length ? (
-                <div className="stack">
-                  <p className="eyebrow">Choose access</p>
-                  {(product?.plans ?? []).map((plan) => (
-                    <div className="flex gap-2 items-center" key={plan.id}>
-                      <span>
-                        {plan.name} · {plan.currency} {plan.amountMinor / 100}
-                        {plan.kind === "subscription" && plan.billingInterval
-                          ? ` / ${plan.billingInterval}`
-                          : plan.kind === "installment" && plan.installmentCount
-                            ? ` · ${plan.installmentCount} payments`
-                            : ""}
-                      </span>
-                      <Button type="button" onClick={() => void checkout(plan)}>
-                        {plan.kind === "free" ? "Get access" : "Buy now"}
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : product?.kind !== "download" ? (
-                <Button type="button" onClick={() => void enroll()}>
-                  Enroll
-                </Button>
-              ) : null}
-            </>
-          ) : null}
-          {product?.kind === "course" ? (
-            <>
-              {product.featuredMedia ? (
-                <img
-                  src={
-                    product.featuredMedia.thumbnailUrl ??
-                    product.featuredMedia.canonicalUrl
-                  }
-                  alt={product.featuredMedia.altText || product.title}
-                  className="w-full rounded-lg object-cover"
-                />
-              ) : null}
-              {firstAvailableLesson ? (
-                <Link
-                  className="w-fit"
-                  href={`/dashboard/courses/${encodeURIComponent(productId)}/${encodeURIComponent(firstAvailableLesson.id)}${previewToken ? `#preview=${encodeURIComponent(previewToken)}` : ""}`}
-                >
-                  <Button type="button">
-                    {product.enrolled ? "Continue learning" : "Start learning"}
+        {error ? (
+          <LearnerText2 role="alert" className="text-destructive">
+            {error}
+          </LearnerText2>
+        ) : null}
+        <PageCard>
+          <PageCardContent className="grid gap-5">
+            {previewToken ? (
+              <LearnerText2 className="text-muted-foreground">
+                Preview mode
+              </LearnerText2>
+            ) : null}
+            {!previewToken ? (
+              <>
+                {product?.kind === "download" && me ? (
+                  <Button type="button" onClick={() => void downloadProduct()}>
+                    Download files
                   </Button>
-                </Link>
-              ) : null}
-            </>
-          ) : null}
-          {product?.kind === "download" &&
-            (product?.lessons ?? []).map((lesson) => (
-              <article
-                id={`lesson-${lesson.id}`}
-                key={lesson.id}
-                className="stack scroll-mt-6"
-              >
-                <h2>{lesson.title}</h2>
-                <Link
-                  className="w-fit text-sm font-medium text-primary hover:underline"
-                  href={`/dashboard/courses/${encodeURIComponent(productId)}/${encodeURIComponent(lesson.id)}${previewToken ? `#preview=${encodeURIComponent(previewToken)}` : ""}`}
-                >
-                  Open lesson
-                </Link>
-                {lesson.mediaId ? (
-                  <LessonMediaContent
-                    productId={productId}
-                    lesson={lesson}
-                    previewToken={previewToken}
+                ) : null}
+                {(product?.plans ?? []).length ? (
+                  <div className="grid gap-4">
+                    <LearnerText2 className="text-muted-foreground">
+                      Choose access
+                    </LearnerText2>
+                    {(product?.plans ?? []).map((plan) => (
+                      <div className="flex gap-2 items-center" key={plan.id}>
+                        <LearnerText2 component="span">
+                          {plan.name} · {plan.currency} {plan.amountMinor / 100}
+                          {plan.kind === "subscription" && plan.billingInterval
+                            ? ` / ${plan.billingInterval}`
+                            : plan.kind === "installment" && plan.installmentCount
+                              ? ` · ${plan.installmentCount} payments`
+                              : ""}
+                        </LearnerText2>
+                        <Button type="button" onClick={() => void checkout(plan)}>
+                          {plan.kind === "free" ? "Get access" : "Buy now"}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : product?.kind !== "download" ? (
+                  <Button type="button" onClick={() => void enroll()}>
+                    Enroll
+                  </Button>
+                ) : null}
+              </>
+            ) : null}
+            {product?.kind === "course" ? (
+              <>
+                {product.featuredMedia ? (
+                  <PageCardImage
+                    src={
+                      product.featuredMedia.thumbnailUrl ??
+                      product.featuredMedia.canonicalUrl
+                    }
+                    alt={product.featuredMedia.altText || product.title}
+                    className="w-full rounded-lg object-cover"
                   />
-                ) : lesson.content && Object.keys(lesson.content).length > 0 ? (
-                  previewToken && lesson.type === "quiz" ? (
-                    <p className="muted">Quiz content is available after enrollment.</p>
-                  ) : (
-                    <LessonContent
-                      content={lesson.content}
-                      lessonId={lesson.id}
+                ) : null}
+                {firstAvailableLesson ? (
+                  <Link
+                    className="w-fit"
+                    href={`/dashboard/courses/${encodeURIComponent(productId)}/${encodeURIComponent(firstAvailableLesson.id)}${previewToken ? `#preview=${encodeURIComponent(previewToken)}` : ""}`}
+                  >
+                    <Button type="button">
+                      {product.enrolled ? "Continue learning" : "Start learning"}
+                    </Button>
+                  </Link>
+                ) : null}
+              </>
+            ) : null}
+            {product?.kind === "download" &&
+              (product?.lessons ?? []).map((lesson) => (
+                <article
+                  id={`lesson-${lesson.id}`}
+                  key={lesson.id}
+                  className="grid gap-4 scroll-mt-6"
+                >
+                  <LearnerHeader4>{lesson.title}</LearnerHeader4>
+                  <Link
+                    className="w-fit text-sm font-medium text-primary hover:underline"
+                    href={`/dashboard/courses/${encodeURIComponent(productId)}/${encodeURIComponent(lesson.id)}${previewToken ? `#preview=${encodeURIComponent(previewToken)}` : ""}`}
+                  >
+                    Open lesson
+                  </Link>
+                  {lesson.mediaId ? (
+                    <LessonMediaContent
                       productId={productId}
-                      type={lesson.type}
+                      lesson={lesson}
+                      previewToken={previewToken}
                     />
-                  )
-                ) : (
-                  <p className="muted">
-                    {lesson.availableAt
-                      ? `This lesson unlocks on ${new Date(lesson.availableAt).toLocaleString()}.`
-                      : "Enroll to read this lesson."}
-                  </p>
-                )}
-                {!previewToken &&
-                (lesson.mediaId ||
-                  (lesson.content && Object.keys(lesson.content).length > 0)) ? (
-                  <>
-                    {!started.has(lesson.id) ? (
-                      <Button type="button" onClick={() => void start(lesson.id)}>
-                        Start lesson
-                      </Button>
-                    ) : null}
-                    {!completed.has(lesson.id) ? (
+                  ) : lesson.content && Object.keys(lesson.content).length > 0 ? (
+                    previewToken && lesson.type === "quiz" ? (
+                      <LearnerText2 className="text-muted-foreground">
+                        Quiz content is available after enrollment.
+                      </LearnerText2>
+                    ) : (
+                      <LessonContent
+                        content={lesson.content}
+                        lessonId={lesson.id}
+                        productId={productId}
+                        type={lesson.type}
+                      />
+                    )
+                  ) : (
+                    <LearnerText2 className="text-muted-foreground">
+                      {lesson.availableAt
+                        ? `This lesson unlocks on ${new Date(lesson.availableAt).toLocaleString()}.`
+                        : "Enroll to read this lesson."}
+                    </LearnerText2>
+                  )}
+                  {!previewToken &&
+                  (lesson.mediaId ||
+                    (lesson.content && Object.keys(lesson.content).length > 0)) ? (
+                    !completed.has(lesson.id) ? (
                       <Button type="button" onClick={() => void complete(lesson.id)}>
                         Mark complete
                       </Button>
                     ) : (
-                      <p>Lesson completed.</p>
-                    )}
-                  </>
-                ) : null}
-                {(previewToken || product?.discussions) &&
-                (lesson.mediaId ||
-                  (lesson.content && Object.keys(lesson.content).length > 0)) &&
-                (me || previewToken) ? (
-                  <CourseDiscussions
-                    productId={productId}
-                    lessonId={lesson.id}
-                    enabled
-                    viewerId={me?.id ?? "preview"}
-                    previewToken={previewToken}
-                  />
-                ) : null}
-              </article>
-            ))}
-          {certificate ? (
-            <p>
-              <Link
-                href={`/certificates/${encodeURIComponent(certificate.verificationId)}`}
-                className="font-medium text-primary hover:underline"
-              >
-                View your course certificate
-              </Link>
-            </p>
-          ) : null}
-        </section>
+                      <LearnerText2>Lesson completed.</LearnerText2>
+                    )
+                  ) : null}
+                  {(previewToken || product?.discussions) &&
+                  (lesson.mediaId ||
+                    (lesson.content && Object.keys(lesson.content).length > 0)) &&
+                  (me || previewToken) ? (
+                    <CourseDiscussions
+                      productId={productId}
+                      lessonId={lesson.id}
+                      enabled
+                      viewerId={me?.id ?? "preview"}
+                      previewToken={previewToken}
+                    />
+                  ) : null}
+                </article>
+              ))}
+            {certificate ? (
+              <LearnerText2>
+                <Link
+                  href={`/certificates/${encodeURIComponent(certificate.verificationId)}`}
+                  className="font-medium text-primary hover:underline"
+                >
+                  View your course certificate
+                </Link>
+              </LearnerText2>
+            ) : null}
+          </PageCardContent>
+        </PageCard>
       </div>
     </LearnerShell>
   );

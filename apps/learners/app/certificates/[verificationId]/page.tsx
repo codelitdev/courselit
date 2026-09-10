@@ -1,9 +1,16 @@
 "use client";
 
-import { Button } from "@codelitdev/design-system";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import {
+  LearnerButton as Button,
+  LearnerCardImage,
+  LearnerHeader1,
+  LearnerHeader2,
+  LearnerHeader3,
+  LearnerText2,
+} from "@/components/themed-page-builder";
 
 type Certificate = {
   id: string;
@@ -43,8 +50,10 @@ export default function CertificateVerificationPage() {
     <main className="certificate-page">
       <header className="certificate-toolbar">
         <div>
-          <p className="eyebrow">CourseLit</p>
-          <p className="text-sm text-muted-foreground">Certificate verification</p>
+          <LearnerText2 className="font-semibold">CourseLit</LearnerText2>
+          <LearnerText2 className="text-muted-foreground">
+            Certificate verification
+          </LearnerText2>
         </div>
         <div className="flex items-center gap-4">
           <Link
@@ -61,48 +70,70 @@ export default function CertificateVerificationPage() {
         </div>
       </header>
       <section className="certificate-sheet">
-        {state === "loading" ? <p>Checking certificate…</p> : null}
+        {state === "loading" ? (
+          <LearnerText2>Checking certificate…</LearnerText2>
+        ) : null}
         {state === "missing" ? (
-          <p role="alert">That certificate could not be verified.</p>
+          <LearnerText2 role="alert">
+            That certificate could not be verified.
+          </LearnerText2>
         ) : null}
         {state === "found" && certificate ? (
           <>
             {certificate.logoUrl ? (
-              <img className="certificate-logo" src={certificate.logoUrl} alt="School logo" />
+              <LearnerCardImage
+                className="certificate-logo w-auto"
+                src={certificate.logoUrl}
+                alt="School logo"
+              />
             ) : null}
-            <p className="certificate-kicker">Verified certificate</p>
-            <h1 className="certificate-title">{certificate.title}</h1>
+            <LearnerText2 className="certificate-kicker">
+              Verified certificate
+            </LearnerText2>
+            <LearnerHeader1 className="certificate-title">
+              {certificate.title}
+            </LearnerHeader1>
             <div className="certificate-rule" />
-            <p className="certificate-subtitle">{certificate.subtitle}</p>
-            <h2 className="certificate-recipient">{certificate.learnerName}</h2>
-            <p className="certificate-description">{certificate.description}</p>
-            <h3 className="certificate-product">{certificate.productTitle}</h3>
+            <LearnerText2 className="certificate-subtitle">
+              {certificate.subtitle}
+            </LearnerText2>
+            <LearnerHeader2 className="certificate-recipient">
+              {certificate.learnerName}
+            </LearnerHeader2>
+            <LearnerText2 className="certificate-description">
+              {certificate.description}
+            </LearnerText2>
+            <LearnerHeader3 className="certificate-product">
+              {certificate.productTitle}
+            </LearnerHeader3>
             <div className="certificate-footer">
               <div>
                 {certificate.signatureImageUrl ? (
-                  <img
-                    className="certificate-signature-image"
+                  <LearnerCardImage
+                    className="certificate-signature-image w-auto"
                     src={certificate.signatureImageUrl}
                     alt="Signature"
                   />
                 ) : null}
                 <div className="certificate-line" />
-                <p>{certificate.signatureName}</p>
+                <LearnerText2>{certificate.signatureName}</LearnerText2>
                 {certificate.signatureDesignation ? (
-                  <p className="certificate-meta">{certificate.signatureDesignation}</p>
+                  <LearnerText2 className="certificate-meta">
+                    {certificate.signatureDesignation}
+                  </LearnerText2>
                 ) : null}
               </div>
               <div>
                 <div className="certificate-line" />
-                <p>Date of Completion</p>
-                <p className="certificate-meta">
+                <LearnerText2>Date of Completion</LearnerText2>
+                <LearnerText2 className="certificate-meta">
                   {new Date(certificate.issuedAt).toLocaleDateString(undefined, {
                     dateStyle: "long",
                   })}
-                </p>
+                </LearnerText2>
               </div>
             </div>
-            <p className="certificate-id">ID: {certificate.id}</p>
+            <LearnerText2 className="certificate-id">ID: {certificate.id}</LearnerText2>
           </>
         ) : null}
       </section>

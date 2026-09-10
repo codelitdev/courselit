@@ -13,7 +13,6 @@ import {
   type PublicPage,
 } from "@/lib/courselit-public";
 import { requestHost } from "@/lib/request-host";
-import { salesPageSlug } from "@/lib/sales-pages";
 
 function metadataImageUrl(image: Record<string, unknown> | null): string | undefined {
   for (const key of ["file", "url", "src"]) {
@@ -74,19 +73,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const product = await getPublicProduct(host, pageSlug);
   if (product) {
-    const { page } = await loadPublicPage(salesPageSlug("product", product.id));
+    const { page } = await loadPublicPage(product.slug);
     return {
       ...metadataForPublicPage(page, product.title),
-      alternates: { canonical: `/${encodeURIComponent(product.slug || product.id)}` },
+      alternates: {
+        canonical: `/p/${encodeURIComponent(product.slug || product.id)}`,
+      },
     };
   }
 
   const community = await getPublicCommunity(host, pageSlug);
   if (community) {
-    const { page } = await loadPublicPage(salesPageSlug("community", community.id));
+    const { page } = await loadPublicPage(community.slug);
     return {
       ...metadataForPublicPage(page, community.name),
-      alternates: { canonical: `/${encodeURIComponent(community.slug || community.id)}` },
+      alternates: {
+        canonical: `/p/${encodeURIComponent(community.slug || community.id)}`,
+      },
     };
   }
 
@@ -119,11 +122,12 @@ export default async function PublicSiteCatchAllPage({ params }: Props) {
     return (
       <PublicSitePage
         pageSlug={pageSlug}
-        salesPageSlug={salesPageSlug("product", product.id)}
+        salesPageSlug={product.slug}
         allowEmpty
         fallbackToHomepage
         systemRoute="product"
         systemContent={<PublicProductDetail productId={product.id} />}
+        salesResource={{ resourceType: "product", resourceId: product.id }}
       />
     );
   }
@@ -133,7 +137,7 @@ export default async function PublicSiteCatchAllPage({ params }: Props) {
     return (
       <PublicSitePage
         pageSlug={pageSlug}
-        salesPageSlug={salesPageSlug("community", community.id)}
+        salesPageSlug={community.slug}
         allowEmpty
         fallbackToHomepage
         systemRoute="community"
@@ -142,10 +146,5 @@ export default async function PublicSiteCatchAllPage({ params }: Props) {
     );
   }
 
-  return (
-    <PublicSitePage
-      pageSlug={pageSlug}
-      allowEmpty={false}
-    />
-  );
+  return <PublicSitePage pageSlug={pageSlug} allowEmpty={false} />;
 }

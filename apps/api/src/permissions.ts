@@ -1,43 +1,13 @@
-export const COURSELIT_PERMISSIONS = [
-  "products:read",
-  "products:write",
-  "products:delete",
-  "learners:read",
-  "learners:write",
-  "school:admin",
-  "billing:read",
-  "media:read",
-  "media:write",
-  "media:delete",
-  "certificates:read",
-  "certificates:write",
-  "storefront:read",
-  "storefront:write",
-  "communities:read",
-  "communities:write",
-  "communities:moderate",
-] as const;
+import {
+  COURSELIT_PERMISSIONS,
+  computeEffectiveCourseLitPermissions,
+  MEMBER_PERMISSIONS,
+  OWNER_PERMISSIONS,
+  type CourseLitPermission,
+} from "@courselit/api-contract";
 
-export type CourseLitPermission = (typeof COURSELIT_PERMISSIONS)[number];
-
-export const OWNER_PERMISSIONS: readonly CourseLitPermission[] = [
-  ...COURSELIT_PERMISSIONS,
-];
-
-export const MEMBER_PERMISSIONS: readonly CourseLitPermission[] = [
-  "products:read",
-  "products:write",
-  "learners:read",
-  "billing:read",
-  "media:read",
-  "media:write",
-  "certificates:read",
-  "certificates:write",
-  "storefront:read",
-  "storefront:write",
-  "communities:read",
-  "communities:write",
-];
+export { COURSELIT_PERMISSIONS, MEMBER_PERMISSIONS, OWNER_PERMISSIONS };
+export type { CourseLitPermission };
 
 export const TELEMETRY_PROPERTY_ALLOWLIST = new Set([
   "path",
@@ -48,13 +18,7 @@ export const TELEMETRY_PROPERTY_ALLOWLIST = new Set([
 ]);
 
 export function parsePermissions(value: string): Set<CourseLitPermission> {
-  const allowed = new Set<string>(COURSELIT_PERMISSIONS);
-  const parsed = new Set<CourseLitPermission>();
-  for (const item of value.split(",")) {
-    const trimmed = item.trim();
-    if (allowed.has(trimmed)) parsed.add(trimmed as CourseLitPermission);
-  }
-  return parsed;
+  return new Set(computeEffectiveCourseLitPermissions(value.split(",")));
 }
 
 export function serializePermissions(

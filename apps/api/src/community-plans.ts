@@ -88,7 +88,7 @@ function normalizeCurrency(value: string | null | undefined) {
 }
 
 export function communityPlanToDto(
-  row: typeof schema.communityPaymentPlans.$inferSelect,
+  row: typeof schema.storefrontPlans.$inferSelect,
   schoolPublicId: string,
   communityPublicId: string,
   currency: string,
@@ -171,7 +171,7 @@ async function validateIncludedProducts(
 
 function isDuplicate(
   candidate: NormalizedPlan,
-  existing: typeof schema.communityPaymentPlans.$inferSelect,
+  existing: typeof schema.storefrontPlans.$inferSelect,
   currentId?: string,
 ) {
   if (currentId && existing.id === currentId) return false;
@@ -201,14 +201,15 @@ export async function listCommunityPlans(
     return { ok: false, error: createPlatformError("not_found") };
   const rows = await db
     .select()
-    .from(schema.communityPaymentPlans)
+    .from(schema.storefrontPlans)
     .where(
       and(
-        eq(schema.communityPaymentPlans.schoolId, context.tenantId!),
-        eq(schema.communityPaymentPlans.communityId, community.id),
+        eq(schema.storefrontPlans.schoolId, context.tenantId!),
+        eq(schema.storefrontPlans.entityType, "community"),
+        eq(schema.storefrontPlans.entityId, community.publicId),
       ),
     )
-    .orderBy(asc(schema.communityPaymentPlans.createdAt));
+    .orderBy(asc(schema.storefrontPlans.createdAt));
   return {
     ok: true,
     value: rows.map((row) =>
@@ -234,15 +235,16 @@ export async function listPublicCommunityPlans(
   }
   const rows = await db
     .select()
-    .from(schema.communityPaymentPlans)
+    .from(schema.storefrontPlans)
     .where(
       and(
-        eq(schema.communityPaymentPlans.schoolId, school.schoolId),
-        eq(schema.communityPaymentPlans.communityId, community.id),
-        eq(schema.communityPaymentPlans.status, "active"),
+        eq(schema.storefrontPlans.schoolId, school.schoolId),
+        eq(schema.storefrontPlans.entityType, "community"),
+        eq(schema.storefrontPlans.entityId, community.publicId),
+        eq(schema.storefrontPlans.status, "active"),
       ),
     )
-    .orderBy(asc(schema.communityPaymentPlans.createdAt));
+    .orderBy(asc(schema.storefrontPlans.createdAt));
   return {
     ok: true,
     value: rows.map((row) =>
@@ -281,11 +283,12 @@ export async function createCommunityPlan(
     return await db.transaction(async (tx) => {
       const existing = await tx
         .select()
-        .from(schema.communityPaymentPlans)
+        .from(schema.storefrontPlans)
         .where(
           and(
-            eq(schema.communityPaymentPlans.communityId, community.id),
-            eq(schema.communityPaymentPlans.status, "active"),
+            eq(schema.storefrontPlans.entityType, "community"),
+            eq(schema.storefrontPlans.entityId, community.publicId),
+            eq(schema.storefrontPlans.status, "active"),
           ),
         );
       if (existing.some((plan) => isDuplicate(checked.value, plan)))
@@ -294,7 +297,8 @@ export async function createCommunityPlan(
         id: uuidv7(clock),
         publicId: createPublicId("pln", clock),
         schoolId: context.tenantId!,
-        communityId: community.id,
+        entityType: "community" as const,
+        entityId: community.publicId,
         name: input.name.trim(),
         description: input.description ?? "",
         includedProducts: input.includedProducts ?? [],
@@ -314,7 +318,7 @@ export async function createCommunityPlan(
         createdAt: now,
         updatedAt: now,
       };
-      await tx.insert(schema.communityPaymentPlans).values(row);
+      await tx.insert(schema.storefrontPlans).values(row);
       await tx.insert(schema.auditEvents).values({
         id: uuidv7(clock),
         schoolId: context.tenantId!,
@@ -336,7 +340,7 @@ export async function createCommunityPlan(
       };
     });
   } catch (error) {
-    if (String(error).includes("community_payment_plans_")) return duplicatePlan();
+    if (String(error).includes("storefront_plans_")) return duplicatePlan();
     throw error;
   }
 }
@@ -352,11 +356,12 @@ export async function updateCommunityPlan(
   if (!canWrite(context)) return { ok: false, error: createPlatformError("forbidden") };
   const rows = await db
     .select()
-    .from(schema.communityPaymentPlans)
+    .from(schema.storefrontPlans)
     .where(
       and(
-        eq(schema.communityPaymentPlans.schoolId, context.tenantId!),
-        eq(schema.communityPaymentPlans.publicId, planPublicId),
+        eq(schema.storefrontPlans.schoolId, context.tenantId!),
+        eq(schema.storefrontPlans.publicId, planPublicId),
+        eq(schema.storefrontPlans.entityType, "community"),
       ),
     )
     .limit(1);
@@ -373,7 +378,7 @@ export async function updateCommunityPlan(
   const community = await loadCommunityById(
     db,
     context.tenantId!,
-    existing.communityId,
+    existing.entityId,
   );
   const school = await loadSchool(db, context.tenantId!);
   if (!community || !school)
@@ -435,11 +440,12 @@ export async function updateCommunityPlan(
   }
   const existingPlans = await db
     .select()
-    .from(schema.communityPaymentPlans)
+    .from(schema.storefrontPlans)
     .where(
       and(
-        eq(schema.communityPaymentPlans.communityId, existing.communityId),
-        eq(schema.communityPaymentPlans.status, "active"),
+        eq(schema.storefrontPlans.entityType, "community"),
+        eq(schema.storefrontPlans.entityId, existing.entityId),
+        eq(schema.storefrontPlans.status, "active"),
       ),
     );
   if (existingPlans.some((plan) => isDuplicate(checked.value, plan, existing.id))) {
@@ -464,9 +470,9 @@ export async function updateCommunityPlan(
   };
   await db.transaction(async (tx) => {
     await tx
-      .update(schema.communityPaymentPlans)
+      .update(schema.storefrontPlans)
       .set(next)
-      .where(eq(schema.communityPaymentPlans.id, existing.id));
+      .where(eq(schema.storefrontPlans.id, existing.id));
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
       schoolId: context.tenantId!,
@@ -500,11 +506,12 @@ export async function setDefaultCommunityPlan(
   return db.transaction(async (tx) => {
     const rows = await tx
       .select()
-      .from(schema.communityPaymentPlans)
+      .from(schema.storefrontPlans)
       .where(
         and(
-          eq(schema.communityPaymentPlans.schoolId, context.tenantId!),
-          eq(schema.communityPaymentPlans.publicId, planPublicId),
+          eq(schema.storefrontPlans.schoolId, context.tenantId!),
+          eq(schema.storefrontPlans.publicId, planPublicId),
+          eq(schema.storefrontPlans.entityType, "community"),
         ),
       )
       .limit(1);
@@ -514,27 +521,23 @@ export async function setDefaultCommunityPlan(
       return { ok: false as const, error: createPlatformError("conflict") };
     const now = clock.now();
     await tx
-      .update(schema.communityPaymentPlans)
+      .update(schema.storefrontPlans)
       .set({ isDefault: false, updatedAt: now })
       .where(
         and(
-          eq(schema.communityPaymentPlans.communityId, row.communityId),
-          eq(schema.communityPaymentPlans.status, "active"),
+          eq(schema.storefrontPlans.entityType, "community"),
+          eq(schema.storefrontPlans.entityId, row.entityId),
+          eq(schema.storefrontPlans.status, "active"),
         ),
       );
     await tx
-      .update(schema.communityPaymentPlans)
+      .update(schema.storefrontPlans)
       .set({ isDefault: true, updatedAt: now })
-      .where(eq(schema.communityPaymentPlans.id, row.id));
+      .where(eq(schema.storefrontPlans.id, row.id));
     const school = await loadSchool(tx, context.tenantId!);
     if (!school) return { ok: false as const, error: createPlatformError("not_found") };
-    const communityRows = await tx
-      .select({ publicId: schema.communities.publicId })
-      .from(schema.communities)
-      .where(eq(schema.communities.id, row.communityId))
-      .limit(1);
-    const publicId = communityRows[0]?.publicId;
-    if (!publicId)
+    const community = await loadCommunity(tx, context.tenantId!, row.entityId);
+    if (!community)
       return { ok: false as const, error: createPlatformError("not_found") };
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
@@ -551,7 +554,7 @@ export async function setDefaultCommunityPlan(
       value: communityPlanToDto(
         { ...row, isDefault: true, updatedAt: now },
         schoolPublicId,
-        publicId,
+        community.publicId,
         normalizeCurrency(school.currency),
       ),
     };
@@ -568,11 +571,12 @@ export async function archiveCommunityPlan(
   if (!canWrite(context)) return { ok: false, error: createPlatformError("forbidden") };
   const rows = await db
     .select()
-    .from(schema.communityPaymentPlans)
+    .from(schema.storefrontPlans)
     .where(
       and(
-        eq(schema.communityPaymentPlans.schoolId, context.tenantId!),
-        eq(schema.communityPaymentPlans.publicId, planPublicId),
+        eq(schema.storefrontPlans.schoolId, context.tenantId!),
+        eq(schema.storefrontPlans.publicId, planPublicId),
+        eq(schema.storefrontPlans.entityType, "community"),
       ),
     )
     .limit(1);
@@ -595,19 +599,15 @@ export async function archiveCommunityPlan(
     };
   }
   const now = clock.now();
-  const communityRows = await db
-    .select({ publicId: schema.communities.publicId })
-    .from(schema.communities)
-    .where(eq(schema.communities.id, row.communityId))
-    .limit(1);
+  const community = await loadCommunity(db, context.tenantId!, row.entityId);
   const school = await loadSchool(db, context.tenantId!);
-  if (!school || !communityRows[0])
+  if (!school || !community)
     return { ok: false, error: createPlatformError("not_found") };
   await db.transaction(async (tx) => {
     await tx
-      .update(schema.communityPaymentPlans)
+      .update(schema.storefrontPlans)
       .set({ status: "archived", isDefault: false, updatedAt: now })
-      .where(eq(schema.communityPaymentPlans.id, row.id));
+      .where(eq(schema.storefrontPlans.id, row.id));
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
       schoolId: context.tenantId!,
@@ -624,7 +624,7 @@ export async function archiveCommunityPlan(
       value: communityPlanToDto(
       { ...row, status: "archived", isDefault: false, updatedAt: now },
       schoolPublicId,
-      communityRows[0].publicId,
+      community.publicId,
       normalizeCurrency(school.currency),
     ),
   };

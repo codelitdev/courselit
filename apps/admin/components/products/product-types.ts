@@ -1,3 +1,5 @@
+import type { CourseLitPermission } from "@courselit/api-contract/team-permissions";
+
 export type ProductKind = "course" | "download";
 
 export type ProductStatus = "draft" | "published";
@@ -107,5 +109,6 @@ export type School = {
   name: string;
   subdomain?: string;
   currency: string;
+  permissions?: readonly CourseLitPermission[] | readonly string[];
   selected?: boolean;
 };

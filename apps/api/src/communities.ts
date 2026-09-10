@@ -24,7 +24,8 @@ import { revokeCommunityMembershipAccess } from "./community-commerce.js";
 import { ActivityType, recordActivity } from "./activities.js";
 import * as schema from "./db/schema/index.js";
 import { getPaymentProvider, type PaymentProvider } from "./payments.js";
-import { createPendingSalesPage } from "./frontlit-sales-pages.js";
+import { enqueueSalesPageProvisioning } from "./frontlit-sales-pages.js";
+import { resourceSlugTaken } from "./resource-slugs.js";
 import {
   type MediaKind,
   mediaIdsForRichTextContent,
@@ -815,17 +816,18 @@ async function loadCommunity(db: AppDb, schoolId: string, publicId: string) {
 async function hasActiveDefaultCommunityPlan(
   db: AppDb,
   schoolId: string,
-  communityId: string,
+  communityPublicId: string,
 ) {
   const rows = await db
-    .select({ id: schema.communityPaymentPlans.id })
-    .from(schema.communityPaymentPlans)
+    .select({ id: schema.storefrontPlans.id })
+    .from(schema.storefrontPlans)
     .where(
       and(
-        eq(schema.communityPaymentPlans.schoolId, schoolId),
-        eq(schema.communityPaymentPlans.communityId, communityId),
-        eq(schema.communityPaymentPlans.status, "active"),
-        eq(schema.communityPaymentPlans.isDefault, true),
+        eq(schema.storefrontPlans.schoolId, schoolId),
+        eq(schema.storefrontPlans.entityType, "community"),
+        eq(schema.storefrontPlans.entityId, communityPublicId),
+        eq(schema.storefrontPlans.status, "active"),
+        eq(schema.storefrontPlans.isDefault, true),
       ),
     )
     .limit(1);
@@ -1717,10 +1719,25 @@ export async function createCommunity(
   const now = clock.now();
   try {
     return await db.transaction(async (tx) => {
+      if (
+        await resourceSlugTaken(tx as AppDb, {
+          schoolId: school.schoolId,
+          slug,
+          resourceType: "community",
+        })
+      ) {
+        return {
+          ok: false as const,
+          error: createPlatformError("conflict", {
+            safeDetails: { reason: "slug_taken" },
+          }),
+        };
+      }
       const row = {
         id: uuidv7(clock),
         publicId,
         schoolId: school.schoolId,
+        salesPageId: null,
         name,
         slug,
         description: input.description,
@@ -1735,12 +1752,11 @@ export async function createCommunity(
         updatedAt: now,
       };
       await tx.insert(schema.communities).values(row);
-      await createPendingSalesPage(tx as AppDb, {
+      await enqueueSalesPageProvisioning(tx as AppDb, {
         id: uuidv7(clock),
         schoolId: row.schoolId,
         resourceType: "community",
         resourceId: row.id,
-        resourcePublicId: row.publicId,
         now,
       });
       const contentMediaIds = [
@@ -1888,7 +1904,7 @@ export async function updateCommunity(
   }
   if (
     input.enabled === true &&
-    !(await hasActiveDefaultCommunityPlan(db, school.schoolId, existing.id))
+    !(await hasActiveDefaultCommunityPlan(db, school.schoolId, existing.publicId))
   ) {
     return {
       ok: false,
@@ -1911,6 +1927,22 @@ export async function updateCommunity(
         joiningReasonText: input.joiningReasonText ?? existing.joiningReasonText,
         updatedAt: now,
       };
+      if (
+        next.slug !== existing.slug &&
+        (await resourceSlugTaken(tx as AppDb, {
+          schoolId: school.schoolId,
+          slug: next.slug,
+          resourceType: "community",
+          resourceId: existing.id,
+        }))
+      ) {
+        return {
+          ok: false as const,
+          error: createPlatformError("conflict", {
+            safeDetails: { reason: "slug_taken" },
+          }),
+        };
+      }
       if (input.description !== undefined || input.banner !== undefined) {
         const contentMediaIds = [
           ...(await mediaIdsForRichTextContent(
@@ -1991,6 +2023,19 @@ export async function updateCommunity(
         .update(schema.communities)
         .set(next)
         .where(eq(schema.communities.id, existing.id));
+      if (
+        input.name !== undefined ||
+        input.slug !== undefined ||
+        input.description !== undefined
+      ) {
+        await enqueueSalesPageProvisioning(tx as AppDb, {
+          id: uuidv7(clock),
+          schoolId: school.schoolId,
+          resourceType: "community",
+          resourceId: existing.id,
+          now,
+        });
+      }
       await tx.insert(schema.auditEvents).values({
         id: uuidv7(clock),
         schoolId: school.schoolId,
@@ -2246,15 +2291,6 @@ export async function deleteCommunity(
           eq(schema.mediaReferences.resourceInternalId, existing.id),
         ),
       );
-    await tx
-      .delete(schema.frontlitSalesPages)
-      .where(
-        and(
-          eq(schema.frontlitSalesPages.schoolId, school.schoolId),
-          eq(schema.frontlitSalesPages.resourceType, "community"),
-          eq(schema.frontlitSalesPages.resourceId, existing.id),
-        ),
-      );
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
       schoolId: school.schoolId,
@@ -2280,16 +2316,17 @@ export async function joinCommunity(
   if (!community?.enabled) return notFound();
   const activePlans = await db
     .select({
-      id: schema.communityPaymentPlans.id,
-      kind: schema.communityPaymentPlans.kind,
-      isDefault: schema.communityPaymentPlans.isDefault,
+      id: schema.storefrontPlans.id,
+      kind: schema.storefrontPlans.kind,
+      isDefault: schema.storefrontPlans.isDefault,
     })
-    .from(schema.communityPaymentPlans)
+    .from(schema.storefrontPlans)
     .where(
       and(
-        eq(schema.communityPaymentPlans.schoolId, viewer.schoolId),
-        eq(schema.communityPaymentPlans.communityId, community.id),
-        eq(schema.communityPaymentPlans.status, "active"),
+        eq(schema.storefrontPlans.schoolId, viewer.schoolId),
+        eq(schema.storefrontPlans.entityType, "community"),
+        eq(schema.storefrontPlans.entityId, community.publicId),
+        eq(schema.storefrontPlans.status, "active"),
       ),
     );
   if (activePlans.length === 0) {
@@ -2470,6 +2507,7 @@ export async function leaveCommunity(
         paymentPlanId: membership.paymentPlanId,
       },
       clock,
+      { cancelSubscription: false },
     );
     await tx
       .delete(schema.communityMemberships)

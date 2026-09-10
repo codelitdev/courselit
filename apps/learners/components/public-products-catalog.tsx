@@ -7,12 +7,12 @@ import {
   Header4,
   PageCard,
   PageCardContent,
-  PageCardImage,
   Subheader1,
   Text2,
 } from "@frontlit/page-builder/primitives";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { LearnerCardImage } from "@/components/themed-page-builder";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
 type PublicProduct = {
@@ -83,7 +83,7 @@ export function PublicProductsCatalog() {
             return (
               <Link
                 key={product.id}
-                href={`/product/${encodeURIComponent(product.slug || product.id)}`}
+                href={`/p/${encodeURIComponent(product.slug || product.id)}`}
               >
                 <PageCard
                   theme={theme}
@@ -91,7 +91,7 @@ export function PublicProductsCatalog() {
                   className="h-full overflow-hidden transition-transform hover:-translate-y-1"
                 >
                   {image ? (
-                    <PageCardImage
+                    <LearnerCardImage
                       theme={theme}
                       src={image.thumbnailUrl ?? image.canonicalUrl}
                       alt={image.altText || product.title}

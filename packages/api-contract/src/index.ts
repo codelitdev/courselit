@@ -1,6 +1,8 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
+export * from "./team-permissions.js";
+
 const c = initContract();
 
 export const platformErrorSchema = z.object({
@@ -261,14 +263,16 @@ export const communityCheckoutSchema = z.object({
   currency: z.string(),
   amountMinor: z.number().int().nonnegative(),
   checkoutUrl: z.string().nullable(),
-  checkoutData: z.object({
-    provider: z.enum(["stripe", "lemonsqueezy", "razorpay"]),
-    publicKey: z.string().optional(),
-    orderId: z.string().optional(),
-    subscriptionId: z.string().optional(),
-    customerEmail: z.string().optional(),
-    customerName: z.string().optional(),
-  }).nullable(),
+  checkoutData: z
+    .object({
+      provider: z.enum(["stripe", "lemonsqueezy", "razorpay"]),
+      publicKey: z.string().optional(),
+      orderId: z.string().optional(),
+      subscriptionId: z.string().optional(),
+      customerEmail: z.string().optional(),
+      customerName: z.string().optional(),
+    })
+    .nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -288,14 +292,16 @@ export const storefrontCheckoutSchema = z.object({
   currency: z.string(),
   amountMinor: z.number().int().nonnegative(),
   checkoutUrl: z.string().nullable(),
-  checkoutData: z.object({
-    provider: z.enum(["stripe", "lemonsqueezy", "razorpay"]),
-    publicKey: z.string().optional(),
-    orderId: z.string().optional(),
-    subscriptionId: z.string().optional(),
-    customerEmail: z.string().optional(),
-    customerName: z.string().optional(),
-  }).nullable(),
+  checkoutData: z
+    .object({
+      provider: z.enum(["stripe", "lemonsqueezy", "razorpay"]),
+      publicKey: z.string().optional(),
+      orderId: z.string().optional(),
+      subscriptionId: z.string().optional(),
+      customerEmail: z.string().optional(),
+      customerName: z.string().optional(),
+    })
+    .nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -350,8 +356,9 @@ export const schoolSchema = z.object({
   status: z.enum(["active", "read_only", "maintenance", "migrating", "deleted"]),
   locale: z.string(),
   currency: z.string(),
+  permissions: z.array(z.string()).optional(),
   selected: z.boolean().optional(),
-  frontlit: z
+  website: z
     .object({
       status: z.enum(["pending", "provisioning", "ready", "action_required"]),
       teamId: z.string().nullable(),
@@ -382,28 +389,36 @@ export const schoolPaymentSettingsSchema = z.object({
     webhookSecretConfigured: z.boolean(),
   }),
 });
-export const updateSchoolPaymentSettingsBodySchema = z.object({
-  provider: z.enum(["stripe", "lemonsqueezy", "razorpay"]).nullable().optional(),
-  stripe: z.object({
-    publishableKey: z.string().optional(),
-    secretKey: z.string().optional(),
-    webhookSecret: z.string().optional(),
-  }).optional(),
-  razorpay: z.object({
-    keyId: z.string().optional(),
-    keySecret: z.string().optional(),
-    webhookSecret: z.string().optional(),
-  }).optional(),
-  lemonsqueezy: z.object({
-    apiKey: z.string().optional(),
-    storeId: z.string().optional(),
-    oneTimeVariantId: z.string().optional(),
-    monthlyVariantId: z.string().optional(),
-    yearlyVariantId: z.string().optional(),
-    webhookSecret: z.string().optional(),
-  }).optional(),
-}).strict();
-export const frontlitContentSummarySchema = z.object({
+export const updateSchoolPaymentSettingsBodySchema = z
+  .object({
+    provider: z.enum(["stripe", "lemonsqueezy", "razorpay"]).nullable().optional(),
+    stripe: z
+      .object({
+        publishableKey: z.string().optional(),
+        secretKey: z.string().optional(),
+        webhookSecret: z.string().optional(),
+      })
+      .optional(),
+    razorpay: z
+      .object({
+        keyId: z.string().optional(),
+        keySecret: z.string().optional(),
+        webhookSecret: z.string().optional(),
+      })
+      .optional(),
+    lemonsqueezy: z
+      .object({
+        apiKey: z.string().optional(),
+        storeId: z.string().optional(),
+        oneTimeVariantId: z.string().optional(),
+        monthlyVariantId: z.string().optional(),
+        yearlyVariantId: z.string().optional(),
+        webhookSecret: z.string().optional(),
+      })
+      .optional(),
+  })
+  .strict();
+export const websiteContentSummarySchema = z.object({
   id: z.string(),
   name: z.string(),
   kind: z.enum(["page", "blog"]),
@@ -421,7 +436,7 @@ export const salesPageSchema = z.object({
   status: z.enum(["pending", "provisioning", "ready", "failed"]),
   lastError: z.string().nullable(),
 });
-export const frontlitWidgetSchema = z.object({
+export const websiteWidgetSchema = z.object({
   widgetId: z.string(),
   name: z.string(),
   deletable: z.boolean(),
@@ -429,15 +444,15 @@ export const frontlitWidgetSchema = z.object({
   shared: z.boolean(),
   settings: z.record(z.string(), z.unknown()).optional(),
 });
-export const frontlitPageSchema = frontlitContentSummarySchema.extend({
+export const websitePageSchema = websiteContentSummarySchema.extend({
   deletable: z.boolean(),
   publishedAt: z.string().nullable().optional(),
-  layout: z.array(frontlitWidgetSchema),
+  layout: z.array(websiteWidgetSchema),
   title: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   socialImage: z.record(z.string(), z.unknown()).nullable().optional(),
   robotsAllowed: z.boolean().nullable().optional(),
-  draftLayout: z.array(frontlitWidgetSchema),
+  draftLayout: z.array(websiteWidgetSchema),
   draftTitle: z.string().nullable().optional(),
   draftDescription: z.string().nullable().optional(),
   draftSocialImage: z.record(z.string(), z.unknown()).nullable().optional(),
@@ -445,32 +460,40 @@ export const frontlitPageSchema = frontlitContentSummarySchema.extend({
   createdAt: z.string().nullable().optional(),
   updatedAt: z.string().nullable().optional(),
 });
-export const frontlitThemeSchema = z.object({
+export const websiteThemeSchema = z.object({
   themeId: z.string(),
   name: z.string(),
   style: z.record(z.string(), z.unknown()),
   createdAt: z.string().nullable(),
   updatedAt: z.string().nullable(),
 });
-export const frontlitSettingsSchema = z.object({
+export const websiteBrandingSchema = z.object({
+  title: z.string().nullable(),
+  subtitle: z.string().nullable(),
+  logo: z.record(z.string(), z.unknown()).nullable(),
   themeId: z.string().nullable(),
 });
-export const updateSchoolFrontLitSettingsBodySchema = z
-  .object({ themeId: z.string().nullable() })
+export const updateSchoolWebsiteBrandingBodySchema = z
+  .object({
+    title: z.string().max(200).nullable().optional(),
+    subtitle: z.string().max(500).nullable().optional(),
+    logo: z.record(z.string(), z.unknown()).nullable().optional(),
+    themeId: z.string().nullable().optional(),
+  })
   .strict();
-export const createSchoolFrontLitThemeBodySchema = z
+export const createSchoolWebsiteThemeBodySchema = z
   .object({
     name: z.string().min(1),
     style: z.record(z.string(), z.unknown()),
   })
   .strict();
-export const updateSchoolFrontLitThemeBodySchema = z
+export const updateSchoolWebsiteThemeBodySchema = z
   .object({
     name: z.string().min(1).optional(),
     style: z.record(z.string(), z.unknown()).optional(),
   })
   .strict();
-export const frontlitBlogSchema = frontlitContentSummarySchema.extend({
+export const websiteBlogSchema = websiteContentSummarySchema.extend({
   publishedAt: z.string().nullable().optional(),
   title: z.string().nullable().optional(),
   content: z.record(z.string(), z.unknown()).nullable().optional(),
@@ -487,7 +510,7 @@ export const frontlitBlogSchema = frontlitContentSummarySchema.extend({
 });
 
 /** Published site data exposed by CourseLit for learner/public rendering.
- * Learners never resolve or call FrontLit directly; the CourseLit API owns
+ * Learners never resolve the website provider directly; the CourseLit API owns
  * that integration and returns only public fields here. */
 export const publicSiteSettingsSchema = z.object({
   title: z.string().nullable(),
@@ -517,7 +540,7 @@ export const publicSitePageSchema = z.object({
   pageId: z.string(),
   name: z.string(),
   slug: z.string(),
-  layout: z.array(frontlitWidgetSchema),
+  layout: z.array(websiteWidgetSchema),
   title: z.string().nullable(),
   description: z.string().nullable(),
   socialImage: z.record(z.string(), z.unknown()).nullable(),
@@ -536,18 +559,18 @@ export const publicSiteBlogSchema = z.object({
   publishedAt: z.string().nullable(),
   updatedAt: z.string().nullable(),
 });
-export const updateSchoolFrontLitPageBodySchema = z
+export const updateSchoolWebsitePageBodySchema = z
   .object({
     name: z.string().trim().min(1).max(200).optional(),
     slug: z.string().trim().min(1).max(200).optional(),
-    layout: z.array(frontlitWidgetSchema).optional(),
+    layout: z.array(websiteWidgetSchema).optional(),
     title: z.string().optional(),
     description: z.string().optional(),
     socialImage: z.record(z.string(), z.unknown()).nullable().optional(),
     robotsAllowed: z.boolean().optional(),
   })
   .strict();
-export const updateSchoolFrontLitBlogBodySchema = z
+export const updateSchoolWebsiteBlogBodySchema = z
   .object({
     slug: z.string().trim().min(1).max(200).optional(),
     title: z.string().optional(),
@@ -557,10 +580,10 @@ export const updateSchoolFrontLitBlogBodySchema = z
     meta: z.record(z.string(), z.unknown()).optional(),
   })
   .strict();
-export const createSchoolFrontLitPageBodySchema = z
+export const createSchoolWebsitePageBodySchema = z
   .object({ name: z.string().trim().min(1).max(200) })
   .strict();
-export const createSchoolFrontLitBlogBodySchema = z
+export const createSchoolWebsiteBlogBodySchema = z
   .object({ title: z.string().trim().min(1).max(200) })
   .strict();
 export const updateSchoolBodySchema = z
@@ -700,6 +723,35 @@ export const invitationSchema = z.object({
   ok: z.literal(true),
   id: z.string(),
   token: z.string().optional(),
+});
+export const schoolTeamMemberSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  image: z.string().nullable(),
+  isOwner: z.boolean(),
+  permissions: z.array(z.string()),
+  createdAt: z.string(),
+});
+export const schoolTeamInvitationSchema = z.object({
+  invitationId: z.string(),
+  email: z.string(),
+  permissions: z.array(z.string()),
+  expiresAt: z.string(),
+  createdAt: z.string(),
+});
+export const schoolTeamViewerSchema = schoolTeamMemberSchema;
+export const teamInvitationSecretBodySchema = z.object({
+  invitationId: z.string().min(1),
+  token: z.string().min(1),
+});
+export const teamInvitationPreviewSchema = z.object({
+  invitationId: z.string(),
+  schoolName: z.string(),
+  inviterName: z.string().nullable(),
+  expiresAt: z.string(),
+  permissions: z.array(z.string()),
+  email: z.string(),
 });
 
 export const lessonSchema = z.object({
@@ -1266,18 +1318,12 @@ export const updateLearnerBodySchema = z.object({
   status: z.enum(["active", "deactivated"]),
 });
 
-export const enrollmentSchema = z.object({
+export const learnerMembershipSchema = z.object({
   id: z.string(),
   schoolId: z.string(),
-  productId: z.string(),
-  source: z.enum([
-    "free_signup",
-    "admin_grant",
-    "storefront_purchase",
-    "included_product",
-    "import",
-    "integration",
-  ]),
+  entityType: z.enum(["product", "community"]),
+  entityId: z.string(),
+  paymentPlanId: z.string().nullable(),
   status: z.enum([
     "active",
     "payment_failed",
@@ -1286,11 +1332,17 @@ export const enrollmentSchema = z.object({
     "rejected",
     "paused",
   ]),
+  role: z.enum(["comment", "post", "moderate"]).nullable(),
+  subscriptionId: z.string().nullable(),
+  subscriptionMethod: z.string().nullable(),
+  joiningReason: z.string(),
+  rejectionReason: z.string().nullable(),
+  isIncludedInPlan: z.boolean(),
 });
 
 export const progressSchema = z.object({
   lessonId: z.string(),
-  enrollmentId: z.string(),
+  membershipId: z.string(),
   startedAt: z.string(),
   completedAt: z.string(),
   courseCompleted: z.boolean(),
@@ -1298,7 +1350,7 @@ export const progressSchema = z.object({
 });
 export const lessonProgressSchema = z.object({
   lessonId: z.string(),
-  enrollmentId: z.string(),
+  membershipId: z.string(),
   startedAt: z.string(),
   completedAt: z.string().nullable(),
 });
@@ -1349,22 +1401,8 @@ export const learnerAuthBodySchema = z.object({
   identityLinkToken: z.string().min(1).max(200).optional(),
   schoolId: z.string().min(1).optional(),
 });
-export const learnerOtpRequestBodySchema = z.object({
-  email: z.string().email(),
-  schoolId: z.string().min(1).optional(),
-});
-export const learnerOtpVerifyBodySchema = z.object({
-  email: z.string().email(),
-  otp: z.string().regex(/^\d{6}$/),
-  name: z.string().min(1).max(200).optional(),
-  identityLinkToken: z.string().min(1).max(200).optional(),
-  schoolId: z.string().min(1).optional(),
-});
 export const learnerIdentityLinkSchema = z.object({
   token: z.string().min(1),
-  expiresAt: z.string().datetime(),
-});
-export const learnerOtpRequestResponseSchema = z.object({
   expiresAt: z.string().datetime(),
 });
 export const createLearnerDownloadLinkBodySchema = z.object({}).default({});
@@ -3071,16 +3109,16 @@ export const contract = c.router({
       404: platformErrorSchema,
     },
   },
-  grantEnrollment: {
+  grantLearnerMembership: {
     method: "POST",
-    path: "/v1/enrollments",
+    path: "/v1/memberships",
     body: z.object({
       productId: z.string().min(1),
       email: z.string().email(),
       name: z.string().min(1).max(200).default("Learner"),
     }),
     responses: {
-      201: enrollmentSchema,
+      201: learnerMembershipSchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
@@ -3099,27 +3137,6 @@ export const contract = c.router({
       401: platformErrorSchema,
       403: platformErrorSchema,
       409: platformErrorSchema,
-    },
-  },
-  learnerRequestOtp: {
-    method: "POST",
-    path: "/v1/learner/auth/request-otp",
-    body: learnerOtpRequestBodySchema,
-    responses: {
-      202: learnerOtpRequestResponseSchema,
-      400: platformErrorSchema,
-      403: platformErrorSchema,
-    },
-  },
-  learnerVerifyOtp: {
-    method: "POST",
-    path: "/v1/learner/auth/verify-otp",
-    body: learnerOtpVerifyBodySchema,
-    responses: {
-      200: learnerSchema,
-      400: platformErrorSchema,
-      401: platformErrorSchema,
-      403: platformErrorSchema,
     },
   },
   learnerSignIn: {
@@ -3151,12 +3168,12 @@ export const contract = c.router({
       403: platformErrorSchema,
     },
   },
-  learnerEnroll: {
+  createLearnerMembership: {
     method: "POST",
-    path: "/v1/learner/enrollments",
+    path: "/v1/learner/memberships",
     body: z.object({ productId: z.string().min(1) }),
     responses: {
-      201: enrollmentSchema,
+      201: learnerMembershipSchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
@@ -3229,36 +3246,38 @@ export const contract = c.router({
       404: platformErrorSchema,
     },
   },
-  learnerStartLesson: {
-    method: "POST",
-    path: "/v1/learner/lessons/:lessonId/start",
-    pathParams: z.object({ lessonId: z.string() }),
-    body: z.object({}).default({}),
-    responses: {
-      200: lessonProgressSchema,
-      400: platformErrorSchema,
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-  },
   stripeWebhook: {
     method: "POST",
     path: "/v1/storefront/webhooks/stripe",
     body: z.unknown(),
-    responses: { 200: paymentWebhookResponseSchema, 400: platformErrorSchema, 401: platformErrorSchema, 409: platformErrorSchema },
+    responses: {
+      200: paymentWebhookResponseSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      409: platformErrorSchema,
+    },
   },
   lemonSqueezyWebhook: {
     method: "POST",
     path: "/v1/storefront/webhooks/lemonsqueezy",
     body: z.unknown(),
-    responses: { 200: paymentWebhookResponseSchema, 400: platformErrorSchema, 401: platformErrorSchema, 409: platformErrorSchema },
+    responses: {
+      200: paymentWebhookResponseSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      409: platformErrorSchema,
+    },
   },
   razorpayWebhook: {
     method: "POST",
     path: "/v1/storefront/webhooks/razorpay",
     body: z.unknown(),
-    responses: { 200: paymentWebhookResponseSchema, 400: platformErrorSchema, 401: platformErrorSchema, 409: platformErrorSchema },
+    responses: {
+      200: paymentWebhookResponseSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      409: platformErrorSchema,
+    },
   },
   listLearnerProgress: {
     method: "GET",
@@ -3353,6 +3372,44 @@ export const contract = c.router({
       403: platformErrorSchema,
     },
   },
+  listSchoolTeam: {
+    method: "GET",
+    path: "/v1/school/team",
+    responses: {
+      200: z.object({
+        members: z.array(schoolTeamMemberSchema),
+        invitations: z.array(schoolTeamInvitationSchema),
+        viewer: schoolTeamViewerSchema,
+      }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  removeSchoolTeamMember: {
+    method: "DELETE",
+    path: "/v1/school/team/members/:userId",
+    pathParams: z.object({ userId: z.string().min(1) }),
+    responses: {
+      204: z.undefined(),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
+  updateSchoolTeamMember: {
+    method: "PATCH",
+    path: "/v1/school/team/members/:userId",
+    pathParams: z.object({ userId: z.string().min(1) }),
+    body: z.object({ permissions: z.array(z.string()) }),
+    responses: {
+      200: schoolTeamMemberSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
   getSchoolPaymentSettings: {
     method: "GET",
     path: "/v1/school/payment-settings",
@@ -3397,23 +3454,24 @@ export const contract = c.router({
       404: platformErrorSchema,
     },
   },
-  listSchoolFrontLitPages: {
+  // Website / Pages
+  listSchoolWebsitePages: {
     method: "GET",
-    path: "/v1/school/frontlit/pages",
+    path: "/v1/school/website/pages",
     responses: {
-      200: z.object({ items: z.array(frontlitContentSummarySchema) }),
+      200: z.object({ items: z.array(websiteContentSummarySchema) }),
       401: platformErrorSchema,
       403: platformErrorSchema,
       409: platformErrorSchema,
       500: platformErrorSchema,
     },
   },
-  createSchoolFrontLitPage: {
+  createSchoolWebsitePage: {
     method: "POST",
-    path: "/v1/school/frontlit/pages",
-    body: createSchoolFrontLitPageBodySchema,
+    path: "/v1/school/website/pages",
+    body: createSchoolWebsitePageBodySchema,
     responses: {
-      201: frontlitContentSummarySchema,
+      201: websiteContentSummarySchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
@@ -3421,12 +3479,12 @@ export const contract = c.router({
       500: platformErrorSchema,
     },
   },
-  getSchoolFrontLitPage: {
+  getSchoolWebsitePage: {
     method: "GET",
-    path: "/v1/school/frontlit/pages/:pageId",
+    path: "/v1/school/website/pages/:pageId",
     pathParams: z.object({ pageId: z.string().min(1) }),
     responses: {
-      200: frontlitPageSchema,
+      200: websitePageSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,
@@ -3434,13 +3492,13 @@ export const contract = c.router({
       500: platformErrorSchema,
     },
   },
-  updateSchoolFrontLitPage: {
+  updateSchoolWebsitePage: {
     method: "PATCH",
-    path: "/v1/school/frontlit/pages/:pageId",
+    path: "/v1/school/website/pages/:pageId",
     pathParams: z.object({ pageId: z.string().min(1) }),
-    body: updateSchoolFrontLitPageBodySchema,
+    body: updateSchoolWebsitePageBodySchema,
     responses: {
-      200: frontlitPageSchema,
+      200: websitePageSchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
@@ -3449,23 +3507,24 @@ export const contract = c.router({
       500: platformErrorSchema,
     },
   },
-  getSchoolFrontLitSettings: {
+  // Website / Branding
+  getSchoolWebsiteBranding: {
     method: "GET",
-    path: "/v1/school/frontlit/settings",
+    path: "/v1/school/website/branding",
     responses: {
-      200: frontlitSettingsSchema,
+      200: websiteBrandingSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
       409: platformErrorSchema,
       500: platformErrorSchema,
     },
   },
-  updateSchoolFrontLitSettings: {
+  updateSchoolWebsiteBranding: {
     method: "PATCH",
-    path: "/v1/school/frontlit/settings",
-    body: updateSchoolFrontLitSettingsBodySchema,
+    path: "/v1/school/website/branding",
+    body: updateSchoolWebsiteBrandingBodySchema,
     responses: {
-      200: frontlitSettingsSchema,
+      200: websiteBrandingSchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
@@ -3473,23 +3532,24 @@ export const contract = c.router({
       500: platformErrorSchema,
     },
   },
-  listSchoolFrontLitThemes: {
+  // Website / Branding themes
+  listSchoolWebsiteBrandingThemes: {
     method: "GET",
-    path: "/v1/school/frontlit/themes",
+    path: "/v1/school/website/branding/themes",
     responses: {
-      200: z.object({ items: z.array(frontlitThemeSchema) }),
+      200: z.object({ items: z.array(websiteThemeSchema) }),
       401: platformErrorSchema,
       403: platformErrorSchema,
       409: platformErrorSchema,
       500: platformErrorSchema,
     },
   },
-  createSchoolFrontLitTheme: {
+  createSchoolWebsiteBrandingTheme: {
     method: "POST",
-    path: "/v1/school/frontlit/themes",
-    body: createSchoolFrontLitThemeBodySchema,
+    path: "/v1/school/website/branding/themes",
+    body: createSchoolWebsiteThemeBodySchema,
     responses: {
-      201: frontlitThemeSchema,
+      201: websiteThemeSchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
@@ -3497,13 +3557,13 @@ export const contract = c.router({
       500: platformErrorSchema,
     },
   },
-  updateSchoolFrontLitTheme: {
+  updateSchoolWebsiteBrandingTheme: {
     method: "PATCH",
-    path: "/v1/school/frontlit/themes/:themeId",
+    path: "/v1/school/website/branding/themes/:themeId",
     pathParams: z.object({ themeId: z.string().min(1) }),
-    body: updateSchoolFrontLitThemeBodySchema,
+    body: updateSchoolWebsiteThemeBodySchema,
     responses: {
-      200: frontlitThemeSchema,
+      200: websiteThemeSchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
@@ -3512,13 +3572,14 @@ export const contract = c.router({
       500: platformErrorSchema,
     },
   },
-  publishSchoolFrontLitPage: {
+  // Website / Pages actions
+  publishSchoolWebsitePage: {
     method: "POST",
-    path: "/v1/school/frontlit/pages/:pageId/publish",
+    path: "/v1/school/website/pages/:pageId/publish",
     pathParams: z.object({ pageId: z.string().min(1) }),
     body: c.noBody(),
     responses: {
-      200: frontlitContentSummarySchema,
+      200: websiteContentSummarySchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,
@@ -3526,13 +3587,13 @@ export const contract = c.router({
       500: platformErrorSchema,
     },
   },
-  discardSchoolFrontLitPage: {
+  discardSchoolWebsitePage: {
     method: "POST",
-    path: "/v1/school/frontlit/pages/:pageId/discard-draft",
+    path: "/v1/school/website/pages/:pageId/discard-draft",
     pathParams: z.object({ pageId: z.string().min(1) }),
     body: c.noBody(),
     responses: {
-      200: frontlitPageSchema,
+      200: websitePageSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,
@@ -3540,13 +3601,14 @@ export const contract = c.router({
       500: platformErrorSchema,
     },
   },
-  publishSchoolFrontLitBlog: {
+  // Website / Blogs
+  publishSchoolWebsiteBlog: {
     method: "POST",
-    path: "/v1/school/frontlit/blogs/:blogId/publish",
+    path: "/v1/school/website/blogs/:blogId/publish",
     pathParams: z.object({ blogId: z.string().min(1) }),
     body: c.noBody(),
     responses: {
-      200: frontlitContentSummarySchema,
+      200: websiteContentSummarySchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,
@@ -3554,23 +3616,23 @@ export const contract = c.router({
       500: platformErrorSchema,
     },
   },
-  listSchoolFrontLitBlogs: {
+  listSchoolWebsiteBlogs: {
     method: "GET",
-    path: "/v1/school/frontlit/blogs",
+    path: "/v1/school/website/blogs",
     responses: {
-      200: z.object({ items: z.array(frontlitContentSummarySchema) }),
+      200: z.object({ items: z.array(websiteContentSummarySchema) }),
       401: platformErrorSchema,
       403: platformErrorSchema,
       409: platformErrorSchema,
       500: platformErrorSchema,
     },
   },
-  createSchoolFrontLitBlog: {
+  createSchoolWebsiteBlog: {
     method: "POST",
-    path: "/v1/school/frontlit/blogs",
-    body: createSchoolFrontLitBlogBodySchema,
+    path: "/v1/school/website/blogs",
+    body: createSchoolWebsiteBlogBodySchema,
     responses: {
-      201: frontlitContentSummarySchema,
+      201: websiteContentSummarySchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
@@ -3578,12 +3640,12 @@ export const contract = c.router({
       500: platformErrorSchema,
     },
   },
-  getSchoolFrontLitBlog: {
+  getSchoolWebsiteBlog: {
     method: "GET",
-    path: "/v1/school/frontlit/blogs/:blogId",
+    path: "/v1/school/website/blogs/:blogId",
     pathParams: z.object({ blogId: z.string().min(1) }),
     responses: {
-      200: frontlitBlogSchema,
+      200: websiteBlogSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,
@@ -3591,13 +3653,13 @@ export const contract = c.router({
       500: platformErrorSchema,
     },
   },
-  updateSchoolFrontLitBlog: {
+  updateSchoolWebsiteBlog: {
     method: "PATCH",
-    path: "/v1/school/frontlit/blogs/:blogId",
+    path: "/v1/school/website/blogs/:blogId",
     pathParams: z.object({ blogId: z.string().min(1) }),
-    body: updateSchoolFrontLitBlogBodySchema,
+    body: updateSchoolWebsiteBlogBodySchema,
     responses: {
-      200: frontlitBlogSchema,
+      200: websiteBlogSchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
@@ -3606,13 +3668,13 @@ export const contract = c.router({
       500: platformErrorSchema,
     },
   },
-  discardSchoolFrontLitBlog: {
+  discardSchoolWebsiteBlog: {
     method: "POST",
-    path: "/v1/school/frontlit/blogs/:blogId/discard-draft",
+    path: "/v1/school/website/blogs/:blogId/discard-draft",
     pathParams: z.object({ blogId: z.string().min(1) }),
     body: c.noBody(),
     responses: {
-      200: frontlitBlogSchema,
+      200: websiteBlogSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,
@@ -3741,7 +3803,6 @@ export const contract = c.router({
     path: "/v1/invitations",
     body: z.object({
       email: z.string().email(),
-      role: z.string().min(1),
       permissions: z.array(z.string()).default([]),
     }),
     responses: {
@@ -3749,6 +3810,42 @@ export const contract = c.router({
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
+    },
+  },
+  previewTeamInvitation: {
+    method: "POST",
+    path: "/v1/team-invitations/preview",
+    body: teamInvitationSecretBodySchema,
+    responses: {
+      200: teamInvitationPreviewSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  acceptTeamInvitation: {
+    method: "POST",
+    path: "/v1/team-invitations/accept",
+    body: teamInvitationSecretBodySchema,
+    responses: {
+      200: z.object({ ok: z.literal(true), schoolId: z.string() }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  rejectTeamInvitation: {
+    method: "POST",
+    path: "/v1/team-invitations/reject",
+    body: teamInvitationSecretBodySchema,
+    responses: {
+      204: z.undefined(),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
     },
   },
   acceptInvitation: {

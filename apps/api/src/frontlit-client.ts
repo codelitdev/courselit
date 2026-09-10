@@ -90,7 +90,10 @@ type FrontLitThemeResponse = {
   updatedAt: string | null;
 };
 
-type FrontLitSettingsResponse = {
+export type FrontLitSettingsResponse = {
+  title: string | null;
+  subtitle: string | null;
+  logo: Record<string, unknown> | null;
   themeId: string | null;
 };
 
@@ -438,7 +441,12 @@ export async function getFrontLitSettings(
 }
 
 export async function updateFrontLitSettings(
-  patch: { themeId: string | null },
+  patch: Partial<{
+    title: string | null;
+    subtitle: string | null;
+    logo: Record<string, unknown> | null;
+    themeId: string | null;
+  }>,
   teamApiKey: string,
   options: { config?: FrontLitConfig; fetcher?: FetchLike } = {},
 ): Promise<FrontLitSettingsResponse> {

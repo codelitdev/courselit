@@ -140,13 +140,14 @@ export async function getProductAnalytics(
       ),
     );
   const customerRows = await db
-    .select({ date: schema.enrollments.createdAt })
-    .from(schema.enrollments)
+    .select({ date: schema.learnerMemberships.createdAt })
+    .from(schema.learnerMemberships)
     .where(
       and(
-        eq(schema.enrollments.schoolId, ctx.tenantId),
-        eq(schema.enrollments.productId, product.id),
-        gte(schema.enrollments.createdAt, previousStart),
+        eq(schema.learnerMemberships.schoolId, ctx.tenantId),
+        eq(schema.learnerMemberships.entityType, "product"),
+        eq(schema.learnerMemberships.entityId, product.publicId),
+        gte(schema.learnerMemberships.createdAt, previousStart),
       ),
     );
 
@@ -156,15 +157,19 @@ export async function getProductAnalytics(
     .where(
       and(eq(schema.lessons.schoolId, ctx.tenantId), eq(schema.lessons.productId, product.id)),
     );
-  const enrollmentRows = await db
-    .select({ id: schema.enrollments.id })
-    .from(schema.enrollments)
+  const membershipRows = await db
+    .select({ id: schema.learnerMemberships.id })
+    .from(schema.learnerMemberships)
     .where(
-      and(eq(schema.enrollments.schoolId, ctx.tenantId), eq(schema.enrollments.productId, product.id)),
+      and(
+        eq(schema.learnerMemberships.schoolId, ctx.tenantId),
+        eq(schema.learnerMemberships.entityType, "product"),
+        eq(schema.learnerMemberships.entityId, product.publicId),
+      ),
     );
   const progressRows = await db
     .select({
-      enrollmentId: schema.lessonProgress.enrollmentId,
+      membershipId: schema.lessonProgress.membershipId,
       lessonId: schema.lessonProgress.lessonId,
       completedAt: schema.lessonProgress.completedAt,
     })
@@ -193,19 +198,19 @@ export async function getProductAnalytics(
   const completionEvents: Event[] = [];
   if (product.kind === "course" && lessonRows.length > 0) {
     const lessonIds = new Set(lessonRows.map((lesson) => lesson.id));
-    const byEnrollment = new Map<string, { lessons: Set<string>; latest: Date | null }>();
+    const byMembership = new Map<string, { lessons: Set<string>; latest: Date | null }>();
     for (const row of progressRows) {
       if (!row.completedAt) continue;
-      const entry = byEnrollment.get(row.enrollmentId) ?? {
+      const entry = byMembership.get(row.membershipId) ?? {
         lessons: new Set<string>(),
         latest: null,
       };
       entry.lessons.add(row.lessonId);
       if (!entry.latest || row.completedAt > entry.latest) entry.latest = row.completedAt;
-      byEnrollment.set(row.enrollmentId, entry);
+      byMembership.set(row.membershipId, entry);
     }
-    for (const enrollment of enrollmentRows) {
-      const entry = byEnrollment.get(enrollment.id);
+    for (const membership of membershipRows) {
+      const entry = byMembership.get(membership.id);
       if (entry && entry.latest && [...lessonIds].every((id) => entry.lessons.has(id))) {
         completionEvents.push({ date: entry.latest, value: 1 });
       }

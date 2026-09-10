@@ -11,32 +11,48 @@ describe("CourseLit FrontLit sales pages", () => {
     );
   });
 
-  it("creates a locked banner between shared site chrome", () => {
+  it("creates product banner and curriculum blocks between shared site chrome", () => {
     const layout = salesPageLayout({
       resourceType: "product",
       resourceId: "prd_1",
       name: "Course",
       description: "Learn something useful.",
+      productKind: "course",
     });
 
     expect(layout.map((widget) => widget.name)).toEqual([
       "header",
-      "banner",
-      "data-slot",
+      "courselit-product-banner",
+      "courselit-product-curriculum",
       "footer",
     ]);
     expect(layout[1]).toMatchObject({
-      name: "banner",
+      name: "courselit-product-banner",
       deletable: false,
       settings: {
-        buttonCaption: "Buy now",
-        buttonAction: "/product/prd_1#checkout",
+        textPosition: "left",
       },
     });
     expect(layout[2]).toMatchObject({
-      name: "data-slot",
+      name: "courselit-product-curriculum",
       deletable: false,
-      settings: { slot: "courselit.sales-page-content" },
+      settings: { title: "Curriculum" },
     });
+  });
+
+  it("does not add a curriculum block to digital downloads", () => {
+    const layout = salesPageLayout({
+      resourceType: "product",
+      resourceId: "prd_1",
+      name: "Download",
+      description: "A download.",
+      productKind: "download",
+    });
+
+    expect(layout.map((widget) => widget.name)).toEqual([
+      "header",
+      "courselit-product-banner",
+      "footer",
+    ]);
   });
 });

@@ -101,6 +101,35 @@ export interface PublicProductSummary {
   kind: "course" | "download";
 }
 
+export interface PublicProductDetail extends PublicProductSummary {
+  enrolled: boolean;
+  leadMagnet: boolean;
+  featuredMedia: {
+    canonicalUrl: string;
+    thumbnailUrl: string | null;
+    altText: string;
+  } | null;
+  sections: Array<{ id: string; title: string }>;
+  lessons: Array<{
+    id: string;
+    title: string;
+    sectionId: string | null;
+    requiresEnrollment: boolean;
+  }>;
+}
+
+export interface PublicProductPlan {
+  id: string;
+  name: string;
+  description: string;
+  type: "free" | "onetime" | "emi" | "subscription";
+  currency: string;
+  amountMinor: number;
+  billingInterval: "month" | "year" | null;
+  installmentCount: number | null;
+  isDefault: boolean;
+}
+
 export interface PublicCommunitySummary {
   id: string;
   slug: string;
@@ -117,6 +146,29 @@ export function getPublicProduct(
     `/v1/products/${encodeURIComponent(idOrSlug)}`,
     host,
   );
+}
+
+export function getPublicProductDetail(
+  host: string,
+  idOrSlug: string,
+): Promise<PublicProductDetail | null> {
+  if (!idOrSlug) return Promise.resolve(null);
+  return getFromApi<PublicProductDetail>(
+    `/v1/products/${encodeURIComponent(idOrSlug)}`,
+    host,
+  );
+}
+
+export async function getPublicProductPlans(
+  host: string,
+  idOrSlug: string,
+): Promise<PublicProductPlan[]> {
+  if (!idOrSlug) return [];
+  const result = await getFromApi<{ items?: PublicProductPlan[] }>(
+    `/v1/storefront/products/${encodeURIComponent(idOrSlug)}/plans`,
+    host,
+  );
+  return result?.items ?? [];
 }
 
 export function getPublicCommunity(

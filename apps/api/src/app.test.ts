@@ -532,18 +532,20 @@ describe.serial("reference API adapters", () => {
     expect(document.paths["/v1/school/code-injection"]).toBeDefined();
     expect(document.paths["/v1/school/hosts"]).toBeDefined();
     expect(document.paths["/v1/school/hosts/{hostname}"]).toBeDefined();
-    expect(document.paths["/v1/school/frontlit/pages/{pageId}"]).toBeDefined();
-    expect(document.paths["/v1/school/frontlit/pages/{pageId}/publish"]).toBeDefined();
+    expect(document.paths["/v1/school/website/pages/{pageId}"]).toBeDefined();
+    expect(document.paths["/v1/school/website/pages/{pageId}/publish"]).toBeDefined();
     expect(
-      document.paths["/v1/school/frontlit/pages/{pageId}/discard-draft"],
+      document.paths["/v1/school/website/pages/{pageId}/discard-draft"],
     ).toBeDefined();
-    expect(document.paths["/v1/school/frontlit/settings"]).toBeDefined();
-    expect(document.paths["/v1/school/frontlit/themes"]).toBeDefined();
-    expect(document.paths["/v1/school/frontlit/themes/{themeId}"]).toBeDefined();
-    expect(document.paths["/v1/school/frontlit/blogs/{blogId}"]).toBeDefined();
-    expect(document.paths["/v1/school/frontlit/blogs/{blogId}/publish"]).toBeDefined();
+    expect(document.paths["/v1/school/website/branding"]).toBeDefined();
+    expect(document.paths["/v1/school/website/branding/themes"]).toBeDefined();
     expect(
-      document.paths["/v1/school/frontlit/blogs/{blogId}/discard-draft"],
+      document.paths["/v1/school/website/branding/themes/{themeId}"],
+    ).toBeDefined();
+    expect(document.paths["/v1/school/website/blogs/{blogId}"]).toBeDefined();
+    expect(document.paths["/v1/school/website/blogs/{blogId}/publish"]).toBeDefined();
+    expect(
+      document.paths["/v1/school/website/blogs/{blogId}/discard-draft"],
     ).toBeDefined();
     expect(document.paths["/v1/products/{productId}/sections"]).toBeDefined();
     expect(document.paths["/v1/products/{productId}/sections/reorder"]).toBeDefined();
@@ -563,6 +565,19 @@ describe.serial("reference API adapters", () => {
       runtime,
       freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z")),
     );
+    const freePlan = await fetch(
+      `http://127.0.0.1:${address.port}/v1/products/${world.noteA.publicId}/plans`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          cookie: world.owner.sessionCookie,
+          "x-school-id": world.schoolA.publicId,
+        },
+        body: JSON.stringify({ name: "Free access", kind: "free", amountMinor: 0 }),
+      },
+    );
+    expect(freePlan.status).toBe(201);
     const patched = await fetch(
       `http://127.0.0.1:${address.port}/v1/products/${world.noteA.publicId}`,
       {
@@ -630,40 +645,10 @@ describe.serial("reference API adapters", () => {
       createdAt: now,
       updatedAt: now,
     });
-    await runtime.db.insert(schema.frontlitSalesPages).values([
-      {
-        id: "55555555-5555-4555-8555-555555555555",
-        schoolId: world.schoolA.id,
-        resourceType: "community",
-        resourceId: "66666666-6666-4666-8666-666666666666",
-        resourcePublicId: "com_legacy",
-        slug: "community-1-sales-page",
-        remotePageId: "page_legacy_sales",
-        status: "ready",
-        attempts: 1,
-        lastAttemptAt: now,
-        nextAttemptAt: now,
-        lastError: null,
-        createdAt: now,
-        updatedAt: now,
-      },
-      {
-        id: "77777777-7777-4777-8777-777777777777",
-        schoolId: world.schoolA.id,
-        resourceType: "product",
-        resourceId: "88888888-8888-4888-8888-888888888888",
-        resourcePublicId: "prd_reserved",
-        slug: "courselit-sales-product-prd-reserved",
-        remotePageId: null,
-        status: "pending",
-        attempts: 0,
-        lastAttemptAt: null,
-        nextAttemptAt: now,
-        lastError: null,
-        createdAt: now,
-        updatedAt: now,
-      },
-    ]);
+    await runtime.db
+      .update(schema.products)
+      .set({ salesPageId: "page_legacy_sales" })
+      .where(eq(schema.products.publicId, world.noteA.publicId));
 
     const previousFetch = globalThis.fetch;
     globalThis.fetch = (async (input) => {
@@ -704,7 +689,7 @@ describe.serial("reference API adapters", () => {
     try {
       const response = await dispatch(runtime, {
         method: "GET",
-        path: "/v1/school/frontlit/pages",
+        path: "/v1/school/website/pages",
         headers: {
           cookie: world.owner.sessionCookie,
           "x-school-id": world.schoolA.publicId,

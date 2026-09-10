@@ -5,25 +5,25 @@ import { PGlite } from "@electric-sql/pglite";
 import { toNodeHandler } from "better-auth/node";
 import { drizzle as drizzlePostgres } from "drizzle-orm/node-postgres";
 import { drizzle } from "drizzle-orm/pglite";
+import { migrate } from "drizzle-orm/pglite/migrator";
 import { Pool } from "pg";
 import type { Logger } from "pino";
-import { createAdminAuth } from "./auth/better-auth.js";
-import { sendVerificationOTP } from "./auth/options.js";
+import { createAdminAuth, createLearnerAuth } from "./auth/better-auth.js";
 import {
   type BillingBundle,
   composeBilling,
   rebindFakeProviderMemory,
 } from "./billing.js";
-import { applyMigrations } from "./db/migrate.js";
+import { migrationsFolder } from "./db/migrate.js";
 import * as billingSchema from "./db/schema/billing.generated.js";
 import * as schema from "./db/schema/index.js";
 import type { DispatchDeps } from "./deps.js";
 import { type MediaLitClient, MemoryMediaLitClient } from "./media.js";
 import { createMediaLitClientFromEnv } from "./media-lit-client.js";
+import type { PaymentProvider } from "./payments.js";
 import { TELEMETRY_PROPERTY_ALLOWLIST } from "./permissions.js";
 import type { AppDb } from "./types.js";
 import { createUnsplashClientFromEnv, type UnsplashClient } from "./unsplash.js";
-import type { PaymentProvider } from "./payments.js";
 
 export type Runtime = DispatchDeps & {
   client: PGlite | Pool;
@@ -41,18 +41,19 @@ export async function createPgliteRuntime(options: {
   logger?: Logger;
   observability?: Observability;
   authSecret?: string;
+  learnerAuthSecret?: string;
+  learnerWebOrigin?: string;
   billingMode?: "cloud" | "oss";
   customDomainVerifier?: (hostname: string, token: string) => Promise<boolean>;
   mediaLit?: MediaLitClient;
   unsplash?: UnsplashClient;
-  learnerOtpDelivery?: import("./deps.js").LearnerOtpDelivery;
   paymentProvider?: PaymentProvider;
 }): Promise<Runtime> {
   const client = new PGlite();
-  await applyMigrations((sql) => client.exec(sql));
   const db = drizzle(client, {
     schema: { ...schema, ...billingSchema },
   }) as AppDb;
+  await migrate(db, { migrationsFolder });
   const clock = options.clock ?? systemClock;
   const billingMode = options.billingMode ?? "cloud";
   let handler: ReturnType<typeof toNodeHandler> | undefined;
@@ -87,7 +88,22 @@ export async function createPgliteRuntime(options: {
     webOrigin,
     secret: options.authSecret ?? "test-secret-that-is-at-least-thirty-two-characters",
   });
-  handler = toNodeHandler(auth.auth);
+  const learnerAuth = createLearnerAuth({
+    db,
+    publicApiUrl,
+    webOrigin: options.learnerWebOrigin ?? webOrigin,
+    secret:
+      options.learnerAuthSecret ??
+      "test-learner-secret-that-is-at-least-thirty-two-characters",
+  });
+  const adminHandler = toNodeHandler(auth.auth);
+  const learnerHandler = toNodeHandler(learnerAuth.auth);
+  handler = async (req, res) => {
+    const requestPath = req.url?.split("?", 1)[0] ?? "";
+    await (requestPath.startsWith(learnerAuth.authBasePath)
+      ? learnerHandler(req, res)
+      : adminHandler(req, res));
+  };
   const importTables = await client.query(
     "select tablename from pg_tables where schemaname = 'public'",
   );
@@ -118,13 +134,9 @@ export async function createPgliteRuntime(options: {
     logger: options.logger ?? observability.logger,
     observability,
     customDomainVerifier: options.customDomainVerifier,
-    learnerOtpDelivery:
-      options.learnerOtpDelivery ??
-      (async ({ email, otp }) => {
-        await sendVerificationOTP({ email, otp, type: "sign-in" });
-      }),
     paymentProvider: options.paymentProvider,
     auth,
+    learnerAuth,
     authServer,
     async close() {
       await new Promise<void>((resolve) => {
@@ -150,9 +162,10 @@ export async function createPostgresRuntime(options: {
   logger?: Logger;
   observability?: Observability;
   authSecret: string;
+  learnerAuthSecret: string;
+  learnerWebOrigin?: string;
   mediaLit?: MediaLitClient;
   unsplash?: UnsplashClient;
-  learnerOtpDelivery?: import("./deps.js").LearnerOtpDelivery;
   paymentProvider?: PaymentProvider;
 }): Promise<Runtime> {
   const client = new Pool({ connectionString: options.databaseUrl });
@@ -174,6 +187,12 @@ export async function createPostgresRuntime(options: {
     publicApiUrl: options.publicApiUrl,
     webOrigin: options.webOrigin,
     secret: options.authSecret,
+  });
+  const learnerAuth = createLearnerAuth({
+    db,
+    publicApiUrl: options.publicApiUrl,
+    webOrigin: options.learnerWebOrigin ?? options.webOrigin,
+    secret: options.learnerAuthSecret,
   });
   const observability =
     options.observability ??
@@ -197,13 +216,9 @@ export async function createPostgresRuntime(options: {
     databaseReady: true,
     logger: options.logger ?? observability.logger,
     observability,
-    learnerOtpDelivery:
-      options.learnerOtpDelivery ??
-      (async ({ email, otp }) => {
-        await sendVerificationOTP({ email, otp, type: "sign-in" });
-      }),
     paymentProvider: options.paymentProvider,
     auth,
+    learnerAuth,
     authServer: null,
     async close() {
       await client.end();

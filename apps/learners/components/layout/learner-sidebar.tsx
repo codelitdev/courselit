@@ -33,6 +33,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { clearSchoolId } from "@/lib/school";
+import { LearnerText2 } from "@/components/themed-page-builder";
 
 const NAV: NavItem[] = [
   { href: "/dashboard/feed", label: "Feed", icon: MessageCircleHeart },
@@ -64,10 +65,15 @@ export function LearnerSidebar({
                 <CourseLitLogo className="size-8" />
               </div>
               <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">CourseLit</span>
-                <span className="truncate text-xs text-muted-foreground">
+                <LearnerText2 component="span" className="truncate font-medium">
+                  CourseLit
+                </LearnerText2>
+                <LearnerText2
+                  component="span"
+                  className="truncate text-xs text-muted-foreground"
+                >
                   Learner Portal
-                </span>
+                </LearnerText2>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -91,10 +97,15 @@ export function LearnerSidebar({
                     {initialsFor(user.email)}
                   </div>
                   <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-medium">{user.email}</span>
-                    <span className="truncate text-xs text-muted-foreground">
+                    <LearnerText2 component="span" className="truncate font-medium">
+                      {user.email}
+                    </LearnerText2>
+                    <LearnerText2
+                      component="span"
+                      className="truncate text-xs text-muted-foreground"
+                    >
                       Learner
-                    </span>
+                    </LearnerText2>
                   </div>
                   <ChevronsUpDown className="ml-auto size-4" />
                 </SidebarMenuButton>
@@ -111,10 +122,15 @@ export function LearnerSidebar({
                       {initialsFor(user.email)}
                     </div>
                     <div className="grid min-w-0 flex-1 leading-tight">
-                      <span className="truncate font-medium">{user.email}</span>
-                      <span className="truncate text-xs text-muted-foreground">
+                      <LearnerText2 component="span" className="truncate font-medium">
+                        {user.email}
+                      </LearnerText2>
+                      <LearnerText2
+                        component="span"
+                        className="truncate text-xs text-muted-foreground"
+                      >
                         Learner
-                      </span>
+                      </LearnerText2>
                     </div>
                   </div>
                 </DropdownMenuLabel>
@@ -122,13 +138,13 @@ export function LearnerSidebar({
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/account">
                     <UserRound />
-                    Account
+                    <LearnerText2 component="span">Account</LearnerText2>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/notifications">
                     <Bell />
-                    Notifications
+                    <LearnerText2 component="span">Notifications</LearnerText2>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -146,7 +162,7 @@ export function LearnerSidebar({
                   }}
                 >
                   <LogOut />
-                  Log out
+                  <LearnerText2 component="span">Log out</LearnerText2>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

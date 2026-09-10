@@ -40,6 +40,12 @@ describe.serial("lesson drip access", () => {
     expect(product.status).toBe(201);
     const productId = (product.body as { id: string }).id;
     await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/plans`,
+      headers: adminHeaders,
+      body: { name: "Free access", kind: "free", amountMinor: 0 },
+    });
+    await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/products/${productId}`,
       headers: adminHeaders,
@@ -50,9 +56,8 @@ describe.serial("lesson drip access", () => {
       path: `/v1/products/${productId}`,
       headers: adminHeaders,
     });
-    const sectionId = (
-      productDetail.body as { sections: Array<{ id: string }> }
-    ).sections[0]!.id;
+    const sectionId = (productDetail.body as { sections: Array<{ id: string }> })
+      .sections[0]!.id;
     const scheduledSection = await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/sections/${sectionId}`,
@@ -119,7 +124,7 @@ describe.serial("lesson drip access", () => {
 
     const enrollment = await dispatch(runtime, {
       method: "POST",
-      path: "/v1/learner/enrollments",
+      path: "/v1/learner/memberships",
       headers: learnerHeaders,
       body: { productId },
     });
@@ -142,46 +147,13 @@ describe.serial("lesson drip access", () => {
       availableAt: null,
     });
 
-    const started = await dispatch(runtime, {
-      method: "POST",
-      path: `/v1/learner/lessons/${immediateLessonId}/start`,
-      headers: learnerHeaders,
-      body: {},
-    });
-    expect(started.status).toBe(200);
-    expect(started.body).toMatchObject({
-      lessonId: immediateLessonId,
-      completedAt: null,
-      startedAt: "2026-03-01T00:00:00.000Z",
-    });
-    const repeatedStart = await dispatch(runtime, {
-      method: "POST",
-      path: `/v1/learner/lessons/${immediateLessonId}/start`,
-      headers: learnerHeaders,
-      body: {},
-    });
-    expect(repeatedStart.status).toBe(200);
-    expect(repeatedStart.body).toMatchObject({
-      lessonId: immediateLessonId,
-      startedAt: "2026-03-01T00:00:00.000Z",
-      completedAt: null,
-    });
     const progress = await dispatch(runtime, {
       method: "GET",
       path: `/v1/learner/progress?productId=${encodeURIComponent(productId)}`,
       headers: learnerHeaders,
     });
     expect(progress.status).toBe(200);
-    expect(progress.body).toMatchObject({
-      items: [
-        {
-          lessonId: immediateLessonId,
-          enrollmentId: expect.any(String),
-          startedAt: "2026-03-01T00:00:00.000Z",
-          completedAt: null,
-        },
-      ],
-    });
+    expect(progress.body).toEqual({ items: [] });
 
     const completion = await dispatch(runtime, {
       method: "POST",

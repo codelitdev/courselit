@@ -28,10 +28,17 @@ import {
   resolveEditorTheme,
   themeSnapshot,
 } from "@/lib/frontlit-theme";
+import "./course-sales-blocks";
+import type { CourseLitProductPreview } from "./course-sales-blocks";
 
 export function FrontLitPageEditor({ pageId }: { pageId: string }) {
   const searchParams = useSearchParams();
-  const redirectTo = resolveEditorRedirect(searchParams.get("redirectTo"), "/pages");
+  const redirectTo = resolveEditorRedirect(
+    searchParams.get("redirectTo"),
+    "/website/pages",
+  );
+  const salesResourceType = searchParams.get("resourceType");
+  const salesResourceId = searchParams.get("resourceId");
   const [page, setPage] = useState<FrontLitPage | null>(null);
   const [slug, setSlug] = useState("");
   const [loading, setLoading] = useState(true);
@@ -42,6 +49,8 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
   const [customThemes, setCustomThemes] = useState<BuilderTheme[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [salesProductPreview, setSalesProductPreview] =
+    useState<CourseLitProductPreview | null>(null);
   const themeAliasesRef = useRef(new Map<string, string>());
   const knownThemeIdsRef = useRef(new Set<string>());
   const themeSnapshotsRef = useRef(new Map<string, string>());
@@ -58,10 +67,10 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
     setLoading(true);
     void Promise.all([
       frontLitRequest<FrontLitPage>(
-        `/api/v1/school/frontlit/pages/${encodeURIComponent(pageId)}`,
+        `/api/v1/school/website/pages/${encodeURIComponent(pageId)}`,
       ),
-      frontLitRequest<{ items: FrontLitTheme[] }>("/api/v1/school/frontlit/themes"),
-      frontLitRequest<FrontLitSettings>("/api/v1/school/frontlit/settings"),
+      frontLitRequest<{ items: FrontLitTheme[] }>("/api/v1/school/website/branding/themes"),
+      frontLitRequest<FrontLitSettings>("/api/v1/school/website/branding"),
     ])
       .then(([loaded, savedThemes, settings]) => {
         if (!active) return;
@@ -104,6 +113,33 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
     };
   }, [pageId]);
 
+  useEffect(() => {
+    if (salesResourceType !== "product" || !salesResourceId) {
+      setSalesProductPreview(null);
+      return;
+    }
+    let active = true;
+    void Promise.all([
+      frontLitRequest<CourseLitProductPreview>(
+        `/api/v1/products/${encodeURIComponent(salesResourceId)}`,
+      ),
+      frontLitRequest<{ items: CourseLitProductPreview["plans"] }>(
+        `/api/v1/storefront/products/${encodeURIComponent(salesResourceId)}/plans`,
+      ),
+    ])
+      .then(([product, planResponse]) => {
+        if (!active) return;
+        const preview = { ...product, plans: planResponse.items ?? [] };
+        setSalesProductPreview(preview);
+      })
+      .catch(() => {
+        if (active) setSalesProductPreview(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [salesResourceId, salesResourceType]);
+
   async function handleChange(state: PageBuilderState) {
     setSaving(true);
     setError(null);
@@ -113,13 +149,13 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
         knownIds: knownThemeIdsRef.current,
         snapshots: themeSnapshotsRef.current,
         create: (input) =>
-          frontLitRequest<FrontLitTheme>("/api/v1/school/frontlit/themes", {
+          frontLitRequest<FrontLitTheme>("/api/v1/school/website/branding/themes", {
             method: "POST",
             body: JSON.stringify(input),
           }),
         update: (themeId, patch) =>
           frontLitRequest<FrontLitTheme>(
-            `/api/v1/school/frontlit/themes/${encodeURIComponent(themeId)}`,
+            `/api/v1/school/website/branding/themes/${encodeURIComponent(themeId)}`,
             { method: "PATCH", body: JSON.stringify(patch) },
           ),
       });
@@ -130,7 +166,7 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
         appliedThemeIdRef.current !== selectedThemeId ||
         appliedThemeSnapshotRef.current !== selectedThemeSnapshot
       ) {
-        await frontLitRequest<FrontLitSettings>("/api/v1/school/frontlit/settings", {
+        await frontLitRequest<FrontLitSettings>("/api/v1/school/website/branding", {
           method: "PATCH",
           body: JSON.stringify({ themeId: selectedThemeId }),
         });
@@ -159,7 +195,7 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
         pagePatch.robotsAllowed = state.seo.robotsAllowed;
       }
       const updated = await frontLitRequest<FrontLitPage>(
-        `/api/v1/school/frontlit/pages/${encodeURIComponent(pageId)}`,
+        `/api/v1/school/website/pages/${encodeURIComponent(pageId)}`,
         {
           method: "PATCH",
           body: JSON.stringify(pagePatch),
@@ -181,7 +217,7 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
     setError(null);
     try {
       const updated = await frontLitRequest<FrontLitPage>(
-        `/api/v1/school/frontlit/pages/${encodeURIComponent(pageId)}`,
+        `/api/v1/school/website/pages/${encodeURIComponent(pageId)}`,
         { method: "PATCH", body: JSON.stringify({ slug: nextSlug }) },
       );
       setPage(updated);
@@ -201,7 +237,7 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
     setNotice(null);
     try {
       const published = await frontLitRequest<FrontLitPage>(
-        `/api/v1/school/frontlit/pages/${encodeURIComponent(pageId)}/publish`,
+        `/api/v1/school/website/pages/${encodeURIComponent(pageId)}/publish`,
         { method: "POST" },
       );
       setPage(published);
@@ -219,7 +255,7 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
     setNotice(null);
     try {
       const reverted = await frontLitRequest<FrontLitPage>(
-        `/api/v1/school/frontlit/pages/${encodeURIComponent(pageId)}/discard-draft`,
+        `/api/v1/school/website/pages/${encodeURIComponent(pageId)}/discard-draft`,
         { method: "POST" },
       );
       setPage(reverted);
@@ -317,7 +353,17 @@ export function FrontLitPageEditor({ pageId }: { pageId: string }) {
               initialLayout={page.draftLayout as WidgetInstance[]}
               initialTheme={initialTheme}
               themes={{ custom: customThemes ?? [] }}
-              pageData={{ pageType: "custom" }}
+              pageData={{
+                pageType: "custom",
+                ...(salesProductPreview
+                  ? {
+                      courseLitSalesData: {
+                        resourceType: "product",
+                        product: salesProductPreview,
+                      },
+                    }
+                  : {}),
+              }}
               initialSeo={{
                 title: page.draftTitle ?? undefined,
                 description: page.draftDescription ?? undefined,

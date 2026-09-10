@@ -23,16 +23,25 @@ and converges when FrontLit is available again. The default local settings match
 
 ## Local database
 
-The API owns PostgreSQL migrations. From the repository root, apply them with:
+The API owns PostgreSQL migrations. From the repository root, apply the Drizzle
+migration with:
 
 ```sh
-DATABASE_URL=postgres://... bun run migrate
+DATABASE_URL=postgres://... bun run --cwd apps/api db:migrate
+```
+
+The schema source is `src/db/schema`, the generated SQL migration is
+`apps/api/drizzle/0000_baseline.sql`, and Drizzle metadata lives under
+`apps/api/drizzle/meta`. Generate schema changes with:
+
+```sh
+bun run --cwd apps/api db:generate
 ```
 
 Production startup keeps the migration runner separate so a deployment can fail
 before serving traffic when the schema cannot be upgraded. The API development
-command runs the same idempotent migration runner before starting the watcher,
-so local schema changes are applied automatically.
+command runs the same migration runner before starting the watcher, so local
+schema changes are applied automatically.
 
 ## Legacy domain import
 

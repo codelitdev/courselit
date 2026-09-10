@@ -32,9 +32,11 @@ import {
   useState,
 } from "react";
 import { AuthGate } from "@/components/auth-gate";
+import { EmptyState } from "@/components/empty-state";
 import { FeaturedCard } from "@/components/featured-card";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { PageHeader } from "@/components/layout/page-header";
+import { PermissionMessage } from "@/components/permission-message";
 import { Resources } from "@/components/resources";
 import { PaymentPlanList } from "@/components/products/payment-plan-list";
 import type { SalesPage, StorefrontPlan } from "@/components/products/product-types";
@@ -59,6 +61,7 @@ import {
 } from "@/components/ui/codelit/select";
 import { Textarea } from "@/components/ui/codelit/textarea";
 import { learnerUrl } from "@/lib/learner-url";
+import { hasSchoolPermission } from "@/lib/school-permissions";
 import {
   CommunityFeaturedImage,
   type CommunityFeaturedMedia,
@@ -69,6 +72,7 @@ type School = {
   name: string;
   subdomain?: string;
   currency: string;
+  permissions?: readonly string[];
   selected?: boolean;
 };
 type CommunityActor = {
@@ -402,6 +406,8 @@ export function CommunityAdmin({
 
   useSetBreadcrumb(breadcrumbItems);
 
+  const canWriteCommunities = hasSchoolPermission(school, "communities:write");
+
   const request = useCallback(
     async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
       if (!school) throw new Error("Select a school before managing communities.");
@@ -428,7 +434,7 @@ export function CommunityAdmin({
   async function shareCommunity() {
     if (!community || !school) return;
     const url = learnerUrl(
-      `/communities/${encodeURIComponent(community.id)}`,
+      `/p/${encodeURIComponent(community.slug)}`,
       school.subdomain,
     );
     if (!url) {
@@ -785,20 +791,25 @@ export function CommunityAdmin({
         ) : view === "list" ? (
           <CommunityList
             communities={communities}
+            canCreate={canWriteCommunities}
             hasMore={Boolean(communitiesNextCursor)}
             loadingMore={loadingMoreCommunities}
             onLoadMore={() => void loadMoreCommunities()}
           />
         ) : view === "new" ? (
           school ? (
-            <NewCommunity
-              request={request}
-              school={school}
-              saving={saving}
-              setSaving={setSaving}
-              setError={setError}
-              router={router}
-            />
+            canWriteCommunities ? (
+              <NewCommunity
+                request={request}
+                school={school}
+                saving={saving}
+                setSaving={setSaving}
+                setError={setError}
+                router={router}
+              />
+            ) : (
+              <PermissionMessage permission="communities:write" />
+            )
           ) : null
         ) : community && school ? (
           view === "detail" ? (
@@ -807,11 +818,14 @@ export function CommunityAdmin({
               posts={posts}
               onShare={() => void shareCommunity()}
               onTogglePin={togglePostPin}
+              canManage={canWriteCommunities}
+              canEditWebsite={hasSchoolPermission(school, "school:admin")}
+              canModerate={hasSchoolPermission(school, "communities:moderate")}
               onLoadMore={loadMorePosts}
               loadingMore={loadingMorePosts}
               hasMore={Boolean(postsNextCursor)}
             />
-          ) : (
+          ) : canWriteCommunities ? (
             <CommunityManage
               community={community}
               school={school}
@@ -841,6 +855,8 @@ export function CommunityAdmin({
               setNotice={setNotice}
               router={router}
             />
+          ) : (
+            <PermissionMessage permission="communities:write" />
           )
         ) : null}
       </main>
@@ -853,6 +869,9 @@ function CommunityOverview({
   posts,
   onShare,
   onTogglePin,
+  canManage,
+  canEditWebsite,
+  canModerate,
   onLoadMore,
   loadingMore,
   hasMore,
@@ -861,6 +880,9 @@ function CommunityOverview({
   posts: Post[];
   onShare: () => void;
   onTogglePin: (post: Post) => void;
+  canManage: boolean;
+  canEditWebsite: boolean;
+  canModerate: boolean;
   onLoadMore: () => void;
   loadingMore: boolean;
   hasMore: boolean;
@@ -892,7 +914,7 @@ function CommunityOverview({
         </div>
         <div className="flex items-center gap-2">
           <StatusBadge enabled={community.enabled} />
-          {community.salesPage?.pageId ? (
+          {community.salesPage?.pageId && canEditWebsite ? (
             <Button asChild variant="outline">
               <Link
                 href={`/pages/${encodeURIComponent(community.salesPage.pageId)}/edit?redirectTo=${encodeURIComponent(`/community/${community.id}`)}`}
@@ -901,12 +923,14 @@ function CommunityOverview({
               </Link>
             </Button>
           ) : null}
-          <Button asChild>
-            <Link href={`/community/${community.id}/manage`}>
-              <Settings className="size-4" />
-              Manage community
-            </Link>
-          </Button>
+          {canManage ? (
+            <Button asChild>
+              <Link href={`/community/${community.id}/manage`}>
+                <Settings className="size-4" />
+                Manage community
+              </Link>
+            </Button>
+          ) : null}
         </div>
       </div>
       {community.featuredMedia ? (
@@ -954,34 +978,42 @@ function CommunityOverview({
           </p>
         </div>
       </section>
-      <section className="card stack">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="font-semibold">Admin controls</h2>
-            <p className="text-sm text-muted-foreground">
-              Configure access, memberships, payment plans, and moderation from the
-              management area.
-            </p>
+      {canManage || canModerate ? (
+        <section className="card stack">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="font-semibold">Admin controls</h2>
+              <p className="text-sm text-muted-foreground">
+                Configure access, memberships, payment plans, and moderation from the
+                management area.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {canManage ? (
+                <>
+                  <Button asChild variant="outline">
+                    <Link href={`/community/${community.id}/manage/memberships`}>
+                      <Users className="size-4" /> Members
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href={`/community/${community.id}/manage/plans`}>
+                      <CircleDashed className="size-4" /> Payment plans
+                    </Link>
+                  </Button>
+                </>
+              ) : null}
+              {canModerate ? (
+                <Button asChild variant="outline">
+                  <Link href={`/community/${community.id}/manage/reports`}>
+                    <Flag className="size-4" /> Moderation
+                  </Link>
+                </Button>
+              ) : null}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline">
-              <Link href={`/community/${community.id}/manage/memberships`}>
-                <Users className="size-4" /> Members
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href={`/community/${community.id}/manage/plans`}>
-                <CircleDashed className="size-4" /> Payment plans
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href={`/community/${community.id}/manage/reports`}>
-                <Flag className="size-4" /> Moderation
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
       <section className="space-y-4" aria-label="Recent community activity">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Recent activity</h2>
@@ -1006,15 +1038,17 @@ function CommunityOverview({
                   <span>·</span>
                   <span>{displayDate(post.createdAt)}</span>
                 </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={post.pinned ? "secondary" : "ghost"}
-                  onClick={() => onTogglePin(post)}
-                >
-                  <Pin className="size-3.5" />
-                  {post.pinned ? "Unpin" : "Pin"}
-                </Button>
+                {canModerate ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={post.pinned ? "secondary" : "ghost"}
+                    onClick={() => onTogglePin(post)}
+                  >
+                    <Pin className="size-3.5" />
+                    {post.pinned ? "Unpin" : "Pin"}
+                  </Button>
+                ) : null}
               </div>
               <h3 className="mt-2 font-semibold">{post.title}</h3>
               <div className="mt-2 text-sm text-muted-foreground">
@@ -1043,11 +1077,13 @@ function CommunityOverview({
 
 function CommunityList({
   communities,
+  canCreate,
   hasMore,
   loadingMore,
   onLoadMore,
 }: {
   communities: Community[];
+  canCreate: boolean;
   hasMore: boolean;
   loadingMore: boolean;
   onLoadMore: () => void;
@@ -1058,28 +1094,32 @@ function CommunityList({
         title="Communities"
         description="Create spaces where learners can ask questions, share progress, and connect."
         action={
-          <Button asChild>
-            <Link href="/community/new">
-              <Plus className="size-4" />
-              New community
-            </Link>
-          </Button>
+          canCreate ? (
+            <Button asChild>
+              <Link href="/community/new">
+                <Plus className="size-4" />
+                New community
+              </Link>
+            </Button>
+          ) : undefined
         }
       />
       {communities.length === 0 ? (
-        <div className="rounded-xl border border-dashed bg-card p-12 text-center">
-          <Users className="mx-auto size-10 text-muted-foreground" />
-          <h2 className="mt-4 text-base font-semibold">No communities found</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            You have not added any communities yet.
-          </p>
-          <Button asChild className="mt-5">
-            <Link href="/community/new">
-              <Plus className="mr-1.5 size-4" />
-              New community
-            </Link>
-          </Button>
-        </div>
+        <EmptyState
+          icon={Users}
+          title="No Communities Found"
+          description="You have not added any communities yet."
+          action={
+            canCreate ? (
+              <Button asChild>
+                <Link href="/community/new">
+                  <Plus className="size-4" />
+                  New community
+                </Link>
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <section
           className="grid gap-x-4 gap-y-3 md:grid-cols-2 lg:grid-cols-3"
@@ -1125,14 +1165,16 @@ function CommunityList({
           </Button>
         </div>
       ) : null}
-      <Resources
-        links={[
-          {
-            href: "https://docs.courselit.app/communities/introduction/",
-            text: "Create a community",
-          },
-        ]}
-      />
+      {canCreate ? (
+        <Resources
+          links={[
+            {
+              href: "https://docs.courselit.app/communities/introduction/",
+              text: "Create a community",
+            },
+          ]}
+        />
+      ) : null}
     </>
   );
 }

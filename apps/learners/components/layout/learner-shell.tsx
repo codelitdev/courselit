@@ -6,6 +6,7 @@ import {
   CourseViewerSidebar,
 } from "@/components/layout/course-viewer-sidebar";
 import { LearnerSidebar } from "@/components/layout/learner-sidebar";
+import { LearnerText2 } from "@/components/themed-page-builder";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 export function LearnerShell({
@@ -48,16 +49,16 @@ export function LearnerShell({
           {headerTitle ? (
             <>
               <div className="h-5 w-px bg-border" aria-hidden="true" />
-              <span className="text-sm font-medium">{headerTitle}</span>
+              <LearnerText2 component="span" className="font-medium">{headerTitle}</LearnerText2>
             </>
           ) : null}
           {course ? (
-            <a
+            <LearnerText2
+              component="span"
               className="ml-auto text-sm font-medium text-muted-foreground hover:text-foreground"
-              href="/dashboard/feed"
             >
-              Back to feed
-            </a>
+              <a href="/dashboard/feed">Back to feed</a>
+            </LearnerText2>
           ) : null}
         </header>
         <div className="flex-1 p-6 overflow-auto">{children}</div>

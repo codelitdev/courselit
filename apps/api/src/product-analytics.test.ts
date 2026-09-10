@@ -114,7 +114,7 @@ describe.serial("product analytics", () => {
     const learnerId = uuidv7(clock);
     const sectionId = uuidv7(clock);
     const lessonId = uuidv7(clock);
-    const enrollmentId = uuidv7(clock);
+    const membershipId = uuidv7(clock);
     const planId = uuidv7(clock);
     const checkoutId = uuidv7(clock);
 
@@ -154,20 +154,30 @@ describe.serial("product analytics", () => {
       createdAt: now,
       updatedAt: now,
     });
-    await runtime.db.insert(schema.enrollments).values({
-      id: enrollmentId,
-      publicId: createPublicId("enr", clock),
+    await runtime.db.insert(schema.learnerMemberships).values({
+      id: membershipId,
+      publicId: createPublicId("lrm", clock),
       schoolId: world.schoolA.id,
       learnerId,
-      productId: product.id,
-      source: "storefront_purchase",
+      entityType: "product",
+      entityId: world.noteA.publicId,
+      paymentPlanId: null,
       status: "active",
+      role: null,
+      subscriptionId: null,
+      subscriptionMethod: null,
+      joiningReason: "",
+      rejectionReason: null,
+      sessionId: null,
+      isIncludedInPlan: false,
+      parentMembershipId: null,
       createdAt: eventDate,
+      updatedAt: eventDate,
     });
     await runtime.db.insert(schema.lessonProgress).values({
       id: uuidv7(clock),
       schoolId: world.schoolA.id,
-      enrollmentId,
+      membershipId,
       lessonId,
       startedAt: eventDate,
       completedAt: eventDate,

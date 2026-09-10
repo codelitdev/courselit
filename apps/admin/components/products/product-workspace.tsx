@@ -43,6 +43,7 @@ import {
   useState,
 } from "react";
 import { AuthGate } from "@/components/auth-gate";
+import { PermissionMessage } from "@/components/permission-message";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/codelit/button";
@@ -72,6 +73,7 @@ import {
 } from "@/components/ui/codelit/select";
 import { Switch } from "@/components/ui/codelit/switch";
 import { learnerUrl } from "@/lib/learner-url";
+import { hasSchoolPermission } from "@/lib/school-permissions";
 import { cn } from "@/lib/utils";
 import { PaymentPlanList } from "./payment-plan-list";
 import {
@@ -238,19 +240,21 @@ export function ProductWorkspace({
       const body = (await response.json().catch(() => null)) as T & ApiError;
       if (!response.ok) {
         const message =
-          body?.details?.reason === "section_not_empty"
-            ? "This section has lessons. Delete them before proceeding."
-            : body?.details?.reason === "download_last_section"
-              ? "A digital download must keep at least one section."
-              : body?.details?.reason === "default_plan_cannot_be_archived"
-                ? "The default payment plan cannot be archived. Select another default first."
-                : body?.details?.reason === "duplicate_payment_plan"
-                  ? "A payment plan with this type and frequency already exists."
-                  : body?.details?.reason === "included_products_not_allowed"
-                    ? "Product payment plans cannot include other products."
-                    : body?.details?.reason === "product_financial_history"
-                      ? "This product has financial history and cannot be deleted."
-                      : (body?.message ?? "The request could not be completed.");
+          body?.details?.reason === "payment_plan_required"
+            ? "Add a payment plan before publishing this product."
+            : body?.details?.reason === "section_not_empty"
+              ? "This section has lessons. Delete them before proceeding."
+              : body?.details?.reason === "download_last_section"
+                ? "A digital download must keep at least one section."
+                : body?.details?.reason === "default_plan_cannot_be_archived"
+                  ? "The default payment plan cannot be archived. Select another default first."
+                  : body?.details?.reason === "duplicate_payment_plan"
+                    ? "A payment plan with this type and frequency already exists."
+                    : body?.details?.reason === "included_products_not_allowed"
+                      ? "Product payment plans cannot include other products."
+                      : body?.details?.reason === "product_financial_history"
+                        ? "This product has financial history and cannot be deleted."
+                        : (body?.message ?? "The request could not be completed.");
         throw new Error(message);
       }
       return body as T;
@@ -326,7 +330,8 @@ export function ProductWorkspace({
   }, [loadProduct]);
 
   useEffect(() => {
-    if (!school || view !== "manage") return;
+    if (!school || view !== "manage" || !hasSchoolPermission(school, "products:write"))
+      return;
     void request<{ items?: StorefrontPlan[] }>(
       `/api/v1/products/${encodeURIComponent(productId)}/plans`,
     )
@@ -634,6 +639,10 @@ export function ProductWorkspace({
 
   async function changePublishStatus(status: Product["status"]) {
     if (saving) return;
+    if (status === "published" && !hasActivePaymentPlan) {
+      setError("Add a payment plan before publishing this product.");
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -814,7 +823,7 @@ export function ProductWorkspace({
     setSaving(true);
     setError(null);
     try {
-      await request("/api/v1/enrollments", {
+      await request("/api/v1/memberships", {
         method: "POST",
         body: JSON.stringify({
           productId,
@@ -837,10 +846,7 @@ export function ProductWorkspace({
 
   async function shareProduct() {
     if (!product) return;
-    const url = learnerUrl(
-      `/product/${encodeURIComponent(product.id)}`,
-      school?.subdomain,
-    );
+    const url = learnerUrl(`/p/${encodeURIComponent(product.slug)}`, school?.subdomain);
     if (!url) {
       setError("Unable to build the public product URL.");
       return;
@@ -940,11 +946,31 @@ export function ProductWorkspace({
   if (!product || !school) return null;
 
   const TypeIcon = product.kind === "course" ? BookOpen : Download;
+  const canWriteProducts = hasSchoolPermission(school, "products:write");
+  const canInviteCustomers = hasSchoolPermission(school, "learners:write");
+  const canEditWebsite = hasSchoolPermission(school, "school:admin");
+  const hasActivePaymentPlan = plans.some((plan) => plan.status === "active");
+  const canEditSalesPage = Boolean(product.salesPage?.pageId && canEditWebsite);
+  const hasProductActions =
+    (product.kind === "course" && canWriteProducts) ||
+    canInviteCustomers ||
+    canEditSalesPage ||
+    canWriteProducts;
+
+  if (view !== "overview" && !canWriteProducts) {
+    return (
+      <AuthGate>
+        <main className="page-shell">
+          <PermissionMessage permission="products:write" />
+        </main>
+      </AuthGate>
+    );
+  }
 
   return (
     <AuthGate>
       <main className="page-shell">
-        {view === "overview" && product.status === "draft" ? (
+        {view === "overview" && product.status === "draft" && canWriteProducts ? (
           <div className="mb-5 rounded-md bg-destructive px-3 py-2 text-sm text-destructive-foreground">
             This product is unpublished.{" "}
             <Link href={`${productRoot}/manage#publish`} className="underline">
@@ -1003,46 +1029,56 @@ export function ProductWorkspace({
                   ))}
                 </SelectContent>
               </Select>
-              <Button asChild variant="outline">
-                <Link href={`${productRoot}/content`}>
-                  <Pencil className="size-4" /> Edit content
-                </Link>
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline">
-                    Actions <ChevronDown className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {product.kind === "course" ? (
-                    <>
-                      <DropdownMenuItem onSelect={() => void createPreview()}>
-                        <BookOpen className="size-4" /> Preview
+              {canWriteProducts ? (
+                <Button asChild variant="outline">
+                  <Link href={`${productRoot}/content`}>
+                    <Pencil className="size-4" /> Edit content
+                  </Link>
+                </Button>
+              ) : null}
+              {hasProductActions ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                      Actions <ChevronDown className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {product.kind === "course" && canWriteProducts ? (
+                      <>
+                        <DropdownMenuItem onSelect={() => void createPreview()}>
+                          <BookOpen className="size-4" /> Preview
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    ) : null}
+                    {canInviteCustomers ? (
+                      <>
+                        <DropdownMenuItem onSelect={() => setInviteDialogOpen(true)}>
+                          <UserPlus className="size-4" /> Invite a customer
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    ) : null}
+                    {canEditSalesPage ? (
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href={`/pages/${encodeURIComponent(product.salesPage?.pageId ?? "")}/edit?redirectTo=${encodeURIComponent(productRoot)}&resourceType=product&resourceId=${encodeURIComponent(product.id)}`}
+                        >
+                          <Globe className="size-4" /> Edit page
+                        </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                    </>
-                  ) : null}
-                  <DropdownMenuItem onSelect={() => setInviteDialogOpen(true)}>
-                    <UserPlus className="size-4" /> Invite a customer
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  {product.salesPage?.pageId ? (
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href={`/pages/${encodeURIComponent(product.salesPage.pageId)}/edit?redirectTo=${encodeURIComponent(productRoot)}`}
-                      >
-                        <Globe className="size-4" /> Edit page
-                      </Link>
-                    </DropdownMenuItem>
-                  ) : null}
-                  <DropdownMenuItem asChild>
-                    <Link href={`${productRoot}/manage`}>
-                      <Settings className="size-4" /> Manage
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    ) : null}
+                    {canWriteProducts ? (
+                      <DropdownMenuItem asChild>
+                        <Link href={`${productRoot}/manage`}>
+                          <Settings className="size-4" /> Manage
+                        </Link>
+                      </DropdownMenuItem>
+                    ) : null}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
             </div>
           </header>
         ) : (
@@ -1785,6 +1821,11 @@ export function ProductWorkspace({
                   Control whether learners can access this{" "}
                   {kindLabel(product.kind).toLowerCase()}.
                 </p>
+                {publishStatus !== "published" && !hasActivePaymentPlan ? (
+                  <p className="mt-2 text-sm text-destructive">
+                    Add a payment plan before publishing this product.
+                  </p>
+                ) : null}
               </div>
               <div className="space-y-5">
                 <div className="flex items-center justify-between gap-4">
@@ -1799,7 +1840,9 @@ export function ProductWorkspace({
                     onCheckedChange={(checked) =>
                       void changePublishStatus(checked === true ? "published" : "draft")
                     }
-                    disabled={saving}
+                    disabled={
+                      saving || (publishStatus !== "published" && !hasActivePaymentPlan)
+                    }
                   />
                 </div>
                 <div className="flex items-center justify-between gap-4">

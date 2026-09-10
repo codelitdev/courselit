@@ -143,11 +143,12 @@ describe.serial("legacy payment-plan migration", () => {
     const rows = await runtime.db
       .select()
       .from(schema.storefrontPlans)
-      .where(eq(schema.storefrontPlans.productId, (await runtime.db
-        .select({ id: schema.products.id })
-        .from(schema.products)
-        .where(eq(schema.products.publicId, course.courseId))
-        .limit(1))[0]!.id));
+      .where(
+        and(
+          eq(schema.storefrontPlans.entityType, "product"),
+          eq(schema.storefrontPlans.entityId, course.courseId),
+        ),
+      );
     expect(rows).toHaveLength(5);
     expect(rows.find((row) => row.publicId === "legacy-plan-monthly")).toMatchObject({
       kind: "subscription",

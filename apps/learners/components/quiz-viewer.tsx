@@ -1,7 +1,14 @@
 "use client";
 
-import { Button } from "@codelitdev/design-system";
 import { useState } from "react";
+import {
+  LearnerButton as Button,
+  LearnerCard,
+  LearnerCardContent,
+  LearnerInput,
+  LearnerLabel,
+  LearnerText2,
+} from "@/components/themed-page-builder";
 import { learnerHeaders } from "@/lib/school";
 
 type QuizOption = { text: string };
@@ -33,9 +40,7 @@ function readQuizContent(value: Record<string, unknown>): QuizContent | null {
     const options = record.options.flatMap((option) => {
       if (!option || typeof option !== "object" || Array.isArray(option)) return [];
       const optionRecord = option as Record<string, unknown>;
-      return typeof optionRecord.text === "string"
-        ? [{ text: optionRecord.text }]
-        : [];
+      return typeof optionRecord.text === "string" ? [{ text: optionRecord.text }] : [];
     });
     if (options.length === 0) return [];
     return [
@@ -59,14 +64,19 @@ export function QuizViewer({
   content: Record<string, unknown>;
 }) {
   const quiz = readQuizContent(content);
-  const [answers, setAnswers] = useState<number[][]>(() =>
-    quiz?.questions.map(() => []) ?? [],
+  const [answers, setAnswers] = useState<number[][]>(
+    () => quiz?.questions.map(() => []) ?? [],
   );
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  if (!quiz) return <p className="muted">This quiz is unavailable.</p>;
+  if (!quiz)
+    return (
+      <LearnerText2 className="text-muted-foreground">
+        This quiz is unavailable.
+      </LearnerText2>
+    );
 
   function selectOption(questionIndex: number, optionIndex: number, multiple: boolean) {
     setEvaluation(null);
@@ -111,45 +121,58 @@ export function QuizViewer({
   }
 
   return (
-    <div className="stack rounded-lg border p-4">
-      {quiz.questions.map((question, questionIndex) => {
-        const multiple = question.type === "multiple";
-        return (
-          <fieldset className="stack" key={`${questionIndex}-${question.text}`}>
-            <legend className="font-medium">
-              {questionIndex + 1}. {question.text}
-            </legend>
-            {question.options.map((option, optionIndex) => {
-              const inputId = `quiz-${lessonId}-${questionIndex}-${optionIndex}`;
-              const checked = answers[questionIndex]?.includes(optionIndex) ?? false;
-              return (
-                <label className="flex items-center gap-2" htmlFor={inputId} key={inputId}>
-                  <input
-                    checked={checked}
-                    id={inputId}
-                    name={`quiz-${lessonId}-${questionIndex}`}
-                    onChange={() => selectOption(questionIndex, optionIndex, multiple)}
-                    type={multiple ? "checkbox" : "radio"}
-                  />
-                  <span>{option.text}</span>
-                </label>
-              );
-            })}
-          </fieldset>
-        );
-      })}
-      {error ? <p role="alert">{error}</p> : null}
-      {evaluation ? (
-        <p role="status">
-          {evaluation.pass ? "Passed" : "Not passed"} · Score: {evaluation.score.toFixed(2)}%
-          {evaluation.requiresPassingGrade
-            ? ` · Passing grade: ${evaluation.passingGrade}%`
-            : ""}
-        </p>
-      ) : null}
-      <Button disabled={submitting} type="button" onClick={() => void submit()}>
-        {submitting ? "Evaluating…" : "Submit quiz"}
-      </Button>
-    </div>
+    <LearnerCard>
+      <LearnerCardContent className="grid gap-5">
+        {quiz.questions.map((question, questionIndex) => {
+          const multiple = question.type === "multiple";
+          return (
+            <fieldset className="grid gap-3" key={`${questionIndex}-${question.text}`}>
+              <legend className="font-medium">
+                {questionIndex + 1}. {question.text}
+              </legend>
+              {question.options.map((option, optionIndex) => {
+                const inputId = `quiz-${lessonId}-${questionIndex}-${optionIndex}`;
+                const checked = answers[questionIndex]?.includes(optionIndex) ?? false;
+                return (
+                  <LearnerLabel
+                    className="flex items-center gap-2"
+                    htmlFor={inputId}
+                    key={inputId}
+                  >
+                    <LearnerInput
+                      checked={checked}
+                      id={inputId}
+                      name={`quiz-${lessonId}-${questionIndex}`}
+                      onChange={() =>
+                        selectOption(questionIndex, optionIndex, multiple)
+                      }
+                      type={multiple ? "checkbox" : "radio"}
+                    />
+                    <LearnerText2 component="span">{option.text}</LearnerText2>
+                  </LearnerLabel>
+                );
+              })}
+            </fieldset>
+          );
+        })}
+        {error ? (
+          <LearnerText2 role="alert" className="text-destructive">
+            {error}
+          </LearnerText2>
+        ) : null}
+        {evaluation ? (
+          <LearnerText2 role="status">
+            {evaluation.pass ? "Passed" : "Not passed"} · Score:{" "}
+            {evaluation.score.toFixed(2)}%
+            {evaluation.requiresPassingGrade
+              ? ` · Passing grade: ${evaluation.passingGrade}%`
+              : ""}
+          </LearnerText2>
+        ) : null}
+        <Button disabled={submitting} type="button" onClick={() => void submit()}>
+          {submitting ? "Evaluating…" : "Submit quiz"}
+        </Button>
+      </LearnerCardContent>
+    </LearnerCard>
   );
 }

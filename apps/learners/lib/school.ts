@@ -24,9 +24,18 @@ export function clearSchoolId() {
   }
 }
 
+function shouldUseStoredSchoolId() {
+  if (typeof window === "undefined") return true;
+  const hostname = window.location.hostname.toLowerCase();
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+}
+
 export function learnerHeaders(extra?: HeadersInit): Headers {
   const headers = new Headers(extra);
   const schoolId = readSchoolId();
-  if (schoolId) headers.set("x-school-id", schoolId);
+  // On a school website, the host is authoritative. A school ID left in a
+  // previous session must not make a valid request look like a cross-tenant
+  // request. The stored ID remains useful for the generic localhost app.
+  if (schoolId && shouldUseStoredSchoolId()) headers.set("x-school-id", schoolId);
   return headers;
 }

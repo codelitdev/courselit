@@ -5,7 +5,9 @@ import { useEffect, useState } from "react";
 import { EmbedViewer } from "@/components/embed-viewer";
 import { QuizViewer } from "@/components/quiz-viewer";
 import { ScormViewer } from "@/components/scorm-viewer";
+import { LearnerText2 } from "@/components/themed-page-builder";
 import { learnerHeaders } from "@/lib/school";
+import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
 export type LearnerLesson = {
   id: string;
@@ -31,6 +33,7 @@ export function LessonContent({
   lessonId: string;
   type?: LearnerLesson["type"];
 }) {
+  const theme = useSchoolThemeStyle();
   if (type === "embed" && typeof content.value === "string") {
     return <EmbedViewer value={content.value} />;
   }
@@ -41,14 +44,19 @@ export function LessonContent({
     return (
       <TextRenderer
         json={content as unknown as TextEditorContent}
+        theme={theme}
         className="lesson-rich-text"
       />
     );
   }
   if (typeof content.value === "string") {
-    return <p className="lesson-body">{content.value}</p>;
+    return <LearnerText2 className="lesson-body">{content.value}</LearnerText2>;
   }
-  return <p className="muted">This lesson type is not available in this viewer yet.</p>;
+  return (
+    <LearnerText2 className="text-muted-foreground">
+      This lesson type is not available in this viewer yet.
+    </LearnerText2>
+  );
 }
 
 export function LessonMediaContent({
@@ -115,8 +123,18 @@ export function LessonMediaContent({
     };
   }, [lesson.id, lesson.mediaId, previewToken, productId]);
 
-  if (loading) return <p className="muted">Loading lesson media…</p>;
-  if (failed || !media) return <p className="muted">This media is unavailable.</p>;
+  if (loading)
+    return (
+      <LearnerText2 className="text-muted-foreground">
+        Loading lesson media…
+      </LearnerText2>
+    );
+  if (failed || !media)
+    return (
+      <LearnerText2 className="text-muted-foreground">
+        This media is unavailable.
+      </LearnerText2>
+    );
   if (lesson.type === "video") {
     return (
       // MediaLit currently supplies no caption-track asset in this contract.
@@ -155,7 +173,11 @@ export function LessonMediaContent({
   }
   if (lesson.type === "scorm") {
     if (previewToken) {
-      return <p className="muted">SCORM content is available after enrollment.</p>;
+      return (
+        <LearnerText2 className="text-muted-foreground">
+          SCORM content is available after enrollment.
+        </LearnerText2>
+      );
     }
     const launchUrl =
       lesson.content && typeof lesson.content.launchUrl === "string"
@@ -173,7 +195,9 @@ export function LessonMediaContent({
       rel="noreferrer"
       className="font-medium text-primary hover:underline"
     >
-      Open {media.fileName}
+      <LearnerText2 component="span" className="font-medium text-primary">
+        Open {media.fileName}
+      </LearnerText2>
     </a>
   );
 }

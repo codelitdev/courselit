@@ -20,6 +20,9 @@ export type FrontLitTheme = {
 };
 
 export type FrontLitSettings = {
+  title: string | null;
+  subtitle: string | null;
+  logo: Record<string, unknown> | null;
   themeId: string | null;
 };
 

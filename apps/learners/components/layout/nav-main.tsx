@@ -19,6 +19,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+import { LearnerText2 } from "@/components/themed-page-builder";
 import { isNavHrefActive, isNavItemActive } from "@/lib/nav-active";
 
 export interface NavItem {
@@ -58,7 +59,7 @@ function NavCollapsibleItem({ item }: { item: NavItem }) {
         <CollapsibleTrigger asChild>
           <SidebarMenuButton isActive={active} tooltip={item.label}>
             <item.icon />
-            <span>{item.label}</span>
+            <LearnerText2 component="span">{item.label}</LearnerText2>
             <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
@@ -71,7 +72,7 @@ function NavCollapsibleItem({ item }: { item: NavItem }) {
                   <SidebarMenuSubButton asChild isActive={itemActive}>
                     <Link href={child.href}>
                       <child.icon />
-                      <span>{child.label}</span>
+                      <LearnerText2 component="span">{child.label}</LearnerText2>
                     </Link>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
@@ -100,7 +101,7 @@ export function NavItems({ items }: { items: NavItem[] }) {
             <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
               <Link href={item.href}>
                 <item.icon />
-                <span>{item.label}</span>
+                <LearnerText2 component="span">{item.label}</LearnerText2>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -113,7 +114,11 @@ export function NavItems({ items }: { items: NavItem[] }) {
 export function NavMain({ label, items }: { label?: string; items: NavItem[] }) {
   return (
     <SidebarGroup>
-      {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
+      {label ? (
+        <SidebarGroupLabel>
+          <LearnerText2 component="span">{label}</LearnerText2>
+        </SidebarGroupLabel>
+      ) : null}
       <SidebarMenu>
         <NavItems items={items} />
       </SidebarMenu>

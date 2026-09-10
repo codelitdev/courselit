@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@codelitdev/design-system";
 // Lesson viewing is protected, except for explicit preview tokens.
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -18,6 +17,13 @@ import {
   LessonMediaContent,
 } from "@/components/lesson-viewer";
 import { learnerHeaders, writeSchoolId } from "@/lib/school";
+import {
+  LearnerButton as Button,
+  LearnerCard as PageCard,
+  LearnerCardContent as PageCardContent,
+  LearnerHeader1,
+  LearnerText2,
+} from "@/components/themed-page-builder";
 
 type Product = {
   id: string;
@@ -43,7 +49,6 @@ export default function LearnerLessonPage() {
   const [previewChecked, setPreviewChecked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [started, setStarted] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
   const [actionError, setActionError] = useState<string | null>(null);
@@ -111,12 +116,10 @@ export default function LearnerLessonPage() {
             const body = (await progressResponse.json()) as {
               items?: Array<{
                 lessonId: string;
-                startedAt: string;
                 completedAt: string | null;
               }>;
             };
             const progress = body.items?.find((item) => item.lessonId === lessonId);
-            setStarted(Boolean(progress?.startedAt));
             setCompleted(Boolean(progress?.completedAt));
             setCompletedLessonIds(
               new Set(
@@ -150,24 +153,6 @@ export default function LearnerLessonPage() {
       ? product?.lessons[lessonIndex + 1]
       : null;
 
-  async function startLesson() {
-    setActionError(null);
-    const response = await fetch(
-      `/api/v1/learner/lessons/${encodeURIComponent(lessonId)}/start`,
-      {
-        method: "POST",
-        credentials: "include",
-        headers: learnerHeaders({ "content-type": "application/json" }),
-        body: JSON.stringify({}),
-      },
-    );
-    if (!response.ok) {
-      setActionError("Unable to start the lesson.");
-      return;
-    }
-    setStarted(true);
-  }
-
   async function completeLesson() {
     setActionError(null);
     const response = await fetch(
@@ -193,17 +178,16 @@ export default function LearnerLessonPage() {
       return;
     }
     const body = (await response.json()) as { certificateId?: string | null };
-    setStarted(true);
     setCompleted(true);
     setCompletedLessonIds((current) => new Set(current).add(lessonId));
     setCertificateId(body.certificateId ?? null);
   }
 
-  if (loading) return <main className="p-6">Loading lesson…</main>;
+  if (loading) return <main className="p-6"><LearnerText2>Loading lesson…</LearnerText2></main>;
   if (error || !product || !lesson) {
     return (
-      <main className="page-shell">
-        <p role="alert">{error ?? "That lesson is not available."}</p>
+      <main className="grid gap-5">
+        <LearnerText2 role="alert" className="text-destructive">{error ?? "That lesson is not available."}</LearnerText2>
         <Link
           className="font-medium text-primary hover:underline"
           href={`/dashboard/courses/${productId}`}
@@ -225,8 +209,8 @@ export default function LearnerLessonPage() {
       previewToken={previewToken}
       completedLessonIds={completedLessonIds}
     >
-      <div className="page-shell">
-        <header className="app-header">
+      <div className="grid gap-7">
+        <header className="flex items-start justify-between gap-4">
           <div>
             <Link
               className="text-sm font-medium text-muted-foreground hover:text-foreground"
@@ -237,17 +221,18 @@ export default function LearnerLessonPage() {
             >
               ← {product.title}
             </Link>
-            <p className="eyebrow mt-4">Lesson</p>
-            <h1>{lesson.title}</h1>
+            <LearnerText2 className="mt-4 text-muted-foreground">Lesson</LearnerText2>
+            <LearnerHeader1>{lesson.title}</LearnerHeader1>
           </div>
-          {previewToken ? <p className="eyebrow">Preview mode</p> : null}
+          {previewToken ? <LearnerText2 className="text-muted-foreground">Preview mode</LearnerText2> : null}
         </header>
 
-        <article className="card stack">
+        <PageCard>
+          <PageCardContent className="grid gap-5">
           {lesson.availableAt && !hasContent ? (
-            <p className="muted">
+            <LearnerText2 className="text-muted-foreground">
               This lesson unlocks on {new Date(lesson.availableAt).toLocaleString()}.
-            </p>
+            </LearnerText2>
           ) : lesson.mediaId ? (
             <LessonMediaContent
               lesson={lesson}
@@ -256,7 +241,7 @@ export default function LearnerLessonPage() {
             />
           ) : lesson.content && Object.keys(lesson.content).length > 0 ? (
             previewToken && lesson.type === "quiz" ? (
-              <p className="muted">Quiz content is available after enrollment.</p>
+              <LearnerText2 className="text-muted-foreground">Quiz content is available after enrollment.</LearnerText2>
             ) : (
               <LessonContent
                 content={lesson.content}
@@ -266,22 +251,17 @@ export default function LearnerLessonPage() {
               />
             )
           ) : (
-            <p className="muted">Enroll to view this lesson.</p>
+            <LearnerText2 className="text-muted-foreground">Enroll to view this lesson.</LearnerText2>
           )}
 
           {!previewToken && me && hasContent ? (
             <div className="flex flex-wrap items-center gap-2 border-t pt-4">
-              {!started ? (
-                <Button type="button" onClick={() => void startLesson()}>
-                  Start lesson
-                </Button>
-              ) : null}
               {!completed ? (
                 <Button type="button" onClick={() => void completeLesson()}>
                   Mark complete
                 </Button>
               ) : (
-                <p>Lesson completed.</p>
+                <LearnerText2>Lesson completed.</LearnerText2>
               )}
               {certificateId ? (
                 <Link
@@ -293,8 +273,9 @@ export default function LearnerLessonPage() {
               ) : null}
             </div>
           ) : null}
-          {actionError ? <p role="alert">{actionError}</p> : null}
-        </article>
+          {actionError ? <LearnerText2 role="alert" className="text-destructive">{actionError}</LearnerText2> : null}
+          </PageCardContent>
+        </PageCard>
 
         {(previewToken || (product.discussions && me)) && hasContent ? (
           <CourseDiscussions

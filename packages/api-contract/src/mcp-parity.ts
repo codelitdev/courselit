@@ -2,7 +2,7 @@ const communityParityExemptions = [
   ["listCommunities", "communities.list"],
   ["createCommunity", "communities.create"],
   ["getCommunity", "communities.get"],
-  ["getSalesPage", "school.frontlit.salesPages.get"],
+  ["getSalesPage", "school.website.salesPages.get"],
   ["updateCommunity", "communities.update"],
   ["addCommunityCategory", "communities.categories.add"],
   ["deleteCommunityCategory", "communities.categories.delete"],
@@ -281,188 +281,188 @@ export const mcpParityManifest = [
     },
   },
   {
-    capability: "school.frontlit.pages.list",
-    rest: { operationId: "listSchoolFrontLitPages" },
+    capability: "school.website.pages.list",
+    rest: { operationId: "listSchoolWebsitePages" },
     parity: "exempt",
     exemption: {
       reason:
-        "FrontLit page listing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
+        "Website page listing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "school.frontlit.pages.create",
-    rest: { operationId: "createSchoolFrontLitPage" },
+    capability: "school.website.pages.create",
+    rest: { operationId: "createSchoolWebsitePage" },
     parity: "exempt",
     exemption: {
       reason:
-        "FrontLit page creation is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
+        "Website page creation is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "school.frontlit.pages.get",
-    rest: { operationId: "getSchoolFrontLitPage" },
+    capability: "school.website.pages.get",
+    rest: { operationId: "getSchoolWebsitePage" },
     parity: "exempt",
     exemption: {
       reason:
-        "FrontLit page editing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
+        "Website page editing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "school.frontlit.pages.update",
-    rest: { operationId: "updateSchoolFrontLitPage" },
+    capability: "school.website.pages.update",
+    rest: { operationId: "updateSchoolWebsitePage" },
     parity: "exempt",
     exemption: {
       reason:
-        "FrontLit page editing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
+        "Website page editing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "school.frontlit.pages.publish",
-    rest: { operationId: "publishSchoolFrontLitPage" },
+    capability: "school.website.pages.publish",
+    rest: { operationId: "publishSchoolWebsitePage" },
     parity: "exempt",
     exemption: {
       reason:
-        "FrontLit page publishing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
+        "Website page publishing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "school.frontlit.pages.discard",
-    rest: { operationId: "discardSchoolFrontLitPage" },
+    capability: "school.website.pages.discard",
+    rest: { operationId: "discardSchoolWebsitePage" },
     parity: "exempt",
     exemption: {
       reason:
-        "FrontLit page draft management is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
+        "Website page draft management is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "school.frontlit.settings.get",
-    rest: { operationId: "getSchoolFrontLitSettings" },
+    capability: "school.website.branding.get",
+    rest: { operationId: "getSchoolWebsiteBranding" },
     parity: "exempt",
     exemption: {
       reason:
-        "FrontLit site-theme settings are an admin browser integration surface and are not exposed as a CourseLit MCP tool.",
+        "Website branding settings are an admin browser integration surface and are not exposed as a CourseLit MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "school.frontlit.settings.update",
-    rest: { operationId: "updateSchoolFrontLitSettings" },
+    capability: "school.website.branding.update",
+    rest: { operationId: "updateSchoolWebsiteBranding" },
     parity: "exempt",
     exemption: {
       reason:
-        "FrontLit site-theme settings are an admin browser integration surface and are not exposed as a CourseLit MCP tool.",
+        "Website branding settings are an admin browser integration surface and are not exposed as a CourseLit MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "school.frontlit.themes.list",
-    rest: { operationId: "listSchoolFrontLitThemes" },
+    capability: "school.website.branding.themes.list",
+    rest: { operationId: "listSchoolWebsiteBrandingThemes" },
     parity: "exempt",
     exemption: {
       reason:
-        "FrontLit theme management is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
+        "Website theme management is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "school.frontlit.themes.create",
-    rest: { operationId: "createSchoolFrontLitTheme" },
+    capability: "school.website.branding.themes.create",
+    rest: { operationId: "createSchoolWebsiteBrandingTheme" },
     parity: "exempt",
     exemption: {
       reason:
-        "FrontLit theme management is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
+        "Website theme management is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "school.frontlit.themes.update",
-    rest: { operationId: "updateSchoolFrontLitTheme" },
+    capability: "school.website.branding.themes.update",
+    rest: { operationId: "updateSchoolWebsiteBrandingTheme" },
     parity: "exempt",
     exemption: {
       reason:
-        "FrontLit theme management is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
+        "Website theme management is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "school.frontlit.blogs.list",
-    rest: { operationId: "listSchoolFrontLitBlogs" },
+    capability: "school.website.blogs.list",
+    rest: { operationId: "listSchoolWebsiteBlogs" },
     parity: "exempt",
     exemption: {
       reason:
-        "FrontLit blog listing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
+        "Website blog listing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "school.frontlit.blogs.create",
-    rest: { operationId: "createSchoolFrontLitBlog" },
+    capability: "school.website.blogs.create",
+    rest: { operationId: "createSchoolWebsiteBlog" },
     parity: "exempt",
     exemption: {
       reason:
-        "FrontLit blog creation is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
+        "Website blog creation is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "school.frontlit.blogs.get",
-    rest: { operationId: "getSchoolFrontLitBlog" },
+    capability: "school.website.blogs.get",
+    rest: { operationId: "getSchoolWebsiteBlog" },
     parity: "exempt",
     exemption: {
       reason:
-        "FrontLit blog editing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
+        "Website blog editing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "school.frontlit.blogs.update",
-    rest: { operationId: "updateSchoolFrontLitBlog" },
+    capability: "school.website.blogs.update",
+    rest: { operationId: "updateSchoolWebsiteBlog" },
     parity: "exempt",
     exemption: {
       reason:
-        "FrontLit blog editing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
+        "Website blog editing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "school.frontlit.blogs.publish",
-    rest: { operationId: "publishSchoolFrontLitBlog" },
+    capability: "school.website.blogs.publish",
+    rest: { operationId: "publishSchoolWebsiteBlog" },
     parity: "exempt",
     exemption: {
       reason:
-        "FrontLit blog publishing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
+        "Website blog publishing is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
   },
   {
-    capability: "school.frontlit.blogs.discard",
-    rest: { operationId: "discardSchoolFrontLitBlog" },
+    capability: "school.website.blogs.discard",
+    rest: { operationId: "discardSchoolWebsiteBlog" },
     parity: "exempt",
     exemption: {
       reason:
-        "FrontLit blog draft management is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
+        "Website blog draft management is an admin browser integration surface and is not exposed as a CourseLit MCP tool.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
@@ -614,17 +614,6 @@ export const mcpParityManifest = [
     exemption: {
       reason:
         "Learner session and certificate consumption endpoints are not MCP tools.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "learner.progress.start",
-    rest: { operationId: "learnerStartLesson" },
-    parity: "exempt",
-    exemption: {
-      reason:
-        "Learner session progress writes are learner-facing browser endpoints and are not MCP tools.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
@@ -989,6 +978,36 @@ export const mcpParityManifest = [
     },
   },
   {
+    capability: "school.team.list",
+    rest: { operationId: "listSchoolTeam" },
+    parity: "exempt",
+    exemption: {
+      reason: "Team administration remains a browser-only school settings workflow.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.team.member.remove",
+    rest: { operationId: "removeSchoolTeamMember" },
+    parity: "exempt",
+    exemption: {
+      reason: "Team administration remains a browser-only school settings workflow.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.team.member.update",
+    rest: { operationId: "updateSchoolTeamMember" },
+    parity: "exempt",
+    exemption: {
+      reason: "Team administration remains a browser-only school settings workflow.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
     capability: "invitation.create",
     rest: { operationId: "createInvitation" },
     parity: "exempt",
@@ -1006,6 +1025,38 @@ export const mcpParityManifest = [
     exemption: {
       reason:
         "Invitation acceptance binds an authenticated browser identity and remains REST-only.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "invitation.preview",
+    rest: { operationId: "previewTeamInvitation" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Invitation preview binds an authenticated browser identity and remains REST-only.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "invitation.acceptWithId",
+    rest: { operationId: "acceptTeamInvitation" },
+    parity: "exempt",
+    exemption: {
+      reason:
+        "Invitation acceptance binds an authenticated browser identity and remains REST-only.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "invitation.reject",
+    rest: { operationId: "rejectTeamInvitation" },
+    parity: "exempt",
+    exemption: {
+      reason: "Invitation decisions are browser-only team membership workflows.",
       owner: "platform",
       reviewBy: "2027-09-01",
     },
@@ -1051,11 +1102,11 @@ export const mcpParityManifest = [
     },
   },
   {
-    capability: "enrollment.grant",
-    rest: { operationId: "grantEnrollment" },
+    capability: "membership.grant",
+    rest: { operationId: "grantLearnerMembership" },
     parity: "exempt",
     exemption: {
-      reason: "Admin enrollment grants are a browser workflow, not an MCP capability.",
+      reason: "Admin membership grants are a browser workflow, not an MCP capability.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
@@ -1066,26 +1117,6 @@ export const mcpParityManifest = [
     parity: "exempt",
     exemption: {
       reason: "Learner browser session operations are not MCP tools.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "learner.requestOtp",
-    rest: { operationId: "learnerRequestOtp" },
-    parity: "exempt",
-    exemption: {
-      reason: "Learner browser authentication operations are not MCP tools.",
-      owner: "courselit",
-      reviewBy: "2027-09-01",
-    },
-  },
-  {
-    capability: "learner.verifyOtp",
-    rest: { operationId: "learnerVerifyOtp" },
-    parity: "exempt",
-    exemption: {
-      reason: "Learner browser authentication operations are not MCP tools.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },
@@ -1121,8 +1152,8 @@ export const mcpParityManifest = [
     },
   },
   {
-    capability: "learner.enroll",
-    rest: { operationId: "learnerEnroll" },
+    capability: "learner.membership.create",
+    rest: { operationId: "createLearnerMembership" },
     parity: "exempt",
     exemption: {
       reason: "Learner browser session operations are not MCP tools.",

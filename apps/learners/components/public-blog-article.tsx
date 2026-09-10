@@ -1,8 +1,9 @@
 "use client";
 
-import { TextRenderer } from "@frontlit/text-editor";
 import { Caption, Header1, Text2 } from "@frontlit/page-builder/primitives";
+import { TextRenderer } from "@frontlit/text-editor";
 import Link from "next/link";
+import { LearnerCardImage } from "@/components/themed-page-builder";
 import type { PublicArticle } from "@/lib/courselit-public";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
@@ -46,10 +47,11 @@ export function PublicBlogArticle({ article }: { article: PublicArticle }) {
         </Caption>
       ) : null}
       {imageUrl ? (
-        <img
+        <LearnerCardImage
+          theme={theme}
           src={imageUrl}
           alt={imageAlt}
-          className="w-full rounded-lg border object-cover"
+          className="w-full border object-cover"
         />
       ) : null}
       {article.content ? <TextRenderer json={article.content} theme={theme} /> : null}

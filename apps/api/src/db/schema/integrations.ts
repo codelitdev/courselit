@@ -32,6 +32,7 @@ export type IntegrationJobStatus = (typeof integrationJobStatuses)[number];
 
 export const integrationJobTypes = [
   "provision_frontlit",
+  "provision_sales_page",
   "provision_sendlit",
   "sync_sendlit_contact",
 ] as const;
@@ -97,6 +98,13 @@ export const integrationOutboxJobs = pgTable(
     provisionIdentity: uniqueIndex("integration_outbox_jobs_provision_uidx")
       .on(table.schoolId, table.provider, table.type)
       .where(sql`type IN ('provision_frontlit', 'provision_sendlit')`),
+    salesPageIdentity: uniqueIndex("integration_outbox_jobs_sales_page_uidx")
+      .on(
+        table.schoolId,
+        sql`(${table.payload}->>'resourceType')`,
+        sql`(${table.payload}->>'resourceId')`,
+      )
+      .where(sql`type = 'provision_sales_page'`),
     contactSyncIdentity: index("integration_outbox_jobs_contact_sync_idx").on(
       table.schoolId,
       table.provider,

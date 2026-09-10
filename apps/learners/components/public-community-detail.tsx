@@ -12,7 +12,6 @@ import {
   Header4,
   PageCard,
   PageCardContent,
-  PageCardImage,
   Subheader1,
   Text2,
 } from "@frontlit/page-builder/primitives";
@@ -20,6 +19,7 @@ import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { z } from "zod";
+import { LearnerCardImage } from "@/components/themed-page-builder";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
 type PublicCommunity = z.infer<typeof communitySchema>;
@@ -114,7 +114,7 @@ export function PublicCommunityDetail({ communityId }: { communityId: string }) 
       </header>
       <PageCard theme={theme} className="scroll-mt-24 overflow-hidden" id="checkout">
         {image ? (
-          <PageCardImage
+          <LearnerCardImage
             theme={theme}
             src={image.thumbnailUrl ?? image.canonicalUrl}
             alt={image.altText || community.name}
@@ -163,9 +163,7 @@ export function PublicCommunityDetail({ communityId }: { communityId: string }) 
             </div>
           ) : (
             <Button theme={theme} type="button" asChild>
-              <Link
-                href={`/dashboard/community/${encodeURIComponent(community.id)}`}
-              >
+              <Link href={`/dashboard/community/${encodeURIComponent(community.id)}`}>
                 Join community
               </Link>
             </Button>

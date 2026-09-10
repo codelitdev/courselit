@@ -9,7 +9,7 @@ import { createExpressEndpoints, initServer } from "@ts-rest/express";
 import { toNodeHandler } from "better-auth/node";
 import express, { type Express, type RequestHandler } from "express";
 import swaggerUi from "swagger-ui-express";
-import { AUTH_BASE_PATH } from "./auth/options.js";
+import { AUTH_BASE_PATH, LEARNER_AUTH_BASE_PATH } from "./auth/options.js";
 import type { DispatchDeps } from "./deps.js";
 import { dispatch } from "./dispatch.js";
 import { serveLearnerDownload } from "./downloads.js";
@@ -36,11 +36,12 @@ export function createExpressApp(deps: DispatchDeps): Express {
     res.setHeader("X-Request-ID", requestId);
     const now = Date.now();
     const forwardedHeader = req.headers["x-forwarded-for"];
-    const forwardedIp = typeof forwardedHeader === "string"
-      ? forwardedHeader.split(",")[0]?.trim()
-      : Array.isArray(forwardedHeader)
-        ? forwardedHeader[0]?.split(",")[0]?.trim()
-        : undefined;
+    const forwardedIp =
+      typeof forwardedHeader === "string"
+        ? forwardedHeader.split(",")[0]?.trim()
+        : Array.isArray(forwardedHeader)
+          ? forwardedHeader[0]?.split(",")[0]?.trim()
+          : undefined;
     const clientIp = forwardedIp || req.ip || req.socket.remoteAddress || "unknown";
     const key = clientIp;
     const isLoopback =
@@ -54,9 +55,7 @@ export function createExpressApp(deps: DispatchDeps): Express {
       : undefined;
     const maxRequests =
       configuredLimit ??
-      (process.env.NODE_ENV === "production"
-        ? isLoopback ? 10_000 : 1_200
-        : 10_000);
+      (process.env.NODE_ENV === "production" ? (isLoopback ? 10_000 : 1_200) : 10_000);
 
     const window = Math.floor(now / 60_000);
     if (buckets.size > 10_000) buckets.clear();
@@ -76,6 +75,7 @@ export function createExpressApp(deps: DispatchDeps): Express {
     next();
   });
   app.all(`${AUTH_BASE_PATH}/*`, toNodeHandler(deps.auth.auth));
+  app.all(`${LEARNER_AUTH_BASE_PATH}/*`, toNodeHandler(deps.learnerAuth.auth));
   app.use(
     createOAuthPagesRouter({
       appName: "CourseLit",
@@ -265,18 +265,15 @@ export function createExpressApp(deps: DispatchDeps): Express {
     deleteMedia: forward,
     listMediaReferences: forward,
     reconcileMediaReferences: forward,
-    grantEnrollment: forward,
-    learnerRequestOtp: forward,
-    learnerVerifyOtp: forward,
+    grantLearnerMembership: forward,
     learnerSignUp: forward,
     learnerSignIn: forward,
     learnerSignOut: forward,
     learnerMe: forward,
-    learnerEnroll: forward,
+    createLearnerMembership: forward,
     learnerCreateDownloadLink: forward,
     learnerCheckout: forward,
     getLearnerCheckout: forward,
-    learnerStartLesson: forward,
     learnerCompleteLesson: forward,
     listLearnerProgress: forward,
     listLearnerCertificates: forward,
@@ -289,18 +286,29 @@ export function createExpressApp(deps: DispatchDeps): Express {
     getEntitlement: forward,
     getBillingCatalog: forward,
     listSchools: forward,
-    listSchoolFrontLitPages: forward,
-    createSchoolFrontLitPage: forward,
-    getSchoolFrontLitPage: forward,
-    updateSchoolFrontLitPage: forward,
-    publishSchoolFrontLitPage: forward,
-    discardSchoolFrontLitPage: forward,
-    listSchoolFrontLitBlogs: forward,
-    createSchoolFrontLitBlog: forward,
-    getSchoolFrontLitBlog: forward,
-    updateSchoolFrontLitBlog: forward,
-    publishSchoolFrontLitBlog: forward,
-    discardSchoolFrontLitBlog: forward,
+    listSchoolTeam: forward,
+    updateSchoolTeamMember: forward,
+    removeSchoolTeamMember: forward,
+    previewTeamInvitation: forward,
+    acceptTeamInvitation: forward,
+    rejectTeamInvitation: forward,
+    listSchoolWebsitePages: forward,
+    createSchoolWebsitePage: forward,
+    getSchoolWebsitePage: forward,
+    updateSchoolWebsitePage: forward,
+    publishSchoolWebsitePage: forward,
+    discardSchoolWebsitePage: forward,
+    getSchoolWebsiteBranding: forward,
+    updateSchoolWebsiteBranding: forward,
+    listSchoolWebsiteBrandingThemes: forward,
+    createSchoolWebsiteBrandingTheme: forward,
+    updateSchoolWebsiteBrandingTheme: forward,
+    listSchoolWebsiteBlogs: forward,
+    createSchoolWebsiteBlog: forward,
+    getSchoolWebsiteBlog: forward,
+    updateSchoolWebsiteBlog: forward,
+    publishSchoolWebsiteBlog: forward,
+    discardSchoolWebsiteBlog: forward,
     updateSchool: forward,
     listSchoolHosts: forward,
     createSchoolHost: forward,

@@ -6,9 +6,12 @@ import { createPostgresRuntime } from "./runtime.js";
 
 const databaseUrl = process.env.DATABASE_URL;
 const authSecret = process.env.AUTH_SECRET;
+const learnerAuthSecret = process.env.LEARNER_AUTH_SECRET;
 const apiKeyPepper = process.env.API_KEY_PEPPER;
-if (!databaseUrl || !authSecret || !apiKeyPepper) {
-  throw new Error("DATABASE_URL_AUTH_SECRET_AND_API_KEY_PEPPER_REQUIRED");
+if (!databaseUrl || !authSecret || !learnerAuthSecret || !apiKeyPepper) {
+  throw new Error(
+    "DATABASE_URL_AUTH_SECRET_LEARNER_AUTH_SECRET_AND_API_KEY_PEPPER_REQUIRED",
+  );
 }
 const observability = createObservability({
   serviceName: "courselit-worker",
@@ -45,6 +48,7 @@ const observability = createObservability({
 const runtime = await createPostgresRuntime({
   databaseUrl,
   authSecret,
+  learnerAuthSecret,
   apiKeyPepper,
   publicApiUrl: process.env.PUBLIC_API_URL ?? "http://127.0.0.1:4000",
   observability,

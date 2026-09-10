@@ -1,7 +1,6 @@
 import {
   createHash,
   randomBytes,
-  randomInt,
   scryptSync,
   timingSafeEqual,
 } from "node:crypto";
@@ -13,12 +12,11 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
-import { and, asc, desc, eq, gt, isNotNull, isNull, lte, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, lte, or } from "drizzle-orm";
 import { lessonUnlockAt, sectionUnlockAt } from "./catalog.js";
 import { issueCertificateIfComplete } from "./certificates.js";
 import { ActivityType, recordActivity } from "./activities.js";
 import * as schema from "./db/schema/index.js";
-import type { LearnerOtpDelivery } from "./deps.js";
 import { normalizeEmail } from "./invitations.js";
 import type { MediaLitClient } from "./media.js";
 import type { CourseLitPermission } from "./permissions.js";
@@ -27,11 +25,13 @@ import { loadSchoolByPublicId } from "./schools.js";
 import { headerSchoolId } from "./school-context.js";
 import { hostnameFromHeaders, schoolLookupKeyFromHost } from "./school-host.js";
 import type { AppDb } from "./types.js";
+import {
+  findLearnerMembership,
+  upsertLearnerMembership,
+} from "./learner-memberships.js";
 
 export const LEARNER_SESSION_COOKIE = "courselit.learner.session";
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-export const LEARNER_OTP_TTL_MS = 10 * 60 * 1000;
-export const LEARNER_OTP_MAX_ATTEMPTS = 5;
 export const LEARNER_IDENTITY_LINK_TTL_MS = 10 * 60 * 1000;
 
 export type LearnerDto = {
@@ -46,23 +46,30 @@ export type AdminLearnerDto = LearnerDto & {
   createdAt: string;
 };
 
-export type EnrollmentDto = {
+export type LearnerMembershipDto = {
   id: string;
   schoolId: string;
-  productId: string;
-  source:
-    | "free_signup"
-    | "admin_grant"
-    | "storefront_purchase"
-    | "included_product"
-    | "import"
-    | "integration";
-  status: "active" | "payment_failed" | "expired" | "pending" | "rejected" | "paused";
+  entityType: "product" | "community";
+  entityId: string;
+  paymentPlanId: string | null;
+  status:
+    | "active"
+    | "payment_failed"
+    | "expired"
+    | "pending"
+    | "rejected"
+    | "paused";
+  role: "comment" | "post" | "moderate" | null;
+  subscriptionId: string | null;
+  subscriptionMethod: string | null;
+  joiningReason: string;
+  rejectionReason: string | null;
+  isIncludedInPlan: boolean;
 };
 
 export type ProgressDto = {
   lessonId: string;
-  enrollmentId: string;
+  membershipId: string;
   startedAt: string;
   completedAt: string;
   courseCompleted: boolean;
@@ -71,7 +78,7 @@ export type ProgressDto = {
 
 export type LessonProgressDto = {
   lessonId: string;
-  enrollmentId: string;
+  membershipId: string;
   startedAt: string;
   completedAt: string | null;
 };
@@ -92,10 +99,6 @@ export type LearnerProductDto = ProductDto & {
   downloaded: boolean;
 };
 
-export type LearnerOtpRequestDto = {
-  expiresAt: string;
-};
-
 export type LearnerIdentityLinkDto = {
   token: string;
   expiresAt: string;
@@ -111,7 +114,7 @@ function latestUnlockAt(...dates: (Date | null)[]): Date | null {
 async function sectionAccessForLesson(
   db: AppDb,
   lesson: typeof schema.lessons.$inferSelect,
-  enrollmentStartedAt: Date,
+  accessStartedAt: Date,
 ): Promise<{ required: boolean; availableAt: Date | null }> {
   if (!lesson.sectionId) return { required: false, availableAt: null };
   const sections = await db
@@ -123,8 +126,28 @@ async function sectionAccessForLesson(
   if (!section?.dripEnabled) return { required: false, availableAt: null };
   return {
     required: true,
-    availableAt: sectionUnlockAt(sections, section.id, enrollmentStartedAt),
+    availableAt: sectionUnlockAt(sections, section.id, accessStartedAt),
   };
+}
+
+async function activeProductMembershipForLesson(
+  db: AppDb,
+  input: { schoolId: string; learnerId: string; productPublicId: string },
+) {
+  const rows = await db
+    .select({ membership: schema.learnerMemberships })
+    .from(schema.learnerMemberships)
+    .where(
+      and(
+        eq(schema.learnerMemberships.schoolId, input.schoolId),
+        eq(schema.learnerMemberships.learnerId, input.learnerId),
+        eq(schema.learnerMemberships.entityType, "product"),
+        eq(schema.learnerMemberships.entityId, input.productPublicId),
+        eq(schema.learnerMemberships.status, "active"),
+      ),
+    )
+    .limit(1);
+  return rows[0]?.membership ?? null;
 }
 
 type LessonMediaViewer =
@@ -175,42 +198,15 @@ export async function getLearnerLessonMedia(
   }
 
   let enrolled = false;
-  let enrollmentStartedAt: Date | null = null;
+  let membershipStartedAt: Date | null = null;
   if (input.viewer.kind === "learner") {
-    const enrollments = await db
-      .select({
-        enrollmentCreatedAt: schema.enrollments.createdAt,
-        grantStartsAt: schema.enrollmentAccessGrants.startsAt,
-      })
-      .from(schema.enrollments)
-      .innerJoin(
-        schema.enrollmentAccessGrants,
-        eq(schema.enrollmentAccessGrants.enrollmentId, schema.enrollments.id),
-      )
-      .where(
-        and(
-          eq(schema.enrollments.schoolId, input.schoolId),
-          eq(schema.enrollments.learnerId, input.viewer.learnerId),
-          eq(schema.enrollments.productId, row.product.id),
-          eq(schema.enrollments.status, "active"),
-          eq(schema.enrollmentAccessGrants.schoolId, input.schoolId),
-          eq(schema.enrollmentAccessGrants.status, "active"),
-          lte(schema.enrollmentAccessGrants.startsAt, now),
-          or(
-            isNull(schema.enrollmentAccessGrants.endsAt),
-            gt(schema.enrollmentAccessGrants.endsAt, now),
-          ),
-        ),
-      )
-      .limit(1);
-    const enrollment = enrollments[0];
-    enrolled = Boolean(enrollment);
-    if (enrollment) {
-      enrollmentStartedAt =
-        enrollment.enrollmentCreatedAt > enrollment.grantStartsAt
-          ? enrollment.enrollmentCreatedAt
-          : enrollment.grantStartsAt;
-    }
+    const membership = await activeProductMembershipForLesson(db, {
+      schoolId: input.schoolId,
+      learnerId: input.viewer.learnerId,
+      productPublicId: row.product.publicId,
+    });
+    enrolled = Boolean(membership);
+    membershipStartedAt = membership?.createdAt ?? null;
   }
 
   const sections = row.lesson.sectionId
@@ -222,13 +218,13 @@ export async function getLearnerLessonMedia(
     : [];
   const section = sections.find((candidate) => candidate.id === row.lesson.sectionId);
   const sectionDripAt =
-    section && enrollmentStartedAt
-      ? sectionUnlockAt(sections, section.id, enrollmentStartedAt)
+    section && membershipStartedAt
+      ? sectionUnlockAt(sections, section.id, membershipStartedAt)
       : null;
   const availableAt = latestUnlockAt(
-    preview || !enrollmentStartedAt
+    preview || !membershipStartedAt
       ? row.lesson.dripAt
-      : lessonUnlockAt(row.lesson, enrollmentStartedAt),
+      : lessonUnlockAt(row.lesson, membershipStartedAt),
     sectionDripAt,
   );
   const sectionAvailable =
@@ -307,39 +303,36 @@ export async function listLearnerProducts(
   now: Date,
 ): Promise<LearnerProductDto[]> {
   const rows = await db
-    .select({ product: schema.products, enrollment: schema.enrollments })
-    .from(schema.enrollments)
+    .select({ product: schema.products, membership: schema.learnerMemberships })
+    .from(schema.learnerMemberships)
     .innerJoin(
-      schema.enrollmentAccessGrants,
-      eq(schema.enrollmentAccessGrants.enrollmentId, schema.enrollments.id),
+      schema.products,
+      eq(schema.products.publicId, schema.learnerMemberships.entityId),
     )
-    .innerJoin(schema.products, eq(schema.products.id, schema.enrollments.productId))
     .where(
       and(
-        eq(schema.enrollments.schoolId, input.schoolId),
-        eq(schema.enrollments.learnerId, input.learnerId),
-        eq(schema.enrollments.status, "active"),
-        eq(schema.enrollmentAccessGrants.schoolId, input.schoolId),
-        eq(schema.enrollmentAccessGrants.status, "active"),
-        lte(schema.enrollmentAccessGrants.startsAt, now),
-        or(
-          isNull(schema.enrollmentAccessGrants.endsAt),
-          gt(schema.enrollmentAccessGrants.endsAt, now),
-        ),
+        eq(schema.learnerMemberships.schoolId, input.schoolId),
+        eq(schema.learnerMemberships.learnerId, input.learnerId),
+        eq(schema.learnerMemberships.entityType, "product"),
+        eq(schema.learnerMemberships.status, "active"),
+        eq(schema.products.schoolId, input.schoolId),
         eq(schema.products.status, "published"),
       ),
     )
     .orderBy(asc(schema.products.title));
-  const seen = new Set<string>();
-  const distinctRows = rows.filter(({ product }) => {
-    if (seen.has(product.id)) return false;
-    seen.add(product.id);
-    return true;
-  });
+  const distinctRows = [...new Map(rows.map((row) => [row.product.id, row])).values()];
+  const membershipsByProduct = new Map<string, typeof rows[number]["membership"][]>();
+  for (const row of rows) {
+    const memberships = membershipsByProduct.get(row.product.id) ?? [];
+    memberships.push(row.membership);
+    membershipsByProduct.set(row.product.id, memberships);
+  }
 
   return Promise.all(
-    distinctRows.map(async ({ product, enrollment }) => {
-      const [publishedLessons, completedLessons, certificateRows, featuredMediaRows] =
+    distinctRows.map(async ({ product }) => {
+      const memberships = membershipsByProduct.get(product.id) ?? [];
+      const membershipIds = memberships.map((membership) => membership.id);
+      const [publishedLessons, completedLessons, certificateRows, featuredMediaRows, downloadRows] =
         await Promise.all([
           db
             .select({ id: schema.lessons.id })
@@ -361,7 +354,7 @@ export async function listLearnerProducts(
             .where(
               and(
                 eq(schema.lessonProgress.schoolId, input.schoolId),
-                eq(schema.lessonProgress.enrollmentId, enrollment.id),
+                inArray(schema.lessonProgress.membershipId, membershipIds),
                 eq(schema.lessons.productId, product.id),
                 eq(schema.lessons.status, "published"),
                 isNotNull(schema.lessonProgress.completedAt),
@@ -395,6 +388,17 @@ export async function listLearnerProducts(
               ),
             )
             .limit(1),
+          db
+            .select({ id: schema.downloadLinks.id })
+            .from(schema.downloadLinks)
+            .where(
+              and(
+                eq(schema.downloadLinks.schoolId, input.schoolId),
+                inArray(schema.downloadLinks.membershipId, membershipIds),
+                eq(schema.downloadLinks.consumed, true),
+              ),
+            )
+            .limit(1),
         ]);
       const media = featuredMediaRows[0]?.media;
       const featuredMedia: ProductFeaturedMediaDto | null = media
@@ -425,7 +429,7 @@ export async function listLearnerProducts(
         totalLessons: publishedLessons.length,
         completedLessonsCount: completedLessons.length,
         certificateId: certificateRows[0]?.publicId ?? null,
-        downloaded: enrollment.downloaded,
+        downloaded: downloadRows.length > 0,
       };
     }),
   );
@@ -774,77 +778,24 @@ async function issueSession(
   learner: typeof schema.learners.$inferSelect,
   school: typeof schema.schools.$inferSelect,
   clock: Clock,
-): Promise<{ token: string; dto: LearnerDto }> {
+): Promise<{ token: string; dto: LearnerDto; sessionId: string }> {
   const token = randomBytes(32).toString("base64url");
+  const sessionId = uuidv7(clock);
   const now = clock.now();
   await db.insert(schema.learnerSessions).values({
-    id: uuidv7(clock),
+    id: sessionId,
     learnerId: learner.id,
     schoolId: school.id,
     tokenDigest: digestToken(token),
     expiresAt: new Date(now.getTime() + SESSION_TTL_MS),
     createdAt: now,
   });
-  return { token, dto: toLearnerDto(learner, school.publicId) };
-}
-
-function generateLearnerOtp(): string {
-  return randomInt(0, 1_000_000).toString().padStart(6, "0");
+  return { token, dto: toLearnerDto(learner, school.publicId), sessionId };
 }
 
 function learnerNameFromEmail(email: string): string {
   const localPart = email.split("@", 1)[0]?.trim();
   return (localPart || "Learner").slice(0, 200);
-}
-
-export async function requestLearnerOtp(
-  db: AppDb,
-  input: { email: string; schoolPublicId: string },
-  clock: Clock,
-  deliver: LearnerOtpDelivery,
-): Promise<
-  { ok: true; value: LearnerOtpRequestDto } | { ok: false; error: PlatformError }
-> {
-  const school = await loadSchoolByPublicId(db, input.schoolPublicId);
-  if (!school) {
-    return { ok: false, error: createPlatformError("tenant_forbidden") };
-  }
-  const email = normalizeEmail(input.email);
-  const now = clock.now();
-  const expiresAt = new Date(now.getTime() + LEARNER_OTP_TTL_MS);
-  const otp = generateLearnerOtp();
-
-  await db.transaction(async (tx) => {
-    await tx
-      .update(schema.learnerOtpChallenges)
-      .set({ consumedAt: now })
-      .where(
-        and(
-          eq(schema.learnerOtpChallenges.schoolId, school.id),
-          eq(schema.learnerOtpChallenges.email, email),
-          isNull(schema.learnerOtpChallenges.consumedAt),
-        ),
-      );
-    await tx.insert(schema.learnerOtpChallenges).values({
-      id: uuidv7(clock),
-      schoolId: school.id,
-      email,
-      codeDigest: hashPassword(otp),
-      expiresAt,
-      attempts: 0,
-      createdAt: now,
-    });
-  });
-
-  await deliver({
-    schoolId: school.id,
-    schoolPublicId: school.publicId,
-    email,
-    otp,
-    expiresAt,
-  });
-
-  return { ok: true, value: { expiresAt: serializeDate(expiresAt) } };
 }
 
 export async function enqueueLearnerContactSync(
@@ -872,19 +823,28 @@ export async function enqueueLearnerContactSync(
   });
 }
 
-export async function verifyLearnerOtp(
+
+/**
+ * Bridge a verified Better Auth browser session into the school-scoped learner
+ * session used by learner APIs. This is also used after social sign-in.
+ */
+export async function signInLearnerWithIdentity(
   db: AppDb,
   input: {
     email: string;
-    otp: string;
-    name?: string;
-    identityLinkToken?: string;
+    name?: string | null;
     schoolPublicId: string;
   },
   clock: Clock,
   requestId: string,
 ): Promise<
-  { ok: true; value: LearnerDto; token: string } | { ok: false; error: PlatformError }
+  | {
+      ok: true;
+      value: LearnerDto;
+      token: string;
+      session: LearnerSession;
+    }
+  | { ok: false; error: PlatformError }
 > {
   const school = await loadSchoolByPublicId(db, input.schoolPublicId);
   if (!school) {
@@ -893,109 +853,65 @@ export async function verifyLearnerOtp(
   const email = normalizeEmail(input.email);
   const now = clock.now();
 
-  try {
-    return await db.transaction(async (tx) => {
-      const challenges = await tx
-        .select()
-        .from(schema.learnerOtpChallenges)
-        .where(
-          and(
-            eq(schema.learnerOtpChallenges.schoolId, school.id),
-            eq(schema.learnerOtpChallenges.email, email),
-            isNull(schema.learnerOtpChallenges.consumedAt),
-            gt(schema.learnerOtpChallenges.expiresAt, now),
-          ),
-        )
-        .orderBy(desc(schema.learnerOtpChallenges.createdAt))
-        .limit(1);
-      const challenge = challenges[0];
-      if (!challenge) {
-        return { ok: false as const, error: createPlatformError("unauthenticated") };
-      }
-
-      const nextAttempts = challenge.attempts + 1;
-      if (!passwordMatches(input.otp, challenge.codeDigest)) {
-        await tx
-          .update(schema.learnerOtpChallenges)
-          .set({
-            attempts: nextAttempts,
-            ...(nextAttempts >= LEARNER_OTP_MAX_ATTEMPTS ? { consumedAt: now } : {}),
-          })
-          .where(eq(schema.learnerOtpChallenges.id, challenge.id));
-        return { ok: false as const, error: createPlatformError("unauthenticated") };
-      }
-
-      await tx
-        .update(schema.learnerOtpChallenges)
-        .set({ attempts: nextAttempts, consumedAt: now })
-        .where(eq(schema.learnerOtpChallenges.id, challenge.id));
-
-      const existing = await tx
-        .select()
-        .from(schema.learners)
-        .where(
-          and(
-            eq(schema.learners.schoolId, school.id),
-            eq(schema.learners.email, email),
-          ),
-        )
-        .limit(1);
-      let learner = existing[0];
-      if (learner?.status !== "active" && learner) {
-        return { ok: false as const, error: createPlatformError("unauthenticated") };
-      }
-      if (!learner) {
-        learner = {
-          id: uuidv7(clock),
-          publicId: createPublicId("lrn", clock),
-          schoolId: school.id,
-          email,
-          name: input.name?.trim() || learnerNameFromEmail(email),
-          status: "active",
-          createdAt: now,
-          updatedAt: now,
-        };
-        await tx.insert(schema.learners).values(learner);
-        await tx.insert(schema.auditEvents).values({
-          id: uuidv7(clock),
-          schoolId: school.id,
-          actorId: learner.publicId,
-          action: "learner.signed_up",
-          resourceType: "learner",
-          resourceId: learner.publicId,
-          requestId,
-          createdAt: now,
-        });
-        await recordActivity(tx as unknown as AppDb, {
+  return db.transaction(async (tx) => {
+    const existing = await tx
+      .select()
+      .from(schema.learners)
+      .where(
+        and(
+          eq(schema.learners.schoolId, school.id),
+          eq(schema.learners.email, email),
+        ),
+      )
+      .limit(1);
+    let learner = existing[0];
+    if (learner?.status !== "active" && learner) {
+      return { ok: false as const, error: createPlatformError("unauthenticated") };
+    }
+    if (!learner) {
+      learner = {
+        id: uuidv7(clock),
+        publicId: createPublicId("lrn", clock),
+        schoolId: school.id,
+        email,
+        name: input.name?.trim() || learnerNameFromEmail(email),
+        status: "active",
+        createdAt: now,
+        updatedAt: now,
+      };
+      await tx.insert(schema.learners).values(learner);
+      await tx.insert(schema.auditEvents).values({
+        id: uuidv7(clock),
+        schoolId: school.id,
+        actorId: learner.publicId,
+        action: "learner.signed_up",
+        resourceType: "learner",
+        resourceId: learner.publicId,
+        requestId,
+        createdAt: now,
+      });
+      await recordActivity(
+        tx as unknown as AppDb,
+        {
           schoolId: school.id,
           actorId: learner.publicId,
           type: ActivityType.USER_CREATED,
           entityId: learner.publicId,
           metadata: { email: learner.email },
-        }, clock);
-        await enqueueLearnerContactSync(tx as unknown as AppDb, school.id, learner, clock);
-      }
-
-      if (input.identityLinkToken) {
-        await consumeLearnerIdentityLink(tx as unknown as AppDb, {
-          schoolId: school.id,
-          learnerId: learner.id,
-          learnerPublicId: learner.publicId,
-          token: input.identityLinkToken,
-          now,
-          clock,
-          requestId,
-        });
-      }
-      const issued = await issueSession(tx as unknown as AppDb, learner, school, clock);
-      return { ok: true as const, value: issued.dto, token: issued.token };
-    });
-  } catch (error) {
-    if (error instanceof LearnerIdentityLinkError) {
-      return { ok: false, error: error.error };
+        },
+        clock,
+      );
+      await enqueueLearnerContactSync(tx as unknown as AppDb, school.id, learner, clock);
     }
-    throw error;
-  }
+
+    const issued = await issueSession(tx as unknown as AppDb, learner, school, clock);
+    return {
+      ok: true as const,
+      value: issued.dto,
+      token: issued.token,
+      session: { learner, school, sessionId: issued.sessionId },
+    };
+  });
 }
 
 export async function signUpLearner(
@@ -1216,7 +1132,27 @@ async function loadPublishedProductInSchool(
   return rows[0] ?? null;
 }
 
-export async function ensureLearnerProductAccess(
+function learnerMembershipToDto(
+  row: typeof schema.learnerMemberships.$inferSelect,
+  publicSchoolId: string,
+): LearnerMembershipDto {
+  return {
+    id: row.publicId,
+    schoolId: publicSchoolId,
+    entityType: row.entityType,
+    entityId: row.entityId,
+    paymentPlanId: row.paymentPlanId,
+    status: row.status,
+    role: row.role,
+    subscriptionId: row.subscriptionId,
+    subscriptionMethod: row.subscriptionMethod,
+    joiningReason: row.joiningReason,
+    rejectionReason: row.rejectionReason,
+    isIncludedInPlan: row.isIncludedInPlan,
+  };
+}
+
+export async function ensureLearnerProductMembership(
   db: AppDb,
   input: {
     schoolId: string;
@@ -1224,111 +1160,68 @@ export async function ensureLearnerProductAccess(
     learnerId: string;
     actorId: string;
     product: typeof schema.products.$inferSelect;
-    source: EnrollmentDto["source"];
+    paymentPlanId?: string | null;
+    status?:
+      | "active"
+      | "payment_failed"
+      | "expired"
+      | "pending"
+      | "rejected"
+      | "paused";
+    role?: "comment" | "post" | "moderate" | null;
+    joiningReason?: string;
+    rejectionReason?: string | null;
+    sessionId?: string | null;
+    isIncludedInPlan?: boolean;
+    parentMembershipId?: string | null;
     requestId: string;
   },
   clock: Clock,
-): Promise<EnrollmentDto> {
+): Promise<LearnerMembershipDto> {
   const now = clock.now();
-  const existing = await db
-    .select()
-    .from(schema.enrollments)
-    .where(
-      and(
-        eq(schema.enrollments.learnerId, input.learnerId),
-        eq(schema.enrollments.productId, input.product.id),
-      ),
-    )
-    .limit(1);
-  const enrollment = existing[0];
-  if (enrollment) {
-    const grants = await db
-      .select()
-      .from(schema.enrollmentAccessGrants)
-      .where(eq(schema.enrollmentAccessGrants.enrollmentId, enrollment.id))
-      .limit(1);
-    const grant = grants[0];
-    if (enrollment.status !== "active") {
-      await db
-        .update(schema.enrollments)
-        .set({ status: "active" })
-        .where(eq(schema.enrollments.id, enrollment.id));
-    }
-    if (grant && grant.status !== "active") {
-      await db
-        .update(schema.enrollmentAccessGrants)
-        .set({ status: "active", startsAt: now, endsAt: null })
-        .where(eq(schema.enrollmentAccessGrants.id, grant.id));
-    } else if (!grant) {
-      await db.insert(schema.enrollmentAccessGrants).values({
-        id: uuidv7(clock),
-        publicId: createPublicId("eag", clock),
-        schoolId: input.schoolId,
-        enrollmentId: enrollment.id,
-        source: input.source,
-        status: "active",
-        startsAt: now,
-        endsAt: null,
-        createdAt: now,
-      });
-    }
-    return {
-      id: enrollment.publicId,
-      schoolId: input.publicSchoolId,
-      productId: input.product.publicId,
-      source: enrollment.source,
-      status: "active",
-    };
-  }
-  const row = {
-    id: uuidv7(clock),
-    publicId: createPublicId("enr", clock),
-    schoolId: input.schoolId,
-    learnerId: input.learnerId,
-    productId: input.product.id,
-    source: input.source,
-    status: "active" as const,
-    createdAt: now,
-  };
-  await db.insert(schema.enrollments).values(row);
-  await db.insert(schema.enrollmentAccessGrants).values({
-    id: uuidv7(clock),
-    publicId: createPublicId("eag", clock),
-    schoolId: input.schoolId,
-    enrollmentId: row.id,
-    source: input.source,
-    status: "active",
-    startsAt: now,
-    endsAt: null,
-    createdAt: now,
-  });
+  const membership = await upsertLearnerMembership(
+    db,
+    {
+      schoolId: input.schoolId,
+      learnerId: input.learnerId,
+      entityType: "product",
+      entityId: input.product.publicId,
+      paymentPlanId: input.paymentPlanId,
+      status: input.status ?? "active",
+      role: input.role,
+      joiningReason: input.joiningReason,
+      rejectionReason: input.rejectionReason,
+      sessionId: input.sessionId,
+      isIncludedInPlan: input.isIncludedInPlan,
+      parentMembershipId: input.parentMembershipId,
+    },
+    clock,
+  );
   await db.insert(schema.auditEvents).values({
     id: uuidv7(clock),
     schoolId: input.schoolId,
     actorId: input.actorId,
-    action: "enrollment.created",
-    resourceType: "enrollment",
-    resourceId: row.publicId,
+    action: "membership.created",
+    resourceType: "learner_membership",
+    resourceId: membership.publicId,
     requestId: input.requestId,
     createdAt: now,
   });
-  await recordActivity(db, {
-    schoolId: input.schoolId,
-    actorId: input.learnerId,
-    type: ActivityType.ENROLLED,
-    entityId: input.product.publicId,
-    metadata: { source: input.source, enrollmentId: row.publicId },
-  }, clock);
-  return {
-    id: row.publicId,
-    schoolId: input.publicSchoolId,
-    productId: input.product.publicId,
-    source: row.source,
-    status: row.status,
-  };
+  await recordActivity(
+    db,
+    {
+      schoolId: input.schoolId,
+      actorId: input.learnerId,
+      type: ActivityType.ENROLLED,
+      entityId: input.product.publicId,
+      metadata: { membershipId: membership.publicId },
+    },
+    clock,
+  );
+  return learnerMembershipToDto(membership, input.publicSchoolId);
 }
 
-export async function enrollLearner(
+export async function ensureLearnerProductMembershipForPublicSignup(
   db: AppDb,
   input: {
     schoolId: string;
@@ -1336,11 +1229,10 @@ export async function enrollLearner(
     learnerId: string;
     actorId: string;
     productPublicId: string;
-    source: "free_signup" | "admin_grant";
     requestId: string;
   },
   clock: Clock,
-): Promise<{ ok: true; value: EnrollmentDto } | { ok: false; error: PlatformError }> {
+): Promise<{ ok: true; value: LearnerMembershipDto } | { ok: false; error: PlatformError }> {
   const product = await loadPublishedProductInSchool(
     db,
     input.schoolId,
@@ -1350,7 +1242,7 @@ export async function enrollLearner(
     return { ok: false, error: createPlatformError("not_found") };
   }
   return db.transaction(async (tx) => {
-    const value = await ensureLearnerProductAccess(
+    const value = await ensureLearnerProductMembership(
       tx as unknown as AppDb,
       {
         ...input,
@@ -1365,7 +1257,7 @@ export async function enrollLearner(
   });
 }
 
-export async function grantEnrollment(
+export async function grantLearnerMembership(
   db: AppDb,
   input: {
     schoolId: string;
@@ -1377,7 +1269,7 @@ export async function grantEnrollment(
     requestId: string;
   },
   clock: Clock,
-): Promise<{ ok: true; value: EnrollmentDto } | { ok: false; error: PlatformError }> {
+): Promise<{ ok: true; value: LearnerMembershipDto } | { ok: false; error: PlatformError }> {
   const email = normalizeEmail(input.email);
   const now = clock.now();
   const learner = await db.transaction(async (tx) => {
@@ -1413,7 +1305,7 @@ export async function grantEnrollment(
     await enqueueLearnerContactSync(tx as unknown as AppDb, input.schoolId, created, clock);
     return created;
   });
-  return enrollLearner(
+  return ensureLearnerProductMembershipForPublicSignup(
     db,
     {
       schoolId: input.schoolId,
@@ -1421,7 +1313,6 @@ export async function grantEnrollment(
       learnerId: learner.id,
       actorId: input.actorId,
       productPublicId: input.productPublicId,
-      source: "admin_grant",
       requestId: input.requestId,
     },
     clock,
@@ -1458,49 +1349,22 @@ export async function completeLesson(
     return { ok: false, error: createPlatformError("not_found") };
   }
   const now = clock.now();
-  const enrollments = await db
-    .select({
-      enrollment: schema.enrollments,
-      grant: schema.enrollmentAccessGrants,
-    })
-    .from(schema.enrollments)
-    .innerJoin(
-      schema.enrollmentAccessGrants,
-      eq(schema.enrollmentAccessGrants.enrollmentId, schema.enrollments.id),
-    )
-    .where(
-      and(
-        eq(schema.enrollments.learnerId, input.learnerId),
-        eq(schema.enrollments.productId, row.product.id),
-        eq(schema.enrollments.schoolId, input.schoolId),
-        eq(schema.enrollments.status, "active"),
-        eq(schema.enrollmentAccessGrants.schoolId, input.schoolId),
-        eq(schema.enrollmentAccessGrants.status, "active"),
-        lte(schema.enrollmentAccessGrants.startsAt, now),
-        or(
-          isNull(schema.enrollmentAccessGrants.endsAt),
-          gt(schema.enrollmentAccessGrants.endsAt, now),
-        ),
-      ),
-    )
-    .limit(1);
-  const enrollment = enrollments[0]?.enrollment;
-  if (!enrollment) {
+  const membership = await activeProductMembershipForLesson(db, {
+    schoolId: input.schoolId,
+    learnerId: input.learnerId,
+    productPublicId: row.product.publicId,
+  });
+  if (!membership) {
     return { ok: false, error: createPlatformError("forbidden") };
   }
-  const grant = enrollments[0]?.grant;
-  const enrollmentStartedAt = grant
-    ? enrollment.createdAt > grant.startsAt
-      ? enrollment.createdAt
-      : grant.startsAt
-    : enrollment.createdAt;
+  const membershipStartedAt = membership.createdAt;
   const sectionAccess = await sectionAccessForLesson(
     db,
     row.lesson,
-    enrollmentStartedAt,
+    membershipStartedAt,
   );
   const availableAt = latestUnlockAt(
-    lessonUnlockAt(row.lesson, enrollmentStartedAt),
+    lessonUnlockAt(row.lesson, membershipStartedAt),
     sectionAccess.availableAt,
   );
   if (
@@ -1525,7 +1389,7 @@ export async function completeLesson(
       .where(
         and(
           eq(schema.lessonEvaluations.schoolId, input.schoolId),
-          eq(schema.lessonEvaluations.enrollmentId, enrollment.id),
+          eq(schema.lessonEvaluations.membershipId, membership.id),
           eq(schema.lessonEvaluations.lessonId, row.lesson.id),
           eq(schema.lessonEvaluations.pass, true),
         ),
@@ -1547,7 +1411,7 @@ export async function completeLesson(
       .where(
         and(
           eq(schema.scormRuntimeStates.schoolId, input.schoolId),
-          eq(schema.scormRuntimeStates.enrollmentId, enrollment.id),
+          eq(schema.scormRuntimeStates.membershipId, membership.id),
           eq(schema.scormRuntimeStates.lessonId, row.lesson.id),
         ),
       )
@@ -1587,7 +1451,7 @@ export async function completeLesson(
       .from(schema.lessonProgress)
       .where(
         and(
-          eq(schema.lessonProgress.enrollmentId, enrollment.id),
+          eq(schema.lessonProgress.membershipId, membership.id),
           eq(schema.lessonProgress.lessonId, row.lesson.id),
         ),
       )
@@ -1622,7 +1486,7 @@ export async function completeLesson(
           schoolId: input.schoolId,
           productId: row.product.id,
           learnerId: input.learnerId,
-          enrollmentId: enrollment.id,
+          membershipId: membership.id,
           actorId: input.actorId,
           requestId: input.requestId,
         },
@@ -1641,7 +1505,7 @@ export async function completeLesson(
         ok: true as const,
         value: {
           lessonId: row.lesson.publicId,
-          enrollmentId: enrollment.publicId,
+          membershipId: membership.publicId,
           startedAt: serializeDate(existing[0].startedAt),
           completedAt: serializeDate(completedAt),
           ...completion,
@@ -1651,7 +1515,7 @@ export async function completeLesson(
     await tx.insert(schema.lessonProgress).values({
       id: uuidv7(clock),
       schoolId: input.schoolId,
-      enrollmentId: enrollment.id,
+      membershipId: membership.id,
       lessonId: row.lesson.id,
       startedAt: now,
       completedAt: now,
@@ -1680,7 +1544,7 @@ export async function completeLesson(
         schoolId: input.schoolId,
         productId: row.product.id,
         learnerId: input.learnerId,
-        enrollmentId: enrollment.id,
+        membershipId: membership.id,
         actorId: input.actorId,
         requestId: input.requestId,
       },
@@ -1698,155 +1562,10 @@ export async function completeLesson(
       ok: true as const,
       value: {
         lessonId: row.lesson.publicId,
-        enrollmentId: enrollment.publicId,
+        membershipId: membership.publicId,
         startedAt: serializeDate(now),
         completedAt: serializeDate(now),
         ...completion,
-      },
-    };
-  });
-}
-
-export async function startLesson(
-  db: AppDb,
-  input: {
-    schoolId: string;
-    learnerId: string;
-    actorId: string;
-    lessonPublicId: string;
-    requestId: string;
-  },
-  clock: Clock,
-): Promise<
-  { ok: true; value: LessonProgressDto } | { ok: false; error: PlatformError }
-> {
-  const lessons = await db
-    .select({ lesson: schema.lessons, product: schema.products })
-    .from(schema.lessons)
-    .innerJoin(schema.products, eq(schema.products.id, schema.lessons.productId))
-    .where(
-      and(
-        eq(schema.lessons.publicId, input.lessonPublicId),
-        eq(schema.lessons.schoolId, input.schoolId),
-      ),
-    )
-    .limit(1);
-  const row = lessons[0];
-  if (row?.lesson.status !== "published" || row.product.status !== "published") {
-    return { ok: false, error: createPlatformError("not_found") };
-  }
-  const now = clock.now();
-  const enrollments = await db
-    .select({ enrollment: schema.enrollments, grant: schema.enrollmentAccessGrants })
-    .from(schema.enrollments)
-    .innerJoin(
-      schema.enrollmentAccessGrants,
-      eq(schema.enrollmentAccessGrants.enrollmentId, schema.enrollments.id),
-    )
-    .where(
-      and(
-        eq(schema.enrollments.learnerId, input.learnerId),
-        eq(schema.enrollments.productId, row.product.id),
-        eq(schema.enrollments.schoolId, input.schoolId),
-        eq(schema.enrollments.status, "active"),
-        eq(schema.enrollmentAccessGrants.schoolId, input.schoolId),
-        eq(schema.enrollmentAccessGrants.status, "active"),
-        lte(schema.enrollmentAccessGrants.startsAt, now),
-        or(
-          isNull(schema.enrollmentAccessGrants.endsAt),
-          gt(schema.enrollmentAccessGrants.endsAt, now),
-        ),
-      ),
-    )
-    .limit(1);
-  const enrollment = enrollments[0]?.enrollment;
-  const grant = enrollments[0]?.grant;
-  if (!enrollment || !grant) {
-    return { ok: false, error: createPlatformError("forbidden") };
-  }
-  const enrollmentStartedAt =
-    enrollment.createdAt > grant.startsAt ? enrollment.createdAt : grant.startsAt;
-  const sectionAccess = await sectionAccessForLesson(
-    db,
-    row.lesson,
-    enrollmentStartedAt,
-  );
-  const availableAt = latestUnlockAt(
-    lessonUnlockAt(row.lesson, enrollmentStartedAt),
-    sectionAccess.availableAt,
-  );
-  if (
-    (sectionAccess.required &&
-      (!sectionAccess.availableAt || sectionAccess.availableAt > now)) ||
-    (availableAt && availableAt > now)
-  ) {
-    return {
-      ok: false,
-      error: createPlatformError("forbidden", {
-        safeDetails: {
-          reason: "lesson_locked",
-          availableAt: availableAt ? serializeDate(availableAt) : null,
-        },
-      }),
-    };
-  }
-  return db.transaction(async (tx) => {
-    const existing = await tx
-      .select()
-      .from(schema.lessonProgress)
-      .where(
-        and(
-          eq(schema.lessonProgress.enrollmentId, enrollment.id),
-          eq(schema.lessonProgress.lessonId, row.lesson.id),
-        ),
-      )
-      .limit(1);
-    if (existing[0]) {
-      return {
-        ok: true as const,
-        value: {
-          lessonId: row.lesson.publicId,
-          enrollmentId: enrollment.publicId,
-          startedAt: serializeDate(existing[0].startedAt),
-          completedAt: existing[0].completedAt
-            ? serializeDate(existing[0].completedAt)
-            : null,
-        },
-      };
-    }
-    await tx.insert(schema.lessonProgress).values({
-      id: uuidv7(clock),
-      schoolId: input.schoolId,
-      enrollmentId: enrollment.id,
-      lessonId: row.lesson.id,
-      startedAt: now,
-      completedAt: null,
-      createdAt: now,
-    });
-    await tx.insert(schema.auditEvents).values({
-      id: uuidv7(clock),
-      schoolId: input.schoolId,
-      actorId: input.actorId,
-      action: "lesson.started",
-      resourceType: "lesson",
-      resourceId: row.lesson.publicId,
-      requestId: input.requestId,
-      createdAt: now,
-    });
-    await recordActivity(tx as unknown as AppDb, {
-      schoolId: input.schoolId,
-      actorId: input.learnerId,
-      type: ActivityType.LESSON_STARTED,
-      entityId: row.lesson.publicId,
-      metadata: { productId: row.product.publicId },
-    }, clock);
-    return {
-      ok: true as const,
-      value: {
-        lessonId: row.lesson.publicId,
-        enrollmentId: enrollment.publicId,
-        startedAt: serializeDate(now),
-        completedAt: null,
       },
     };
   });
@@ -1870,26 +1589,12 @@ export async function listLearnerProgress(
     .limit(1);
   const product = products[0];
   if (!product) return { ok: false, error: createPlatformError("not_found") };
-  const enrollments = await db
-    .select({ id: schema.enrollments.id, publicId: schema.enrollments.publicId })
-    .from(schema.enrollments)
-    .innerJoin(
-      schema.enrollmentAccessGrants,
-      eq(schema.enrollmentAccessGrants.enrollmentId, schema.enrollments.id),
-    )
-    .where(
-      and(
-        eq(schema.enrollments.learnerId, input.learnerId),
-        eq(schema.enrollments.productId, product.id),
-        eq(schema.enrollments.schoolId, input.schoolId),
-        eq(schema.enrollments.status, "active"),
-        eq(schema.enrollmentAccessGrants.schoolId, input.schoolId),
-        eq(schema.enrollmentAccessGrants.status, "active"),
-      ),
-    )
-    .limit(1);
-  const enrollment = enrollments[0];
-  if (!enrollment) return { ok: true, value: [] };
+  const membership = await activeProductMembershipForLesson(db, {
+    schoolId: input.schoolId,
+    learnerId: input.learnerId,
+    productPublicId: input.productPublicId,
+  });
+  if (!membership) return { ok: true, value: [] };
   const rows = await db
     .select({
       progress: schema.lessonProgress,
@@ -1900,7 +1605,7 @@ export async function listLearnerProgress(
     .where(
       and(
         eq(schema.lessonProgress.schoolId, input.schoolId),
-        eq(schema.lessonProgress.enrollmentId, enrollment.id),
+        eq(schema.lessonProgress.membershipId, membership.id),
       ),
     )
     .orderBy(asc(schema.lessonProgress.startedAt));
@@ -1908,7 +1613,7 @@ export async function listLearnerProgress(
     ok: true,
     value: rows.map(({ progress, lessonPublicId }) => ({
       lessonId: lessonPublicId,
-      enrollmentId: enrollment.publicId,
+      membershipId: membership.publicId,
       startedAt: serializeDate(progress.startedAt),
       completedAt: progress.completedAt ? serializeDate(progress.completedAt) : null,
     })),

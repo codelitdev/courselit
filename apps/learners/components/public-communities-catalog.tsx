@@ -8,7 +8,6 @@ import {
   PageCard,
   PageCardContent,
   PageCardHeader,
-  PageCardImage,
   Subheader1,
   Text2,
 } from "@frontlit/page-builder/primitives";
@@ -16,6 +15,7 @@ import { Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { z } from "zod";
+import { LearnerCardImage } from "@/components/themed-page-builder";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
 type PublicCommunity = z.infer<typeof communitySchema>;
@@ -114,10 +114,10 @@ export function PublicCommunitiesCatalog() {
                 className="h-full overflow-hidden"
               >
                 <Link
-                  href={`/communities/${encodeURIComponent(community.id)}`}
+                  href={`/p/${encodeURIComponent(community.slug || community.id)}`}
                   className="block h-full"
                 >
-                  <PageCardImage
+                  <LearnerCardImage
                     theme={theme}
                     src={
                       image?.thumbnailUrl ??

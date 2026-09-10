@@ -48,6 +48,12 @@ describe.serial("quiz evaluation", () => {
     expect(product.status).toBe(201);
     const productId = (product.body as { id: string }).id;
     await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/plans`,
+      headers: adminHeaders,
+      body: { name: "Free access", kind: "free", amountMinor: 0 },
+    });
+    await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/products/${productId}`,
       headers: adminHeaders,
@@ -96,7 +102,7 @@ describe.serial("quiz evaluation", () => {
 
     const enrollment = await dispatch(runtime, {
       method: "POST",
-      path: "/v1/learner/enrollments",
+      path: "/v1/learner/memberships",
       headers: learnerHeaders,
       body: { productId },
     });
@@ -109,7 +115,9 @@ describe.serial("quiz evaluation", () => {
     });
     expect(productDetail.status).toBe(200);
     const learnerLesson = (
-      productDetail.body as { lessons: Array<{ id: string; content: Record<string, unknown> }> }
+      productDetail.body as {
+        lessons: Array<{ id: string; content: Record<string, unknown> }>;
+      }
     ).lessons.find((item) => item.id === lessonId)!;
     expect(learnerLesson.content).toMatchObject({
       questions: [
@@ -153,7 +161,12 @@ describe.serial("quiz evaluation", () => {
       method: "POST",
       path: `/v1/learner/products/${productId}/lessons/${lessonId}/evaluation`,
       headers: learnerHeaders,
-      body: { answers: [[0, 1], [0, 1, 2]] },
+      body: {
+        answers: [
+          [0, 1],
+          [0, 1, 2],
+        ],
+      },
     });
     expect(fullWithWrongOption).toMatchObject({
       status: 200,
@@ -171,7 +184,12 @@ describe.serial("quiz evaluation", () => {
     const lessonRow = await runtime.db
       .select({ id: schema.lessons.id })
       .from(schema.lessons)
-      .where(and(eq(schema.lessons.schoolId, world.schoolA.id), eq(schema.lessons.publicId, lessonId)))
+      .where(
+        and(
+          eq(schema.lessons.schoolId, world.schoolA.id),
+          eq(schema.lessons.publicId, lessonId),
+        ),
+      )
       .limit(1);
     const evaluations = await runtime.db
       .select()

@@ -60,10 +60,10 @@ This inventory is complete for code visible in the CourseLit and `courselit-subs
 | PRD-001 | Courses and digital downloads share the product model                     | CourseLit API               | Migrate products, visibility, pricing links, authors, metadata, and slugs                | Evidence pending | `apps/api/src/migrations/products.test.ts` covers source-typed course import, school mapping, rich description preservation, and idempotency; `apps/api/src/migrations/payment-plans.test.ts` covers source payment-plan amount fields, default state, school currency isolation, rejection, and idempotency; public/admin read parity and production-shaped fixture evidence remain pending |
 | PRD-002 | Courses contain ordered groups/sections and lessons                       | CourseLit API               | Normalize sections and ordering without changing learner-visible order                   | Evidence pending | Section ordering, assignment, cross-school, and malformed-order tests |
 | PRD-003 | Lessons support multiple content types and visibility rules               | CourseLit API               | Migrate supported types; preserve opaque unsupported payloads for repair                 | Evidence pending | Lesson type enum/content JSON contract, rich-text authoring, dedicated learner lesson viewer, authorization tests, type-by-type renderer and malformed-data report still pending |
-| PRD-004 | SCORM packages, runtime state, evaluations, and size limits are supported | CourseLit API + learner app | Migrate package references and learner state; preserve sandbox/private-delivery controls | In progress | SCORM package processing, private delivery, enrollment-scoped runtime state, quiz evaluations, completion guards, and focused tests are ported; migration/browser evidence remains pending |
-| PRD-005 | Admins can preview unpublished products as learners                       | CourseLit API + learner app | Replace implicit privilege with short-lived, school/product-bound preview grants         | Evidence pending | Grant expiry, scope, replay, and no-enrollment-mutation tests |
+| PRD-004 | SCORM packages, runtime state, evaluations, and size limits are supported | CourseLit API + learner app | Migrate package references and learner state; preserve sandbox/private-delivery controls | In progress | SCORM package processing, private delivery, membership-scoped runtime state, quiz evaluations, completion guards, and focused tests are ported; migration/browser evidence remains pending |
+| PRD-005 | Admins can preview unpublished products as learners                       | CourseLit API + learner app | Replace implicit privilege with short-lived, school/product-bound preview grants         | Evidence pending | Grant expiry, scope, replay, and no-membership-mutation tests |
 | PRD-006 | Certificates and templates are generated from course completion           | CourseLit API + learner app | Migrate templates and issued certificates; retain verification identifiers               | Evidence pending | `certificates.test.ts` covers completion, idempotence, learner listing, public verification, template presentation fields, stable certificate-ID lookup, and school isolation; learner My Content exposes the active certificate ID and `/certificates/[verificationId]` renders a printable template-backed certificate; template import still pending |
-| PRD-007 | Memberships and `User.purchases` grant product access                     | CourseLit API               | Normalize into enrollment/access-grant records with provenance                           | Evidence pending | Free/admin enrollment creates one school-scoped access grant; duplicate enrollment remains idempotent; learner `My content` reads active published products through `/v1/learner/products`, including published-lesson progress, featured artwork, certificate linkage, and download state; authenticated digital-download links and archive delivery are covered by `downloads.test.ts`; purchase/import reconciliation still pending |
+| PRD-007 | Memberships and `User.purchases` grant product access                     | CourseLit API               | Normalize into `learner_memberships` with lifecycle and included-plan provenance       | Evidence pending | Free/admin membership activation creates one school-scoped learner membership; duplicate activation remains idempotent; learner `My content` reads active published products through `/v1/learner/products`, including published-lesson progress, featured artwork, certificate linkage, and download state; authenticated digital-download links and archive delivery are covered by `downloads.test.ts`; purchase/import reconciliation still pending |
 | PRD-008 | Drip schedules unlock course content asynchronously                       | CourseLit worker            | Move unlock calculation and scheduling into the API application worker                   | Evidence pending | `drip.test.ts` covers relative/fixed unlock precedence, locked-content omission, preview bypass, start/completion guards, and idempotent progress reads/writes; dedicated lesson viewer consumes locked-content/access state; durable worker scheduling and read-only behavior remain pending |
 | PRD-009 | Admin reports and learner activity summarize product usage                | CourseLit API               | Migrate required state plus 12 months of queryable raw activity; archive older events    | Contract pending | Aggregate comparison and archive manifest                     |
 
@@ -139,10 +139,7 @@ evidence and the production regression cases are ported.
 - **Target implementation/evidence:** `apps/admin/components/products/payment-plan-list.tsx`,
   `apps/admin/components/products/payment-plan-dialog.tsx`,
   `apps/api/src/storefront.ts`, `apps/api/src/db/schema/storefront.ts`, and
-  `apps/api/src/db/migrations/0021_storefront_plan_parity.sql`,
-  `apps/api/src/db/migrations/0024_storefront_plan_school_currency.sql`,
-  `apps/api/src/db/migrations/0025_storefront_plan_source_amounts.sql`, and
-  `apps/api/src/db/migrations/0027_storefront_plan_source_uniqueness.sql`. The API behavior is
+  `apps/api/drizzle/0000_baseline.sql`. The API behavior is
   covered by `apps/api/src/storefront.test.ts`; source payment-plan migration is covered by
   `apps/api/src/migrations/payment-plans.test.ts` and the operator path is
   `apps/api/scripts/import-payment-plans.mjs`. Admin typecheck and the storefront/commerce
@@ -261,7 +258,8 @@ evidence and the production regression cases are ported.
   `apps/admin/components/products/media-picker.tsx`,
   `apps/admin/components/products/media-upload-button.tsx`,
   `apps/admin/components/products/scorm-lesson-upload.tsx`, and the lesson/section
-  contracts, catalog service, and `apps/api/src/db/migrations/0026_lesson_downloadable.sql`.
+  contracts and catalog service; the schema is created by
+  `apps/api/drizzle/0000_baseline.sql`.
   The target adapts the editor to
   `@frontlit/text-editor` and `@frontlit/media-uploader` for binary handling to MediaLit;
   the rich-text picker preserves `main`'s MediaLit-backed image uploads while also
@@ -281,7 +279,7 @@ evidence and the production regression cases are ported.
   configuration. SCORM package runtime extraction, learner launch, and progress state are
   now ported in the Milestone 4 learner vertical: the API derives and stores manifest
   metadata, serves private package files through the learner app, exposes SCORM 1.2/2004
-  browser APIs, and persists enrollment-scoped runtime state. Quiz evaluation is also
+  browser APIs, and persists membership-scoped runtime state. Quiz evaluation is also
   server-side, persists every attempt with production-compatible scoring, and redacts
   correct answers from learner product responses. The learner app now also has a
   dedicated `/courses/[productId]/[lessonId]` viewer with course-back and previous/next
@@ -333,7 +331,7 @@ evidence and the production regression cases are ported.
   display currency from `schools.currency`; it does not introduce a product-level
   currency. Product actions that already have target routes are retained: Preview and
   Manage/publishing remain links, while Invite a customer is an in-place dialog backed
-  by the existing admin enrollment-grant contract. The source share control is adapted
+  by the existing admin membership-grant contract. The source share control is adapted
   to copy the learner app's `/courses/:productId` URL using
   `NEXT_PUBLIC_LEARNER_ORIGIN`; FrontLit-owned View page/Edit page actions remain
   explicitly deferred to the FrontLit milestone rather than being represented by
@@ -383,7 +381,7 @@ evidence and the production regression cases are ported.
   while preserving the nine-item page size, filter semantics, card hierarchy,
   terminology, privacy/publication distinction, and school-level currency display.
   `sales` is a count of succeeded storefront payments and `customers` is a count of
-  school-scoped enrollments; currency is a school response projection, never a
+  school-scoped learner memberships; currency is a school response projection, never a
   product or payment-plan input. The target reuses the source
   `/courselit_backdrop_square.webp` asset when the MediaLit catalog has no featured
   image.
@@ -401,30 +399,21 @@ evidence and the production regression cases are ported.
 
 ### M4-FPB-001 — School-local learner email authentication
 
-- **Status:** In progress; the email-OTP path is ported and password auth remains
-  available as a compatibility fallback.
+- **Status:** In progress; learner email OTP is provided only by the separate
+  Better Auth learner realm. The rewrite does not expose or call the former custom
+  learner OTP endpoints.
 - **Production source and behavior:** `main` uses Better Auth email OTP in the
   public payment/login flow (`apps/web/components/public/payments/login-form.tsx`).
-  The rewrite keeps learner principals separate from admin users and scopes every
-  challenge to the resolved school.
-- **Target implementation/evidence:** `apps/api/src/learners.ts` owns challenge
-  creation, salted code digests, ten-minute expiry, five-attempt lockout, one-time
-  consumption, learner creation, and learner-session issuance. The schema and
-  migration are `learner_otp_challenges` / `0030_learner_otp_challenges.sql`;
-  REST operations are `learnerRequestOtp` and `learnerVerifyOtp`; and the learner
-  login is OTP-first in `apps/learners/app/login/page.tsx`. `apps/api/src/learner-auth.test.ts`
-  covers non-persistence of raw codes, replay prevention, lockout, and school
-  isolation. Admin-to-learner linking now uses a separate
-  `learner_admin_links` relationship and a digest-only ten-minute handoff token;
-  the admin learner roster can launch that handoff, and password/OTP completion
-  consumes it transactionally. The link reconciliation merges admin-owned
-  community memberships, while same-email login without the handoff remains an
-  intentionally separate learner identity. `apps/api/src/learner-admin.test.ts`
-  covers both cases.
-- **Delivery disposition:** the API uses the existing OTP delivery seam, which logs
-  codes only in development and deliberately has no production mail implementation
-  yet. Real learner transactional delivery remains part of the SendLit integration
-  milestone; SendLit downtime must not merge or grant learner access.
+  The rewrite keeps learner principals and cookies separate from admin users.
+- **Target implementation/evidence:** `apps/api/src/auth/options.ts` configures
+  the learner realm with Better Auth email OTP, while
+  `apps/learners/components/public-login-block.tsx` and
+  `apps/learners/components/checkout-login-form.tsx` use that realm directly.
+  `apps/api/src/learner-auth.test.ts` covers the separate learner realm and asserts
+  that the legacy OTP routes are absent. The Better Auth session is bridged into
+  the school-scoped learner session used by learner APIs; admin-to-learner linking
+  continues to use the separate `learner_admin_links` relationship and its
+  digest-only handoff token.
 
 ### M4-FPB-002 — Digital-download link and archive delivery
 
@@ -437,8 +426,8 @@ evidence and the production regression cases are ported.
   marks the learner purchase as downloaded, records `DOWNLOADED`, and consumes the
   link after delivery. Lead-magnet email creation remains a SendLit milestone.
 - **Target implementation/evidence:** `apps/api/src/downloads.ts` and
-  `apps/api/src/db/migrations/0031_download_links.sql` create school- and
-  enrollment-scoped links, store only a SHA-256 token digest, resolve private files
+  `apps/api/drizzle/0000_baseline.sql` create school- and
+  membership-scoped links, store only a SHA-256 token digest, resolve private files
   through the server-only MediaLit client, and expose a binary attachment route at
   `/v1/learner/downloads/:token`. Link creation is contract-first at
   `POST /v1/learner/products/:productId/download`; the learner product page exposes
@@ -510,7 +499,7 @@ evidence and the production regression cases are ported.
   asserts the learner surface retains both renderer paths.
 - **Disposition:** preserve the production content-type behavior and the target
   split-app routes. Preview continues to bypass learner writes, while normal
-  completion remains protected by the existing API enrollment, drip, quiz, and
+  completion remains protected by the existing API membership, drip, quiz, and
   SCORM guards. Add side-by-side browser evidence for each lesson type before
   closing this brief.
 
@@ -560,7 +549,7 @@ only.
 | SL-003  | Course/product delivery by email exists                                                                                             | SendLit + CourseLit                         | Reframe as a supported transactional or marketing workflow without changing access ownership              | Contract pending | End-to-end delivery and authorization tests                         |
 | MED-001 | Media upload/proxy metadata is CourseLit-owned and binaries are stored through MediaLit                                             | CourseLit catalog + MediaLit                | Build a school-scoped media library; import each asset once and normalize references                      | Evidence pending | Resumable TUS upload to `/media/create/resumable` using a short-lived signature, `Media` response-header parsing, seal adapter, metadata/search/reuse, reference reconciliation, and tenant tests; legacy import still pending |
 | MED-002 | Deletion can remove media used by content/community records                                                                         | CourseLit API                               | Reject in-use deletion, reconcile references, and clean unused/temporary uploads safely                   | Evidence pending | In-use conflict, unused-delete, lesson-media reference save, and MediaLit HTTP deletion tests; retryable cleanup and legacy import still pending |
-| MED-003 | Private downloads and SCORM content use signed/proxied delivery                                                                     | CourseLit API + MediaLit                    | Preserve access checks and time-bounded private delivery                                                  | In progress     | `getLearnerLessonMedia` applies publication/enrollment/drip checks; private assets are resolved through the server-only MediaLit client; SCORM package extraction and learner runtime delivery are covered by focused tests; `downloads.test.ts` covers school/enrollment scoping, two-day one-use links, digest-only persistence, private MediaLit resolution, archive delivery, expiry/replay rejection, and download analytics; migration/browser evidence remains pending |
+| MED-003 | Private downloads and SCORM content use signed/proxied delivery                                                                     | CourseLit API + MediaLit                    | Preserve access checks and time-bounded private delivery                                                  | In progress     | `getLearnerLessonMedia` applies publication/membership/drip checks; private assets are resolved through the server-only MediaLit client; SCORM package extraction and learner runtime delivery are covered by focused tests; `downloads.test.ts` covers school/membership scoping, two-day one-use links, digest-only persistence, private MediaLit resolution, archive delivery, expiry/replay rejection, and download analytics; migration/browser evidence remains pending |
 
 ### API, operations, and cross-cutting behavior
 
@@ -603,7 +592,7 @@ GraphQL is an implementation detail of the legacy system, but every operation be
 | Product API            | `GET/POST /api/products`; `GET/PATCH/DELETE /api/products/:productId`                                                | Replace with `ts-rest`, preserving supported public contract                          |
 | Sections               | list/create/update/delete/reorder under `/api/products/:productId/sections`                                          | Replace with product contracts                                                        |
 | Lessons                | list/create/read/update/delete/move under `/api/products/:productId/lessons`                                         | Replace with lesson contracts                                                         |
-| Customers              | list, invite, progress, completion, evaluations under product/customer paths                                         | Split into learner, enrollment, progress, and evaluation contracts                    |
+| Customers              | list, invite, progress, completion, evaluations under product/customer paths                                         | Split into learner, membership, progress, and evaluation contracts                    |
 | Payment plans          | list/create/read/update/delete/set-default under product paths                                                       | Replace with storefront-plan contracts                                                |
 | Checkout               | `POST /api/payment/initiate`, `POST /api/payment/verify-new`, Razorpay verification, `GET/POST /api/payment/webhook` | Replace with provider-contract checkout and Stripe/Lemon Squeezy/Razorpay webhook inbox                        |
 | Media                  | presign, read, and delete under `/api/media`; SCORM upload/content/runtime                                           | Replace with CourseLit catalog plus MediaLit delivery                                 |

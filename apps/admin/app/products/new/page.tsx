@@ -17,6 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/codelit/select";
 import { AuthGate } from "../../../components/auth-gate";
+import { PermissionMessage } from "../../../components/permission-message";
+import { hasSchoolPermission } from "@/lib/school-permissions";
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -90,7 +92,10 @@ export default function NewProductPage() {
           </p>
         ) : null}
 
-        <form onSubmit={create} className="space-y-4">
+        {school && !hasSchoolPermission(school, "products:write") ? (
+          <PermissionMessage permission="products:write" />
+        ) : (
+          <form onSubmit={create} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="product-title">Title</Label>
             <Input
@@ -127,7 +132,8 @@ export default function NewProductPage() {
               <Link href="/products">Cancel</Link>
             </Button>
           </div>
-        </form>
+          </form>
+        )}
       </div>
     </AuthGate>
   );

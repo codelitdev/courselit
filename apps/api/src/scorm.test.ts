@@ -151,6 +151,15 @@ describe.serial("SCORM runtime", () => {
     });
     const productId = (product.body as { id: string }).id;
     await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/plans`,
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+      body: { name: "Free access", kind: "free", amountMinor: 0 },
+    });
+    await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/products/${productId}`,
       headers: {
@@ -209,7 +218,7 @@ describe.serial("SCORM runtime", () => {
 
     const enrolled = await dispatch(runtime, {
       method: "POST",
-      path: "/v1/learner/enrollments",
+      path: "/v1/learner/memberships",
       headers: {
         cookie: learnerCookie,
         "x-school-id": world.schoolA.publicId,

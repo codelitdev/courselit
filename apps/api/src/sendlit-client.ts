@@ -1024,15 +1024,18 @@ export async function sendSendLitTransactionalEmail(
   teamApiKey: string,
   input: {
     to: string;
-    templateId: string;
+    templateId?: string;
+    html?: string;
     variables?: Record<string, unknown>;
     replyTo?: string;
     subject?: string;
+    headers?: Record<string, string>;
+    idempotencyKey?: string;
   },
   options: { config?: SendLitConfig; fetcher?: FetchLike } = {},
-): Promise<{ txeId: string }> {
+): Promise<{ txeId: string; status?: string }> {
   const config = options.config ?? sendLitConfig();
-  return requestJson<{ txeId: string }>(
+  return requestJson<{ txeId: string; status?: string }>(
     config,
     "/emails",
     { method: "POST", teamApiKey, body: input },

@@ -201,29 +201,6 @@ export const learnerSessions = pgTable("learner_sessions", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
 });
 
-export const learnerOtpChallenges = pgTable(
-  "learner_otp_challenges",
-  {
-    id: uuid("id").primaryKey(),
-    schoolId: uuid("school_id")
-      .notNull()
-      .references(() => schools.id, { onDelete: "cascade" }),
-    email: text("email").notNull(),
-    codeDigest: text("code_digest").notNull(),
-    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-    attempts: integer("attempts").notNull().default(0),
-    consumedAt: timestamp("consumed_at", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
-  },
-  (table) => ({
-    lookup: index("learner_otp_challenges_lookup_idx").on(
-      table.schoolId,
-      table.email,
-      table.createdAt,
-    ),
-  }),
-);
-
 /** Explicit, school-scoped relationship between an admin principal and a
  * learner principal. Email equality is deliberately not used for this link.
  */
@@ -281,47 +258,6 @@ export const learnerIdentityLinkTokens = pgTable(
   }),
 );
 
-export const enrollments = pgTable(
-  "enrollments",
-  {
-    id: uuid("id").primaryKey(),
-    publicId: text("public_id").notNull().unique(),
-    schoolId: uuid("school_id")
-      .notNull()
-      .references(() => schools.id, { onDelete: "cascade" }),
-    learnerId: uuid("learner_id")
-      .notNull()
-      .references(() => learners.id, { onDelete: "cascade" }),
-    productId: uuid("product_id")
-      .notNull()
-      .references(() => products.id, { onDelete: "cascade" }),
-    source: text("source")
-      .$type<
-        | "free_signup"
-        | "admin_grant"
-        | "storefront_purchase"
-        | "included_product"
-        | "import"
-        | "integration"
-      >()
-      .notNull(),
-    status: text("status")
-      .$type<
-        "active" | "payment_failed" | "expired" | "pending" | "rejected" | "paused"
-      >()
-      .notNull()
-      .default("active"),
-    downloaded: boolean("downloaded").notNull().default(false),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
-  },
-  (table) => ({
-    learnerProduct: uniqueIndex("enrollments_learner_product_uidx").on(
-      table.learnerId,
-      table.productId,
-    ),
-  }),
-);
-
 export const downloadLinks = pgTable(
   "download_links",
   {
@@ -329,9 +265,7 @@ export const downloadLinks = pgTable(
     schoolId: uuid("school_id")
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
-    enrollmentId: uuid("enrollment_id")
-      .notNull()
-      .references(() => enrollments.id, { onDelete: "cascade" }),
+    membershipId: uuid("membership_id").notNull(),
     learnerId: uuid("learner_id")
       .notNull()
       .references(() => learners.id, { onDelete: "cascade" }),
@@ -353,39 +287,6 @@ export const downloadLinks = pgTable(
   }),
 );
 
-export const enrollmentAccessGrants = pgTable(
-  "enrollment_access_grants",
-  {
-    id: uuid("id").primaryKey(),
-    publicId: text("public_id").notNull().unique(),
-    schoolId: uuid("school_id")
-      .notNull()
-      .references(() => schools.id, { onDelete: "cascade" }),
-    enrollmentId: uuid("enrollment_id")
-      .notNull()
-      .references(() => enrollments.id, { onDelete: "cascade" }),
-    source: text("source")
-      .$type<
-        | "free_signup"
-        | "admin_grant"
-        | "storefront_purchase"
-        | "included_product"
-        | "import"
-        | "integration"
-      >()
-      .notNull(),
-    status: text("status").$type<"active" | "revoked">().notNull().default("active"),
-    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
-    endsAt: timestamp("ends_at", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
-  },
-  (table) => ({
-    enrollment: uniqueIndex("enrollment_access_grants_enrollment_uidx").on(
-      table.enrollmentId,
-    ),
-  }),
-);
-
 export const lessonProgress = pgTable(
   "lesson_progress",
   {
@@ -393,9 +294,7 @@ export const lessonProgress = pgTable(
     schoolId: uuid("school_id")
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
-    enrollmentId: uuid("enrollment_id")
-      .notNull()
-      .references(() => enrollments.id, { onDelete: "cascade" }),
+    membershipId: uuid("membership_id").notNull(),
     lessonId: uuid("lesson_id")
       .notNull()
       .references(() => lessons.id, { onDelete: "cascade" }),
@@ -404,8 +303,8 @@ export const lessonProgress = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
-    enrollmentLesson: uniqueIndex("lesson_progress_enrollment_lesson_uidx").on(
-      table.enrollmentId,
+    membershipLesson: uniqueIndex("lesson_progress_membership_lesson_uidx").on(
+      table.membershipId,
       table.lessonId,
     ),
   }),
@@ -418,9 +317,7 @@ export const scormRuntimeStates = pgTable(
     schoolId: uuid("school_id")
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
-    enrollmentId: uuid("enrollment_id")
-      .notNull()
-      .references(() => enrollments.id, { onDelete: "cascade" }),
+    membershipId: uuid("membership_id").notNull(),
     lessonId: uuid("lesson_id")
       .notNull()
       .references(() => lessons.id, { onDelete: "cascade" }),
@@ -429,8 +326,8 @@ export const scormRuntimeStates = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
-    enrollmentLesson: uniqueIndex("scorm_runtime_states_enrollment_lesson_uidx").on(
-      table.enrollmentId,
+    membershipLesson: uniqueIndex("scorm_runtime_states_membership_lesson_uidx").on(
+      table.membershipId,
       table.lessonId,
     ),
   }),
@@ -443,9 +340,7 @@ export const lessonEvaluations = pgTable(
     schoolId: uuid("school_id")
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
-    enrollmentId: uuid("enrollment_id")
-      .notNull()
-      .references(() => enrollments.id, { onDelete: "cascade" }),
+    membershipId: uuid("membership_id").notNull(),
     learnerId: uuid("learner_id")
       .notNull()
       .references(() => learners.id, { onDelete: "cascade" }),
@@ -459,8 +354,8 @@ export const lessonEvaluations = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
-    enrollmentLesson: index("lesson_evaluations_enrollment_lesson_idx").on(
-      table.enrollmentId,
+    membershipLesson: index("lesson_evaluations_membership_lesson_idx").on(
+      table.membershipId,
       table.lessonId,
     ),
     schoolLesson: index("lesson_evaluations_school_lesson_idx").on(

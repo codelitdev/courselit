@@ -82,7 +82,7 @@ type Identity = { learnerId: string | null; adminUserId: string | null };
 
 const COLLECTIONS = {
   communities: "communities",
-  plans: "communityPaymentPlans",
+  plans: "storefrontPlans",
   memberships: "communityMemberships",
   posts: "communityPosts",
   comments: "communityComments",
@@ -225,7 +225,7 @@ async function schoolFor(
 
 async function targetExists(
   db: AppDb,
-  table: "media" | "communities" | "communityPaymentPlans" | "communityMemberships" | "communityPosts" | "communityComments" | "communityReactions" | "communityPostSubscribers" | "communityReports",
+  table: "media" | "communities" | "storefrontPlans" | "communityMemberships" | "communityPosts" | "communityComments" | "communityReactions" | "communityPostSubscribers" | "communityReports",
   id: string,
 ): Promise<boolean> {
   const tableRef = schema[table];
@@ -659,7 +659,7 @@ export async function importLegacyCommunities(
         continue;
       }
       seen.add(duplicateKey);
-      if (await mappingStatus(COLLECTIONS.plans, sourceId, "communityPaymentPlans")) continue;
+      if (await mappingStatus(COLLECTIONS.plans, sourceId, "storefrontPlans")) continue;
       const communitySourceId = sourceIdFor(record, "communityId", "entityId", "community");
       if (!communitySourceId) {
         addRejection(rejection(COLLECTIONS.plans, sourceId, "community_mapping_missing"));
@@ -723,7 +723,7 @@ export async function importLegacyCommunities(
       if (includeFailure) continue;
       const activeDefault = booleanValue(record.isDefault ?? record.default, false);
       if (activeDefault) {
-        const existingDefault = await db.select({ id: schema.communityPaymentPlans.id }).from(schema.communityPaymentPlans).where(and(eq(schema.communityPaymentPlans.communityId, communityId), eq(schema.communityPaymentPlans.status, "active"), eq(schema.communityPaymentPlans.isDefault, true))).limit(1);
+        const existingDefault = await db.select({ id: schema.storefrontPlans.id }).from(schema.storefrontPlans).where(and(eq(schema.storefrontPlans.entityType, "community"), eq(schema.storefrontPlans.entityId, communitySourceId), eq(schema.storefrontPlans.status, "active"), eq(schema.storefrontPlans.isDefault, true))).limit(1);
         if (existingDefault[0]) {
           addRejection(rejection(COLLECTIONS.plans, sourceId, "duplicate_active_plan"));
           continue;
@@ -731,11 +731,12 @@ export async function importLegacyCommunities(
       }
       if (!addReady()) continue;
       const targetId = uuidv7(input.clock);
-      await db.insert(schema.communityPaymentPlans).values({
+      await db.insert(schema.storefrontPlans).values({
         id: targetId,
         publicId: sourceId,
         schoolId: communityRow.schoolId,
-        communityId,
+        entityType: "community",
+        entityId: communitySourceId,
         name,
         description: stringValue(record.description) ?? "",
         includedProducts,
@@ -755,7 +756,7 @@ export async function importLegacyCommunities(
         createdAt: timestamps.createdAt,
         updatedAt: timestamps.updatedAt,
       });
-      await addMapping(db, { clock: input.clock, runId, sourceSystem, sourceCollection: COLLECTIONS.plans, sourceId, targetTable: "communityPaymentPlans", targetId, schoolId: communityRow.schoolId });
+      await addMapping(db, { clock: input.clock, runId, sourceSystem, sourceCollection: COLLECTIONS.plans, sourceId, targetTable: "storefrontPlans", targetId, schoolId: communityRow.schoolId });
       counts.imported += 1;
       counts.plansImported += 1;
     }
@@ -799,7 +800,7 @@ export async function importLegacyCommunities(
         continue;
       }
       const planSourceId = sourceIdFor(record, "paymentPlanId", "planId");
-      const paymentPlanId = planSourceId ? await mappedTarget(db, sourceSystem, COLLECTIONS.plans, planSourceId, "communityPaymentPlans") : null;
+      const paymentPlanId = planSourceId ? await mappedTarget(db, sourceSystem, COLLECTIONS.plans, planSourceId, "storefrontPlans") : null;
       if (planSourceId && !paymentPlanId) {
         addRejection(rejection(COLLECTIONS.memberships, sourceId, "plan_mapping_missing", { planId: planSourceId }));
         continue;

@@ -10,7 +10,14 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { z } from "zod";
 import { requestJson } from "@/components/communities/learner-community";
-import { Button } from "@/components/ui/codelit/button";
+import {
+  LearnerButton as Button,
+  LearnerCard,
+  LearnerCardContent,
+  LearnerCardImage,
+  LearnerHeader2,
+  LearnerText2,
+} from "@/components/themed-page-builder";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
 type FeedPost = z.infer<typeof learnerFeedPostSchema>;
@@ -43,7 +50,7 @@ function PostContent({ value }: { value: string }) {
   if (richText) {
     return <TextRenderer json={richText} theme={theme} className="text-sm leading-6" />;
   }
-  return <p className="whitespace-pre-wrap text-sm leading-6">{value}</p>;
+  return <LearnerText2 className="whitespace-pre-wrap leading-6">{value}</LearnerText2>;
 }
 
 function formatPostDate(value: string) {
@@ -61,7 +68,7 @@ function PostMedia({ post }: { post: FeedPost }) {
       {post.media.map((media) => {
         if (media.type === "image") {
           return (
-            <img
+            <LearnerCardImage
               key={media.id}
               src={media.thumbnailUrl ?? media.url}
               alt={media.title}
@@ -71,6 +78,7 @@ function PostMedia({ post }: { post: FeedPost }) {
         }
         if (media.type === "video") {
           return (
+            // biome-ignore lint/a11y/useMediaCaption: the learner media contract does not provide a caption-track asset
             <video
               key={media.id}
               src={media.url}
@@ -110,7 +118,7 @@ function ReactionBar({
           key={reaction.emoji}
           type="button"
           size="sm"
-          variant={reaction.active ? "soft" : "outline"}
+          variant={reaction.active ? "secondary" : "outline"}
           className="h-8 rounded-full px-2.5"
           onClick={() => onReact(reaction.emoji)}
         >
@@ -124,15 +132,17 @@ function ReactionBar({
         </summary>
         <div className="absolute bottom-10 left-0 z-10 flex gap-1 rounded-md border bg-popover p-2 shadow-md">
           {REACTION_EMOJIS.map((emoji) => (
-            <button
+            <Button
               key={emoji}
               type="button"
-              className="flex size-8 items-center justify-center rounded-md text-lg transition-colors hover:bg-muted"
+              variant="ghost"
+              size="icon"
+              className="size-8 text-lg"
               onClick={() => onReact(emoji)}
               aria-label={`React ${emoji}`}
             >
               {emoji}
-            </button>
+            </Button>
           ))}
         </div>
       </details>
@@ -149,10 +159,10 @@ function FeedPostCard({
 }) {
   const authorName = post.author?.name || "Community member";
   return (
-    <article className="overflow-hidden rounded-xl border bg-card p-6 shadow-sm">
+    <LearnerCard className="overflow-hidden p-6">
       <div className="flex items-start gap-3">
         {post.author?.imageUrl ? (
-          <img
+          <LearnerCardImage
             src={post.author.imageUrl}
             alt=""
             className="size-10 rounded-full object-cover"
@@ -163,8 +173,8 @@ function FeedPostCard({
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="font-medium">{authorName}</p>
-          <p className="text-xs text-muted-foreground">
+          <LearnerText2 className="font-medium">{authorName}</LearnerText2>
+          <LearnerText2 className="text-xs text-muted-foreground">
             {formatPostDate(post.updatedAt)} · {post.category} ·{" "}
             <Link
               href={`/dashboard/community/${encodeURIComponent(post.community.id)}`}
@@ -172,7 +182,7 @@ function FeedPostCard({
             >
               {post.community.name}
             </Link>
-          </p>
+          </LearnerText2>
         </div>
       </div>
       <div className="mt-7 space-y-4">
@@ -180,9 +190,9 @@ function FeedPostCard({
           href={`/dashboard/community/${encodeURIComponent(post.community.id)}/${encodeURIComponent(post.id)}`}
           className="group block space-y-3"
         >
-          <h2 className="text-lg font-semibold group-hover:text-primary">
+          <LearnerHeader2 className="group-hover:text-primary">
             {post.title}
-          </h2>
+          </LearnerHeader2>
           <PostContent value={post.content} />
         </Link>
         <PostMedia post={post} />
@@ -200,7 +210,7 @@ function FeedPostCard({
           </span>
         </Link>
       </div>
-    </article>
+    </LearnerCard>
   );
 }
 
@@ -304,15 +314,15 @@ export function LearnerFeed() {
   }
 
   return (
-    <div className="page-shell">
+    <div className="grid gap-7">
       {error ? (
-        <p className="text-sm text-destructive" role="alert">
+        <LearnerText2 className="text-destructive" role="alert">
           {error}
-        </p>
+        </LearnerText2>
       ) : null}
       {loading ? (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <div className="space-y-4" aria-label="Loading feed">
+          <div className="space-y-4" role="status" aria-label="Loading feed">
             {[1, 2, 3].map((item) => (
               <div
                 key={item}
@@ -324,21 +334,23 @@ export function LearnerFeed() {
         </div>
       ) : (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <section className="stack" aria-label="Community feed">
+          <section className="grid gap-4" aria-label="Community feed">
             {posts.length === 0 ? (
-              <div className="card stack items-start">
-                <MessageCircle className="size-8 text-muted-foreground" />
-                <h2>No posts yet</h2>
-                <p className="muted">
-                  Posts from communities you join will appear here.
-                </p>
-                <Link
-                  href="/communities"
-                  className="font-medium text-primary hover:underline"
-                >
-                  Browse communities
-                </Link>
-              </div>
+              <LearnerCard>
+                <LearnerCardContent className="grid justify-items-start gap-3">
+                  <MessageCircle className="size-8 text-muted-foreground" />
+                  <LearnerHeader2>No posts yet</LearnerHeader2>
+                  <LearnerText2 className="text-muted-foreground">
+                    Posts from communities you join will appear here.
+                  </LearnerText2>
+                  <Link
+                    href="/communities"
+                    className="font-medium text-primary hover:underline"
+                  >
+                    Browse communities
+                  </Link>
+                </LearnerCardContent>
+              </LearnerCard>
             ) : (
               posts.map((post) => (
                 <FeedPostCard
@@ -360,34 +372,36 @@ export function LearnerFeed() {
               </Button>
             ) : null}
           </section>
-          <aside className="card h-fit stack" aria-label="Your communities">
-            <h2 className="text-xl font-semibold">Your communities</h2>
-            {communities.length ? (
-              <ul className="stack gap-2">
-                {communities.map((community) => (
-                  <li key={community.id}>
-                    <Link
-                      href={`/dashboard/community/${encodeURIComponent(community.id)}`}
-                      className="block truncate text-sm hover:text-primary"
-                    >
-                      {community.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="stack items-start text-sm text-muted-foreground">
-                <Users className="size-7" />
-                <p>You have not joined any communities yet.</p>
-                <Link
-                  href="/communities"
-                  className="font-medium text-primary hover:underline"
-                >
-                  Browse communities
-                </Link>
-              </div>
-            )}
-          </aside>
+          <LearnerCard className="h-fit" aria-label="Your communities">
+            <LearnerCardContent className="grid gap-4">
+              <LearnerHeader2>Your communities</LearnerHeader2>
+              {communities.length ? (
+                <ul className="grid gap-2">
+                  {communities.map((community) => (
+                    <li key={community.id}>
+                      <Link
+                        href={`/dashboard/community/${encodeURIComponent(community.id)}`}
+                        className="block truncate text-sm hover:text-primary"
+                      >
+                        {community.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="grid items-start gap-3 text-muted-foreground">
+                  <Users className="size-7" />
+                  <LearnerText2>You have not joined any communities yet.</LearnerText2>
+                  <Link
+                    href="/communities"
+                    className="font-medium text-primary hover:underline"
+                  >
+                    Browse communities
+                  </Link>
+                </div>
+              )}
+            </LearnerCardContent>
+          </LearnerCard>
         </div>
       )}
     </div>

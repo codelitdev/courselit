@@ -3,6 +3,7 @@
 import { Check, ChevronsUpDown, Plus } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import type { CourseLitPermission } from "@courselit/api-contract/team-permissions";
 import { CourseLitLogo } from "@/components/layout/courselit-logo";
 import {
   DropdownMenu,
@@ -24,6 +25,7 @@ export type School = {
   name: string;
   subdomain?: string;
   status?: string;
+  permissions?: readonly CourseLitPermission[];
   selected?: boolean;
 };
 

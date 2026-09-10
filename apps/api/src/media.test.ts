@@ -321,6 +321,13 @@ describe.serial("media library", () => {
     expect(finalized.status).toBe(201);
     const mediaId = (finalized.body as { id: string }).id;
 
+    const freePlan = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${world.noteA.publicId}/plans`,
+      headers: adminHeaders,
+      body: { name: "Free access", kind: "free", amountMinor: 0 },
+    });
+    expect(freePlan.status).toBe(201);
     await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/products/${world.noteA.publicId}`,
@@ -368,7 +375,7 @@ describe.serial("media library", () => {
 
     const enrolled = await dispatch(runtime, {
       method: "POST",
-      path: "/v1/learner/enrollments",
+      path: "/v1/learner/memberships",
       headers: { cookie: learnerCookie, "x-school-id": world.schoolA.publicId },
       body: { productId: world.noteA.publicId },
     });

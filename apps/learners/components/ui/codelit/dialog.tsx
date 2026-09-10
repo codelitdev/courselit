@@ -1,6 +1,8 @@
+import { Header4, Text2 } from "@frontlit/page-builder/primitives";
 import { XIcon } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import type * as React from "react";
+import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 import { cn } from "@/lib/utils";
 
 function Dialog(props: React.ComponentProps<typeof DialogPrimitive.Root>) {
@@ -50,25 +52,35 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
 
 function DialogTitle({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Title>) {
+  const theme = useSchoolThemeStyle();
   return (
     <DialogPrimitive.Title
+      asChild
       className={cn("text-base leading-tight font-semibold", className)}
       {...props}
-    />
+    >
+      <Header4 theme={theme}>{children}</Header4>
+    </DialogPrimitive.Title>
   );
 }
 
 function DialogDescription({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Description>) {
+  const theme = useSchoolThemeStyle();
   return (
     <DialogPrimitive.Description
+      asChild
       className={cn("text-sm text-muted-foreground", className)}
       {...props}
-    />
+    >
+      <Text2 theme={theme}>{children}</Text2>
+    </DialogPrimitive.Description>
   );
 }
 

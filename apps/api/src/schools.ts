@@ -8,7 +8,12 @@ import {
 import { and, eq, ne, or } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { frontLitConfig } from "./frontlit-client.js";
-import { OWNER_PERMISSIONS, serializePermissions } from "./permissions.js";
+import {
+  OWNER_PERMISSIONS,
+  parsePermissions,
+  serializePermissions,
+  type CourseLitPermission,
+} from "./permissions.js";
 import { sendLitConfig } from "./sendlit-client.js";
 import type { AppDb } from "./types.js";
 import { SCHOOL_PUBLIC_ID_PREFIX } from "./public-id-prefixes.js";
@@ -26,12 +31,14 @@ export type SchoolDto = {
   status: "active" | "read_only" | "maintenance" | "migrating" | "deleted";
   locale: string;
   currency: string;
+  permissions?: CourseLitPermission[];
   selected?: boolean;
 };
 
 export function toSchoolDto(
   row: typeof schema.schools.$inferSelect,
   selected?: boolean,
+  permissions?: readonly CourseLitPermission[],
 ): SchoolDto {
   return {
     id: row.publicId,
@@ -40,6 +47,7 @@ export function toSchoolDto(
     status: row.status,
     locale: row.locale,
     currency: row.currency,
+    ...(permissions === undefined ? {} : { permissions: [...permissions] }),
     ...(selected === undefined ? {} : { selected }),
   };
 }
@@ -84,6 +92,8 @@ export async function createSchool(
     ssoConfig: null,
     googleConfig: null,
     paymentSettingsEncrypted: null,
+    codeInjectionHead: "",
+    codeInjectionBody: "",
     createdAt: now,
     updatedAt: now,
   };
@@ -207,12 +217,18 @@ export async function listSchoolsForUser(
     .limit(1);
   const selectedTenantPublicId = selectedRows[0]?.publicId;
   const rows = await db
-    .select({ school: schema.schools })
+    .select({ school: schema.schools, membership: schema.memberships })
     .from(schema.memberships)
     .innerJoin(schema.schools, eq(schema.schools.id, schema.memberships.schoolId))
     .where(eq(schema.memberships.userId, principalId));
   return rows.map((row) =>
-    toSchoolDto(row.school, row.school.publicId === selectedTenantPublicId),
+    toSchoolDto(
+      row.school,
+      row.school.publicId === selectedTenantPublicId,
+      row.membership.isOwner
+        ? OWNER_PERMISSIONS
+        : [...parsePermissions(row.membership.permissions)],
+    ),
   );
 }
 

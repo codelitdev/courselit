@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { LearnerText2 } from "@/components/themed-page-builder";
 import { learnerHeaders, writeSchoolId } from "@/lib/school";
 
 function isCoursePreviewPath(pathname: string) {
@@ -61,8 +62,8 @@ export function LoggedInRoute({ children }: { children: React.ReactNode }) {
 
   if (checking && !preview) {
     return (
-      <main className="flex min-h-[400px] items-center justify-center p-6 text-sm text-muted-foreground">
-        Loading your learner portal…
+      <main className="flex min-h-[400px] items-center justify-center p-6">
+        <LearnerText2 className="text-muted-foreground">Loading your learner portal…</LearnerText2>
       </main>
     );
   }

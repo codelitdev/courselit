@@ -7,6 +7,7 @@ import {
   ImagePickerContextProvider,
   type PickedImage,
 } from "@frontlit/text-editor";
+import { LearnerText2 } from "@/components/themed-page-builder";
 import { useCallback, useRef, useState } from "react";
 import {
   type LearnerCommunityMedia,
@@ -97,9 +98,9 @@ export function LearnerRichTextEditor({
         onSelect={finishPicker}
       />
       {error ? (
-        <p role="alert" className="text-sm text-destructive">
+        <LearnerText2 role="alert" className="text-destructive">
           {error}
-        </p>
+        </LearnerText2>
       ) : null}
     </div>
   );

@@ -1,11 +1,13 @@
+import { drizzle } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Client } from "pg";
-import { applyMigrations } from "../src/db/migrate.ts";
+import { migrationsFolder } from "../src/db/migrate.ts";
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL_REQUIRED");
 const client = new Client({ connectionString: databaseUrl });
 await client.connect();
-await applyMigrations((sql) => client.query(sql));
+await migrate(drizzle(client), { migrationsFolder });
 const tables = await client.query(
   "select tablename from pg_tables where schemaname = 'public' order by tablename",
 );

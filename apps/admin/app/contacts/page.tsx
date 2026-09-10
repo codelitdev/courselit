@@ -12,6 +12,7 @@ import { ChevronRight, Contact, Plus } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/codelit/button";
 import {
   Dialog,
@@ -23,9 +24,16 @@ import {
 } from "@/components/ui/codelit/dialog";
 import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
+import { hasSchoolPermission } from "@/lib/school-permissions";
 import { AuthGate } from "../../components/auth-gate";
 
-type School = { id: string; name: string; subdomain: string; selected?: boolean };
+type School = {
+  id: string;
+  name: string;
+  subdomain: string;
+  permissions?: readonly string[];
+  selected?: boolean;
+};
 
 type Learner = {
   id: string;
@@ -125,7 +133,9 @@ export default function ContactsPage() {
       const body = (await response.json()) as { items?: Subscriber[] };
       setSubscribers(body.items ?? []);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to load subscribers.");
+      setError(
+        caught instanceof Error ? caught.message : "Unable to load subscribers.",
+      );
     } finally {
       setLoadingSubscribers(false);
     }
@@ -140,7 +150,12 @@ export default function ContactsPage() {
       });
       if (response.ok) {
         const body = (await response.json()) as {
-          items?: Array<{ id?: string; segmentId?: string; name: string; filter: ContactFilterWithAggregator }>;
+          items?: Array<{
+            id?: string;
+            segmentId?: string;
+            name: string;
+            filter: ContactFilterWithAggregator;
+          }>;
         };
         const loaded: ContactFilterSegment[] = (body.items ?? []).map((seg) => ({
           id: seg.id || seg.segmentId || "",
@@ -239,7 +254,10 @@ export default function ContactsPage() {
       return allContacts;
     }
 
-    const matchesCondition = (contact: ContactItem, cond: ContactFilterCondition): boolean => {
+    const matchesCondition = (
+      contact: ContactItem,
+      cond: ContactFilterCondition,
+    ): boolean => {
       const val = (cond.value ?? "").trim().toLowerCase();
 
       switch (cond.name) {
@@ -312,7 +330,10 @@ export default function ContactsPage() {
   }, [allContacts, filter]);
 
   // Segment Handlers
-  async function handleSaveSegment(name: string, filterValue: ContactFilterWithAggregator) {
+  async function handleSaveSegment(
+    name: string,
+    filterValue: ContactFilterWithAggregator,
+  ) {
     if (!school) return;
     setError(null);
     try {
@@ -329,7 +350,12 @@ export default function ContactsPage() {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.message || "Unable to save segment.");
       }
-      const created = (await response.json()) as { id?: string; segmentId?: string; name: string; filter: ContactFilterWithAggregator };
+      const created = (await response.json()) as {
+        id?: string;
+        segmentId?: string;
+        name: string;
+        filter: ContactFilterWithAggregator;
+      };
       const newSeg: ContactFilterSegment = {
         id: created.id || created.segmentId || "",
         name: created.name,
@@ -363,7 +389,8 @@ export default function ContactsPage() {
         setFilter({ aggregator: "or", filters: [] });
       }
     } catch (caught) {
-      const msg = caught instanceof Error ? caught.message : "Unable to delete segment.";
+      const msg =
+        caught instanceof Error ? caught.message : "Unable to delete segment.";
       setError(msg);
       throw caught;
     }
@@ -406,6 +433,7 @@ export default function ContactsPage() {
   }
 
   const isLoading = loadingLearners || loadingSubscribers;
+  const canWriteContacts = hasSchoolPermission(school, "learners:write");
 
   return (
     <AuthGate>
@@ -414,18 +442,20 @@ export default function ContactsPage() {
           title="Contacts"
           description="Manage audience contacts, learners, subscribers, segmentation, and tags."
           action={
-            <Button
-              type="button"
-              onClick={() => {
-                setSubscriberEmail("");
-                setSubscriberName("");
-                setSubscriberTags([]);
-                setNewSubscriberOpen(true);
-              }}
-            >
-              <Plus className="size-4 mr-1.5" />
-              Add subscriber
-            </Button>
+            canWriteContacts ? (
+              <Button
+                type="button"
+                onClick={() => {
+                  setSubscriberEmail("");
+                  setSubscriberName("");
+                  setSubscriberTags([]);
+                  setNewSubscriberOpen(true);
+                }}
+              >
+                <Plus className="size-4 mr-1.5" />
+                Add subscriber
+              </Button>
+            ) : undefined
           }
         />
 
@@ -463,13 +493,27 @@ export default function ContactsPage() {
               Loading contacts…
             </div>
           ) : allContacts.length === 0 ? (
-            <div className="py-12 text-center">
-              <Contact className="mx-auto size-8 text-muted-foreground mb-2" />
-              <p className="text-sm font-medium">No contacts yet</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Contacts will appear here as they register, enroll in courses, or subscribe to your mailing list.
-              </p>
-            </div>
+            <EmptyState
+              icon={Contact}
+              title="No Contacts Found"
+              description="Contacts will appear here as they register, enroll in courses, or subscribe to your mailing list."
+              action={
+                canWriteContacts ? (
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setSubscriberEmail("");
+                      setSubscriberName("");
+                      setSubscriberTags([]);
+                      setNewSubscriberOpen(true);
+                    }}
+                  >
+                    <Plus className="size-4" />
+                    Add subscriber
+                  </Button>
+                ) : undefined
+              }
+            />
           ) : filteredContacts.length === 0 ? (
             <div className="py-12 text-center">
               <Contact className="mx-auto size-8 text-muted-foreground mb-2" />
@@ -518,7 +562,9 @@ export default function ContactsPage() {
                             }
                             dot
                           >
-                            {contact.learner.status === "active" ? "Learner" : "Suspended"}
+                            {contact.learner.status === "active"
+                              ? "Learner"
+                              : "Suspended"}
                           </Badge>
                         ) : (
                           <Badge variant="neutral">Subscriber</Badge>
@@ -590,9 +636,7 @@ export default function ContactsPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>New contact</DialogTitle>
-              <DialogDescription>
-                Add a new contact to your SendLit audience.
-              </DialogDescription>
+              <DialogDescription>Add a new contact to your audience.</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleAddSubscriber} className="space-y-4 py-2">
               <div className="space-y-1.5">
@@ -627,7 +671,9 @@ export default function ContactsPage() {
                     )
                   }
                   onRemove={(tag) =>
-                    setSubscriberTags((current) => current.filter((item) => item !== tag))
+                    setSubscriberTags((current) =>
+                      current.filter((item) => item !== tag),
+                    )
                   }
                 />
               </div>

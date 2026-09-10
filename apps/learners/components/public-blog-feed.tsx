@@ -6,11 +6,11 @@ import {
   Header4,
   PageCard,
   PageCardContent,
-  PageCardImage,
   Subheader1,
   Text2,
 } from "@frontlit/page-builder/primitives";
 import Link from "next/link";
+import { LearnerCardImage } from "@/components/themed-page-builder";
 import type { PublicArticle } from "@/lib/courselit-public";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
@@ -60,7 +60,7 @@ export function PublicBlogFeed({
                 className="h-full transition-transform hover:-translate-y-1"
               >
                 {featuredImageUrl(post) ? (
-                  <PageCardImage
+                  <LearnerCardImage
                     theme={theme}
                     src={featuredImageUrl(post)!}
                     alt={

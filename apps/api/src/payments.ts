@@ -67,6 +67,7 @@ export type PaymentProvider = {
   name: PaymentProviderName;
   createCheckout(input: PaymentCheckoutInput): Promise<PaymentCheckoutResult>;
   cancelSubscription?(providerSubscriptionId: string): Promise<void>;
+  validateSubscription?(providerSubscriptionId: string): Promise<boolean>;
   verifyWebhook(rawBody: string, headers: Record<string, string | undefined>, now: Date): void;
   parseWebhook(rawBody: string, headers: Record<string, string | undefined>): NormalizedPaymentEvent;
 };
@@ -174,6 +175,19 @@ class StripePayment implements PaymentProvider {
       headers: { authorization: basicAuth(required(this.settings.secretKey, "stripe_secret_key")) },
     });
     if (!response.ok) throw new Error(`stripe_subscription_cancel_failed_${response.status}`);
+  }
+
+  async validateSubscription(providerSubscriptionId: string): Promise<boolean> {
+    try {
+      const response = await fetch(`https://api.stripe.com/v1/subscriptions/${encodeURIComponent(providerSubscriptionId)}`, {
+        headers: { authorization: basicAuth(required(this.settings.secretKey, "stripe_secret_key")) },
+      });
+      if (!response.ok) return false;
+      const body = objectValue(await response.json());
+      return body.status === "active";
+    } catch {
+      return false;
+    }
   }
 
   verifyWebhook(rawBody: string, headers: Record<string, string | undefined>, now: Date): void {
@@ -294,6 +308,24 @@ class LemonSqueezyPayment implements PaymentProvider {
     if (!response.ok) throw new Error(`lemonsqueezy_subscription_cancel_failed_${response.status}`);
   }
 
+  async validateSubscription(providerSubscriptionId: string): Promise<boolean> {
+    try {
+      const response = await fetch(`https://api.lemonsqueezy.com/v1/subscriptions/${encodeURIComponent(providerSubscriptionId)}`, {
+        headers: {
+          authorization: `Bearer ${required(this.settings.apiKey, "lemonsqueezy_api_key")}`,
+          accept: "application/vnd.api+json",
+          "X-Version": "2023-06-30",
+        },
+      });
+      if (!response.ok) return false;
+      const body = objectValue(await response.json());
+      const attributes = objectValue(objectValue(body.data).attributes);
+      return attributes.status === "active";
+    } catch {
+      return false;
+    }
+  }
+
   verifyWebhook(rawBody: string, headers: Record<string, string | undefined>, _now: Date): void {
     const secret = required(this.settings.webhookSecret, "lemonsqueezy_webhook_secret");
     verifyDigest(required(headers["x-signature"], "lemonsqueezy_signature"), hmacHex(secret, rawBody), "lemonsqueezy_signature_invalid");
@@ -352,6 +384,17 @@ class RazorpayPayment implements PaymentProvider {
       method: "POST",
       body: JSON.stringify({ cancel_at_cycle_end: 0 }),
     });
+  }
+
+  async validateSubscription(providerSubscriptionId: string): Promise<boolean> {
+    try {
+      const subscription = await this.request(`/subscriptions/${encodeURIComponent(providerSubscriptionId)}`, {
+        method: "GET",
+      });
+      return subscription.status === "active";
+    } catch {
+      return false;
+    }
   }
 
   async createCheckout(input: PaymentCheckoutInput): Promise<PaymentCheckoutResult> {

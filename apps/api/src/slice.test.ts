@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { contract } from "@courselit/api-contract";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
 import { LEARNER_SESSION_COOKIE } from "./learners.js";
@@ -96,21 +96,38 @@ describe.serial("first vertical slice", () => {
       },
       body: {
         email: world.outsider.email,
-        role: "member",
         permissions: ["products:read", "products:write"],
       },
     });
     expect(invited.status).toBe(201);
     const invitation = invited.body as { id: string; token: string };
+    expect(invitation.id).toMatch(/^tinv_/);
+
+    const invitationPreview = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/team-invitations/preview",
+      headers: {
+        cookie: world.outsider.sessionCookie,
+        "x-request-id": "req_invitation_preview",
+      },
+      body: { invitationId: invitation.id, token: invitation.token },
+    });
+    expect(invitationPreview.status).toBe(200);
+    expect(invitationPreview.body).toMatchObject({
+      invitationId: invitation.id,
+      schoolName: "Slice School",
+      email: world.outsider.email,
+      permissions: ["products:read", "products:write"],
+    });
 
     const accepted = await dispatch(runtime, {
       method: "POST",
-      path: "/v1/invitations/accept",
+      path: "/v1/team-invitations/accept",
       headers: {
         cookie: world.outsider.sessionCookie,
         "x-request-id": "req_accept",
       },
-      body: { token: invitation.token, email: world.outsider.email },
+      body: { invitationId: invitation.id, token: invitation.token },
     });
     expect(accepted.status).toBe(200);
     expect(accepted.body).toMatchObject({ ok: true, schoolId: school.id });
@@ -208,6 +225,216 @@ describe.serial("first vertical slice", () => {
     await runtime.close();
   });
 
+  it("lists, revokes, and removes school team access", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+
+    const initial = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/school/team",
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+    });
+    expect(initial.status).toBe(200);
+    expect(initial.body).toMatchObject({
+      members: [
+        expect.objectContaining({
+          id: world.member.id,
+          permissions: expect.arrayContaining(["products:read"]),
+        }),
+        expect.objectContaining({ id: world.owner.id, isOwner: true }),
+      ],
+      invitations: [],
+    });
+
+    const updated = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/school/team/members/${world.member.id}`,
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+      body: { permissions: ["products:read"] },
+    });
+    expect(updated.status).toBe(200);
+    expect(updated.body).toMatchObject({
+      id: world.member.id,
+      permissions: ["products:read"],
+    });
+
+    const memberUpdate = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/school/team/members/${world.owner.id}`,
+      headers: {
+        cookie: world.member.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+      body: { permissions: ["products:read"] },
+    });
+    expect(memberUpdate.status).toBe(403);
+
+    const invited = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/invitations",
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+      body: {
+        email: world.outsider.email,
+        permissions: ["school:admin", "products:read"],
+      },
+    });
+    expect(invited.status).toBe(201);
+    const invitation = invited.body as { id: string };
+
+    const withInvitation = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/school/team",
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+    });
+    expect(withInvitation.status).toBe(200);
+    expect(withInvitation.body).toMatchObject({
+      invitations: [
+        expect.objectContaining({
+          invitationId: invitation.id,
+          permissions: expect.arrayContaining(["products:read"]),
+        }),
+      ],
+    });
+
+    const revoked = await dispatch(runtime, {
+      method: "DELETE",
+      path: `/v1/invitations/${invitation.id}`,
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+    });
+    expect(revoked.status).toBe(204);
+
+    const removed = await dispatch(runtime, {
+      method: "DELETE",
+      path: `/v1/school/team/members/${world.member.id}`,
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+    });
+    expect(removed.status).toBe(204);
+
+    const final = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/school/team",
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+    });
+    expect(final.status).toBe(200);
+    expect(final.body).toMatchObject({
+      members: [expect.objectContaining({ id: world.owner.id, isOwner: true })],
+      invitations: [],
+    });
+
+    await runtime.close();
+  });
+
+  it("lets scoped members invite only within their delegated permissions", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+    await runtime.db
+      .update(schema.memberships)
+      .set({ permissions: "members:invite,products:read" })
+      .where(
+        and(
+          eq(schema.memberships.schoolId, world.schoolA.id),
+          eq(schema.memberships.userId, world.member.id),
+        ),
+      );
+
+    const team = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/school/team",
+      headers: {
+        cookie: world.member.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+    });
+    expect(team.status).toBe(200);
+    expect(team.body).toMatchObject({
+      viewer: {
+        id: world.member.id,
+        isOwner: false,
+        permissions: expect.arrayContaining(["members:read", "members:invite"]),
+      },
+    });
+
+    const schools = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/schools",
+      headers: { cookie: world.member.sessionCookie },
+    });
+    expect(schools.status).toBe(200);
+    const scopedSchool = (
+      schools.body as {
+        items: Array<{ id: string; permissions?: string[] }>;
+      }
+    ).items.find((item) => item.id === world.schoolA.publicId);
+    expect(scopedSchool).toBeDefined();
+    expect(scopedSchool?.permissions).toEqual(
+      expect.arrayContaining(["members:read", "members:invite", "products:read"]),
+    );
+    expect(scopedSchool?.permissions?.includes("products:write") ?? false).toBe(false);
+
+    const allowed = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/invitations",
+      headers: {
+        cookie: world.member.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+      body: {
+        email: world.outsider.email,
+        permissions: ["products:read"],
+      },
+    });
+    expect(allowed.status).toBe(201);
+
+    const escalated = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/invitations",
+      headers: {
+        cookie: world.member.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+      body: {
+        email: "another-outsider@example.com",
+        permissions: ["products:delete"],
+      },
+    });
+    expect(escalated.status).toBe(403);
+
+    const restrictedCommunityCreate = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/communities",
+      headers: {
+        cookie: world.member.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+      body: { name: "Support should not create" },
+    });
+    expect(restrictedCommunityCreate.status).toBe(403);
+    await runtime.close();
+  });
+
   it("publishes a free course with one lesson and hides unpublished content", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
@@ -273,6 +500,15 @@ describe.serial("first vertical slice", () => {
     });
     expect(publicDraft.status).toBe(404);
 
+    await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${product.id}/plans`,
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+      body: { name: "Free access", kind: "free", amountMinor: 0 },
+    });
     const publishedCourse = await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/products/${product.id}`,
@@ -387,6 +623,15 @@ describe.serial("first vertical slice", () => {
     });
     const productId = (course.body as { id: string }).id;
     await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/plans`,
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+      body: { name: "Free access", kind: "free", amountMinor: 0 },
+    });
+    await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/products/${productId}`,
       headers: {
@@ -442,7 +687,7 @@ describe.serial("first vertical slice", () => {
 
     const enrolled = await dispatch(runtime, {
       method: "POST",
-      path: "/v1/learner/enrollments",
+      path: "/v1/learner/memberships",
       headers: {
         cookie: learnerCookie,
         "x-school-id": world.schoolA.publicId,
@@ -452,10 +697,11 @@ describe.serial("first vertical slice", () => {
     });
     expect(enrolled.status).toBe(201);
     expect(enrolled.body).toMatchObject({
-      productId,
-      source: "free_signup",
+      entityType: "product",
+      entityId: productId,
       status: "active",
       schoolId: world.schoolA.publicId,
+      isIncludedInPlan: false,
     });
 
     const myContent = await dispatch(runtime, {
@@ -545,7 +791,7 @@ describe.serial("first vertical slice", () => {
     const enrollEvents = await runtime.db
       .select()
       .from(schema.auditEvents)
-      .where(eq(schema.auditEvents.action, "enrollment.created"));
+      .where(eq(schema.auditEvents.action, "membership.created"));
     expect(
       enrollEvents.some(
         (event) =>
@@ -590,6 +836,15 @@ describe.serial("first vertical slice", () => {
       body: { kind: "course", title: "Parity course", description: "shared" },
     });
     const productId = (course.body as { id: string }).id;
+    await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/plans`,
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+      body: { name: "Free access", kind: "free", amountMinor: 0 },
+    });
     const lesson = await dispatch(runtime, {
       method: "POST",
       path: `/v1/products/${productId}/lessons`,

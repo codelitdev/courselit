@@ -1,6 +1,9 @@
 "use client";
 
-import { Button } from "@/components/ui/codelit/button";
+import {
+  LearnerButton as Button,
+  LearnerText2,
+} from "@/components/themed-page-builder";
 
 export function GoogleLogo() {
   return (
@@ -45,9 +48,10 @@ export function ExternalLoginButton({
       className="w-full flex items-center justify-center gap-2"
     >
       {provider === "google" ? <GoogleLogo /> : null}
-      <span>
-        {label ?? (provider === "google" ? "Continue with Google" : "Continue with SSO")}
-      </span>
+      <LearnerText2 component="span">
+        {label ??
+          (provider === "google" ? "Continue with Google" : "Continue with SSO")}
+      </LearnerText2>
     </Button>
   );
 }

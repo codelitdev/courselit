@@ -13,8 +13,15 @@ import {
   useLearnerSession,
 } from "@/components/communities/learner-community";
 import { LearnerShell } from "@/components/layout/learner-shell";
-import { Button } from "@/components/ui/codelit/button";
-import { Switch } from "@/components/ui/codelit/switch";
+import {
+  LearnerButton as Button,
+  LearnerCard as PageCard,
+  LearnerCardContent as PageCardContent,
+  LearnerHeader1,
+  LearnerHeader2,
+  LearnerText2,
+  LearnerSwitch as Switch,
+} from "@/components/themed-page-builder";
 
 type Notification = z.infer<typeof notificationSchema>;
 type NotificationPreference = z.infer<typeof notificationPreferenceSchema>;
@@ -199,12 +206,12 @@ export function LearnerNotifications() {
 
   return (
     <LearnerShell user={learner}>
-      <main className="page-shell">
-        <header className="app-header">
+      <main className="grid gap-7">
+        <header className="flex items-start justify-between gap-4">
           <div>
-            <p className="eyebrow">Learner activity</p>
-            <h1>Notifications</h1>
-            <p className="subtitle">Stay up to date with conversations you follow.</p>
+            <LearnerText2 className="text-muted-foreground">Learner activity</LearnerText2>
+            <LearnerHeader1>Notifications</LearnerHeader1>
+            <LearnerText2 className="mt-2 text-muted-foreground">Stay up to date with conversations you follow.</LearnerText2>
           </div>
           <Button
             type="button"
@@ -216,25 +223,25 @@ export function LearnerNotifications() {
           </Button>
         </header>
         {error ? (
-          <p className="text-sm text-destructive" role="alert">
+          <LearnerText2 className="text-destructive" role="alert">
             {error}
-          </p>
+          </LearnerText2>
         ) : null}
-        {loading ? <p className="muted">Loading notifications…</p> : null}
-        <section
-          className="card stack"
+        {loading ? <LearnerText2 className="text-muted-foreground">Loading notifications…</LearnerText2> : null}
+        <PageCard
           aria-labelledby="notification-preferences-title"
         >
+          <PageCardContent className="grid gap-5">
           <div>
-            <p className="eyebrow">Preferences</p>
-            <h2 id="notification-preferences-title">Notification preferences</h2>
-            <p className="muted">
+            <LearnerText2 className="text-muted-foreground">Preferences</LearnerText2>
+            <LearnerHeader2 id="notification-preferences-title">Notification preferences</LearnerHeader2>
+            <LearnerText2 className="mt-2 text-muted-foreground">
               Choose which activity appears in your in-app notifications.
-            </p>
+            </LearnerText2>
           </div>
-          {preferencesLoading ? <p className="muted">Loading preferences…</p> : null}
+          {preferencesLoading ? <LearnerText2 className="text-muted-foreground">Loading preferences…</LearnerText2> : null}
           {!preferencesLoading ? (
-            <div className="stack">
+            <div className="grid gap-4">
               {preferences.map((preference) => {
                 const copy = preferenceCopy[preference.type];
                 return (
@@ -243,8 +250,8 @@ export function LearnerNotifications() {
                     className="flex items-center justify-between gap-4 border-t pt-4 first:border-t-0 first:pt-0"
                   >
                     <div>
-                      <h3 className="font-medium">{copy.title}</h3>
-                      <p className="muted">{copy.description}</p>
+                      <LearnerText2 className="font-medium">{copy.title}</LearnerText2>
+                      <LearnerText2 className="text-muted-foreground">{copy.description}</LearnerText2>
                     </div>
                     <Switch
                       aria-label={`Enable ${copy.title.toLowerCase()}`}
@@ -259,31 +266,35 @@ export function LearnerNotifications() {
               })}
             </div>
           ) : null}
-        </section>
+          </PageCardContent>
+        </PageCard>
         {!loading && items.length === 0 ? (
-          <section className="card stack">
+          <PageCard>
+            <PageCardContent className="grid justify-items-start gap-3">
             <Bell className="size-8 text-muted-foreground" />
-            <h2>You&apos;re all caught up</h2>
-            <p className="muted">
+            <LearnerHeader2>You&apos;re all caught up</LearnerHeader2>
+            <LearnerText2 className="text-muted-foreground">
               New community replies and activity will appear here.
-            </p>
+            </LearnerText2>
             <Button asChild variant="outline">
               <Link href="/communities">Browse communities</Link>
             </Button>
-          </section>
+            </PageCardContent>
+          </PageCard>
         ) : null}
-        <section className="stack" aria-label="Notifications">
+        <section className="grid gap-4" aria-label="Notifications">
           {items.map((item) => {
             const content = (
               <div
-                key={item.id}
-                className={`card ${item.readAt ? "opacity-70" : "border-primary/50"}`}
+                className="block"
               >
+              <PageCard className={item.readAt ? "opacity-70" : "border-primary/50"}>
+                <PageCardContent>
                 <div className="flex items-start gap-3">
                   <Bell className="mt-0.5 size-5 shrink-0 text-primary" />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h2 className="font-semibold">{item.title}</h2>
+                      <LearnerHeader2>{item.title}</LearnerHeader2>
                       <time
                         className="text-xs text-muted-foreground"
                         dateTime={item.createdAt}
@@ -293,9 +304,11 @@ export function LearnerNotifications() {
                         }).format(new Date(item.createdAt))}
                       </time>
                     </div>
-                    <p className="mt-1 text-sm text-muted-foreground">{item.body}</p>
+                    <LearnerText2 className="mt-1 text-muted-foreground">{item.body}</LearnerText2>
                   </div>
                 </div>
+                </PageCardContent>
+              </PageCard>
               </div>
             );
             return item.href ? (
@@ -308,14 +321,15 @@ export function LearnerNotifications() {
                 {content}
               </Link>
             ) : (
-              <button
+              <Button
                 key={item.id}
                 type="button"
-                className="block w-full text-left"
+                variant="ghost"
+                className="h-auto w-full justify-start p-0 text-left"
                 onClick={() => void markRead(item)}
               >
                 {content}
-              </button>
+              </Button>
             );
           })}
         </section>

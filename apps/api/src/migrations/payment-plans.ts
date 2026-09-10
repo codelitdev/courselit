@@ -535,7 +535,12 @@ export async function importLegacyPaymentPlans(
       const productPlans = await db
         .select()
         .from(schema.storefrontPlans)
-        .where(eq(schema.storefrontPlans.productId, product[0].id));
+        .where(
+          and(
+            eq(schema.storefrontPlans.entityType, "product"),
+            eq(schema.storefrontPlans.entityId, plan.entityId),
+          ),
+        );
       const productKey = product[0].id;
       const keys = plannedKeys.get(productKey) ?? new Set<string>();
       if (plan.status === "active") {
@@ -592,7 +597,8 @@ export async function importLegacyPaymentPlans(
             id: planId,
             publicId: plan.sourceId,
             schoolId: plan.schoolId,
-            productId: plan.productId,
+            entityType: "product",
+            entityId: plan.entityId,
             name: plan.name,
             description: plan.description,
             includedProducts: plan.includedProducts,

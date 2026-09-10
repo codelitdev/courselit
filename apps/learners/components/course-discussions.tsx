@@ -1,11 +1,17 @@
 "use client";
 
-import { Button } from "@codelitdev/design-system";
 import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
-import { MessageSquare, ThumbsUp } from "lucide-react";
+import { MessageSquare, ThumbsUp, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { learnerHeaders } from "../lib/school";
+import { useSchoolThemeStyle } from "../lib/school-theme-context";
 import { LearnerDiscussionEditor } from "./learner-discussion-editor";
+import {
+  LearnerButton as Button,
+  LearnerLabel,
+  LearnerText2,
+  LearnerTextarea,
+} from "./themed-page-builder";
 import {
   Dialog,
   DialogContent,
@@ -77,13 +83,18 @@ export function CourseDiscussions({
   enabled,
   viewerId,
   previewToken = null,
+  className = "",
+  onClose,
 }: {
   productId: string;
   lessonId: string;
   enabled: boolean;
   viewerId: string;
   previewToken?: string | null;
+  className?: string;
+  onClose?: () => void;
 }) {
+  const theme = useSchoolThemeStyle();
   const [comments, setComments] = useState<Comment[]>([]);
   const [replies, setReplies] = useState<Record<string, Reply[]>>({});
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -608,45 +619,64 @@ export function CourseDiscussions({
 
   if (!enabled) return null;
   return (
-    <section className="mt-5 border-t pt-5" aria-label="Lesson discussions">
+    <section
+      className={`${onClose ? "mt-0 border-0 pt-0" : "mt-5 border-t pt-5"} ${className}`.trim()}
+      aria-label="Lesson discussions"
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="flex items-center gap-2 text-lg font-semibold">
+          <LearnerText2 className="flex items-center gap-2 text-lg font-semibold">
             <MessageSquare className="size-4" /> Discussions
-          </h3>
-          <p className="text-sm text-muted-foreground">
+          </LearnerText2>
+          <LearnerText2 className="text-muted-foreground">
             Ask questions and learn with other learners.
-          </p>
+          </LearnerText2>
         </div>
-        {!previewToken ? (
-          <div className="flex items-center gap-3">
-            {summary ? (
-              <span className="text-sm text-muted-foreground">
-                {summary.totalCount} {summary.totalCount === 1 ? "post" : "posts"}
-              </span>
-            ) : null}
-            <button
+        <div className="flex items-center gap-3">
+          {!previewToken ? (
+            <>
+              {summary ? (
+                <LearnerText2 component="span" className="text-muted-foreground">
+                  {summary.totalCount} {summary.totalCount === 1 ? "post" : "posts"}
+                </LearnerText2>
+              ) : null}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-auto p-0 text-primary hover:underline"
+                onClick={() => void toggleSubscription()}
+              >
+                {subscribed ? "Unsubscribe" : "Subscribe"}
+              </Button>
+            </>
+          ) : null}
+          {onClose ? (
+            <Button
               type="button"
-              className="text-sm text-primary hover:underline"
-              onClick={() => void toggleSubscription()}
+              aria-label="Close discussions"
+              variant="ghost"
+              size="icon"
+              className="size-7 text-muted-foreground hover:bg-muted hover:text-foreground"
+              onClick={onClose}
             >
-              {subscribed ? "Unsubscribe" : "Subscribe"}
-            </button>
-          </div>
-        ) : null}
+              <X className="size-4" />
+            </Button>
+          ) : null}
+        </div>
       </div>
       {error ? (
-        <p role="alert" className="mt-3 text-sm text-destructive">
+        <LearnerText2 role="alert" className="mt-3 text-destructive">
           {error}
-        </p>
+        </LearnerText2>
       ) : null}
       {notice ? (
-        <p role="status" className="mt-3 text-sm text-primary">
+        <LearnerText2 role="status" className="mt-3 text-primary">
           {notice}
-        </p>
+        </LearnerText2>
       ) : null}
       {!previewToken ? (
-        <div className="mt-4 stack">
+        <div className="mt-4 grid gap-4">
           <LearnerDiscussionEditor
             initialContent={commentDraft}
             refresh={commentRefresh}
@@ -664,34 +694,36 @@ export function CourseDiscussions({
           </div>
         </div>
       ) : null}
-      <div className="mt-5 stack">
+      <div className="mt-5 grid gap-4">
         {comments.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No comments yet.</p>
+        <LearnerText2 className="text-muted-foreground">No comments yet.</LearnerText2>
         ) : null}
         {comments.map((comment) => (
           <article
             key={comment.id}
             id={`discussion-comment-${comment.id}`}
-            className="rounded-lg border p-4 stack"
+            className="grid gap-4 rounded-lg border p-4"
           >
             <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-              <span>
+              <LearnerText2 component="span">
                 {displayName(comment.authorId, comment.authorKind)} ·{" "}
                 {new Date(comment.createdAt).toLocaleString()}
                 {comment.isEdited ? " · edited" : ""}
-              </span>
+              </LearnerText2>
               {!previewToken && !comment.deleted && comment.authorId !== viewerId ? (
-                <button
+                <Button
                   type="button"
-                  className="hover:underline"
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 hover:underline"
                   onClick={() => requestReport("comment", comment.id)}
                 >
                   Report
-                </button>
+                </Button>
               ) : null}
             </div>
             {editing?.type === "comment" && editing.id === comment.id ? (
-              <div className="stack">
+              <div className="grid gap-4">
                 <LearnerDiscussionEditor
                   initialContent={editing.value}
                   onChange={(value) =>
@@ -712,35 +744,41 @@ export function CourseDiscussions({
                 </div>
               </div>
             ) : comment.deleted ? (
-              <p className="text-sm italic text-muted-foreground">
+              <LearnerText2 className="italic text-muted-foreground">
                 This comment was removed.
-              </p>
+              </LearnerText2>
             ) : (
-              <TextRenderer json={comment.content} className="text-sm" />
+              <TextRenderer json={comment.content} theme={theme} className="text-sm" />
             )}
             <div className="flex flex-wrap items-center gap-3 text-sm">
               {!previewToken && !comment.deleted ? (
-                <button
+                <Button
                   type="button"
-                  className="inline-flex items-center gap-1 hover:underline"
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 hover:underline"
                   onClick={() => void like("comment", comment.id)}
                 >
                   <ThumbsUp className="size-3.5" /> {comment.likesCount}
-                </button>
+                </Button>
               ) : null}
-              <button
+              <Button
                 type="button"
-                className="hover:underline"
+                variant="ghost"
+                size="sm"
+                className="h-auto p-0 hover:underline"
                 onClick={() => void toggleReplies(comment.id)}
               >
                 {expanded.has(comment.id)
                   ? "Hide replies"
                   : `View replies (${comment.replyCount})`}
-              </button>
+              </Button>
               {!comment.deleted ? (
-                <button
+                <Button
                   type="button"
-                  className="hover:underline"
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 hover:underline"
                   onClick={() => {
                     setReplyingTo({ commentId: comment.id });
                     clearReplyDraft();
@@ -749,13 +787,15 @@ export function CourseDiscussions({
                   }}
                 >
                   Reply
-                </button>
+                </Button>
               ) : null}
               {!previewToken && !comment.deleted && comment.authorId === viewerId ? (
                 <>
-                  <button
+                  <Button
                     type="button"
-                    className="hover:underline"
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto p-0 hover:underline"
                     onClick={() =>
                       setEditing({
                         type: "comment",
@@ -765,45 +805,49 @@ export function CourseDiscussions({
                     }
                   >
                     Edit
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
-                    className="hover:underline"
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto p-0 hover:underline"
                     onClick={() => requestDelete("comment", comment.id)}
                   >
                     Delete
-                  </button>
+                  </Button>
                 </>
               ) : null}
             </div>
             {expanded.has(comment.id) ? (
-              <div className="ml-4 border-l pl-4 stack">
+              <div className="ml-4 grid gap-4 border-l pl-4">
                 {(replies[comment.id] ?? []).map((reply) => (
                   <div
                     key={reply.id}
                     id={`discussion-reply-${reply.id}`}
-                    className="stack"
+                    className="grid gap-4"
                   >
                     <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                      <span>
+                      <LearnerText2 component="span">
                         {displayName(reply.authorId, reply.authorKind)} ·{" "}
                         {new Date(reply.createdAt).toLocaleString()}
                         {reply.isEdited ? " · edited" : ""}
-                      </span>
+                      </LearnerText2>
                       {!previewToken &&
                       !reply.deleted &&
                       reply.authorId !== viewerId ? (
-                        <button
+                        <Button
                           type="button"
-                          className="hover:underline"
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-0 hover:underline"
                           onClick={() => requestReport("reply", reply.id)}
                         >
                           Report
-                        </button>
+                        </Button>
                       ) : null}
                     </div>
                     {editing?.type === "reply" && editing.id === reply.id ? (
-                      <div className="stack">
+                      <div className="grid gap-4">
                         <LearnerDiscussionEditor
                           initialContent={editing.value}
                           onChange={(value) =>
@@ -829,24 +873,28 @@ export function CourseDiscussions({
                         </div>
                       </div>
                     ) : reply.deleted ? (
-                      <p className="text-sm italic text-muted-foreground">
+                      <LearnerText2 className="italic text-muted-foreground">
                         This reply was removed.
-                      </p>
+                      </LearnerText2>
                     ) : (
-                      <TextRenderer json={reply.content} className="text-sm" />
+                      <TextRenderer json={reply.content} theme={theme} className="text-sm" />
                     )}
                     {!previewToken && !reply.deleted ? (
                       <div className="flex gap-3 text-sm">
-                        <button
+                        <Button
                           type="button"
-                          className="inline-flex items-center gap-1 hover:underline"
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-0 hover:underline"
                           onClick={() => void like("reply", reply.id)}
                         >
                           <ThumbsUp className="size-3.5" /> {reply.likesCount}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
-                          className="hover:underline"
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-0 hover:underline"
                           onClick={() => {
                             setReplyingTo({
                               commentId: comment.id,
@@ -856,12 +904,14 @@ export function CourseDiscussions({
                           }}
                         >
                           Reply
-                        </button>
+                        </Button>
                         {reply.authorId === viewerId ? (
                           <>
-                            <button
+                            <Button
                               type="button"
-                              className="hover:underline"
+                              variant="ghost"
+                              size="sm"
+                              className="h-auto p-0 hover:underline"
                               onClick={() =>
                                 setEditing({
                                   type: "reply",
@@ -871,14 +921,16 @@ export function CourseDiscussions({
                               }
                             >
                               Edit
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                               type="button"
-                              className="hover:underline"
+                              variant="ghost"
+                              size="sm"
+                              className="h-auto p-0 hover:underline"
                               onClick={() => requestDelete("reply", reply.id)}
                             >
                               Delete
-                            </button>
+                            </Button>
                           </>
                         ) : null}
                       </div>
@@ -886,18 +938,20 @@ export function CourseDiscussions({
                   </div>
                 ))}
                 {replyHasMore[comment.id] && replyCursors[comment.id] ? (
-                  <button
+                  <Button
                     type="button"
-                    className="self-start text-sm text-primary hover:underline"
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto self-start p-0 text-primary hover:underline"
                     onClick={() =>
                       void loadReplies(comment.id, replyCursors[comment.id])
                     }
                   >
                     View more replies
-                  </button>
+                  </Button>
                 ) : null}
                 {replyingTo?.commentId === comment.id ? (
-                  <div className="stack">
+                  <div className="grid gap-4">
                     <LearnerDiscussionEditor
                       initialContent={replyDraft}
                       refresh={replyRefresh}
@@ -956,10 +1010,10 @@ export function CourseDiscussions({
               Tell the course admin why this content should be reviewed.
             </DialogDescription>
           </DialogHeader>
-          <label className="stack text-sm font-medium">
+          <LearnerLabel className="grid gap-2 font-medium">
             Reason
-            <textarea
-              className="min-h-24 w-full rounded-md border bg-background p-2 font-normal outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            <LearnerTextarea
+              className="min-h-24 w-full font-normal"
               value={reportReason}
               maxLength={2000}
               onChange={(event) => {
@@ -969,7 +1023,7 @@ export function CourseDiscussions({
               placeholder="Describe the issue"
               autoFocus
             />
-          </label>
+          </LearnerLabel>
           <DialogFooter>
             <Button
               type="button"

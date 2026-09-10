@@ -1,5 +1,5 @@
 import type { Clock } from "@codelitdev/platform";
-import { and, asc, eq, inArray, lt, lte, or } from "drizzle-orm";
+import { and, asc, eq, inArray, lt, lte } from "drizzle-orm";
 import type { Logger } from "pino";
 import * as schema from "./db/schema/index.js";
 import {
@@ -12,10 +12,7 @@ import {
   provisionFrontLitTeam,
   setFrontLitSubdomain,
 } from "./frontlit-client.js";
-import {
-  ensureSalesPageMappings,
-  processNextFrontLitSalesPage,
-} from "./frontlit-sales-pages.js";
+import { ensureSalesPageJobs, provisionSalesPageJob } from "./frontlit-sales-pages.js";
 import {
   addSendLitContactTag,
   createSendLitContact,
@@ -226,18 +223,6 @@ async function provisionOneFrontLitSchool(
     lastError: null,
     updatedAt: syncedAt,
   });
-  await db
-    .update(schema.frontlitSalesPages)
-    .set({ nextAttemptAt: syncedAt, updatedAt: syncedAt })
-    .where(
-      and(
-        eq(schema.frontlitSalesPages.schoolId, job.schoolId),
-        or(
-          eq(schema.frontlitSalesPages.status, "pending"),
-          eq(schema.frontlitSalesPages.status, "failed"),
-        ),
-      ),
-    );
 }
 
 async function provisionOneSendLitSchool(
@@ -452,7 +437,7 @@ async function failJob(
 ): Promise<void> {
   const now = clock.now();
   const message = safeError(error);
-  if (job.type.startsWith("provision_")) {
+  if (job.type === "provision_frontlit" || job.type === "provision_sendlit") {
     await updateIntegration(db, job.schoolId, job.provider, {
       status: actionRequired ? "action_required" : "pending",
       lastError: message,
@@ -483,7 +468,7 @@ export async function processNextIntegrationJob(
   sendLitCfg: SendLitConfig = sendLitConfig(),
 ): Promise<boolean> {
   const allowedProviders: schema.IntegrationProvider[] = [];
-  if (config.server && config.provisioningSecret) {
+  if (config.server) {
     allowedProviders.push("frontlit");
   }
   if (sendLitCfg.server) {
@@ -496,7 +481,15 @@ export async function processNextIntegrationJob(
 
   if (job.provider === "frontlit") {
     try {
-      await provisionOneFrontLitSchool(db, job, clock, operations, config);
+      if (job.type === "provision_sales_page") {
+        await provisionSalesPageJob(db, job, clock, config);
+      } else if (job.type === "provision_frontlit") {
+        await provisionOneFrontLitSchool(db, job, clock, operations, config);
+      } else {
+        throw new IntegrationActionRequiredError(
+          `Unknown FrontLit job type: ${job.type}`,
+        );
+      }
       await finishJob(db, job, clock);
     } catch (error) {
       const actionRequired = isActionRequired(error);
@@ -564,6 +557,7 @@ export function startIntegrationWorker(
   async function tick() {
     if (stopped) return;
     try {
+      await ensureSalesPageJobs(db, clock);
       let processed = await processNextIntegrationJob(
         db,
         clock,
@@ -583,11 +577,6 @@ export function startIntegrationWorker(
           options.sendLitOperations,
           sendLitConfig(),
         );
-      }
-      await ensureSalesPageMappings(db, clock);
-      let salesPageProcessed = await processNextFrontLitSalesPage(db, clock);
-      while (salesPageProcessed && !stopped) {
-        salesPageProcessed = await processNextFrontLitSalesPage(db, clock);
       }
     } catch (error) {
       logger.error({ error: safeError(error) }, "Integration worker poll error");

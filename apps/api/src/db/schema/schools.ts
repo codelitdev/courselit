@@ -99,6 +99,7 @@ export const selectedSchools = pgTable("selected_schools", {
 
 export const invitations = pgTable("invitations", {
   id: uuid("id").primaryKey(),
+  publicId: text("public_id").notNull().unique(),
   schoolId: uuid("school_id")
     .notNull()
     .references(() => schools.id, { onDelete: "cascade" }),

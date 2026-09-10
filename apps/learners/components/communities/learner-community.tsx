@@ -8,7 +8,6 @@ import type {
   communitySchema,
   learnerSchema,
 } from "@courselit/api-contract";
-import { PlatformTabs } from "@courselit/components-library";
 import { MediaUploadDialog, type SelectedMedia } from "@frontlit/media-uploader";
 import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
 import {
@@ -24,13 +23,24 @@ import {
   Share2,
   Users,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { z } from "zod";
 import { LearnerShell } from "@/components/layout/learner-shell";
-import { Button } from "@/components/ui/codelit/button";
+import {
+  LearnerButton as Button,
+  LearnerCardImage,
+  LearnerHeader1,
+  LearnerHeader2,
+  LearnerHeader3,
+  LearnerInput,
+  LearnerSelect,
+  LearnerText2,
+  LearnerTextarea,
+  LearnerCard as PageCard,
+  LearnerCardContent as PageCardContent,
+} from "@/components/themed-page-builder";
 import {
   Dialog,
   DialogContent,
@@ -43,8 +53,8 @@ import {
   type LearnerCommunityMedia,
   useLearnerCommunityMediaUploader,
 } from "@/lib/community-media-uploader";
-import { learnerHeaders, writeSchoolId } from "@/lib/school";
 import { openRazorpayCheckout } from "@/lib/razorpay";
+import { learnerHeaders, writeSchoolId } from "@/lib/school";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 import { LearnerRichTextEditor } from "./learner-rich-text-editor";
 
@@ -160,7 +170,7 @@ function CommunityReactionsBar({
             key={reaction.emoji}
             type="button"
             size="sm"
-            variant={reaction.active ? "soft" : "outline"}
+            variant={reaction.active ? "secondary" : "outline"}
             className="h-8 min-w-11 rounded-full px-2.5 text-sm"
             onClick={() => onReact(reaction.emoji)}
           >
@@ -175,15 +185,17 @@ function CommunityReactionsBar({
         </summary>
         <div className="absolute bottom-10 left-0 z-10 flex gap-1 rounded-md border bg-popover p-2 shadow-md">
           {COMMUNITY_REACTION_EMOJIS.map((emoji) => (
-            <button
+            <Button
               key={emoji}
               type="button"
-              className="flex size-8 items-center justify-center rounded-md text-lg transition-colors hover:bg-muted"
+              variant="ghost"
+              size="icon"
+              className="size-8 text-lg"
               onClick={() => onReact(emoji)}
               aria-label={`React ${emoji}`}
             >
               {emoji}
-            </button>
+            </Button>
           ))}
         </div>
       </details>
@@ -203,68 +215,67 @@ function MediaAttachments({
   return (
     <ul className="grid list-none gap-3 p-0 sm:grid-cols-2" aria-label="Attached media">
       {items.map((item) => (
-        <li
-          key={item.id}
-          className="relative overflow-hidden rounded-md border bg-card"
-        >
-          {item.type === "image" && item.url ? (
-            <Image
-              src={item.thumbnailUrl ?? item.url}
-              alt={item.title}
-              width={640}
-              height={360}
-              unoptimized
-              className="aspect-video w-full object-cover"
-            />
-          ) : item.type === "video" && item.url ? (
-            <a
-              href={item.url}
-              target="_blank"
-              rel="noreferrer"
-              className="relative block aspect-video bg-muted hover:opacity-90"
-            >
-              {item.thumbnailUrl ? (
-                <Image
-                  src={item.thumbnailUrl}
-                  alt={item.title}
-                  width={640}
-                  height={360}
-                  unoptimized
-                  className="size-full object-cover"
-                />
-              ) : (
-                <span className="flex size-full items-center justify-center gap-2 text-sm text-muted-foreground">
-                  <Film className="size-5" /> Open video
-                </span>
-              )}
-            </a>
-          ) : (
-            <a
-              href={item.url}
-              target="_blank"
-              rel="noreferrer"
-              className="flex min-h-24 items-center gap-3 p-3 text-sm hover:bg-muted/40"
-            >
-              <FileText className="size-5 shrink-0 text-primary" />
-              <span className="min-w-0 truncate">{item.fileName}</span>
-            </a>
-          )}
-          <div className="flex items-center justify-between gap-2 border-t px-3 py-2 text-xs">
-            <span className="min-w-0 truncate text-muted-foreground" title={item.title}>
-              {item.title}
-            </span>
-            {onRemove ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 shrink-0 px-2 text-xs"
-                onClick={() => onRemove(item.id)}
+        <li key={item.id} className="min-w-0">
+          <PageCard className="relative overflow-hidden">
+            {item.type === "image" && item.url ? (
+              <LearnerCardImage
+                src={item.thumbnailUrl ?? item.url}
+                alt={item.title}
+                className="aspect-video w-full object-cover"
+              />
+            ) : item.type === "video" && item.url ? (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noreferrer"
+                className="relative block aspect-video bg-muted hover:opacity-90"
               >
-                Remove
-              </Button>
-            ) : null}
-          </div>
+                {item.thumbnailUrl ? (
+                  <LearnerCardImage
+                    src={item.thumbnailUrl}
+                    alt={item.title}
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <LearnerText2 className="flex size-full items-center justify-center gap-2 text-muted-foreground">
+                    <Film className="size-5" /> Open video
+                  </LearnerText2>
+                )}
+              </a>
+            ) : (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noreferrer"
+                className="flex min-h-24 items-center gap-3 p-3 hover:bg-muted/40"
+              >
+                <FileText className="size-5 shrink-0 text-primary" />
+                <LearnerText2 component="span" className="min-w-0 truncate">
+                  {item.fileName}
+                </LearnerText2>
+              </a>
+            )}
+            <div className="flex items-center justify-between gap-2 border-t px-3 py-2">
+              <LearnerText2
+                component="span"
+                className="min-w-0 truncate text-muted-foreground"
+                title={item.title}
+              >
+                {item.title}
+              </LearnerText2>
+              {onRemove ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 shrink-0 px-2 text-xs"
+                  onClick={() => onRemove(item.id)}
+                >
+                  Remove
+                </Button>
+              ) : null}
+            </div>
+          </PageCard>
         </li>
       ))}
     </ul>
@@ -318,8 +329,8 @@ export function useLearnerSession(nextPath = "/communities") {
 
 function LoadingState({ label }: { label: string }) {
   return (
-    <main className="flex min-h-[400px] items-center justify-center p-6 text-sm text-muted-foreground">
-      {label}
+    <main className="flex min-h-[400px] items-center justify-center p-6">
+      <LearnerText2 className="text-muted-foreground">{label}</LearnerText2>
     </main>
   );
 }
@@ -388,7 +399,7 @@ function CommunityDescription({
   if (richText) {
     return <TextRenderer json={richText} theme={theme} className={className} />;
   }
-  return <p className={className}>{value}</p>;
+  return <LearnerText2 className={className}>{value}</LearnerText2>;
 }
 
 export function LearnerCommunities() {
@@ -477,14 +488,14 @@ export function LearnerCommunities() {
 
   return (
     <LearnerShell user={learner}>
-      <main className="page-shell">
-        <header className="app-header">
+      <main className="grid gap-7">
+        <header className="flex items-start justify-between gap-4">
           <div>
-            <p className="eyebrow">Community</p>
-            <h1>Communities</h1>
-            <p className="subtitle">
+            <LearnerText2 className="text-muted-foreground">Community</LearnerText2>
+            <LearnerHeader1>Communities</LearnerHeader1>
+            <LearnerText2 className="mt-2 text-muted-foreground">
               Learn together, ask questions, and share progress.
-            </p>
+            </LearnerText2>
           </div>
           <Button asChild type="button" variant="outline" aria-label="Notifications">
             <Link href="/dashboard/notifications">
@@ -494,17 +505,25 @@ export function LearnerCommunities() {
           </Button>
         </header>
         {error ? (
-          <p className="text-sm text-destructive" role="alert">
+          <LearnerText2 className="text-destructive" role="alert">
             {error}
-          </p>
+          </LearnerText2>
         ) : null}
-        {loading ? <p className="muted">Loading communities…</p> : null}
+        {loading ? (
+          <LearnerText2 className="text-muted-foreground">
+            Loading communities…
+          </LearnerText2>
+        ) : null}
         {!loading && communities.length === 0 ? (
-          <section className="card stack">
-            <Users className="size-8 text-muted-foreground" />
-            <h2>No communities yet</h2>
-            <p className="muted">Your school has not opened a community yet.</p>
-          </section>
+          <PageCard>
+            <PageCardContent className="grid justify-items-start gap-3">
+              <Users className="size-8 text-muted-foreground" />
+              <LearnerHeader2>No communities yet</LearnerHeader2>
+              <LearnerText2 className="text-muted-foreground">
+                Your school has not opened a community yet.
+              </LearnerText2>
+            </PageCardContent>
+          </PageCard>
         ) : null}
         {!loading && communities.length > 0 ? (
           <section
@@ -515,46 +534,60 @@ export function LearnerCommunities() {
               <Link
                 key={community.id}
                 href={`/dashboard/community/${encodeURIComponent(community.id)}`}
-                className="group card flex flex-col gap-4 transition-colors hover:border-primary/60"
+                className="group block"
               >
-                {community.featuredMedia ? (
-                  <Image
-                    src={
-                      community.featuredMedia.thumbnailUrl ??
-                      community.featuredMedia.canonicalUrl
-                    }
-                    alt={community.featuredMedia.altText || community.name}
-                    width={640}
-                    height={360}
-                    unoptimized
-                    className="aspect-video w-full rounded-md border object-cover"
-                  />
-                ) : null}
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h2 className="font-semibold group-hover:text-primary">
-                      {community.name}
-                    </h2>
-                    <CommunityDescription
-                      value={community.description || "Join the conversation."}
-                      className="mt-1 line-clamp-3 text-sm text-muted-foreground"
+                <PageCard
+                  isLink
+                  className="flex flex-col gap-4 transition-colors hover:border-primary/60"
+                >
+                  {community.featuredMedia ? (
+                    <LearnerCardImage
+                      src={
+                        community.featuredMedia.thumbnailUrl ??
+                        community.featuredMedia.canonicalUrl
+                      }
+                      alt={community.featuredMedia.altText || community.name}
+                      className="aspect-video w-full rounded-md border object-cover"
                     />
-                  </div>
-                  <MessageCircle className="size-5 shrink-0 text-primary" />
-                </div>
-                <div className="mt-auto flex flex-wrap gap-2 text-xs text-muted-foreground">
-                  {community.categories.slice(0, 3).map((category) => (
-                    <span key={category} className="rounded-full border px-2 py-1">
-                      {category}
-                    </span>
-                  ))}
-                  <span className="ml-auto rounded-full bg-muted px-2 py-1">
-                    {communityMembershipLabel(community)}
-                  </span>
-                  <span className="rounded-full bg-muted px-2 py-1">
-                    {community.membersCount.toLocaleString()} members
-                  </span>
-                </div>
+                  ) : null}
+                  <PageCardContent className="flex flex-col gap-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <LearnerHeader2 className="group-hover:text-primary">
+                          {community.name}
+                        </LearnerHeader2>
+                        <CommunityDescription
+                          value={community.description || "Join the conversation."}
+                          className="mt-1 line-clamp-3 text-sm text-muted-foreground"
+                        />
+                      </div>
+                      <MessageCircle className="size-5 shrink-0 text-primary" />
+                    </div>
+                    <div className="mt-auto flex flex-wrap gap-2">
+                      {community.categories.slice(0, 3).map((category) => (
+                        <LearnerText2
+                          key={category}
+                          component="span"
+                          className="rounded-full border px-2 py-1 text-muted-foreground"
+                        >
+                          {category}
+                        </LearnerText2>
+                      ))}
+                      <LearnerText2
+                        component="span"
+                        className="ml-auto rounded-full bg-muted px-2 py-1 text-muted-foreground"
+                      >
+                        {communityMembershipLabel(community)}
+                      </LearnerText2>
+                      <LearnerText2
+                        component="span"
+                        className="rounded-full bg-muted px-2 py-1 text-muted-foreground"
+                      >
+                        {community.membersCount.toLocaleString()} members
+                      </LearnerText2>
+                    </div>
+                  </PageCardContent>
+                </PageCard>
               </Link>
             ))}
           </section>
@@ -1417,8 +1450,8 @@ export function LearnerCommunity({
 
   return (
     <LearnerShell user={learner}>
-      <main className="page-shell">
-        <header className="app-header">
+      <main className="grid gap-7">
+        <header className="flex items-start justify-between gap-4">
           <div>
             <nav
               className="flex items-center gap-2 text-sm text-muted-foreground"
@@ -1443,15 +1476,15 @@ export function LearnerCommunity({
                 <span aria-current="page">{community?.name ?? "Community"}</span>
               )}
             </nav>
-            <h1>{community?.name ?? "Community"}</h1>
+            <LearnerHeader1>{community?.name ?? "Community"}</LearnerHeader1>
             <CommunityDescription
               value={community?.description || "Join the conversation."}
-              className="subtitle"
+              className="mt-2 text-muted-foreground"
             />
             {community ? (
-              <p className="text-sm text-muted-foreground">
+              <LearnerText2 className="text-muted-foreground">
                 {community.membersCount.toLocaleString()} members
-              </p>
+              </LearnerText2>
             ) : null}
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
@@ -1476,203 +1509,224 @@ export function LearnerCommunity({
           </div>
         </header>
         {community?.featuredMedia ? (
-          <Image
+          <LearnerCardImage
             src={
               community.featuredMedia.thumbnailUrl ??
               community.featuredMedia.canonicalUrl
             }
             alt={community.featuredMedia.altText || community.name}
-            width={1280}
-            height={480}
-            unoptimized
             className="max-h-72 w-full rounded-xl border object-cover"
           />
         ) : null}
         {community?.banner && communityDescriptionHasContent(community.banner) ? (
-          <section
-            className="rounded-md border bg-muted/40 p-4"
-            aria-label="Community announcement"
-          >
-            <CommunityDescription value={community.banner} />
-          </section>
+          <PageCard aria-label="Community announcement">
+            <PageCardContent>
+              <CommunityDescription value={community.banner} />
+            </PageCardContent>
+          </PageCard>
         ) : null}
         {error ? (
-          <p className="text-sm text-destructive" role="alert">
+          <LearnerText2 className="text-destructive" role="alert">
             {error}
-          </p>
+          </LearnerText2>
         ) : null}
         {notice ? (
-          <p
+          <LearnerText2
             className="rounded-md bg-[var(--primary-soft)] px-3 py-2 text-sm text-primary"
             role="status"
           >
             {notice}
-          </p>
+          </LearnerText2>
         ) : null}
-        {loading ? <p className="muted">Loading discussions…</p> : null}
+        {loading ? (
+          <LearnerText2 className="text-muted-foreground">
+            Loading discussions…
+          </LearnerText2>
+        ) : null}
         {!loading && community && !activeMember ? (
-          <section className="card stack">
-            <h2 className="font-semibold">
-              {community.membership?.status === "pending"
-                ? "Request pending"
-                : "Join this community"}
-            </h2>
-            <p className="muted">
-              {community.membership?.status === "pending"
-                ? "An administrator needs to approve your membership before you can participate."
-                : community.joiningReasonText ||
-                  "Join to post, comment, and follow the conversation."}
-            </p>
-            {!community.membership ||
-            ["rejected", "payment_failed", "expired"].includes(
-              community.membership.status,
-            ) ? (
-              <div className="stack">
-                {plans.length > 0 ? (
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {plans.map((plan) => (
-                      <div key={plan.id} className="rounded-md border p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <h3 className="font-medium">{plan.name}</h3>
-                            {plan.description ? (
-                              <p className="muted mt-1">{plan.description}</p>
-                            ) : null}
-                          </div>
-                          <span className="text-sm font-medium">
-                            {plan.amountMinor === 0
-                              ? "Free"
-                              : new Intl.NumberFormat(undefined, {
-                                  style: "currency",
-                                  currency: plan.currency,
-                                }).format(plan.amountMinor / 100)}
-                          </span>
-                        </div>
-                        <Button
-                          type="button"
-                          className="mt-4"
-                          onClick={() => requestJoin(plan)}
-                          disabled={joining}
-                        >
-                          {joining
-                            ? "Joining…"
-                            : plan.kind === "free"
-                              ? "Join community"
-                              : "Continue to payment"}
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <Button
-                    type="button"
-                    onClick={() => requestJoin()}
-                    disabled={joining}
-                  >
-                    {joining ? "Joining…" : "Join community"}
-                  </Button>
-                )}
-              </div>
-            ) : null}
-          </section>
+          <PageCard>
+            <PageCardContent className="grid gap-4">
+              <LearnerHeader2>
+                {community.membership?.status === "pending"
+                  ? "Request pending"
+                  : "Join this community"}
+              </LearnerHeader2>
+              <LearnerText2 className="text-muted-foreground">
+                {community.membership?.status === "pending"
+                  ? "An administrator needs to approve your membership before you can participate."
+                  : community.joiningReasonText ||
+                    "Join to post, comment, and follow the conversation."}
+              </LearnerText2>
+              {!community.membership ||
+              ["rejected", "payment_failed", "expired"].includes(
+                community.membership.status,
+              ) ? (
+                <div className="grid gap-4">
+                  {plans.length > 0 ? (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {plans.map((plan) => (
+                        <PageCard key={plan.id}>
+                          <PageCardContent className="grid gap-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <LearnerHeader3>{plan.name}</LearnerHeader3>
+                                {plan.description ? (
+                                  <LearnerText2 className="mt-1 text-muted-foreground">
+                                    {plan.description}
+                                  </LearnerText2>
+                                ) : null}
+                              </div>
+                              <LearnerText2 component="span" className="font-medium">
+                                {plan.amountMinor === 0
+                                  ? "Free"
+                                  : new Intl.NumberFormat(undefined, {
+                                      style: "currency",
+                                      currency: plan.currency,
+                                    }).format(plan.amountMinor / 100)}
+                              </LearnerText2>
+                            </div>
+                            <Button
+                              type="button"
+                              onClick={() => requestJoin(plan)}
+                              disabled={joining}
+                            >
+                              {joining
+                                ? "Joining…"
+                                : plan.kind === "free"
+                                  ? "Join community"
+                                  : "Continue to payment"}
+                            </Button>
+                          </PageCardContent>
+                        </PageCard>
+                      ))}
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      onClick={() => requestJoin()}
+                      disabled={joining}
+                    >
+                      {joining ? "Joining…" : "Join community"}
+                    </Button>
+                  )}
+                </div>
+              ) : null}
+            </PageCardContent>
+          </PageCard>
         ) : null}
         {!loading && activeMember ? (
           <>
             {!postId ? (
-              <section className="card stack">
-                <div className="flex items-center gap-2">
-                  <MessageCircle className="size-5 text-primary" />
-                  <h2 className="font-semibold">Start a discussion</h2>
-                </div>
-                <form onSubmit={(event) => void createPost(event)} className="stack">
-                  <input
-                    value={postDraft.title}
-                    onChange={(event) => updatePostDraft("title", event.target.value)}
-                    placeholder="Discussion title"
-                    aria-label="Discussion title"
-                    className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    required
-                  />
-                  <LearnerRichTextEditor
-                    initialContent={communityEditorContent(postDraft.content)}
-                    onChange={(document) =>
-                      updatePostDraft("content", JSON.stringify(document))
-                    }
-                    placeholder="Share something with the community…"
-                    className="rounded-md border bg-background"
-                    editorClassName="min-h-[140px]"
-                  />
-                  <MediaAttachments
-                    items={postMedia.map(selectedMediaToAttachment)}
-                    onRemove={(id) =>
-                      updatePostMedia(
-                        postMediaRef.current.filter((media) => media.id !== id),
-                      )
-                    }
-                  />
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <select
-                        value={postDraft.category}
-                        onChange={(event) =>
-                          updatePostDraft("category", event.target.value)
-                        }
-                        aria-label="Discussion category"
-                        className="h-9 rounded-md border bg-background px-3 text-sm"
-                      >
-                        {categoryOptions.map((category) => (
-                          <option key={category}>{category}</option>
-                        ))}
-                      </select>
-                      <MediaUploadDialog<LearnerCommunityMedia>
-                        {...mediaAdapters}
-                        title="Attach media"
-                        description="Add an image, video, or PDF to your discussion."
-                        acceptedTypes={COMMUNITY_MEDIA_ACCEPTED_TYPES}
-                        allowUnsplash={false}
-                        maxUploadBytes={100_000_000}
-                        onSelect={selectPostMedia}
-                      >
-                        <Button type="button" variant="outline" size="sm">
-                          <Paperclip className="size-4" /> Attach media
-                        </Button>
-                      </MediaUploadDialog>
-                    </div>
-                    <Button
-                      type="submit"
-                      disabled={
-                        busy ||
-                        !postDraft.title.trim() ||
-                        !communityDescriptionHasContent(postDraft.content)
-                      }
-                    >
-                      <Send className="size-4" />{" "}
-                      {busy ? "Publishing…" : "Publish post"}
-                    </Button>
+              <PageCard>
+                <PageCardContent className="grid gap-4">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="size-5 text-primary" />
+                    <LearnerHeader2>Start a discussion</LearnerHeader2>
                   </div>
-                </form>
-              </section>
+                  <form
+                    onSubmit={(event) => void createPost(event)}
+                    className="grid gap-4"
+                  >
+                    <LearnerInput
+                      value={postDraft.title}
+                      onChange={(event) => updatePostDraft("title", event.target.value)}
+                      placeholder="Discussion title"
+                      aria-label="Discussion title"
+                      className="h-10"
+                      required
+                    />
+                    <LearnerRichTextEditor
+                      initialContent={communityEditorContent(postDraft.content)}
+                      onChange={(document) =>
+                        updatePostDraft("content", JSON.stringify(document))
+                      }
+                      placeholder="Share something with the community…"
+                      className="rounded-md border bg-background"
+                      editorClassName="min-h-[140px]"
+                    />
+                    <MediaAttachments
+                      items={postMedia.map(selectedMediaToAttachment)}
+                      onRemove={(id) =>
+                        updatePostMedia(
+                          postMediaRef.current.filter((media) => media.id !== id),
+                        )
+                      }
+                    />
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <LearnerSelect
+                          value={postDraft.category}
+                          onChange={(event) =>
+                            updatePostDraft("category", event.target.value)
+                          }
+                          aria-label="Discussion category"
+                          className="h-9"
+                        >
+                          {categoryOptions.map((category) => (
+                            <option key={category}>{category}</option>
+                          ))}
+                        </LearnerSelect>
+                        <MediaUploadDialog<LearnerCommunityMedia>
+                          {...mediaAdapters}
+                          title="Attach media"
+                          description="Add an image, video, or PDF to your discussion."
+                          acceptedTypes={COMMUNITY_MEDIA_ACCEPTED_TYPES}
+                          allowUnsplash={false}
+                          maxUploadBytes={100_000_000}
+                          onSelect={selectPostMedia}
+                        >
+                          <Button type="button" variant="outline" size="sm">
+                            <Paperclip className="size-4" /> Attach media
+                          </Button>
+                        </MediaUploadDialog>
+                      </div>
+                      <Button
+                        type="submit"
+                        disabled={
+                          busy ||
+                          !postDraft.title.trim() ||
+                          !communityDescriptionHasContent(postDraft.content)
+                        }
+                      >
+                        <Send className="size-4" />{" "}
+                        {busy ? "Publishing…" : "Publish post"}
+                      </Button>
+                    </div>
+                  </form>
+                </PageCardContent>
+              </PageCard>
             ) : null}
-            <section className="stack" aria-label="Community discussions">
+            <section className="grid gap-4" aria-label="Community discussions">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold">Discussions</h2>
-                <span className="text-sm text-muted-foreground">
+                <LearnerHeader2>Discussions</LearnerHeader2>
+                <LearnerText2 component="span" className="text-muted-foreground">
                   {community.postsCount.toLocaleString()}{" "}
                   {community.postsCount === 1 ? "post" : "posts"}
-                </span>
+                </LearnerText2>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <PlatformTabs
-                  className="w-auto"
-                  listClassName="border-b-0"
-                  ariaLabel="Discussion categories"
-                  value={activeCategory}
-                  onValueChange={selectCategory}
-                  items={visibleFeedCategories.map((category) => ({
-                    value: category,
-                    label: category,
-                  }))}
-                />
+                <div
+                  className="flex flex-wrap items-center gap-1"
+                  role="tablist"
+                  aria-label="Discussion categories"
+                >
+                  {visibleFeedCategories.map((category) => {
+                    const active = category === activeCategory;
+                    return (
+                      <Button
+                        key={category}
+                        type="button"
+                        role="tab"
+                        aria-selected={active}
+                        variant={active ? "secondary" : "ghost"}
+                        size="sm"
+                        onClick={() => selectCategory(category)}
+                      >
+                        {category}
+                      </Button>
+                    );
+                  })}
+                </div>
                 {feedCategories.length > 3 ? (
                   <Button
                     type="button"
@@ -1686,326 +1740,332 @@ export function LearnerCommunity({
                 ) : null}
               </div>
               {displayedPosts.length === 0 ? (
-                <div className="card text-sm text-muted-foreground">
-                  {postId
-                    ? "This discussion is no longer available."
-                    : "No discussions yet."}
-                </div>
+                <PageCard>
+                  <PageCardContent className="text-muted-foreground">
+                    {postId
+                      ? "This discussion is no longer available."
+                      : "No discussions yet."}
+                  </PageCardContent>
+                </PageCard>
               ) : null}
               {displayedPosts.map((post) => (
-                <article key={post.id} className="card stack">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        {post.pinned ? (
-                          <span className="inline-flex items-center gap-1 text-primary">
-                            <Pin className="size-3" /> Pinned
-                          </span>
-                        ) : null}
-                        <span>{post.category}</span>
-                        <span>·</span>
-                        <span>
-                          {post.author?.name ??
-                            (post.authorKind === "admin"
-                              ? "Admin"
-                              : "Community member")}
-                        </span>
-                        <span>·</span>
-                        <time dateTime={post.updatedAt}>
-                          {new Date(post.updatedAt).toLocaleDateString()}
-                        </time>
-                      </div>
-                      {editingPostId === post.id ? (
-                        <div className="stack">
-                          <input
-                            value={postEditDraft.title}
-                            onChange={(event) =>
-                              setPostEditDraft((current) => ({
-                                ...current,
-                                title: event.target.value,
-                              }))
-                            }
-                            className="h-9 rounded-md border bg-background px-3 text-sm"
-                            aria-label="Edit post title"
-                          />
-                          <LearnerRichTextEditor
-                            key={`${post.id}-${editingPostId}`}
-                            initialContent={communityEditorContent(
-                              postEditDraft.content,
-                            )}
-                            onChange={(document) =>
-                              updatePostEditContent(JSON.stringify(document))
-                            }
-                            placeholder="Share something with the community…"
-                            className="rounded-md border bg-background"
-                            editorClassName="min-h-[120px]"
-                          />
-                          <MediaAttachments
-                            items={postEditMedia}
-                            onRemove={removePostEditMedia}
-                          />
-                          <MediaUploadDialog<LearnerCommunityMedia>
-                            {...mediaAdapters}
-                            title="Attach media"
-                            description="Add an image, video, or PDF to your discussion."
-                            acceptedTypes={COMMUNITY_MEDIA_ACCEPTED_TYPES}
-                            allowUnsplash={false}
-                            maxUploadBytes={100_000_000}
-                            onSelect={selectPostEditMedia}
-                          >
-                            <Button type="button" variant="outline" size="sm">
-                              <Paperclip className="size-4" /> Attach media
-                            </Button>
-                          </MediaUploadDialog>
-                        </div>
-                      ) : (
-                        <h3 className="text-base font-semibold">{post.title}</h3>
-                      )}
-                    </div>
-                    {post.authorId === learner.id || canModerate ? (
-                      <div className="flex gap-2">
-                        {post.authorId === learner.id && editingPostId === post.id ? (
-                          <Button
-                            type="button"
-                            size="sm"
-                            onClick={() => void savePostEdit(post.id)}
-                          >
-                            Save
-                          </Button>
-                        ) : post.authorId === learner.id ? (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => startEditing(post)}
-                          >
-                            Edit
-                          </Button>
-                        ) : null}
-                        {post.authorId === learner.id || canModerate ? (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => requestDeletePost(post.id)}
-                          >
-                            Delete
-                          </Button>
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </div>
-                  {editingPostId === post.id ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setEditingPostId(null)}
-                    >
-                      Cancel
-                    </Button>
-                  ) : (
-                    <CommunityDescription
-                      value={post.content}
-                      className="text-sm leading-6 text-muted-foreground"
-                    />
-                  )}
-                  {editingPostId === post.id ? null : (
-                    <MediaAttachments
-                      items={post.media.map(communityMediaToAttachment)}
-                    />
-                  )}
-                  <div className="flex flex-wrap items-center gap-2 border-t pt-4">
-                    <CommunityReactionsBar
-                      reactions={post.reactions}
-                      onReact={(emoji) => void toggleReaction(post.id, emoji)}
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() =>
-                        expandedPostId === post.id
-                          ? setExpandedPostId(null)
-                          : void loadComments(post.id)
-                      }
-                    >
-                      <MessageCircle className="size-4" />{" "}
-                      {expandedPostId === post.id ? "Hide comments" : "Comments"}
-                      {post.commentsCount > 0 ? ` (${post.commentsCount})` : null}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={subscribedPostIds.has(post.id) ? "soft" : "ghost"}
-                      onClick={() => void toggleSubscription(post.id)}
-                    >
-                      <Bell className="size-4" />{" "}
-                      {subscribedPostIds.has(post.id) ? "Following" : "Follow"}
-                    </Button>
-                    {post.authorId !== learner.id ? (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => reportPost(post.id)}
-                      >
-                        <Flag className="size-4" /> Report
-                      </Button>
-                    ) : null}
-                  </div>
-                  {expandedPostId === post.id ? (
-                    <div className="stack border-t pt-4">
-                      {(comments[post.id] ?? []).map((comment) => (
-                        <div
-                          key={comment.id}
-                          id={comment.id}
-                          className={`rounded-md bg-muted/40 p-3 text-sm ${comment.parentCommentId ? "ml-6" : ""}`}
-                        >
-                          <div className="mb-1 text-xs text-muted-foreground">
-                            {comment.author?.name ??
-                              (comment.authorKind === "admin"
+                <PageCard key={post.id}>
+                  <PageCardContent className="grid gap-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          {post.pinned ? (
+                            <span className="inline-flex items-center gap-1 text-primary">
+                              <Pin className="size-3" /> Pinned
+                            </span>
+                          ) : null}
+                          <span>{post.category}</span>
+                          <span>·</span>
+                          <span>
+                            {post.author?.name ??
+                              (post.authorKind === "admin"
                                 ? "Admin"
-                                : "Community member")}{" "}
-                            · {new Date(comment.createdAt).toLocaleDateString()}
-                          </div>
-                          {comment.deletedAt ? (
-                            <p className="italic text-muted-foreground">Deleted</p>
-                          ) : (
-                            <>
-                              <CommunityDescription value={comment.content} />
-                              <MediaAttachments
-                                items={comment.media.map(communityMediaToAttachment)}
-                              />
-                            </>
-                          )}
-                          <div className="flex flex-wrap items-center gap-2 text-xs">
-                            {!comment.deletedAt ? (
-                              <CommunityReactionsBar
-                                reactions={comment.reactions}
-                                onReact={(emoji) =>
-                                  void toggleCommentReaction(comment, emoji)
-                                }
-                              />
-                            ) : null}
-                            {!comment.deletedAt &&
-                            (comment.authorId === learner.id || canModerate) ? (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 px-2 text-xs"
-                                onClick={() =>
-                                  requestDeleteComment(post.id, comment.id)
-                                }
-                              >
-                                Delete
+                                : "Community member")}
+                          </span>
+                          <span>·</span>
+                          <time dateTime={post.updatedAt}>
+                            {new Date(post.updatedAt).toLocaleDateString()}
+                          </time>
+                        </div>
+                        {editingPostId === post.id ? (
+                          <div className="grid gap-4">
+                            <LearnerInput
+                              value={postEditDraft.title}
+                              onChange={(event) =>
+                                setPostEditDraft((current) => ({
+                                  ...current,
+                                  title: event.target.value,
+                                }))
+                              }
+                              className="h-9"
+                              aria-label="Edit post title"
+                            />
+                            <LearnerRichTextEditor
+                              key={`${post.id}-${editingPostId}`}
+                              initialContent={communityEditorContent(
+                                postEditDraft.content,
+                              )}
+                              onChange={(document) =>
+                                updatePostEditContent(JSON.stringify(document))
+                              }
+                              placeholder="Share something with the community…"
+                              className="rounded-md border bg-background"
+                              editorClassName="min-h-[120px]"
+                            />
+                            <MediaAttachments
+                              items={postEditMedia}
+                              onRemove={removePostEditMedia}
+                            />
+                            <MediaUploadDialog<LearnerCommunityMedia>
+                              {...mediaAdapters}
+                              title="Attach media"
+                              description="Add an image, video, or PDF to your discussion."
+                              acceptedTypes={COMMUNITY_MEDIA_ACCEPTED_TYPES}
+                              allowUnsplash={false}
+                              maxUploadBytes={100_000_000}
+                              onSelect={selectPostEditMedia}
+                            >
+                              <Button type="button" variant="outline" size="sm">
+                                <Paperclip className="size-4" /> Attach media
                               </Button>
-                            ) : null}
-                            {!comment.deletedAt && comment.authorId !== learner.id ? (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 px-2 text-xs"
-                                onClick={() => reportComment(comment)}
-                              >
-                                <Flag className="size-3.5" /> Report
-                              </Button>
-                            ) : null}
+                            </MediaUploadDialog>
                           </div>
-                          {!comment.parentCommentId && !comment.deletedAt ? (
+                        ) : (
+                          <LearnerHeader3>{post.title}</LearnerHeader3>
+                        )}
+                      </div>
+                      {post.authorId === learner.id || canModerate ? (
+                        <div className="flex gap-2">
+                          {post.authorId === learner.id && editingPostId === post.id ? (
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => void savePostEdit(post.id)}
+                            >
+                              Save
+                            </Button>
+                          ) : post.authorId === learner.id ? (
                             <Button
                               type="button"
                               size="sm"
                               variant="ghost"
-                              className="mt-2"
-                              onClick={() => toggleReplyTarget(post.id, comment.id)}
+                              onClick={() => startEditing(post)}
                             >
-                              Reply
+                              Edit
+                            </Button>
+                          ) : null}
+                          {post.authorId === learner.id || canModerate ? (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => requestDeletePost(post.id)}
+                            >
+                              Delete
                             </Button>
                           ) : null}
                         </div>
-                      ))}
-                      {commentNextCursors[post.id] ? (
+                      ) : null}
+                    </div>
+                    {editingPostId === post.id ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingPostId(null)}
+                      >
+                        Cancel
+                      </Button>
+                    ) : (
+                      <CommunityDescription
+                        value={post.content}
+                        className="text-sm leading-6 text-muted-foreground"
+                      />
+                    )}
+                    {editingPostId === post.id ? null : (
+                      <MediaAttachments
+                        items={post.media.map(communityMediaToAttachment)}
+                      />
+                    )}
+                    <div className="flex flex-wrap items-center gap-2 border-t pt-4">
+                      <CommunityReactionsBar
+                        reactions={post.reactions}
+                        onReact={(emoji) => void toggleReaction(post.id, emoji)}
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() =>
+                          expandedPostId === post.id
+                            ? setExpandedPostId(null)
+                            : void loadComments(post.id)
+                        }
+                      >
+                        <MessageCircle className="size-4" />{" "}
+                        {expandedPostId === post.id ? "Hide comments" : "Comments"}
+                        {post.commentsCount > 0 ? ` (${post.commentsCount})` : null}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={subscribedPostIds.has(post.id) ? "secondary" : "ghost"}
+                        onClick={() => void toggleSubscription(post.id)}
+                      >
+                        <Bell className="size-4" />{" "}
+                        {subscribedPostIds.has(post.id) ? "Following" : "Follow"}
+                      </Button>
+                      {post.authorId !== learner.id ? (
                         <Button
                           type="button"
                           size="sm"
-                          variant="outline"
-                          disabled={loadingMoreCommentsPostId === post.id}
-                          onClick={() => void loadMoreComments(post.id)}
+                          variant="ghost"
+                          onClick={() => reportPost(post.id)}
                         >
-                          {loadingMoreCommentsPostId === post.id
-                            ? "Loading comments…"
-                            : "Load more comments"}
+                          <Flag className="size-4" /> Report
                         </Button>
                       ) : null}
-                      <MediaAttachments
-                        items={(commentMedia[post.id] ?? []).map(
-                          selectedMediaToAttachment,
-                        )}
-                        onRemove={(id) =>
-                          updateCommentMedia(
-                            post.id,
-                            (commentMediaRefs.current[post.id] ?? []).filter(
-                              (media) => media.id !== id,
-                            ),
-                          )
-                        }
-                      />
-                      <div className="stack">
-                        <LearnerRichTextEditor
-                          key={`${post.id}-${replyToCommentId ?? "comment"}-${commentEditorVersions[post.id] ?? 0}`}
-                          initialContent={communityEditorContent(
-                            commentDrafts[post.id] ?? "",
-                          )}
-                          onChange={(document) =>
-                            updateCommentDraft(post.id, JSON.stringify(document))
-                          }
-                          placeholder={
-                            replyToCommentId ? "Write a reply…" : "Add a comment…"
-                          }
-                          showToolbar={false}
-                          className="rounded-md border bg-background"
-                          editorClassName="min-h-[100px]"
-                        />
-                        <div className="flex flex-wrap gap-2">
-                          <MediaUploadDialog<LearnerCommunityMedia>
-                            {...mediaAdapters}
-                            title="Attach media"
-                            description="Add an image, video, or PDF to your comment."
-                            acceptedTypes={COMMUNITY_MEDIA_ACCEPTED_TYPES}
-                            allowUnsplash={false}
-                            maxUploadBytes={100_000_000}
-                            onSelect={(selected) =>
-                              selectCommentMedia(post.id, selected)
-                            }
+                    </div>
+                    {expandedPostId === post.id ? (
+                      <div className="grid gap-4 border-t pt-4">
+                        {(comments[post.id] ?? []).map((comment) => (
+                          <div
+                            key={comment.id}
+                            id={comment.id}
+                            className={`rounded-md bg-muted/40 p-3 text-sm ${comment.parentCommentId ? "ml-6" : ""}`}
                           >
-                            <Button type="button" variant="outline" size="sm">
-                              <Paperclip className="size-4" /> Attach
-                            </Button>
-                          </MediaUploadDialog>
+                            <div className="mb-1 text-xs text-muted-foreground">
+                              {comment.author?.name ??
+                                (comment.authorKind === "admin"
+                                  ? "Admin"
+                                  : "Community member")}{" "}
+                              · {new Date(comment.createdAt).toLocaleDateString()}
+                            </div>
+                            {comment.deletedAt ? (
+                              <LearnerText2 className="italic text-muted-foreground">
+                                Deleted
+                              </LearnerText2>
+                            ) : (
+                              <>
+                                <CommunityDescription value={comment.content} />
+                                <MediaAttachments
+                                  items={comment.media.map(communityMediaToAttachment)}
+                                />
+                              </>
+                            )}
+                            <div className="flex flex-wrap items-center gap-2 text-xs">
+                              {!comment.deletedAt ? (
+                                <CommunityReactionsBar
+                                  reactions={comment.reactions}
+                                  onReact={(emoji) =>
+                                    void toggleCommentReaction(comment, emoji)
+                                  }
+                                />
+                              ) : null}
+                              {!comment.deletedAt &&
+                              (comment.authorId === learner.id || canModerate) ? (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 px-2 text-xs"
+                                  onClick={() =>
+                                    requestDeleteComment(post.id, comment.id)
+                                  }
+                                >
+                                  Delete
+                                </Button>
+                              ) : null}
+                              {!comment.deletedAt && comment.authorId !== learner.id ? (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 px-2 text-xs"
+                                  onClick={() => reportComment(comment)}
+                                >
+                                  <Flag className="size-3.5" /> Report
+                                </Button>
+                              ) : null}
+                            </div>
+                            {!comment.parentCommentId && !comment.deletedAt ? (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                className="mt-2"
+                                onClick={() => toggleReplyTarget(post.id, comment.id)}
+                              >
+                                Reply
+                              </Button>
+                            ) : null}
+                          </div>
+                        ))}
+                        {commentNextCursors[post.id] ? (
                           <Button
                             type="button"
                             size="sm"
-                            disabled={
-                              busy ||
-                              !communityDescriptionHasContent(
-                                commentDrafts[post.id] ?? "",
-                              )
-                            }
-                            onClick={() =>
-                              void createComment(post.id, replyToCommentId)
-                            }
+                            variant="outline"
+                            disabled={loadingMoreCommentsPostId === post.id}
+                            onClick={() => void loadMoreComments(post.id)}
                           >
-                            <Send className="size-4" />{" "}
-                            {replyToCommentId ? "Reply" : "Comment"}
+                            {loadingMoreCommentsPostId === post.id
+                              ? "Loading comments…"
+                              : "Load more comments"}
                           </Button>
+                        ) : null}
+                        <MediaAttachments
+                          items={(commentMedia[post.id] ?? []).map(
+                            selectedMediaToAttachment,
+                          )}
+                          onRemove={(id) =>
+                            updateCommentMedia(
+                              post.id,
+                              (commentMediaRefs.current[post.id] ?? []).filter(
+                                (media) => media.id !== id,
+                              ),
+                            )
+                          }
+                        />
+                        <div className="grid gap-4">
+                          <LearnerRichTextEditor
+                            key={`${post.id}-${replyToCommentId ?? "comment"}-${commentEditorVersions[post.id] ?? 0}`}
+                            initialContent={communityEditorContent(
+                              commentDrafts[post.id] ?? "",
+                            )}
+                            onChange={(document) =>
+                              updateCommentDraft(post.id, JSON.stringify(document))
+                            }
+                            placeholder={
+                              replyToCommentId ? "Write a reply…" : "Add a comment…"
+                            }
+                            showToolbar={false}
+                            className="rounded-md border bg-background"
+                            editorClassName="min-h-[100px]"
+                          />
+                          <div className="flex flex-wrap gap-2">
+                            <MediaUploadDialog<LearnerCommunityMedia>
+                              {...mediaAdapters}
+                              title="Attach media"
+                              description="Add an image, video, or PDF to your comment."
+                              acceptedTypes={COMMUNITY_MEDIA_ACCEPTED_TYPES}
+                              allowUnsplash={false}
+                              maxUploadBytes={100_000_000}
+                              onSelect={(selected) =>
+                                selectCommentMedia(post.id, selected)
+                              }
+                            >
+                              <Button type="button" variant="outline" size="sm">
+                                <Paperclip className="size-4" /> Attach
+                              </Button>
+                            </MediaUploadDialog>
+                            <Button
+                              type="button"
+                              size="sm"
+                              disabled={
+                                busy ||
+                                !communityDescriptionHasContent(
+                                  commentDrafts[post.id] ?? "",
+                                )
+                              }
+                              onClick={() =>
+                                void createComment(post.id, replyToCommentId)
+                              }
+                            >
+                              <Send className="size-4" />{" "}
+                              {replyToCommentId ? "Reply" : "Comment"}
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ) : null}
-                </article>
+                    ) : null}
+                  </PageCardContent>
+                </PageCard>
               ))}
               {postsNextCursor ? (
                 <Button
@@ -2101,7 +2161,7 @@ export function LearnerCommunity({
                   "Tell the community owner why you would like to join."}
               </DialogDescription>
             </DialogHeader>
-            <textarea
+            <LearnerTextarea
               value={joiningReason}
               onChange={(event) => {
                 joiningReasonRef.current = event.target.value;
@@ -2111,7 +2171,7 @@ export function LearnerCommunity({
               aria-label="Reason to join"
               rows={4}
               maxLength={2000}
-              className="w-full resize-y rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="w-full resize-y"
             />
             <DialogFooter>
               <Button
@@ -2147,14 +2207,14 @@ export function LearnerCommunity({
                 Tell the community moderators why this content should be reviewed.
               </DialogDescription>
             </DialogHeader>
-            <textarea
+            <LearnerTextarea
               value={reportReason}
               onChange={(event) => setReportReason(event.target.value)}
               placeholder="Reason for reporting"
               aria-label="Report reason"
               rows={4}
               maxLength={2000}
-              className="w-full resize-y rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="w-full resize-y"
             />
             <DialogFooter>
               <Button

@@ -11,6 +11,7 @@ import {
   useSchoolThemeStyle,
 } from "@/lib/school-theme-context";
 import { resolveSchoolTheme } from "@/lib/site-theme";
+import "./course-sales-blocks";
 
 function SiteLink(props: PageBuilderLinkProps) {
   return <NextLink {...props} />;

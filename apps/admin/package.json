@@ -12,6 +12,7 @@
   "dependencies": {
     "@codelitdev/design-system": "0.1.0-alpha.7",
     "@codelitdev/observability": "0.1.0-alpha.0",
+    "@courselit/api-contract": "workspace:*",
     "@courselit/components-library": "workspace:*",
     "@frontlit/media-uploader": "0.1.0-alpha.0",
     "@frontlit/page-builder": "0.1.0-alpha.1",

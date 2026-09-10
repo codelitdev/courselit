@@ -14,6 +14,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 import { CourseLitLogo } from "@/components/layout/courselit-logo";
+import { LearnerText2 } from "@/components/themed-page-builder";
+import type { LearnerLesson } from "@/components/lesson-viewer";
 import {
   Collapsible,
   CollapsibleContent,
@@ -33,7 +35,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import type { LearnerLesson } from "@/components/lesson-viewer";
 
 export type CourseViewerSection = {
   id: string;
@@ -47,8 +48,10 @@ export type CourseViewerSection = {
 
 export type CourseViewerProduct = {
   id: string;
+  slug?: string;
   title: string;
   kind: "course" | "download";
+  enrolled?: boolean;
   discussions: boolean;
   sections: CourseViewerSection[];
   lessons: LearnerLesson[];
@@ -58,9 +61,16 @@ export function courseViewerHref(path: string, previewToken: string | null) {
   return previewToken ? `${path}#preview=${encodeURIComponent(previewToken)}` : path;
 }
 
-function isLessonLocked(lesson: LearnerLesson, previewToken: string | null) {
-  if (previewToken || !lesson.requiresEnrollment) return false;
-  return !lesson.content && !lesson.mediaId;
+function isLessonLocked(
+  lesson: LearnerLesson,
+  previewToken: string | null,
+  enrolled = false,
+) {
+  if (previewToken) return false;
+  const hasContent = Boolean(
+    lesson.mediaId || (lesson.content && Object.keys(lesson.content).length > 0),
+  );
+  return !hasContent || (lesson.requiresEnrollment && !enrolled);
 }
 
 function sectionAvailability(
@@ -87,9 +97,10 @@ function lessonStatusIcon(
   lesson: LearnerLesson,
   completedLessonIds: ReadonlySet<string>,
   previewToken: string | null,
+  enrolled: boolean,
 ) {
   if (previewToken) return null;
-  if (isLessonLocked(lesson, previewToken)) {
+  if (isLessonLocked(lesson, previewToken, enrolled)) {
     return <LockKeyhole aria-label="Locked" className="size-3.5" />;
   }
   return completedLessonIds.has(lesson.id) ? (
@@ -104,14 +115,19 @@ export function CourseViewerSidebar({
   previewToken,
   completedLessonIds,
   user,
+  basePath,
+  homeHref = "/dashboard/products",
 }: {
   product: CourseViewerProduct;
   previewToken: string | null;
   completedLessonIds: ReadonlySet<string>;
   user: { email: string; schoolId: string } | null;
+  basePath?: string;
+  homeHref?: string;
 }) {
   const pathname = usePathname();
-  const basePath = `/dashboard/courses/${encodeURIComponent(product.id)}`;
+  const resolvedBasePath =
+    basePath ?? `/dashboard/courses/${encodeURIComponent(product.id)}`;
   const sections = useMemo(
     () => [...product.sections].sort((left, right) => left.position - right.position),
     [product.sections],
@@ -130,17 +146,22 @@ export function CourseViewerSidebar({
 
   function lessonItem(lesson: LearnerLesson) {
     const href = courseViewerHref(
-      `${basePath}/${encodeURIComponent(lesson.id)}`,
+      `${resolvedBasePath}/${encodeURIComponent(lesson.id)}`,
       previewToken,
     );
-    const active = pathname === `/dashboard/courses/${product.id}/${lesson.id}`;
+    const active = pathname === `${resolvedBasePath}/${encodeURIComponent(lesson.id)}`;
     return (
       <SidebarMenuSubItem key={lesson.id}>
         <SidebarMenuSubButton asChild isActive={active}>
           <Link href={href}>
             <BookOpen className="size-3.5" />
-            <span>{lesson.title}</span>
-            {lessonStatusIcon(lesson, completedLessonIds, previewToken)}
+            <LearnerText2 component="span">{lesson.title}</LearnerText2>
+            {lessonStatusIcon(
+              lesson,
+              completedLessonIds,
+              previewToken,
+              Boolean(product.enrolled),
+            )}
           </Link>
         </SidebarMenuSubButton>
       </SidebarMenuSubItem>
@@ -155,12 +176,20 @@ export function CourseViewerSidebar({
           <SidebarGroupLabel asChild className="h-auto min-h-8 px-0">
             <CollapsibleTrigger className="w-full rounded-md px-2 py-1.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
               <Folder className="size-4 shrink-0" />
-              <span className="min-w-0 flex-1 truncate text-left">{section.title}</span>
+              <LearnerText2
+                component="span"
+                className="min-w-0 flex-1 truncate text-left"
+              >
+                {section.title}
+              </LearnerText2>
               {availability ? (
-                <span className="flex shrink-0 items-center gap-1 text-[11px] text-muted-foreground">
+                <LearnerText2
+                  component="span"
+                  className="flex shrink-0 items-center gap-1 text-muted-foreground"
+                >
                   <Clock3 className="size-3" />
                   {availability}
-                </span>
+                </LearnerText2>
               ) : null}
               <ChevronRight className="ml-auto size-4 shrink-0 transition-transform group-data-[state=open]/collapsible:rotate-90" />
             </CollapsibleTrigger>
@@ -181,11 +210,13 @@ export function CourseViewerSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard/products">
+              <Link href={homeHref}>
                 <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <CourseLitLogo className="size-8" />
                 </div>
-                <span className="truncate font-semibold">{product.title}</span>
+                <LearnerText2 component="span" className="truncate font-semibold">
+                  {product.title}
+                </LearnerText2>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -198,27 +229,30 @@ export function CourseViewerSidebar({
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === basePath}
+                  isActive={pathname === resolvedBasePath}
                   tooltip="About"
                 >
-                  <Link href={courseViewerHref(basePath, previewToken)}>
+                  <Link href={courseViewerHref(resolvedBasePath, previewToken)}>
                     <BookOpen />
-                    <span>About</span>
+                    <LearnerText2 component="span">About</LearnerText2>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              {product.discussions && (user || previewToken) ? (
+              {product.discussions && (previewToken || (user && product.enrolled)) ? (
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === `${basePath}/discussions`}
+                    isActive={pathname === `${resolvedBasePath}/discussions`}
                     tooltip="Discussions"
                   >
                     <Link
-                      href={courseViewerHref(`${basePath}/discussions`, previewToken)}
+                      href={courseViewerHref(
+                        `${resolvedBasePath}/discussions`,
+                        previewToken,
+                      )}
                     >
                       <MessageSquare />
-                      <span>Discussions</span>
+                      <LearnerText2 component="span">Discussions</LearnerText2>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

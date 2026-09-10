@@ -13,6 +13,19 @@ describe("admin and learner surfaces", () => {
     const schools = read("admin/app/schools/page.tsx");
     const sidebar = read("admin/components/layout/app-sidebar.tsx");
     const settings = read("admin/app/settings/page.tsx");
+    const branding = read("admin/app/branding/page.tsx");
+    const website = read("admin/app/website/page.tsx");
+    const websitePages = read("admin/app/website/pages/page.tsx");
+    const websiteBlogs = read("admin/app/website/blogs/page.tsx");
+    const websitePageEditor = read("admin/app/website/pages/[pageId]/edit/page.tsx");
+    const websiteBlogEditor = read("admin/app/website/blogs/[blogId]/edit/page.tsx");
+    const websiteSettings = read("admin/app/website/settings/page.tsx");
+    const mailSettings = read("admin/app/mails/settings/page.tsx");
+    const teamSettings = read("admin/components/settings/team-settings.tsx");
+    const brandingSettings = read("admin/components/settings/branding-settings.tsx");
+    const codeInjectionSettings = read(
+      "admin/components/website/code-injection-settings.tsx",
+    );
     const shell = read("admin/components/layout/admin-shell.tsx");
     const createSchool = read("admin/components/layout/create-school-form.tsx");
     const products = read("admin/app/products/page.tsx");
@@ -42,6 +55,10 @@ describe("admin and learner surfaces", () => {
     );
     const communities = read("admin/app/communities/page.tsx");
     const acceptInvitation = read("admin/app/invitations/accept/page.tsx");
+    const teamInvitation = read("admin/app/team-invitations/[invitationId]/page.tsx");
+    const teamInvitationLayout = read(
+      "admin/app/team-invitations/[invitationId]/layout.tsx",
+    );
     const communityWorkspace = read("admin/components/communities/community-admin.tsx");
     const communityFeaturedImage = read(
       "admin/components/communities/community-featured-image.tsx",
@@ -100,20 +117,59 @@ describe("admin and learner surfaces", () => {
     expect(account).not.toContain('type="file"');
     expect(schools).toContain("New school");
     expect(sidebar).toContain("/settings");
-    expect(sidebar).toContain(
-      '{ href: "/media", label: "Media library", icon: LibraryBig }',
+    expect(sidebar).toContain('label: "Website"');
+    expect(sidebar.indexOf('href: "/website/pages"')).toBeLessThan(
+      sidebar.indexOf('href: "/website/blogs"'),
     );
+    expect(sidebar.indexOf('href: "/website/blogs"')).toBeLessThan(
+      sidebar.indexOf('href: "/website/settings"'),
+    );
+    expect(sidebar).toContain('href: "/website/settings"');
+    expect(sidebar).toContain('href: "/settings?tab=api-keys"');
+    expect(sidebar).toContain('href: "/settings?tab=team"');
+    expect(sidebar).toContain('href: "/mails/settings"');
+    expect(sidebar).not.toContain('{ href: "/settings?tab=mails", label: "Mails" }');
+    expect(sidebar).toContain('href: "/media"');
     expect(sidebar).not.toContain('href: "/schools"');
     expect(sidebar).not.toContain('href: "/invitations/accept"');
     expect(settings).toContain('params.set("tab"');
-    expect(settings).toContain("Branding");
+    expect(branding).toContain('redirect("/website/settings?tab=branding")');
+    expect(website).toContain('redirect("/website/pages")');
+    expect(websitePages).toContain("<FrontLitPageList />");
+    expect(websiteBlogs).toContain("<FrontLitPageList onlyBlogs />");
+    expect(websitePageEditor).toContain("<FrontLitPageEditor");
+    expect(websiteBlogEditor).toContain("<FrontLitBlogEditor");
+    expect(websiteSettings).toContain('return <SettingsPage mode="website" />');
+    expect(mailSettings).toContain('return <SettingsPage mode="mails" />');
+    expect(teamSettings).toContain('"/api/v1/school/team"');
+    expect(teamSettings).toContain('"/api/v1/invitations"');
+    expect(teamSettings).toContain("PermissionPicker");
+    expect(teamSettings).not.toContain("team-invite-role");
+    expect(teamSettings).toContain("Pending");
+    expect(teamSettings).toContain("Remove team member");
+    expect(teamSettings).toContain("Edit permissions");
+    expect(teamSettings).toContain("saveMemberPermissions");
+    expect(teamSettings).toContain('method: "PATCH"');
+    expect(teamSettings).toContain("resendInvitation");
+    expect(acceptInvitation).toContain("window.location.search");
+    expect(teamInvitation).toContain("/api/v1/team-invitations/preview");
+    expect(teamInvitation).toContain('action === "accept"');
+    expect(teamInvitation).toContain('action === "reject"');
+    expect(teamInvitation).toContain("persistInvitationToken(invitationId");
+    expect(teamInvitationLayout).toContain('content="no-referrer"');
+    expect(brandingSettings).toContain('"/api/v1/school/website/branding"');
+    expect(codeInjectionSettings).toContain('"/api/v1/school/code-injection"');
+    expect(settings).toContain('"branding",');
+    expect(settings).toContain('"api-keys", "team"] as const');
+    expect(settings).toContain('"team"] as const');
+    expect(settings).toContain('value="team"');
+    expect(settings).toContain('"login-methods",');
+    expect(settings).toContain('value="login-methods"');
+    expect(settings).toContain('value="api-keys"');
     expect(settings).toContain("Payment");
-    expect(settings).toContain("Mails");
     expect(settings).toContain("Code Injection");
-    expect(settings).toContain("Miscellaneous");
+    expect(settings).not.toContain('label: "Miscellaneous"');
     expect(settings).toContain("/api/v1/schools/");
-    expect(settings).toContain("/api/v1/school/code-injection");
-    expect(settings).toContain("saveCodeInjection");
     expect(settings).toContain('method: "PATCH"');
     expect(settings).toContain("Currency saved.");
     expect(shell).toContain('router.replace("/schools")');
@@ -124,7 +180,7 @@ describe("admin and learner surfaces", () => {
     expect(home).not.toContain("/api/v1/invitations");
     expect(products).toContain("Products");
     expect(products).toContain("<FeaturedCard");
-    expect(products).toContain("href={`/products/${product.id}/manage`}");
+    expect(products).toContain("href={`/products/${product.id}`}");
     expect(contentPages).toContain("<FeaturedCard");
     expect(contentPages).toContain("page.featuredImage");
     expect(contentPages).toContain("page.excerpt");
@@ -133,7 +189,7 @@ describe("admin and learner surfaces", () => {
     expect(contentPages).not.toContain(">Edit</");
     expect(contentPages).toContain("gap-y-3");
     expect(communityWorkspace).toContain("<FeaturedCard");
-    expect(communityWorkspace).toContain("href={`/community/${item.id}/manage`}");
+    expect(communityWorkspace).toContain("href={`/community/${item.id}`}");
     expect(communityWorkspace).toContain("item.featuredMedia?.thumbnailUrl");
     expect(communityWorkspace).toContain("gap-y-3");
     expect(communityWorkspace).toContain("shareCommunity");
@@ -198,8 +254,10 @@ describe("admin and learner surfaces", () => {
     expect(productWorkspace).toContain("learnerUrl");
     expect(productWorkspace).toContain(publicProductPath);
     expect(productWorkspace).toContain("Edit page");
-    expect(productWorkspace).toContain("product.salesPage.pageId)}/edit`}");
-    expect(productWorkspace).toContain("/api/v1/enrollments");
+    expect(productWorkspace).toContain(
+      '/pages/${encodeURIComponent(product.salesPage?.pageId ?? "")}/edit?redirectTo=',
+    );
+    expect(productWorkspace).toContain("/api/v1/memberships");
     expect(productWorkspace).toContain('aria-label="Share product"');
     expect(productWorkspace).toContain("NEXT_PUBLIC_LEARNER_ORIGIN");
     expect(productWorkspace).toContain(
@@ -256,7 +314,7 @@ describe("admin and learner surfaces", () => {
     expect(productWorkspace).toContain(
       "The URL-friendly identifier for this product page.",
     );
-    expect(featuredImage).toContain("Open media library");
+    expect(featuredImage).toContain("Select featured image");
     expect(featuredImage).toContain("@frontlit/media-uploader");
     expect(certificates).toContain("Issue certificates");
     expect(certificates).toContain("<Switch");
@@ -264,7 +322,7 @@ describe("admin and learner surfaces", () => {
     expect(certificates).toContain("signatureImageId");
     expect(certificates).toContain("maxLength={400}");
     expect(certificates).toContain("for completing the course.");
-    expect(certificates).toContain("encodeURIComponent(id)");
+    expect(certificates).toContain("encodeURIComponent(productId)");
     expect(certificates).toContain("A deleted or cross-school asset");
     expect(mediaPicker).toContain('purpose: "lesson_media"');
     expect(mediaPicker).toContain('accessPolicy: "private"');
@@ -412,14 +470,14 @@ describe("admin and learner surfaces", () => {
     expect(learnerNotificationsComponent).toContain("Load more notifications");
     expect(learnerNotificationsComponent).toContain("aria-label={`Enable");
     expect(contentPages).toContain("contentStatusLabel");
-    expect(contentPages).toContain("/pages/$" + "{encodeURIComponent(page.id)}/edit");
-    expect(contentPages).toContain("/blogs/$" + "{encodeURIComponent(page.id)}/edit");
+    expect(contentPages).toContain("encodeURIComponent(page.id)}/edit?redirectTo=");
+    expect(contentPages).toContain("encodeURIComponent(page.id)}/edit?redirectTo=");
     expect(contentPages).not.toContain("publishContent");
     expect(pageEditor).toContain("@frontlit/page-builder/builder");
     expect(pageEditor).toContain("/discard-draft");
     expect(pageEditor).toContain("/publish");
     expect(pageEditor).toContain("Publish changes");
-    expect(pageEditor).toContain('"/api/v1/school/frontlit/settings"');
+    expect(pageEditor).toContain('"/api/v1/school/website/branding"');
     expect(pageEditor).toContain("const pagePatch:");
     expect(pageEditor).toContain("state.seo.socialImage != null");
     expect(pageEditor).not.toContain("socialImage: state.seo.socialImage ?? null");
@@ -511,7 +569,7 @@ describe("admin and learner surfaces", () => {
     expect(publicProductsCatalog).toContain("@frontlit/page-builder/primitives");
     expect(publicProductsCatalog).toContain("useSchoolThemeStyle");
     expect(publicProductsCatalog).toContain("/api/v1/public/products");
-    expect(publicProductsCatalog).toContain("/product/");
+    expect(publicProductsCatalog).toContain("/p/");
     expect(publicProductDetailPage).toContain('systemRoute="product"');
     expect(publicProductDetail).toContain("@frontlit/page-builder/primitives");
     expect(publicProductDetail).toContain("/api/v1/storefront/products/");
@@ -566,7 +624,7 @@ describe("admin and learner surfaces", () => {
     expect(surface).toContain("/api/v1/learner/auth/sign-in");
     expect(surface).toContain("/api/v1/learner/auth/sign-up");
     expect(surface).toContain("/api/v1/products/");
-    expect(surface).toContain("/api/v1/learner/enrollments");
+    expect(surface).toContain("/api/v1/learner/memberships");
     expect(surface).toContain("/api/v1/learner/lessons/");
     expect(surface).toContain("/discussions");
     expect(surface).toContain("Post comment");

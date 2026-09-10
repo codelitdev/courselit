@@ -23,6 +23,12 @@ describe.serial("admin learner management", () => {
     });
     expect(created.status).toBe(201);
     const productId = (created.body as { id: string }).id;
+    await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/plans`,
+      headers: adminHeaders,
+      body: { name: "Free access", kind: "free", amountMinor: 0 },
+    });
     const published = await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/products/${productId}`,
@@ -33,7 +39,7 @@ describe.serial("admin learner management", () => {
 
     const invited = await dispatch(runtime, {
       method: "POST",
-      path: "/v1/enrollments",
+      path: "/v1/memberships",
       headers: adminHeaders,
       body: {
         productId,
@@ -43,10 +49,11 @@ describe.serial("admin learner management", () => {
     });
     expect(invited.status).toBe(201);
     expect(invited.body).toMatchObject({
-      productId,
+      entityType: "product",
+      entityId: productId,
       schoolId: world.schoolA.publicId,
-      source: "admin_grant",
       status: "active",
+      isIncludedInPlan: false,
     });
     const learner = await runtime.db
       .select()
@@ -207,11 +214,12 @@ describe.serial("admin learner management", () => {
       createdAt: now,
       updatedAt: now,
     });
-    await runtime.db.insert(schema.communityPaymentPlans).values({
+    await runtime.db.insert(schema.storefrontPlans).values({
       id: uuidv7(clock),
       publicId: createPublicId("cpp", clock),
       schoolId: world.schoolA.id,
-      communityId,
+      entityType: "community",
+      entityId: communityPublicId,
       name: "Free",
       description: "",
       includedProducts: [],

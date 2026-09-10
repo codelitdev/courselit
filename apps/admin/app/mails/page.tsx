@@ -49,8 +49,15 @@ import {
 import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
 import { Textarea } from "@/components/ui/codelit/textarea";
+import { hasSchoolPermission } from "@/lib/school-permissions";
 
-type School = { id: string; name: string; subdomain: string; selected?: boolean };
+type School = {
+  id: string;
+  name: string;
+  subdomain: string;
+  permissions?: readonly string[];
+  selected?: boolean;
+};
 
 type BroadcastEmail = {
   emailId: string;
@@ -110,23 +117,20 @@ function getBroadcastStatus(broadcast: BroadcastItem): {
   if (broadcast.status === "completed") {
     return {
       label: "Sent",
-      badgeClass:
-        "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300",
+      badgeClass: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300",
     };
   }
   if (broadcast.status === "active") {
     if (isScheduled) {
       return {
         label: "Scheduled",
-        badgeClass:
-          "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+        badgeClass: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
         scheduledAt: new Date(delay),
       };
     }
     return {
       label: "Sending",
-      badgeClass:
-        "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300",
+      badgeClass: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300",
     };
   }
   return {
@@ -152,7 +156,9 @@ export default function MailsPage() {
   const [broadcastSubject, setBroadcastSubject] = useState("");
   const [selectedTemplateId, setSelectedTemplateId] = useState("system:blank");
   const [selectedTemplateTitle, setSelectedTemplateTitle] = useState("Blank");
-  const [systemTemplates, setSystemTemplates] = useState<SystemTemplateSummary[]>(BUILTIN_SYSTEM_TEMPLATES);
+  const [systemTemplates, setSystemTemplates] = useState<SystemTemplateSummary[]>(
+    BUILTIN_SYSTEM_TEMPLATES,
+  );
   const [savingBroadcast, setSavingBroadcast] = useState(false);
 
   // Quick Schedule modal state
@@ -181,212 +187,204 @@ export default function MailsPage() {
   const [selectedNewTemplateTitle, setSelectedNewTemplateTitle] = useState("Blank");
   const [savingTemplate, setSavingTemplate] = useState(false);
 
+  const canWriteMails = hasSchoolPermission(school, "learners:write");
+
   function selectTab(tab: string) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tab);
     router.replace(`/mails?${params.toString()}`, { scroll: false });
   }
 
-  const loadTabData = useCallback(
-    async (selectedSchool: School, tab: MailsTab) => {
-      setLoading(true);
-      setError(null);
-      const headers = { "x-school-id": selectedSchool.id };
-      try {
-        if (tab === "broadcasts") {
-          const [res, tmplRes, sysTmplRes] = await Promise.all([
-            fetch("/api/v1/school/mails/sequences?type=broadcast", {
-              credentials: "include",
-              cache: "no-store",
-              headers,
-            }),
-            fetch("/api/v1/school/mails/templates", {
-              credentials: "include",
-              cache: "no-store",
-              headers,
-            }).catch(() => null),
-            fetch("/api/v1/school/mails/system-templates", {
-              credentials: "include",
-              cache: "no-store",
-              headers,
-            }).catch(() => null),
-          ]);
-          if (res.ok) {
-            const data = await res.json();
-            const rawItems: any[] = Array.isArray(data)
-              ? data
-              : Array.isArray(data?.items)
-                ? data.items
-                : Array.isArray(data?.sequences)
-                  ? data.sequences
-                  : Array.isArray(data?.data)
-                    ? data.data
-                    : [];
-            const normalizedBroadcasts: BroadcastItem[] = rawItems.map((item) => ({
-              ...item,
-              sequenceId: item.sequenceId || item.id || "",
-              id: item.id || item.sequenceId || "",
-              title: item.title || "Untitled broadcast",
-              type: item.type || "broadcast",
-              status: item.status || "draft",
-              emails: Array.isArray(item.emails)
-                ? item.emails.map((e: any) => ({
-                    ...e,
-                    emailId: e.emailId || e.id || "",
-                  }))
-                : [],
-            }));
-            setBroadcasts(normalizedBroadcasts);
-          } else {
-            const errData = await res.json().catch(() => null);
-            setError(
-              errData?.details?.reason ||
-                errData?.message ||
-                "Failed to load broadcasts",
-            );
-            setBroadcasts([]);
-          }
-          if (tmplRes && tmplRes.ok) {
-            const tmplData = await tmplRes.json();
-            const rawTmpls: any[] = Array.isArray(tmplData)
-              ? tmplData
-              : Array.isArray(tmplData?.items)
-                ? tmplData.items
-                : Array.isArray(tmplData?.templates)
-                  ? tmplData.templates
-                  : Array.isArray(tmplData?.data)
-                    ? tmplData.data
-                    : [];
-            setTemplates(
-              rawTmpls.map((item) => ({
-                ...item,
-                templateId: item.templateId || item.id || "",
-                id: item.id || item.templateId || "",
-                title: item.title || item.name || "Untitled Template",
-                name: item.name || item.title || "Untitled Template",
-              })),
-            );
-          }
-          if (sysTmplRes && sysTmplRes.ok) {
-            const sysData = (await sysTmplRes.json()) as {
-              items?: Array<{ templateId: string; title: string; content: unknown }>;
-            };
-            if (sysData.items && sysData.items.length > 0) {
-              setSystemTemplates(
-                sysData.items.map((item) => ({
-                  templateId: item.templateId,
-                  title: item.title,
-                  description: "",
-                  content: (item.content as unknown as Email) || defaultTemplateEmail,
-                })),
-              );
-            }
-          }
-        } else if (tab === "sequences") {
-          const seqRes = await fetch(
-            "/api/v1/school/mails/sequences?type=sequence",
-            { credentials: "include", cache: "no-store", headers },
+  const loadTabData = useCallback(async (selectedSchool: School, tab: MailsTab) => {
+    setLoading(true);
+    setError(null);
+    const headers = { "x-school-id": selectedSchool.id };
+    try {
+      if (tab === "broadcasts") {
+        const [res, tmplRes, sysTmplRes] = await Promise.all([
+          fetch("/api/v1/school/mails/sequences?type=broadcast", {
+            credentials: "include",
+            cache: "no-store",
+            headers,
+          }),
+          fetch("/api/v1/school/mails/templates", {
+            credentials: "include",
+            cache: "no-store",
+            headers,
+          }).catch(() => null),
+          fetch("/api/v1/school/mails/system-templates", {
+            credentials: "include",
+            cache: "no-store",
+            headers,
+          }).catch(() => null),
+        ]);
+        if (res.ok) {
+          const data = await res.json();
+          const rawItems: any[] = Array.isArray(data)
+            ? data
+            : Array.isArray(data?.items)
+              ? data.items
+              : Array.isArray(data?.sequences)
+                ? data.sequences
+                : Array.isArray(data?.data)
+                  ? data.data
+                  : [];
+          const normalizedBroadcasts: BroadcastItem[] = rawItems.map((item) => ({
+            ...item,
+            sequenceId: item.sequenceId || item.id || "",
+            id: item.id || item.sequenceId || "",
+            title: item.title || "Untitled broadcast",
+            type: item.type || "broadcast",
+            status: item.status || "draft",
+            emails: Array.isArray(item.emails)
+              ? item.emails.map((e: any) => ({
+                  ...e,
+                  emailId: e.emailId || e.id || "",
+                }))
+              : [],
+          }));
+          setBroadcasts(normalizedBroadcasts);
+        } else {
+          const errData = await res.json().catch(() => null);
+          setError(
+            errData?.details?.reason || errData?.message || "Failed to load broadcasts",
           );
-          if (seqRes.ok) {
-            const data = await seqRes.json();
-            const rawItems: any[] = Array.isArray(data)
-              ? data
-              : Array.isArray(data?.items)
-                ? data.items
-                : Array.isArray(data?.sequences)
-                  ? data.sequences
-                  : Array.isArray(data?.data)
-                    ? data.data
-                    : [];
-            const normalizedSequences: SequenceItem[] = rawItems.map((item) => ({
+          setBroadcasts([]);
+        }
+        if (tmplRes && tmplRes.ok) {
+          const tmplData = await tmplRes.json();
+          const rawTmpls: any[] = Array.isArray(tmplData)
+            ? tmplData
+            : Array.isArray(tmplData?.items)
+              ? tmplData.items
+              : Array.isArray(tmplData?.templates)
+                ? tmplData.templates
+                : Array.isArray(tmplData?.data)
+                  ? tmplData.data
+                  : [];
+          setTemplates(
+            rawTmpls.map((item) => ({
               ...item,
-              sequenceId: item.sequenceId || item.id || "",
-              id: item.id || item.sequenceId || "",
-              title: item.title || "Untitled Sequence",
-              status: item.status || "draft",
-              type: item.type || "sequence",
-              emailsCount:
-                item.emailsCount ??
-                (Array.isArray(item.emails) ? item.emails.length : undefined),
-            }));
-            setSequences(normalizedSequences);
-          } else {
-            const errData = await seqRes.json().catch(() => null);
-            setError(
-              errData?.details?.reason ||
-                errData?.message ||
-                "Failed to load sequences",
-            );
-            setSequences([]);
-          }
-        } else if (tab === "templates") {
-          const [tmplRes, sysTmplRes] = await Promise.all([
-            fetch("/api/v1/school/mails/templates", {
-              credentials: "include",
-              cache: "no-store",
-              headers,
-            }),
-            fetch("/api/v1/school/mails/system-templates", {
-              credentials: "include",
-              cache: "no-store",
-              headers,
-            }).catch(() => null),
-          ]);
-          if (tmplRes.ok) {
-            const data = await tmplRes.json();
-            const rawTmpls: any[] = Array.isArray(data)
-              ? data
-              : Array.isArray(data?.items)
-                ? data.items
-                : Array.isArray(data?.templates)
-                  ? data.templates
-                  : Array.isArray(data?.data)
-                    ? data.data
-                    : [];
-            setTemplates(
-              rawTmpls.map((item) => ({
-                ...item,
-                templateId: item.templateId || item.id || "",
-                id: item.id || item.templateId || "",
-                title: item.title || item.name || "Untitled Template",
-                name: item.name || item.title || "Untitled Template",
+              templateId: item.templateId || item.id || "",
+              id: item.id || item.templateId || "",
+              title: item.title || item.name || "Untitled Template",
+              name: item.name || item.title || "Untitled Template",
+            })),
+          );
+        }
+        if (sysTmplRes && sysTmplRes.ok) {
+          const sysData = (await sysTmplRes.json()) as {
+            items?: Array<{ templateId: string; title: string; content: unknown }>;
+          };
+          if (sysData.items && sysData.items.length > 0) {
+            setSystemTemplates(
+              sysData.items.map((item) => ({
+                templateId: item.templateId,
+                title: item.title,
+                description: "",
+                content: (item.content as unknown as Email) || defaultTemplateEmail,
               })),
             );
-          } else {
-            const errData = await tmplRes.json().catch(() => null);
-            setError(
-              errData?.details?.reason ||
-                errData?.message ||
-                "Failed to load templates",
-            );
-            setTemplates([]);
-          }
-          if (sysTmplRes && sysTmplRes.ok) {
-            const sysData = (await sysTmplRes.json()) as {
-              items?: Array<{ templateId: string; title: string; content: unknown }>;
-            };
-            if (sysData.items && sysData.items.length > 0) {
-              setSystemTemplates(
-                sysData.items.map((item) => ({
-                  templateId: item.templateId,
-                  title: item.title,
-                  description: "",
-                  content: (item.content as unknown as Email) || defaultTemplateEmail,
-                })),
-              );
-            }
           }
         }
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Unable to load mailing data.",
-        );
-      } finally {
-        setLoading(false);
+      } else if (tab === "sequences") {
+        const seqRes = await fetch("/api/v1/school/mails/sequences?type=sequence", {
+          credentials: "include",
+          cache: "no-store",
+          headers,
+        });
+        if (seqRes.ok) {
+          const data = await seqRes.json();
+          const rawItems: any[] = Array.isArray(data)
+            ? data
+            : Array.isArray(data?.items)
+              ? data.items
+              : Array.isArray(data?.sequences)
+                ? data.sequences
+                : Array.isArray(data?.data)
+                  ? data.data
+                  : [];
+          const normalizedSequences: SequenceItem[] = rawItems.map((item) => ({
+            ...item,
+            sequenceId: item.sequenceId || item.id || "",
+            id: item.id || item.sequenceId || "",
+            title: item.title || "Untitled Sequence",
+            status: item.status || "draft",
+            type: item.type || "sequence",
+            emailsCount:
+              item.emailsCount ??
+              (Array.isArray(item.emails) ? item.emails.length : undefined),
+          }));
+          setSequences(normalizedSequences);
+        } else {
+          const errData = await seqRes.json().catch(() => null);
+          setError(
+            errData?.details?.reason || errData?.message || "Failed to load sequences",
+          );
+          setSequences([]);
+        }
+      } else if (tab === "templates") {
+        const [tmplRes, sysTmplRes] = await Promise.all([
+          fetch("/api/v1/school/mails/templates", {
+            credentials: "include",
+            cache: "no-store",
+            headers,
+          }),
+          fetch("/api/v1/school/mails/system-templates", {
+            credentials: "include",
+            cache: "no-store",
+            headers,
+          }).catch(() => null),
+        ]);
+        if (tmplRes.ok) {
+          const data = await tmplRes.json();
+          const rawTmpls: any[] = Array.isArray(data)
+            ? data
+            : Array.isArray(data?.items)
+              ? data.items
+              : Array.isArray(data?.templates)
+                ? data.templates
+                : Array.isArray(data?.data)
+                  ? data.data
+                  : [];
+          setTemplates(
+            rawTmpls.map((item) => ({
+              ...item,
+              templateId: item.templateId || item.id || "",
+              id: item.id || item.templateId || "",
+              title: item.title || item.name || "Untitled Template",
+              name: item.name || item.title || "Untitled Template",
+            })),
+          );
+        } else {
+          const errData = await tmplRes.json().catch(() => null);
+          setError(
+            errData?.details?.reason || errData?.message || "Failed to load templates",
+          );
+          setTemplates([]);
+        }
+        if (sysTmplRes && sysTmplRes.ok) {
+          const sysData = (await sysTmplRes.json()) as {
+            items?: Array<{ templateId: string; title: string; content: unknown }>;
+          };
+          if (sysData.items && sysData.items.length > 0) {
+            setSystemTemplates(
+              sysData.items.map((item) => ({
+                templateId: item.templateId,
+                title: item.title,
+                description: "",
+                content: (item.content as unknown as Email) || defaultTemplateEmail,
+              })),
+            );
+          }
+        }
       }
-    },
-    [],
-  );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to load mailing data.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     void fetch("/api/v1/schools", { credentials: "include", cache: "no-store" })
@@ -452,21 +450,18 @@ export default function MailsPage() {
       const emailId = firstEmail?.emailId || firstEmail?.id;
 
       if (emailId && broadcastSubject.trim()) {
-        await fetch(
-          `/api/v1/school/mails/sequences/${sequenceId}/emails/${emailId}`,
-          {
-            method: "PATCH",
-            credentials: "include",
-            headers: {
-              "content-type": "application/json",
-              "x-school-id": school.id,
-            },
-            body: JSON.stringify({
-              subject: broadcastSubject.trim(),
-              published: true,
-            }),
+        await fetch(`/api/v1/school/mails/sequences/${sequenceId}/emails/${emailId}`, {
+          method: "PATCH",
+          credentials: "include",
+          headers: {
+            "content-type": "application/json",
+            "x-school-id": school.id,
           },
-        ).catch(() => null);
+          body: JSON.stringify({
+            subject: broadcastSubject.trim(),
+            published: true,
+          }),
+        }).catch(() => null);
       }
 
       // Prepend to local broadcasts state immediately
@@ -477,15 +472,26 @@ export default function MailsPage() {
         title,
         type: "broadcast",
         status: created.status || "draft",
-        emails: rawEmails.length > 0
-          ? rawEmails.map((e: any) => ({
-              ...e,
-              emailId: e.emailId || e.id || "",
-              subject: (e === firstEmail && broadcastSubject.trim()) ? broadcastSubject.trim() : (e.subject || title),
-            }))
-          : emailId
-            ? [{ emailId, subject: broadcastSubject.trim() || title, delayInMillis: 0, published: true }]
-            : [],
+        emails:
+          rawEmails.length > 0
+            ? rawEmails.map((e: any) => ({
+                ...e,
+                emailId: e.emailId || e.id || "",
+                subject:
+                  e === firstEmail && broadcastSubject.trim()
+                    ? broadcastSubject.trim()
+                    : e.subject || title,
+              }))
+            : emailId
+              ? [
+                  {
+                    emailId,
+                    subject: broadcastSubject.trim() || title,
+                    delayInMillis: 0,
+                    published: true,
+                  },
+                ]
+              : [],
         createdAt: created.createdAt || new Date().toISOString(),
       };
 
@@ -503,9 +509,7 @@ export default function MailsPage() {
       // Navigate to the full screen email editor
       router.push(`/mails/editor/${sequenceId}`);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to create broadcast.",
-      );
+      setError(err instanceof Error ? err.message : "Unable to create broadcast.");
     } finally {
       setSavingBroadcast(false);
     }
@@ -525,27 +529,21 @@ export default function MailsPage() {
       const firstEmail = broadcast.emails?.[0];
       const emailId = firstEmail?.emailId || (firstEmail as any)?.id;
       if (emailId) {
-        await fetch(
-          `/api/v1/school/mails/sequences/${seqId}/emails/${emailId}`,
-          {
-            method: "PATCH",
-            credentials: "include",
-            headers: {
-              "content-type": "application/json",
-              "x-school-id": school.id,
-            },
-            body: JSON.stringify({ delayInMillis: 0, published: true }),
-          },
-        );
-      }
-      const response = await fetch(
-        `/api/v1/school/mails/sequences/${seqId}/start`,
-        {
-          method: "POST",
+        await fetch(`/api/v1/school/mails/sequences/${seqId}/emails/${emailId}`, {
+          method: "PATCH",
           credentials: "include",
-          headers: { "x-school-id": school.id },
-        },
-      );
+          headers: {
+            "content-type": "application/json",
+            "x-school-id": school.id,
+          },
+          body: JSON.stringify({ delayInMillis: 0, published: true }),
+        });
+      }
+      const response = await fetch(`/api/v1/school/mails/sequences/${seqId}/start`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "x-school-id": school.id },
+      });
       if (response.ok) {
         await loadTabData(school, "broadcasts");
       }
@@ -563,34 +561,26 @@ export default function MailsPage() {
       const firstEmail = scheduleTarget.emails?.[0];
       const emailId = firstEmail?.emailId || (firstEmail as any)?.id;
       if (emailId) {
-        await fetch(
-          `/api/v1/school/mails/sequences/${seqId}/emails/${emailId}`,
-          {
-            method: "PATCH",
-            credentials: "include",
-            headers: {
-              "content-type": "application/json",
-              "x-school-id": school.id,
-            },
-            body: JSON.stringify({ delayInMillis, published: true }),
-          },
-        );
-      }
-      await fetch(
-        `/api/v1/school/mails/sequences/${seqId}/start`,
-        {
-          method: "POST",
+        await fetch(`/api/v1/school/mails/sequences/${seqId}/emails/${emailId}`, {
+          method: "PATCH",
           credentials: "include",
-          headers: { "x-school-id": school.id },
-        },
-      );
+          headers: {
+            "content-type": "application/json",
+            "x-school-id": school.id,
+          },
+          body: JSON.stringify({ delayInMillis, published: true }),
+        });
+      }
+      await fetch(`/api/v1/school/mails/sequences/${seqId}/start`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "x-school-id": school.id },
+      });
       setScheduleTarget(null);
       setScheduleDateTime("");
       await loadTabData(school, "broadcasts");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to schedule broadcast.",
-      );
+      setError(err instanceof Error ? err.message : "Unable to schedule broadcast.");
     } finally {
       setScheduling(false);
     }
@@ -600,14 +590,11 @@ export default function MailsPage() {
     if (!school) return;
     try {
       const seqId = broadcast.sequenceId || (broadcast as any).id;
-      const response = await fetch(
-        `/api/v1/school/mails/sequences/${seqId}/pause`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "x-school-id": school.id },
-        },
-      );
+      const response = await fetch(`/api/v1/school/mails/sequences/${seqId}/pause`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "x-school-id": school.id },
+      });
       if (response.ok) {
         await loadTabData(school, "broadcasts");
       }
@@ -620,16 +607,15 @@ export default function MailsPage() {
     if (!school) return;
     if (!confirm("Are you sure you want to delete this broadcast?")) return;
     try {
-      const response = await fetch(
-        `/api/v1/school/mails/sequences/${sequenceId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-          headers: { "x-school-id": school.id },
-        },
-      );
+      const response = await fetch(`/api/v1/school/mails/sequences/${sequenceId}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "x-school-id": school.id },
+      });
       if (response.ok) {
-        setBroadcasts((prev) => prev.filter((b) => (b.sequenceId || (b as any).id) !== sequenceId));
+        setBroadcasts((prev) =>
+          prev.filter((b) => (b.sequenceId || (b as any).id) !== sequenceId),
+        );
       }
     } catch {
       /* ignore */
@@ -663,26 +649,21 @@ export default function MailsPage() {
       const firstEmail = editTarget.emails?.[0];
       const emailId = firstEmail?.emailId || (firstEmail as any)?.id;
       if (emailId && editSubject.trim()) {
-        await fetch(
-          `/api/v1/school/mails/sequences/${seqId}/emails/${emailId}`,
-          {
-            method: "PATCH",
-            credentials: "include",
-            headers: {
-              "content-type": "application/json",
-              "x-school-id": school.id,
-            },
-            body: JSON.stringify({ subject: editSubject.trim() }),
+        await fetch(`/api/v1/school/mails/sequences/${seqId}/emails/${emailId}`, {
+          method: "PATCH",
+          credentials: "include",
+          headers: {
+            "content-type": "application/json",
+            "x-school-id": school.id,
           },
-        );
+          body: JSON.stringify({ subject: editSubject.trim() }),
+        });
       }
 
       setEditTarget(null);
       await loadTabData(school, "broadcasts");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to save broadcast.",
-      );
+      setError(err instanceof Error ? err.message : "Unable to save broadcast.");
     } finally {
       setSavingEdit(false);
     }
@@ -732,9 +713,7 @@ export default function MailsPage() {
       setNewSequenceOpen(false);
       await loadTabData(school, "sequences");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to create sequence.",
-      );
+      setError(err instanceof Error ? err.message : "Unable to create sequence.");
     } finally {
       setSavingSequence(false);
     }
@@ -771,14 +750,11 @@ export default function MailsPage() {
   async function handleDeleteSequence(sequenceId: string) {
     if (!school) return;
     try {
-      const response = await fetch(
-        `/api/v1/school/mails/sequences/${sequenceId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-          headers: { "x-school-id": school.id },
-        },
-      );
+      const response = await fetch(`/api/v1/school/mails/sequences/${sequenceId}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "x-school-id": school.id },
+      });
       if (response.ok) {
         setSequences((prev) =>
           prev.filter((s) => (s.sequenceId || s.id) !== sequenceId),
@@ -844,9 +820,7 @@ export default function MailsPage() {
       setNewTemplateOpen(false);
       await loadTabData(school, "templates");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to create template.",
-      );
+      setError(err instanceof Error ? err.message : "Unable to create template.");
     } finally {
       setSavingTemplate(false);
     }
@@ -874,14 +848,11 @@ export default function MailsPage() {
   async function handleDeleteTemplate(templateId: string) {
     if (!school) return;
     try {
-      const response = await fetch(
-        `/api/v1/school/mails/templates/${templateId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-          headers: { "x-school-id": school.id },
-        },
-      );
+      const response = await fetch(`/api/v1/school/mails/templates/${templateId}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "x-school-id": school.id },
+      });
       if (response.ok) {
         setTemplates((prev) => prev.filter((t) => t.id !== templateId));
       }
@@ -905,9 +876,7 @@ export default function MailsPage() {
                 if (school) void loadTabData(school, selectedTab);
               }}
             >
-              <RefreshCw
-                className={`size-4 mr-2 ${loading ? "animate-spin" : ""}`}
-              />
+              <RefreshCw className={`size-4 mr-2 ${loading ? "animate-spin" : ""}`} />
               Refresh
             </Button>
           }
@@ -951,10 +920,12 @@ export default function MailsPage() {
                     One-time emails sent immediately or scheduled for later delivery.
                   </CardDescription>
                 </div>
-                <Button size="sm" onClick={() => setNewBroadcastOpen(true)}>
-                  <Plus className="size-4 mr-1" />
-                  New broadcast
-                </Button>
+                {canWriteMails ? (
+                  <Button size="sm" onClick={() => setNewBroadcastOpen(true)}>
+                    <Plus className="size-4 mr-1" />
+                    New broadcast
+                  </Button>
+                ) : null}
               </CardHeader>
               <CardContent>
                 {loading && broadcasts.length === 0 ? (
@@ -963,20 +934,23 @@ export default function MailsPage() {
                   </p>
                 ) : broadcasts.length === 0 ? (
                   <div className="py-12 text-center">
-                    <Radio className="mx-auto size-8 text-muted-foreground mb-2" />
+                    <Radio className="mx-auto size-6 text-muted-foreground mb-2" />
                     <p className="text-sm font-medium">No broadcasts yet</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Send a one-time announcement, newsletter, or update to your audience.
+                      Send a one-time announcement, newsletter, or update to your
+                      audience.
                     </p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="mt-4"
-                      onClick={() => setNewBroadcastOpen(true)}
-                    >
-                      <Plus className="size-4 mr-1" />
-                      Create broadcast
-                    </Button>
+                    {canWriteMails ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-4"
+                        onClick={() => setNewBroadcastOpen(true)}
+                      >
+                        <Plus className="size-4 mr-1" />
+                        Create broadcast
+                      </Button>
+                    ) : null}
                   </div>
                 ) : (
                   <div className="divide-y divide-border">
@@ -1009,81 +983,85 @@ export default function MailsPage() {
                               {status.label === "Scheduled" && status.scheduledAt ? (
                                 <span className="flex items-center gap-1 text-amber-700 dark:text-amber-400 font-medium">
                                   <Clock className="size-3.5" />
-                                  Scheduled for{" "}
-                                  {status.scheduledAt.toLocaleString()}
+                                  Scheduled for {status.scheduledAt.toLocaleString()}
                                 </span>
                               ) : null}
                               {b.createdAt ? (
                                 <span>
-                                  Created{" "}
-                                  {new Date(b.createdAt).toLocaleDateString()}
+                                  Created {new Date(b.createdAt).toLocaleDateString()}
                                 </span>
                               ) : null}
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 self-end sm:self-center">
-                            {status.label === "Draft" ? (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => void handleSendNow(b)}
-                                >
-                                  <Send className="size-3.5 mr-1 text-green-600" />
-                                  Send now
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    setScheduleTarget(b);
-                                    setScheduleDateTime("");
-                                  }}
-                                >
-                                  <Calendar className="size-3.5 mr-1 text-blue-600" />
-                                  Schedule
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => router.push(`/mails/editor/${broadcastId}`)}
-                                  title="Edit broadcast in email editor"
-                                >
-                                  <Edit2 className="size-4" />
-                                </Button>
-                              </>
-                            ) : null}
+                          {canWriteMails ? (
+                            <div className="flex items-center gap-2 self-end sm:self-center">
+                              {status.label === "Draft" ? (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => void handleSendNow(b)}
+                                  >
+                                    <Send className="size-3.5 mr-1 text-green-600" />
+                                    Send now
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setScheduleTarget(b);
+                                      setScheduleDateTime("");
+                                    }}
+                                  >
+                                    <Calendar className="size-3.5 mr-1 text-blue-600" />
+                                    Schedule
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() =>
+                                      router.push(`/mails/editor/${broadcastId}`)
+                                    }
+                                    title="Edit broadcast in email editor"
+                                  >
+                                    <Edit2 className="size-4" />
+                                  </Button>
+                                </>
+                              ) : null}
 
-                            {status.label === "Scheduled" ? (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => void handleCancelSchedule(b)}
-                                >
-                                  <XCircle className="size-3.5 mr-1 text-amber-600" />
-                                  Cancel schedule
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => router.push(`/mails/editor/${broadcastId}`)}
-                                  title="Edit broadcast in email editor"
-                                >
-                                  <Edit2 className="size-4" />
-                                </Button>
-                              </>
-                            ) : null}
+                              {status.label === "Scheduled" ? (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => void handleCancelSchedule(b)}
+                                  >
+                                    <XCircle className="size-3.5 mr-1 text-amber-600" />
+                                    Cancel schedule
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() =>
+                                      router.push(`/mails/editor/${broadcastId}`)
+                                    }
+                                    title="Edit broadcast in email editor"
+                                  >
+                                    <Edit2 className="size-4" />
+                                  </Button>
+                                </>
+                              ) : null}
 
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => void handleDeleteBroadcast(broadcastId)}
-                            >
-                              <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
-                            </Button>
-                          </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => void handleDeleteBroadcast(broadcastId)}
+                              >
+                                <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
+                              </Button>
+                            </div>
+                          ) : null}
                         </div>
                       );
                     })}
@@ -1103,10 +1081,12 @@ export default function MailsPage() {
                     Automated drip campaigns triggered by user events or enrollments.
                   </CardDescription>
                 </div>
-                <Button size="sm" onClick={() => setNewSequenceOpen(true)}>
-                  <Plus className="size-4 mr-1" />
-                  New sequence
-                </Button>
+                {canWriteMails ? (
+                  <Button size="sm" onClick={() => setNewSequenceOpen(true)}>
+                    <Plus className="size-4 mr-1" />
+                    New sequence
+                  </Button>
+                ) : null}
               </CardHeader>
               <CardContent>
                 {loading && sequences.length === 0 ? (
@@ -1115,10 +1095,11 @@ export default function MailsPage() {
                   </p>
                 ) : sequences.length === 0 ? (
                   <div className="py-12 text-center">
-                    <Layers className="mx-auto size-8 text-muted-foreground mb-2" />
+                    <Layers className="mx-auto size-6 text-muted-foreground mb-2" />
                     <p className="text-sm font-medium">No sequences yet</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Automate welcome series, course onboarding, or re-engagement flows.
+                      Automate welcome series, course onboarding, or re-engagement
+                      flows.
                     </p>
                   </div>
                 ) : (
@@ -1151,26 +1132,28 @@ export default function MailsPage() {
                               ) : null}
                             </div>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => void toggleSequenceStatus(seq)}
-                            >
-                              {seq.status === "active" ? (
-                                <Pause className="size-4 text-amber-600" />
-                              ) : (
-                                <Play className="size-4 text-green-600" />
-                              )}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => void handleDeleteSequence(seqId)}
-                            >
-                              <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
-                            </Button>
-                          </div>
+                          {canWriteMails ? (
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => void toggleSequenceStatus(seq)}
+                              >
+                                {seq.status === "active" ? (
+                                  <Pause className="size-4 text-amber-600" />
+                                ) : (
+                                  <Play className="size-4 text-green-600" />
+                                )}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => void handleDeleteSequence(seqId)}
+                              >
+                                <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
+                              </Button>
+                            </div>
+                          ) : null}
                         </div>
                       );
                     })}
@@ -1190,10 +1173,12 @@ export default function MailsPage() {
                     Custom layouts and reusable branded marketing email templates.
                   </CardDescription>
                 </div>
-                <Button size="sm" onClick={() => setNewTemplateOpen(true)}>
-                  <Plus className="size-4 mr-1" />
-                  New template
-                </Button>
+                {canWriteMails ? (
+                  <Button size="sm" onClick={() => setNewTemplateOpen(true)}>
+                    <Plus className="size-4 mr-1" />
+                    New template
+                  </Button>
+                ) : null}
               </CardHeader>
               <CardContent>
                 {loading && templates.length === 0 ? (
@@ -1202,10 +1187,11 @@ export default function MailsPage() {
                   </p>
                 ) : templates.length === 0 ? (
                   <div className="py-12 text-center">
-                    <FileText className="mx-auto size-8 text-muted-foreground mb-2" />
+                    <FileText className="mx-auto size-6 text-muted-foreground mb-2" />
                     <p className="text-sm font-medium">No templates yet</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Design templates to keep your email styling consistent across campaigns.
+                      Design templates to keep your email styling consistent across
+                      campaigns.
                     </p>
                   </div>
                 ) : (
@@ -1215,27 +1201,27 @@ export default function MailsPage() {
                         <CardHeader className="pb-2">
                           <CardTitle className="text-base">{tmpl.name}</CardTitle>
                           {tmpl.subject ? (
-                            <CardDescription>
-                              Subject: {tmpl.subject}
-                            </CardDescription>
+                            <CardDescription>Subject: {tmpl.subject}</CardDescription>
                           ) : null}
                         </CardHeader>
-                        <CardContent className="flex items-center justify-end gap-1 pt-0">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => void handleDuplicateTemplate(tmpl.id)}
-                          >
-                            <Copy className="size-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => void handleDeleteTemplate(tmpl.id)}
-                          >
-                            <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
-                          </Button>
-                        </CardContent>
+                        {canWriteMails ? (
+                          <CardContent className="flex items-center justify-end gap-1 pt-0">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => void handleDuplicateTemplate(tmpl.id)}
+                            >
+                              <Copy className="size-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => void handleDeleteTemplate(tmpl.id)}
+                            >
+                              <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
+                            </Button>
+                          </CardContent>
+                        ) : null}
                       </Card>
                     ))}
                   </div>
@@ -1421,7 +1407,8 @@ export default function MailsPage() {
             <DialogHeader>
               <DialogTitle>New automated sequence</DialogTitle>
               <DialogDescription>
-                Create a drip sequence that automatically emails contacts based on triggers.
+                Create a drip sequence that automatically emails contacts based on
+                triggers.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-2">

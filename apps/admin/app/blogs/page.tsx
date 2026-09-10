@@ -1,5 +1,5 @@
-import { FrontLitPageList } from "@/components/content/frontlit-page-list";
+import { redirect } from "next/navigation";
 
 export default function BlogsPage() {
-  return <FrontLitPageList onlyBlogs />;
+  redirect("/website/blogs");
 }

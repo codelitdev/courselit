@@ -182,7 +182,34 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
     return [{ label: "Media" }];
   }
 
-  // Settings
+  // Website / Settings
+  if (clean === "/website") {
+    return [{ label: "Website", href: "/website/pages" }];
+  }
+  if (clean === "/website/pages") {
+    return [
+      { label: "Website", href: "/website/pages" },
+      { label: "Pages" },
+    ];
+  }
+  if (clean === "/website/blogs") {
+    return [
+      { label: "Website", href: "/website/pages" },
+      { label: "Blogs" },
+    ];
+  }
+  if (clean === "/website/settings") {
+    return [
+      { label: "Website", href: "/website/pages" },
+      { label: "Settings" },
+    ];
+  }
+  if (clean === "/mails/settings") {
+    return [
+      { label: "Mails", href: "/mails?tab=broadcasts" },
+      { label: "Settings" },
+    ];
+  }
   if (clean === "/settings") {
     return [{ label: "Settings" }];
   }

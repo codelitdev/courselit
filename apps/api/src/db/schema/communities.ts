@@ -21,6 +21,8 @@ export const communities = pgTable(
     schoolId: uuid("school_id")
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
+    /** The saved public sales page in the school's website service. */
+    salesPageId: text("sales_page_id").default(sql`null`),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     description: text("description").notNull().default(""),

@@ -14,7 +14,8 @@ import { and, eq, isNull } from "drizzle-orm";
 import * as schema from "../db/schema/index.js";
 import type { AppDb } from "../types.js";
 import { apiKeyDigestMatches, parseApiKey } from "./api-keys.js";
-import type { AdminAuth } from "./better-auth.js";
+import type { AdminAuth, LearnerAuth } from "./better-auth.js";
+import { ADMIN_SESSION_COOKIE_NAME } from "./options.js";
 
 export type AuthRuntime = {
   db: AppDb;
@@ -33,7 +34,9 @@ export async function authenticateHttpRequest(
   headers: HeaderMap,
   deps: AuthRuntime,
 ): Promise<AuthenticationResult<string>> {
-  const selected = selectHttpCredential(headers);
+  const selected = selectHttpCredential(headers, {
+    sessionCookieName: ADMIN_SESSION_COOKIE_NAME,
+  });
   if (selected.kind === "absent") {
     return mapTransportAuthentication({ kind: "absent" }, { transport: "http" });
   }
@@ -132,6 +135,45 @@ export async function authenticateHttpRequest(
     kind: "authenticated",
     principalId: key.userId,
     credential: { kind: "api_key", credentialId: key.id },
+  };
+}
+
+/**
+ * Resolve only the learner Better Auth cookie. This is deliberately separate
+ * from authenticateHttpRequest: an admin session must never authenticate a
+ * learner request.
+ */
+export async function authenticateLearnerHttpRequest(
+  headers: HeaderMap,
+  deps: { learnerAuth: LearnerAuth },
+): Promise<AuthenticationResult<string>> {
+  const cookie = headers.cookie ?? headers.Cookie;
+  if (!cookie) {
+    return mapTransportAuthentication({ kind: "absent" }, { transport: "http" });
+  }
+  const resolved = await resolveBetterAuthSession(
+    {
+      auth: deps.learnerAuth.auth,
+      issuer: deps.learnerAuth.issuer,
+    },
+    fromNodeHeaders(toNodeHeaderMap(headers)),
+  );
+  if (resolved.status === "unavailable") {
+    return {
+      kind: "rejected",
+      error: createPlatformError("internal_error"),
+    };
+  }
+  if (resolved.status !== "authenticated" || resolved.identity.method !== "session") {
+    return {
+      kind: "rejected",
+      error: createPlatformError("unauthenticated"),
+    };
+  }
+  return {
+    kind: "authenticated",
+    principalId: resolved.identity.subject,
+    credential: { kind: "session", credentialId: resolved.identity.subject },
   };
 }
 

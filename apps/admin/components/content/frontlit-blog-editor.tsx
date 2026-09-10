@@ -37,7 +37,10 @@ function tagsFromMeta(meta: Record<string, unknown>): string {
 
 export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
   const searchParams = useSearchParams();
-  const redirectTo = resolveEditorRedirect(searchParams.get("redirectTo"), "/blogs");
+  const redirectTo = resolveEditorRedirect(
+    searchParams.get("redirectTo"),
+    "/website/blogs",
+  );
   const [blog, setBlog] = useState<FrontLitBlog | null>(null);
   const [school, setSchool] = useState<School | null>(null);
   const [draft, setDraft] = useState<BlogDraft>({
@@ -72,7 +75,7 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
     setLoading(true);
     void Promise.all([
       frontLitRequest<FrontLitBlog>(
-        `/api/v1/school/frontlit/blogs/${encodeURIComponent(blogId)}`,
+        `/api/v1/school/website/blogs/${encodeURIComponent(blogId)}`,
       ),
       fetch("/api/v1/schools", { credentials: "include", cache: "no-store" }).then(
         async (response) => {
@@ -126,7 +129,7 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
     setError(null);
     try {
       const updated = await frontLitRequest<FrontLitBlog>(
-        `/api/v1/school/frontlit/blogs/${encodeURIComponent(blogId)}`,
+        `/api/v1/school/website/blogs/${encodeURIComponent(blogId)}`,
         { method: "PATCH", body: JSON.stringify(patch) },
       );
       setBlog(updated);
@@ -180,7 +183,7 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
     setError(null);
     try {
       const published = await frontLitRequest<FrontLitBlog>(
-        `/api/v1/school/frontlit/blogs/${encodeURIComponent(blogId)}/publish`,
+        `/api/v1/school/website/blogs/${encodeURIComponent(blogId)}/publish`,
         { method: "POST" },
       );
       setBlog(published);
@@ -199,7 +202,7 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
     setError(null);
     try {
       const reverted = await frontLitRequest<FrontLitBlog>(
-        `/api/v1/school/frontlit/blogs/${encodeURIComponent(blogId)}/discard-draft`,
+        `/api/v1/school/website/blogs/${encodeURIComponent(blogId)}/discard-draft`,
         { method: "POST" },
       );
       const nextDraft = {

@@ -8,23 +8,50 @@ async function proxy(
 ) {
   try {
     const { path } = await context.params;
-    if (path[0] !== "v1" && path[0] !== "auth") {
+    if (path[0] !== "v1" && path[0] !== "learner-auth") {
       return NextResponse.json(
         {
           code: "not_found",
-          message: "Learner app only proxies public, learner, and auth APIs.",
+          message: "Learner app only proxies public, learner, and learner-auth APIs.",
         },
         { status: 404 },
       );
     }
     const suffix = path.join("/");
-    const upstreamPath = path[0] === "auth" ? `/api/${suffix}` : `/${suffix}`;
+    const isLearnerAuth = path[0] === "learner-auth";
+    const upstreamPath = isLearnerAuth ? `/api/${suffix}` : `/${suffix}`;
     const target = `${API_URL}${upstreamPath}${request.nextUrl.search}`;
     const headers = new Headers(request.headers);
     const incomingHost =
       request.headers.get("x-forwarded-host") ?? request.headers.get("host");
     headers.delete("host");
     if (incomingHost) headers.set("x-forwarded-host", incomingHost);
+    const rawCookie = request.headers.get("cookie");
+    if (rawCookie) {
+      const isLearnerBetterAuthCookie = (name: string) =>
+        name.startsWith("courselit-learner.") ||
+        name.startsWith("courselit-learner-") ||
+        name.startsWith("__Secure-courselit-learner.") ||
+        name.startsWith("__Secure-courselit-learner-");
+      const includeLearnerBetterAuth =
+        isLearnerAuth || (path[0] === "v1" && suffix === "v1/learner/me");
+      const cookies = rawCookie
+        .split(";")
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .filter((part) => {
+          const name = part.split("=", 1)[0];
+          return (
+            name === "courselit.learner.session" ||
+            (includeLearnerBetterAuth && isLearnerBetterAuthCookie(name))
+          );
+        });
+      if (cookies.length > 0) {
+        headers.set("cookie", cookies.join("; "));
+      } else {
+        headers.delete("cookie");
+      }
+    }
     let body: BodyInit | undefined;
     if (request.method !== "GET" && request.method !== "HEAD") {
       body = await request.text();

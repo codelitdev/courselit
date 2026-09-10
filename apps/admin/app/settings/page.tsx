@@ -16,10 +16,14 @@ import {
   Settings,
   Sliders,
   Trash2,
+  Users,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
+import { BrandingSettings } from "@/components/settings/branding-settings";
+import { TeamSettings } from "@/components/settings/team-settings";
+import { CodeInjectionSettings } from "@/components/website/code-injection-settings";
 import {
   Card,
   CardContent,
@@ -49,14 +53,19 @@ import {
 import { Textarea } from "@/components/ui/codelit/textarea";
 import currencies from "@/data/currencies.json";
 
-const SETTINGS_TABS = [
+const GENERAL_SETTINGS_TABS = ["api-keys", "team"] as const;
+const MAIL_SETTINGS_TABS = ["delivery"] as const;
+const WEBSITE_SETTINGS_TABS = [
   "branding",
   "payment",
-  "mails",
   "code-injection",
-  "miscellaneous",
+  "login-methods",
 ] as const;
-type SettingsTab = (typeof SETTINGS_TABS)[number];
+type SettingsMode = "general" | "website" | "mails";
+type SettingsTab =
+  | (typeof GENERAL_SETTINGS_TABS)[number]
+  | (typeof MAIL_SETTINGS_TABS)[number]
+  | (typeof WEBSITE_SETTINGS_TABS)[number];
 
 const PAYMENT_METHODS = [
   { value: "stripe", label: "Stripe" },
@@ -64,8 +73,14 @@ const PAYMENT_METHODS = [
   { value: "lemonsqueezy", label: "Lemonsqueezy" },
 ] as const;
 
-function isSettingsTab(value: string | null): value is SettingsTab {
-  return SETTINGS_TABS.includes(value as SettingsTab);
+function isSettingsTab(value: string | null, mode: SettingsMode): value is SettingsTab {
+  const tabs =
+    mode === "website"
+      ? WEBSITE_SETTINGS_TABS
+      : mode === "mails"
+        ? MAIL_SETTINGS_TABS
+        : GENERAL_SETTINGS_TABS;
+  return tabs.includes(value as never);
 }
 
 type ApiKeyItem = {
@@ -81,17 +96,34 @@ type SchoolItem = {
   selected?: boolean;
 };
 
-export default function SettingsPage() {
+export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const selectedTab = isSettingsTab(searchParams.get("tab"))
+  const selectedTab = isSettingsTab(searchParams.get("tab"), mode)
     ? searchParams.get("tab")!
-    : "branding";
+    : mode === "website"
+      ? "branding"
+      : mode === "mails"
+        ? "delivery"
+        : "api-keys";
 
-  const [title, setTitle] = useState("");
-  const [subtitle, setSubtitle] = useState("");
-  const [hideCourseLitBranding, setHideCourseLitBranding] = useState(false);
-  const [logoName, setLogoName] = useState<string | null>(null);
+  useEffect(() => {
+    const legacyTab = searchParams.get("tab");
+    if (mode !== "general") return;
+    if (legacyTab === "branding") {
+      router.replace("/website/settings?tab=branding", { scroll: false });
+    } else if (legacyTab === "code-injection") {
+      router.replace("/website/settings?tab=code-injection", { scroll: false });
+    } else if (legacyTab === "payment") {
+      router.replace("/website/settings?tab=payment", { scroll: false });
+    } else if (legacyTab === "login-methods") {
+      router.replace("/website/settings?tab=login-methods", { scroll: false });
+    } else if (legacyTab === "mails") {
+      router.replace("/mails/settings", { scroll: false });
+    } else if (legacyTab === "miscellaneous") {
+      router.replace("/settings?tab=api-keys", { scroll: false });
+    }
+  }, [mode, router, searchParams]);
 
   const [currency, setCurrency] = useState("USD");
   const [currencySaving, setCurrencySaving] = useState(false);
@@ -116,11 +148,6 @@ export default function SettingsPage() {
   const [mailingAddressSaving, setMailingAddressSaving] = useState(false);
   const [mailingAddressSaved, setMailingAddressSaved] = useState(false);
   const [mailingAddressError, setMailingAddressError] = useState<string | null>(null);
-  const [codeInjectionHead, setCodeInjectionHead] = useState("");
-  const [codeInjectionBody, setCodeInjectionBody] = useState("");
-  const [codeInjectionSaving, setCodeInjectionSaving] = useState(false);
-  const [codeInjectionSaved, setCodeInjectionSaved] = useState(false);
-  const [codeInjectionError, setCodeInjectionError] = useState<string | null>(null);
 
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [apiKeys, setApiKeys] = useState<ApiKeyItem[]>([]);
@@ -166,7 +193,6 @@ export default function SettingsPage() {
         const selected = items.find((item) => item.selected) ?? items[0];
         if (!selected) return;
         setSchoolId(selected.id);
-        setTitle(selected.name);
         setCurrency(selected.currency || "USD");
         void fetch("/api/v1/school/payment-settings", {
           credentials: "include",
@@ -195,7 +221,7 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
-    if (!schoolId) return;
+    if (!schoolId || mode !== "mails") return;
     void fetch("/api/v1/school/mails/settings", {
       credentials: "include",
       cache: "no-store",
@@ -208,61 +234,7 @@ export default function SettingsPage() {
         }
       })
       .catch(() => {});
-  }, [schoolId]);
-
-  useEffect(() => {
-    if (!schoolId) return;
-    void fetch("/api/v1/school/code-injection", {
-      credentials: "include",
-      cache: "no-store",
-      headers: { "x-school-id": schoolId },
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: { codeInjectionHead?: string; codeInjectionBody?: string } | null) => {
-        if (!data) return;
-        setCodeInjectionHead(data.codeInjectionHead ?? "");
-        setCodeInjectionBody(data.codeInjectionBody ?? "");
-      })
-      .catch(() => {});
-  }, [schoolId]);
-
-  async function saveCodeInjection() {
-    if (!schoolId || codeInjectionSaving) return;
-    setCodeInjectionSaving(true);
-    setCodeInjectionError(null);
-    setCodeInjectionSaved(false);
-    try {
-      const response = await fetch("/api/v1/school/code-injection", {
-        method: "PATCH",
-        credentials: "include",
-        headers: {
-          "content-type": "application/json",
-          "x-school-id": schoolId,
-        },
-        body: JSON.stringify({
-          codeInjectionHead,
-          codeInjectionBody,
-        }),
-      });
-      const body = (await response.json().catch(() => null)) as {
-        codeInjectionHead?: string;
-        codeInjectionBody?: string;
-        message?: string;
-      } | null;
-      if (!response.ok) {
-        throw new Error(body?.message ?? "Unable to save code injection.");
-      }
-      setCodeInjectionHead(body?.codeInjectionHead ?? codeInjectionHead);
-      setCodeInjectionBody(body?.codeInjectionBody ?? codeInjectionBody);
-      setCodeInjectionSaved(true);
-    } catch (caught) {
-      setCodeInjectionError(
-        caught instanceof Error ? caught.message : "Unable to save code injection.",
-      );
-    } finally {
-      setCodeInjectionSaving(false);
-    }
-  }
+  }, [mode, schoolId]);
 
   async function saveMailingSettings() {
     if (!schoolId || mailingAddressSaving) return;
@@ -300,7 +272,7 @@ export default function SettingsPage() {
   }
 
   useEffect(() => {
-    if (!schoolId) return;
+    if (!schoolId || mode !== "general") return;
     void fetch("/api/v1/api-keys", {
       credentials: "include",
       cache: "no-store",
@@ -309,10 +281,10 @@ export default function SettingsPage() {
       .then((response) => (response.ok ? response.json() : { items: [] }))
       .then((body: { items?: ApiKeyItem[] }) => setApiKeys(body.items ?? []))
       .catch(() => setApiKeys([]));
-  }, [schoolId]);
+  }, [mode, schoolId]);
 
   useEffect(() => {
-    if (!schoolId) return;
+    if (!schoolId || mode !== "website") return;
     void fetch("/api/v1/school/login-methods", {
       credentials: "include",
       cache: "no-store",
@@ -338,7 +310,7 @@ export default function SettingsPage() {
         }
       })
       .catch(() => {});
-  }, [schoolId]);
+  }, [mode, schoolId]);
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const ssoSpAcsUrl = `${origin}/api/auth/sso/saml2/sp/acs/sso`;
@@ -584,10 +556,22 @@ export default function SettingsPage() {
 
   function selectTab(tab: string) {
     const params = new URLSearchParams(searchParams.toString());
-    if (tab === "branding") params.delete("tab");
+    const settingsPath =
+      mode === "website"
+        ? "/website/settings"
+        : mode === "mails"
+          ? "/mails/settings"
+          : "/settings";
+    if (
+      (mode === "website" && tab === "branding") ||
+      (mode === "mails" && tab === "delivery") ||
+      (mode === "general" && tab === "api-keys")
+    ) {
+      params.delete("tab");
+    }
     else params.set("tab", tab);
     const query = params.toString();
-    router.replace(`/settings${query ? `?${query}` : ""}`, { scroll: false });
+    router.replace(`${settingsPath}${query ? `?${query}` : ""}`, { scroll: false });
   }
 
   async function copyWebhook() {
@@ -692,112 +676,80 @@ export default function SettingsPage() {
     <AuthGate>
       <div className="page-shell">
         <header>
-          <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {mode === "website"
+              ? "Website settings"
+              : mode === "mails"
+                ? "Mail settings"
+                : "Settings"}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Branding, payments, mail, and site customisation for this school.
+            {mode === "website"
+              ? "Manage your website branding, payments, code injection, and login methods."
+              : mode === "mails"
+                ? "Manage mail delivery settings for this school."
+                : "Manage team access and API access for this school."}
           </p>
         </header>
 
         <PlatformTabs
           value={selectedTab}
           onValueChange={selectTab}
-          ariaLabel="School settings"
-          items={[
-            {
-              value: "branding",
-              label: "Branding",
-              icon: <Palette className="size-4" />,
-            },
-            {
-              value: "payment",
-              label: "Payment",
-              icon: <CreditCard className="size-4" />,
-            },
-            {
-              value: "mails",
-              label: "Mails",
-              icon: <Mail className="size-4" />,
-            },
-            {
-              value: "code-injection",
-              label: "Code Injection",
-              icon: <Code className="size-4" />,
-            },
-            {
-              value: "miscellaneous",
-              label: "Miscellaneous",
-              icon: <Sliders className="size-4" />,
-            },
-          ]}
+          ariaLabel={
+            mode === "website"
+              ? "Website settings"
+              : mode === "mails"
+                ? "Mail settings"
+                : "School settings"
+          }
+          items={
+            mode === "website"
+              ? [
+                  {
+                    value: "branding",
+                    label: "Branding",
+                    icon: <Palette className="size-4" />,
+                  },
+                  {
+                    value: "payment",
+                    label: "Payments",
+                    icon: <CreditCard className="size-4" />,
+                  },
+                  {
+                    value: "code-injection",
+                    label: "Code Injection",
+                    icon: <Code className="size-4" />,
+                  },
+                  {
+                    value: "login-methods",
+                    label: "Login methods",
+                    icon: <Sliders className="size-4" />,
+                  },
+                ]
+              : mode === "mails"
+                ? [
+                    {
+                      value: "delivery",
+                      label: "Mail delivery",
+                      icon: <Mail className="size-4" />,
+                    },
+                  ]
+              : [
+                  {
+                    value: "team",
+                    label: "Team",
+                    icon: <Users className="size-4" />,
+                  },
+                  {
+                    value: "api-keys",
+                    label: "API keys",
+                    icon: <Key className="size-4" />,
+                  },
+                ]
+          }
         >
-          <PlatformTabsContent value="branding" className="pt-4">
-            <form
-              className="space-y-6"
-              onSubmit={(event) => {
-                event.preventDefault();
-              }}
-            >
-              <div className="space-y-1.5">
-                <Label htmlFor="settings-title">Title</Label>
-                <Input
-                  id="settings-title"
-                  required
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="settings-subtitle">Subtitle</Label>
-                <Input
-                  id="settings-subtitle"
-                  value={subtitle}
-                  onChange={(event) => setSubtitle(event.target.value)}
-                />
-              </div>
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Remove CourseLit branding</p>
-                  <p className="text-sm text-muted-foreground">
-                    Hide &quot;Powered by CourseLit&quot; on your CourseLit courses and
-                    site.
-                  </p>
-                </div>
-                <Checkbox
-                  checked={hideCourseLitBranding}
-                  onCheckedChange={(value) => setHideCourseLitBranding(value === true)}
-                  aria-label="Remove CourseLit branding"
-                />
-              </div>
-              <Button type="submit" disabled={!title.trim()}>
-                Save
-              </Button>
-              <div className="space-y-1.5">
-                <Label htmlFor="settings-logo">Logo</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="settings-logo"
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      setLogoName(file?.name ?? null);
-                    }}
-                  />
-                  {logoName ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setLogoName(null)}
-                    >
-                      Remove picture
-                    </Button>
-                  ) : null}
-                </div>
-                {logoName ? (
-                  <p className="text-xs text-muted-foreground">{logoName}</p>
-                ) : null}
-              </div>
-            </form>
+          <PlatformTabsContent value="branding" className="w-full pt-4">
+            <BrandingSettings />
           </PlatformTabsContent>
 
           <PlatformTabsContent value="payment" className="space-y-6 pt-4">
@@ -1038,132 +990,106 @@ export default function SettingsPage() {
             </Card>
           </PlatformTabsContent>
 
-          <PlatformTabsContent value="mails" className="pt-4">
-            <form
-              className="space-y-4"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void saveMailingSettings();
-              }}
-            >
-              <div className="space-y-1.5">
-                <Label htmlFor="mailing-address">Mailing Address</Label>
-                <Textarea
-                  id="mailing-address"
-                  rows={5}
-                  value={mailingAddress}
-                  onChange={(event) => setMailingAddress(event.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  This is required in order to comply with the CAN-SPAM Act.
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button type="submit" variant="outline" disabled={!schoolId || mailingAddressSaving}>
-                  {mailingAddressSaving ? "Saving…" : "Save"}
-                </Button>
-                {mailingAddressSaved ? (
-                  <p className="text-sm text-muted-foreground" role="status">
-                    Mailing settings saved.
-                  </p>
-                ) : null}
-                {mailingAddressError ? (
-                  <p className="text-sm text-destructive" role="alert">
-                    {mailingAddressError}
-                  </p>
-                ) : null}
-              </div>
-            </form>
+          <PlatformTabsContent value="code-injection" className="w-full pt-4">
+            <CodeInjectionSettings />
           </PlatformTabsContent>
 
-          <PlatformTabsContent value="code-injection" className="pt-4">
-            <form
-              className="space-y-4"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void saveCodeInjection();
-              }}
-            >
-              <div className="space-y-1.5">
-                <Label htmlFor="code-head">Code Injection in &lt;head&gt;</Label>
-                <Textarea
-                  id="code-head"
-                  rows={10}
-                  value={codeInjectionHead}
-                  onChange={(event) => setCodeInjectionHead(event.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="code-body">Code Injection in &lt;body&gt;</Label>
-                <Textarea
-                  id="code-body"
-                  rows={10}
-                  value={codeInjectionBody}
-                  onChange={(event) => setCodeInjectionBody(event.target.value)}
-                />
-              </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  type="submit"
-                  variant="outline"
-                  disabled={!schoolId || codeInjectionSaving}
-                >
-                  {codeInjectionSaving ? "Saving…" : "Save"}
-                </Button>
-                {codeInjectionSaved ? (
-                  <p className="text-sm text-muted-foreground" role="status">
-                    Code injection saved.
+          {mode === "mails" ? (
+            <PlatformTabsContent value="delivery" className="pt-4">
+              <form
+                className="space-y-4"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void saveMailingSettings();
+                }}
+              >
+                <div className="space-y-1.5">
+                  <Label htmlFor="mailing-address">Mailing Address</Label>
+                  <Textarea
+                    id="mailing-address"
+                    rows={5}
+                    value={mailingAddress}
+                    onChange={(event) => setMailingAddress(event.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This is required in order to comply with the CAN-SPAM Act.
                   </p>
-                ) : null}
-                {codeInjectionError ? (
-                  <p className="text-sm text-destructive" role="alert">
-                    {codeInjectionError}
-                  </p>
-                ) : null}
-              </div>
-            </form>
-          </PlatformTabsContent>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    disabled={!schoolId || mailingAddressSaving}
+                  >
+                    {mailingAddressSaving ? "Saving…" : "Save"}
+                  </Button>
+                  {mailingAddressSaved ? (
+                    <p className="text-sm text-muted-foreground" role="status">
+                      Mailing settings saved.
+                    </p>
+                  ) : null}
+                  {mailingAddressError ? (
+                    <p className="text-sm text-destructive" role="alert">
+                      {mailingAddressError}
+                    </p>
+                  ) : null}
+                </div>
+              </form>
+            </PlatformTabsContent>
+          ) : null}
 
-          <PlatformTabsContent value="miscellaneous" className="space-y-4 pt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Login methods</CardTitle>
-                <CardDescription>
-                  Choose how learners can sign in to your school.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {loginMethodsError ? (
-                  <p className="text-sm text-destructive" role="alert">
-                    {loginMethodsError}
-                  </p>
-                ) : null}
-                <LoginMethodRow
-                  label="Email"
-                  checked={emailLogin}
-                  disabled={emailLogin && !googleLogin && !ssoLogin}
-                  onCheckedChange={(checked) =>
-                    void updateLoginMethods({ email: checked })
-                  }
-                />
-                <LoginMethodRow
-                  label="Google"
-                  checked={googleLogin}
-                  onCheckedChange={(checked) =>
-                    void updateLoginMethods({ google: checked })
-                  }
-                  onConfigure={() => setGoogleDialogOpen(true)}
-                />
-                <LoginMethodRow
-                  label="SSO"
-                  checked={ssoLogin}
-                  onCheckedChange={(checked) =>
-                    void updateLoginMethods({ sso: checked })
-                  }
-                  onConfigure={() => setSsoDialogOpen(true)}
-                />
-              </CardContent>
-            </Card>
+          {mode === "website" ? (
+            <PlatformTabsContent
+              value="login-methods"
+              className="space-y-4 pt-4"
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle>Login methods</CardTitle>
+                  <CardDescription>
+                    Choose how learners can sign in to your school.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {loginMethodsError ? (
+                    <p className="text-sm text-destructive" role="alert">
+                      {loginMethodsError}
+                    </p>
+                  ) : null}
+                  <LoginMethodRow
+                    label="Email"
+                    checked={emailLogin}
+                    disabled={emailLogin && !googleLogin && !ssoLogin}
+                    onCheckedChange={(checked) =>
+                      void updateLoginMethods({ email: checked })
+                    }
+                  />
+                  <LoginMethodRow
+                    label="Google"
+                    checked={googleLogin}
+                    onCheckedChange={(checked) =>
+                      void updateLoginMethods({ google: checked })
+                    }
+                    onConfigure={() => setGoogleDialogOpen(true)}
+                  />
+                  <LoginMethodRow
+                    label="SSO"
+                    checked={ssoLogin}
+                    onCheckedChange={(checked) =>
+                      void updateLoginMethods({ sso: checked })
+                    }
+                    onConfigure={() => setSsoDialogOpen(true)}
+                  />
+                </CardContent>
+              </Card>
+            </PlatformTabsContent>
+          ) : null}
+
+          {mode === "general" ? (
+            <PlatformTabsContent
+              value="api-keys"
+              className="space-y-4 pt-4"
+            >
             <Card>
               <CardHeader>
                 <CardTitle>API Keys</CardTitle>
@@ -1214,7 +1140,14 @@ export default function SettingsPage() {
                 )}
               </CardContent>
             </Card>
-          </PlatformTabsContent>
+            </PlatformTabsContent>
+          ) : null}
+
+          {mode === "general" ? (
+            <PlatformTabsContent value="team" className="w-full pt-4">
+              <TeamSettings />
+            </PlatformTabsContent>
+          ) : null}
         </PlatformTabs>
 
         {/* SSO Configuration Dialog */}
@@ -1622,6 +1555,8 @@ export default function SettingsPage() {
     </AuthGate>
   );
 }
+
+export default SettingsPage;
 
 function LoginMethodRow({
   label,

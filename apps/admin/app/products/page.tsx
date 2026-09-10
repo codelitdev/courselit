@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FeaturedCard } from "@/components/featured-card";
+import { EmptyState } from "@/components/empty-state";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { PageHeader } from "@/components/layout/page-header";
 import type { Product, ProductKind, School } from "@/components/products/product-types";
@@ -32,6 +33,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/codelit/tooltip";
 import { AuthGate } from "../../components/auth-gate";
+import { hasSchoolPermission } from "@/lib/school-permissions";
 
 type ProductFilter = "all" | ProductKind;
 const ITEMS_PER_PAGE = 9;
@@ -266,14 +268,14 @@ export default function ProductsPage() {
         <PageHeader
           title="Products"
           description="Create and manage courses and digital downloads."
-          action={
+          action={hasSchoolPermission(school, "products:write") ? (
             <Button asChild>
               <Link href="/products/new">
                 <Plus className="size-4" />
                 New product
               </Link>
             </Button>
-          }
+          ) : undefined}
         />
 
         {error ? (
@@ -304,19 +306,19 @@ export default function ProductsPage() {
         {loading ? (
           <ProductListSkeleton />
         ) : products.length === 0 ? (
-          <div className="rounded-xl border border-dashed bg-card p-12 text-center">
-            <BookOpen className="mx-auto size-10 text-muted-foreground" />
-            <h2 className="mt-4 text-base font-semibold">No Products Found</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              You have not added any products yet.
-            </p>
-            <Button asChild className="mt-5">
-              <Link href="/products/new">
-                <Plus className="mr-1.5 size-4" />
-                New product
-              </Link>
-            </Button>
-          </div>
+          <EmptyState
+            icon={BookOpen}
+            title="No Products Found"
+            description="You have not added any products yet."
+            action={hasSchoolPermission(school, "products:write") ? (
+              <Button asChild>
+                <Link href="/products/new">
+                  <Plus className="size-4" />
+                  New product
+                </Link>
+              </Button>
+            ) : undefined}
+          />
         ) : (
           <section
             className="grid gap-x-4 gap-y-3 md:grid-cols-2 lg:grid-cols-3"
@@ -339,18 +341,20 @@ export default function ProductsPage() {
             onNext={goToNextPage}
           />
         ) : null}
-        <Resources
-          links={[
-            {
-              href: "https://docs.courselit.app/courses/introduction/",
-              text: "Create a course",
-            },
-            {
-              href: "https://docs.courselit.app/downloads/introduction/",
-              text: "Create a digital download",
-            },
-          ]}
-        />
+        {hasSchoolPermission(school, "products:write") ? (
+          <Resources
+            links={[
+              {
+                href: "https://docs.courselit.app/courses/introduction/",
+                text: "Create a course",
+              },
+              {
+                href: "https://docs.courselit.app/downloads/introduction/",
+                text: "Create a digital download",
+              },
+            ]}
+          />
+        ) : null}
       </main>
     </AuthGate>
   );

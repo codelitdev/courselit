@@ -1,2 +1,0 @@
-ALTER TABLE communities
-  ADD COLUMN IF NOT EXISTS banner text NOT NULL DEFAULT '';

@@ -3,8 +3,12 @@ import { sso } from "@better-auth/sso";
 import { createOAuthProviderOptions } from "@codelitdev/oauth-server-kit/better-auth";
 import { emailOTP } from "better-auth/plugins/email-otp";
 import { jwt } from "better-auth/plugins/jwt";
+import { escapeHtml, sendSystemMail } from "../system-mail.js";
 
 export const AUTH_BASE_PATH = "/api/auth";
+export const LEARNER_AUTH_BASE_PATH = "/api/learner-auth";
+export const ADMIN_AUTH_COOKIE_PREFIX = "courselit-admin";
+export const ADMIN_SESSION_COOKIE_NAME = `${ADMIN_AUTH_COOKIE_PREFIX}.session_token`;
 export const AUTH_SECRET_MIN_LENGTH = 32;
 
 export type AdminAuthUrls = {
@@ -15,6 +19,7 @@ export type AdminAuthUrls = {
 export function authUrls(
   publicApiUrl: string,
   webOrigin?: string,
+  basePath = AUTH_BASE_PATH,
 ): AdminAuthUrls & {
   issuer: string;
   restResource: string;
@@ -24,7 +29,7 @@ export function authUrls(
   return {
     publicApiUrl: normalized,
     webOrigin: (webOrigin ?? normalized).replace(/\/$/, ""),
-    issuer: `${normalized}${AUTH_BASE_PATH}`,
+    issuer: `${normalized}${basePath}`,
     restResource: `${normalized}/api`,
     mcpResource: `${normalized}/mcp`,
   };
@@ -83,6 +88,9 @@ export function adminAuthOptions(input: {
         trustedProviders: ["sso", "google", "email-otp"],
       },
     },
+    advanced: {
+      cookiePrefix: ADMIN_AUTH_COOKIE_PREFIX,
+    },
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
       ? {
           socialProviders: {
@@ -119,18 +127,88 @@ export function adminAuthOptions(input: {
   };
 }
 
-/** In development the OTP is printed to the API process log, matching SendLit. */
-export async function sendVerificationOTP(input: {
-  email: string;
-  otp: string;
-  type?: string;
+/** Better Auth options for the school-local learner realm. */
+export function learnerAuthOptions(input: {
+  publicApiUrl: string;
+  secret: string;
+  webOrigin?: string;
+  database?: unknown;
 }) {
-  if (process.env.NODE_ENV !== "production") {
-    const kind = input.type ? ` (${input.type})` : "";
-    console.info(`[Dev] CourseLit sign-in OTP for ${input.email}${kind}: ${input.otp}`);
-    return;
-  }
-  console.error(
-    `[CourseLit] OTP for ${input.email} was not emailed: product mail is not configured`,
+  const urls = authUrls(input.publicApiUrl, input.webOrigin, LEARNER_AUTH_BASE_PATH);
+  return {
+    appName: "CourseLit Learners",
+    baseURL: urls.publicApiUrl,
+    basePath: LEARNER_AUTH_BASE_PATH,
+    secret: input.secret,
+    trustedOrigins: async (request?: Request) => {
+      const origins: string[] = [
+        urls.webOrigin,
+        urls.publicApiUrl,
+        "https://accounts.google.com",
+        "https://oauth2.googleapis.com",
+        "https://openidconnect.googleapis.com",
+        "https://www.googleapis.com",
+      ];
+      if (request) {
+        const origin = request.headers.get("origin");
+        if (origin && !origins.includes(origin)) origins.push(origin);
+        const ssoTrusted = request.headers.get("ssotrusteddomain");
+        if (ssoTrusted && !origins.includes(ssoTrusted)) origins.push(ssoTrusted);
+      }
+      return origins;
+    },
+    emailAndPassword: { enabled: false },
+    user: { modelName: "learnerUser" },
+    session: { modelName: "learnerSession" },
+    account: { modelName: "learnerAccount" },
+    verification: { modelName: "learnerVerification" },
+    advanced: {
+      cookiePrefix: "courselit-learner",
+    },
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? {
+          socialProviders: {
+            google: {
+              clientId: process.env.GOOGLE_CLIENT_ID,
+              clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            },
+          },
+        }
+      : {}),
+    ...(input.database ? { database: input.database } : {}),
+    plugins: [
+      emailOTP({
+        overrideDefaultEmailVerification: true,
+        storeOTP: "hashed",
+        async sendVerificationOTP({ email, otp, type }) {
+          await sendVerificationOTP({ email, otp, type });
+        },
+      }),
+      sso({
+        modelName: "learnerSsoProvider",
+        fields: { domain: "domain_string" },
+      }),
+    ],
+  };
+}
+
+/** Sends authentication OTPs through the deployment's system-mail provider. */
+export async function sendVerificationOTP(
+  input: {
+    email: string;
+    otp: string;
+    type?: string;
+  },
+  options: { env?: Record<string, string | undefined> } = {},
+) {
+  const otp = escapeHtml(input.otp);
+  await sendSystemMail(
+    {
+      to: input.email,
+      subject: "Your CourseLit verification code",
+      text: `Enter this code to sign in to CourseLit: ${input.otp}`,
+      html: `<p>Enter this code to sign in to CourseLit:</p><h2>${otp}</h2>`,
+    },
+    { env: options.env },
   );
 }

@@ -1,6 +1,10 @@
 "use client";
 
-import { Button } from "@codelitdev/design-system";
+import {
+  LearnerButton as Button,
+  LearnerHeader2,
+  LearnerText2,
+} from "@/components/themed-page-builder";
 import { useEffect } from "react";
 
 export default function ErrorPage({
@@ -16,10 +20,10 @@ export default function ErrorPage({
 
   return (
     <main className="flex min-h-[400px] flex-col items-center justify-center p-6 text-center">
-      <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
-      <p className="text-sm text-muted-foreground mb-4 max-w-md">
+      <LearnerHeader2 className="mb-2">Something went wrong</LearnerHeader2>
+      <LearnerText2 className="mb-4 max-w-md text-muted-foreground">
         {error.message || "An unexpected error occurred."}
-      </p>
+      </LearnerText2>
       <Button onClick={() => reset()}>Try again</Button>
     </main>
   );

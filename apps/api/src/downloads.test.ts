@@ -56,6 +56,12 @@ describe.serial("digital downloads", () => {
     });
     expect(product.status).toBe(201);
     const productId = (product.body as { id: string }).id;
+    await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/plans`,
+      headers: adminHeaders,
+      body: { name: "Free access", kind: "free", amountMinor: 0 },
+    });
     const mediaId = createPublicId("med", clock);
     await runtime.db.insert(schema.media).values({
       id: uuidv7(clock),
@@ -120,7 +126,7 @@ describe.serial("digital downloads", () => {
 
     const enrolled = await dispatch(runtime, {
       method: "POST",
-      path: "/v1/learner/enrollments",
+      path: "/v1/learner/memberships",
       headers: { cookie: learnerCookie, "x-school-id": world.schoolA.publicId },
       body: { productId },
     });
@@ -142,10 +148,7 @@ describe.serial("digital downloads", () => {
     expect(link.status).toBe(201);
     const token = (link.body as { token: string }).token;
     expect(token).toMatch(/^[a-f0-9]{128}$/);
-    const storedLink = await runtime.db
-      .select()
-      .from(schema.downloadLinks)
-      .limit(1);
+    const storedLink = await runtime.db.select().from(schema.downloadLinks).limit(1);
     expect(storedLink).toHaveLength(1);
     expect(storedLink[0]!.tokenDigest).not.toBe(token);
 
@@ -175,11 +178,11 @@ describe.serial("digital downloads", () => {
     );
     expect(assetReads).toEqual(["https://media.test/private/asset_private_handout"]);
 
-    const enrollmentRows = await runtime.db
-      .select({ downloaded: schema.enrollments.downloaded })
-      .from(schema.enrollments)
-      .where(eq(schema.enrollments.learnerId, session.value.learner.id));
-    expect(enrollmentRows).toEqual([{ downloaded: true }]);
+    const membershipRows = await runtime.db
+      .select({ consumed: schema.downloadLinks.consumed })
+      .from(schema.downloadLinks)
+      .where(eq(schema.downloadLinks.learnerId, session.value.learner.id));
+    expect(membershipRows).toEqual([{ consumed: true }]);
     const completedEvents = await runtime.db
       .select({ action: schema.auditEvents.action })
       .from(schema.auditEvents)
@@ -226,6 +229,12 @@ describe.serial("digital downloads", () => {
     });
     const productId = (product.body as { id: string }).id;
     await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/plans`,
+      headers: adminHeaders,
+      body: { name: "Free access", kind: "free", amountMinor: 0 },
+    });
+    await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/products/${productId}`,
       headers: adminHeaders,
@@ -244,7 +253,7 @@ describe.serial("digital downloads", () => {
     const learnerCookie = cookieFrom(signedUp.headers);
     await dispatch(runtime, {
       method: "POST",
-      path: "/v1/learner/enrollments",
+      path: "/v1/learner/memberships",
       headers: { cookie: learnerCookie, "x-school-id": world.schoolA.publicId },
       body: { productId },
     });

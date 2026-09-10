@@ -1,15 +1,11 @@
 "use client";
 
 import type { ThemeStyle } from "@frontlit/page-builder/models";
-import {
-  Caption,
-  Header1,
-  PageCardImage,
-  Text2,
-} from "@frontlit/page-builder/primitives";
+import { Caption, Header1, Text2 } from "@frontlit/page-builder/primitives";
 import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { LearnerCard, LearnerCardImage } from "@/components/themed-page-builder";
 import { learnerHeaders } from "@/lib/school";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 import {
@@ -20,6 +16,7 @@ import {
 
 type PublicProduct = {
   id: string;
+  slug: string;
   kind: "course" | "download";
   title: string;
   description: string;
@@ -30,7 +27,13 @@ type PublicProduct = {
     altText: string;
   } | null;
   sections: Array<{ id: string; title: string }>;
-  lessons: Array<{ id: string; title: string; status: string }>;
+  lessons: Array<{
+    id: string;
+    title: string;
+    status: string;
+    sectionId: string | null;
+    requiresEnrollment: boolean;
+  }>;
 };
 
 function ProductDescription({ value, theme }: { value: string; theme: ThemeStyle }) {
@@ -52,6 +55,7 @@ export function PublicProductDetail({ productId }: { productId: string }) {
   const [plans, setPlans] = useState<ProductPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyPlanId, setBusyPlanId] = useState<string | null>(null);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -79,6 +83,7 @@ export function PublicProductDetail({ productId }: { productId: string }) {
         if (plansResponse.ok) {
           const body = (await plansResponse.json()) as { items?: ProductPlan[] };
           setPlans(body.items ?? []);
+          setSelectedPlanId(null);
         }
       })
       .catch(() => {
@@ -121,38 +126,49 @@ export function PublicProductDetail({ productId }: { productId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-10">
-      <header className="flex flex-col gap-4">
-        <Caption theme={theme}>
-          {product.kind === "course" ? "Course" : "Digital download"}
-        </Caption>
-        <Header1 theme={theme}>{product.title}</Header1>
-        <ProductDescription value={product.description} theme={theme} />
-      </header>
+    <div className="flex flex-col gap-16">
+      <section id="checkout" className="scroll-mt-24">
+        <div className="grid items-center gap-10 md:grid-cols-2">
+          {product.featuredMedia ? (
+            <LearnerCardImage
+              theme={theme}
+              src={
+                product.featuredMedia.thumbnailUrl ?? product.featuredMedia.canonicalUrl
+              }
+              alt={product.featuredMedia.altText || product.title}
+              className="aspect-[4/3] w-full border object-cover"
+            />
+          ) : (
+            <LearnerCard className="hidden aspect-[4/3] border-dashed bg-muted/30 p-0 md:block">
+              <span aria-hidden />
+            </LearnerCard>
+          )}
+          <div className="flex flex-col items-start gap-4">
+            <Caption theme={theme}>
+              {product.kind === "course" ? "Course" : "Digital download"}
+            </Caption>
+            <Header1 theme={theme}>{product.title}</Header1>
+            <ProductDescription value={product.description} theme={theme} />
+            <ProductPurchaseBlock
+              plans={plans}
+              theme={theme}
+              busyPlanId={busyPlanId}
+              selectedPlanId={selectedPlanId}
+              onSelectPlan={setSelectedPlanId}
+              onChoosePlan={(plan) => void choosePlan(plan)}
+              continueHref={
+                product.enrolled
+                  ? `/course/${encodeURIComponent(product.slug)}/${encodeURIComponent(product.id)}`
+                  : undefined
+              }
+            />
+          </div>
+        </div>
+      </section>
 
-      {product.featuredMedia ? (
-        <PageCardImage
-          theme={theme}
-          src={product.featuredMedia.thumbnailUrl ?? product.featuredMedia.canonicalUrl}
-          alt={product.featuredMedia.altText || product.title}
-          className="w-full rounded-xl border object-cover"
-        />
-      ) : null}
-
-      <div
-        id="checkout"
-        className="grid scroll-mt-24 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]"
-      >
+      {product.kind === "course" ? (
         <ProductCurriculumBlock product={product} theme={theme} />
-        <ProductPurchaseBlock
-          productId={product.id}
-          plans={plans}
-          theme={theme}
-          busyPlanId={busyPlanId}
-          onChoosePlan={(plan) => void choosePlan(plan)}
-          enrolled={product.enrolled}
-        />
-      </div>
+      ) : null}
       <Link href="/products" className="w-fit">
         <Text2 theme={theme} className="hover:underline">
           ← All products

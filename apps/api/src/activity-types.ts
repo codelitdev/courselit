@@ -7,7 +7,6 @@ export const ActivityType = {
   ENROLLED: "enrolled",
   PURCHASED: "purchased",
   DOWNLOADED: "downloaded",
-  LESSON_STARTED: "lesson_started",
   LESSON_COMPLETED: "lesson_completed",
   COURSE_COMPLETED: "course_completed",
   QUIZ_ATTEMPTED: "quiz_attempted",
@@ -43,4 +42,3 @@ export const activityTypeValues = Object.values(ActivityType) as [
   ActivityType,
   ...ActivityType[],
 ];
-

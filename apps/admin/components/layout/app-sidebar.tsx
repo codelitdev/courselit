@@ -10,10 +10,9 @@ import {
   MessageCircleHeart,
   Settings,
   Target,
-  Text,
-  Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import type { CourseLitPermission } from "@courselit/api-contract/team-permissions";
 import { type NavItem, NavMain } from "@/components/layout/nav-main";
 import { type CurrentAccount, NavUser } from "@/components/layout/nav-user";
 import { type School, TeamSwitcher } from "@/components/layout/team-switcher";
@@ -24,46 +23,127 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { hasSchoolPermission } from "@/lib/school-permissions";
 
-const CREATE_NAV: NavItem[] = [
+type PermissionedNavItem = NavItem & {
+  requiredPermission?: CourseLitPermission;
+  items?: PermissionedNavItem[];
+};
+
+const CREATE_NAV: PermissionedNavItem[] = [
   { href: "/", label: "Overview", icon: Target },
-  { href: "/products", label: "Products", icon: Box },
+  {
+    href: "/products",
+    label: "Products",
+    icon: Box,
+    requiredPermission: "products:read",
+  },
   {
     href: "/communities",
     label: "Communities",
     icon: MessageCircleHeart,
+    requiredPermission: "communities:read",
   },
-  { href: "/blogs", label: "Blogs", icon: Text },
-  { href: "/pages", label: "Pages", icon: Globe },
-  { href: "/contacts", label: "Contacts", icon: Contact },
+  {
+    href: "#",
+    label: "Website",
+    icon: Globe,
+    items: [
+      {
+        href: "/website/pages",
+        label: "Pages",
+        requiredPermission: "school:admin",
+      },
+      {
+        href: "/website/blogs",
+        label: "Blogs",
+        requiredPermission: "school:admin",
+      },
+      {
+        href: "/website/settings",
+        label: "Settings",
+        requiredPermission: "school:admin",
+      },
+    ],
+  },
+  {
+    href: "/contacts",
+    label: "Contacts",
+    icon: Contact,
+    requiredPermission: "learners:read",
+  },
   {
     href: "#",
     label: "Mails",
     icon: Mail,
     items: [
-      { href: "/mails?tab=broadcasts", label: "Broadcasts" },
-      { href: "/mails?tab=sequences", label: "Sequences" },
-      { href: "/mails?tab=templates", label: "Templates" },
+      {
+        href: "/mails?tab=broadcasts",
+        label: "Broadcasts",
+        requiredPermission: "learners:read",
+      },
+      {
+        href: "/mails?tab=sequences",
+        label: "Sequences",
+        requiredPermission: "learners:read",
+      },
+      {
+        href: "/mails?tab=templates",
+        label: "Templates",
+        requiredPermission: "learners:read",
+      },
+      {
+        href: "/mails/settings",
+        label: "Settings",
+        requiredPermission: "learners:read",
+      },
     ],
+  },
+];
+
+const SECONDARY_NAV: PermissionedNavItem[] = [
+  { href: "/support", label: "Support", icon: LifeBuoy },
+  {
+    href: "/media",
+    label: "Media library",
+    icon: LibraryBig,
+    requiredPermission: "media:read",
   },
   {
     href: "#",
     label: "Settings",
     icon: Settings,
     items: [
-      { href: "/settings", label: "Branding" },
-      { href: "/settings?tab=payment", label: "Payment" },
-      { href: "/settings?tab=mails", label: "Mails" },
-      { href: "/settings?tab=code-injection", label: "Code Injection" },
-      { href: "/settings?tab=miscellaneous", label: "Miscellaneous" },
+      {
+        href: "/settings?tab=team",
+        label: "Team",
+        requiredPermission: "members:read",
+      },
+      {
+        href: "/settings?tab=api-keys",
+        label: "API keys",
+        requiredPermission: "school:admin",
+      },
     ],
   },
 ];
 
-const SECONDARY_NAV: NavItem[] = [
-  { href: "/media", label: "Media library", icon: LibraryBig },
-  { href: "/support", label: "Support", icon: LifeBuoy },
-];
+function filterNav(
+  items: readonly PermissionedNavItem[],
+  school: School | null,
+): PermissionedNavItem[] {
+  return items.flatMap((item) => {
+    if (
+      item.requiredPermission &&
+      !hasSchoolPermission(school, item.requiredPermission)
+    ) {
+      return [];
+    }
+    if (!item.items) return [item];
+    const children = filterNav(item.items, school);
+    return children.length > 0 ? [{ ...item, items: children }] : [];
+  });
+}
 
 export function AppSidebar() {
   const [schools, setSchools] = useState<School[]>([]);
@@ -106,6 +186,14 @@ export function AppSidebar() {
     };
   }, []);
 
+  const currentSchool =
+    schools.find((school) => school.id === currentSchoolId) ??
+    schools.find((school) => school.selected) ??
+    schools[0] ??
+    null;
+  const createNav = filterNav(CREATE_NAV, currentSchool);
+  const secondaryNav = filterNav(SECONDARY_NAV, currentSchool);
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -113,9 +201,9 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain label="Create" items={CREATE_NAV} />
+        <NavMain label="Create" items={createNav} />
         <div className="mt-auto">
-          <NavMain items={SECONDARY_NAV} />
+          <NavMain items={secondaryNav} />
         </div>
       </SidebarContent>
 

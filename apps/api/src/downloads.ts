@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { type Clock, createPlatformError, serializeDate, uuidv7 } from "@codelitdev/platform";
-import { and, asc, eq, gt, isNull, lte, or } from "drizzle-orm";
+import { and, asc, eq, gt } from "drizzle-orm";
 import { zipSync } from "fflate";
 import { ActivityType, recordActivity } from "./activities.js";
 import * as schema from "./db/schema/index.js";
@@ -78,30 +78,20 @@ export async function createLearnerDownloadLink(
 
   const now = clock.now();
   const accessRows = await db
-    .select({ enrollment: schema.enrollments })
-    .from(schema.enrollments)
-    .innerJoin(
-      schema.enrollmentAccessGrants,
-      eq(schema.enrollmentAccessGrants.enrollmentId, schema.enrollments.id),
-    )
+    .select({ membership: schema.learnerMemberships })
+    .from(schema.learnerMemberships)
     .where(
       and(
-        eq(schema.enrollments.schoolId, input.schoolId),
-        eq(schema.enrollments.learnerId, input.learnerId),
-        eq(schema.enrollments.productId, product.id),
-        eq(schema.enrollments.status, "active"),
-        eq(schema.enrollmentAccessGrants.schoolId, input.schoolId),
-        eq(schema.enrollmentAccessGrants.status, "active"),
-        lte(schema.enrollmentAccessGrants.startsAt, now),
-        or(
-          isNull(schema.enrollmentAccessGrants.endsAt),
-          gt(schema.enrollmentAccessGrants.endsAt, now),
-        ),
+        eq(schema.learnerMemberships.schoolId, input.schoolId),
+        eq(schema.learnerMemberships.learnerId, input.learnerId),
+        eq(schema.learnerMemberships.entityType, "product"),
+        eq(schema.learnerMemberships.entityId, product.publicId),
+        eq(schema.learnerMemberships.status, "active"),
       ),
     )
     .limit(1);
-  const enrollment = accessRows[0]?.enrollment;
-  if (!enrollment) return forbidden();
+  const membership = accessRows[0]?.membership;
+  if (!membership) return forbidden();
 
   const token = generatedToken();
   const expiresAt = new Date(now.getTime() + DOWNLOAD_LINK_TTL_MS);
@@ -109,7 +99,7 @@ export async function createLearnerDownloadLink(
     await tx.insert(schema.downloadLinks).values({
       id: uuidv7(clock),
       schoolId: input.schoolId,
-      enrollmentId: enrollment.id,
+      membershipId: membership.id,
       learnerId: input.learnerId,
       productId: product.id,
       tokenDigest: digestToken(token),
@@ -123,7 +113,7 @@ export async function createLearnerDownloadLink(
       actorId: input.actorId,
       action: "download.link_created",
       resourceType: "download_link",
-      resourceId: enrollment.publicId,
+      resourceId: membership.publicId,
       requestId: input.requestId,
       createdAt: now,
     });
@@ -164,18 +154,13 @@ export async function serveLearnerDownload(
   const rows = await db
     .select({
       link: schema.downloadLinks,
-      enrollment: schema.enrollments,
-      grant: schema.enrollmentAccessGrants,
+      membership: schema.learnerMemberships,
       product: schema.products,
     })
     .from(schema.downloadLinks)
     .innerJoin(
-      schema.enrollments,
-      eq(schema.enrollments.id, schema.downloadLinks.enrollmentId),
-    )
-    .innerJoin(
-      schema.enrollmentAccessGrants,
-      eq(schema.enrollmentAccessGrants.enrollmentId, schema.enrollments.id),
+      schema.learnerMemberships,
+      eq(schema.learnerMemberships.id, schema.downloadLinks.membershipId),
     )
     .innerJoin(schema.products, eq(schema.products.id, schema.downloadLinks.productId))
     .where(
@@ -185,16 +170,9 @@ export async function serveLearnerDownload(
         eq(schema.downloadLinks.learnerId, input.learnerId),
         eq(schema.downloadLinks.consumed, false),
         gt(schema.downloadLinks.expiresAt, now),
-        eq(schema.enrollments.schoolId, input.schoolId),
-        eq(schema.enrollments.learnerId, input.learnerId),
-        eq(schema.enrollments.status, "active"),
-        eq(schema.enrollmentAccessGrants.schoolId, input.schoolId),
-        eq(schema.enrollmentAccessGrants.status, "active"),
-        lte(schema.enrollmentAccessGrants.startsAt, now),
-        or(
-          isNull(schema.enrollmentAccessGrants.endsAt),
-          gt(schema.enrollmentAccessGrants.endsAt, now),
-        ),
+        eq(schema.learnerMemberships.schoolId, input.schoolId),
+        eq(schema.learnerMemberships.learnerId, input.learnerId),
+        eq(schema.learnerMemberships.status, "active"),
         eq(schema.products.schoolId, input.schoolId),
         eq(schema.products.status, "published"),
         eq(schema.products.kind, "download"),
@@ -324,10 +302,6 @@ export async function serveLearnerDownload(
       .update(schema.downloadLinks)
       .set({ consumed: true })
       .where(eq(schema.downloadLinks.id, row.link.id));
-    await tx
-      .update(schema.enrollments)
-      .set({ downloaded: true })
-      .where(eq(schema.enrollments.id, row.enrollment.id));
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
       schoolId: input.schoolId,

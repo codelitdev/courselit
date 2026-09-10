@@ -23,9 +23,11 @@ export const storefrontPlans = pgTable(
     schoolId: uuid("school_id")
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
-    productId: uuid("product_id")
-      .notNull()
-      .references(() => products.id, { onDelete: "cascade" }),
+    /** The entity this plan sells, represented by its public ID. */
+    entityType: text("entity_type")
+      .$type<"product" | "community">()
+      .notNull(),
+    entityId: text("entity_id").notNull(),
     name: text("name").notNull(),
     // CourseLit's production PaymentPlan.description is string-backed.
     // Keep that field as text instead of treating it as rich document JSON.
@@ -60,32 +62,40 @@ export const storefrontPlans = pgTable(
   },
   (table) => ({
     activeFreeType: uniqueIndex("storefront_plans_active_free_type_uidx")
-      .on(table.productId)
+      .on(table.entityType, table.entityId)
       .where(sql`${table.status} = 'active' AND ${table.kind} = 'free'`),
     activeOneTimeType: uniqueIndex("storefront_plans_active_one_time_type_uidx")
-      .on(table.productId)
+      .on(table.entityType, table.entityId)
       .where(sql`${table.status} = 'active' AND ${table.kind} = 'one_time'`),
     activeInstallmentType: uniqueIndex("storefront_plans_active_installment_type_uidx")
-      .on(table.productId)
+      .on(table.entityType, table.entityId)
       .where(sql`${table.status} = 'active' AND ${table.kind} = 'installment'`),
     activeSubscriptionMonthly: uniqueIndex(
       "storefront_plans_active_subscription_monthly_uidx",
     )
-      .on(table.productId)
+      .on(table.entityType, table.entityId)
       .where(
         sql`${table.status} = 'active' AND ${table.kind} = 'subscription' AND ${table.subscriptionMonthlyAmount} IS NOT NULL`,
       ),
     activeSubscriptionYearly: uniqueIndex(
       "storefront_plans_active_subscription_yearly_uidx",
     )
-      .on(table.productId)
+      .on(table.entityType, table.entityId)
       .where(
         sql`${table.status} = 'active' AND ${table.kind} = 'subscription' AND ${table.subscriptionYearlyAmount} IS NOT NULL`,
       ),
     activeDefault: uniqueIndex("storefront_plans_active_default_uidx")
-      .on(table.productId)
+      .on(table.entityType, table.entityId)
       .where(sql`${table.status} = 'active' AND ${table.isDefault} = true`),
     amountCheck: check("storefront_plans_amount_check", sql`${table.amountMinor} >= 0`),
+    entityTypeCheck: check(
+      "storefront_plans_entity_type_check",
+      sql`${table.entityType} IN ('product', 'community')`,
+    ),
+    entityIdCheck: check(
+      "storefront_plans_entity_id_check",
+      sql`length(trim(${table.entityId})) > 0`,
+    ),
     kindCheck: check(
       "storefront_plans_kind_check",
       sql`${table.kind} IN ('free', 'one_time', 'subscription', 'installment')`,
@@ -123,6 +133,7 @@ export const storefrontCheckoutAttempts = pgTable(
     planId: uuid("plan_id")
       .notNull()
       .references(() => storefrontPlans.id, { onDelete: "restrict" }),
+    membershipId: uuid("membership_id"),
     provider: text("provider").$type<"free" | "stripe" | "lemonsqueezy" | "razorpay">().notNull(),
     idempotencyKey: text("idempotency_key").notNull(),
     providerCheckoutId: text("provider_checkout_id"),
@@ -197,6 +208,7 @@ export const storefrontPayments = pgTable(
     checkoutId: uuid("checkout_id")
       .notNull()
       .references(() => storefrontCheckoutAttempts.id, { onDelete: "restrict" }),
+    membershipId: uuid("membership_id"),
     providerPaymentId: text("provider_payment_id").notNull(),
     kind: text("kind").$type<"one_time" | "subscription" | "installment">().notNull(),
     status: text("status")
@@ -221,14 +233,14 @@ export const storefrontInvoices = pgTable(
     id: uuid("id").primaryKey(),
     publicId: text("public_id").notNull().unique(),
     paymentId: uuid("payment_id")
-      .notNull()
       .unique()
       .references(() => storefrontPayments.id, { onDelete: "restrict" }),
     checkoutId: uuid("checkout_id")
       .notNull()
       .references(() => storefrontCheckoutAttempts.id, { onDelete: "restrict" }),
+    membershipId: uuid("membership_id"),
     providerInvoiceId: text("provider_invoice_id"),
-    status: text("status").$type<"paid" | "refunded" | "void">().notNull(),
+    status: text("status").$type<"pending" | "paid" | "refunded" | "void">().notNull(),
     currency: text("currency").notNull(),
     amountMinor: integer("amount_minor").notNull(),
     issuedAt: timestamp("issued_at", { withTimezone: true }).notNull(),
@@ -249,6 +261,7 @@ export const storefrontSubscriptions = pgTable(
     checkoutId: uuid("checkout_id")
       .notNull()
       .references(() => storefrontCheckoutAttempts.id, { onDelete: "restrict" }),
+    membershipId: uuid("membership_id"),
     providerSubscriptionId: text("provider_subscription_id").notNull(),
     status: text("status")
       .$type<"active" | "past_due" | "cancelled" | "expired">()

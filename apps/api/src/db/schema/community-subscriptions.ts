@@ -9,6 +9,7 @@ export const communitySubscriptions = pgTable(
     checkoutId: uuid("checkout_id")
       .notNull()
       .references(() => communityCheckoutAttempts.id, { onDelete: "restrict" }),
+    membershipId: uuid("membership_id"),
     providerSubscriptionId: text("provider_subscription_id").notNull(),
     status: text("status")
       .$type<"active" | "past_due" | "cancelled" | "expired">()

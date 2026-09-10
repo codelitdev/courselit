@@ -6,7 +6,7 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
-import { and, asc, eq, gt, isNull, lte, or } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { unzipSync } from "fflate";
 import { lessonUnlockAt, sectionUnlockAt } from "./catalog.js";
 import * as schema from "./db/schema/index.js";
@@ -40,7 +40,7 @@ export type ScormRuntimeInput = {
 type ScormLessonAccess = {
   lesson: typeof schema.lessons.$inferSelect;
   product: typeof schema.products.$inferSelect;
-  enrollment: typeof schema.enrollments.$inferSelect;
+  membership: typeof schema.learnerMemberships.$inferSelect;
 };
 
 type AdminContext = PlatformRequestContext<string, string, CourseLitPermission>;
@@ -152,38 +152,25 @@ async function loadScormLessonAccess(
     return { ok: false, error: createPlatformError("not_found") };
   }
 
-  const enrollments = await db
-    .select({ enrollment: schema.enrollments, grant: schema.enrollmentAccessGrants })
-    .from(schema.enrollments)
-    .innerJoin(
-      schema.enrollmentAccessGrants,
-      eq(schema.enrollmentAccessGrants.enrollmentId, schema.enrollments.id),
-    )
+  const memberships = await db
+    .select({ membership: schema.learnerMemberships })
+    .from(schema.learnerMemberships)
     .where(
       and(
-        eq(schema.enrollments.schoolId, input.schoolId),
-        eq(schema.enrollments.learnerId, input.learnerId),
-        eq(schema.enrollments.productId, row.product.id),
-        eq(schema.enrollments.status, "active"),
-        eq(schema.enrollmentAccessGrants.schoolId, input.schoolId),
-        eq(schema.enrollmentAccessGrants.status, "active"),
-        lte(schema.enrollmentAccessGrants.startsAt, now),
-        or(
-          isNull(schema.enrollmentAccessGrants.endsAt),
-          gt(schema.enrollmentAccessGrants.endsAt, now),
-        ),
+        eq(schema.learnerMemberships.schoolId, input.schoolId),
+        eq(schema.learnerMemberships.learnerId, input.learnerId),
+        eq(schema.learnerMemberships.entityType, "product"),
+        eq(schema.learnerMemberships.entityId, row.product.publicId),
+        eq(schema.learnerMemberships.status, "active"),
       ),
     )
     .limit(1);
-  const enrollmentRow = enrollments[0];
-  if (!enrollmentRow) {
+  const membership = memberships[0]?.membership;
+  if (!membership) {
     return { ok: false, error: createPlatformError("forbidden") };
   }
 
-  const enrollmentStartedAt =
-    enrollmentRow.enrollment.createdAt > enrollmentRow.grant.startsAt
-      ? enrollmentRow.enrollment.createdAt
-      : enrollmentRow.grant.startsAt;
+  const membershipStartedAt = membership.createdAt;
   const sections = row.lesson.sectionId
     ? await db
         .select()
@@ -193,10 +180,10 @@ async function loadScormLessonAccess(
     : [];
   const section = sections.find((candidate) => candidate.id === row.lesson.sectionId);
   const sectionAvailableAt = section?.dripEnabled
-    ? sectionUnlockAt(sections, section.id, enrollmentStartedAt)
+    ? sectionUnlockAt(sections, section.id, membershipStartedAt)
     : null;
   const availableAt = latestUnlockAt(
-    lessonUnlockAt(row.lesson, enrollmentStartedAt),
+    lessonUnlockAt(row.lesson, membershipStartedAt),
     sectionAvailableAt,
   );
   if (availableAt && availableAt > now) {
@@ -215,7 +202,7 @@ async function loadScormLessonAccess(
     value: {
       lesson: row.lesson,
       product: row.product,
-      enrollment: enrollmentRow.enrollment,
+      membership,
     },
   };
 }
@@ -235,7 +222,7 @@ export async function getScormRuntimeState(
     .where(
       and(
         eq(schema.scormRuntimeStates.schoolId, input.schoolId),
-        eq(schema.scormRuntimeStates.enrollmentId, access.value.enrollment.id),
+        eq(schema.scormRuntimeStates.membershipId, access.value.membership.id),
         eq(schema.scormRuntimeStates.lessonId, access.value.lesson.id),
       ),
     )
@@ -272,7 +259,7 @@ export async function updateScormRuntimeState(
       .where(
         and(
           eq(schema.scormRuntimeStates.schoolId, input.schoolId),
-          eq(schema.scormRuntimeStates.enrollmentId, access.value.enrollment.id),
+          eq(schema.scormRuntimeStates.membershipId, access.value.membership.id),
           eq(schema.scormRuntimeStates.lessonId, access.value.lesson.id),
         ),
       )
@@ -292,7 +279,7 @@ export async function updateScormRuntimeState(
         .where(
           and(
             eq(schema.scormRuntimeStates.schoolId, input.schoolId),
-            eq(schema.scormRuntimeStates.enrollmentId, access.value.enrollment.id),
+            eq(schema.scormRuntimeStates.membershipId, access.value.membership.id),
             eq(schema.scormRuntimeStates.lessonId, access.value.lesson.id),
           ),
         );
@@ -300,7 +287,7 @@ export async function updateScormRuntimeState(
       await tx.insert(schema.scormRuntimeStates).values({
         id: uuidv7(clock),
         schoolId: input.schoolId,
-        enrollmentId: access.value.enrollment.id,
+        membershipId: access.value.membership.id,
         lessonId: access.value.lesson.id,
         state,
         createdAt: now,

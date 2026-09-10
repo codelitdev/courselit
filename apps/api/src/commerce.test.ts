@@ -32,6 +32,12 @@ describe.serial("storefront commerce", () => {
     });
     const productId = (product.body as { id: string }).id;
     await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/plans`,
+      headers: adminHeaders,
+      body: { name: "Publication access", kind: "free", amountMinor: 0 },
+    });
+    await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/products/${productId}`,
       headers: adminHeaders,
@@ -84,6 +90,15 @@ describe.serial("storefront commerce", () => {
     });
     expect(provider.checkouts).toHaveLength(1);
     const checkoutId = (created.body as { id: string }).id;
+    const pendingInvoices = await runtime.db
+      .select()
+      .from(schema.storefrontInvoices);
+    expect(pendingInvoices).toHaveLength(1);
+    expect(pendingInvoices[0]).toMatchObject({
+      paymentId: null,
+      status: "pending",
+      membershipId: expect.any(String),
+    });
 
     const replay = await dispatch(runtime, {
       method: "POST",
@@ -137,12 +152,13 @@ describe.serial("storefront commerce", () => {
       status: "paid",
       checkoutUrl: "https://checkout.test/stripe_checkout_1",
     });
-    const enrollments = await runtime.db.select().from(schema.enrollments);
+    const memberships = await runtime.db.select().from(schema.learnerMemberships);
     const payments = await runtime.db.select().from(schema.storefrontPayments);
     const invoices = await runtime.db.select().from(schema.storefrontInvoices);
-    expect(enrollments.filter((row) => row.learnerId !== undefined)).toHaveLength(1);
+    expect(memberships.filter((row) => row.entityType === "product")).toHaveLength(1);
     expect(payments).toHaveLength(1);
     expect(invoices).toHaveLength(1);
+    expect(invoices[0]?.status).toBe("paid");
 
     const duplicate = await dispatch(runtime, {
       method: "POST",
@@ -189,8 +205,8 @@ describe.serial("storefront commerce", () => {
     });
     expect(afterRefund.body).toMatchObject({ status: "refunded" });
     expect(
-      (await runtime.db.select().from(schema.enrollmentAccessGrants))[0]?.status,
-    ).toBe("revoked");
+      (await runtime.db.select().from(schema.learnerMemberships))[0]?.status,
+    ).toBe("expired");
 
     const deletion = await dispatch(runtime, {
       method: "DELETE",
@@ -224,6 +240,12 @@ describe.serial("storefront commerce", () => {
       body: { title: "Mismatch course" },
     });
     const productId = (product.body as { id: string }).id;
+    await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/plans`,
+      headers: adminHeaders,
+      body: { name: "Publication access", kind: "free", amountMinor: 0 },
+    });
     await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/products/${productId}`,
@@ -305,12 +327,6 @@ describe.serial("storefront commerce", () => {
       body: { title: "Free course" },
     });
     const productId = (product.body as { id: string }).id;
-    await dispatch(runtime, {
-      method: "PATCH",
-      path: `/v1/products/${productId}`,
-      headers: adminHeaders,
-      body: { status: "published" },
-    });
     const plan = await dispatch(runtime, {
       method: "POST",
       path: `/v1/products/${productId}/plans`,
@@ -318,6 +334,12 @@ describe.serial("storefront commerce", () => {
       body: { name: "Free", kind: "free", amountMinor: 0 },
     });
     const planId = (plan.body as { id: string }).id;
+    await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/products/${productId}`,
+      headers: adminHeaders,
+      body: { status: "published" },
+    });
     const publicPlans = await dispatch(runtime, {
       method: "GET",
       path: `/v1/storefront/products/${productId}/plans`,
@@ -361,7 +383,7 @@ describe.serial("storefront commerce", () => {
       body: { planId },
     });
     expect(replay.body).toEqual(checkout.body);
-    expect(await runtime.db.select().from(schema.enrollments)).toHaveLength(1);
+    expect(await runtime.db.select().from(schema.learnerMemberships)).toHaveLength(1);
     expect(await runtime.db.select().from(schema.storefrontPayments)).toHaveLength(1);
     expect(await runtime.db.select().from(schema.storefrontInvoices)).toHaveLength(1);
     await runtime.close();
@@ -382,12 +404,6 @@ describe.serial("storefront commerce", () => {
       body: { title: "Session course" },
     });
     const productId = (product.body as { id: string }).id;
-    await dispatch(runtime, {
-      method: "PATCH",
-      path: `/v1/products/${productId}`,
-      headers: adminHeaders,
-      body: { status: "published", privacy: "public" },
-    });
     const plan = await dispatch(runtime, {
       method: "POST",
       path: `/v1/products/${productId}/plans`,
@@ -395,6 +411,14 @@ describe.serial("storefront commerce", () => {
       body: { name: "Free access", kind: "free", amountMinor: 0 },
     });
     const planId = (plan.body as { id: string }).id;
+    await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/products/${productId}`,
+      headers: adminHeaders,
+      // Direct sales pages may be unlisted. They must still be able to start
+      // checkout; privacy controls catalog visibility, not access to a link.
+      body: { status: "published", privacy: "unlisted" },
+    });
     const created = await dispatch(runtime, {
       method: "POST",
       path: "/v1/storefront/checkout-sessions",
@@ -438,7 +462,7 @@ describe.serial("storefront commerce", () => {
         cookie,
         "x-school-id": world.schoolA.publicId,
       },
-      body: { returnUrl: "http://localhost:3001/checkout" },
+      body: { returnUrl: "http://school-a.localhost:3001/checkout" },
     });
     expect(started.status).toBe(201);
     expect(started.body).toMatchObject({

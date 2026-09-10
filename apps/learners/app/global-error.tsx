@@ -1,6 +1,11 @@
 "use client";
 
-import { Button } from "@codelitdev/design-system";
+import {
+  Button,
+  Header2,
+  Text2,
+  themes,
+} from "@frontlit/page-builder/primitives";
 
 export default function GlobalError({
   error,
@@ -12,11 +17,11 @@ export default function GlobalError({
   return (
     <html lang="en" data-product="courselit">
       <body className="flex min-h-screen flex-col items-center justify-center p-6 text-center antialiased">
-        <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
-        <p className="text-sm text-muted-foreground mb-4 max-w-md">
+        <Header2 theme={themes[0]?.theme} className="mb-2">Something went wrong</Header2>
+        <Text2 theme={themes[0]?.theme} className="mb-4 max-w-md text-muted-foreground">
           {error.message || "An unexpected error occurred."}
-        </p>
-        <Button onClick={() => reset()}>Try again</Button>
+        </Text2>
+        <Button theme={themes[0]?.theme} onClick={() => reset()}>Try again</Button>
       </body>
     </html>
   );

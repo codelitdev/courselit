@@ -9,7 +9,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { learners } from "./catalog.js";
 import { communities } from "./communities.js";
-import { communityPaymentPlans } from "./community-plans.js";
+import { storefrontPlans } from "./storefront.js";
 import { schools } from "./schools.js";
 
 export const communityCheckoutAttempts = pgTable(
@@ -28,7 +28,8 @@ export const communityCheckoutAttempts = pgTable(
       .references(() => communities.id, { onDelete: "cascade" }),
     planId: uuid("plan_id")
       .notNull()
-      .references(() => communityPaymentPlans.id, { onDelete: "restrict" }),
+      .references(() => storefrontPlans.id, { onDelete: "restrict" }),
+    membershipId: uuid("membership_id"),
     provider: text("provider").$type<"free" | "stripe" | "lemonsqueezy" | "razorpay">().notNull(),
     idempotencyKey: text("idempotency_key").notNull(),
     providerCheckoutId: text("provider_checkout_id"),
@@ -60,6 +61,7 @@ export const communityPayments = pgTable("community_payments", {
   checkoutId: uuid("checkout_id")
     .notNull()
     .references(() => communityCheckoutAttempts.id, { onDelete: "restrict" }),
+  membershipId: uuid("membership_id"),
   providerPaymentId: text("provider_payment_id").notNull().unique(),
   kind: text("kind").$type<"one_time" | "subscription" | "installment">().notNull(),
   status: text("status")
@@ -77,14 +79,15 @@ export const communityInvoices = pgTable(
   {
     id: uuid("id").primaryKey(),
     publicId: text("public_id").notNull().unique(),
-    paymentId: uuid("payment_id")
-      .notNull()
-      .references(() => communityPayments.id, { onDelete: "restrict" }),
+    paymentId: uuid("payment_id").references(() => communityPayments.id, {
+      onDelete: "restrict",
+    }),
     checkoutId: uuid("checkout_id")
       .notNull()
       .references(() => communityCheckoutAttempts.id, { onDelete: "restrict" }),
+    membershipId: uuid("membership_id"),
     providerInvoiceId: text("provider_invoice_id"),
-    status: text("status").$type<"paid" | "refunded" | "void">().notNull(),
+    status: text("status").$type<"pending" | "paid" | "refunded" | "void">().notNull(),
     currency: text("currency").notNull(),
     amountMinor: integer("amount_minor").notNull(),
     issuedAt: timestamp("issued_at", { withTimezone: true }).notNull(),

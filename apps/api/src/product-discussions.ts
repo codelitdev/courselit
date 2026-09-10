@@ -264,40 +264,24 @@ async function accessibleDiscussionLessons(
   if (!product) return notFound();
   if (!product.discussions) return forbidden();
 
-  let enrollmentStartedAt: Date | null = null;
+  let membershipStartedAt: Date | null = null;
   if (viewer.kind === "learner") {
     if (product.status !== "published") return notFound();
-    const enrollment = await db
-      .select({
-        enrollmentStartedAt: schema.enrollments.createdAt,
-        grantStartsAt: schema.enrollmentAccessGrants.startsAt,
-      })
-      .from(schema.enrollments)
-      .innerJoin(
-        schema.enrollmentAccessGrants,
-        eq(schema.enrollmentAccessGrants.enrollmentId, schema.enrollments.id),
-      )
+    const membership = await db
+      .select({ createdAt: schema.learnerMemberships.createdAt })
+      .from(schema.learnerMemberships)
       .where(
         and(
-          eq(schema.enrollments.schoolId, viewer.schoolId),
-          eq(schema.enrollments.learnerId, viewer.learnerId),
-          eq(schema.enrollments.productId, product.id),
-          eq(schema.enrollments.status, "active"),
-          eq(schema.enrollmentAccessGrants.schoolId, viewer.schoolId),
-          eq(schema.enrollmentAccessGrants.status, "active"),
-          lte(schema.enrollmentAccessGrants.startsAt, now),
-          or(
-            isNull(schema.enrollmentAccessGrants.endsAt),
-            gt(schema.enrollmentAccessGrants.endsAt, now),
-          ),
+          eq(schema.learnerMemberships.schoolId, viewer.schoolId),
+          eq(schema.learnerMemberships.learnerId, viewer.learnerId),
+          eq(schema.learnerMemberships.entityType, "product"),
+          eq(schema.learnerMemberships.entityId, product.publicId),
+          eq(schema.learnerMemberships.status, "active"),
         ),
       )
       .limit(1);
-    if (!enrollment[0]) return forbidden();
-    enrollmentStartedAt =
-      enrollment[0].enrollmentStartedAt > enrollment[0].grantStartsAt
-        ? enrollment[0].enrollmentStartedAt
-        : enrollment[0].grantStartsAt;
+    if (!membership[0]) return forbidden();
+    membershipStartedAt = membership[0].createdAt;
   }
 
   const lessons = await db
@@ -311,7 +295,7 @@ async function accessibleDiscussionLessons(
       ),
     )
     .orderBy(asc(schema.lessons.position));
-  const sections = enrollmentStartedAt
+  const sections = membershipStartedAt
     ? await db
         .select()
         .from(schema.productSections)
@@ -322,9 +306,9 @@ async function accessibleDiscussionLessons(
     ok: true,
     value: {
       product,
-      lessons: enrollmentStartedAt
+      lessons: membershipStartedAt
         ? lessons.filter((lesson) => {
-            const availableAt = lessonUnlockAt(lesson, enrollmentStartedAt!);
+            const availableAt = lessonUnlockAt(lesson, membershipStartedAt!);
             const section = lesson.sectionId
               ? sections.find((candidate) => candidate.id === lesson.sectionId)
               : undefined;
@@ -332,7 +316,7 @@ async function accessibleDiscussionLessons(
               const sectionAvailableAt = sectionUnlockAt(
                 sections,
                 section.id,
-                enrollmentStartedAt!,
+                membershipStartedAt!,
               );
               if (!sectionAvailableAt || sectionAvailableAt > now) return false;
             }
@@ -505,38 +489,22 @@ async function resolveTarget(
   if (target.product.status !== "published" || target.lesson.status !== "published") {
     return notFound();
   }
-  const enrollment = await db
-    .select({
-      enrollmentStartedAt: schema.enrollments.createdAt,
-      grantStartsAt: schema.enrollmentAccessGrants.startsAt,
-    })
-    .from(schema.enrollments)
-    .innerJoin(
-      schema.enrollmentAccessGrants,
-      eq(schema.enrollmentAccessGrants.enrollmentId, schema.enrollments.id),
-    )
+  const membership = await db
+    .select({ createdAt: schema.learnerMemberships.createdAt })
+    .from(schema.learnerMemberships)
     .where(
       and(
-        eq(schema.enrollments.schoolId, schoolId),
-        eq(schema.enrollments.learnerId, viewer.learnerId),
-        eq(schema.enrollments.productId, target.product.id),
-        eq(schema.enrollments.status, "active"),
-        eq(schema.enrollmentAccessGrants.schoolId, schoolId),
-        eq(schema.enrollmentAccessGrants.status, "active"),
-        lte(schema.enrollmentAccessGrants.startsAt, now),
-        or(
-          isNull(schema.enrollmentAccessGrants.endsAt),
-          gt(schema.enrollmentAccessGrants.endsAt, now),
-        ),
+        eq(schema.learnerMemberships.schoolId, schoolId),
+        eq(schema.learnerMemberships.learnerId, viewer.learnerId),
+        eq(schema.learnerMemberships.entityType, "product"),
+        eq(schema.learnerMemberships.entityId, target.product.publicId),
+        eq(schema.learnerMemberships.status, "active"),
       ),
     )
     .limit(1);
-  const activeEnrollment = enrollment[0];
-  if (!activeEnrollment) return forbidden();
-  const startedAt =
-    activeEnrollment.enrollmentStartedAt > activeEnrollment.grantStartsAt
-      ? activeEnrollment.enrollmentStartedAt
-      : activeEnrollment.grantStartsAt;
+  const activeMembership = membership[0];
+  if (!activeMembership) return forbidden();
+  const startedAt = activeMembership.createdAt;
   const availableAt = lessonUnlockAt(target.lesson, startedAt);
   if (availableAt && availableAt > now) return forbidden();
   if (target.lesson.sectionId) {

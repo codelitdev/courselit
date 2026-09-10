@@ -26,6 +26,10 @@ export class MemoryPaymentProvider implements PaymentProvider {
     this.cancelledSubscriptions.push(providerSubscriptionId);
   }
 
+  async validateSubscription(): Promise<boolean> {
+    return true;
+  }
+
   verifyWebhook(): void {}
 
   parseWebhook(rawBody: string, headers: Record<string, string | undefined>): NormalizedPaymentEvent {

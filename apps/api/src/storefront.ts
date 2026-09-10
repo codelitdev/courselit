@@ -479,7 +479,8 @@ export async function listPlans(
     .where(
       and(
         eq(schema.storefrontPlans.schoolId, ctx.tenantId!),
-        eq(schema.storefrontPlans.productId, product.id),
+        eq(schema.storefrontPlans.entityType, "product"),
+        eq(schema.storefrontPlans.entityId, product.publicId),
       ),
     )
     .orderBy(asc(schema.storefrontPlans.createdAt));
@@ -509,7 +510,8 @@ export async function listPublicPlans(
     .where(
       and(
         eq(schema.storefrontPlans.schoolId, school.schoolId),
-        eq(schema.storefrontPlans.productId, product.id),
+        eq(schema.storefrontPlans.entityType, "product"),
+        eq(schema.storefrontPlans.entityId, product.publicId),
         eq(schema.storefrontPlans.status, "active"),
       ),
     )
@@ -546,7 +548,8 @@ export async function createPlan(
         .from(schema.storefrontPlans)
         .where(
           and(
-            eq(schema.storefrontPlans.productId, product.id),
+            eq(schema.storefrontPlans.entityType, "product"),
+            eq(schema.storefrontPlans.entityId, product.publicId),
             eq(schema.storefrontPlans.status, "active"),
             eq(schema.storefrontPlans.isDefault, true),
           ),
@@ -557,7 +560,8 @@ export async function createPlan(
         .from(schema.storefrontPlans)
         .where(
           and(
-            eq(schema.storefrontPlans.productId, product.id),
+            eq(schema.storefrontPlans.entityType, "product"),
+            eq(schema.storefrontPlans.entityId, product.publicId),
             eq(schema.storefrontPlans.status, "active"),
           ),
         );
@@ -568,7 +572,8 @@ export async function createPlan(
         id: uuidv7(clock),
         publicId: createPublicId("pln", clock),
         schoolId: ctx.tenantId!,
-        productId: product.id,
+        entityType: "product" as const,
+        entityId: product.publicId,
         name: input.name.trim(),
         description: input.description ?? "",
         includedProducts: input.includedProducts ?? [],
@@ -656,7 +661,10 @@ export async function updatePlan(
       .from(schema.storefrontPlans)
       .innerJoin(
         schema.products,
-        eq(schema.products.id, schema.storefrontPlans.productId),
+        and(
+          eq(schema.products.publicId, schema.storefrontPlans.entityId),
+          eq(schema.storefrontPlans.entityType, "product"),
+        ),
       )
       .innerJoin(schema.schools, eq(schema.schools.id, schema.storefrontPlans.schoolId))
       .where(
@@ -745,7 +753,8 @@ export async function updatePlan(
       .from(schema.storefrontPlans)
       .where(
         and(
-          eq(schema.storefrontPlans.productId, row.product.id),
+          eq(schema.storefrontPlans.entityType, "product"),
+          eq(schema.storefrontPlans.entityId, row.product.publicId),
           eq(schema.storefrontPlans.status, "active"),
         ),
       );
@@ -834,7 +843,10 @@ export async function setDefaultPlan(
       .from(schema.storefrontPlans)
       .innerJoin(
         schema.products,
-        eq(schema.products.id, schema.storefrontPlans.productId),
+        and(
+          eq(schema.products.publicId, schema.storefrontPlans.entityId),
+          eq(schema.storefrontPlans.entityType, "product"),
+        ),
       )
       .innerJoin(schema.schools, eq(schema.schools.id, schema.storefrontPlans.schoolId))
       .where(
@@ -860,7 +872,8 @@ export async function setDefaultPlan(
       .set({ isDefault: false, updatedAt: now })
       .where(
         and(
-          eq(schema.storefrontPlans.productId, row.product.id),
+          eq(schema.storefrontPlans.entityType, "product"),
+          eq(schema.storefrontPlans.entityId, row.product.publicId),
           eq(schema.storefrontPlans.status, "active"),
         ),
       );
@@ -910,7 +923,10 @@ export async function archivePlan(
       .from(schema.storefrontPlans)
       .innerJoin(
         schema.products,
-        eq(schema.products.id, schema.storefrontPlans.productId),
+        and(
+          eq(schema.products.publicId, schema.storefrontPlans.entityId),
+          eq(schema.storefrontPlans.entityType, "product"),
+        ),
       )
       .innerJoin(schema.schools, eq(schema.schools.id, schema.storefrontPlans.schoolId))
       .where(

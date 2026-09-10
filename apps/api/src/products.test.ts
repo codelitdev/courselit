@@ -7,6 +7,55 @@ import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
 
 describe.serial("product listing", () => {
+  it("requires an active payment plan before publishing", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock, billingMode: "oss" });
+    const world = await seedWorld(runtime, clock);
+    const headers = {
+      cookie: world.owner.sessionCookie,
+      "x-school-id": world.schoolA.publicId,
+    };
+    const created = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/products",
+      headers,
+      body: { kind: "course", title: "Plan required" },
+    });
+    expect(created.status).toBe(201);
+    const productId = (created.body as { id: string }).id;
+
+    const withoutPlan = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/products/${productId}`,
+      headers,
+      body: { status: "published" },
+    });
+    expect(withoutPlan.status).toBe(400);
+    expect(withoutPlan.body).toMatchObject({
+      code: "validation_failed",
+      details: { reason: "payment_plan_required" },
+    });
+
+    const freePlan = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/plans`,
+      headers,
+      body: { name: "Free access", kind: "free" },
+    });
+    expect(freePlan.status).toBe(201);
+
+    const withPlan = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/products/${productId}`,
+      headers,
+      body: { status: "published" },
+    });
+    expect(withPlan.status).toBe(200);
+    expect(withPlan.body).toMatchObject({ id: productId, status: "published" });
+
+    await runtime.close();
+  });
+
   it("ports product card metrics, kind filtering, and cursor pagination", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
@@ -44,15 +93,25 @@ describe.serial("product listing", () => {
       createdAt: clock.now(),
       updatedAt: clock.now(),
     });
-    await runtime.db.insert(schema.enrollments).values({
+    await runtime.db.insert(schema.learnerMemberships).values({
       id: uuidv7(clock),
-      publicId: createPublicId("enr", clock),
+      publicId: createPublicId("lrm", clock),
       schoolId: world.schoolA.id,
       learnerId,
-      productId: seededProduct[0]!.id,
-      source: "admin_grant",
+      entityType: "product",
+      entityId: world.noteA.publicId,
+      paymentPlanId: null,
       status: "active",
+      role: null,
+      subscriptionId: null,
+      subscriptionMethod: null,
+      joiningReason: "",
+      rejectionReason: null,
+      sessionId: null,
+      isIncludedInPlan: false,
+      parentMembershipId: null,
       createdAt: clock.now(),
+      updatedAt: clock.now(),
     });
 
     const firstPage = await dispatch(runtime, {
@@ -132,6 +191,16 @@ describe.serial("product listing", () => {
     const runtime = await createPgliteRuntime({ clock, billingMode: "oss" });
     const world = await seedWorld(runtime, clock);
 
+    const freePlan = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${world.noteA.publicId}/plans`,
+      headers: {
+        cookie: world.owner.sessionCookie,
+        "x-school-id": world.schoolA.publicId,
+      },
+      body: { name: "Free access", kind: "free", amountMinor: 0 },
+    });
+    expect(freePlan.status).toBe(201);
     const published = await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/products/${world.noteA.publicId}`,
@@ -168,7 +237,7 @@ describe.serial("product listing", () => {
           status: "published",
           privacy: "public",
           currency: "USD",
-          priceMinor: null,
+          priceMinor: 0,
         },
       ],
       nextCursor: null,
@@ -197,6 +266,29 @@ describe.serial("product listing", () => {
       id: world.noteA.publicId,
       slug: "seed-product",
       status: "published",
+    });
+
+    await runtime.db
+      .update(schema.memberships)
+      .set({ permissions: "communities:read" })
+      .where(
+        and(
+          eq(schema.memberships.schoolId, world.schoolA.id),
+          eq(schema.memberships.userId, world.member.id),
+        ),
+      );
+    const publicWithAdminSession = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/products/${world.noteA.publicId}`,
+      headers: {
+        cookie: world.member.sessionCookie,
+        "x-forwarded-host": "school-a.localhost:3001",
+      },
+    });
+    expect(publicWithAdminSession.status).toBe(200);
+    expect(publicWithAdminSession.body).toMatchObject({
+      id: world.noteA.publicId,
+      enrolled: false,
     });
 
     await runtime.close();

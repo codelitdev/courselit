@@ -104,6 +104,12 @@ describe.serial("certificates", () => {
     expect(createdProduct.status).toBe(201);
     const productId = (createdProduct.body as { id: string }).id;
     await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/plans`,
+      headers: adminHeaders,
+      body: { name: "Free access", kind: "free", amountMinor: 0 },
+    });
+    await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/products/${productId}`,
       headers: adminHeaders,
@@ -183,23 +189,19 @@ describe.serial("certificates", () => {
       "x-school-id": world.schoolA.publicId,
     };
 
-    const enrollment = await dispatch(runtime, {
+    const membership = await dispatch(runtime, {
       method: "POST",
-      path: "/v1/learner/enrollments",
+      path: "/v1/learner/memberships",
       headers: learnerHeaders,
       body: { productId },
     });
-    expect(enrollment.status).toBe(201);
-    const enrollmentId = (enrollment.body as { id: string }).id;
-    const enrollmentRows = await runtime.db
-      .select({ source: schema.enrollmentAccessGrants.source })
-      .from(schema.enrollmentAccessGrants)
-      .innerJoin(
-        schema.enrollments,
-        eq(schema.enrollments.id, schema.enrollmentAccessGrants.enrollmentId),
-      )
-      .where(eq(schema.enrollments.publicId, enrollmentId));
-    expect(enrollmentRows).toEqual([{ source: "free_signup" }]);
+    expect(membership.status).toBe(201);
+    const membershipId = (membership.body as { id: string }).id;
+    const membershipRows = await runtime.db
+      .select({ status: schema.learnerMemberships.status })
+      .from(schema.learnerMemberships)
+      .where(eq(schema.learnerMemberships.publicId, membershipId));
+    expect(membershipRows).toEqual([{ status: "active" }]);
 
     const firstCompletion = await dispatch(runtime, {
       method: "POST",

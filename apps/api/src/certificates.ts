@@ -489,7 +489,7 @@ export async function issueCertificateIfComplete(
     schoolId: string;
     productId: string;
     learnerId: string;
-    enrollmentId: string;
+    membershipId: string;
     actorId: string;
     requestId: string;
   },
@@ -527,7 +527,7 @@ export async function issueCertificateIfComplete(
     .from(schema.lessonProgress)
     .where(
       and(
-        eq(schema.lessonProgress.enrollmentId, input.enrollmentId),
+        eq(schema.lessonProgress.membershipId, input.membershipId),
         isNotNull(schema.lessonProgress.completedAt),
       ),
     );

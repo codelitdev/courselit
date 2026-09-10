@@ -1,9 +1,14 @@
 "use client";
 
 import { type ReactNode, useEffect, useState } from "react";
+import {
+  persistInvitationToken,
+  readInvitationTokenFromHash,
+} from "@/lib/invitation-token";
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const [checking, setChecking] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -26,25 +31,43 @@ export function AuthGate({ children }: { children: ReactNode }) {
         }
 
         if (response.status === 401) {
-          window.location.replace("/login");
+          const token = readInvitationTokenFromHash(window.location.hash);
+          const invitationMatch = /^\/team-invitations\/([^/]+)\/?$/.exec(
+            window.location.pathname,
+          );
+          if (token && invitationMatch?.[1]) {
+            persistInvitationToken(decodeURIComponent(invitationMatch[1]), token);
+          } else if (token) {
+            persistInvitationToken(token);
+          }
+          const loginUrl = new URL("/login", window.location.origin);
+          loginUrl.searchParams.set(
+            "next",
+            `${window.location.pathname}${window.location.search}`,
+          );
+          window.location.replace(loginUrl.toString());
           return;
         }
 
         if (response.ok) {
           const body = (await response.json()) as { user?: unknown };
           if (!body?.user) {
-            window.location.replace("/login");
+            const loginUrl = new URL("/login", window.location.origin);
+            loginUrl.searchParams.set(
+              "next",
+              `${window.location.pathname}${window.location.search}`,
+            );
+            window.location.replace(loginUrl.toString());
             return;
           }
           setChecking(false);
           return;
         }
 
-        // Other non-200/non-401 responses (e.g. 500/502/503): do not log out
-        setChecking(false);
+        // Never render protected content when the session cannot be verified.
+        setError("Unable to verify your session. Please try again.");
       } catch {
-        // Network or fetch failure: do not log out
-        if (active) setChecking(false);
+        if (active) setError("Unable to verify your session. Please try again.");
       }
     }
 
@@ -57,5 +80,12 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }, []);
 
   if (checking) return <main>Checking session…</main>;
+  if (error) {
+    return (
+      <main role="alert" className="p-6 text-sm text-destructive">
+        {error}
+      </main>
+    );
+  }
   return children;
 }

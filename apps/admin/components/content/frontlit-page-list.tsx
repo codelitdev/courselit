@@ -3,6 +3,7 @@
 import { FileText, Plus } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
+import { EmptyState } from "@/components/empty-state";
 import { FeaturedCard } from "@/components/featured-card";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/codelit/button";
@@ -57,12 +58,13 @@ export function FrontLitPageList({ onlyBlogs = false }: { onlyBlogs?: boolean })
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const createFormRef = useRef({ name: "" });
+  const editorReturnPath = onlyBlogs ? "/website/blogs" : "/website/pages";
 
   useEffect(() => {
     let active = true;
     const endpoint = onlyBlogs
-      ? "/api/v1/school/frontlit/blogs"
-      : "/api/v1/school/frontlit/pages";
+      ? "/api/v1/school/website/blogs"
+      : "/api/v1/school/website/pages";
     void fetch(endpoint, {
       credentials: "include",
       cache: "no-store",
@@ -119,7 +121,7 @@ export function FrontLitPageList({ onlyBlogs = false }: { onlyBlogs?: boolean })
     setCreateError(null);
     try {
       const response = await fetch(
-        onlyBlogs ? "/api/v1/school/frontlit/blogs" : "/api/v1/school/frontlit/pages",
+        onlyBlogs ? "/api/v1/school/website/blogs" : "/api/v1/school/website/pages",
         {
           method: "POST",
           credentials: "include",
@@ -182,17 +184,21 @@ export function FrontLitPageList({ onlyBlogs = false }: { onlyBlogs?: boolean })
           </section>
         ) : null}
         {!loading && !error && visiblePages.length === 0 ? (
-          <section className="rounded-xl border border-dashed p-10 text-center">
-            <p className="text-sm text-muted-foreground">
-              {onlyBlogs
-                ? "No blog posts have been created yet."
-                : "No pages have been created yet."}
-            </p>
-            <Button className="mt-4" onClick={openCreateDialog}>
-              <Plus className="size-4" />
-              {onlyBlogs ? "New blog" : "New page"}
-            </Button>
-          </section>
+          <EmptyState
+            icon={FileText}
+            title={onlyBlogs ? "No Blogs Found" : "No Pages Found"}
+            description={
+              onlyBlogs
+                ? "You have not added any blogs yet."
+                : "You have not added any pages yet."
+            }
+            action={
+              <Button onClick={openCreateDialog}>
+                <Plus className="size-4" />
+                {onlyBlogs ? "New blog" : "New page"}
+              </Button>
+            }
+          />
         ) : null}
         {!loading && !error && visiblePages.length > 0 ? (
           <section
@@ -202,7 +208,7 @@ export function FrontLitPageList({ onlyBlogs = false }: { onlyBlogs?: boolean })
             {visiblePages.map((page) => (
               <FeaturedCard
                 key={page.id}
-                href={`${onlyBlogs ? "/blogs" : "/pages"}/${encodeURIComponent(page.id)}/edit?redirectTo=${encodeURIComponent(onlyBlogs ? "/blogs" : "/pages")}`}
+                href={`${onlyBlogs ? "/website/blogs" : "/pages"}/${encodeURIComponent(page.id)}/edit?redirectTo=${encodeURIComponent(editorReturnPath)}`}
                 title={page.name}
                 imageUrl={imageUrl(page.featuredImage)}
                 imageAlt={page.name}

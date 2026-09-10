@@ -37,7 +37,10 @@ export default function SignInPage() {
       setError("That code is invalid or expired.");
       return;
     }
-    window.location.assign("/");
+    const next = new URLSearchParams(window.location.search).get("next");
+    window.location.assign(
+      next && next.startsWith("/") && !next.startsWith("//") ? next : "/",
+    );
   }
 
   return (

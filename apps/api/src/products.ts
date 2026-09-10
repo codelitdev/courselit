@@ -20,7 +20,8 @@ import {
   sql,
 } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
-import { createPendingSalesPage } from "./frontlit-sales-pages.js";
+import { enqueueSalesPageProvisioning } from "./frontlit-sales-pages.js";
+import { resourceSlugTaken } from "./resource-slugs.js";
 import {
   mediaIdsForRichTextContent,
   reconcileMediaReferencesInTransaction,
@@ -181,17 +182,18 @@ export async function listProducts(
       ? Promise.resolve([])
       : db
           .select({
-            productId: schema.enrollments.productId,
-            count: count(schema.enrollments.id),
+            productId: schema.learnerMemberships.entityId,
+            count: count(schema.learnerMemberships.id),
           })
-          .from(schema.enrollments)
+          .from(schema.learnerMemberships)
           .where(
             and(
-              eq(schema.enrollments.schoolId, ctx.tenantId!),
-              inArray(schema.enrollments.productId, productIds),
+              eq(schema.learnerMemberships.schoolId, ctx.tenantId!),
+              eq(schema.learnerMemberships.entityType, "product"),
+              inArray(schema.learnerMemberships.entityId, page.map((row) => row.publicId)),
             ),
           )
-          .groupBy(schema.enrollments.productId),
+          .groupBy(schema.learnerMemberships.entityId),
     productIds.length === 0
       ? Promise.resolve([])
       : db
@@ -230,7 +232,7 @@ export async function listProducts(
         ...(await toDto(db, row, publicSchoolId)),
         currency,
         sales: salesByProduct.get(row.id) ?? 0,
-        customers: customersByProduct.get(row.id) ?? 0,
+        customers: customersByProduct.get(row.publicId) ?? 0,
       })),
     ),
     nextCursor:
@@ -298,7 +300,7 @@ export async function listPublicProducts(
       ? []
       : await db
           .select({
-            productId: schema.storefrontPlans.productId,
+            productPublicId: schema.storefrontPlans.entityId,
             amountMinor: schema.storefrontPlans.amountMinor,
             isDefault: schema.storefrontPlans.isDefault,
             createdAt: schema.storefrontPlans.createdAt,
@@ -307,7 +309,11 @@ export async function listPublicProducts(
           .where(
             and(
               eq(schema.storefrontPlans.schoolId, school.schoolId),
-              inArray(schema.storefrontPlans.productId, productIds),
+              eq(schema.storefrontPlans.entityType, "product"),
+              inArray(
+                schema.storefrontPlans.entityId,
+                page.map((product) => product.publicId),
+              ),
               eq(schema.storefrontPlans.status, "active"),
             ),
           )
@@ -317,8 +323,8 @@ export async function listPublicProducts(
           );
   const priceByProduct = new Map<string, number>();
   for (const plan of planRows) {
-    if (!priceByProduct.has(plan.productId)) {
-      priceByProduct.set(plan.productId, plan.amountMinor);
+    if (!priceByProduct.has(plan.productPublicId)) {
+      priceByProduct.set(plan.productPublicId, plan.amountMinor);
     }
   }
   const currency = normalizeCurrency(school.currency);
@@ -329,7 +335,7 @@ export async function listPublicProducts(
       page.map(async (row) => ({
         ...(await toDto(db, row, school.publicId)),
         currency,
-        priceMinor: priceByProduct.get(row.id) ?? null,
+        priceMinor: priceByProduct.get(row.publicId) ?? null,
       })),
     ),
     nextCursor:
@@ -398,14 +404,13 @@ export async function createProduct(
       }),
     };
   }
-  const duplicate = await db
-    .select({ id: schema.products.id })
-    .from(schema.products)
-    .where(
-      and(eq(schema.products.schoolId, ctx.tenantId!), eq(schema.products.slug, slug)),
-    )
-    .limit(1);
-  if (duplicate[0]) {
+  if (
+    await resourceSlugTaken(db, {
+      schoolId: ctx.tenantId!,
+      slug,
+      resourceType: "product",
+    })
+  ) {
     return {
       ok: false,
       error: createPlatformError("conflict", {
@@ -417,6 +422,7 @@ export async function createProduct(
     id: uuidv7(clock),
     publicId,
     schoolId: ctx.tenantId!,
+    salesPageId: null,
     kind: input.kind,
     status: "draft" as const,
     slug,
@@ -433,12 +439,11 @@ export async function createProduct(
   };
   await db.transaction(async (tx) => {
     await tx.insert(schema.products).values(row);
-    await createPendingSalesPage(tx as AppDb, {
+    await enqueueSalesPageProvisioning(tx as AppDb, {
       id: uuidv7(clock),
       schoolId: row.schoolId,
       resourceType: "product",
       resourceId: row.id,
-      resourcePublicId: row.publicId,
       now,
     });
     // The production CourseLit setup creates its first group immediately for
@@ -525,28 +530,46 @@ export async function updateProduct(
         }),
       };
     }
-    if (nextSlug !== row.slug) {
-      const duplicate = await tx
-        .select({ id: schema.products.id })
-        .from(schema.products)
+    if (
+      nextSlug !== row.slug &&
+      (await resourceSlugTaken(tx as AppDb, {
+        schoolId: ctx.tenantId!,
+        slug: nextSlug,
+        resourceType: "product",
+        resourceId: row.id,
+      }))
+    ) {
+      return {
+        ok: false as const,
+        error: createPlatformError("conflict", {
+          safeDetails: { reason: "slug_taken" },
+        }),
+      };
+    }
+    const now = clock.now();
+    const status = input.status ?? row.status;
+    if (status === "published") {
+      const activePlans = await tx
+        .select({ id: schema.storefrontPlans.id })
+        .from(schema.storefrontPlans)
         .where(
           and(
-            eq(schema.products.schoolId, ctx.tenantId!),
-            eq(schema.products.slug, nextSlug),
+            eq(schema.storefrontPlans.schoolId, ctx.tenantId!),
+            eq(schema.storefrontPlans.entityType, "product"),
+            eq(schema.storefrontPlans.entityId, row.publicId),
+            eq(schema.storefrontPlans.status, "active"),
           ),
         )
         .limit(1);
-      if (duplicate[0]) {
+      if (activePlans.length === 0) {
         return {
           ok: false as const,
-          error: createPlatformError("conflict", {
-            safeDetails: { reason: "slug_taken" },
+          error: createPlatformError("validation_failed", {
+            safeDetails: { reason: "payment_plan_required" },
           }),
         };
       }
     }
-    const now = clock.now();
-    const status = input.status ?? row.status;
     let featuredMedia: ProductFeaturedMediaDto | null | undefined;
     if (input.featuredMediaId !== undefined) {
       let mediaId: string | null = null;
@@ -616,7 +639,8 @@ export async function updateProduct(
         .where(
           and(
             eq(schema.storefrontPlans.schoolId, ctx.tenantId!),
-            eq(schema.storefrontPlans.productId, row.id),
+            eq(schema.storefrontPlans.entityType, "product"),
+            eq(schema.storefrontPlans.entityId, row.publicId),
             eq(schema.storefrontPlans.kind, "free"),
             eq(schema.storefrontPlans.status, "active"),
           ),
@@ -635,7 +659,8 @@ export async function updateProduct(
         .where(
           and(
             eq(schema.storefrontPlans.schoolId, ctx.tenantId!),
-            eq(schema.storefrontPlans.productId, row.id),
+            eq(schema.storefrontPlans.entityType, "product"),
+            eq(schema.storefrontPlans.entityId, row.publicId),
             eq(schema.storefrontPlans.status, "active"),
           ),
         );
@@ -669,6 +694,19 @@ export async function updateProduct(
       updatedAt: now,
     };
     await tx.update(schema.products).set(next).where(eq(schema.products.id, row.id));
+    if (
+      input.slug !== undefined ||
+      input.title !== undefined ||
+      input.description !== undefined
+    ) {
+      await enqueueSalesPageProvisioning(tx as AppDb, {
+        id: uuidv7(clock),
+        schoolId: row.schoolId,
+        resourceType: "product",
+        resourceId: row.id,
+        now,
+      });
+    }
     if (input.description !== undefined) {
       const contentMediaIds = await mediaIdsForRichTextContent(
         tx as AppDb,
@@ -808,15 +846,6 @@ export async function deleteProduct(
           eq(schema.mediaReferences.resourceInternalId, row.id),
         ),
       );
-    await tx
-      .delete(schema.frontlitSalesPages)
-      .where(
-        and(
-          eq(schema.frontlitSalesPages.schoolId, ctx.tenantId!),
-          eq(schema.frontlitSalesPages.resourceType, "product"),
-          eq(schema.frontlitSalesPages.resourceId, row.id),
-        ),
-      );
     await tx.delete(schema.products).where(eq(schema.products.id, row.id));
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
@@ -862,7 +891,10 @@ export async function removeMember(
   memberUserId: string,
   clock: Clock,
 ): Promise<{ ok: true } | { ok: false; error: PlatformError }> {
-  if (!ctx.permissions.has("school:admin") || !ctx.tenantId) {
+  if (
+    (!ctx.permissions.has("school:admin") && !ctx.permissions.has("members:manage")) ||
+    !ctx.tenantId
+  ) {
     return { ok: false, error: createPlatformError("forbidden") };
   }
   return db.transaction(async (tx) => {

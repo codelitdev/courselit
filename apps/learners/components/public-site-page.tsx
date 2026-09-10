@@ -1,11 +1,17 @@
 import { loadDataSlots } from "@frontlit/page-builder/data-slots";
-import type { WidgetInstance } from "@frontlit/page-builder/models";
+import type { PageData, WidgetInstance } from "@frontlit/page-builder/models";
 import { notFound } from "next/navigation";
 import { PublicBlogFeed } from "@/components/public-blog-feed";
 import { PublicCommunitiesCatalog } from "@/components/public-communities-catalog";
 import { PublicProductsCatalog } from "@/components/public-products-catalog";
 import { SitePageRenderer, SitePageSection } from "@/components/site-page-renderer";
-import { getPageBySlug, getSettings, listPublicArticles } from "@/lib/courselit-public";
+import {
+  getPageBySlug,
+  getPublicProductDetail,
+  getPublicProductPlans,
+  getSettings,
+  listPublicArticles,
+} from "@/lib/courselit-public";
 import { requestHost } from "@/lib/request-host";
 
 export type PublicSystemRoute =
@@ -14,7 +20,9 @@ export type PublicSystemRoute =
   | "communities"
   | "community"
   | "product"
-  | "checkout";
+  | "lesson"
+  | "checkout"
+  | "login";
 
 export function publicSystemRouteForSlug(
   pageSlug: string,
@@ -37,6 +45,7 @@ export async function PublicSitePage({
   fallbackToHomepage = false,
   systemRoute,
   systemContent: providedSystemContent,
+  salesResource,
 }: {
   pageSlug: string;
   salesPageSlug?: string;
@@ -46,6 +55,7 @@ export async function PublicSitePage({
    * requiring a persisted FrontLit page. */
   systemRoute?: PublicSystemRoute;
   systemContent?: React.ReactNode;
+  salesResource?: { resourceType: "product"; resourceId: string };
 }) {
   const isSalesPage = Boolean(salesPageSlug);
   const { host, page } = await loadPublicPage(
@@ -66,11 +76,32 @@ export async function PublicSitePage({
         ? settings.logo.caption
         : null;
 
-  const pageData = {
+  const salesProduct =
+    salesResource?.resourceType === "product"
+      ? await getPublicProductDetail(host, salesResource.resourceId)
+      : null;
+  const salesPlans =
+    salesProduct && salesResource
+      ? await getPublicProductPlans(host, salesResource.resourceId)
+      : [];
+
+  const pageData: PageData = {
     pageType: "site",
     pageSlug,
-  } as const;
-  const layout: WidgetInstance[] =
+    ...(salesProduct && salesResource
+      ? {
+          courseLitSalesData: {
+            resourceType: salesResource.resourceType,
+            product: { ...salesProduct, plans: salesPlans },
+          },
+        }
+      : {}),
+  };
+  const siteName =
+    settings?.title?.trim() && settings.title.trim().toLowerCase() !== "frontlit"
+      ? settings.title.trim()
+      : "CourseLit";
+  const baseLayout: WidgetInstance[] =
     systemRoute && !isSalesPage
       ? (resolvedPage?.layout ?? []).filter(
           (instance) => instance.name === "header" || instance.name === "footer",
@@ -80,6 +111,33 @@ export async function PublicSitePage({
             (instance) => instance.name === "header" || instance.name === "footer",
           )
         : (resolvedPage?.layout ?? []);
+  const brandedLayout = baseLayout.map((instance) => {
+    if (instance.name !== "header" && instance.name !== "footer") return instance;
+    const currentSettings = instance.settings ?? {};
+    const logoText = currentSettings.logoText;
+    const copyrightText = currentSettings.copyrightText;
+    const tagline = currentSettings.tagline;
+    return {
+      ...instance,
+      settings: {
+        ...currentSettings,
+        ...(typeof logoText !== "string" || logoText.trim().toLowerCase() === "frontlit"
+          ? { logoText: siteName }
+          : {}),
+        ...(instance.name === "footer" &&
+        typeof copyrightText === "string" &&
+        copyrightText.toLowerCase().includes("frontlit")
+          ? { copyrightText: copyrightText.replace(/frontlit/gi, siteName) }
+          : instance.name === "footer" && typeof copyrightText !== "string"
+            ? { copyrightText: `© ${siteName}. All rights reserved.` }
+            : {}),
+        ...(instance.name === "footer" &&
+        (typeof tagline !== "string" || tagline.toLowerCase().includes("frontlit"))
+          ? { tagline: "Build, publish, and grow your audience from one dashboard." }
+          : {}),
+      },
+    };
+  });
 
   let systemContent = providedSystemContent ?? null;
   if (providedSystemContent === undefined && systemRoute === "blog") {
@@ -102,7 +160,7 @@ export async function PublicSitePage({
     : systemRoute
       ? undefined
       : await loadDataSlots(
-          layout,
+          baseLayout,
           {
             "frontlit.content-feed": async ({ instance }) => {
               if (instance.settings?.source !== "articles") return null;
@@ -123,7 +181,7 @@ export async function PublicSitePage({
 
   return (
     <SitePageRenderer
-      layout={layout}
+      layout={brandedLayout}
       themeId={settings?.themeId ?? null}
       themeStyle={settings?.theme ?? null}
       siteLogoUrl={siteLogoUrl}

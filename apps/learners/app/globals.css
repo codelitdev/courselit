@@ -1,10 +1,8 @@
-@import "@codelitdev/design-system/styles.css";
 @import "@frontlit/text-editor/styles.css";
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@source "../../../packages/components-library/src";
 /* The published stylesheet includes the page-builder utility classes used by
  * its blocks. Theme tokens alone leave the rendered site unstyled. */
 @import "@frontlit/page-builder/styles.css";
@@ -70,88 +68,6 @@ body {
   min-height: 100%;
 }
 
-.page-shell {
-  display: grid;
-  gap: 28px;
-}
-.app-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-}
-.eyebrow {
-  margin: 0 0 6px;
-  color: var(--muted-foreground);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.subtitle {
-  margin: 8px 0 0;
-  color: var(--muted-foreground);
-}
-.card {
-  padding: 24px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 5%);
-}
-.stack {
-  display: grid;
-  gap: 18px;
-}
-form {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 12px;
-}
-label {
-  display: grid;
-  gap: 7px;
-  color: var(--foreground);
-  font-size: 14px;
-  font-weight: 600;
-}
-input,
-textarea {
-  min-height: 40px;
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--background);
-  color: var(--foreground);
-  font: inherit;
-}
-input:focus,
-textarea:focus {
-  outline: 2px solid var(--ring);
-  border-color: var(--primary);
-}
-.field {
-  flex: 1 1 220px;
-}
-.muted {
-  color: var(--muted-foreground);
-}
-.auth-page {
-  display: grid;
-  min-height: 100vh;
-  place-items: center;
-  padding-block: 24px;
-}
-.auth-card {
-  width: min(100%, 460px);
-}
-.auth-card form {
-  display: grid;
-  gap: 16px;
-  align-items: stretch;
-}
 .lesson-body {
   white-space: pre-wrap;
 }

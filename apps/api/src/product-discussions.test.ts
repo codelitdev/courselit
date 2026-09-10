@@ -35,6 +35,12 @@ describe.serial("course discussions", () => {
     });
     const productId = (created.body as { id: string }).id;
     await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/products/${productId}/plans`,
+      headers: adminHeaders,
+      body: { name: "Free access", kind: "free", amountMinor: 0 },
+    });
+    await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/products/${productId}`,
       headers: adminHeaders,
@@ -78,7 +84,7 @@ describe.serial("course discussions", () => {
 
     const enrolled = await dispatch(runtime, {
       method: "POST",
-      path: "/v1/learner/enrollments",
+      path: "/v1/learner/memberships",
       headers: learnerHeaders,
       body: { productId },
     });
@@ -119,7 +125,7 @@ describe.serial("course discussions", () => {
     };
     const secondEnrolled = await dispatch(runtime, {
       method: "POST",
-      path: "/v1/learner/enrollments",
+      path: "/v1/learner/memberships",
       headers: secondLearnerHeaders,
       body: { productId },
     });

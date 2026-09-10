@@ -1,11 +1,18 @@
 "use client";
 
-import { Button } from "@codelitdev/design-system";
 // Course discussions are part of the protected course viewer.
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { LearnerShell } from "@/components/layout/learner-shell";
+import {
+  LearnerButton as Button,
+  LearnerCard as PageCard,
+  LearnerCardContent as PageCardContent,
+  LearnerHeader1,
+  LearnerHeader2,
+  LearnerText2,
+} from "@/components/themed-page-builder";
 import { learnerHeaders, writeSchoolId } from "@/lib/school";
 
 type Learner = { id: string; email: string; name: string; schoolId: string };
@@ -127,12 +134,14 @@ export default function CourseDiscussionIndexPage() {
 
   return (
     <LearnerShell user={learner}>
-      <div className="page-shell">
-        <header className="app-header">
+      <div className="grid gap-7">
+        <header className="flex items-start justify-between gap-4">
           <div>
-            <p className="eyebrow">Course</p>
-            <h1>Discussions</h1>
-            <p className="subtitle">Continue the conversation from each lesson.</p>
+            <LearnerText2 className="text-muted-foreground">Course</LearnerText2>
+            <LearnerHeader1>Discussions</LearnerHeader1>
+            <LearnerText2 className="mt-2 text-muted-foreground">
+              Continue the conversation from each lesson.
+            </LearnerText2>
           </div>
           <Link
             href={courseHref}
@@ -142,68 +151,81 @@ export default function CourseDiscussionIndexPage() {
           </Link>
         </header>
         {denied ? (
-          <section className="card stack">
-            <h2 className="font-semibold">
-              {previewToken ? "Preview unavailable" : "Discussions aren’t available"}
-            </h2>
-            <p className="muted">
-              {previewToken
-                ? "This preview has expired or is no longer available."
-                : "Enroll in this course to view its discussions."}
-            </p>
-            <Link href={courseHref}>
-              <Button type="button">Go to course</Button>
-            </Link>
-          </section>
+          <PageCard>
+            <PageCardContent className="grid gap-4">
+              <LearnerHeader2>
+                {previewToken ? "Preview unavailable" : "Discussions aren’t available"}
+              </LearnerHeader2>
+              <LearnerText2 className="text-muted-foreground">
+                {previewToken
+                  ? "This preview has expired or is no longer available."
+                  : "Enroll in this course to view its discussions."}
+              </LearnerText2>
+              <Link href={courseHref}>
+                <Button type="button">Go to course</Button>
+              </Link>
+            </PageCardContent>
+          </PageCard>
         ) : null}
         {error ? (
-          <p role="alert" className="text-destructive">
+          <LearnerText2 role="alert" className="text-destructive">
             {error}
-          </p>
+          </LearnerText2>
         ) : null}
         {!denied && loading && items.length === 0 ? (
-          <p className="muted">Loading discussions…</p>
+          <LearnerText2 className="text-muted-foreground">
+            Loading discussions…
+          </LearnerText2>
         ) : null}
         {!denied && !loading && items.length === 0 ? (
-          <section className="card">
-            <p className="muted">No lesson discussions yet.</p>
-          </section>
+          <PageCard>
+            <PageCardContent>
+              <LearnerText2 className="text-muted-foreground">
+                No lesson discussions yet.
+              </LearnerText2>
+            </PageCardContent>
+          </PageCard>
         ) : null}
         {!denied && items.length > 0 ? (
-          <section className="card stack" aria-label="Lesson discussions">
-            {items.map((item) => (
-              <Link
-                key={item.entityId}
-                href={`/dashboard/courses/${encodeURIComponent(productId)}?discussion=open${previewToken ? `&preview=${encodeURIComponent(previewToken)}` : ""}#lesson-${encodeURIComponent(item.entityId)}`}
-                className="rounded-lg border p-4 transition-colors hover:bg-muted"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <h2 className="font-semibold">{item.lessonTitle}</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {item.commentsCount}{" "}
-                      {item.commentsCount === 1 ? "comment" : "comments"} ·{" "}
-                      {item.repliesCount}{" "}
-                      {item.repliesCount === 1 ? "reply" : "replies"}
-                    </p>
+          <PageCard aria-label="Lesson discussions">
+            <PageCardContent className="grid gap-4">
+              {items.map((item) => (
+                <Link
+                  key={item.entityId}
+                  href={`/dashboard/courses/${encodeURIComponent(productId)}?discussion=open${previewToken ? `&preview=${encodeURIComponent(previewToken)}` : ""}#lesson-${encodeURIComponent(item.entityId)}`}
+                  className="rounded-lg border p-4 transition-colors hover:bg-muted"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <LearnerHeader2>{item.lessonTitle}</LearnerHeader2>
+                      <LearnerText2 className="mt-1 text-muted-foreground">
+                        {item.commentsCount}{" "}
+                        {item.commentsCount === 1 ? "comment" : "comments"} ·{" "}
+                        {item.repliesCount}{" "}
+                        {item.repliesCount === 1 ? "reply" : "replies"}
+                      </LearnerText2>
+                    </div>
+                    <LearnerText2
+                      component="span"
+                      className="text-xs text-muted-foreground"
+                    >
+                      {new Date(item.lastActivityAt).toLocaleString()}
+                    </LearnerText2>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(item.lastActivityAt).toLocaleString()}
-                  </span>
-                </div>
-              </Link>
-            ))}
-            {hasMore && nextCursor ? (
-              <Button
-                type="button"
-                variant="outline"
-                disabled={loading}
-                onClick={() => void load(nextCursor)}
-              >
-                Load more discussions
-              </Button>
-            ) : null}
-          </section>
+                </Link>
+              ))}
+              {hasMore && nextCursor ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={loading}
+                  onClick={() => void load(nextCursor)}
+                >
+                  Load more discussions
+                </Button>
+              ) : null}
+            </PageCardContent>
+          </PageCard>
         ) : null}
       </div>
     </LearnerShell>

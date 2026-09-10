@@ -5,180 +5,27 @@ import { dispatch } from "./dispatch.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
 
-describe.serial("learner OTP authentication", () => {
-  it("creates a school-local learner without storing or returning the OTP", async () => {
+describe.serial("learner authentication", () => {
+  it("does not expose the legacy learner OTP endpoints", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
-    const deliveries: Array<{
-      schoolId: string;
-      schoolPublicId: string;
-      email: string;
-      otp: string;
-      expiresAt: Date;
-    }> = [];
-    const runtime = await createPgliteRuntime({
-      clock,
-      learnerOtpDelivery: async (input) => {
-        deliveries.push(input);
-      },
-    });
+    const runtime = await createPgliteRuntime({ clock });
     const world = await seedWorld(runtime, clock);
 
-    const requested = await dispatch(runtime, {
-      method: "POST",
-      path: "/v1/learner/auth/request-otp",
-      headers: { "x-school-id": world.schoolA.publicId },
-      body: { email: "Otp-Learner@Example.com" },
-    });
-    expect(requested.status).toBe(202);
-    expect(requested.body).toMatchObject({
-      expiresAt: "2026-03-01T00:10:00.000Z",
-    });
-    expect(JSON.stringify(requested.body)).not.toMatch(/\d{6}/);
-    expect(deliveries).toHaveLength(1);
-    expect(deliveries[0]).toMatchObject({
-      schoolPublicId: world.schoolA.publicId,
-      email: "otp-learner@example.com",
-    });
-
-    const challenges = await runtime.db
-      .select()
-      .from(schema.learnerOtpChallenges)
-      .where(
-        and(
-          eq(schema.learnerOtpChallenges.schoolId, world.schoolA.id),
-          eq(schema.learnerOtpChallenges.email, "otp-learner@example.com"),
-        ),
-      );
-    expect(challenges).toHaveLength(1);
-    expect(challenges[0]!.codeDigest).not.toBe(deliveries[0]!.otp);
-    expect(challenges[0]!.codeDigest).toContain(":");
-
-    const verified = await dispatch(runtime, {
-      method: "POST",
-      path: "/v1/learner/auth/verify-otp",
-      headers: { "x-school-id": world.schoolA.publicId },
-      body: {
-        email: "otp-learner@example.com",
-        otp: deliveries[0]!.otp,
-        name: "OTP Learner",
-      },
-    });
-    expect(verified.status).toBe(200);
-    expect(verified.body).toMatchObject({
-      email: "otp-learner@example.com",
-      name: "OTP Learner",
-      schoolId: world.schoolA.publicId,
-    });
-    expect(verified.headers?.["Set-Cookie"]).toContain("courselit.learner.session=");
-
-    const learners = await runtime.db
-      .select()
-      .from(schema.learners)
-      .where(
-        and(
-          eq(schema.learners.schoolId, world.schoolA.id),
-          eq(schema.learners.email, "otp-learner@example.com"),
-        ),
-      );
-    expect(learners).toHaveLength(1);
-    const credentials = await runtime.db
-      .select()
-      .from(schema.learnerCredentials)
-      .where(eq(schema.learnerCredentials.learnerId, learners[0]!.id));
-    expect(credentials).toHaveLength(0);
-    expect(challenges[0]!.consumedAt).toBeNull();
-    const consumed = await runtime.db
-      .select()
-      .from(schema.learnerOtpChallenges)
-      .where(eq(schema.learnerOtpChallenges.id, challenges[0]!.id));
-    expect(consumed[0]!.consumedAt).toEqual(clock.now());
-
-    const replay = await dispatch(runtime, {
-      method: "POST",
-      path: "/v1/learner/auth/verify-otp",
-      headers: { "x-school-id": world.schoolA.publicId },
-      body: { email: "otp-learner@example.com", otp: deliveries[0]!.otp },
-    });
-    expect(replay.status).toBe(401);
-    await runtime.close();
-  });
-
-  it("invalidates prior challenges and locks a challenge after five failed attempts", async () => {
-    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
-    const deliveries: string[] = [];
-    const runtime = await createPgliteRuntime({
-      clock,
-      learnerOtpDelivery: async ({ otp }) => {
-        deliveries.push(otp);
-      },
-    });
-    const world = await seedWorld(runtime, clock);
-
-    await dispatch(runtime, {
-      method: "POST",
-      path: "/v1/learner/auth/request-otp",
-      headers: { "x-school-id": world.schoolA.publicId },
-      body: { email: "locked@example.com" },
-    });
-    await dispatch(runtime, {
-      method: "POST",
-      path: "/v1/learner/auth/request-otp",
-      headers: { "x-school-id": world.schoolA.publicId },
-      body: { email: "locked@example.com" },
-    });
-    expect(deliveries).toHaveLength(2);
-    const wrongCode = deliveries[1] === "000000" ? "111111" : "000000";
-
-    const oldCode = await dispatch(runtime, {
-      method: "POST",
-      path: "/v1/learner/auth/verify-otp",
-      headers: { "x-school-id": world.schoolA.publicId },
-      body: { email: "locked@example.com", otp: deliveries[0] },
-    });
-    expect(oldCode.status).toBe(401);
-
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-      const failed = await dispatch(runtime, {
+    for (const path of [
+      "/v1/learner/auth/request-otp",
+      "/v1/learner/auth/verify-otp",
+    ]) {
+      const response = await dispatch(runtime, {
         method: "POST",
-        path: "/v1/learner/auth/verify-otp",
+        path,
         headers: { "x-school-id": world.schoolA.publicId },
-        body: { email: "locked@example.com", otp: wrongCode },
+        body: { email: "learner@example.com", otp: "000000" },
       });
-      expect(failed.status).toBe(401);
+      // Unknown learner routes fall through to the learner-auth guard, rather
+      // than reaching a legacy unauthenticated OTP handler.
+      expect(response.status).toBe(401);
     }
-    const correctAfterLock = await dispatch(runtime, {
-      method: "POST",
-      path: "/v1/learner/auth/verify-otp",
-      headers: { "x-school-id": world.schoolA.publicId },
-      body: { email: "locked@example.com", otp: deliveries[1] },
-    });
-    expect(correctAfterLock.status).toBe(401);
-    await runtime.close();
-  });
 
-  it("does not allow an OTP from one school to authenticate in another", async () => {
-    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
-    const deliveries: string[] = [];
-    const runtime = await createPgliteRuntime({
-      clock,
-      learnerOtpDelivery: async ({ otp }) => {
-        deliveries.push(otp);
-      },
-    });
-    const world = await seedWorld(runtime, clock);
-    await dispatch(runtime, {
-      method: "POST",
-      path: "/v1/learner/auth/request-otp",
-      headers: { "x-school-id": world.schoolA.publicId },
-      body: { email: "same@example.com" },
-    });
-    const wrongSchool = await dispatch(runtime, {
-      method: "POST",
-      path: "/v1/learner/auth/verify-otp",
-      headers: { "x-school-id": world.schoolB.publicId },
-      body: { email: "same@example.com", otp: deliveries[0] },
-    });
-    expect(wrongSchool.status).toBe(401);
     await runtime.close();
   });
 
@@ -334,30 +181,32 @@ describe.serial("learner OTP authentication", () => {
     await runtime.close();
   });
 
-  it("authenticates a learner via Better Auth session cookie and auto-provisions learner", async () => {
+  it("authenticates a learner via the separate learner Better Auth realm", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
     const world = await seedWorld(runtime, clock);
 
-    // Create a Better Auth user and session in database
-    const userId = "ba-user-1";
-    const sessionToken = "ba-session-token-xyz";
-    await runtime.db.insert(schema.user).values({
-      id: userId,
-      name: "SSO Learner",
-      email: "sso-learner@example.com",
-      emailVerified: true,
-      createdAt: clock.now(),
-      updatedAt: clock.now(),
+    const otp = await runtime.learnerAuth.auth.api.createVerificationOTP({
+      body: {
+        email: "sso-learner@example.com",
+        type: "sign-in",
+      },
     });
-    await runtime.db.insert(schema.session).values({
-      id: "ba-session-1",
-      token: sessionToken,
-      userId,
-      expiresAt: new Date("2026-03-02T00:00:00.000Z"),
-      createdAt: clock.now(),
-      updatedAt: clock.now(),
+    // Obtain a real learner Better Auth browser session. Better Auth stores a
+    // hashed session token, so inserting a raw token into the session table
+    // would not represent a valid browser cookie.
+    const signedIn = await runtime.learnerAuth.auth.api.signInEmailOTP({
+      body: {
+        email: "sso-learner@example.com",
+        otp,
+        name: "SSO Learner",
+      },
+      asResponse: true,
     });
+    expect(signedIn.status).toBe(200);
+    const sessionCookie = signedIn.headers.get("set-cookie")?.split(";", 1)[0];
+    expect(sessionCookie).toBeTruthy();
+    expect(sessionCookie).toMatch(/^courselit-learner\.session_token=/);
 
     // Make an authenticated learner request with Better Auth cookie
     const whoami = await dispatch(runtime, {
@@ -365,7 +214,7 @@ describe.serial("learner OTP authentication", () => {
       path: "/v1/learner/me",
       headers: {
         "x-school-id": world.schoolA.publicId,
-        cookie: `better-auth.session_token=${sessionToken}`,
+        cookie: sessionCookie!,
       },
     });
     expect(whoami.status).toBe(200);
@@ -373,6 +222,29 @@ describe.serial("learner OTP authentication", () => {
       email: "sso-learner@example.com",
       name: "SSO Learner",
     });
+
+    // An admin Better Auth cookie is not a learner identity and must not be
+    // bridged into the school-scoped learner session.
+    const admin = await runtime.auth.auth.api.signUpEmail({
+      body: {
+        name: "Admin User",
+        email: "admin@example.com",
+        password: "password123",
+      },
+      asResponse: true,
+    });
+    const adminCookie = admin.headers.get("set-cookie")?.split(";", 1)[0];
+    expect(adminCookie).toBeTruthy();
+    expect(adminCookie).toMatch(/^courselit-admin\./);
+    const adminWhoami = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/learner/me",
+      headers: {
+        "x-school-id": world.schoolA.publicId,
+        cookie: adminCookie!,
+      },
+    });
+    expect(adminWhoami.status).toBe(401);
 
     // Verify learner was persisted in database
     const learners = await runtime.db

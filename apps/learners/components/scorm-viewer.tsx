@@ -1,7 +1,10 @@
 "use client";
 
-import { Button } from "@codelitdev/design-system";
 import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  LearnerButton as Button,
+  LearnerText2,
+} from "@/components/themed-page-builder";
 import { learnerHeaders } from "@/lib/school";
 
 type ScormState = Record<string, unknown>;
@@ -223,8 +226,8 @@ export function ScormViewer({
   }, [launchUrl, lessonId, productId]);
 
   return (
-    <div className="stack">
-      <p className="muted">Launch the SCORM learning activity in a separate window.</p>
+    <div className="grid gap-4">
+      <LearnerText2 className="text-muted-foreground">Launch the SCORM learning activity in a separate window.</LearnerText2>
       <div>
         <Button type="button" onClick={openInPopup} disabled={!isDataLoaded}>
           Enter SCORM content
