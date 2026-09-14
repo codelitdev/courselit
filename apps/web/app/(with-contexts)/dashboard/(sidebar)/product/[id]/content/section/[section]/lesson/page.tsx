@@ -100,6 +100,14 @@ const mediaLessonTypes: LessonType[] = [
     Constants.LessonType.FILE,
 ];
 
+const descriptionLessonTypes: LessonType[] = [
+    ...Constants.LessonTypesWithDescription,
+];
+
+const attachmentLessonTypes: LessonType[] = [
+    ...Constants.LessonTypesWithAttachments,
+];
+
 type LessonError = Partial<Record<keyof Lesson, string>>;
 
 export default function LessonPage() {
@@ -163,6 +171,12 @@ export default function LessonPage() {
     const [attachments, setAttachments] = useState<Partial<Media>[]>([]);
     const [isLoading, setIsLoading] = useState(isEditing);
     const isMediaLesson = mediaLessonTypes.includes(lesson.type as LessonType);
+    const supportsDescription = descriptionLessonTypes.includes(
+        lesson.type as LessonType,
+    );
+    const supportsAttachments = attachmentLessonTypes.includes(
+        lesson.type as LessonType,
+    );
 
     useEffect(() => {
         if (product && !lesson.lessonId) {
@@ -347,7 +361,7 @@ export default function LessonPage() {
                         content: JSON.stringify(content),
                         requiresEnrollment: lesson?.requiresEnrollment,
                         published: !!lesson?.published,
-                        ...(isMediaLesson
+                        ...(supportsDescription
                             ? { description: JSON.stringify(description) }
                             : {}),
                     },
@@ -395,12 +409,10 @@ export default function LessonPage() {
                         requiresEnrollment: lesson?.requiresEnrollment,
                         groupId: lesson?.groupId,
                         published: !!lesson?.published,
-                        ...(isMediaLesson
-                            ? {
-                                  description: JSON.stringify(description),
-                                  attachments,
-                              }
+                        ...(supportsDescription
+                            ? { description: JSON.stringify(description) }
                             : {}),
+                        ...(supportsAttachments ? { attachments } : {}),
                     },
                 },
             })
@@ -719,6 +731,10 @@ export default function LessonPage() {
                                             );
                                         }}
                                     />
+                                </>
+                            )}
+                            {supportsDescription && (
+                                <>
                                     <Separator />
                                     <div className="space-y-0.5">
                                         <Label className="font-semibold">
@@ -738,6 +754,10 @@ export default function LessonPage() {
                                             LESSON_DESCRIPTION_PLACEHOLDER
                                         }
                                     />
+                                </>
+                            )}
+                            {supportsAttachments && (
+                                <>
                                     <Separator />
                                     <div className="space-y-0.5">
                                         <Label className="font-semibold">

@@ -69,7 +69,9 @@ function toExistingUpdatePayload(
     }
 
     if (Object.prototype.hasOwnProperty.call(body, "description")) {
-        payload.description = JSON.stringify(body.description);
+        // A null description clears it, rather than storing the string "null".
+        payload.description =
+            body.description === null ? "" : JSON.stringify(body.description);
     }
 
     return payload;

@@ -96,14 +96,16 @@ export const LessonViewer = ({
     const { toast } = useToast();
     const { theme } = useContext(ThemeContext);
     const viewerProfile = profile?.userId ? (profile as Profile) : undefined;
-    const isMediaLesson = Boolean(
+    const supportsDescription = Boolean(
         lesson &&
-            [
-                LESSON_TYPE_VIDEO,
-                LESSON_TYPE_AUDIO,
-                LESSON_TYPE_PDF,
-                LESSON_TYPE_FILE,
-            ].some(
+            Constants.LessonTypesWithDescription.some(
+                (type) =>
+                    String.prototype.toUpperCase.call(type) === lesson.type,
+            ),
+    );
+    const supportsAttachments = Boolean(
+        lesson &&
+            Constants.LessonTypesWithAttachments.some(
                 (type) =>
                     String.prototype.toUpperCase.call(type) === lesson.type,
             ),
@@ -437,7 +439,7 @@ export const LessonViewer = ({
                                     }
                                 />
                             )}
-                        {isMediaLesson && hasDescription && (
+                        {supportsDescription && hasDescription && (
                             <WidgetErrorBoundary widgetName="text-editor">
                                 <div className="mt-6">
                                     <TextRenderer
@@ -449,7 +451,7 @@ export const LessonViewer = ({
                                 </div>
                             </WidgetErrorBoundary>
                         )}
-                        {isMediaLesson && lesson.attachments?.length ? (
+                        {supportsAttachments && lesson.attachments?.length ? (
                             <div className="mt-8 flex flex-col gap-2">
                                 <Text1
                                     theme={theme.theme}
@@ -458,8 +460,9 @@ export const LessonViewer = ({
                                     {LESSON_RESOURCES_HEADER}
                                 </Text1>
                                 <div className="flex flex-col items-start gap-2">
-                                    {lesson.attachments.map(
-                                        (attachment, index) => (
+                                    {lesson.attachments
+                                        .filter((attachment) => attachment.file)
+                                        .map((attachment, index) => (
                                             <Link
                                                 key={
                                                     attachment.mediaId || index
@@ -476,8 +479,7 @@ export const LessonViewer = ({
                                                         attachment.originalFileName}
                                                 </Button>
                                             </Link>
-                                        ),
-                                    )}
+                                        ))}
                                 </div>
                             </div>
                         ) : null}

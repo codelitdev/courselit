@@ -58,6 +58,9 @@ jest.mock("@courselit/utils", () => ({
 
 jest.mock("@courselit/text-editor", () => ({
     emptyDoc: { type: "doc", content: [] },
+    Editor: ({ placeholder }: any) => (
+        <div data-testid="description-editor">{placeholder}</div>
+    ),
 }));
 
 jest.mock("@courselit/components-library", () => ({
@@ -70,6 +73,9 @@ jest.mock("@courselit/components-library", () => ({
         isUploading: false,
         uploadProgress: 0,
     }),
+    MediaSelector: ({ title, srcTitle }: any) => (
+        <div data-testid="media-selector">{title || srcTitle}</div>
+    ),
 }));
 
 jest.mock("../lesson-content-renderer", () => ({
@@ -943,5 +949,33 @@ describe("LessonPage", () => {
                 expect(capturedPayload.variables.lessonData).toBeDefined();
             }
         });
+    });
+    describe("description and resources sections", () => {
+        it.each([
+            [Constants.LessonType.TEXT, false, true],
+            [Constants.LessonType.VIDEO, true, true],
+            [Constants.LessonType.AUDIO, true, true],
+            [Constants.LessonType.EMBED, true, true],
+            [Constants.LessonType.PDF, true, false],
+            [Constants.LessonType.FILE, true, false],
+            [Constants.LessonType.QUIZ, false, false],
+            [Constants.LessonType.SCORM, false, false],
+        ])(
+            "on a %s lesson shows description=%s and resources=%s",
+            async (type, expectsDescription, expectsResources) => {
+                render(<LessonPage />, { wrapper });
+
+                fireEvent.click(screen.getByTestId(`radio-item-${type}`));
+
+                await waitFor(() => {
+                    expect(
+                        screen.queryByTestId("description-editor") !== null,
+                    ).toBe(expectsDescription);
+                });
+                expect(screen.queryByText("Add a resource") !== null).toBe(
+                    expectsResources,
+                );
+            },
+        );
     });
 });

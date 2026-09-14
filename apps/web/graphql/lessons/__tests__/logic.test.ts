@@ -326,4 +326,171 @@ describe("Lesson description and attachments", () => {
             null,
         );
     });
+    const createLessonOfType = async (
+        type: string,
+        overrides: Record<string, unknown> = {},
+    ) => {
+        return await createLesson(
+            {
+                title: `${type} lesson`,
+                type,
+                content: "",
+                courseId: course.courseId,
+                groupId,
+                requiresEnrollment: true,
+                downloadable: false,
+                published: true,
+                ...overrides,
+            } as any,
+            ownerCtx,
+        );
+    };
+
+    const emptyDoc = JSON.stringify({ type: "doc", content: [] });
+
+    it.each([
+        [Constants.LessonType.PDF],
+        [Constants.LessonType.FILE],
+        [Constants.LessonType.QUIZ],
+    ])("rejects attachments on a %s lesson", async (type) => {
+        await expect(
+            createLessonOfType(type, {
+                attachments: [attachment(id("unsupported"), "handout.pdf")],
+            }),
+        ).rejects.toThrow(responses.lesson_attachments_not_supported);
+    });
+
+    it.each([[Constants.LessonType.QUIZ], [Constants.LessonType.TEXT]])(
+        "rejects a description on a %s lesson",
+        async (type) => {
+            await expect(
+                createLessonOfType(type, {
+                    content:
+                        type === Constants.LessonType.TEXT
+                            ? emptyDoc
+                            : undefined,
+                    description: JSON.stringify({
+                        type: "doc",
+                        content: [
+                            {
+                                type: "paragraph",
+                                content: [{ type: "text", text: "Notes" }],
+                            },
+                        ],
+                    }),
+                }),
+            ).rejects.toThrow(responses.lesson_description_not_supported);
+        },
+    );
+
+    it("allows attachments on a text lesson", async () => {
+        const mediaId = id("text-attachment");
+        const lesson = await createLessonOfType(Constants.LessonType.TEXT, {
+            content: emptyDoc,
+            attachments: [attachment(mediaId, "worksheet.pdf")],
+        });
+
+        expect(lesson.attachments).toHaveLength(1);
+        expect(lesson.attachments[0].mediaId).toBe(mediaId);
+    });
+
+    it("allows a description and attachments on an embed lesson", async () => {
+        const mediaId = id("embed-attachment");
+        const lesson = await createLessonOfType(Constants.LessonType.EMBED, {
+            content: JSON.stringify({ value: "https://example.com/embed" }),
+            description: JSON.stringify({
+                type: "doc",
+                content: [
+                    {
+                        type: "paragraph",
+                        content: [{ type: "text", text: "Watch this" }],
+                    },
+                ],
+            }),
+            attachments: [attachment(mediaId, "slides.pdf")],
+        });
+
+        expect(lesson.description.content).toHaveLength(1);
+        expect(lesson.attachments).toHaveLength(1);
+    });
+
+    it("rejects attachments added to an existing pdf lesson", async () => {
+        const lesson = await createLessonOfType(Constants.LessonType.PDF);
+
+        await expect(
+            updateLesson(
+                {
+                    id: lesson.lessonId,
+                    attachments: [attachment(id("late"), "handout.pdf")],
+                } as any,
+                ownerCtx,
+            ),
+        ).rejects.toThrow(responses.lesson_attachments_not_supported);
+    });
+
+    it("rejects a description added to an existing text lesson", async () => {
+        const lesson = await createLessonOfType(Constants.LessonType.TEXT, {
+            content: emptyDoc,
+        });
+
+        await expect(
+            updateLesson(
+                {
+                    id: lesson.lessonId,
+                    description: JSON.stringify({
+                        type: "doc",
+                        content: [
+                            {
+                                type: "paragraph",
+                                content: [{ type: "text", text: "Notes" }],
+                            },
+                        ],
+                    }),
+                } as any,
+                ownerCtx,
+            ),
+        ).rejects.toThrow(responses.lesson_description_not_supported);
+    });
+    it("rejects a description that is not a ProseMirror document", async () => {
+        await expect(
+            createVideoLesson({
+                description: JSON.stringify({ foo: 1 }),
+            }),
+        ).rejects.toThrow(responses.invalid_input);
+    });
+
+    it("removes an attachment even when its media is already gone", async () => {
+        const mediaId = id("stale-attachment-media");
+        const lesson = await createVideoLesson({
+            attachments: [attachment(mediaId, "handout.pdf")],
+        });
+
+        (deleteMedia as jest.Mock).mockRejectedValue(new Error("Not found"));
+
+        const updated = await updateLesson(
+            { id: lesson.lessonId, attachments: [] } as any,
+            ownerCtx,
+        );
+
+        expect(deleteMedia).toHaveBeenCalledWith(mediaId);
+        expect(updated.attachments).toHaveLength(0);
+        expect(
+            (await LessonModel.findOne({ lessonId: lesson.lessonId }))
+                ?.attachments,
+        ).toHaveLength(0);
+    });
+
+    it("deletes a lesson even when its media is already gone", async () => {
+        const lesson = await createVideoLesson({
+            attachments: [attachment(id("undeletable-media"), "handout.pdf")],
+        });
+
+        (deleteMedia as jest.Mock).mockRejectedValue(new Error("Not found"));
+
+        await deleteLesson(lesson.lessonId, ownerCtx);
+
+        expect(await LessonModel.findOne({ lessonId: lesson.lessonId })).toBe(
+            null,
+        );
+    });
 });

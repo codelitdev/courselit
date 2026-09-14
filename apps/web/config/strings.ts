@@ -34,6 +34,10 @@ export const responses = {
     cost_not_provided: "Cost field is required",
     invalid_cost: "Invalid cost",
     cannot_add_to_blogs: "Cannot add lessons to a blog post",
+    lesson_description_not_supported:
+        "This lesson type does not support a description",
+    lesson_attachments_not_supported:
+        "This lesson type does not support resources",
     file_is_required: "A file is required",
     error_in_moving_file: "Error in moving file",
     success: "success",

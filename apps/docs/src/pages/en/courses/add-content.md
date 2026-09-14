@@ -56,6 +56,10 @@ A lesson is a container for the actual learning material. CourseLit supports mul
 
     See the [guide to add a SCORM package](/en/lessons/scorm).
 
+Most lesson types can also carry a rich text description, downloadable resources, or both, alongside their main content.
+
+See the [guide to add a description and resources](/en/lessons/description-and-resources).
+
 ## Steps to add a new lesson
 
 1. From the `Products` section in the dashboard, select your product to open its dashboard.

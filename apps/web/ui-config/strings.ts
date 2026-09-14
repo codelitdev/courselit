@@ -901,7 +901,7 @@ export const LESSON_CONTENT_LABEL = "Content";
 export const LESSON_MEDIA_LABEL = "Media";
 export const LESSON_DESCRIPTION_LABEL = "Description";
 export const LESSON_DESCRIPTION_TOOLTIP =
-    "Add notes, instructions or links to go alongside this lesson's media.";
+    "Add notes, instructions or links to go alongside this lesson's content.";
 export const LESSON_DESCRIPTION_PLACEHOLDER =
     "Add notes or links for this lesson (optional)";
 export const LESSON_RESOURCES_LABEL = "Resources";

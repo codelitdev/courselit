@@ -25,6 +25,7 @@ import {
     Progress,
     Quiz,
     ScormContent,
+    TextEditorContent,
     User,
 } from "@courselit/common-models";
 import LessonEvaluation from "../../models/LessonEvaluation";
@@ -195,9 +196,48 @@ function validateLessonDescriptionOrThrow(description?: string | null) {
     if (
         typeof parsedDescription !== "object" ||
         parsedDescription === null ||
-        Array.isArray(parsedDescription)
+        Array.isArray(parsedDescription) ||
+        (parsedDescription as TextEditorContent).type !== "doc" ||
+        !Array.isArray((parsedDescription as TextEditorContent).content)
     ) {
         throw new Error(responses.invalid_input);
+    }
+}
+
+// A lesson can reference many media, and the media service may no longer know
+// about some of them. A failed cleanup must not take the whole deletion down.
+async function deleteMediaQuietly(mediaId: string) {
+    try {
+        return await deleteMedia(mediaId);
+    } catch (err: any) {
+        error(err.message, { mediaId });
+        return false;
+    }
+}
+
+// Not every lesson type offers these fields in the editor, so reject values the
+// UI would never show and the viewer would never render.
+function validateLessonFieldSupportOrThrow({
+    type,
+    description,
+    attachments,
+}: {
+    type: Lesson["type"];
+    description?: string | null;
+    attachments?: Partial<Media>[] | null;
+}) {
+    const supportsDescription = (
+        Constants.LessonTypesWithDescription as readonly string[]
+    ).includes(type);
+    if (description && !supportsDescription) {
+        throw new Error(responses.lesson_description_not_supported);
+    }
+
+    const supportsAttachments = (
+        Constants.LessonTypesWithAttachments as readonly string[]
+    ).includes(type);
+    if (attachments?.length && !supportsAttachments) {
+        throw new Error(responses.lesson_attachments_not_supported);
     }
 }
 
@@ -244,6 +284,11 @@ export const createLesson = async (
 
     lessonValidator(lessonData);
     validateLessonDescriptionOrThrow(lessonData.description);
+    validateLessonFieldSupportOrThrow({
+        type: lessonData.type,
+        description: lessonData.description,
+        attachments: lessonData.attachments,
+    });
 
     try {
         const course: InternalCourse | null = await CourseModel.findOne({
@@ -393,6 +438,12 @@ export const updateLesson = async (
         }
     }
 
+    validateLessonFieldSupportOrThrow({
+        type: lesson.type,
+        description: descriptionUpdated ? lessonData.description : undefined,
+        attachments: attachmentsUpdated ? lessonData.attachments : undefined,
+    });
+
     for (const key of Object.keys(lessonData)) {
         if (key === "content") {
             lesson.content =
@@ -416,11 +467,19 @@ export const updateLesson = async (
             lesson[key] = lessonData[key];
         }
     }
+    lesson = await (lesson as any).save();
+
+    // Media cleanup runs after the lesson is persisted and never fails the
+    // update: a media id the media service no longer knows about would
+    // otherwise make the attachment or image impossible to remove.
     for (const mediaId of contentMediaIdsMarkedForDeletion) {
-        await deleteMedia(mediaId);
+        try {
+            await deleteMedia(mediaId);
+        } catch (err: any) {
+            error(err.message, { mediaId, lessonId: lesson.lessonId });
+        }
     }
 
-    lesson = await (lesson as any).save();
     return lesson;
 };
 
@@ -436,7 +495,7 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
 
         for (const attachment of lesson.attachments || []) {
             if (attachment.mediaId) {
-                cleanupTasks.push(deleteMedia(attachment.mediaId));
+                cleanupTasks.push(deleteMediaQuietly(attachment.mediaId));
             }
         }
 
@@ -445,7 +504,7 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
                 JSON.stringify(lesson.description),
             );
             for (const mediaId of Array.from(descriptionMediaIds)) {
-                cleanupTasks.push(deleteMedia(mediaId));
+                cleanupTasks.push(deleteMediaQuietly(mediaId));
             }
         }
 

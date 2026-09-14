@@ -118,10 +118,7 @@ async function isActionAllowed(
         case "lesson":
             const lesson = await LessonModel.findOne<Lesson>({
                 domain: domain._id,
-                $or: [
-                    { "media.mediaId": mediaId },
-                    { "attachments.mediaId": mediaId },
-                ],
+                "media.mediaId": mediaId,
             });
             if (!lesson) {
                 return false;
