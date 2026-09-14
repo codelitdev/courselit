@@ -4,6 +4,8 @@ type LessonDocument = {
     type: string;
     content?: unknown;
     media?: unknown;
+    description?: unknown;
+    attachments?: unknown;
     downloadable?: boolean;
     courseId: string;
     groupId: string;
@@ -18,6 +20,8 @@ export function serializeLesson(lesson: LessonDocument) {
         type: lesson.type,
         content: lesson.content,
         media: lesson.media,
+        description: lesson.description,
+        attachments: lesson.attachments,
         downloadable: lesson.downloadable,
         courseId: lesson.courseId,
         groupId: lesson.groupId,
@@ -35,6 +39,9 @@ export function toExistingLessonPayload(
         courseId,
         content: Object.prototype.hasOwnProperty.call(body, "content")
             ? JSON.stringify(body.content)
+            : undefined,
+        description: Object.prototype.hasOwnProperty.call(body, "description")
+            ? JSON.stringify(body.description)
             : undefined,
     };
 }

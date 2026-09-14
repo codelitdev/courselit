@@ -18,6 +18,8 @@ export interface InternalLesson {
     type: LessonType;
     content?: Quiz | TextEditorContent | ScormContent | { value: string };
     media?: Media;
+    description?: TextEditorContent;
+    attachments?: Media[];
     downloadable: boolean;
     creatorId: string;
     courseId: string;
@@ -37,6 +39,8 @@ export const LessonSchema = new mongoose.Schema<InternalLesson>({
     },
     content: { type: mongoose.Schema.Types.Mixed, default: {} },
     media: MediaSchema,
+    description: { type: mongoose.Schema.Types.Mixed },
+    attachments: { type: [MediaSchema], default: [] },
     downloadable: { type: Boolean, default: false },
     creatorId: { type: String, required: true },
     courseId: { type: String, required: true },

@@ -898,6 +898,19 @@ export const LOGIN_CODE_SENT_MESSAGE =
     "We have emailed you a one time password.";
 export const LESSON_EMBED_URL_LABEL = "Embed code";
 export const LESSON_CONTENT_LABEL = "Content";
+export const LESSON_MEDIA_LABEL = "Media";
+export const LESSON_DESCRIPTION_LABEL = "Description";
+export const LESSON_DESCRIPTION_TOOLTIP =
+    "Add notes, instructions or links to go alongside this lesson's media.";
+export const LESSON_DESCRIPTION_PLACEHOLDER =
+    "Add notes or links for this lesson (optional)";
+export const LESSON_RESOURCES_LABEL = "Resources";
+export const LESSON_RESOURCES_TOOLTIP =
+    "Attach files your students can download, such as PDFs, worksheets or slides.";
+export const LESSON_RESOURCES_SAVE_LESSON_FIRST =
+    "Save the lesson to enable resource uploads";
+export const LESSON_RESOURCES_ADD = "Add a resource";
+export const LESSON_RESOURCES_HEADER = "Resources";
 export const EMAIL_EDITOR_EMAIL_EDIT_HEADER = "Editing email";
 export const EMAIL_EDITOR_TEMPLATE_EDIT_HEADER = "Editing template";
 export const LOGIN_FORM_PERSONAL_INFORMATION_LABEL = "Personal Information";

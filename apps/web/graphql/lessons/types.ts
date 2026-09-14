@@ -8,6 +8,7 @@ import {
     GraphQLBoolean,
     GraphQLInt,
     GraphQLFloat,
+    GraphQLList,
 } from "graphql";
 import constants from "../../config/constants";
 import mediaTypes from "../media/types";
@@ -58,6 +59,16 @@ const lessonType = new GraphQLObjectType({
             type: mediaTypes.mediaType,
             resolve: (lesson, _, __, ___) => getMedia(lesson.media),
         },
+        description: { type: GraphQLJSONObject },
+        attachments: {
+            type: new GraphQLList(mediaTypes.mediaType),
+            resolve: (lesson, _, __, ___) =>
+                Promise.all(
+                    (lesson.attachments || []).map((attachment) =>
+                        getMedia(attachment),
+                    ),
+                ),
+        },
         prevLesson: { type: GraphQLString },
         nextLesson: { type: GraphQLString },
     },
@@ -98,6 +109,8 @@ const lessonInputType = new GraphQLInputObjectType({
         },
         content: { type: GraphQLString },
         // media: { type: mediaTypes.mediaInputType },
+        description: { type: GraphQLString },
+        attachments: { type: new GraphQLList(mediaTypes.mediaInputType) },
         downloadable: { type: GraphQLBoolean },
         groupId: { type: new GraphQLNonNull(GraphQLID) },
         published: { type: GraphQLBoolean },
@@ -114,6 +127,8 @@ const lessonUpdateType = new GraphQLInputObjectType({
         title: { type: GraphQLString },
         content: { type: GraphQLString },
         media: { type: mediaTypes.mediaInputType },
+        description: { type: GraphQLString },
+        attachments: { type: new GraphQLList(mediaTypes.mediaInputType) },
         downloadable: { type: GraphQLBoolean },
         requiresEnrollment: {
             description: DESCRIPTION_REQUIRES_ENROLLMENT,

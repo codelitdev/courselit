@@ -23,6 +23,8 @@ const updateLessonFields = new Set([
     "title",
     "content",
     "media",
+    "description",
+    "attachments",
     "downloadable",
     "requiresEnrollment",
     "published",
@@ -64,6 +66,10 @@ function toExistingUpdatePayload(
 
     if (Object.prototype.hasOwnProperty.call(body, "content")) {
         payload.content = JSON.stringify(body.content);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(body, "description")) {
+        payload.description = JSON.stringify(body.description);
     }
 
     return payload;

@@ -13,6 +13,7 @@ import {
     File,
     Tv,
     Package,
+    Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,13 @@ import {
     TOAST_TITLE_SUCCESS,
     ALPHA_LABEL,
     LESSON_PREVIEW,
+    LESSON_MEDIA_LABEL,
+    LESSON_DESCRIPTION_LABEL,
+    LESSON_DESCRIPTION_TOOLTIP,
+    LESSON_DESCRIPTION_PLACEHOLDER,
+    LESSON_RESOURCES_LABEL,
+    LESSON_RESOURCES_TOOLTIP,
+    LESSON_RESOURCES_SAVE_LESSON_FIRST,
 } from "@ui-config/strings";
 import DashboardContent from "@components/admin/dashboard-content";
 import useProduct from "@/hooks/use-product";
@@ -52,6 +60,7 @@ import {
     Constants,
     Lesson,
     LessonType,
+    Media,
     TextEditorContent,
     UIConstants,
 } from "@courselit/common-models";
@@ -60,9 +69,10 @@ import { FetchBuilder } from "@courselit/utils";
 import { LessonContentRenderer } from "./lesson-content-renderer";
 import { isTextEditorNonEmpty, truncate } from "@ui-lib/utils";
 import { Separator } from "@components/ui/separator";
-import { emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
+import { Editor, emptyDoc as TextEditorEmptyDoc } from "@courselit/text-editor";
 import { LessonSkeleton } from "./skeleton";
 import { ScormLessonUpload } from "./scorm-lesson-upload";
+import { LessonAttachments } from "./lesson-attachments";
 import {
     Tooltip,
     TooltipContent,
@@ -82,6 +92,13 @@ const lessonTypes = [
     { value: Constants.LessonType.QUIZ, label: "Quiz", icon: HelpCircle },
     { value: Constants.LessonType.SCORM, label: "SCORM", icon: Package },
 ] as const;
+
+const mediaLessonTypes: LessonType[] = [
+    Constants.LessonType.VIDEO,
+    Constants.LessonType.AUDIO,
+    Constants.LessonType.PDF,
+    Constants.LessonType.FILE,
+];
 
 type LessonError = Partial<Record<keyof Lesson, string>>;
 
@@ -140,7 +157,12 @@ export default function LessonPage() {
               ? {}
               : { value: "" },
     );
+    const [description, setDescription] = useState<TextEditorContent>(
+        TextEditorEmptyDoc as unknown as TextEditorContent,
+    );
+    const [attachments, setAttachments] = useState<Partial<Media>[]>([]);
     const [isLoading, setIsLoading] = useState(isEditing);
+    const isMediaLesson = mediaLessonTypes.includes(lesson.type as LessonType);
 
     useEffect(() => {
         if (product && !lesson.lessonId) {
@@ -184,7 +206,18 @@ export default function LessonPage() {
                     },
                     requiresEnrollment,
                     published,
-                    lessonId
+                    lessonId,
+                    description,
+                    attachments {
+                        mediaId,
+                        originalFileName,
+                        mimeType,
+                        size,
+                        access,
+                        file,
+                        thumbnail,
+                        caption
+                    }
                 }
             }
         `;
@@ -209,6 +242,11 @@ export default function LessonPage() {
 
                 setLesson(loadedLesson);
                 setContent(response.lesson.content);
+                setDescription(
+                    (response.lesson.description as TextEditorContent) ??
+                        (TextEditorEmptyDoc as unknown as TextEditorContent),
+                );
+                setAttachments(response.lesson.attachments || []);
             }
         } catch (err: any) {
             toast({
@@ -309,6 +347,9 @@ export default function LessonPage() {
                         content: JSON.stringify(content),
                         requiresEnrollment: lesson?.requiresEnrollment,
                         published: !!lesson?.published,
+                        ...(isMediaLesson
+                            ? { description: JSON.stringify(description) }
+                            : {}),
                     },
                 },
             })
@@ -354,6 +395,12 @@ export default function LessonPage() {
                         requiresEnrollment: lesson?.requiresEnrollment,
                         groupId: lesson?.groupId,
                         published: !!lesson?.published,
+                        ...(isMediaLesson
+                            ? {
+                                  description: JSON.stringify(description),
+                                  attachments,
+                              }
+                            : {}),
                     },
                 },
             })
@@ -384,6 +431,55 @@ export default function LessonPage() {
                 variant: "destructive",
             });
         } finally {
+        }
+    };
+
+    const saveAttachments = async (nextAttachments: Partial<Media>[]) => {
+        const previousAttachments = attachments;
+        setAttachments(nextAttachments);
+
+        const query = `
+            mutation ($id: ID!, $attachments: [MediaInput]) {
+                lesson: updateLesson(lessonData: {
+                    id: $id
+                    attachments: $attachments
+                }) {
+                    lessonId
+                }
+            }
+        `;
+        const fetch = new FetchBuilder()
+            .setUrl(`${address.backend}/api/graph`)
+            .setPayload({
+                query,
+                variables: {
+                    id: lesson?.lessonId,
+                    attachments: nextAttachments.map((attachment) =>
+                        Object.assign({}, attachment, {
+                            file:
+                                attachment.access === "public"
+                                    ? attachment.file
+                                    : null,
+                        }),
+                    ),
+                },
+            })
+            .setIsGraphQLEndpoint(true)
+            .build();
+
+        try {
+            await fetch.exec();
+            toast({
+                title: TOAST_TITLE_SUCCESS,
+                description: "Lesson updated",
+            });
+        } catch (err: any) {
+            setAttachments(previousAttachments);
+            toast({
+                title: TOAST_TITLE_ERROR,
+                description: err.message,
+                variant: "destructive",
+            });
         }
     };
 
@@ -604,6 +700,66 @@ export default function LessonPage() {
                                     />
                                 </>
                             )}
+                            {isMediaLesson && (
+                                <>
+                                    <Label className="font-semibold">
+                                        {LESSON_MEDIA_LABEL}
+                                    </Label>
+                                    <LessonContentRenderer
+                                        lesson={lesson}
+                                        errors={errors}
+                                        onContentChange={setContent}
+                                        onLessonChange={(updates) => {
+                                            setLesson(
+                                                Object.assign(
+                                                    {},
+                                                    lesson,
+                                                    updates,
+                                                ),
+                                            );
+                                        }}
+                                    />
+                                    <Separator />
+                                    <div className="space-y-0.5">
+                                        <Label className="font-semibold">
+                                            {LESSON_DESCRIPTION_LABEL}
+                                        </Label>
+                                        <p className="text-sm text-muted-foreground">
+                                            {LESSON_DESCRIPTION_TOOLTIP}
+                                        </p>
+                                    </div>
+                                    <Editor
+                                        initialContent={description}
+                                        onChange={(state: any) => {
+                                            setDescription(state);
+                                        }}
+                                        url={address.backend}
+                                        placeholder={
+                                            LESSON_DESCRIPTION_PLACEHOLDER
+                                        }
+                                    />
+                                    <Separator />
+                                    <div className="space-y-0.5">
+                                        <Label className="font-semibold">
+                                            {LESSON_RESOURCES_LABEL}
+                                        </Label>
+                                        <p className="text-sm text-muted-foreground">
+                                            {LESSON_RESOURCES_TOOLTIP}
+                                        </p>
+                                    </div>
+                                    <LessonAttachments
+                                        attachments={attachments}
+                                        disabled={!lesson.lessonId}
+                                        onChange={saveAttachments}
+                                    />
+                                    {!lesson.lessonId && (
+                                        <p className="text-xs text-muted-foreground flex items-center gap-2">
+                                            <Info className="w-4 h-4" />
+                                            {LESSON_RESOURCES_SAVE_LESSON_FIRST}
+                                        </p>
+                                    )}
+                                </>
+                            )}
                             {product?.type?.toLowerCase() ===
                                 Constants.CourseType.COURSE &&
                                 lesson.type !== Constants.LessonType.QUIZ && (
@@ -723,29 +879,6 @@ export default function LessonPage() {
                             </div>
                         </div>
                     </form>
-                    {[
-                        Constants.LessonType.VIDEO,
-                        Constants.LessonType.AUDIO,
-                        Constants.LessonType.PDF,
-                        Constants.LessonType.FILE,
-                    ].includes(lesson.type as any) && (
-                        <>
-                            <Separator />
-                            <div className="space-y-4">
-                                <Label className="font-semibold">Media</Label>
-                                <LessonContentRenderer
-                                    lesson={lesson}
-                                    errors={errors}
-                                    onContentChange={setContent}
-                                    onLessonChange={(updates) => {
-                                        setLesson(
-                                            Object.assign({}, lesson, updates),
-                                        );
-                                    }}
-                                />
-                            </div>
-                        </>
-                    )}
                     {lesson.type === Constants.LessonType.SCORM &&
                         lesson.lessonId && (
                             <>

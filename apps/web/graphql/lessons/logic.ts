@@ -172,8 +172,12 @@ export const getLessonDetails = async (
     return lesson;
 };
 
-export type LessonWithStringContent = Omit<Lesson, "content"> & {
+export type LessonWithStringContent = Omit<
+    Lesson,
+    "content" | "description"
+> & {
     content: string;
+    description?: string;
 };
 
 async function sealLessonMedia(media?: Partial<Media> | null) {
@@ -188,6 +192,20 @@ async function sealLessonMedia(media?: Partial<Media> | null) {
 
     delete sealedMedia.file;
     return sealedMedia;
+}
+
+async function sealLessonAttachments(attachments?: Partial<Media>[] | null) {
+    if (!attachments?.length) {
+        return [];
+    }
+
+    const sealedAttachments = await Promise.all(
+        attachments.map((attachment) => sealLessonMedia(attachment)),
+    );
+
+    return sealedAttachments.filter((attachment): attachment is Media =>
+        Boolean(attachment),
+    );
 }
 
 export const createLesson = async (
@@ -224,6 +242,12 @@ export const createLesson = async (
                 lessonData.content || "",
             ),
             media: await sealLessonMedia(lessonData.media),
+            description: lessonData.description
+                ? await replaceTempMediaWithSealedMediaInProseMirrorDoc(
+                      lessonData.description,
+                  )
+                : undefined,
+            attachments: await sealLessonAttachments(lessonData.attachments),
             downloadable: lessonData.downloadable,
             creatorId: ctx.user.userId,
             courseId: course.courseId,
@@ -248,6 +272,8 @@ export const updateLesson = async (
         | "title"
         | "content"
         | "media"
+        | "description"
+        | "attachments"
         | "downloadable"
         | "requiresEnrollment"
         | "published"
@@ -280,6 +306,10 @@ export const updateLesson = async (
             ? lessonData.content!
             : JSON.stringify(lesson.content || ""),
         media: lessonData.media ?? lesson.media,
+        description:
+            lessonData.description ??
+            (lesson.description ? JSON.stringify(lesson.description) : ""),
+        attachments: lessonData.attachments ?? lesson.attachments,
         downloadable: lessonData.downloadable ?? lesson.downloadable,
         requiresEnrollment:
             lessonData.requiresEnrollment ?? lesson.requiresEnrollment,
@@ -301,6 +331,19 @@ export const updateLesson = async (
         );
     }
 
+    const descriptionUpdated = Object.prototype.hasOwnProperty.call(
+        lessonData,
+        "description",
+    );
+    if (descriptionUpdated) {
+        contentMediaIdsMarkedForDeletion.push(
+            ...getDeletedMediaIds(
+                JSON.stringify(lesson.description || ""),
+                (lessonData.description ?? "") as string,
+            ),
+        );
+    }
+
     for (const key of Object.keys(lessonData)) {
         if (key === "content") {
             lesson.content =
@@ -311,6 +354,15 @@ export const updateLesson = async (
                     : JSON.parse(lessonData.content);
         } else if (key === "media" && lessonData.media) {
             lesson.media = await sealLessonMedia(lessonData.media);
+        } else if (key === "description") {
+            lesson.description =
+                await replaceTempMediaWithSealedMediaInProseMirrorDoc(
+                    lessonData.description || "",
+                );
+        } else if (key === "attachments") {
+            lesson.attachments = await sealLessonAttachments(
+                lessonData.attachments,
+            );
         } else if (key !== "lessonId" && key !== "id") {
             lesson[key] = lessonData[key];
         }
@@ -331,6 +383,21 @@ export const deleteLesson = async (id: string, ctx: GQLContext) => {
 
         if (lesson.media?.mediaId) {
             cleanupTasks.push(deleteMedia(lesson.media.mediaId));
+        }
+
+        for (const attachment of lesson.attachments || []) {
+            if (attachment.mediaId) {
+                cleanupTasks.push(deleteMedia(attachment.mediaId));
+            }
+        }
+
+        if (lesson.description) {
+            const descriptionMediaIds = extractMediaIDs(
+                JSON.stringify(lesson.description),
+            );
+            for (const mediaId of Array.from(descriptionMediaIds)) {
+                cleanupTasks.push(deleteMedia(mediaId));
+            }
         }
 
         if (lesson.type === Constants.LessonType.TEXT && lesson.content) {

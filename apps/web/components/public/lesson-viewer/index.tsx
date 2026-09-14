@@ -20,6 +20,7 @@ import {
     ENROLL_BUTTON_TEXT,
     TOAST_TITLE_ERROR,
     NOT_ENROLLED_HEADER,
+    LESSON_RESOURCES_HEADER,
 } from "@/ui-config/strings";
 import { Link, Skeleton, useToast } from "@courselit/components-library";
 import { TextRenderer } from "@courselit/page-blocks";
@@ -95,6 +96,18 @@ export const LessonViewer = ({
     const { toast } = useToast();
     const { theme } = useContext(ThemeContext);
     const viewerProfile = profile?.userId ? (profile as Profile) : undefined;
+    const isMediaLesson = Boolean(
+        lesson &&
+            [
+                LESSON_TYPE_VIDEO,
+                LESSON_TYPE_AUDIO,
+                LESSON_TYPE_PDF,
+                LESSON_TYPE_FILE,
+            ].some(
+                (type) =>
+                    String.prototype.toUpperCase.call(type) === lesson.type,
+            ),
+    );
     const isViewerEnrolled = Boolean(
         lesson && viewerProfile && isEnrolled(lesson.courseId, viewerProfile),
     );
@@ -137,7 +150,14 @@ export const LessonViewer = ({
                     requiresEnrollment,
                     courseId,
                     prevLesson,
-                    nextLesson
+                    nextLesson,
+                    description,
+                    attachments {
+                        mediaId,
+                        file,
+                        caption,
+                        originalFileName
+                    }
                 }
             }
         `;
@@ -414,6 +434,50 @@ export const LessonViewer = ({
                                     }
                                 />
                             )}
+                        {isMediaLesson && lesson.description && (
+                            <WidgetErrorBoundary widgetName="text-editor">
+                                <div className="mt-6">
+                                    <TextRenderer
+                                        json={
+                                            lesson.description as TextEditorContent
+                                        }
+                                        theme={theme.theme}
+                                    />
+                                </div>
+                            </WidgetErrorBoundary>
+                        )}
+                        {isMediaLesson && lesson.attachments?.length ? (
+                            <div className="mt-8 flex flex-col gap-2">
+                                <Text1
+                                    theme={theme.theme}
+                                    className="font-semibold"
+                                >
+                                    {LESSON_RESOURCES_HEADER}
+                                </Text1>
+                                <div className="flex flex-col items-start gap-2">
+                                    {lesson.attachments.map(
+                                        (attachment, index) => (
+                                            <Link
+                                                key={
+                                                    attachment.mediaId || index
+                                                }
+                                                href={attachment.file as string}
+                                            >
+                                                <Button
+                                                    theme={theme.theme}
+                                                    variant="secondary"
+                                                    className="flex gap-1 items-center"
+                                                >
+                                                    <ArrowDownward />
+                                                    {attachment.caption ||
+                                                        attachment.originalFileName}
+                                                </Button>
+                                            </Link>
+                                        ),
+                                    )}
+                                </div>
+                            </div>
+                        ) : null}
                         {isViewerEnrolled && !isPreview && (
                             <div className="mt-8 flex flex-col gap-4">
                                 <div className="flex justify-start">

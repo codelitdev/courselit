@@ -131,6 +131,7 @@ const MediaSelector = (props: MediaSelectorProps) => {
                 )}
                 {props.mediaId && (
                     <Button2
+                        type="button"
                         onClick={removeFile}
                         disabled={uploading || disabled}
                         size="sm"

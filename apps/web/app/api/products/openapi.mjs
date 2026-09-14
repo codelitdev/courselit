@@ -104,7 +104,7 @@ const lessonContentSchema = {
         { $ref: "#/components/schemas/QuizContent" },
     ],
     description:
-        "`text` lessons use `TiptapDocument`; `embed` lessons use `EmbedContent`; `quiz` lessons use `QuizContent`. Media-backed lessons (`video`, `audio`, `pdf`, `file`) use `media` instead of `content`.",
+        "`text` lessons use `TiptapDocument`; `embed` lessons use `EmbedContent`; `quiz` lessons use `QuizContent`. Media-backed lessons (`video`, `audio`, `pdf`, `file`) use `media` instead of `content`, and may additionally carry a `description` document and `attachments`.",
 };
 
 const tiptapDocumentDescription =
@@ -570,7 +570,7 @@ export const productsApiOpenApi = {
                 tags: ["Product Content"],
                 summary: "Create a product lesson",
                 description:
-                    "Creates a lesson. `text` lessons accept Tiptap/ProseMirror JSON in `content`; `embed` lessons accept `{ value }` in `content`; `quiz` lessons accept quiz JSON in `content`; media-backed lessons (`video`, `audio`, `pdf`, `file`) use `media`. SCORM lessons are not supported.",
+                    "Creates a lesson. `text` lessons accept Tiptap/ProseMirror JSON in `content`; `embed` lessons accept `{ value }` in `content`; `quiz` lessons accept quiz JSON in `content`; media-backed lessons (`video`, `audio`, `pdf`, `file`) use `media`, and may additionally carry a `description` document and `attachments`. SCORM lessons are not supported.",
                 operationId: "createProductLesson",
                 security: secured,
                 parameters: [productIdParam],
@@ -1156,6 +1156,16 @@ export const productsApiOpenApi = {
                     caption: { type: "string" },
                 },
             },
+            LessonDescription: {
+                type: "object",
+                description:
+                    "Supporting rich text shown below the media on `video`, `audio`, `pdf` and `file` lessons, as a Tiptap/ProseMirror document. Use it for notes and links to resources.",
+                required: ["type", "content"],
+                properties: {
+                    type: { type: "string", enum: ["doc"] },
+                    content: { type: "array", items: { type: "object" } },
+                },
+            },
             Lesson: {
                 type: "object",
                 properties: {
@@ -1167,6 +1177,15 @@ export const productsApiOpenApi = {
                     },
                     content: lessonContentSchema,
                     media: { $ref: "#/components/schemas/LessonMedia" },
+                    description: {
+                        $ref: "#/components/schemas/LessonDescription",
+                    },
+                    attachments: {
+                        type: "array",
+                        description:
+                            "Files students can download alongside the lesson, such as PDFs, worksheets or slides. Supported on `video`, `audio`, `pdf` and `file` lessons.",
+                        items: { $ref: "#/components/schemas/LessonMedia" },
+                    },
                     downloadable: { type: "boolean" },
                     courseId: { type: "string" },
                     groupId: { type: "string" },
@@ -1195,6 +1214,15 @@ export const productsApiOpenApi = {
                     },
                     content: lessonContentSchema,
                     media: { $ref: "#/components/schemas/LessonMedia" },
+                    description: {
+                        $ref: "#/components/schemas/LessonDescription",
+                    },
+                    attachments: {
+                        type: "array",
+                        description:
+                            "Files students can download alongside the lesson, such as PDFs, worksheets or slides. Supported on `video`, `audio`, `pdf` and `file` lessons.",
+                        items: { $ref: "#/components/schemas/LessonMedia" },
+                    },
                     downloadable: { type: "boolean" },
                     groupId: { type: "string" },
                     requiresEnrollment: { type: "boolean" },
@@ -1207,6 +1235,15 @@ export const productsApiOpenApi = {
                     title: { type: "string" },
                     content: lessonContentSchema,
                     media: { $ref: "#/components/schemas/LessonMedia" },
+                    description: {
+                        $ref: "#/components/schemas/LessonDescription",
+                    },
+                    attachments: {
+                        type: "array",
+                        description:
+                            "Files students can download alongside the lesson, such as PDFs, worksheets or slides. Supported on `video`, `audio`, `pdf` and `file` lessons.",
+                        items: { $ref: "#/components/schemas/LessonMedia" },
+                    },
                     downloadable: { type: "boolean" },
                     requiresEnrollment: { type: "boolean" },
                     published: { type: "boolean" },
