@@ -108,6 +108,9 @@ export const LessonViewer = ({
                     String.prototype.toUpperCase.call(type) === lesson.type,
             ),
     );
+    const hasDescription = Boolean(
+        (lesson?.description as TextEditorContent | undefined)?.content?.length,
+    );
     const isViewerEnrolled = Boolean(
         lesson && viewerProfile && isEnrolled(lesson.courseId, viewerProfile),
     );
@@ -434,7 +437,7 @@ export const LessonViewer = ({
                                     }
                                 />
                             )}
-                        {isMediaLesson && lesson.description && (
+                        {isMediaLesson && hasDescription && (
                             <WidgetErrorBoundary widgetName="text-editor">
                                 <div className="mt-6">
                                     <TextRenderer

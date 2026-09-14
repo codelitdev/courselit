@@ -6,6 +6,7 @@ import LessonModel from "@/models/Lesson";
 import ActivityModel from "@/models/Activity";
 import { createLesson, deleteLesson, updateLesson } from "../logic";
 import { deleteMedia, sealMedia } from "@/services/medialit";
+import { responses } from "@/config/strings";
 
 jest.mock("@/services/medialit", () => ({
     deleteMedia: jest.fn(),
@@ -265,6 +266,46 @@ describe("Lesson description and attachments", () => {
 
         expect(updated.attachments).toHaveLength(1);
         expect(updated.attachments![0].mediaId).toBe(replacementId);
+    });
+
+    it("deletes media for attachments dropped on update", async () => {
+        const droppedId = id("dropped-attachment");
+        const keptId = id("kept-attachment");
+        const lesson = await createVideoLesson({
+            attachments: [
+                attachment(droppedId, "dropped.pdf"),
+                attachment(keptId, "kept.pdf"),
+            ],
+        });
+
+        (deleteMedia as jest.Mock).mockReset();
+
+        await updateLesson(
+            {
+                id: lesson.lessonId,
+                attachments: [attachment(keptId, "kept.pdf")],
+            } as any,
+            ownerCtx,
+        );
+
+        expect(deleteMedia).toHaveBeenCalledWith(droppedId);
+        expect(deleteMedia).not.toHaveBeenCalledWith(keptId);
+    });
+
+    it("rejects a description that is not a document object", async () => {
+        await expect(
+            createVideoLesson({
+                description: JSON.stringify("watch this first"),
+            }),
+        ).rejects.toThrow(responses.invalid_input);
+    });
+
+    it("rejects an attachment without a media id", async () => {
+        await expect(
+            createVideoLesson({
+                attachments: [{ originalFileName: "worksheet.pdf" }],
+            }),
+        ).rejects.toThrow(responses.invalid_input);
     });
 
     it("cleans up description media and attachments when the lesson is deleted", async () => {

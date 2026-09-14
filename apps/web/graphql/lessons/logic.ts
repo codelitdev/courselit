@@ -180,6 +180,27 @@ export type LessonWithStringContent = Omit<
     description?: string;
 };
 
+function validateLessonDescriptionOrThrow(description?: string | null) {
+    if (!description) {
+        return;
+    }
+
+    let parsedDescription: unknown;
+    try {
+        parsedDescription = JSON.parse(description);
+    } catch (err) {
+        throw new Error(responses.invalid_input);
+    }
+
+    if (
+        typeof parsedDescription !== "object" ||
+        parsedDescription === null ||
+        Array.isArray(parsedDescription)
+    ) {
+        throw new Error(responses.invalid_input);
+    }
+}
+
 async function sealLessonMedia(media?: Partial<Media> | null) {
     if (!media?.mediaId) {
         return undefined;
@@ -197,6 +218,10 @@ async function sealLessonMedia(media?: Partial<Media> | null) {
 async function sealLessonAttachments(attachments?: Partial<Media>[] | null) {
     if (!attachments?.length) {
         return [];
+    }
+
+    if (attachments.some((attachment) => !attachment?.mediaId)) {
+        throw new Error(responses.invalid_input);
     }
 
     const sealedAttachments = await Promise.all(
@@ -218,6 +243,7 @@ export const createLesson = async (
     }
 
     lessonValidator(lessonData);
+    validateLessonDescriptionOrThrow(lessonData.description);
 
     try {
         const course: InternalCourse | null = await CourseModel.findOne({
@@ -336,12 +362,35 @@ export const updateLesson = async (
         "description",
     );
     if (descriptionUpdated) {
+        validateLessonDescriptionOrThrow(lessonData.description);
         contentMediaIdsMarkedForDeletion.push(
             ...getDeletedMediaIds(
                 JSON.stringify(lesson.description || ""),
                 (lessonData.description ?? "") as string,
             ),
         );
+    }
+
+    // Attachments removed by this update would otherwise be orphaned in the
+    // media service, so mark their media for deletion alongside the rest.
+    const attachmentsUpdated = Object.prototype.hasOwnProperty.call(
+        lessonData,
+        "attachments",
+    );
+    if (attachmentsUpdated) {
+        const retainedMediaIds = new Set(
+            (lessonData.attachments || []).map(
+                (attachment) => attachment?.mediaId,
+            ),
+        );
+        for (const attachment of lesson.attachments || []) {
+            if (
+                attachment.mediaId &&
+                !retainedMediaIds.has(attachment.mediaId)
+            ) {
+                contentMediaIdsMarkedForDeletion.push(attachment.mediaId);
+            }
+        }
     }
 
     for (const key of Object.keys(lessonData)) {

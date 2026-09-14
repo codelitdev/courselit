@@ -31,6 +31,7 @@ export function LessonAttachments({
                     address={address}
                     strings={{}}
                     type="lesson"
+                    deleteOnRemove={false}
                     onSelection={() => {}}
                     onRemove={() => {
                         onChange(attachments.filter((_, i) => i !== index));
