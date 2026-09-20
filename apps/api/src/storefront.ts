@@ -88,17 +88,11 @@ function normalizeSchoolCurrency(value: string | null | undefined): string {
 }
 
 function canRead(ctx: StorefrontContext): boolean {
-  return Boolean(
-    ctx.tenantId &&
-      (ctx.permissions.has("storefront:read") || ctx.permissions.has("school:admin")),
-  );
+  return Boolean(ctx.tenantId && ctx.permissions.has("storefront:read"));
 }
 
 function canWrite(ctx: StorefrontContext): boolean {
-  return Boolean(
-    ctx.tenantId &&
-      (ctx.permissions.has("storefront:write") || ctx.permissions.has("school:admin")),
-  );
+  return Boolean(ctx.tenantId && ctx.permissions.has("storefront:write"));
 }
 
 export function sourceTypeForKind(kind: TargetPlanKind): SourcePlanType {

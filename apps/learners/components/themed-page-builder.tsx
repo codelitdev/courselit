@@ -2,10 +2,37 @@
 
 import type { ThemeStyle } from "@frontlit/page-builder/models";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
   Badge,
   Button,
   Caption,
+  Checkbox,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
   Drawer,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
   Header1,
   Header2,
   Header3,
@@ -17,16 +44,36 @@ import {
   PageCardContent,
   PageCardHeader,
   PageCardImage,
+  Popover,
+  PopoverAnchor,
+  PopoverClose,
+  PopoverContent,
+  PopoverTrigger,
   Preheader,
+  RadioGroup,
+  RadioGroupItem,
   Section,
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+  Separator,
   Subheader1,
   Subheader2,
   Switch,
   Text1,
   Text2,
   Textarea,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
 } from "@frontlit/page-builder/primitives";
-import type { ComponentProps, SelectHTMLAttributes } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 import { cn } from "@/lib/utils";
 
@@ -106,47 +153,48 @@ export function LearnerInput({
   );
 }
 
-/** A compact native radio control that does not inherit field shadows/radii. */
-export function LearnerRadio({ className, style, ...props }: ThemedInputProps) {
-  return (
-    <LearnerInput
-      {...props}
-      type="radio"
-      className={cn(
-        "mt-1 size-4 min-h-4 min-w-4 shrink-0 rounded-full shadow-none accent-[var(--primary)]",
-        className,
-      )}
-      style={{
-        ...style,
-        width: "16px",
-        minWidth: "16px",
-        height: "16px",
-        minHeight: "16px",
-        padding: 0,
-        borderRadius: "9999px",
-        boxShadow: "none",
-      }}
-    />
-  );
+export function LearnerCheckbox(props: WithoutTheme<ComponentProps<typeof Checkbox>>) {
+  return <Checkbox {...props} theme={useSchoolThemeStyle()} />;
 }
 
-/**
- * The page-builder package intentionally keeps its primitive set small and
- * does not ship a select yet. Keep native select semantics while applying the
- * same themed input contract as the page-builder Input primitive.
- */
-export function LearnerSelect({
-  className,
-  ...props
-}: SelectHTMLAttributes<HTMLSelectElement>) {
-  const theme = useSchoolThemeStyle();
-  return (
-    <select
-      {...props}
-      className={cn(BASE_INPUT_CLASSES, ...inputThemeClasses(theme), className)}
-    />
-  );
+export function LearnerRadioGroup(
+  props: WithoutTheme<ComponentProps<typeof RadioGroup>>,
+) {
+  return <RadioGroup {...props} theme={useSchoolThemeStyle()} />;
 }
+
+export function LearnerRadioGroupItem(
+  props: WithoutTheme<ComponentProps<typeof RadioGroupItem>>,
+) {
+  return <RadioGroupItem {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export function LearnerSelect(props: WithoutTheme<ComponentProps<typeof Select>>) {
+  return <Select {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export function LearnerSelectTrigger(
+  props: WithoutTheme<ComponentProps<typeof SelectTrigger>>,
+) {
+  return <SelectTrigger {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export function LearnerSelectContent(
+  props: WithoutTheme<ComponentProps<typeof SelectContent>>,
+) {
+  return <SelectContent {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export function LearnerSelectItem(
+  props: WithoutTheme<ComponentProps<typeof SelectItem>>,
+) {
+  return <SelectItem {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export const LearnerSelectValue = SelectValue;
+export const LearnerSelectGroup = SelectGroup;
+export const LearnerSelectLabel = SelectLabel;
+export const LearnerSelectSeparator = SelectSeparator;
 
 export function LearnerTextarea(props: WithoutTheme<ComponentProps<typeof Textarea>>) {
   return <Textarea {...props} theme={useSchoolThemeStyle()} />;
@@ -280,4 +328,228 @@ export function LearnerSection(props: WithoutTheme<ComponentProps<typeof Section
 
 export function LearnerDrawer(props: WithoutTheme<ComponentProps<typeof Drawer>>) {
   return <Drawer {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export function LearnerDialog(props: WithoutTheme<ComponentProps<typeof Dialog>>) {
+  return <Dialog {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export const LearnerDialogTrigger = DialogTrigger;
+export const LearnerDialogClose = DialogClose;
+
+export function LearnerDialogContent(
+  props: WithoutTheme<ComponentProps<typeof DialogContent>>,
+) {
+  return <DialogContent {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export function LearnerDialogTitle(
+  props: WithoutTheme<ComponentProps<typeof DialogTitle>>,
+) {
+  return <DialogTitle {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export function LearnerDialogDescription(
+  props: WithoutTheme<ComponentProps<typeof DialogDescription>>,
+) {
+  return <DialogDescription {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export const LearnerDialogHeader = DialogHeader;
+export const LearnerDialogFooter = DialogFooter;
+
+export function LearnerAlertDialog(
+  props: WithoutTheme<ComponentProps<typeof AlertDialog>>,
+) {
+  return <AlertDialog {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export const LearnerAlertDialogTrigger = AlertDialogTrigger;
+export const LearnerAlertDialogCancel = AlertDialogCancel;
+export const LearnerAlertDialogAction = AlertDialogAction;
+
+export function LearnerAlertDialogContent(
+  props: WithoutTheme<ComponentProps<typeof AlertDialogContent>>,
+) {
+  return <AlertDialogContent {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export function LearnerAlertDialogTitle(
+  props: WithoutTheme<ComponentProps<typeof AlertDialogTitle>>,
+) {
+  return <AlertDialogTitle {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export function LearnerAlertDialogDescription(
+  props: WithoutTheme<ComponentProps<typeof AlertDialogDescription>>,
+) {
+  return <AlertDialogDescription {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export const LearnerAlertDialogHeader = AlertDialogHeader;
+export const LearnerAlertDialogFooter = AlertDialogFooter;
+
+export function LearnerPopover(props: WithoutTheme<ComponentProps<typeof Popover>>) {
+  return <Popover {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export const LearnerPopoverTrigger = PopoverTrigger;
+export const LearnerPopoverAnchor = PopoverAnchor;
+export const LearnerPopoverClose = PopoverClose;
+
+export function LearnerPopoverContent(
+  props: WithoutTheme<ComponentProps<typeof PopoverContent>>,
+) {
+  return <PopoverContent {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export function LearnerAvatar(props: WithoutTheme<ComponentProps<typeof Avatar>>) {
+  return <Avatar {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export const LearnerAvatarImage = AvatarImage;
+export const LearnerAvatarFallback = AvatarFallback;
+
+export function LearnerSeparator(
+  props: WithoutTheme<ComponentProps<typeof Separator>>,
+) {
+  return <Separator {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export function LearnerTooltipProvider(
+  props: WithoutTheme<ComponentProps<typeof TooltipProvider>>,
+) {
+  return <TooltipProvider {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export function LearnerTooltip(props: WithoutTheme<ComponentProps<typeof Tooltip>>) {
+  return <Tooltip {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export const LearnerTooltipTrigger = TooltipTrigger;
+
+export function LearnerTooltipContent(
+  props: WithoutTheme<ComponentProps<typeof TooltipContent>>,
+) {
+  return <TooltipContent {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export function LearnerDropdownMenu(
+  props: WithoutTheme<ComponentProps<typeof DropdownMenu>>,
+) {
+  return <DropdownMenu {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export function LearnerDropdownMenuTrigger(
+  props: ComponentProps<typeof DropdownMenuTrigger>,
+) {
+  return <DropdownMenuTrigger {...props} />;
+}
+
+export function LearnerDropdownMenuContent(
+  props: WithoutTheme<ComponentProps<typeof DropdownMenuContent>>,
+) {
+  return <DropdownMenuContent {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export function LearnerDropdownMenuItem(
+  props: WithoutTheme<ComponentProps<typeof DropdownMenuItem>>,
+) {
+  return <DropdownMenuItem {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export function LearnerDropdownMenuLabel(
+  props: WithoutTheme<ComponentProps<typeof DropdownMenuLabel>>,
+) {
+  return <DropdownMenuLabel {...props} theme={useSchoolThemeStyle()} />;
+}
+
+export const LearnerDropdownMenuSeparator = DropdownMenuSeparator;
+
+type LearnerReactionPickerProps = {
+  emojis: readonly string[];
+  onReact: (emoji: string) => void;
+  children: ReactNode;
+  triggerLabel?: string;
+};
+
+/**
+ * A compact, theme-aware reaction picker for interactive learner surfaces.
+ */
+export function LearnerReactionPicker({
+  emojis,
+  onReact,
+  children,
+  triggerLabel = "Add reaction",
+}: LearnerReactionPickerProps) {
+  return (
+    <LearnerPopover>
+      <LearnerPopoverTrigger asChild>
+        <LearnerButton
+          type="button"
+          variant="outline"
+          size="sm"
+          aria-label={triggerLabel}
+          onClick={(event) => event.stopPropagation()}
+        >
+          {children}
+        </LearnerButton>
+      </LearnerPopoverTrigger>
+      <LearnerPopoverContent
+        className="w-auto p-2"
+        side="top"
+        align="start"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex gap-1">
+          {emojis.map((emoji) => (
+            <LearnerButton
+              key={emoji}
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={`React ${emoji}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                onReact(emoji);
+              }}
+            >
+              {emoji}
+            </LearnerButton>
+          ))}
+        </div>
+      </LearnerPopoverContent>
+    </LearnerPopover>
+  );
+}
+
+type LearnerActionMenuProps = {
+  children: ReactNode;
+  menu: ReactNode;
+  label: string;
+};
+
+/** A theme-aware overflow menu for learner content actions. */
+export function LearnerActionMenu({ children, menu, label }: LearnerActionMenuProps) {
+  return (
+    <LearnerDropdownMenu>
+      <LearnerDropdownMenuTrigger asChild>
+        <LearnerButton
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label={label}
+          onClick={(event) => event.stopPropagation()}
+        >
+          {children}
+        </LearnerButton>
+      </LearnerDropdownMenuTrigger>
+      <LearnerDropdownMenuContent
+        align="end"
+        onClick={(event) => event.stopPropagation()}
+      >
+        {menu}
+      </LearnerDropdownMenuContent>
+    </LearnerDropdownMenu>
+  );
 }

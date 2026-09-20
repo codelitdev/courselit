@@ -242,10 +242,10 @@ describe.serial("first vertical slice", () => {
     expect(initial.body).toMatchObject({
       members: [
         expect.objectContaining({
-          id: world.member.id,
+          name: "Member",
           permissions: expect.arrayContaining(["products:read"]),
         }),
-        expect.objectContaining({ id: world.owner.id, isOwner: true }),
+        expect.objectContaining({ name: "Owner", isOwner: true }),
       ],
       invitations: [],
     });
@@ -261,7 +261,7 @@ describe.serial("first vertical slice", () => {
     });
     expect(updated.status).toBe(200);
     expect(updated.body).toMatchObject({
-      id: world.member.id,
+      name: "Member",
       permissions: ["products:read"],
     });
 
@@ -285,7 +285,7 @@ describe.serial("first vertical slice", () => {
       },
       body: {
         email: world.outsider.email,
-        permissions: ["school:admin", "products:read"],
+        permissions: ["products:read", "products:write"],
       },
     });
     expect(invited.status).toBe(201);
@@ -339,7 +339,7 @@ describe.serial("first vertical slice", () => {
     });
     expect(final.status).toBe(200);
     expect(final.body).toMatchObject({
-      members: [expect.objectContaining({ id: world.owner.id, isOwner: true })],
+      members: [expect.objectContaining({ name: "Owner", isOwner: true })],
       invitations: [],
     });
 
@@ -350,13 +350,22 @@ describe.serial("first vertical slice", () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
     const world = await seedWorld(runtime, clock);
+    const [memberAccount] = await runtime.db
+      .select()
+      .from(schema.schoolAccounts)
+      .where(
+        and(
+          eq(schema.schoolAccounts.schoolId, world.schoolA.id),
+          eq(schema.schoolAccounts.userId, world.member.id),
+        ),
+      );
     await runtime.db
       .update(schema.memberships)
-      .set({ permissions: "members:invite,products:read" })
+      .set({ permissions: ["members:read", "members:invite", "products:read"] })
       .where(
         and(
           eq(schema.memberships.schoolId, world.schoolA.id),
-          eq(schema.memberships.userId, world.member.id),
+          eq(schema.memberships.schoolAccountId, memberAccount!.id),
         ),
       );
 
@@ -371,7 +380,6 @@ describe.serial("first vertical slice", () => {
     expect(team.status).toBe(200);
     expect(team.body).toMatchObject({
       viewer: {
-        id: world.member.id,
         isOwner: false,
         permissions: expect.arrayContaining(["members:read", "members:invite"]),
       },

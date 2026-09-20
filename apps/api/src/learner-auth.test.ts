@@ -6,7 +6,7 @@ import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
 import { seedWorld } from "./seed.js";
 
 describe.serial("learner authentication", () => {
-  it("does not expose the legacy learner OTP endpoints", async () => {
+  it("does not expose legacy unauthenticated learner OTP endpoints", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
     const world = await seedWorld(runtime, clock);
@@ -21,42 +21,32 @@ describe.serial("learner authentication", () => {
         headers: { "x-school-id": world.schoolA.publicId },
         body: { email: "learner@example.com", otp: "000000" },
       });
-      // Unknown learner routes fall through to the learner-auth guard, rather
-      // than reaching a legacy unauthenticated OTP handler.
       expect(response.status).toBe(401);
     }
 
     await runtime.close();
   });
 
-  it("handles school login methods querying and updating", async () => {
+  it("handles school login methods querying", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
     const world = await seedWorld(runtime, clock);
 
-    // 1. Public endpoint
+    // Public endpoint returns computed login methods from env vars
     const pubRes = await dispatch(runtime, {
       method: "GET",
       path: "/v1/public/school/login-methods",
       headers: { "x-school-id": world.schoolA.publicId },
     });
     expect(pubRes.status).toBe(200);
-    expect(pubRes.body).toEqual({
+    expect(pubRes.body).toMatchObject({
       schoolId: world.schoolA.publicId,
-      loginMethods: ["email"],
-      hasSSO: false,
+      loginMethods: expect.arrayContaining(["email"]),
       hasGoogle: false,
     });
 
-    // 2. Admin GET endpoint requires auth
-    const unauthRes = await dispatch(runtime, {
-      method: "GET",
-      path: "/v1/school/login-methods",
-      headers: { "x-school-id": world.schoolA.publicId },
-    });
-    expect(unauthRes.status).toBe(401);
-
-    const adminGetRes = await dispatch(runtime, {
+    // Admin login-methods endpoint no longer exists
+    const adminRes = await dispatch(runtime, {
       method: "GET",
       path: "/v1/school/login-methods",
       headers: {
@@ -64,149 +54,34 @@ describe.serial("learner authentication", () => {
         cookie: world.owner.sessionCookie,
       },
     });
-    expect(adminGetRes.status).toBe(200);
-    expect(adminGetRes.body).toMatchObject({
-      loginMethods: ["email"],
-      sso: {
-        configured: false,
-        entryPoint: "",
-        cert: "",
-        idpMetadata: "",
-      },
-      google: {
-        configured: false,
-        clientId: "",
-        hasClientSecret: false,
-      },
-    });
-
-    // 3. Validation: cannot enable SSO without config
-    const enableSsoFail = await dispatch(runtime, {
-      method: "PATCH",
-      path: "/v1/school/login-methods",
-      headers: {
-        "x-school-id": world.schoolA.publicId,
-        cookie: world.owner.sessionCookie,
-      },
-      body: {
-        loginMethods: ["email", "sso"],
-      },
-    });
-    expect(enableSsoFail.status).toBe(400);
-
-    // 4. Validation: cannot disable all login methods
-    const disableAllFail = await dispatch(runtime, {
-      method: "PATCH",
-      path: "/v1/school/login-methods",
-      headers: {
-        "x-school-id": world.schoolA.publicId,
-        cookie: world.owner.sessionCookie,
-      },
-      body: {
-        loginMethods: [],
-      },
-    });
-    expect(disableAllFail.status).toBe(400);
-
-    // 5. Configure SSO and Google
-    const updateRes = await dispatch(runtime, {
-      method: "PATCH",
-      path: "/v1/school/login-methods",
-      headers: {
-        "x-school-id": world.schoolA.publicId,
-        cookie: world.owner.sessionCookie,
-      },
-      body: {
-        sso: {
-          idpMetadata: "<EntityDescriptor>...</EntityDescriptor>",
-          entryPoint: "https://idp.example.com/saml/sso",
-          cert: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0",
-        },
-        google: {
-          clientId: "google-client-id-123",
-          clientSecret: "google-client-secret-456",
-        },
-      },
-    });
-    expect(updateRes.status).toBe(200);
-    expect(updateRes.body).toMatchObject({
-      loginMethods: ["email"],
-      sso: {
-        configured: true,
-        entryPoint: "https://idp.example.com/saml/sso",
-      },
-      google: {
-        configured: true,
-        clientId: "google-client-id-123",
-        hasClientSecret: true,
-      },
-    });
-
-    // Verify sso_provider table has been populated
-    const ssoProviders = await runtime.db.select().from(schema.ssoProvider);
-    expect(ssoProviders.length).toBeGreaterThan(0);
-    expect(ssoProviders[0]!.providerId).toBe("sso");
-
-    // 6. Now enable all methods
-    const enableAllRes = await dispatch(runtime, {
-      method: "PATCH",
-      path: "/v1/school/login-methods",
-      headers: {
-        "x-school-id": world.schoolA.publicId,
-        cookie: world.owner.sessionCookie,
-      },
-      body: {
-        loginMethods: ["email", "sso", "google"],
-      },
-    });
-    expect(enableAllRes.status).toBe(200);
-    expect(enableAllRes.body).toMatchObject({
-      loginMethods: ["email", "sso", "google"],
-    });
-
-    // 7. Verify public endpoint reflects the changes
-    const pubResUpdated = await dispatch(runtime, {
-      method: "GET",
-      path: "/v1/public/school/login-methods",
-      headers: { "x-school-id": world.schoolA.publicId },
-    });
-    expect(pubResUpdated.status).toBe(200);
-    expect(pubResUpdated.body).toEqual({
-      schoolId: world.schoolA.publicId,
-      loginMethods: ["email", "sso", "google"],
-      hasSSO: true,
-      hasGoogle: true,
-    });
+    expect(adminRes.status).toBe(404);
 
     await runtime.close();
   });
 
-  it("authenticates a learner via the separate learner Better Auth realm", async () => {
+  it("authenticates a learner via unified Better Auth and bridges to school account", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
     const world = await seedWorld(runtime, clock);
 
-    const otp = await runtime.learnerAuth.auth.api.createVerificationOTP({
+    const email = "unified-learner@example.com";
+    const otp = await runtime.auth.auth.api.createVerificationOTP({
       body: {
-        email: "sso-learner@example.com",
+        email,
         type: "sign-in",
       },
     });
-    // Obtain a real learner Better Auth browser session. Better Auth stores a
-    // hashed session token, so inserting a raw token into the session table
-    // would not represent a valid browser cookie.
-    const signedIn = await runtime.learnerAuth.auth.api.signInEmailOTP({
+    const signedIn = await runtime.auth.auth.api.signInEmailOTP({
       body: {
-        email: "sso-learner@example.com",
+        email,
         otp,
-        name: "SSO Learner",
+        name: "Unified Learner",
       },
       asResponse: true,
     });
     expect(signedIn.status).toBe(200);
     const sessionCookie = signedIn.headers.get("set-cookie")?.split(";", 1)[0];
     expect(sessionCookie).toBeTruthy();
-    expect(sessionCookie).toMatch(/^courselit-learner\.session_token=/);
 
     // Make an authenticated learner request with Better Auth cookie
     const whoami = await dispatch(runtime, {
@@ -219,45 +94,93 @@ describe.serial("learner authentication", () => {
     });
     expect(whoami.status).toBe(200);
     expect(whoami.body).toMatchObject({
-      email: "sso-learner@example.com",
-      name: "SSO Learner",
+      email,
+      name: "Unified Learner",
     });
 
-    // An admin Better Auth cookie is not a learner identity and must not be
-    // bridged into the school-scoped learner session.
-    const admin = await runtime.auth.auth.api.signUpEmail({
-      body: {
-        name: "Admin User",
-        email: "admin@example.com",
-        password: "password123",
-      },
-      asResponse: true,
-    });
-    const adminCookie = admin.headers.get("set-cookie")?.split(";", 1)[0];
-    expect(adminCookie).toBeTruthy();
-    expect(adminCookie).toMatch(/^courselit-admin\./);
-    const adminWhoami = await dispatch(runtime, {
-      method: "GET",
-      path: "/v1/learner/me",
-      headers: {
-        "x-school-id": world.schoolA.publicId,
-        cookie: adminCookie!,
-      },
-    });
-    expect(adminWhoami.status).toBe(401);
-
-    // Verify learner was persisted in database
-    const learners = await runtime.db
+    // Verify school account was persisted in database
+    const accounts = await runtime.db
       .select()
-      .from(schema.learners)
+      .from(schema.schoolAccounts)
       .where(
         and(
-          eq(schema.learners.schoolId, world.schoolA.id),
-          eq(schema.learners.email, "sso-learner@example.com"),
+          eq(schema.schoolAccounts.schoolId, world.schoolA.id),
+          eq(schema.schoolAccounts.email, email),
         ),
       );
-    expect(learners).toHaveLength(1);
-    expect(learners[0]!.name).toBe("SSO Learner");
+    expect(accounts).toHaveLength(1);
+    expect(accounts[0]!.displayName).toBe("Unified Learner");
+
+    await runtime.close();
+  });
+
+  it("exchanges a single-use auth ticket for a school session", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-03T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+
+    // Create a global user
+    const userRes = await runtime.auth.auth.api.signUpEmail({
+      body: {
+        name: "Ticket User",
+        email: "ticket-user@example.com",
+        password: "password123",
+      },
+    });
+    expect(userRes.user).toBeDefined();
+
+    // Bridge user to school account
+    const { signInLearnerWithIdentity, createSchoolAuthTicket } = await import("./learners.js");
+    const bridged = await signInLearnerWithIdentity(runtime.db, {
+      userId: userRes.user.id,
+      email: userRes.user.email,
+      name: userRes.user.name,
+      schoolPublicId: world.schoolA.publicId,
+      authenticationMethod: "email",
+    }, clock, "test-req");
+    expect(bridged.ok).toBe(true);
+    if (!bridged.ok) return;
+
+    // Create a school auth ticket
+    const ticket = await createSchoolAuthTicket(runtime.db, {
+      schoolId: world.schoolA.id,
+      schoolAccountId: bridged.session.schoolAccount.id,
+      userId: userRes.user.id,
+      clock,
+      authenticationMethod: "email",
+    });
+
+    // Exchange ticket on the tenant domain
+    const exchange = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/auth/tickets/consume",
+      headers: {
+        "x-school-id": world.schoolA.publicId,
+      },
+      body: {
+        ticket,
+      },
+    });
+    expect(exchange.status).toBe(200);
+    expect(exchange.body).toMatchObject({
+      email: "ticket-user@example.com",
+      name: "Ticket User",
+    });
+    const sessionCookie = exchange.headers?.["Set-Cookie"];
+    expect(sessionCookie).toBeTruthy();
+
+    // Ticket cannot be reused
+    const reuse = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/auth/tickets/consume",
+      headers: {
+        "x-school-id": world.schoolA.publicId,
+      },
+      body: {
+        ticket,
+      },
+    });
+    expect(reuse.status).toBe(401);
 
     await runtime.close();
   });

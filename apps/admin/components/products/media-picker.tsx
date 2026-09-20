@@ -86,7 +86,7 @@ export function MediaPicker({
 
   function selectMedia(selected: SelectedMedia<CourseLitMedia>) {
     if (!selected.media) {
-      setError("Lesson media must be stored in the private MediaLit library.");
+      setError("Lesson media must be stored in the private media library.");
       return;
     }
     if (!mediaMatchesAcceptedTypes(selected.media, acceptedTypes)) {

@@ -22,12 +22,12 @@ describe("CourseLit FrontLit sales pages", () => {
 
     expect(layout.map((widget) => widget.name)).toEqual([
       "header",
-      "courselit-product-banner",
+      "courselit-product",
       "courselit-product-curriculum",
       "footer",
     ]);
     expect(layout[1]).toMatchObject({
-      name: "courselit-product-banner",
+      name: "courselit-product",
       deletable: false,
       settings: {
         textPosition: "left",
@@ -51,8 +51,31 @@ describe("CourseLit FrontLit sales pages", () => {
 
     expect(layout.map((widget) => widget.name)).toEqual([
       "header",
-      "courselit-product-banner",
+      "courselit-product",
       "footer",
     ]);
+  });
+
+  it("uses the Community block for community sales pages", () => {
+    const layout = salesPageLayout({
+      resourceType: "community",
+      resourceId: "com_1",
+      name: "Community",
+      description: "Join a community.",
+    });
+
+    expect(layout.map((widget) => widget.name)).toEqual([
+      "header",
+      "courselit-community",
+      "footer",
+    ]);
+    expect(layout[1]).toMatchObject({
+      name: "courselit-community",
+      deletable: false,
+      settings: {
+        textPosition: "left",
+        textAlignment: "left",
+      },
+    });
   });
 });

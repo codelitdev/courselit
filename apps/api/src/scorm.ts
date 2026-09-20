@@ -32,7 +32,8 @@ export type ScormPackageInfoDto = {
 
 export type ScormRuntimeInput = {
   schoolId: string;
-  learnerId: string;
+  schoolAccountId?: string;
+  learnerId?: string;
   productPublicId: string;
   lessonPublicId: string;
 };
@@ -158,7 +159,7 @@ async function loadScormLessonAccess(
     .where(
       and(
         eq(schema.learnerMemberships.schoolId, input.schoolId),
-        eq(schema.learnerMemberships.learnerId, input.learnerId),
+        eq(schema.learnerMemberships.schoolAccountId, input.schoolAccountId ?? input.learnerId!),
         eq(schema.learnerMemberships.entityType, "product"),
         eq(schema.learnerMemberships.entityId, row.product.publicId),
         eq(schema.learnerMemberships.status, "active"),

@@ -15,6 +15,10 @@ import { dispatch } from "./dispatch.js";
 import { serveLearnerDownload } from "./downloads.js";
 import { assertLearnerSchool, authenticateLearner } from "./learners.js";
 import { createOpenApiDocument } from "./openapi.js";
+import { and, eq, or } from "drizzle-orm";
+import * as schema from "./db/schema/index.js";
+import { authenticateHttpRequest } from "./auth/authenticate.js";
+import { subscribeToNotifications } from "./notification-stream.js";
 
 export function createExpressApp(deps: DispatchDeps): Express {
   const app = express();
@@ -74,8 +78,13 @@ export function createExpressApp(deps: DispatchDeps): Express {
     }
     next();
   });
-  app.all(`${AUTH_BASE_PATH}/*`, toNodeHandler(deps.auth.auth));
-  app.all(`${LEARNER_AUTH_BASE_PATH}/*`, toNodeHandler(deps.learnerAuth.auth));
+  const authNodeHandler = toNodeHandler(deps.auth.auth);
+  app.all(`${AUTH_BASE_PATH}/*`, authNodeHandler);
+  app.all("/api/learner-auth/*", (req, res) => {
+    req.url = req.url.replace(/^\/api\/learner-auth/, AUTH_BASE_PATH);
+    if (req.originalUrl) req.originalUrl = req.originalUrl.replace(/^\/api\/learner-auth/, AUTH_BASE_PATH);
+    return authNodeHandler(req, res);
+  });
   app.use(
     createOAuthPagesRouter({
       appName: "CourseLit",
@@ -195,6 +204,108 @@ export function createExpressApp(deps: DispatchDeps): Express {
     }
   });
 
+  app.get("/v1/learner/notifications/stream", async (req, res, next) => {
+    try {
+      const learnerAuth = await authenticateLearner(
+        deps.db,
+        req.headers as Record<string, string | string[] | undefined>,
+        deps.clock,
+      );
+      if (learnerAuth.kind !== "authenticated") {
+        res.status(401).end();
+        return;
+      }
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      res.flushHeaders();
+      res.write(": connected\n\n");
+
+      const unsubscribe = subscribeToNotifications(
+        {
+          audience: "learner",
+          schoolId: learnerAuth.value.school.id,
+          recipientId: learnerAuth.value.schoolAccount.id,
+        },
+        (event) => {
+          res.write(`event: notification\ndata: ${JSON.stringify(event.notification)}\n\n`);
+        },
+      );
+      req.on("close", () => {
+        unsubscribe();
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/v1/notifications/stream", async (req, res, next) => {
+    try {
+      const adminAuth = await authenticateHttpRequest(
+        req.headers as Record<string, string | string[] | undefined>,
+        deps,
+      );
+      if (adminAuth.kind !== "authenticated") {
+        res.status(401).end();
+        return;
+      }
+      const schoolPublicId = typeof req.query.schoolId === "string" ? req.query.schoolId : "";
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(schoolPublicId);
+      const [school] = await deps.db
+        .select({ id: schema.schools.id })
+        .from(schema.schools)
+        .where(
+          isUuid
+            ? eq(schema.schools.id, schoolPublicId)
+            : or(eq(schema.schools.publicId, schoolPublicId), eq(schema.schools.subdomain, schoolPublicId))
+        )
+        .limit(1);
+      if (!school) {
+        res.status(404).end();
+        return;
+      }
+      const [membership] = await deps.db
+        .select({ schoolAccountId: schema.schoolAccounts.id })
+        .from(schema.schoolAccounts)
+        .innerJoin(
+          schema.memberships,
+          eq(schema.memberships.schoolAccountId, schema.schoolAccounts.id),
+        )
+        .where(
+          and(
+            eq(schema.schoolAccounts.schoolId, school.id),
+            eq(schema.schoolAccounts.userId, adminAuth.principalId),
+          ),
+        )
+        .limit(1);
+      if (!membership?.schoolAccountId) {
+        res.status(403).end();
+        return;
+      }
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      res.flushHeaders();
+      res.write(": connected\n\n");
+
+      const unsubscribe = subscribeToNotifications(
+        {
+          audience: "admin",
+          schoolId: school.id,
+          recipientId: membership.schoolAccountId,
+        },
+        (event) => {
+          res.write(`event: notification\ndata: ${JSON.stringify(event.notification)}\n\n`);
+        },
+      );
+      req.on("close", () => {
+        unsubscribe();
+      });
+    } catch (error) {
+            next(error);
+    }
+  });
+
   const server = initServer();
   const forward = async (input: {
     req: {
@@ -216,7 +327,7 @@ export function createExpressApp(deps: DispatchDeps): Express {
       headers: input.req.headers,
       body: input.req.body,
     });
-    for (const [name, value] of Object.entries(response.headers ?? {})) {
+        for (const [name, value] of Object.entries(response.headers ?? {})) {
       input.res.setHeader(name, value);
     }
     return { status: response.status, body: response.body } as never;
@@ -260,6 +371,7 @@ export function createExpressApp(deps: DispatchDeps): Express {
     authorizeMediaUpload: forward,
     finalizeMediaUpload: forward,
     listMedia: forward,
+    searchUnsplash: forward,
     getMedia: forward,
     updateMedia: forward,
     deleteMedia: forward,

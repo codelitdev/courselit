@@ -7,14 +7,19 @@ import { LearnerText2 } from "@/components/themed-page-builder";
 
 export function LearnerDashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const isSpacePost = /^\/dashboard\/s\/[^/]+\/[^/]+$/.test(pathname);
   const isDashboardContent =
-    pathname === "/dashboard" ||
-    pathname.startsWith("/dashboard/feed") ||
-    pathname.startsWith("/dashboard/products");
+    !isSpacePost &&
+    (pathname === "/dashboard" ||
+      pathname.startsWith("/dashboard/s/") ||
+      pathname.startsWith("/dashboard/products"));
   if (!isDashboardContent) return <>{children}</>;
 
   return (
-    <LearnerDashboardContent isProducts={pathname.startsWith("/dashboard/products")}>
+    <LearnerDashboardContent
+      isProducts={pathname.startsWith("/dashboard/products")}
+      nextPath={pathname}
+    >
       {children}
     </LearnerDashboardContent>
   );
@@ -22,19 +27,21 @@ export function LearnerDashboardLayout({ children }: { children: React.ReactNode
 
 function LearnerDashboardContent({
   isProducts,
+  nextPath,
   children,
 }: {
   isProducts: boolean;
+  nextPath: string;
   children: React.ReactNode;
 }) {
-  const { learner, checking } = useLearnerSession(
-    isProducts ? "/dashboard/products" : "/dashboard/feed",
-  );
+  const { learner, checking } = useLearnerSession(nextPath);
 
   if (checking) {
     return (
       <main className="flex min-h-[400px] items-center justify-center p-6">
-        <LearnerText2 className="text-muted-foreground">Loading your content…</LearnerText2>
+        <LearnerText2 className="text-muted-foreground">
+          Loading your content…
+        </LearnerText2>
       </main>
     );
   }

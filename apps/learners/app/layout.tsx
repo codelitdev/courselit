@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import { CodeInjector } from "../components/code-injector";
 import { SchoolThemeProvider } from "../components/school-theme-provider";
+import { LearnerTooltipProvider } from "../components/themed-page-builder";
 import { getSettings } from "../lib/courselit-public";
 import { requestHost } from "../lib/request-host";
 
@@ -21,6 +22,9 @@ export const metadata = {
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const settings = await getSettings(await requestHost());
+  const siteLogoUrl =
+    typeof settings?.logo?.url === "string" ? settings.logo.url : null;
+  const siteLogoAlt = settings?.logo?.alt ?? null;
 
   return (
     <html
@@ -32,8 +36,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <SchoolThemeProvider
           themeId={settings?.themeId ?? null}
           themeStyle={settings?.theme ?? null}
+          logoUrl={siteLogoUrl}
+          logoAlt={siteLogoAlt}
         >
-          {children}
+          <LearnerTooltipProvider>{children}</LearnerTooltipProvider>
         </SchoolThemeProvider>
         <CodeInjector
           head={settings?.codeInjectionHead}

@@ -1,39 +1,12 @@
-import { oauthProvider } from "@better-auth/oauth-provider";
-import { sso } from "@better-auth/sso";
 import { createOAuthProviderOptions } from "@codelitdev/oauth-server-kit/better-auth";
-import { emailOTP } from "better-auth/plugins/email-otp";
+import { emailOTP } from "better-auth/plugins";
 import { jwt } from "better-auth/plugins/jwt";
+import { oauthProvider } from "@better-auth/oauth-provider";
+import type { BetterAuthOptions } from "better-auth";
+import { and, eq } from "drizzle-orm";
+import * as schema from "../db/schema/index.js";
+import type { AppDb } from "../types.js";
 import { escapeHtml, sendSystemMail } from "../system-mail.js";
-
-export const AUTH_BASE_PATH = "/api/auth";
-export const LEARNER_AUTH_BASE_PATH = "/api/learner-auth";
-export const ADMIN_AUTH_COOKIE_PREFIX = "courselit-admin";
-export const ADMIN_SESSION_COOKIE_NAME = `${ADMIN_AUTH_COOKIE_PREFIX}.session_token`;
-export const AUTH_SECRET_MIN_LENGTH = 32;
-
-export type AdminAuthUrls = {
-  publicApiUrl: string;
-  webOrigin: string;
-};
-
-export function authUrls(
-  publicApiUrl: string,
-  webOrigin?: string,
-  basePath = AUTH_BASE_PATH,
-): AdminAuthUrls & {
-  issuer: string;
-  restResource: string;
-  mcpResource: string;
-} {
-  const normalized = publicApiUrl.replace(/\/$/, "");
-  return {
-    publicApiUrl: normalized,
-    webOrigin: (webOrigin ?? normalized).replace(/\/$/, ""),
-    issuer: `${normalized}${basePath}`,
-    restResource: `${normalized}/api`,
-    mcpResource: `${normalized}/mcp`,
-  };
-}
 
 export function oauthProviderInput(urls: ReturnType<typeof authUrls>) {
   return createOAuthProviderOptions({
@@ -46,57 +19,148 @@ export function oauthProviderInput(urls: ReturnType<typeof authUrls>) {
   });
 }
 
-/** Shared Better Auth options used by the live factory and the schema generator. */
-export function adminAuthOptions(input: {
+export function buildBetterAuthOptions(input: {
+  database?: any;
   publicApiUrl: string;
-  secret: string;
   webOrigin?: string;
-  database?: unknown;
+  secret: string;
+  db?: AppDb;
 }) {
   const urls = authUrls(input.publicApiUrl, input.webOrigin);
+
+  const isProduction = process.env.NODE_ENV === "production";
+  const hasPlatformGoogle = Boolean(
+    process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
+  );
+  const platformDomain = (
+    process.env.PLATFORM_SITE_DOMAIN ?? "courselit.app"
+  )
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/:\d+$/, "")
+    .replace(/^\./, "");
+
   return {
-    appName: "CourseLit",
-    baseURL: urls.publicApiUrl,
-    basePath: AUTH_BASE_PATH,
     secret: input.secret,
+    baseURL: input.publicApiUrl,
+    basePath: AUTH_BASE_PATH,
     trustedOrigins: async (request?: Request) => {
       const origins: string[] = [
-        urls.webOrigin,
-        urls.publicApiUrl,
-        "https://accounts.google.com",
-        "https://oauth2.googleapis.com",
-        "https://openidconnect.googleapis.com",
-        "https://www.googleapis.com",
+        input.publicApiUrl,
+        ...(input.webOrigin ? [input.webOrigin] : []),
+        ...(platformDomain
+          ? [
+              `https://*.${platformDomain}`,
+              `http://*.${platformDomain}`,
+              `https://${platformDomain}`,
+              `http://${platformDomain}`,
+            ]
+          : []),
+        ...(isProduction
+          ? []
+          : [
+              "http://*.localhost:*",
+              "http://*.localhost",
+              "https://*.localhost:*",
+              "https://*.localhost",
+              "http://localhost:*",
+              "http://localhost",
+              "https://localhost:*",
+              "https://localhost",
+              "http://127.0.0.1:*",
+              "http://127.0.0.1",
+              "https://127.0.0.1:*",
+              "https://127.0.0.1",
+              "http://localhost:3000",
+              "http://localhost:3001",
+              "http://127.0.0.1:3000",
+              "http://127.0.0.1:3001",
+              "http://localhost:5173",
+              "http://localhost:5174",
+            ]),
       ];
+
       if (request) {
-        const origin = request.headers.get("origin");
-        if (origin && !origins.includes(origin)) {
-          origins.push(origin);
-        }
-        const ssoTrusted = request.headers.get("ssotrusteddomain");
-        if (ssoTrusted && !origins.includes(ssoTrusted)) {
-          origins.push(ssoTrusted);
+        const originHeader =
+          request.headers.get("origin") ??
+          request.headers.get("referer") ??
+          request.headers.get("x-forwarded-host");
+        if (originHeader) {
+          try {
+            const parsedUrl =
+              originHeader.startsWith("http://") ||
+              originHeader.startsWith("https://")
+                ? new URL(originHeader)
+                : new URL(`http://${originHeader}`);
+            const hostname = parsedUrl.hostname.toLowerCase();
+            if (
+              !isProduction &&
+              (hostname === "localhost" ||
+                hostname.endsWith(".localhost") ||
+                hostname === "127.0.0.1")
+            ) {
+              origins.push(parsedUrl.origin);
+            }
+            if (input.db && hostname) {
+              const host = await input.db
+                .select({ id: schema.schoolHosts.id })
+                .from(schema.schoolHosts)
+                .where(
+                  and(
+                    eq(schema.schoolHosts.hostname, hostname),
+                    eq(schema.schoolHosts.verificationStatus, "verified"),
+                  ),
+                )
+                .limit(1);
+              if (host[0]) {
+                origins.push(`https://${hostname}`);
+                origins.push(`http://${hostname}`);
+                origins.push(parsedUrl.origin);
+              }
+            }
+          } catch {}
         }
       }
       return origins;
     },
-    emailAndPassword: { enabled: true },
-    account: {
-      storeStateStrategy: "cookie" as const,
-      accountLinking: {
-        enabled: true,
-        trustedProviders: ["sso", "google", "email-otp"],
+    user: {
+      modelName: "user",
+      fields: {
+        email: "email",
+        name: "name",
+        image: "image",
+        emailVerified: "emailVerified",
+        createdAt: "createdAt",
+        updatedAt: "updatedAt",
       },
     },
-    advanced: {
-      cookiePrefix: ADMIN_AUTH_COOKIE_PREFIX,
+    session: {
+      modelName: "session",
+      cookieCache: {
+        enabled: true,
+        maxAge: 5 * 60,
+      },
     },
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+    account: {
+      modelName: "account",
+    },
+    verification: {
+      modelName: "verification",
+    },
+    rateLimit: {
+      window: 60,
+      max: 100,
+    },
+    emailAndPassword: {
+      enabled: true,
+    },
+    ...(hasPlatformGoogle
       ? {
           socialProviders: {
             google: {
-              clientId: process.env.GOOGLE_CLIENT_ID,
-              clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+              clientId: process.env.GOOGLE_CLIENT_ID!,
+              clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
             },
           },
         }
@@ -112,103 +176,77 @@ export function adminAuthOptions(input: {
         },
       }),
       oauthProvider(oauthProviderInput(urls)),
-      sso({
-        saml: {
-          enableInResponseToValidation: true,
-          requestTTL: 10 * 60 * 1000,
-          clockSkew: 5 * 60 * 1000,
-          requireTimestamps: true,
-        },
-        fields: {
-          domain: "domain_string",
-        },
-      }),
     ],
   };
 }
 
-/** Better Auth options for the school-local learner realm. */
-export function learnerAuthOptions(input: {
-  publicApiUrl: string;
-  secret: string;
-  webOrigin?: string;
-  database?: unknown;
-}) {
-  const urls = authUrls(input.publicApiUrl, input.webOrigin, LEARNER_AUTH_BASE_PATH);
-  return {
-    appName: "CourseLit Learners",
-    baseURL: urls.publicApiUrl,
-    basePath: LEARNER_AUTH_BASE_PATH,
-    secret: input.secret,
-    trustedOrigins: async (request?: Request) => {
-      const origins: string[] = [
-        urls.webOrigin,
-        urls.publicApiUrl,
-        "https://accounts.google.com",
-        "https://oauth2.googleapis.com",
-        "https://openidconnect.googleapis.com",
-        "https://www.googleapis.com",
-      ];
-      if (request) {
-        const origin = request.headers.get("origin");
-        if (origin && !origins.includes(origin)) origins.push(origin);
-        const ssoTrusted = request.headers.get("ssotrusteddomain");
-        if (ssoTrusted && !origins.includes(ssoTrusted)) origins.push(ssoTrusted);
-      }
-      return origins;
-    },
-    emailAndPassword: { enabled: false },
-    user: { modelName: "learnerUser" },
-    session: { modelName: "learnerSession" },
-    account: { modelName: "learnerAccount" },
-    verification: { modelName: "learnerVerification" },
-    advanced: {
-      cookiePrefix: "courselit-learner",
-    },
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-      ? {
-          socialProviders: {
-            google: {
-              clientId: process.env.GOOGLE_CLIENT_ID,
-              clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            },
-          },
-        }
-      : {}),
-    ...(input.database ? { database: input.database } : {}),
-    plugins: [
-      emailOTP({
-        overrideDefaultEmailVerification: true,
-        storeOTP: "hashed",
-        async sendVerificationOTP({ email, otp, type }) {
-          await sendVerificationOTP({ email, otp, type });
-        },
-      }),
-      sso({
-        modelName: "learnerSsoProvider",
-        fields: { domain: "domain_string" },
-      }),
-    ],
-  };
-}
-
-/** Sends authentication OTPs through the deployment's system-mail provider. */
 export async function sendVerificationOTP(
-  input: {
+  params: {
     email: string;
     otp: string;
-    type?: string;
+    type: "sign-in" | "email-verification" | "forget-password" | "change-email";
   },
-  options: { env?: Record<string, string | undefined> } = {},
+  options?: { env?: { NODE_ENV?: string } },
 ) {
-  const otp = escapeHtml(input.otp);
-  await sendSystemMail(
-    {
-      to: input.email,
-      subject: "Your CourseLit verification code",
-      text: `Enter this code to sign in to CourseLit: ${input.otp}`,
-      html: `<p>Enter this code to sign in to CourseLit:</p><h2>${otp}</h2>`,
-    },
-    { env: options.env },
-  );
+  const subject =
+    params.type === "sign-in"
+      ? "Your CourseLit Sign-in Code"
+      : params.type === "forget-password"
+        ? "Reset Your CourseLit Password"
+        : "Verify Your CourseLit Email";
+
+  const description =
+    params.type === "sign-in"
+      ? "Enter the following code to complete your CourseLit sign-in:"
+      : params.type === "forget-password"
+        ? "Enter the following code to reset your password:"
+        : "Enter the following code to verify your email address:";
+
+  const html = `
+    <!doctype html>
+    <html>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 24px; color: #1a1a1a;">
+        <h2 style="margin-top: 0; color: #111;">CourseLit Security Code</h2>
+        <p>${description}</p>
+        <div style="font-size: 32px; font-weight: bold; letter-spacing: 6px; padding: 16px 24px; background: #f3f4f6; border-radius: 8px; width: fit-content; margin: 24px 0;">
+          ${escapeHtml(params.otp)}
+        </div>
+        <p style="color: #666; font-size: 14px;">This code will expire in 5 minutes. If you did not request this, you can ignore this email.</p>
+      </body>
+    </html>
+  `;
+
+  const text = `${description} ${params.otp} (expires in 5 minutes)`;
+
+  const env = options?.env ?? process.env;
+  if (env.NODE_ENV !== "production" || !process.env.RESEND_API_KEY) {
+    console.info(`[CourseLit OTP] ${params.type} for ${params.email}: ${params.otp}`);
+  }
+
+  await sendSystemMail({
+    to: params.email,
+    subject,
+    text,
+    html,
+  });
+}
+
+export const AUTH_BASE_PATH = "/api/auth";
+export const LEARNER_AUTH_BASE_PATH = "/api/auth";
+export const ADMIN_SESSION_COOKIE_NAME = "better-auth.session_token";
+export const adminAuthOptions = buildBetterAuthOptions;
+
+export function authUrls(
+  publicApiUrl: string,
+  webOrigin?: string,
+  basePath = AUTH_BASE_PATH,
+) {
+  const normalized = publicApiUrl.replace(/\/$/, "");
+  return {
+    publicApiUrl: normalized,
+    webOrigin: (webOrigin ?? normalized).replace(/\/$/, ""),
+    issuer: `${normalized}${basePath}`,
+    restResource: `${normalized}/api`,
+    mcpResource: `${normalized}/mcp`,
+  };
 }

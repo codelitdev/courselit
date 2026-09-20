@@ -34,6 +34,7 @@ describe.serial("legacy notification migration", () => {
             forUserId: "legacy-notification-learner",
             activityType: "community_post_created",
             message: "A new post is waiting.",
+            href: "/community/legacy-community/legacy-post",
             metadata: { communityId: "legacy-community", postId: "legacy-post" },
             read: true,
             createdAt: "2026-02-15T00:00:00.000Z",
@@ -84,14 +85,14 @@ describe.serial("legacy notification migration", () => {
     expect(notification).toMatchObject({
       type: "community_post_created",
       body: "A new post is waiting.",
-      href: "/dashboard/community/legacy-community/legacy-post",
+      href: "/dashboard",
     });
     expect(notification.readAt).toEqual(new Date("2026-02-16T00:00:00.000Z"));
     const learner = (
       await runtime.db
-        .select({ id: schema.learners.id })
-        .from(schema.learners)
-        .where(eq(schema.learners.publicId, "legacy-notification-learner"))
+        .select({ id: schema.schoolAccounts.id })
+        .from(schema.schoolAccounts)
+        .where(eq(schema.schoolAccounts.publicId, "legacy-notification-learner"))
     )[0]!;
     expect(
       await runtime.db
@@ -99,7 +100,7 @@ describe.serial("legacy notification migration", () => {
         .from(schema.learnerNotificationPreferences)
         .where(
           and(
-            eq(schema.learnerNotificationPreferences.learnerId, learner.id),
+            eq(schema.learnerNotificationPreferences.schoolAccountId, learner.id),
             eq(schema.learnerNotificationPreferences.type, "community_post_created"),
           ),
         ),
@@ -109,9 +110,17 @@ describe.serial("legacy notification migration", () => {
         await runtime.db
           .select()
           .from(schema.learnerNotificationPreferences)
-          .where(eq(schema.learnerNotificationPreferences.learnerId, learner.id))
+          .where(eq(schema.learnerNotificationPreferences.schoolAccountId, learner.id))
       )[0]!.appEnabled,
     ).toBe(false);
+    expect(
+      (
+        await runtime.db
+          .select()
+          .from(schema.learnerNotificationPreferences)
+          .where(eq(schema.learnerNotificationPreferences.schoolAccountId, learner.id))
+      )[0]!.emailEnabled,
+    ).toBe(true);
 
     const second = await importLegacyNotifications(runtime.db, {
       clock,

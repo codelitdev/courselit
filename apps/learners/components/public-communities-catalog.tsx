@@ -1,24 +1,14 @@
 "use client";
 
-import type { communitySchema } from "@courselit/api-contract";
-import {
-  Button,
-  Caption,
-  Header1,
-  PageCard,
-  PageCardContent,
-  PageCardHeader,
-  Subheader1,
-  Text2,
-} from "@frontlit/page-builder/primitives";
+import type { publicCommunityListItemSchema } from "@courselit/api-contract";
+import { Button, Header1, Subheader1, Text2 } from "@frontlit/page-builder/primitives";
 import { Users } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { z } from "zod";
-import { LearnerCardImage } from "@/components/themed-page-builder";
+import { PublicCatalogCard } from "@/components/public-catalog-card";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
-type PublicCommunity = z.infer<typeof communitySchema>;
+type PublicCommunity = z.infer<typeof publicCommunityListItemSchema>;
 
 export function PublicCommunitiesCatalog() {
   const theme = useSchoolThemeStyle();
@@ -105,39 +95,22 @@ export function PublicCommunitiesCatalog() {
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {communities.map((community) => {
-            const image = community.featuredMedia;
+            const image = community.featuredImage;
             return (
-              <PageCard
+              <PublicCatalogCard
                 key={community.id}
-                theme={theme}
-                isLink
-                className="h-full overflow-hidden"
-              >
-                <Link
-                  href={`/p/${encodeURIComponent(community.slug || community.id)}`}
-                  className="block h-full"
-                >
-                  <LearnerCardImage
-                    theme={theme}
-                    src={
-                      image?.thumbnailUrl ??
-                      image?.canonicalUrl ??
-                      "/courselit_backdrop_square.webp"
-                    }
-                    alt={image?.altText || community.name}
-                    className="aspect-video object-cover"
-                  />
-                  <PageCardContent theme={theme}>
-                    <PageCardHeader theme={theme}>{community.name}</PageCardHeader>
-                    <div className="flex items-center text-sm">
-                      <Users className="mr-2 size-4" aria-hidden="true" />
-                      <Caption theme={theme}>
-                        {community.membersCount.toLocaleString()} members
-                      </Caption>
-                    </div>
-                  </PageCardContent>
-                </Link>
-              </PageCard>
+                href={`/p/${encodeURIComponent(community.slug || community.id)}`}
+                title={community.name}
+                image={image}
+                priceMinor={community.priceMinor}
+                currency={community.currency}
+                meta={
+                  <span className="inline-flex items-center gap-2">
+                    <Users className="size-4" aria-hidden="true" />
+                    {community.membersCount.toLocaleString()} members
+                  </span>
+                }
+              />
             );
           })}
         </div>

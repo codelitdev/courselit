@@ -47,8 +47,8 @@ describe.serial("legacy community migration", () => {
     const learner = (
       await runtime.db
         .select()
-        .from(schema.learners)
-        .where(eq(schema.learners.publicId, learnerSourceId))
+        .from(schema.schoolAccounts)
+        .where(eq(schema.schoolAccounts.publicId, learnerSourceId))
     )[0]!;
     const learnerId = learner.id;
     const mediaId = uuidv7(clock);
@@ -70,7 +70,7 @@ describe.serial("legacy community migration", () => {
       accessPolicy: "public",
       status: "active",
       createdBy: world.owner.id,
-      createdByLearnerId: null,
+      createdBySchoolAccountId: null,
       createdAt: clock.now(),
       updatedAt: clock.now(),
     });
@@ -216,7 +216,7 @@ describe.serial("legacy community migration", () => {
         .from(schema.communities)
         .where(eq(schema.communities.publicId, "legacy-community-1"))
     )[0]!;
-    expect(community).toMatchObject({ schoolId: school.id, slug: "creators", enabled: true });
+    expect(community).toMatchObject({ schoolId: school.id, slug: "creators" });
     expect(JSON.parse(community.categories)).toEqual(["General", "Questions"]);
     const comments = await runtime.db
       .select()
@@ -230,7 +230,7 @@ describe.serial("legacy community migration", () => {
       await runtime.db
         .select()
         .from(schema.communityMemberships)
-        .where(eq(schema.communityMemberships.learnerId, learnerId)),
+        .where(eq(schema.communityMemberships.schoolAccountId, learnerId)),
     ).toHaveLength(1);
     expect(
       await runtime.db

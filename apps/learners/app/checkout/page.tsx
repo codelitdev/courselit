@@ -3,7 +3,9 @@ import { PublicCheckoutSession } from "@/components/public-checkout-session";
 import { PublicSitePage } from "@/components/public-site-page";
 
 interface Props {
-  searchParams: Promise<{ session?: string }>;
+  searchParams: Promise<{
+    session?: string;
+  }>;
 }
 
 export default async function CheckoutPage({ searchParams }: Props) {

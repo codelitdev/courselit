@@ -7,6 +7,8 @@
  * its blocks. Theme tokens alone leave the rendered site unstyled. */
 @import "@frontlit/page-builder/styles.css";
 
+@source "../../../packages/page-blocks/src";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -44,7 +46,9 @@
 }
 
 :root {
-  --sidebar: var(--card);
+  /* The page-builder theme supplies the sidebar-specific tokens at runtime.
+   * Keep the generic card color only as a fallback for the first paint. */
+  --sidebar: var(--sidebar-background, var(--card));
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);

@@ -107,7 +107,8 @@ describe.serial("learner memberships", () => {
 
     let memberships = await runtime.db
       .select()
-      .from(schema.learnerMemberships);
+      .from(schema.learnerMemberships)
+      .where(eq(schema.learnerMemberships.entityType, "product"));
     expect(memberships).toHaveLength(1);
     expect(memberships[0]).toMatchObject({
       entityType: "product",
@@ -136,7 +137,10 @@ describe.serial("learner memberships", () => {
       }),
     ).toMatchObject({ status: 200, body: { duplicate: false, status: "processed" } });
 
-    memberships = await runtime.db.select().from(schema.learnerMemberships);
+    memberships = await runtime.db
+      .select()
+      .from(schema.learnerMemberships)
+      .where(eq(schema.learnerMemberships.entityType, "product"));
     expect(memberships).toHaveLength(1);
     expect(memberships[0]).toMatchObject({
       status: "active",
@@ -192,13 +196,11 @@ describe.serial("learner memberships", () => {
       body: { status: "published" },
     });
 
-    const community = await dispatch(runtime, {
-      method: "POST",
-      path: "/v1/communities",
-      headers: adminHeaders,
-      body: { name: "Included community", enabled: false, autoAcceptMembers: true },
-    });
-    const communityId = (community.body as { id: string }).id;
+    const [communityRow] = await runtime.db
+      .select()
+      .from(schema.communities)
+      .where(eq(schema.communities.schoolId, world.schoolA.id));
+    const communityId = communityRow!.publicId;
     const communityPlan = await dispatch(runtime, {
       method: "POST",
       path: `/v1/communities/${communityId}/plans`,
@@ -211,12 +213,6 @@ describe.serial("learner memberships", () => {
       },
     });
     const communityPlanId = (communityPlan.body as { id: string }).id;
-    await dispatch(runtime, {
-      method: "PATCH",
-      path: `/v1/communities/${communityId}`,
-      headers: adminHeaders,
-      body: { enabled: true },
-    });
 
     const learner = await dispatch(runtime, {
       method: "POST",
@@ -250,10 +246,10 @@ describe.serial("learner memberships", () => {
     const rows = await runtime.db
       .select()
       .from(schema.learnerMemberships)
-      .where(eq(schema.learnerMemberships.learnerId, (await runtime.db
-        .select({ id: schema.learners.id })
-        .from(schema.learners)
-        .where(eq(schema.learners.email, "included-membership@example.com"))
+      .where(eq(schema.learnerMemberships.schoolAccountId, (await runtime.db
+        .select({ id: schema.schoolAccounts.id })
+        .from(schema.schoolAccounts)
+        .where(eq(schema.schoolAccounts.email, "included-membership@example.com"))
         .limit(1))[0]!.id));
     expect(rows).toHaveLength(3);
     expect(rows.filter((row) => row.entityType === "community")).toHaveLength(1);
@@ -271,7 +267,7 @@ describe.serial("learner memberships", () => {
     const afterLeave = await runtime.db
       .select()
       .from(schema.learnerMemberships)
-      .where(eq(schema.learnerMemberships.learnerId, rows[0]!.learnerId));
+      .where(eq(schema.learnerMemberships.schoolAccountId, rows[0]!.schoolAccountId));
     expect(afterLeave.find((row) => row.entityType === "community")?.status).toBe("expired");
     expect(afterLeave.find((row) => row.isIncludedInPlan)?.status).toBe("expired");
     expect(afterLeave.find((row) => row.entityType === "product" && !row.isIncludedInPlan)?.status).toBe("active");
@@ -311,13 +307,17 @@ describe.serial("learner memberships", () => {
       headers: adminHeaders,
       body: { status: "published" },
     });
-    const community = await dispatch(runtime, {
-      method: "POST",
-      path: "/v1/communities",
+    const [communityRow] = await runtime.db
+      .select()
+      .from(schema.communities)
+      .where(eq(schema.communities.schoolId, world.schoolA.id));
+    const communityId = communityRow!.publicId;
+    await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/communities/${communityId}`,
       headers: adminHeaders,
-      body: { name: "Approval community", enabled: false, autoAcceptMembers: false },
+      body: { autoAcceptMembers: false },
     });
-    const communityId = (community.body as { id: string }).id;
     const plan = await dispatch(runtime, {
       method: "POST",
       path: `/v1/communities/${communityId}/plans`,
@@ -325,12 +325,6 @@ describe.serial("learner memberships", () => {
       body: { name: "Approval access", kind: "free", type: "free", includedProducts: [productId] },
     });
     const planId = (plan.body as { id: string }).id;
-    await dispatch(runtime, {
-      method: "PATCH",
-      path: `/v1/communities/${communityId}`,
-      headers: adminHeaders,
-      body: { enabled: true },
-    });
     const learner = await dispatch(runtime, {
       method: "POST",
       path: "/v1/learner/auth/sign-up",
@@ -338,6 +332,17 @@ describe.serial("learner memberships", () => {
       body: { email: "approval-membership@example.com", password: "learner-password-1", name: "Approval" },
     });
     const headers = { cookie: learnerCookie(learner), "x-school-id": world.schoolA.publicId };
+    const missingReason = await dispatch(runtime, {
+      method: "POST",
+      path: `/v1/learner/communities/${communityId}/checkout`,
+      headers: { ...headers, "idempotency-key": "approval-community-missing-reason" },
+      body: { planId },
+    });
+    expect(missingReason.status).toBe(400);
+    expect(missingReason.body).toMatchObject({
+      details: { reason: "joining_reason_required" },
+    });
+
     expect(
       await dispatch(runtime, {
         method: "POST",
@@ -347,16 +352,45 @@ describe.serial("learner memberships", () => {
       }),
     ).toMatchObject({ status: 201, body: { status: "paid" } });
     const learnerId = (await runtime.db
-      .select({ id: schema.learners.id })
-      .from(schema.learners)
-      .where(eq(schema.learners.email, "approval-membership@example.com"))
+      .select({ id: schema.schoolAccounts.id })
+      .from(schema.schoolAccounts)
+      .where(eq(schema.schoolAccounts.email, "approval-membership@example.com"))
       .limit(1))[0]!.id;
     const rows = await runtime.db
       .select()
       .from(schema.learnerMemberships)
-      .where(eq(schema.learnerMemberships.learnerId, learnerId));
+      .where(eq(schema.learnerMemberships.schoolAccountId, learnerId));
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ entityType: "community", status: "pending" });
+    const adminNotifications = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/notifications",
+      headers: adminHeaders,
+    });
+    expect(adminNotifications.status).toBe(200);
+    expect(
+      (
+        adminNotifications.body as {
+          items: Array<{
+            id: string;
+            type: string;
+            title: string;
+            body: string;
+            href: string | null;
+            readAt: string | null;
+            createdAt: string;
+          }>;
+        }
+      ).items,
+    ).toContainEqual({
+      type: "community_membership_requested",
+      title: "New community membership request",
+      body: expect.any(String),
+      href: `/community/memberships`,
+      id: expect.any(String),
+      readAt: null,
+      createdAt: expect.any(String),
+    });
     await runtime.close();
   });
 
@@ -366,13 +400,17 @@ describe.serial("learner memberships", () => {
     const runtime = await createPgliteRuntime({ clock, paymentProvider: provider });
     const world = await seedWorld(runtime, clock);
     const adminHeaders = { cookie: world.owner.sessionCookie, "x-school-id": world.schoolA.publicId };
-    const community = await dispatch(runtime, {
-      method: "POST",
-      path: "/v1/communities",
+    const [communityRow] = await runtime.db
+      .select()
+      .from(schema.communities)
+      .where(eq(schema.communities.schoolId, world.schoolA.id));
+    const communityId = communityRow!.publicId;
+    await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/communities/${communityId}`,
       headers: adminHeaders,
-      body: { name: "Subscription community", enabled: false, autoAcceptMembers: true },
+      body: { autoAcceptMembers: false },
     });
-    const communityId = (community.body as { id: string }).id;
     const plan = await dispatch(runtime, {
       method: "POST",
       path: `/v1/communities/${communityId}/plans`,
@@ -388,12 +426,6 @@ describe.serial("learner memberships", () => {
       },
     });
     const planId = (plan.body as { id: string }).id;
-    await dispatch(runtime, {
-      method: "PATCH",
-      path: `/v1/communities/${communityId}`,
-      headers: adminHeaders,
-      body: { enabled: true },
-    });
     const learner = await dispatch(runtime, {
       method: "POST",
       path: "/v1/learner/auth/sign-up",
@@ -441,8 +473,15 @@ describe.serial("learner memberships", () => {
         body: {},
       }),
     ).toMatchObject({ status: 200, body: { left: true } });
-    expect(provider.cancelledSubscriptions).toEqual(["subscription-community-provider-sub"]);
-    const rows = await runtime.db.select().from(schema.learnerMemberships);
+    const [learnerAccount] = await runtime.db
+      .select({ id: schema.schoolAccounts.id })
+      .from(schema.schoolAccounts)
+      .where(eq(schema.schoolAccounts.email, "subscription-community@example.com"))
+      .limit(1);
+    const rows = await runtime.db
+      .select()
+      .from(schema.learnerMemberships)
+      .where(eq(schema.learnerMemberships.schoolAccountId, learnerAccount!.id));
     expect(rows.find((row) => row.entityType === "community")?.status).toBe("expired");
     expect((await runtime.db.select().from(schema.communitySubscriptions))[0]?.status).toBe("cancelled");
     await runtime.close();

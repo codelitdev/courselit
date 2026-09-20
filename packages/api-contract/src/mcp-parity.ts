@@ -44,6 +44,9 @@ const communityParityExemptions = [
   ["updateLearnerNotificationPreference", "learner.notifications.preferences.update"],
   ["markLearnerNotificationRead", "learner.notifications.read"],
   ["markAllLearnerNotificationsRead", "learner.notifications.readAll"],
+  ["listAdminNotifications", "admin.notifications.list"],
+  ["markAdminNotificationRead", "admin.notifications.read"],
+  ["markAllAdminNotificationsRead", "admin.notifications.readAll"],
   ["listCommunityPlans", "communities.plans.list"],
   ["createCommunityPlan", "communities.plans.create"],
   ["updateCommunityPlan", "communities.plans.update"],
@@ -76,6 +79,19 @@ const communityParityExemptions = [
   ["getPublicSitePage", "public.site.pages.get"],
   ["listPublicSiteBlogs", "public.site.blogs.list"],
   ["getPublicSiteBlog", "public.site.blogs.get"],
+  ["listSpaces", "spaces.list"],
+  ["createSpace", "spaces.create"],
+  ["getSpace", "spaces.get"],
+  ["updateSpace", "spaces.update"],
+  ["orderSpaces", "spaces.order"],
+  ["deleteSpace", "spaces.delete"],
+  ["listLearnerSpaces", "learner.spaces.list"],
+  ["followLearnerSpace", "learner.spaces.follow"],
+  ["unfollowLearnerSpace", "learner.spaces.unfollow"],
+  ["createLearnerSpacePost", "learner.spaces.posts.create"],
+  ["getLearnerSpacePost", "learner.spaces.posts.get"],
+  ["authorizeLearnerAvatarMediaUpload", "learner.avatars.authorize"],
+  ["finalizeLearnerAvatarMediaUpload", "learner.avatars.finalize"],
 ] as const;
 
 export const mcpParityManifest = [
@@ -1008,6 +1024,56 @@ export const mcpParityManifest = [
     },
   },
   {
+    capability: "school.team.leave",
+    rest: { operationId: "leaveSchoolTeam" },
+    parity: "exempt",
+    exemption: {
+      reason: "Team administration remains a browser-only school settings workflow.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.team.ownership.transfer",
+    rest: { operationId: "transferSchoolOwnership" },
+    parity: "exempt",
+    exemption: {
+      reason: "Team administration remains a browser-only school settings workflow.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.team.invitation.create",
+    rest: { operationId: "createSchoolTeamInvitation" },
+    parity: "exempt",
+    exemption: {
+      reason: "Invitation delivery is a browser and email workflow, not an MCP capability.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.team.invitation.resend",
+    rest: { operationId: "resendSchoolTeamInvitation" },
+    parity: "exempt",
+    exemption: {
+      reason: "Invitation delivery is a browser and email workflow, not an MCP capability.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "school.team.invitation.revoke",
+    rest: { operationId: "revokeSchoolTeamInvitation" },
+    parity: "exempt",
+    exemption: {
+      reason: "Invitation delivery is a browser and email workflow, not an MCP capability.",
+      owner: "platform",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
     capability: "invitation.create",
     rest: { operationId: "createInvitation" },
     parity: "exempt",
@@ -1157,6 +1223,16 @@ export const mcpParityManifest = [
     parity: "exempt",
     exemption: {
       reason: "Learner browser session operations are not MCP tools.",
+      owner: "courselit",
+      reviewBy: "2027-09-01",
+    },
+  },
+  {
+    capability: "learner.profile.update",
+    rest: { operationId: "updateLearnerProfile" },
+    parity: "exempt",
+    exemption: {
+      reason: "Learner browser profile operations are not MCP tools.",
       owner: "courselit",
       reviewBy: "2027-09-01",
     },

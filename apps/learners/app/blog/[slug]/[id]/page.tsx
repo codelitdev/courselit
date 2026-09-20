@@ -18,13 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const article = await loadBlogArticle(await params);
   if (!article) return { title: "Post not found" };
   const image = article.featuredImage;
-  const imageUrl = image
-    ? typeof image.url === "string"
-      ? image.url
-      : typeof image.file === "string"
-        ? image.file
-        : null
-    : null;
+  const imageUrl = image?.url ?? null;
   return {
     title: article.title ?? article.slug,
     description: article.excerpt ?? undefined,

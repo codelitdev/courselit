@@ -1,16 +1,25 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { SchoolThemeContextProvider } from "@/lib/school-theme-context";
+import {
+  SchoolBrandContextProvider,
+  SchoolThemeContextProvider,
+  SchoolThemeModeProvider,
+} from "@/lib/school-theme-context";
 import { resolveSchoolTheme, schoolThemeStyleTag } from "@/lib/site-theme";
+import { LearnerToaster } from "./themed-sonner";
 
 export function SchoolThemeProvider({
   themeId,
   themeStyle,
+  logoUrl,
+  logoAlt,
   children,
 }: {
   themeId?: string | null;
   themeStyle?: Record<string, unknown> | null;
+  logoUrl?: string | null;
+  logoAlt?: string | null;
   children: React.ReactNode;
 }) {
   const [activeThemeId, setActiveThemeId] = useState<string | null>(themeId ?? null);
@@ -40,9 +49,14 @@ export function SchoolThemeProvider({
     <>
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: theme CSS is generated from the resolved school theme. */}
       <style id="school-theme-styles" dangerouslySetInnerHTML={{ __html: styleCss }} />
-      <SchoolThemeContextProvider theme={resolvedTheme}>
-        {children}
-      </SchoolThemeContextProvider>
+      <SchoolThemeModeProvider>
+        <SchoolBrandContextProvider logoUrl={logoUrl} logoAlt={logoAlt}>
+          <SchoolThemeContextProvider theme={resolvedTheme}>
+            {children}
+            <LearnerToaster />
+          </SchoolThemeContextProvider>
+        </SchoolBrandContextProvider>
+      </SchoolThemeModeProvider>
     </>
   );
 }

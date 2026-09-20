@@ -6,7 +6,7 @@ import type { AppDb } from "../types.js";
 
 const SOURCE_SYSTEM = "courselit-mongo";
 const SOURCE_COLLECTION = "users";
-const TARGET_TABLE = "learners";
+const TARGET_TABLE = "school_accounts";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -188,9 +188,9 @@ export async function importLegacyLearners(
         .limit(1);
       if (existingMapping[0]) {
         const target = await db
-          .select({ id: schema.learners.id })
-          .from(schema.learners)
-          .where(eq(schema.learners.id, existingMapping[0].targetId))
+          .select({ id: schema.schoolAccounts.id })
+          .from(schema.schoolAccounts)
+          .where(eq(schema.schoolAccounts.id, existingMapping[0].targetId))
           .limit(1);
         if (!target[0]) {
           addRejection(
@@ -234,7 +234,7 @@ export async function importLegacyLearners(
         continue;
       }
       const normalized = normalizedEmail(email);
-      const name = stringValue(record.name ?? record.fullName) ?? normalized.split("@", 1)[0]!;
+      const name = stringValue(record.displayName ?? record.name ?? record.fullName) ?? normalized.split("@", 1)[0]!;
       if (!name || name.length > 200) {
         addRejection(rejection(sourceId, "invalid_name"));
         continue;
@@ -246,9 +246,9 @@ export async function importLegacyLearners(
         continue;
       }
       const conflict = await db
-        .select({ id: schema.learners.id })
-        .from(schema.learners)
-        .where(and(eq(schema.learners.schoolId, schoolId), eq(schema.learners.email, normalized)))
+        .select({ id: schema.schoolAccounts.id })
+        .from(schema.schoolAccounts)
+        .where(and(eq(schema.schoolAccounts.schoolId, schoolId), eq(schema.schoolAccounts.email, normalized)))
         .limit(1);
       if (conflict[0]) {
         addRejection(rejection(sourceId, "learner_conflict", { email: normalized }));
@@ -257,18 +257,36 @@ export async function importLegacyLearners(
       counts.ready += 1;
       if (mode === "dry_run") continue;
 
-      const learnerId = uuidv7(input.clock);
+      const schoolAccountId = uuidv7(input.clock);
       const deactivated =
         record.deleted === true ||
         ["deleted", "deactivated", "inactive"].includes(
           stringValue(record.status)?.toLowerCase() ?? "",
         );
-      await db.insert(schema.learners).values({
-        id: learnerId,
+      let userRow = await db
+        .select({ id: schema.user.id })
+        .from(schema.user)
+        .where(eq(schema.user.email, normalized))
+        .limit(1);
+      let userId = userRow[0]?.id;
+      if (!userId) {
+        userId = uuidv7(input.clock);
+        await db.insert(schema.user).values({
+          id: userId,
+          name,
+          email: normalized,
+          emailVerified: true,
+          createdAt,
+          updatedAt,
+        });
+      }
+      await db.insert(schema.schoolAccounts).values({
+        id: schoolAccountId,
         publicId: sourceId,
         schoolId,
+        userId,
         email: normalized,
-        name,
+        displayName: name,
         status: deactivated ? "deactivated" : "active",
         createdAt,
         updatedAt,
@@ -279,7 +297,7 @@ export async function importLegacyLearners(
         sourceCollection: SOURCE_COLLECTION,
         sourceId,
         targetTable: TARGET_TABLE,
-        targetId: learnerId,
+        targetId: schoolAccountId,
         schoolId,
         runId,
         createdAt: now,

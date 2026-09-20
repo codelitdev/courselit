@@ -7,6 +7,7 @@ function hrefQuery(href: string): string {
 export function isNavItemActive(pathname: string, href: string): boolean {
   const targetPathname = href.split(/[?#]/, 1)[0] || "/";
   if (targetPathname === "/") return pathname === "/";
+  if (targetPathname === "/dashboard") return pathname === "/dashboard";
   return pathname === targetPathname || pathname.startsWith(`${targetPathname}/`);
 }
 

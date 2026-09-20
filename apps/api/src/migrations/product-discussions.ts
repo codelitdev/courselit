@@ -29,7 +29,7 @@ type JsonRecord = Record<string, unknown>;
 type Mode = "dry_run" | "apply";
 type EntityType = "lesson" | "product";
 type ContentType = "comment" | "reply";
-type Identity = { learnerId: string | null; adminUserId: string | null };
+type Identity = { schoolAccountId: string | null };
 
 export type LegacyProductDiscussionExport = {
   comments: readonly unknown[];
@@ -364,17 +364,20 @@ async function resolveAdmin(
 ): Promise<string | null> {
   if (!sourceId) return null;
   const directMembership = await db
-    .select({ userId: schema.memberships.userId })
-    .from(schema.memberships)
-    .innerJoin(schema.user, eq(schema.user.id, schema.memberships.userId))
+    .select({ schoolAccountId: schema.schoolAccounts.id })
+    .from(schema.schoolAccounts)
+    .innerJoin(
+      schema.memberships,
+      eq(schema.memberships.schoolAccountId, schema.schoolAccounts.id),
+    )
     .where(
       and(
-        eq(schema.memberships.schoolId, schoolId),
-        eq(schema.memberships.userId, sourceId),
+        eq(schema.schoolAccounts.schoolId, schoolId),
+        eq(schema.schoolAccounts.userId, sourceId),
       ),
     )
     .limit(1);
-  if (directMembership[0]) return directMembership[0].userId;
+  if (directMembership[0]?.schoolAccountId) return directMembership[0].schoolAccountId;
   const mapping = await findMapping(db, sourceSystem, "users", sourceId, "user");
   if (!mapping) return null;
   const mapped = await db
@@ -384,16 +387,20 @@ async function resolveAdmin(
     .limit(1);
   if (!mapped[0]) return null;
   const membership = await db
-    .select({ userId: schema.memberships.userId })
-    .from(schema.memberships)
+    .select({ schoolAccountId: schema.schoolAccounts.id })
+    .from(schema.schoolAccounts)
+    .innerJoin(
+      schema.memberships,
+      eq(schema.memberships.schoolAccountId, schema.schoolAccounts.id),
+    )
     .where(
       and(
-        eq(schema.memberships.schoolId, schoolId),
-        eq(schema.memberships.userId, mapped[0].id),
+        eq(schema.schoolAccounts.schoolId, schoolId),
+        eq(schema.schoolAccounts.userId, mapped[0].id),
       ),
     )
     .limit(1);
-  return membership[0]?.userId ?? null;
+  return membership[0]?.schoolAccountId ?? null;
 }
 
 async function resolveLearner(
@@ -405,18 +412,19 @@ async function resolveLearner(
   if (!sourceId) return null;
   if (isUuid(sourceId)) {
     const direct = await db
-      .select({ id: schema.learners.id })
-      .from(schema.learners)
-      .where(and(eq(schema.learners.id, sourceId), eq(schema.learners.schoolId, schoolId)))
+      .select({ id: schema.schoolAccounts.id })
+      .from(schema.schoolAccounts)
+      .where(and(eq(schema.schoolAccounts.id, sourceId), eq(schema.schoolAccounts.schoolId, schoolId)))
       .limit(1);
     if (direct[0]) return direct[0].id;
   }
-  const mapping = await findMapping(db, sourceSystem, "users", sourceId, "learners");
+  const mapping = (await findMapping(db, sourceSystem, "users", sourceId, "school_accounts"))
+    ?? (await findMapping(db, sourceSystem, "users", sourceId, "learners"));
   if (!mapping) return null;
   const mapped = await db
-    .select({ id: schema.learners.id })
-    .from(schema.learners)
-    .where(and(eq(schema.learners.id, mapping.targetId), eq(schema.learners.schoolId, schoolId)))
+    .select({ id: schema.schoolAccounts.id })
+    .from(schema.schoolAccounts)
+    .where(and(eq(schema.schoolAccounts.id, mapping.targetId), eq(schema.schoolAccounts.schoolId, schoolId)))
     .limit(1);
   return mapped[0]?.id ?? null;
 }
@@ -430,28 +438,23 @@ async function resolveIdentity(
   const sourceUserId = sourceIdFor(record, "userId", "authorId", "reporterId", "actorId");
   const kind = stringValue(record.userKind ?? record.authorKind ?? record.reporterKind)?.toLowerCase();
   if (kind === "admin" || record.isAdmin === true) {
-    return {
-      learnerId: null,
-      adminUserId: await resolveAdmin(db, sourceSystem, sourceUserId, schoolId),
-    };
+    const adminAccountId = await resolveAdmin(db, sourceSystem, sourceUserId, schoolId);
+    return { schoolAccountId: adminAccountId };
   }
   if (kind === "learner") {
-    return {
-      learnerId: await resolveLearner(db, sourceSystem, sourceUserId, schoolId),
-      adminUserId: null,
-    };
+    const learnerAccountId = await resolveLearner(db, sourceSystem, sourceUserId, schoolId);
+    return { schoolAccountId: learnerAccountId };
   }
-  const adminUserId = await resolveAdmin(db, sourceSystem, sourceUserId, schoolId);
-  return adminUserId
-    ? { learnerId: null, adminUserId }
-    : {
-        learnerId: await resolveLearner(db, sourceSystem, sourceUserId, schoolId),
-        adminUserId: null,
-      };
+  const adminAccountId = await resolveAdmin(db, sourceSystem, sourceUserId, schoolId);
+  if (adminAccountId) {
+    return { schoolAccountId: adminAccountId };
+  }
+  const learnerAccountId = await resolveLearner(db, sourceSystem, sourceUserId, schoolId);
+  return { schoolAccountId: learnerAccountId };
 }
 
 function hasIdentity(identity: Identity): boolean {
-  return Boolean(identity.learnerId || identity.adminUserId);
+  return Boolean(identity.schoolAccountId);
 }
 
 function sourceTargetFields(record: JsonRecord) {
@@ -1188,7 +1191,7 @@ export async function importLegacyProductDiscussions(
         contentType,
         contentId: contentTargetId,
         commentId,
-        ...identity,
+        schoolAccountId: identity.schoolAccountId!,
         createdAt: dates.createdAt,
       });
       await addMapping(db, {
@@ -1244,7 +1247,7 @@ export async function importLegacyProductDiscussions(
         productId: target.productId,
         entityType: target.entityType,
         entityId: target.entityId,
-        ...identity,
+        schoolAccountId: identity.schoolAccountId!,
         subscription: booleanValue(record.subscription, true),
         createdAt: dates.createdAt,
         updatedAt: dates.updatedAt,
@@ -1337,8 +1340,8 @@ export async function importLegacyProductDiscussions(
         entityId: target.entityId,
         contentType,
         contentId: contentTargetId,
-        commentId,
-        ...identity,
+        commentId: commentId ?? undefined,
+        schoolAccountId: identity.schoolAccountId!,
         reason: stringValue(record.reason) ?? "Legacy report",
         status,
         rejectionReason: stringValue(record.rejectionReason),

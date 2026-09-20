@@ -1,7 +1,8 @@
 "use client";
 
-import { toast } from "sonner";
+import type { MediaRef } from "@courselit/api-contract";
 import { type FormEvent, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { MediaField } from "@/components/products/media-upload-button";
 import type { School } from "@/components/products/product-types";
 import { Button } from "@/components/ui/codelit/button";
@@ -14,12 +15,10 @@ import { getCourseLitMedia } from "@/lib/course-media-uploader";
 type WebsiteBrandingSettings = {
   title?: string | null;
   subtitle?: string | null;
-  logo?: {
-    mediaId?: string;
-  } | null;
+  logo?: MediaRef | null;
 };
 
-function logoReference(media: CourseLitMedia | null): Record<string, unknown> | null {
+function logoReference(media: CourseLitMedia | null): MediaRef | null {
   if (!media) return null;
   return {
     mediaId: media.id,
@@ -140,7 +139,9 @@ export function BrandingSettings() {
       setSavedSubtitle(nextSubtitle.trim());
       toast.success("Branding saved.");
     } catch (caught) {
-      toast.error(caught instanceof Error ? caught.message : "Unable to save branding.");
+      toast.error(
+        caught instanceof Error ? caught.message : "Unable to save branding.",
+      );
     } finally {
       setBrandingSaving(false);
     }
@@ -168,7 +169,9 @@ export function BrandingSettings() {
       setLogo(nextLogo);
       toast.success(nextLogo ? "Logo saved." : "Logo removed.");
     } catch (caught) {
-      toast.error(caught instanceof Error ? caught.message : "Unable to save the logo.");
+      toast.error(
+        caught instanceof Error ? caught.message : "Unable to save the logo.",
+      );
       throw caught;
     } finally {
       setLogoSaving(false);

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { type Clock, uuidv7 } from "@codelitdev/platform";
-import { and, eq } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import * as schema from "../db/schema/index.js";
 import type { AppDb } from "../types.js";
 
@@ -137,12 +137,12 @@ function targetType(value: unknown): string | null {
 
 function titleFor(type: string): string {
   const titles: Record<string, string> = {
-    community_post_created: "New community post",
-    community_post_liked: "Your community post was reacted to",
-    community_comment: "New community comment",
-    community_comment_liked: "Your community comment was reacted to",
-    community_reply: "New community reply",
-    community_reply_liked: "Your community reply was reacted to",
+    community_post_created: "New space post",
+    community_post_liked: "Your space post was reacted to",
+    community_comment: "New space comment",
+    community_comment_liked: "Your space comment was reacted to",
+    community_reply: "New space reply",
+    community_reply_liked: "Your space reply was reacted to",
     community_membership_granted: "Community membership approved",
     course_discussion_comment_created: "New course discussion comment",
     course_discussion_reacted: "Your course discussion was reacted to",
@@ -152,11 +152,18 @@ function titleFor(type: string): string {
 
 function hrefFor(record: JsonRecord, metadata: JsonRecord | null): string | null {
   const explicit = stringValue(record.href);
-  if (explicit) return explicit;
+  const isLegacyLearnerCommunityHref =
+    explicit?.startsWith("/dashboard/community/") ||
+    explicit?.startsWith("/community/");
+  if (explicit && !isLegacyLearnerCommunityHref) return explicit;
   const communityId = idValue(metadata?.communityId ?? metadata?.communityPublicId);
   const postId = idValue(metadata?.postId ?? metadata?.postPublicId);
+  const spaceId = idValue(metadata?.spaceId ?? metadata?.spacePublicId);
+  if (spaceId && postId) {
+    return `/dashboard/s/${encodeURIComponent(spaceId)}/${encodeURIComponent(postId)}`;
+  }
   if (communityId && postId) {
-    return `/dashboard/community/${encodeURIComponent(communityId)}/${encodeURIComponent(postId)}`;
+    return "/dashboard";
   }
   const productId = idValue(metadata?.productId ?? metadata?.courseId);
   const lessonId = idValue(metadata?.lessonId);
@@ -174,9 +181,9 @@ async function learnerTarget(
   if (!sourceUserId) return null;
   if (isUuid(sourceUserId)) {
     const direct = await db
-      .select({ id: schema.learners.id, schoolId: schema.learners.schoolId })
-      .from(schema.learners)
-      .where(eq(schema.learners.id, sourceUserId))
+      .select({ id: schema.schoolAccounts.id, schoolId: schema.schoolAccounts.schoolId })
+      .from(schema.schoolAccounts)
+      .where(eq(schema.schoolAccounts.id, sourceUserId))
       .limit(1);
     if (direct[0]) return direct[0];
   }
@@ -188,15 +195,15 @@ async function learnerTarget(
         eq(schema.migrationMappings.sourceSystem, sourceSystem),
         eq(schema.migrationMappings.sourceCollection, "users"),
         eq(schema.migrationMappings.sourceId, sourceUserId),
-        eq(schema.migrationMappings.targetTable, "learners"),
+        or(eq(schema.migrationMappings.targetTable, "school_accounts"), eq(schema.migrationMappings.targetTable, "learners")),
       ),
     )
     .limit(1);
   if (!mappings[0]) return null;
   const learner = await db
-    .select({ id: schema.learners.id, schoolId: schema.learners.schoolId })
-    .from(schema.learners)
-    .where(eq(schema.learners.id, mappings[0].targetId))
+    .select({ id: schema.schoolAccounts.id, schoolId: schema.schoolAccounts.schoolId })
+    .from(schema.schoolAccounts)
+    .where(eq(schema.schoolAccounts.id, mappings[0].targetId))
     .limit(1);
   return learner[0] ?? null;
 }
@@ -335,7 +342,7 @@ export async function importLegacyNotifications(
         id: targetId,
         publicId: sourceId,
         schoolId: learner.schoolId,
-        learnerId: learner.id,
+        schoolAccountId: learner.id,
         type,
         title,
         body,
@@ -416,7 +423,7 @@ export async function importLegacyNotifications(
         .where(
           and(
             eq(schema.learnerNotificationPreferences.schoolId, learner.schoolId),
-            eq(schema.learnerNotificationPreferences.learnerId, learner.id),
+            eq(schema.learnerNotificationPreferences.schoolAccountId, learner.id),
             eq(schema.learnerNotificationPreferences.type, activityType),
           ),
         )
@@ -424,7 +431,8 @@ export async function importLegacyNotifications(
       const channels = Array.isArray(record.channels)
         ? record.channels.filter((item): item is string => typeof item === "string").map((item) => item.toLowerCase())
         : [];
-      const appEnabled = channels.length === 0 || channels.includes("in_app") || channels.includes("web") || channels.includes("all");
+      const appEnabled = channels.length === 0 || channels.includes("app") || channels.includes("in_app") || channels.includes("web") || channels.includes("all");
+      const emailEnabled = channels.length === 0 || channels.includes("email") || channels.includes("all");
       const createdAt = record.createdAt === undefined ? now : dateValue(record.createdAt);
       const updatedAt = record.updatedAt === undefined ? createdAt : dateValue(record.updatedAt);
       if (!createdAt || !updatedAt) {
@@ -436,10 +444,10 @@ export async function importLegacyNotifications(
       const targetId = existing[0]?.id ?? uuidv7(input.clock);
       await db
         .insert(schema.learnerNotificationPreferences)
-        .values({ id: targetId, schoolId: learner.schoolId, learnerId: learner.id, type: activityType, appEnabled, createdAt, updatedAt })
+        .values({ id: targetId, schoolId: learner.schoolId, schoolAccountId: learner.id, type: activityType, appEnabled, emailEnabled, createdAt, updatedAt })
         .onConflictDoUpdate({
-          target: [schema.learnerNotificationPreferences.schoolId, schema.learnerNotificationPreferences.learnerId, schema.learnerNotificationPreferences.type],
-          set: { appEnabled, updatedAt },
+          target: [schema.learnerNotificationPreferences.schoolId, schema.learnerNotificationPreferences.schoolAccountId, schema.learnerNotificationPreferences.type],
+          set: { appEnabled, emailEnabled, updatedAt },
         });
       if (!existing[0]) {
         await db.insert(schema.migrationMappings).values({

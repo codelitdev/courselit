@@ -6,17 +6,22 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
-import { and, eq, inArray, or } from "drizzle-orm";
-import { communityPlanToDto } from "./community-plans.js";
+import { and, eq, inArray, isNull, or } from "drizzle-orm";
 import { ActivityType, recordActivity } from "./activities.js";
+import { communityPlanToDto } from "./community-plans.js";
 import * as schema from "./db/schema/index.js";
-import { getPaymentProvider, type PaymentCheckoutResult, type PaymentProvider } from "./payments.js";
 import {
   findLearnerMembership,
   type LearnerMembershipRow,
   revokeLearnerMembership,
   upsertLearnerMembership,
 } from "./learner-memberships.js";
+import { createSchoolAdminNotifications } from "./notifications.js";
+import {
+  getPaymentProvider,
+  type PaymentCheckoutResult,
+  type PaymentProvider,
+} from "./payments.js";
 import type { AppDb } from "./types.js";
 
 type CommunityCheckoutStatus =
@@ -46,6 +51,7 @@ export type CommunityCheckoutContext = {
   schoolId: string;
   publicSchoolId: string;
   learnerId: string;
+  schoolAccountId?: string;
   learnerPublicId: string;
   learnerEmail: string;
   learnerName: string;
@@ -146,7 +152,7 @@ async function loadCommunityPlan(
         eq(schema.storefrontPlans.publicId, planPublicId),
         eq(schema.storefrontPlans.status, "active"),
         eq(schema.communities.publicId, communityPublicId),
-        eq(schema.communities.enabled, true),
+        isNull(schema.communities.deletedAt),
       ),
     )
     .limit(1);
@@ -182,7 +188,7 @@ async function loadCommunityPlans(
         eq(schema.storefrontPlans.entityType, "community"),
         eq(schema.storefrontPlans.entityId, communityPublicId),
         eq(schema.communities.publicId, communityPublicId),
-        eq(schema.communities.enabled, true),
+        isNull(schema.communities.deletedAt),
       ),
     );
   return rows;
@@ -202,7 +208,7 @@ export async function listLearnerCommunityPlans(
         and(
           eq(schema.communities.schoolId, context.schoolId),
           eq(schema.communities.publicId, communityPublicId),
-          eq(schema.communities.enabled, true),
+          isNull(schema.communities.deletedAt),
         ),
       )
       .limit(1);
@@ -248,7 +254,7 @@ async function loadCheckout(
       and(
         eq(schema.communityCheckoutAttempts.publicId, checkoutPublicId),
         eq(schema.communityCheckoutAttempts.schoolId, context.schoolId),
-        eq(schema.communityCheckoutAttempts.learnerId, context.learnerId),
+        eq(schema.communityCheckoutAttempts.schoolAccountId, context.learnerId),
       ),
     )
     .limit(1);
@@ -284,7 +290,7 @@ async function activateCommunityPlan(
         and(
           eq(schema.communityMemberships.schoolId, context.schoolId),
           eq(schema.communityMemberships.communityId, community.id),
-          eq(schema.communityMemberships.learnerId, context.learnerId),
+          eq(schema.communityMemberships.schoolAccountId, context.learnerId),
         ),
       )
       .limit(1)
@@ -296,7 +302,7 @@ async function activateCommunityPlan(
     tx,
     {
       schoolId: context.schoolId,
-      learnerId: context.learnerId,
+      schoolAccountId: context.schoolAccountId ?? context.learnerId,
       entityType: "community",
       entityId: community.publicId,
       paymentPlanId: plan.publicId,
@@ -326,8 +332,7 @@ async function activateCommunityPlan(
       schoolId: context.schoolId,
       communityId: community.id,
       paymentPlanId: plan.id,
-      learnerId: context.learnerId,
-      adminUserId: null,
+      schoolAccountId: context.schoolAccountId ?? context.learnerId,
       status,
       role: "member",
       joiningReason,
@@ -337,15 +342,37 @@ async function activateCommunityPlan(
     });
   }
   if (!wasActive) {
-    await recordActivity(tx as unknown as AppDb, {
-      schoolId: context.schoolId,
-      actorId: context.learnerId,
-      type: status === "active"
-        ? ActivityType.COMMUNITY_JOINED
-        : ActivityType.COMMUNITY_MEMBERSHIP_REQUESTED,
-      entityId: community.publicId,
-      metadata: { membershipId: membershipPublicId },
-    }, clock);
+    await recordActivity(
+      tx as unknown as AppDb,
+      {
+        schoolId: context.schoolId,
+        actorId: context.learnerId,
+        type:
+          status === "active"
+            ? ActivityType.COMMUNITY_JOINED
+            : ActivityType.COMMUNITY_MEMBERSHIP_REQUESTED,
+        entityId: community.publicId,
+        metadata: { membershipId: membershipPublicId },
+      },
+      clock,
+    );
+    await createSchoolAdminNotifications(
+      tx as unknown as AppDb,
+      context.schoolId,
+      {
+        type: status === "pending" ? "community_membership_requested" : "community_joined",
+        title:
+          status === "pending"
+            ? "New community membership request"
+            : "New community member",
+        body:
+          status === "pending"
+            ? `A learner requested to join “${community.name}”.`
+            : `A learner joined “${community.name}”.`,
+        href: `/community/memberships`,
+      },
+      clock,
+    );
   }
   if (status !== "active" || plan.includedProducts.length === 0) return learnerMembership;
   const products = await includedProducts(tx, context.schoolId, plan.includedProducts);
@@ -386,7 +413,7 @@ async function stageCommunityMembership(
         and(
           eq(schema.communityMemberships.schoolId, context.schoolId),
           eq(schema.communityMemberships.communityId, community.id),
-          eq(schema.communityMemberships.learnerId, context.learnerId),
+          eq(schema.communityMemberships.schoolAccountId, context.learnerId),
         ),
       )
       .limit(1)
@@ -411,8 +438,7 @@ async function stageCommunityMembership(
     schoolId: context.schoolId,
     communityId: community.id,
     paymentPlanId: plan.id,
-    learnerId: context.learnerId,
-    adminUserId: null,
+    schoolAccountId: context.learnerId,
     status: "pending",
     role: "member",
     joiningReason,
@@ -425,7 +451,7 @@ async function stageCommunityMembership(
     db,
     {
       schoolId: context.schoolId,
-      learnerId: context.learnerId,
+      schoolAccountId: context.schoolAccountId ?? context.learnerId,
       entityType: "community",
       entityId: community.publicId,
       paymentPlanId: plan.publicId,
@@ -542,11 +568,11 @@ export async function startLearnerCommunityCheckout(
   } catch {
     return error("validation_failed", { reason: "invalid_return_url" });
   }
-  if (
-    parsedReturnUrl.protocol !== "https:" &&
-    parsedReturnUrl.hostname !== "localhost" &&
-    parsedReturnUrl.hostname !== "127.0.0.1"
-  ) {
+  const isLocalhost =
+    parsedReturnUrl.hostname === "localhost" ||
+    parsedReturnUrl.hostname === "127.0.0.1" ||
+    parsedReturnUrl.hostname.endsWith(".localhost");
+  if (parsedReturnUrl.protocol !== "https:" && !isLocalhost) {
     return error("validation_failed", { reason: "invalid_return_url" });
   }
   const selected = await loadCommunityPlan(
@@ -556,8 +582,9 @@ export async function startLearnerCommunityCheckout(
     input.planPublicId,
   );
   if (!selected) return error("not_found");
-  const normalizedJoiningReason = input.joiningReason.trim();
-  if (!selected.community.autoAcceptMembers && !normalizedJoiningReason) {
+  const isFreePlan = selected.plan.kind === "free";
+  const normalizedJoiningReason = isFreePlan ? input.joiningReason.trim() : "";
+  if (isFreePlan && !selected.community.autoAcceptMembers && !normalizedJoiningReason) {
     return error("validation_failed", { reason: "joining_reason_required" });
   }
   const existing = await db
@@ -573,7 +600,7 @@ export async function startLearnerCommunityCheckout(
   if (existing[0]) {
     const row = existing[0];
     if (
-      row.learnerId !== context.learnerId ||
+      row.schoolAccountId !== (context.schoolAccountId ?? context.learnerId) ||
       row.communityId !== selected.community.id ||
       row.planId !== selected.plan.id
     ) {
@@ -652,7 +679,7 @@ export async function startLearnerCommunityCheckout(
         and(
           eq(schema.communityMemberships.schoolId, context.schoolId),
           eq(schema.communityMemberships.communityId, selected.community.id),
-          eq(schema.communityMemberships.learnerId, context.learnerId),
+          eq(schema.communityMemberships.schoolAccountId, context.learnerId),
           eq(schema.communityMemberships.status, "active"),
         ),
       )
@@ -664,7 +691,7 @@ export async function startLearnerCommunityCheckout(
     id: uuidv7(clock),
     publicId: createPublicId("chk", clock),
     schoolId: context.schoolId,
-    learnerId: context.learnerId,
+    schoolAccountId: context.schoolAccountId ?? context.learnerId,
     communityId: selected.community.id,
     planId: selected.plan.id,
     provider: selected.plan.kind === "free" ? ("free" as const) : paymentProvider!.name,
@@ -952,7 +979,7 @@ async function revokeIncludedProductAccess(
     .where(
       and(
         eq(schema.learnerMemberships.schoolId, schoolId),
-        eq(schema.learnerMemberships.learnerId, learnerId),
+        eq(schema.learnerMemberships.schoolAccountId, learnerId),
         eq(schema.learnerMemberships.entityType, "product"),
         eq(schema.learnerMemberships.isIncludedInPlan, true),
         eq(schema.learnerMemberships.paymentPlanId, plan.publicId),
@@ -980,7 +1007,7 @@ async function revokeCommunityAccess(
       and(
         eq(schema.communityMemberships.schoolId, attempt.schoolId),
         eq(schema.communityMemberships.communityId, attempt.communityId),
-        eq(schema.communityMemberships.learnerId, attempt.learnerId),
+        eq(schema.communityMemberships.schoolAccountId, attempt.schoolAccountId),
       ),
     );
   if (attempt.membershipId) {
@@ -989,7 +1016,7 @@ async function revokeCommunityAccess(
   await revokeIncludedProductAccess(
     tx,
     attempt.schoolId,
-    attempt.learnerId,
+    attempt.schoolAccountId,
     plan,
     clock,
     status,
@@ -1034,7 +1061,7 @@ export async function revokeCommunityMembershipAccess(
       .where(
         and(
           eq(schema.learnerMemberships.schoolId, input.schoolId),
-          eq(schema.learnerMemberships.learnerId, input.learnerId),
+          eq(schema.learnerMemberships.schoolAccountId, input.learnerId),
           eq(schema.learnerMemberships.entityType, "community"),
           eq(schema.learnerMemberships.paymentPlanId, plan.publicId),
           eq(schema.learnerMemberships.status, "active"),
@@ -1149,7 +1176,7 @@ export async function processCommunityPaymentEvent(
           tx as unknown as AppDb,
           {
             schoolId: current.schoolId,
-            learnerId: current.learnerId,
+            learnerId: current.schoolAccountId,
             entityType: "community",
             entityId: eventCheckout.community.publicId,
             paymentPlanId: eventCheckout.plan.publicId,
@@ -1249,7 +1276,7 @@ export async function processCommunityPaymentEvent(
             {
               schoolId: current.schoolId,
               publicSchoolId: eventCheckout.school.publicId,
-              learnerId: current.learnerId,
+              learnerId: current.schoolAccountId,
               learnerPublicId: "payment:webhook",
               learnerEmail: "",
               learnerName: "",
@@ -1266,7 +1293,7 @@ export async function processCommunityPaymentEvent(
         }
         await recordActivity(tx as unknown as AppDb, {
           schoolId: current.schoolId,
-          actorId: current.learnerId,
+          actorId: current.schoolAccountId,
           type: ActivityType.PURCHASED,
           entityId: eventCheckout.community.publicId,
           metadata: {
@@ -1478,7 +1505,7 @@ export async function processCommunityPaymentEvent(
           {
             schoolId: subscription!.attempt.schoolId,
             publicSchoolId: subscription!.school.publicId,
-            learnerId: subscription!.attempt.learnerId,
+            learnerId: subscription!.attempt.schoolAccountId,
             learnerPublicId: "payment:webhook",
             learnerEmail: "",
             learnerName: "",

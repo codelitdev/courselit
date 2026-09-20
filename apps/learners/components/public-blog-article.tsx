@@ -7,22 +7,11 @@ import { LearnerCardImage } from "@/components/themed-page-builder";
 import type { PublicArticle } from "@/lib/courselit-public";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
-function stringValue(value: unknown): string | null {
-  return typeof value === "string" && value.length > 0 ? value : null;
-}
-
 export function PublicBlogArticle({ article }: { article: PublicArticle }) {
   const theme = useSchoolThemeStyle();
   const featuredImage = article.featuredImage;
-  const imageUrl = featuredImage
-    ? (stringValue(featuredImage.url) ?? stringValue(featuredImage.file))
-    : null;
-  const imageAlt = featuredImage
-    ? (stringValue(featuredImage.alt) ??
-      stringValue(featuredImage.caption) ??
-      article.title ??
-      article.slug)
-    : (article.title ?? article.slug);
+  const imageUrl = featuredImage?.url ?? null;
+  const imageAlt = featuredImage?.alt ?? article.title ?? article.slug;
 
   return (
     <article className="mx-auto flex w-full max-w-2xl flex-col gap-6">

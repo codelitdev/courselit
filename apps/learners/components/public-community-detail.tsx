@@ -5,21 +5,19 @@ import type {
   communitySchema,
 } from "@courselit/api-contract";
 import {
-  Badge,
   Button,
   Caption,
   Header1,
   Header4,
-  PageCard,
-  PageCardContent,
-  Subheader1,
   Text2,
 } from "@frontlit/page-builder/primitives";
 import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
+import { Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { z } from "zod";
-import { LearnerCardImage } from "@/components/themed-page-builder";
+import { LearnerCard, LearnerCardImage } from "@/components/themed-page-builder";
+import { learnerHeaders } from "@/lib/school";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
 type PublicCommunity = z.infer<typeof communitySchema>;
@@ -62,6 +60,9 @@ export function PublicCommunityDetail({ communityId }: { communityId: string }) 
   const [community, setCommunity] = useState<PublicCommunity | null>(null);
   const [plans, setPlans] = useState<CommunityPlan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [checkoutBusy, setCheckoutBusy] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -97,79 +98,132 @@ export function PublicCommunityDetail({ communityId }: { communityId: string }) 
   if (!community) return <Text2 theme={theme}>That community is not available.</Text2>;
 
   const description = richText(community.description);
-  const image = community.featuredMedia;
+  const image = community.featuredImage;
+  const selectedPlan =
+    plans.find((plan) => plan.id === selectedPlanId) ??
+    plans.find((plan) => plan.isDefault) ??
+    plans[0];
+  const currentCommunity = community;
+
+  async function checkoutResponseError(response: Response, fallback: string) {
+    try {
+      const body = (await response.json()) as { message?: unknown };
+      if (typeof body.message === "string" && body.message.trim()) {
+        return body.message;
+      }
+    } catch {
+      // Keep the stable fallback for non-JSON proxy responses.
+    }
+    return fallback;
+  }
+
+  async function startCheckout() {
+    if (!selectedPlan || checkoutBusy) return;
+    setCheckoutBusy(true);
+    setCheckoutError(null);
+    try {
+      const response = await fetch("/api/v1/storefront/checkout-sessions", {
+        method: "POST",
+        credentials: "include",
+        headers: learnerHeaders({ "content-type": "application/json" }),
+        body: JSON.stringify({
+          communityId: currentCommunity.id,
+          planId: selectedPlan.id,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error(
+          await checkoutResponseError(response, "Unable to start checkout."),
+        );
+      }
+      const session = (await response.json()) as { id?: unknown };
+      if (typeof session.id !== "string" || !session.id) {
+        throw new Error("Unable to create checkout session.");
+      }
+      window.location.assign(`/checkout?session=${encodeURIComponent(session.id)}`);
+    } catch (caught) {
+      setCheckoutError(
+        caught instanceof Error ? caught.message : "Unable to start checkout.",
+      );
+    } finally {
+      setCheckoutBusy(false);
+    }
+  }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-16">
+      <section id="checkout" className="scroll-mt-24">
+        <div className="grid items-center gap-10 md:grid-cols-2">
+          {image ? (
+            <LearnerCardImage
+              theme={theme}
+              src={image.thumbnailUrl ?? image.url}
+              alt={image.alt || community.name}
+              className="aspect-[4/3] w-full border object-cover"
+            />
+          ) : (
+            <LearnerCard className="hidden aspect-[4/3] border-dashed bg-muted/30 p-0 md:block">
+              <span aria-hidden />
+            </LearnerCard>
+          )}
+          <div className="flex flex-col items-start gap-4">
+            <Caption theme={theme}>Community</Caption>
+            <Header1 theme={theme}>{community.name}</Header1>
+            {description ? (
+              <TextRenderer json={description} theme={theme} />
+            ) : community.description ? (
+              <Text2 theme={theme}>{community.description}</Text2>
+            ) : null}
+            <Text2 theme={theme} className="flex items-center gap-1">
+              <Users className="size-4" /> {community.membersCount} members
+            </Text2>
+            {plans.length > 1 ? (
+              <div className="flex flex-wrap gap-2">
+                {plans.map((plan) => (
+                  <Button
+                    key={plan.id}
+                    type="button"
+                    theme={theme}
+                    size="sm"
+                    variant={selectedPlan?.id === plan.id ? "secondary" : "outline"}
+                    onClick={() => setSelectedPlanId(plan.id)}
+                  >
+                    {plan.name}
+                  </Button>
+                ))}
+              </div>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-4">
+              {selectedPlan ? (
+                <Header4 theme={theme}>{planPrice(selectedPlan)}</Header4>
+              ) : null}
+              <Button
+                theme={theme}
+                type="button"
+                disabled={!selectedPlan || checkoutBusy}
+                onClick={() => void startCheckout()}
+              >
+                {checkoutBusy ? "Please wait…" : "Join community"}
+              </Button>
+            </div>
+            {checkoutError ? (
+              <Text2 theme={theme} className="text-destructive">
+                {checkoutError}
+              </Text2>
+            ) : null}
+            {selectedPlan?.description ? (
+              <Text2 theme={theme} className="max-w-md text-muted-foreground">
+                {selectedPlan.description}
+              </Text2>
+            ) : null}
+          </div>
+        </div>
+      </section>
       <Link href="/communities" className="w-fit">
         <Text2 theme={theme} className="hover:underline">
           ← Communities
         </Text2>
       </Link>
-      <header className="flex flex-col gap-4">
-        <Header1 theme={theme}>{community.name}</Header1>
-        <Subheader1 theme={theme} component="span">
-          Join the conversation and learn with other members.
-        </Subheader1>
-      </header>
-      <PageCard theme={theme} className="scroll-mt-24 overflow-hidden" id="checkout">
-        {image ? (
-          <LearnerCardImage
-            theme={theme}
-            src={image.thumbnailUrl ?? image.canonicalUrl}
-            alt={image.altText || community.name}
-            className="aspect-video w-full object-cover"
-          />
-        ) : null}
-        <PageCardContent theme={theme} className="flex flex-col gap-5">
-          {description ? (
-            <TextRenderer json={description} theme={theme} />
-          ) : community.description ? (
-            <Text2 theme={theme}>{community.description}</Text2>
-          ) : null}
-          <div className="flex flex-wrap items-center gap-3">
-            <Caption theme={theme}>{community.membersCount} members</Caption>
-            <Caption theme={theme}>{community.postsCount} posts</Caption>
-            {community.categories.slice(0, 4).map((category) => (
-              <Caption key={category} theme={theme}>
-                {category}
-              </Caption>
-            ))}
-          </div>
-          {plans.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {plans.map((plan) => (
-                <PageCard key={plan.id} theme={theme}>
-                  <PageCardContent theme={theme} className="flex flex-col gap-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <Header4 theme={theme}>{plan.name}</Header4>
-                      <Badge theme={theme} variant="secondary">
-                        {planPrice(plan)}
-                      </Badge>
-                    </div>
-                    {plan.description ? (
-                      <Text2 theme={theme}>{plan.description}</Text2>
-                    ) : null}
-                    <Button theme={theme} type="button" asChild>
-                      <Link
-                        href={`/dashboard/community/${encodeURIComponent(community.id)}`}
-                      >
-                        Join community
-                      </Link>
-                    </Button>
-                  </PageCardContent>
-                </PageCard>
-              ))}
-            </div>
-          ) : (
-            <Button theme={theme} type="button" asChild>
-              <Link href={`/dashboard/community/${encodeURIComponent(community.id)}`}>
-                Join community
-              </Link>
-            </Button>
-          )}
-        </PageCardContent>
-      </PageCard>
     </div>
   );
 }

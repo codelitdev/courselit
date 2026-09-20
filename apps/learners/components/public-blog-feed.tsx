@@ -10,22 +10,12 @@ import {
   Text2,
 } from "@frontlit/page-builder/primitives";
 import Link from "next/link";
-import { LearnerCardImage } from "@/components/themed-page-builder";
+import { LearnerCardImage as PageCardImage } from "@/components/themed-page-builder";
 import type { PublicArticle } from "@/lib/courselit-public";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
-function stringValue(value: unknown): string | null {
-  return typeof value === "string" && value.length > 0 ? value : null;
-}
-
 function featuredImageUrl(article: PublicArticle): string | null {
-  const image = article.featuredImage;
-  return image
-    ? (stringValue(image.thumbnailUrl) ??
-        stringValue(image.thumbnail) ??
-        stringValue(image.url) ??
-        stringValue(image.file))
-    : null;
+  return article.featuredImage?.thumbnailUrl ?? article.featuredImage?.url ?? null;
 }
 
 export function PublicBlogFeed({
@@ -60,15 +50,10 @@ export function PublicBlogFeed({
                 className="h-full transition-transform hover:-translate-y-1"
               >
                 {featuredImageUrl(post) ? (
-                  <LearnerCardImage
+                  <PageCardImage
                     theme={theme}
                     src={featuredImageUrl(post)!}
-                    alt={
-                      stringValue(post.featuredImage?.alt) ??
-                      stringValue(post.featuredImage?.caption) ??
-                      post.title ??
-                      post.slug
-                    }
+                    alt={post.featuredImage?.alt ?? post.title ?? post.slug}
                     className="aspect-video object-cover"
                   />
                 ) : null}

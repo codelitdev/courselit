@@ -128,7 +128,7 @@ describe("FrontLit client", () => {
           JSON.stringify({
             title: "School",
             subtitle: "Learn with us",
-            logo: null,
+            logo: { file: "https://cdn.example.com/logo.png", caption: "School logo" },
             themeId: "classic",
             theme: null,
           }),
@@ -174,7 +174,11 @@ describe("FrontLit client", () => {
 
     await expect(
       getPublicFrontLitSettings("team-public", { config, fetcher }),
-    ).resolves.toMatchObject({ title: "School", themeId: "classic" });
+    ).resolves.toMatchObject({
+      title: "School",
+      themeId: "classic",
+      logo: { url: "https://cdn.example.com/logo.png", alt: "School logo" },
+    });
     await expect(
       getPublicFrontLitPage("team-public", "", { config, fetcher }),
     ).resolves.toMatchObject({ pageId: "page_1", slug: "" });
@@ -242,7 +246,10 @@ describe("FrontLit client", () => {
             pageId: "page/1",
             name: "Refund policy",
             slug: "refund",
+            deletable: true,
             status: "published",
+            layout: [],
+            draftLayout: [],
           }),
           { status: 200, headers: { "content-type": "application/json" } },
         );
@@ -250,12 +257,14 @@ describe("FrontLit client", () => {
     });
 
     expect(requestUrl).toBe("http://frontlit.test/pages/page%2F1/publish");
-    expect(page).toEqual({
+    expect(page).toMatchObject({
       id: "page/1",
       name: "Refund policy",
       kind: "page",
       slug: "refund",
       status: "published",
+      layout: [],
+      draftLayout: [],
     });
     expect(receivedHeaders).toMatchObject({ "x-frontlit-apikey": "team-key" });
     expect(receivedHeaders).not.toMatchObject({
@@ -367,7 +376,7 @@ describe("FrontLit client", () => {
         kind: "blog",
         slug: "hello",
         status: "draft",
-        featuredImage: { file: "https://media.test/hello.png" },
+        featuredImage: { url: "https://media.test/hello.png" },
         excerpt: "A short introduction.",
         updatedAt: "2026-09-07T08:00:00.000Z",
       },

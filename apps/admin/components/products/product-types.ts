@@ -1,4 +1,5 @@
 import type { CourseLitPermission } from "@courselit/api-contract/team-permissions";
+import type { MediaRef } from "@courselit/api-contract";
 
 export type ProductKind = "course" | "download";
 
@@ -30,13 +31,7 @@ export type Product = {
   schoolId: string;
   title: string;
   description: string;
-  featuredMedia: {
-    id: string;
-    canonicalUrl: string;
-    thumbnailUrl: string | null;
-    fileName: string;
-    altText: string;
-  } | null;
+  featuredImage: MediaRef | null;
   privacy: "public" | "unlisted";
   leadMagnet: boolean;
   certificate: boolean;

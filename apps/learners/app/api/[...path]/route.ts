@@ -8,18 +8,18 @@ async function proxy(
 ) {
   try {
     const { path } = await context.params;
-    if (path[0] !== "v1" && path[0] !== "learner-auth") {
+    if (path[0] !== "v1" && path[0] !== "auth" && path[0] !== "learner-auth") {
       return NextResponse.json(
         {
           code: "not_found",
-          message: "Learner app only proxies public, learner, and learner-auth APIs.",
+          message: "Learner app only proxies public, learner, and auth APIs.",
         },
         { status: 404 },
       );
     }
     const suffix = path.join("/");
-    const isLearnerAuth = path[0] === "learner-auth";
-    const upstreamPath = isLearnerAuth ? `/api/${suffix}` : `/${suffix}`;
+    const isAuth = path[0] === "auth" || path[0] === "learner-auth";
+    const upstreamPath = isAuth ? `/api/${suffix}` : `/${suffix}`;
     const target = `${API_URL}${upstreamPath}${request.nextUrl.search}`;
     const headers = new Headers(request.headers);
     const incomingHost =
@@ -28,13 +28,15 @@ async function proxy(
     if (incomingHost) headers.set("x-forwarded-host", incomingHost);
     const rawCookie = request.headers.get("cookie");
     if (rawCookie) {
-      const isLearnerBetterAuthCookie = (name: string) =>
+      const isBetterAuthCookie = (name: string) =>
+        name.startsWith("better-auth.") ||
+        name.startsWith("__Secure-better-auth.") ||
         name.startsWith("courselit-learner.") ||
         name.startsWith("courselit-learner-") ||
         name.startsWith("__Secure-courselit-learner.") ||
         name.startsWith("__Secure-courselit-learner-");
-      const includeLearnerBetterAuth =
-        isLearnerAuth || (path[0] === "v1" && suffix === "v1/learner/me");
+      const includeBetterAuth =
+        isAuth || (path[0] === "v1" && suffix === "v1/learner/me");
       const cookies = rawCookie
         .split(";")
         .map((part) => part.trim())
@@ -43,7 +45,7 @@ async function proxy(
           const name = part.split("=", 1)[0];
           return (
             name === "courselit.learner.session" ||
-            (includeLearnerBetterAuth && isLearnerBetterAuthCookie(name))
+            (includeBetterAuth && isBetterAuthCookie(name))
           );
         });
       if (cookies.length > 0) {
@@ -65,10 +67,9 @@ async function proxy(
     const outputHeaders = new Headers();
     for (const name of [
       "content-type",
-      "content-disposition",
-      "content-length",
       "location",
       "x-request-id",
+      "retry-after",
     ]) {
       const value = response.headers.get(name);
       if (value) outputHeaders.set(name, value);
@@ -77,19 +78,14 @@ async function proxy(
     for (const cookie of setCookies) {
       outputHeaders.append("set-cookie", cookie);
     }
-    if (setCookies.length === 0) {
-      const rawSetCookie = response.headers.get("set-cookie");
-      if (rawSetCookie) outputHeaders.set("set-cookie", rawSetCookie);
-    }
-    outputHeaders.set("cache-control", "no-store");
-    return new NextResponse(response.body, {
+    const buffer = await response.arrayBuffer();
+    return new NextResponse(buffer, {
       status: response.status,
       headers: outputHeaders,
     });
-  } catch (error) {
-    console.error("LEARNERS PROXY ERROR:", error);
+  } catch (caught) {
     return NextResponse.json(
-      { code: "proxy_error", message: String(error) },
+      { code: "proxy_error", message: String(caught) },
       { status: 502 },
     );
   }
@@ -97,5 +93,6 @@ async function proxy(
 
 export const GET = proxy;
 export const POST = proxy;
+export const PUT = proxy;
 export const PATCH = proxy;
 export const DELETE = proxy;

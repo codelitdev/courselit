@@ -1,5 +1,6 @@
 "use client";
 
+import type { MediaRef } from "@courselit/api-contract";
 import { FileText, Plus } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
@@ -24,17 +25,13 @@ type FrontLitContent = {
   kind: "page" | "blog";
   slug: string;
   status: "draft" | "published" | "published_with_changes";
-  featuredImage?: Record<string, unknown> | null;
+  featuredImage?: MediaRef | null;
   excerpt?: string | null;
   updatedAt?: string | null;
 };
 
-function imageUrl(image: Record<string, unknown> | null | undefined): string | null {
-  for (const key of ["thumbnail", "file", "url", "src"]) {
-    const value = image?.[key];
-    if (typeof value === "string" && value.trim()) return value;
-  }
-  return null;
+function imageUrl(image: MediaRef | null | undefined): string | null {
+  return image?.thumbnailUrl ?? image?.url ?? null;
 }
 
 function formatUpdatedAt(value: string | null | undefined): string | null {

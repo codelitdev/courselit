@@ -78,7 +78,7 @@ export type CommunityImportResult = {
 };
 
 type Mapping = typeof schema.migrationMappings.$inferSelect;
-type Identity = { learnerId: string | null; adminUserId: string | null };
+type Identity = { schoolAccountId: string | null };
 
 const COLLECTIONS = {
   communities: "communities",
@@ -247,35 +247,102 @@ async function mappedTarget(
     : null;
 }
 
-async function resolveAdminUser(
+async function resolveAdminAccount(
   db: AppDb,
   sourceSystem: string,
   sourceUserId: string | null,
   schoolId: string,
-  fallbackToOwner = true,
+  fallbackToOwner = false,
 ): Promise<string | null> {
+  let userId: string | null = null;
   if (sourceUserId) {
     const direct = await db
       .select({ id: schema.user.id })
       .from(schema.user)
       .where(eq(schema.user.id, sourceUserId))
       .limit(1);
-    if (direct[0]) return direct[0].id;
-    const mapped = await findMapping(db, sourceSystem, "users", sourceUserId, "user");
-    if (mapped) {
-      const exists = await db
-        .select({ id: schema.user.id })
-        .from(schema.user)
-        .where(eq(schema.user.id, mapped.targetId))
-        .limit(1);
-      if (exists[0]) return exists[0].id;
+    if (direct[0]) userId = direct[0].id;
+    else {
+      const mapped = await findMapping(db, sourceSystem, "users", sourceUserId, "user");
+      if (mapped) {
+        const exists = await db
+          .select({ id: schema.user.id })
+          .from(schema.user)
+          .where(eq(schema.user.id, mapped.targetId))
+          .limit(1);
+        if (exists[0]) userId = exists[0].id;
+      }
     }
+  }
+  if (userId) {
+    const membership = await db
+      .select({ schoolAccountId: schema.schoolAccounts.id })
+      .from(schema.schoolAccounts)
+      .innerJoin(
+        schema.memberships,
+        eq(schema.memberships.schoolAccountId, schema.schoolAccounts.id),
+      )
+      .where(and(eq(schema.schoolAccounts.schoolId, schoolId), eq(schema.schoolAccounts.userId, userId)))
+      .limit(1);
+    if (membership[0]?.schoolAccountId) return membership[0].schoolAccountId;
   }
   if (!fallbackToOwner) return null;
   const owner = await db
-    .select({ userId: schema.memberships.userId })
+    .select({ schoolAccountId: schema.memberships.schoolAccountId })
     .from(schema.memberships)
     .where(and(eq(schema.memberships.schoolId, schoolId), eq(schema.memberships.isOwner, true)))
+    .limit(1);
+  return owner[0]?.schoolAccountId ?? null;
+}
+
+async function resolveAdminUserId(
+  db: AppDb,
+  sourceSystem: string,
+  sourceUserId: string | null,
+  schoolId: string,
+  fallbackToOwner = false,
+): Promise<string | null> {
+  let userId: string | null = null;
+  if (sourceUserId) {
+    const direct = await db
+      .select({ id: schema.user.id })
+      .from(schema.user)
+      .where(eq(schema.user.id, sourceUserId))
+      .limit(1);
+    if (direct[0]) userId = direct[0].id;
+    else {
+      const mapped = await findMapping(db, sourceSystem, "users", sourceUserId, "user");
+      if (mapped) {
+        const exists = await db
+          .select({ id: schema.user.id })
+          .from(schema.user)
+          .where(eq(schema.user.id, mapped.targetId))
+          .limit(1);
+        if (exists[0]) userId = exists[0].id;
+      }
+    }
+  }
+  if (userId) {
+    const membership = await db
+      .select({ userId: schema.schoolAccounts.userId })
+      .from(schema.schoolAccounts)
+      .innerJoin(
+        schema.memberships,
+        eq(schema.memberships.schoolAccountId, schema.schoolAccounts.id),
+      )
+      .where(and(eq(schema.schoolAccounts.schoolId, schoolId), eq(schema.schoolAccounts.userId, userId)))
+      .limit(1);
+    if (membership[0]?.userId) return membership[0].userId;
+  }
+  if (!fallbackToOwner) return null;
+  const owner = await db
+    .select({ userId: schema.schoolAccounts.userId })
+    .from(schema.schoolAccounts)
+    .innerJoin(
+      schema.memberships,
+      eq(schema.memberships.schoolAccountId, schema.schoolAccounts.id),
+    )
+    .where(and(eq(schema.schoolAccounts.schoolId, schoolId), eq(schema.memberships.isOwner, true)))
     .limit(1);
   return owner[0]?.userId ?? null;
 }
@@ -289,18 +356,19 @@ async function resolveLearner(
   if (!sourceUserId) return null;
   if (isUuid(sourceUserId)) {
     const direct = await db
-      .select({ id: schema.learners.id })
-      .from(schema.learners)
-      .where(and(eq(schema.learners.id, sourceUserId), eq(schema.learners.schoolId, schoolId)))
+      .select({ id: schema.schoolAccounts.id })
+      .from(schema.schoolAccounts)
+      .where(and(eq(schema.schoolAccounts.id, sourceUserId), eq(schema.schoolAccounts.schoolId, schoolId)))
       .limit(1);
     if (direct[0]) return direct[0].id;
   }
-  const mapping = await findMapping(db, sourceSystem, "users", sourceUserId, "learners");
+  const mapping = (await findMapping(db, sourceSystem, "users", sourceUserId, "school_accounts"))
+    ?? (await findMapping(db, sourceSystem, "users", sourceUserId, "learners"));
   if (!mapping) return null;
   const mapped = await db
-    .select({ id: schema.learners.id })
-    .from(schema.learners)
-    .where(and(eq(schema.learners.id, mapping.targetId), eq(schema.learners.schoolId, schoolId)))
+    .select({ id: schema.schoolAccounts.id })
+    .from(schema.schoolAccounts)
+    .where(and(eq(schema.schoolAccounts.id, mapping.targetId), eq(schema.schoolAccounts.schoolId, schoolId)))
     .limit(1);
   return mapped[0]?.id ?? null;
 }
@@ -314,18 +382,18 @@ async function resolveIdentity(
   const sourceUserId = sourceIdFor(record, "userId", "authorId", "reporterId", "actorId");
   const kind = stringValue(record.userKind ?? record.authorKind ?? record.reporterKind);
   if (kind === "admin" || record.isAdmin === true) {
-    return { learnerId: null, adminUserId: await resolveAdminUser(db, sourceSystem, sourceUserId, schoolId, false) };
+    return { schoolAccountId: await resolveAdminAccount(db, sourceSystem, sourceUserId, schoolId, false) };
   }
   if (kind === "learner") {
-    return { learnerId: await resolveLearner(db, sourceSystem, sourceUserId, schoolId), adminUserId: null };
+    return { schoolAccountId: await resolveLearner(db, sourceSystem, sourceUserId, schoolId) };
   }
-  const adminUserId = await resolveAdminUser(db, sourceSystem, sourceUserId, schoolId, false);
-  if (adminUserId) return { learnerId: null, adminUserId };
-  return { learnerId: await resolveLearner(db, sourceSystem, sourceUserId, schoolId), adminUserId: null };
+  const adminAccountId = await resolveAdminAccount(db, sourceSystem, sourceUserId, schoolId, false);
+  if (adminAccountId) return { schoolAccountId: adminAccountId };
+  return { schoolAccountId: await resolveLearner(db, sourceSystem, sourceUserId, schoolId) };
 }
 
 function hasIdentity(identity: Identity): boolean {
-  return Boolean(identity.learnerId || identity.adminUserId);
+  return Boolean(identity.schoolAccountId);
 }
 
 function isUuid(value: string): boolean {
@@ -607,7 +675,7 @@ export async function importLegacyCommunities(
         continue;
       }
       const timestamps = normalizeTimestamps(record, now);
-      const creatorId = await resolveAdminUser(db, sourceSystem, sourceIdFor(record, "creatorId", "createdBy"), schoolId);
+      const creatorId = await resolveAdminUserId(db, sourceSystem, sourceIdFor(record, "creatorId", "createdBy"), schoolId, false);
       if (!timestamps) {
         addRejection(rejection(COLLECTIONS.communities, sourceId, "invalid_timestamps"));
         continue;
@@ -633,7 +701,6 @@ export async function importLegacyCommunities(
         description: contentValue(record.description),
         banner: contentValue(record.banner),
         categories: JSON.stringify(stringArray(record.categories).length > 0 ? stringArray(record.categories) : ["General"]),
-        enabled: booleanValue(record.enabled, false) && !deleted,
         autoAcceptMembers: booleanValue(record.autoAcceptMembers, true),
         joiningReasonText: stringValue(record.joiningReasonText) ?? "",
         deletedAt: deleted ? timestamps.updatedAt : null,
@@ -688,7 +755,7 @@ export async function importLegacyCommunities(
         addRejection(rejection(COLLECTIONS.plans, sourceId, "invalid_timestamps"));
         continue;
       }
-      const creatorId = await resolveAdminUser(db, sourceSystem, sourceIdFor(record, "creatorId", "createdBy"), communityRow.schoolId);
+      const creatorId = await resolveAdminUserId(db, sourceSystem, sourceIdFor(record, "creatorId", "createdBy"), communityRow.schoolId, true);
       if (!creatorId) {
         addRejection(rejection(COLLECTIONS.plans, sourceId, "creator_not_found"));
         continue;
@@ -813,8 +880,7 @@ export async function importLegacyCommunities(
         schoolId: communityRow.schoolId,
         communityId,
         paymentPlanId,
-        learnerId: identity.learnerId,
-        adminUserId: identity.adminUserId,
+        schoolAccountId: identity.schoolAccountId!,
         status,
         role,
         joiningReason: stringValue(record.joiningReason) ?? "",
@@ -845,7 +911,7 @@ export async function importLegacyCommunities(
       const community = await db.select({ schoolId: schema.communities.schoolId }).from(schema.communities).where(eq(schema.communities.id, communityId)).limit(1);
       const communityRow = community[0];
       const timestamps = normalizeTimestamps(record, now);
-      const identity = communityRow ? await resolveIdentity(db, sourceSystem, record, communityRow.schoolId) : { learnerId: null, adminUserId: null };
+      const identity = communityRow ? await resolveIdentity(db, sourceSystem, record, communityRow.schoolId) : { schoolAccountId: null };
       if (!communityRow || !timestamps) {
         addRejection(rejection(COLLECTIONS.posts, sourceId, "invalid_timestamps"));
         continue;
@@ -863,8 +929,7 @@ export async function importLegacyCommunities(
         publicId: sourceId,
         schoolId: communityRow.schoolId,
         communityId,
-        learnerId: identity.learnerId,
-        adminUserId: identity.adminUserId,
+        schoolAccountId: identity.schoolAccountId!,
         title: stringValue(record.title) ?? "",
         content: contentValue(record.content),
         category: stringValue(record.category) ?? "General",
@@ -912,7 +977,7 @@ export async function importLegacyCommunities(
         const post = await db.select({ communityId: schema.communityPosts.communityId, schoolId: schema.communityPosts.schoolId }).from(schema.communityPosts).where(eq(schema.communityPosts.id, postId)).limit(1);
         const postRow = post[0];
         const timestamps = normalizeTimestamps(itemRecord, now);
-        const identity = postRow ? await resolveIdentity(db, sourceSystem, itemRecord, postRow.schoolId) : { learnerId: null, adminUserId: null };
+        const identity = postRow ? await resolveIdentity(db, sourceSystem, itemRecord, postRow.schoolId) : { schoolAccountId: null };
         if (!postRow || !timestamps) {
           addRejection(rejection(COLLECTIONS.comments, sourceId, "invalid_timestamps"));
           continue;
@@ -937,8 +1002,7 @@ export async function importLegacyCommunities(
           communityId: postRow.communityId,
           postId,
           parentCommentId: parentId,
-          learnerId: identity.learnerId,
-          adminUserId: identity.adminUserId,
+          schoolAccountId: identity.schoolAccountId!,
           content: contentValue(itemRecord.content),
           deletedAt: itemRecord.deleted === true ? timestamps.updatedAt : null,
           createdAt: timestamps.createdAt,
@@ -979,7 +1043,7 @@ export async function importLegacyCommunities(
         ? await db.select({ communityId: schema.communityPosts.communityId, schoolId: schema.communityPosts.schoolId }).from(schema.communityPosts).where(eq(schema.communityPosts.id, entityId)).limit(1)
         : await db.select({ communityId: schema.communityComments.communityId, schoolId: schema.communityComments.schoolId }).from(schema.communityComments).where(eq(schema.communityComments.id, entityId)).limit(1);
       const entityRow = entity[0];
-      const identity = entityRow ? await resolveIdentity(db, sourceSystem, record, entityRow.schoolId) : { learnerId: null, adminUserId: null };
+      const identity = entityRow ? await resolveIdentity(db, sourceSystem, record, entityRow.schoolId) : { schoolAccountId: null };
       const emoji = stringValue(record.emoji);
       if (!entityRow || !emoji || !hasIdentity(identity)) {
         addRejection(rejection(COLLECTIONS.reactions, sourceId, !hasIdentity(identity) ? "actor_not_found" : "source_reference_missing"));
@@ -987,7 +1051,7 @@ export async function importLegacyCommunities(
       }
       if (!addReady()) continue;
       const targetId = uuidv7(input.clock);
-      await db.insert(schema.communityReactions).values({ id: targetId, publicId: sourceId, schoolId: entityRow.schoolId, communityId: entityRow.communityId, entityType, entityId, emoji, learnerId: identity.learnerId, adminUserId: identity.adminUserId });
+      await db.insert(schema.communityReactions).values({ id: targetId, publicId: sourceId, schoolId: entityRow.schoolId, communityId: entityRow.communityId, entityType, entityId, emoji, schoolAccountId: identity.schoolAccountId! });
       await addMapping(db, { clock: input.clock, runId, sourceSystem, sourceCollection: COLLECTIONS.reactions, sourceId, targetTable: "communityReactions", targetId, schoolId: entityRow.schoolId });
       counts.imported += 1;
       counts.reactionsImported += 1;
@@ -1011,14 +1075,14 @@ export async function importLegacyCommunities(
       if (!postId) continue;
       const post = await db.select({ communityId: schema.communityPosts.communityId, schoolId: schema.communityPosts.schoolId }).from(schema.communityPosts).where(eq(schema.communityPosts.id, postId)).limit(1);
       const postRow = post[0];
-      const identity = postRow ? await resolveIdentity(db, sourceSystem, record, postRow.schoolId) : { learnerId: null, adminUserId: null };
+      const identity = postRow ? await resolveIdentity(db, sourceSystem, record, postRow.schoolId) : { schoolAccountId: null };
       if (!postRow || !hasIdentity(identity)) {
         addRejection(rejection(COLLECTIONS.subscribers, sourceId, !postRow ? "post_mapping_missing" : "actor_not_found"));
         continue;
       }
       if (!addReady()) continue;
       const targetId = uuidv7(input.clock);
-      await db.insert(schema.communityPostSubscribers).values({ id: targetId, schoolId: postRow.schoolId, communityId: postRow.communityId, postId, learnerId: identity.learnerId, adminUserId: identity.adminUserId });
+      await db.insert(schema.communityPostSubscribers).values({ id: targetId, schoolId: postRow.schoolId, communityId: postRow.communityId, postId, schoolAccountId: identity.schoolAccountId! });
       await addMapping(db, { clock: input.clock, runId, sourceSystem, sourceCollection: COLLECTIONS.subscribers, sourceId, targetTable: "communityPostSubscribers", targetId, schoolId: postRow.schoolId });
       counts.imported += 1;
       counts.subscribersImported += 1;
@@ -1046,7 +1110,7 @@ export async function importLegacyCommunities(
       const contentCollection = contentType === "post" ? COLLECTIONS.posts : COLLECTIONS.comments;
       const contentTable = contentType === "post" ? "communityPosts" : "communityComments";
       const contentId = contentSourceId && contentType ? await mappedTarget(db, sourceSystem, contentCollection, contentSourceId, contentTable) : null;
-      const identity = communityRow ? await resolveIdentity(db, sourceSystem, record, communityRow.schoolId) : { learnerId: null, adminUserId: null };
+      const identity = communityRow ? await resolveIdentity(db, sourceSystem, record, communityRow.schoolId) : { schoolAccountId: null };
       const timestamps = normalizeTimestamps(record, now);
       if (!communityRow || !contentType || !contentId || !timestamps || !hasIdentity(identity)) {
         addRejection(rejection(COLLECTIONS.reports, sourceId, !hasIdentity(identity) ? "actor_not_found" : "source_reference_missing"));
@@ -1062,7 +1126,7 @@ export async function importLegacyCommunities(
       const targetId = uuidv7(input.clock);
       const status = stringValue(record.status)?.toLowerCase();
       const normalizedStatus = status === "accepted" || status === "rejected" ? status : "pending";
-      await db.insert(schema.communityReports).values({ id: targetId, publicId: sourceId, schoolId: communityRow.schoolId, communityId, contentType, contentId, contentParentId, learnerId: identity.learnerId, adminUserId: identity.adminUserId, reason: stringValue(record.reason) ?? "", status: normalizedStatus, rejectionReason: stringValue(record.rejectionReason), createdAt: timestamps.createdAt, updatedAt: timestamps.updatedAt });
+      await db.insert(schema.communityReports).values({ id: targetId, publicId: sourceId, schoolId: communityRow.schoolId, communityId, contentType, contentId, contentParentId, schoolAccountId: identity.schoolAccountId!, reason: stringValue(record.reason) ?? "", status: normalizedStatus, rejectionReason: stringValue(record.rejectionReason), createdAt: timestamps.createdAt, updatedAt: timestamps.updatedAt });
       await addMapping(db, { clock: input.clock, runId, sourceSystem, sourceCollection: COLLECTIONS.reports, sourceId, targetTable: "communityReports", targetId, schoolId: communityRow.schoolId });
       counts.imported += 1;
       counts.reportsImported += 1;

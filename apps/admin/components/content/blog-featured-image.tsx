@@ -1,5 +1,6 @@
 "use client";
 
+import type { MediaRef } from "@courselit/api-contract";
 import { ImageUploadDialog, type SelectedImage } from "@frontlit/media-uploader";
 import Image from "next/image";
 import { useState } from "react";
@@ -10,6 +11,7 @@ import {
   mediaMatchesAcceptedTypes,
   useCourseLitMediaUploader,
 } from "@/lib/course-media-uploader";
+import { toMediaRef } from "@/lib/media-ref";
 
 const BLOG_IMAGE_ACCEPTED_TYPES = [
   "image/jpeg",
@@ -18,33 +20,10 @@ const BLOG_IMAGE_ACCEPTED_TYPES = [
   "image/webp",
 ];
 
-type BlogFeaturedImageValue = Record<string, unknown>;
-
-function stringValue(value: unknown): string | null {
-  return typeof value === "string" && value.length > 0 ? value : null;
-}
+type BlogFeaturedImageValue = MediaRef;
 
 function imageUrl(value: BlogFeaturedImageValue | null | undefined): string | null {
-  if (!value) return null;
-  return (
-    stringValue(value.thumbnailUrl) ??
-    stringValue(value.thumbnail) ??
-    stringValue(value.url) ??
-    stringValue(value.file)
-  );
-}
-
-function mediaToFeaturedImage(media: CourseLitMedia): BlogFeaturedImageValue {
-  return {
-    mediaId: media.id,
-    url: media.canonicalUrl,
-    file: media.canonicalUrl,
-    thumbnailUrl: media.thumbnailUrl,
-    thumbnail: media.thumbnailUrl,
-    alt: media.altText,
-    caption: media.caption || media.fileName,
-    originalFileName: media.fileName,
-  };
+  return value?.thumbnailUrl ?? value?.url ?? null;
 }
 
 export function BlogFeaturedImage({
@@ -72,7 +51,7 @@ export function BlogFeaturedImage({
 
   function selectImage(selected: SelectedImage<CourseLitMedia>) {
     if (!selected.media) {
-      setError("Featured images must be stored in the MediaLit library.");
+      setError("Featured images must be stored in the media library.");
       return;
     }
     if (!mediaMatchesAcceptedTypes(selected.media, BLOG_IMAGE_ACCEPTED_TYPES)) {
@@ -80,7 +59,7 @@ export function BlogFeaturedImage({
       return;
     }
     setError(null);
-    onChange(mediaToFeaturedImage(selected.media));
+    onChange(toMediaRef(selected));
   }
 
   return (
@@ -95,7 +74,7 @@ export function BlogFeaturedImage({
         <div className="mt-3 space-y-3">
           <Image
             src={previewUrl}
-            alt={stringValue(value?.alt) ?? stringValue(value?.caption) ?? ""}
+            alt={value?.alt ?? ""}
             width={640}
             height={360}
             unoptimized

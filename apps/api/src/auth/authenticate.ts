@@ -14,7 +14,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import * as schema from "../db/schema/index.js";
 import type { AppDb } from "../types.js";
 import { apiKeyDigestMatches, parseApiKey } from "./api-keys.js";
-import type { AdminAuth, LearnerAuth } from "./better-auth.js";
+import type { AdminAuth } from "./better-auth.js";
 import { ADMIN_SESSION_COOKIE_NAME } from "./options.js";
 
 export type AuthRuntime = {
@@ -105,8 +105,19 @@ export async function authenticateHttpRequest(
     };
   }
   const keys = await deps.db
-    .select()
+    .select({
+      key: schema.apiKeys,
+      accountUserId: schema.schoolAccounts.userId,
+    })
     .from(schema.apiKeys)
+    .leftJoin(
+      schema.memberships,
+      eq(schema.memberships.id, schema.apiKeys.membershipId),
+    )
+    .leftJoin(
+      schema.schoolAccounts,
+      eq(schema.schoolAccounts.id, schema.memberships.schoolAccountId),
+    )
     .where(
       and(
         eq(schema.apiKeys.publicId, parsed.publicId),
@@ -114,12 +125,19 @@ export async function authenticateHttpRequest(
       ),
     )
     .limit(1);
-  const key = keys[0];
+  const row = keys[0];
   if (
-    !key ||
-    (key.expiresAt && key.expiresAt.getTime() <= deps.clock.now().getTime()) ||
-    !apiKeyDigestMatches(deps.apiKeyPepper, parsed.secret, key.digest)
+    !row ||
+    (row.key.expiresAt && row.key.expiresAt.getTime() <= deps.clock.now().getTime()) ||
+    !apiKeyDigestMatches(deps.apiKeyPepper, parsed.secret, row.key.digest)
   ) {
+    return {
+      kind: "rejected",
+      error: createPlatformError("unauthenticated"),
+    };
+  }
+  const principalId = row.key.userId ?? row.accountUserId ?? "";
+  if (!principalId) {
     return {
       kind: "rejected",
       error: createPlatformError("unauthenticated"),
@@ -128,52 +146,13 @@ export async function authenticateHttpRequest(
   void deps.db
     .update(schema.apiKeys)
     .set({ lastUsedAt: deps.clock.now() })
-    .where(eq(schema.apiKeys.id, key.id))
+    .where(eq(schema.apiKeys.id, row.key.id))
     .then(() => undefined)
     .catch(() => undefined);
   return {
     kind: "authenticated",
-    principalId: key.userId,
-    credential: { kind: "api_key", credentialId: key.id },
-  };
-}
-
-/**
- * Resolve only the learner Better Auth cookie. This is deliberately separate
- * from authenticateHttpRequest: an admin session must never authenticate a
- * learner request.
- */
-export async function authenticateLearnerHttpRequest(
-  headers: HeaderMap,
-  deps: { learnerAuth: LearnerAuth },
-): Promise<AuthenticationResult<string>> {
-  const cookie = headers.cookie ?? headers.Cookie;
-  if (!cookie) {
-    return mapTransportAuthentication({ kind: "absent" }, { transport: "http" });
-  }
-  const resolved = await resolveBetterAuthSession(
-    {
-      auth: deps.learnerAuth.auth,
-      issuer: deps.learnerAuth.issuer,
-    },
-    fromNodeHeaders(toNodeHeaderMap(headers)),
-  );
-  if (resolved.status === "unavailable") {
-    return {
-      kind: "rejected",
-      error: createPlatformError("internal_error"),
-    };
-  }
-  if (resolved.status !== "authenticated" || resolved.identity.method !== "session") {
-    return {
-      kind: "rejected",
-      error: createPlatformError("unauthenticated"),
-    };
-  }
-  return {
-    kind: "authenticated",
-    principalId: resolved.identity.subject,
-    credential: { kind: "session", credentialId: resolved.identity.subject },
+    principalId,
+    credential: { kind: "api_key", credentialId: row.key.id },
   };
 }
 
@@ -188,21 +167,85 @@ export async function authenticateMcpRequest(
   if (selected.kind === "ambiguous") {
     return { kind: "rejected", error: selected.error };
   }
-  if (selected.credential.kind === "session") {
+  const presented = selected.credential;
+  if (presented.kind === "oauth") {
+    const resolved = await verifyOAuthAccessToken(
+      {
+        oauthResourceClient: deps.auth.oauthResourceClient,
+        issuer: deps.auth.issuer,
+        audiences: [deps.auth.mcpResource, deps.auth.restResource],
+      },
+      presented.secret,
+    );
+    if (resolved.status === "unavailable") {
+      return {
+        kind: "rejected",
+        error: createPlatformError("internal_error"),
+      };
+    }
+    if (resolved.status !== "authenticated" || resolved.identity.method !== "oauth") {
+      return {
+        kind: "rejected",
+        error: createPlatformError("unauthenticated"),
+      };
+    }
+    return {
+      kind: "authenticated",
+      principalId: resolved.identity.subject,
+      credential: {
+        kind: "oauth",
+        credentialId: resolved.identity.clientId,
+      },
+    };
+  }
+  const parsed = parseApiKey(presented.secret);
+  if (!parsed) {
     return {
       kind: "rejected",
       error: createPlatformError("unauthenticated"),
     };
   }
-  return authenticateHttpRequest(
-    {
-      authorization:
-        selected.credential.kind === "oauth"
-          ? `Bearer ${selected.credential.secret}`
-          : undefined,
-      "x-api-key":
-        selected.credential.kind === "api_key" ? selected.credential.secret : undefined,
-    },
-    deps,
-  ).then((result) => mapTransportAuthentication(result, { transport: "mcp" }));
+  const keys = await deps.db
+    .select({
+      key: schema.apiKeys,
+      userId: schema.schoolAccounts.userId,
+    })
+    .from(schema.apiKeys)
+    .innerJoin(
+      schema.memberships,
+      eq(schema.memberships.id, schema.apiKeys.membershipId),
+    )
+    .innerJoin(
+      schema.schoolAccounts,
+      eq(schema.schoolAccounts.id, schema.memberships.schoolAccountId),
+    )
+    .where(
+      and(
+        eq(schema.apiKeys.publicId, parsed.publicId),
+        isNull(schema.apiKeys.revokedAt),
+      ),
+    )
+    .limit(1);
+  const matched = keys[0];
+  if (
+    !matched ||
+    (matched.key.expiresAt && matched.key.expiresAt.getTime() <= deps.clock.now().getTime()) ||
+    !apiKeyDigestMatches(deps.apiKeyPepper, parsed.secret, matched.key.digest)
+  ) {
+    return {
+      kind: "rejected",
+      error: createPlatformError("unauthenticated"),
+    };
+  }
+  void deps.db
+    .update(schema.apiKeys)
+    .set({ lastUsedAt: deps.clock.now() })
+    .where(eq(schema.apiKeys.id, matched.key.id))
+    .then(() => undefined)
+    .catch(() => undefined);
+  return {
+    kind: "authenticated",
+    principalId: matched.userId,
+    credential: { kind: "api_key", credentialId: matched.key.id },
+  };
 }

@@ -23,6 +23,9 @@ describe("CourseLit FrontLit provisioning", () => {
     const runtime = await createPgliteRuntime({ clock, billingMode: "oss" });
     const world = await seedWorld(runtime, clock);
     process.env.AUTH_SECRET ??= "integration-test-auth-secret";
+    delete process.env.FRONTLIT_SERVER;
+    delete process.env.FRONTLIT_APIKEY;
+    process.env.NODE_ENV = "test";
 
     const created = await createSchool(
       runtime.db,

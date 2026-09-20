@@ -1,5 +1,6 @@
 "use client";
 
+import type { MediaRef } from "@courselit/api-contract";
 import {
   Button,
   Caption,
@@ -14,8 +15,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { CheckoutLoginForm } from "@/components/checkout-login-form";
 import {
   LearnerCardImage,
+  LearnerLabel,
   LearnerOptionLabel,
-  LearnerRadio,
+  LearnerRadioGroup,
+  LearnerRadioGroupItem,
+  LearnerTextarea,
 } from "@/components/themed-page-builder";
 import { openRazorpayCheckout, type RazorpayCheckoutData } from "@/lib/razorpay";
 import { learnerHeaders, writeSchoolId } from "@/lib/school";
@@ -23,10 +27,14 @@ import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
 type CheckoutSession = {
   id: string;
-  productId: string;
+  resourceType: "product" | "community";
+  resourceId: string;
+  productId: string | null;
+  communityId: string | null;
   planId: string;
-  productTitle: string;
-  productKind: "course" | "download";
+  productTitle: string | null;
+  productKind: "course" | "download" | null;
+  communityName: string | null;
   planName: string;
   planDescription: string;
   planType: "free" | "onetime" | "emi" | "subscription";
@@ -50,11 +58,9 @@ type CheckoutSession = {
 type Product = {
   title: string;
   description: string;
-  featuredMedia: {
-    canonicalUrl: string;
-    thumbnailUrl: string | null;
-    altText: string;
-  } | null;
+  featuredImage: MediaRef | null;
+  autoAcceptMembers?: boolean;
+  joiningReasonText?: string;
 };
 
 type Plan = {
@@ -91,6 +97,8 @@ type Learner = {
   schoolId?: string;
 };
 
+type MembershipStatus = "active" | "rejected" | null;
+
 function formatMoney(amountMinor: number, currency: string) {
   return new Intl.NumberFormat(undefined, {
     style: "currency",
@@ -123,14 +131,21 @@ function fallbackPlan(session: CheckoutSession): Plan {
   };
 }
 
-async function openCourse(productId: string) {
-  let slug = productId;
+async function openResource(session: CheckoutSession) {
+  if (session.resourceType === "community") {
+    window.location.assign("/dashboard");
+    return;
+  }
+  let slug = session.productId ?? session.resourceId;
   try {
-    const response = await fetch(`/api/v1/products/${encodeURIComponent(productId)}`, {
-      credentials: "include",
-      cache: "no-store",
-      headers: learnerHeaders(),
-    });
+    const response = await fetch(
+      `/api/v1/products/${encodeURIComponent(session.resourceId)}`,
+      {
+        credentials: "include",
+        cache: "no-store",
+        headers: learnerHeaders(),
+      },
+    );
     if (response.ok) {
       const product = (await response.json()) as { slug?: string };
       if (product.slug) slug = product.slug;
@@ -139,7 +154,75 @@ async function openCourse(productId: string) {
     // Keep the canonical route shape even if the post-checkout refresh fails.
   }
   window.location.assign(
-    `/course/${encodeURIComponent(slug)}/${encodeURIComponent(productId)}`,
+    `/course/${encodeURIComponent(slug)}/${encodeURIComponent(session.resourceId)}`,
+  );
+}
+
+function CheckoutStatusView({
+  session,
+  error,
+  refreshing,
+  onRefresh,
+}: {
+  session: CheckoutSession;
+  error: string | null;
+  refreshing: boolean;
+  onRefresh: () => Promise<void>;
+}) {
+  const theme = useSchoolThemeStyle();
+  const status = session.checkoutStatus ?? "pending";
+  const isPaid = status === "paid";
+  const isPending = status === "pending";
+  const title = isPaid ? "Thank you for your purchase!" : "Thank you for your order!";
+  const message =
+    status === "paid"
+      ? "Payment verified successfully. Your access is ready."
+      : status === "pending"
+        ? "Payment not received yet. We’re waiting for confirmation from the payment provider."
+        : status === "failed"
+          ? "Payment verification failed. Please try again or contact the school."
+          : status === "cancelled"
+            ? "This payment was cancelled."
+            : status === "refunded"
+              ? "This payment was refunded, so access is no longer active."
+              : "This payment is under review. Please contact the school for help.";
+
+  return (
+    <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-6 text-center">
+      <Header1 theme={theme}>{title}</Header1>
+      <Text2 theme={theme}>
+        Your order number is:{" "}
+        <span className="font-semibold">{session.checkoutId ?? session.id}</span>
+      </Text2>
+      <Text2
+        theme={theme}
+        className={
+          isPaid ? "text-green-600" : isPending ? undefined : "text-destructive"
+        }
+      >
+        {message}
+      </Text2>
+      {error ? (
+        <Text2 theme={theme} className="text-destructive">
+          {error}
+        </Text2>
+      ) : null}
+      {isPending ? (
+        <Button
+          theme={theme}
+          type="button"
+          onClick={() => void onRefresh()}
+          disabled={refreshing}
+        >
+          {refreshing ? "Checking…" : "Check status again"}
+        </Button>
+      ) : null}
+      {isPaid ? (
+        <Button theme={theme} type="button" onClick={() => void openResource(session)}>
+          Continue
+        </Button>
+      ) : null}
+    </div>
   );
 }
 
@@ -150,11 +233,15 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [learner, setLearner] = useState<Learner | null>(null);
   const [loginMethods, setLoginMethods] = useState<string[]>(["email"]);
+  const [googleProviderId, setGoogleProviderId] = useState<string | null>("google");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [refreshingStatus, setRefreshingStatus] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [joiningReason, setJoiningReason] = useState("");
+  const [membershipStatus, setMembershipStatus] = useState<MembershipStatus>(null);
 
   const loadSession = useCallback(async (checkoutSessionId: string) => {
     const response = await fetch(
@@ -189,8 +276,12 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
         headers: learnerHeaders(),
       }).then(async (response) => {
         if (!response.ok || !active) return;
-        const body = (await response.json()) as { loginMethods?: string[] };
+        const body = (await response.json()) as {
+          loginMethods?: string[];
+          googleProviderId?: string | null;
+        };
         if (Array.isArray(body.loginMethods)) setLoginMethods(body.loginMethods);
+        setGoogleProviderId(body.googleProviderId ?? null);
       }),
     ])
       .catch((caught) => {
@@ -211,24 +302,50 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
   useEffect(() => {
     if (!session) return;
     let active = true;
+    const resourcePath =
+      session.resourceType === "product"
+        ? `/api/v1/products/${encodeURIComponent(session.resourceId)}`
+        : `/api/v1/public/communities/${encodeURIComponent(session.resourceId)}`;
+    const plansPath =
+      session.resourceType === "product"
+        ? `/api/v1/storefront/products/${encodeURIComponent(session.resourceId)}/plans`
+        : `/api/v1/public/communities/${encodeURIComponent(session.resourceId)}/plans`;
     void Promise.all([
-      fetch(`/api/v1/products/${encodeURIComponent(session.productId)}`, {
+      fetch(resourcePath, {
         credentials: "include",
         cache: "no-store",
         headers: learnerHeaders(),
       }),
-      fetch(
-        `/api/v1/storefront/products/${encodeURIComponent(session.productId)}/plans`,
-        {
-          credentials: "include",
-          cache: "no-store",
-          headers: learnerHeaders(),
-        },
-      ),
+      fetch(plansPath, {
+        credentials: "include",
+        cache: "no-store",
+        headers: learnerHeaders(),
+      }),
     ])
       .then(async ([productResponse, plansResponse]) => {
         if (!active) return;
-        if (productResponse.ok) setProduct((await productResponse.json()) as Product);
+        if (productResponse.ok) {
+          const resource = (await productResponse.json()) as Product & {
+            name?: string;
+            enrolled?: boolean;
+            membership?: { status?: string } | null;
+          };
+          setProduct({
+            title: resource.title ?? resource.name ?? "",
+            description: resource.description ?? "",
+            featuredImage: resource.featuredImage ?? null,
+            autoAcceptMembers: resource.autoAcceptMembers,
+            joiningReasonText: resource.joiningReasonText,
+          });
+          if (session.resourceType === "product") {
+            setMembershipStatus(resource.enrolled ? "active" : null);
+          } else {
+            const status = resource.membership?.status;
+            setMembershipStatus(
+              status === "active" || status === "rejected" ? status : null,
+            );
+          }
+        }
         if (plansResponse.ok) {
           const body = (await plansResponse.json()) as { items?: Plan[] };
           setPlans(body.items?.length ? body.items : [fallbackPlan(session)]);
@@ -252,12 +369,6 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
     return () => window.clearInterval(timer);
   }, [loadSession, session?.checkoutId, session?.checkoutStatus, session?.id]);
 
-  useEffect(() => {
-    if (session?.checkoutStatus === "paid") {
-      void openCourse(session.productId);
-    }
-  }, [session?.checkoutStatus, session?.productId]);
-
   const selectedPlan = useMemo(
     () =>
       plans.find((plan) => plan.id === selectedPlanId) ??
@@ -269,13 +380,32 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
 
   const loginPath = `/checkout?session=${encodeURIComponent(session?.id ?? sessionId)}`;
 
+  const refreshStatus = useCallback(async () => {
+    setRefreshingStatus(true);
+    setError(null);
+    try {
+      await loadSession(sessionId);
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Unable to check payment status.",
+      );
+    } finally {
+      setRefreshingStatus(false);
+    }
+  }, [loadSession, sessionId]);
+
   async function createSessionForPlan(plan: Plan) {
     if (!session) throw new Error("Checkout is unavailable.");
     const response = await fetch("/api/v1/storefront/checkout-sessions", {
       method: "POST",
       credentials: "include",
       headers: learnerHeaders({ "content-type": "application/json" }),
-      body: JSON.stringify({ productId: session.productId, planId: plan.id }),
+      body: JSON.stringify({
+        ...(session.resourceType === "product"
+          ? { productId: session.resourceId }
+          : { communityId: session.resourceId }),
+        planId: plan.id,
+      }),
     });
     if (!response.ok) throw new Error("Unable to select this plan.");
     const nextSession = (await response.json()) as CheckoutSession;
@@ -325,10 +455,29 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
           headers: learnerHeaders({ "content-type": "application/json" }),
           body: JSON.stringify({
             returnUrl: `${window.location.origin}/checkout?session=${encodeURIComponent(activeSession.id)}`,
+            joiningReason:
+              session.resourceType === "community" &&
+              product?.autoAcceptMembers === false &&
+              (selectedPlan.type === "free" || selectedPlan.amountMinor === 0)
+                ? joiningReason.trim()
+                : "",
           }),
         },
       );
-      if (!response.ok) throw new Error("Unable to start checkout.");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as {
+          details?: { reason?: string };
+        } | null;
+        if (body?.details?.reason === "already_member") {
+          setMembershipStatus("active");
+          return;
+        }
+        if (body?.details?.reason === "membership_rejected") {
+          setMembershipStatus("rejected");
+          return;
+        }
+        throw new Error("Unable to start checkout.");
+      }
       const checkout = (await response.json()) as StartedCheckout;
       if (checkout.checkoutUrl) {
         window.location.assign(checkout.checkoutUrl);
@@ -337,7 +486,11 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
       if (checkout.checkoutData?.provider === "razorpay") {
         await openRazorpayCheckout({
           data: checkout.checkoutData,
-          name: product?.title ?? activeSession.productTitle,
+          name:
+            product?.title ??
+            activeSession.productTitle ??
+            activeSession.communityName ??
+            "Checkout",
           description: activeSession.planName,
         });
         await loadSession(activeSession.id);
@@ -345,7 +498,7 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
         return;
       }
       if (checkout.status === "paid") {
-        await openCourse(activeSession.productId);
+        await openResource(activeSession);
         return;
       }
       setNotice("Your payment is processing. This page will update automatically.");
@@ -358,9 +511,50 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
   }
 
   if (loading) return <Text2 theme={theme}>Loading checkout…</Text2>;
-  if (error || !session) {
+  if (!session) {
     return <Text2 theme={theme}>{error ?? "Checkout is unavailable."}</Text2>;
   }
+  const isFreePlan = selectedPlan?.type === "free" || selectedPlan?.amountMinor === 0;
+  const needsJoiningReason =
+    session.resourceType === "community" &&
+    product?.autoAcceptMembers === false &&
+    isFreePlan;
+
+  if (membershipStatus === "active" || membershipStatus === "rejected") {
+    return (
+      <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-6 text-center">
+        <Header1 theme={theme}>
+          {membershipStatus === "active" ? "Already owned" : "Access denied"}
+        </Header1>
+        <Text2 theme={theme}>
+          {membershipStatus === "active"
+            ? "You already have access to this resource."
+            : "You have been rejected and cannot proceed with checkout."}
+        </Text2>
+        {membershipStatus === "active" ? (
+          <Button
+            theme={theme}
+            type="button"
+            onClick={() => void openResource(session)}
+          >
+            Go to the resource
+          </Button>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (session.checkoutId || session.status === "completed") {
+    return (
+      <CheckoutStatusView
+        session={session}
+        error={error}
+        refreshing={refreshingStatus}
+        onRefresh={refreshStatus}
+      />
+    );
+  }
+  if (error) return <Text2 theme={theme}>{error}</Text2>;
 
   return (
     <div className="mx-auto grid w-full max-w-5xl items-start gap-x-8 gap-y-10 md:grid-cols-[minmax(0,1fr)_22.5rem]">
@@ -382,6 +576,7 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
             <CheckoutLoginForm
               checkoutPath={loginPath}
               loginMethods={loginMethods}
+              googleProviderId={googleProviderId}
               onComplete={setLearner}
             />
           )}
@@ -397,20 +592,23 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
         <section className="flex flex-col gap-4">
           <Header4 theme={theme}>Select Your Plan</Header4>
           {plans.length > 0 ? (
-            <div className="flex flex-col gap-3">
+            <LearnerRadioGroup
+              value={selectedPlanId ?? undefined}
+              onValueChange={(planId) => {
+                const plan = plans.find((candidate) => candidate.id === planId);
+                if (plan) void selectPlan(plan);
+              }}
+              disabled={!learner || busy}
+              className="flex flex-col gap-3"
+            >
               {plans.map((plan) => {
                 const selected = selectedPlan?.id === plan.id;
                 return (
                   <div key={plan.id} className="flex items-start gap-3">
-                    <LearnerRadio
-                      theme={theme}
+                    <LearnerRadioGroupItem
                       id={`checkout-plan-${plan.id}`}
-                      type="radio"
-                      name="checkout-plan"
                       value={plan.id}
-                      checked={selected}
-                      onChange={() => void selectPlan(plan)}
-                      disabled={!learner || busy}
+                      className="mt-1"
                     />
                     <LearnerOptionLabel
                       theme={theme}
@@ -440,10 +638,26 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
                   </div>
                 );
               })}
-            </div>
+            </LearnerRadioGroup>
           ) : (
-            <Text2 theme={theme}>This product is not available for checkout yet.</Text2>
+            <Text2 theme={theme}>
+              This {session.resourceType} is not available for checkout yet.
+            </Text2>
           )}
+
+          {needsJoiningReason ? (
+            <LearnerLabel htmlFor="joining-reason" className="flex flex-col gap-3">
+              {product?.joiningReasonText || "Why do you want to join this community?"}
+              <LearnerTextarea
+                id="joining-reason"
+                value={joiningReason}
+                onChange={(event) => setJoiningReason(event.target.value)}
+                maxLength={2000}
+                rows={5}
+                placeholder="Enter your answer"
+              />
+            </LearnerLabel>
+          ) : null}
 
           {notice ? <Text2 theme={theme}>{notice}</Text2> : null}
           {error ? (
@@ -455,7 +669,11 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
             theme={theme}
             type="button"
             disabled={
-              !learner || !selectedPlan || busy || session.checkoutStatus === "pending"
+              !learner ||
+              !selectedPlan ||
+              busy ||
+              session.checkoutStatus === "pending" ||
+              (needsJoiningReason && !joiningReason.trim())
             }
             onClick={() => void continueCheckout()}
             className="w-fit"
@@ -470,14 +688,11 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
           <PageCardContent theme={theme} className="flex flex-col gap-5">
             <Header4 theme={theme}>Order summary</Header4>
             <div className="flex items-center gap-3">
-              {product?.featuredMedia ? (
+              {product?.featuredImage ? (
                 <LearnerCardImage
                   theme={theme}
-                  src={
-                    product.featuredMedia.thumbnailUrl ??
-                    product.featuredMedia.canonicalUrl
-                  }
-                  alt={product.featuredMedia.altText || product.title}
+                  src={product.featuredImage.thumbnailUrl ?? product.featuredImage.url}
+                  alt={product.featuredImage.alt || product.title}
                   className="size-14 shrink-0 border object-cover"
                 />
               ) : (
@@ -490,7 +705,7 @@ export function PublicCheckoutSession({ sessionId }: { sessionId: string }) {
               )}
               <div className="min-w-0">
                 <Text2 theme={theme} className="truncate font-semibold">
-                  {product?.title ?? session.productTitle}
+                  {product?.title ?? session.productTitle ?? session.communityName}
                 </Text2>
                 <Caption theme={theme}>
                   {selectedPlan?.name ?? session.planName}

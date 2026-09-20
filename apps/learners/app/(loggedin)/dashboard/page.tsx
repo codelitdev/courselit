@@ -1,7 +1,7 @@
-import { redirect } from "next/navigation";
+import { LearnerFeed } from "@/components/dashboard/learner-feed";
 
-// The dashboard root remains a convenience redirect.
+// The dashboard root is the aggregate feed for all accessible spaces.
 
 export default function LearnerDashboardPage() {
-  redirect("/dashboard/feed");
+  return <LearnerFeed />;
 }

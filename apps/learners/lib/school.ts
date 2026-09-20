@@ -1,4 +1,5 @@
 export const SCHOOL_STORAGE_KEY = "courselit.learner.schoolId";
+export const LEARNER_IDENTITY_LINK_STORAGE_KEY = "courselit.learner.identityLink";
 
 export function readSchoolId(): string | null {
   if (typeof window === "undefined") return null;
@@ -24,6 +25,23 @@ export function clearSchoolId() {
   }
 }
 
+export function readLearnerIdentityLink(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.sessionStorage.getItem(LEARNER_IDENTITY_LINK_STORAGE_KEY);
+}
+
+export function writeLearnerIdentityLink(token: string) {
+  if (typeof window !== "undefined" && token.trim()) {
+    window.sessionStorage.setItem(LEARNER_IDENTITY_LINK_STORAGE_KEY, token.trim());
+  }
+}
+
+export function clearLearnerIdentityLink() {
+  if (typeof window !== "undefined") {
+    window.sessionStorage.removeItem(LEARNER_IDENTITY_LINK_STORAGE_KEY);
+  }
+}
+
 function shouldUseStoredSchoolId() {
   if (typeof window === "undefined") return true;
   const hostname = window.location.hostname.toLowerCase();
@@ -37,5 +55,9 @@ export function learnerHeaders(extra?: HeadersInit): Headers {
   // previous session must not make a valid request look like a cross-tenant
   // request. The stored ID remains useful for the generic localhost app.
   if (schoolId && shouldUseStoredSchoolId()) headers.set("x-school-id", schoolId);
+  if (typeof window !== "undefined") {
+    const identityLink = window.sessionStorage.getItem(LEARNER_IDENTITY_LINK_STORAGE_KEY);
+    if (identityLink) headers.set("x-learner-identity-link", identityLink);
+  }
   return headers;
 }

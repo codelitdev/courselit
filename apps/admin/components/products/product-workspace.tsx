@@ -11,7 +11,6 @@ import {
   CircleDashed,
   Download,
   Droplets,
-  Eye,
   File,
   FileImage,
   FileText,
@@ -741,17 +740,17 @@ export function ProductWorkspace({
     }
   }
 
-  async function changeFeaturedMedia(mediaId: string | null) {
+  async function changeFeaturedImage(featuredImage: Product["featuredImage"]) {
     if (saving) return;
     setSaving(true);
     setError(null);
     try {
       await request(`/api/v1/products/${encodeURIComponent(productId)}`, {
         method: "PATCH",
-        body: JSON.stringify({ featuredMediaId: mediaId }),
+        body: JSON.stringify({ featuredImage }),
       });
       await refresh();
-      setNotice(mediaId ? "Featured image saved." : "Featured image removed.");
+      setNotice(featuredImage ? "Featured image saved." : "Featured image removed.");
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -846,7 +845,8 @@ export function ProductWorkspace({
 
   async function shareProduct() {
     if (!product) return;
-    const url = learnerUrl(`/p/${encodeURIComponent(product.slug)}`, school?.subdomain);
+    const publicProductPath = product.slug ? `/p/${encodeURIComponent(product.slug)}` : `/product/${encodeURIComponent(product.id)}`;
+    const url = learnerUrl(publicProductPath, school?.subdomain);
     if (!url) {
       setError("Unable to build the public product URL.");
       return;
@@ -948,7 +948,7 @@ export function ProductWorkspace({
   const TypeIcon = product.kind === "course" ? BookOpen : Download;
   const canWriteProducts = hasSchoolPermission(school, "products:write");
   const canInviteCustomers = hasSchoolPermission(school, "learners:write");
-  const canEditWebsite = hasSchoolPermission(school, "school:admin");
+  const canEditWebsite = hasSchoolPermission(school, "storefront:write");
   const hasActivePaymentPlan = plans.some((plan) => plan.status === "active");
   const canEditSalesPage = Boolean(product.salesPage?.pageId && canEditWebsite);
   const hasProductActions =
@@ -1724,8 +1724,8 @@ export function ProductWorkspace({
 
             <ProductFeaturedImage
               school={school}
-              value={product.featuredMedia}
-              onChange={(mediaId) => void changeFeaturedMedia(mediaId)}
+              value={product.featuredImage}
+              onChange={(featuredImage) => void changeFeaturedImage(featuredImage)}
             />
 
             <PaymentPlanList

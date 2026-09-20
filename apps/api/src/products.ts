@@ -7,6 +7,7 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
+import type { MediaRef } from "@courselit/api-contract";
 import {
   and,
   asc,
@@ -21,21 +22,20 @@ import {
 } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { enqueueSalesPageProvisioning } from "./frontlit-sales-pages.js";
-import { resourceSlugTaken } from "./resource-slugs.js";
 import {
   mediaIdsForRichTextContent,
+  mediaRefFromCatalog,
+  normalizeMediaRef,
   reconcileMediaReferencesInTransaction,
 } from "./media.js";
+import { removeSchoolTeamMember } from "./team.js";
 import type { CourseLitPermission } from "./permissions.js";
+import { resourceSlugTaken } from "./resource-slugs.js";
+import {
+  enableProductDiscussionSpace,
+  syncIncludedProductMemberships,
+} from "./spaces.js";
 import type { AppDb } from "./types.js";
-
-export type ProductFeaturedMediaDto = {
-  id: string;
-  canonicalUrl: string;
-  thumbnailUrl: string | null;
-  fileName: string;
-  altText: string;
-};
 
 export type ProductDto = {
   id: string;
@@ -45,11 +45,13 @@ export type ProductDto = {
   slug: string;
   title: string;
   description: string;
-  featuredMedia: ProductFeaturedMediaDto | null;
+  featuredImage: MediaRef | null;
   privacy: "public" | "unlisted";
   leadMagnet: boolean;
   certificate: boolean;
   discussions: boolean;
+  includedWithCommunity: boolean;
+  discussionSpaceId: string | null;
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -68,41 +70,34 @@ export type PublicProductListItemDto = ProductDto & {
 
 type Ctx = PlatformRequestContext<string, string, CourseLitPermission>;
 
-async function featuredMediaFor(
+export async function productFeaturedImageFor(
   db: AppDb,
-  schoolId: string,
-  productInternalId: string,
-): Promise<ProductFeaturedMediaDto | null> {
+  row: typeof schema.products.$inferSelect,
+): Promise<MediaRef | null> {
   const rows = await db
     .select({ media: schema.media })
     .from(schema.mediaReferences)
     .innerJoin(schema.media, eq(schema.media.id, schema.mediaReferences.mediaId))
     .where(
       and(
-        eq(schema.mediaReferences.schoolId, schoolId),
+        eq(schema.mediaReferences.schoolId, row.schoolId),
         eq(schema.mediaReferences.resourceType, "product_artwork"),
-        eq(schema.mediaReferences.resourceInternalId, productInternalId),
+        eq(schema.mediaReferences.resourceInternalId, row.id),
         eq(schema.media.status, "active"),
       ),
     )
     .limit(1);
   const media = rows[0]?.media;
-  return media
-    ? {
-        id: media.publicId,
-        canonicalUrl: media.canonicalUrl,
-        thumbnailUrl: media.thumbnailUrl,
-        fileName: media.fileName,
-        altText: media.altText,
-      }
-    : null;
+  if (media) return mediaRefFromCatalog(media);
+  const stored = normalizeMediaRef(row.featuredImage);
+  return stored?.mediaId ? null : stored;
 }
 
 async function toDto(
   db: AppDb,
   row: typeof schema.products.$inferSelect,
   publicSchoolId: string,
-  featuredMedia?: ProductFeaturedMediaDto | null,
+  featuredImage?: MediaRef | null,
 ): Promise<ProductDto> {
   return {
     id: row.publicId,
@@ -112,14 +107,24 @@ async function toDto(
     slug: row.slug,
     title: row.title,
     description: row.description,
-    featuredMedia:
-      featuredMedia === undefined
-        ? await featuredMediaFor(db, row.schoolId, row.id)
-        : featuredMedia,
+    featuredImage:
+      featuredImage === undefined
+        ? await productFeaturedImageFor(db, row)
+        : featuredImage,
     privacy: row.privacy,
     leadMagnet: row.leadMagnet,
     certificate: row.certificate,
     discussions: row.discussions,
+    includedWithCommunity: row.includedWithCommunity,
+    discussionSpaceId: row.discussionSpaceId
+      ? (
+          await db
+            .select({ publicId: schema.spaces.publicId })
+            .from(schema.spaces)
+            .where(eq(schema.spaces.id, row.discussionSpaceId))
+            .limit(1)
+        )[0]?.publicId ?? null
+      : null,
     publishedAt: row.publishedAt ? serializeDate(row.publishedAt) : null,
     createdAt: serializeDate(row.createdAt),
     updatedAt: serializeDate(row.updatedAt),
@@ -190,7 +195,10 @@ export async function listProducts(
             and(
               eq(schema.learnerMemberships.schoolId, ctx.tenantId!),
               eq(schema.learnerMemberships.entityType, "product"),
-              inArray(schema.learnerMemberships.entityId, page.map((row) => row.publicId)),
+              inArray(
+                schema.learnerMemberships.entityId,
+                page.map((row) => row.publicId),
+              ),
             ),
           )
           .groupBy(schema.learnerMemberships.entityId),
@@ -428,10 +436,13 @@ export async function createProduct(
     slug,
     title: input.title,
     description: input.description,
+    featuredImage: null,
     privacy: input.privacy ?? "unlisted",
     leadMagnet: input.leadMagnet ?? false,
     certificate: input.certificate ?? false,
     discussions: false,
+    includedWithCommunity: false,
+    discussionSpaceId: null,
     publishedAt: null,
     createdBy: ctx.principalId,
     createdAt: now,
@@ -495,11 +506,12 @@ export async function updateProduct(
     slug?: string;
     title?: string;
     description?: string;
-    featuredMediaId?: string | null;
+    featuredImage?: MediaRef | null;
     privacy?: "public" | "unlisted";
     leadMagnet?: boolean;
     certificate?: boolean;
     discussions?: boolean;
+    includedWithCommunity?: boolean;
   },
   clock: Clock,
 ): Promise<{ ok: true; value: ProductDto } | { ok: false; error: PlatformError }> {
@@ -561,7 +573,9 @@ export async function updateProduct(
           ),
         )
         .limit(1);
-      if (activePlans.length === 0) {
+      const included =
+        input.includedWithCommunity ?? row.includedWithCommunity;
+      if (activePlans.length === 0 && !included) {
         return {
           ok: false as const,
           error: createPlatformError("validation_failed", {
@@ -570,16 +584,16 @@ export async function updateProduct(
         };
       }
     }
-    let featuredMedia: ProductFeaturedMediaDto | null | undefined;
-    if (input.featuredMediaId !== undefined) {
-      let mediaId: string | null = null;
-      if (input.featuredMediaId) {
+    let featuredImage: MediaRef | null | undefined;
+    if (input.featuredImage !== undefined) {
+      let selectedMedia: typeof schema.media.$inferSelect | null = null;
+      if (input.featuredImage?.mediaId) {
         const media = await tx
-          .select({ media: schema.media })
+          .select()
           .from(schema.media)
           .where(
             and(
-              eq(schema.media.publicId, input.featuredMediaId),
+              eq(schema.media.publicId, input.featuredImage.mediaId),
               eq(schema.media.schoolId, ctx.tenantId!),
               eq(schema.media.status, "active"),
               eq(schema.media.kind, "image"),
@@ -592,7 +606,7 @@ export async function updateProduct(
             error: createPlatformError("not_found"),
           };
         }
-        mediaId = media[0].media.publicId;
+        selectedMedia = media[0];
       }
       await tx
         .delete(schema.mediaReferences)
@@ -603,21 +617,11 @@ export async function updateProduct(
             eq(schema.mediaReferences.resourceInternalId, row.id),
           ),
         );
-      if (mediaId) {
-        const media = await tx
-          .select({ id: schema.media.id })
-          .from(schema.media)
-          .where(
-            and(
-              eq(schema.media.publicId, mediaId),
-              eq(schema.media.schoolId, ctx.tenantId!),
-            ),
-          )
-          .limit(1);
+      if (selectedMedia) {
         await tx.insert(schema.mediaReferences).values({
           id: uuidv7(clock),
           schoolId: ctx.tenantId!,
-          mediaId: media[0]!.id,
+          mediaId: selectedMedia.id,
           resourceType: "product_artwork",
           resourceInternalId: row.id,
           resourcePublicId: row.publicId,
@@ -626,8 +630,10 @@ export async function updateProduct(
           createdAt: now,
           updatedAt: now,
         });
+        featuredImage = mediaRefFromCatalog(selectedMedia);
+      } else {
+        featuredImage = normalizeMediaRef(input.featuredImage);
       }
-      featuredMedia = await featuredMediaFor(tx as AppDb, ctx.tenantId!, row.id);
     }
     const privacy = input.privacy ?? row.privacy;
     const leadMagnet = input.leadMagnet ?? row.leadMagnet;
@@ -690,10 +696,27 @@ export async function updateProduct(
       leadMagnet,
       certificate,
       discussions: input.discussions ?? row.discussions,
+      includedWithCommunity: input.includedWithCommunity ?? row.includedWithCommunity,
+      ...(input.featuredImage !== undefined ? { featuredImage } : {}),
       publishedAt: status === "published" ? (row.publishedAt ?? now) : null,
       updatedAt: now,
     };
-    await tx.update(schema.products).set(next).where(eq(schema.products.id, row.id));
+    let discussionSpaceId = row.discussionSpaceId;
+    if (next.discussions && row.kind === "course" && !discussionSpaceId) {
+      discussionSpaceId = await enableProductDiscussionSpace(
+        tx as AppDb,
+        ctx.tenantId!,
+        row,
+        clock,
+      );
+    }
+    await tx
+      .update(schema.products)
+      .set({ ...next, discussionSpaceId })
+      .where(eq(schema.products.id, row.id));
+    if (input.includedWithCommunity !== undefined || status === "published") {
+      await syncIncludedProductMemberships(tx as AppDb, ctx.tenantId!, clock);
+    }
     if (
       input.slug !== undefined ||
       input.title !== undefined ||
@@ -743,7 +766,7 @@ export async function updateProduct(
         tx as AppDb,
         { ...row, ...next },
         publicSchoolId,
-        featuredMedia,
+        featuredImage,
       ),
     };
   });
@@ -891,61 +914,5 @@ export async function removeMember(
   memberUserId: string,
   clock: Clock,
 ): Promise<{ ok: true } | { ok: false; error: PlatformError }> {
-  if (
-    (!ctx.permissions.has("school:admin") && !ctx.permissions.has("members:manage")) ||
-    !ctx.tenantId
-  ) {
-    return { ok: false, error: createPlatformError("forbidden") };
-  }
-  return db.transaction(async (tx) => {
-    // Every membership removal for a school locks the school row first.
-    // PostgreSQL serializes these transactions, so two concurrent owner
-    // removals cannot both observe two owners and delete the last pair.
-    await tx.execute(sql`SELECT id FROM schools WHERE id = ${ctx.tenantId} FOR UPDATE`);
-    const rows = await tx
-      .select()
-      .from(schema.memberships)
-      .where(
-        and(
-          eq(schema.memberships.schoolId, ctx.tenantId!),
-          eq(schema.memberships.userId, memberUserId),
-        ),
-      )
-      .limit(1);
-    const member = rows[0];
-    if (!member) {
-      return { ok: false as const, error: createPlatformError("not_found") };
-    }
-    if (member.isOwner) {
-      const owners = await tx
-        .select()
-        .from(schema.memberships)
-        .where(
-          and(
-            eq(schema.memberships.schoolId, ctx.tenantId!),
-            eq(schema.memberships.isOwner, true),
-          ),
-        );
-      if (owners.length <= 1) {
-        return {
-          ok: false as const,
-          error: createPlatformError("conflict", {
-            safeDetails: { reason: "last_owner" },
-          }),
-        };
-      }
-    }
-    await tx.delete(schema.memberships).where(eq(schema.memberships.id, member.id));
-    await tx.insert(schema.auditEvents).values({
-      id: uuidv7(clock),
-      schoolId: ctx.tenantId,
-      actorId: ctx.principalId,
-      action: "membership.removed",
-      resourceType: "membership",
-      resourceId: memberUserId,
-      requestId: ctx.requestId,
-      createdAt: clock.now(),
-    });
-    return { ok: true as const };
-  });
+  return removeSchoolTeamMember(db, ctx, memberUserId, clock);
 }

@@ -7,6 +7,7 @@
 @import "shadcn/tailwind.css";
 
 @source "../../../packages/components-library/src";
+@source "../../../packages/page-blocks/src";
 @source "../node_modules/@sendlit/email-blocks";
 @source "../node_modules/@sendlit/email-editor";
 
@@ -94,7 +95,11 @@ body:has([data-full-screen-editor]) {
 
 /* Fallback styling for unstyled native inputs on legacy screens.
    Skip non-textual controls so packaged editors keep swatch/slider sizing. */
-input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="color"]):not([type="range"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]):not([data-slot]),
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(
+  [type="color"]
+):not([type="range"]):not([type="hidden"]):not([type="button"]):not(
+  [type="submit"]
+):not([type="reset"]):not([type="image"]):not([data-slot]),
 select:not([data-slot]):not([aria-hidden="true"]) {
   height: 36px;
   width: 100%;
@@ -118,7 +123,11 @@ textarea:not([data-slot]) {
   font-size: 14px;
   resize: vertical;
 }
-input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="color"]):not([type="range"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]):not([data-slot]):focus,
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(
+  [type="color"]
+):not([type="range"]):not([type="hidden"]):not([type="button"]):not(
+  [type="submit"]
+):not([type="reset"]):not([type="image"]):not([data-slot]):focus,
 select:not([data-slot]):not([aria-hidden="true"]):focus,
 textarea:not([data-slot]):focus {
   outline: none;

@@ -1,5 +1,5 @@
-import { CommunityAdmin } from "@/components/communities/community-admin";
+import { redirect } from "next/navigation";
 
 export default function CommunitiesPage() {
-  return <CommunityAdmin view="list" />;
+  redirect("/community");
 }

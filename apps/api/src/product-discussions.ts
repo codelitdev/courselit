@@ -26,7 +26,10 @@ import {
 import { lessonUnlockAt, sectionUnlockAt } from "./catalog.js";
 import { ActivityType, recordActivity } from "./activities.js";
 import * as schema from "./db/schema/index.js";
-import { createLearnerNotification } from "./notifications.js";
+import {
+  createLearnerNotification,
+  createSchoolAdminNotifications,
+} from "./notifications.js";
 import type { CourseLitPermission } from "./permissions.js";
 import { assertRateLimit } from "./rate-limit.js";
 import type { AppDb } from "./types.js";
@@ -38,12 +41,19 @@ export type DiscussionLearnerViewer = {
   kind: "learner";
   schoolId: string;
   schoolPublicId: string;
+  schoolAccountId?: string;
   learnerId: string;
   learnerPublicId: string;
 };
 
+export type DiscussionAdminViewer = {
+  kind: "admin";
+  context: AdminContext;
+  schoolAccountId?: string;
+};
+
 export type DiscussionViewer =
-  | { kind: "admin"; context: AdminContext }
+  | DiscussionAdminViewer
   | DiscussionLearnerViewer;
 
 type Target = {
@@ -273,7 +283,7 @@ async function accessibleDiscussionLessons(
       .where(
         and(
           eq(schema.learnerMemberships.schoolId, viewer.schoolId),
-          eq(schema.learnerMemberships.learnerId, viewer.learnerId),
+          eq(schema.learnerMemberships.schoolAccountId, viewer.schoolAccountId ?? viewer.learnerId),
           eq(schema.learnerMemberships.entityType, "product"),
           eq(schema.learnerMemberships.entityId, product.publicId),
           eq(schema.learnerMemberships.status, "active"),
@@ -380,20 +390,72 @@ function parseContent(value: string): ContentDocument {
   }
 }
 
-function identityColumns(viewer: DiscussionViewer) {
-  return viewer.kind === "learner"
-    ? { learnerId: viewer.learnerId, adminUserId: null }
-    : { learnerId: null, adminUserId: viewer.context.principalId };
+async function viewerSchoolAccountId(
+  db: AppDb,
+  viewer: DiscussionViewer,
+): Promise<string | null> {
+  if (viewer.kind === "learner") {
+    return viewer.schoolAccountId ?? viewer.learnerId ?? null;
+  }
+  if (viewer.schoolAccountId) return viewer.schoolAccountId;
+  if (viewer.context.tenantId) {
+    const rows = await db
+      .select({ schoolAccountId: schema.schoolAccounts.id })
+      .from(schema.schoolAccounts)
+      .innerJoin(
+        schema.memberships,
+        eq(schema.memberships.schoolAccountId, schema.schoolAccounts.id),
+      )
+      .where(
+        and(
+          eq(schema.schoolAccounts.schoolId, viewer.context.tenantId),
+          eq(schema.schoolAccounts.userId, viewer.context.principalId),
+        ),
+      )
+      .limit(1);
+    return rows[0]?.schoolAccountId ?? null;
+  }
+  return null;
+}
+
+async function authorFields(
+  db: AppDb,
+  schoolAccountId: string | null,
+): Promise<{ authorId: string | null; authorKind: "learner" | "admin" | null }> {
+  if (!schoolAccountId) return { authorId: null, authorKind: null };
+  const accounts = await db
+    .select({
+      publicId: schema.schoolAccounts.publicId,
+      schoolId: schema.schoolAccounts.schoolId,
+    })
+    .from(schema.schoolAccounts)
+    .where(eq(schema.schoolAccounts.id, schoolAccountId))
+    .limit(1);
+  const account = accounts[0];
+  if (!account) return { authorId: null, authorKind: null };
+  const adminMembership = await db
+    .select({ id: schema.memberships.id })
+    .from(schema.memberships)
+    .where(
+      and(
+        eq(schema.memberships.schoolId, account.schoolId),
+        eq(schema.memberships.schoolAccountId, schoolAccountId),
+      ),
+    )
+    .limit(1);
+  return {
+    authorId: account.publicId,
+    authorKind: adminMembership[0] ? ("admin" as const) : ("learner" as const),
+  };
 }
 
 async function ensureSubscriber(
   tx: any,
   target: Target,
-  viewer: DiscussionViewer,
+  schoolAccountId: string,
   clock: Clock,
 ) {
   const now = clock.now();
-  const identity = identityColumns(viewer);
   await tx
     .insert(schema.productDiscussionSubscribers)
     .values({
@@ -403,7 +465,7 @@ async function ensureSubscriber(
       productId: target.product.id,
       entityType: "lesson",
       entityId: target.lesson.id,
-      ...identity,
+      schoolAccountId,
       subscription: true,
       createdAt: now,
       updatedAt: now,
@@ -417,39 +479,9 @@ async function ensureSubscriber(
         eq(schema.productDiscussionSubscribers.productId, target.product.id),
         eq(schema.productDiscussionSubscribers.entityType, "lesson"),
         eq(schema.productDiscussionSubscribers.entityId, target.lesson.id),
-        viewer.kind === "learner"
-          ? eq(schema.productDiscussionSubscribers.learnerId, viewer.learnerId)
-          : eq(
-              schema.productDiscussionSubscribers.adminUserId,
-              viewer.context.principalId,
-            ),
+        eq(schema.productDiscussionSubscribers.schoolAccountId, schoolAccountId),
       ),
     );
-}
-
-function authorFields(row: {
-  learnerId: string | null;
-  adminUserId: string | null;
-  learnerPublicId?: string | null;
-}) {
-  return {
-    authorId: row.learnerId ? (row.learnerPublicId ?? null) : (row.adminUserId ?? null),
-    authorKind: row.learnerId
-      ? ("learner" as const)
-      : row.adminUserId
-        ? ("admin" as const)
-        : null,
-  };
-}
-
-async function learnerPublicId(db: AppDb, id: string | null): Promise<string | null> {
-  if (!id) return null;
-  const rows = await db
-    .select({ publicId: schema.learners.publicId })
-    .from(schema.learners)
-    .where(eq(schema.learners.id, id))
-    .limit(1);
-  return rows[0]?.publicId ?? null;
 }
 
 async function resolveTarget(
@@ -495,7 +527,7 @@ async function resolveTarget(
     .where(
       and(
         eq(schema.learnerMemberships.schoolId, schoolId),
-        eq(schema.learnerMemberships.learnerId, viewer.learnerId),
+        eq(schema.learnerMemberships.schoolAccountId, viewer.schoolAccountId ?? viewer.learnerId),
         eq(schema.learnerMemberships.entityType, "product"),
         eq(schema.learnerMemberships.entityId, target.product.publicId),
         eq(schema.learnerMemberships.status, "active"),
@@ -713,25 +745,26 @@ async function commentDto(
   target: Target,
   viewer: DiscussionViewer,
 ): Promise<ProductDiscussionCommentDto> {
-  const [publicId, replyCount, liked, replyRows] = await Promise.all([
-    learnerPublicId(db, row.learnerId),
+  const viewerAccountId = await viewerSchoolAccountId(db, viewer);
+  const [author, replyCount, liked, replyRows] = await Promise.all([
+    authorFields(db, row.schoolAccountId),
     db
       .select({ count: count() })
       .from(schema.productDiscussionReplies)
       .where(and(eq(schema.productDiscussionReplies.commentId, row.id))),
-    db
-      .select({ id: schema.productDiscussionLikes.id })
-      .from(schema.productDiscussionLikes)
-      .where(
-        and(
-          eq(schema.productDiscussionLikes.contentType, "comment"),
-          eq(schema.productDiscussionLikes.contentId, row.id),
-          viewer.kind === "learner"
-            ? eq(schema.productDiscussionLikes.learnerId, viewer.learnerId)
-            : eq(schema.productDiscussionLikes.adminUserId, viewer.context.principalId),
-        ),
-      )
-      .limit(1),
+    viewerAccountId
+      ? db
+          .select({ id: schema.productDiscussionLikes.id })
+          .from(schema.productDiscussionLikes)
+          .where(
+            and(
+              eq(schema.productDiscussionLikes.contentType, "comment"),
+              eq(schema.productDiscussionLikes.contentId, row.id),
+              eq(schema.productDiscussionLikes.schoolAccountId, viewerAccountId),
+            ),
+          )
+          .limit(1)
+      : Promise.resolve([]),
     db
       .select()
       .from(schema.productDiscussionReplies)
@@ -752,7 +785,7 @@ async function commentDto(
     productId: target.product.publicId,
     entityType: "lesson",
     entityId: target.lesson.publicId,
-    ...authorFields({ ...row, learnerPublicId: publicId }),
+    ...author,
     content: row.deletedAt ? { type: "doc", content: [] } : parseContent(row.content),
     likesCount: row.likesCount,
     hasLiked: Boolean(liked[0]),
@@ -778,8 +811,9 @@ async function replyDto(
   viewer: DiscussionViewer,
   commentPublicId: string,
 ): Promise<ProductDiscussionReplyDto> {
-  const [publicId, parent] = await Promise.all([
-    learnerPublicId(db, row.learnerId),
+  const viewerAccountId = await viewerSchoolAccountId(db, viewer);
+  const [author, parent, liked] = await Promise.all([
+    authorFields(db, row.schoolAccountId),
     row.parentReplyId
       ? db
           .select({ publicId: schema.productDiscussionReplies.publicId })
@@ -787,20 +821,20 @@ async function replyDto(
           .where(eq(schema.productDiscussionReplies.id, row.parentReplyId))
           .limit(1)
       : Promise.resolve([]),
+    viewerAccountId
+      ? db
+          .select({ id: schema.productDiscussionLikes.id })
+          .from(schema.productDiscussionLikes)
+          .where(
+            and(
+              eq(schema.productDiscussionLikes.contentType, "reply"),
+              eq(schema.productDiscussionLikes.contentId, row.id),
+              eq(schema.productDiscussionLikes.schoolAccountId, viewerAccountId),
+            ),
+          )
+          .limit(1)
+      : Promise.resolve([]),
   ]);
-  const liked = await db
-    .select({ id: schema.productDiscussionLikes.id })
-    .from(schema.productDiscussionLikes)
-    .where(
-      and(
-        eq(schema.productDiscussionLikes.contentType, "reply"),
-        eq(schema.productDiscussionLikes.contentId, row.id),
-        viewer.kind === "learner"
-          ? eq(schema.productDiscussionLikes.learnerId, viewer.learnerId)
-          : eq(schema.productDiscussionLikes.adminUserId, viewer.context.principalId),
-      ),
-    )
-    .limit(1);
   return {
     id: row.publicId,
     productId: target.product.publicId,
@@ -808,7 +842,7 @@ async function replyDto(
     entityId: target.lesson.publicId,
     commentId: commentPublicId,
     parentReplyId: parent[0]?.publicId ?? null,
-    ...authorFields({ ...row, learnerPublicId: publicId }),
+    ...author,
     content: row.deletedAt ? { type: "doc", content: [] } : parseContent(row.content),
     likesCount: row.likesCount,
     hasLiked: Boolean(liked[0]),
@@ -999,12 +1033,14 @@ async function replyForTarget(db: AppDb, target: Target, publicId: string) {
 }
 
 function owns(
-  viewer: DiscussionViewer,
-  row: { learnerId: string | null; adminUserId: string | null },
+  viewerAccountId: string | null,
+  row: { schoolAccountId: string | null },
 ): boolean {
-  return viewer.kind === "learner"
-    ? row.learnerId === viewer.learnerId
-    : row.adminUserId === viewer.context.principalId;
+  return Boolean(
+    viewerAccountId &&
+      row.schoolAccountId &&
+      viewerAccountId === row.schoolAccountId,
+  );
 }
 
 export async function createDiscussionComment(
@@ -1040,6 +1076,8 @@ export async function createDiscussionComment(
   );
   if (!rateLimit.ok) return rateLimit;
   const now = clock.now();
+  const viewerAccountId = await viewerSchoolAccountId(db, viewer);
+  if (!viewerAccountId) return forbidden();
   const row = {
     id: uuidv7(clock),
     publicId: createPublicId("pdc", clock),
@@ -1047,7 +1085,7 @@ export async function createDiscussionComment(
     productId: target.product.id,
     entityType: "lesson" as const,
     entityId: target.lesson.id,
-    ...identityColumns(viewer),
+    schoolAccountId: viewerAccountId,
     content: JSON.stringify(document),
     likesCount: 0,
     deletedAt: null,
@@ -1074,7 +1112,7 @@ export async function createDiscussionComment(
       },
       clock,
     );
-    await ensureSubscriber(tx, target, viewer, clock);
+    await ensureSubscriber(tx, target, viewerAccountId, clock);
   });
   await notifyDiscussionLearners(
     db,
@@ -1088,9 +1126,22 @@ export async function createDiscussionComment(
     },
     clock,
   );
+  if (viewer.kind === "learner") {
+    await createSchoolAdminNotifications(
+      db,
+      target.product.schoolId,
+      {
+        type: "course_discussion_comment_created",
+        title: "New course discussion comment",
+        body: `A learner commented in “${target.product.title}”.`,
+        href: `/products/${encodeURIComponent(target.product.publicId)}/manage/discussions`,
+      },
+      clock,
+    );
+  }
   await recordActivity(db, {
     schoolId: target.product.schoolId,
-    actorId: viewer.kind === "learner" ? viewer.learnerId : viewer.context.principalId,
+    actorId: viewerAccountId,
     type: ActivityType.COURSE_DISCUSSION_COMMENT_CREATED,
     entityId: row.publicId,
     metadata: {
@@ -1123,7 +1174,8 @@ export async function updateDiscussionComment(
   if (!targetResult.ok) return targetResult;
   const row = await commentForTarget(db, targetResult.value, commentPublicId);
   if (!row) return notFound();
-  if (!owns(viewer, row) || row.deletedAt) return forbidden();
+  const viewerAccountId = await viewerSchoolAccountId(db, viewer);
+  if (!owns(viewerAccountId, row) || row.deletedAt) return forbidden();
   const now = clock.now();
   await db
     .update(schema.productDiscussionComments)
@@ -1158,7 +1210,8 @@ export async function deleteDiscussionComment(
   if (!targetResult.ok) return targetResult;
   const row = await commentForTarget(db, targetResult.value, commentPublicId);
   if (!row) return notFound();
-  if (!owns(viewer, row) || row.deletedAt) return forbidden();
+  const viewerAccountId = await viewerSchoolAccountId(db, viewer);
+  if (!owns(viewerAccountId, row) || row.deletedAt) return forbidden();
   const now = clock.now();
   await db.transaction(async (tx) => {
     await tx
@@ -1235,6 +1288,8 @@ export async function createDiscussionReply(
   );
   if (!rateLimit.ok) return rateLimit;
   const now = clock.now();
+  const viewerAccountId = await viewerSchoolAccountId(db, viewer);
+  if (!viewerAccountId) return forbidden();
   const row = {
     id: uuidv7(clock),
     publicId: createPublicId("pdr", clock),
@@ -1244,7 +1299,7 @@ export async function createDiscussionReply(
     entityId: target.lesson.id,
     commentId: comment.id,
     parentReplyId,
-    ...identityColumns(viewer),
+    schoolAccountId: viewerAccountId,
     content: JSON.stringify(document),
     likesCount: 0,
     deletedAt: null,
@@ -1271,7 +1326,7 @@ export async function createDiscussionReply(
       },
       clock,
     );
-    await ensureSubscriber(tx, target, viewer, clock);
+    await ensureSubscriber(tx, target, viewerAccountId, clock);
   });
   await notifyDiscussionLearners(
     db,
@@ -1284,11 +1339,24 @@ export async function createDiscussionReply(
       href: `/dashboard/courses/${encodeURIComponent(target.product.publicId)}/${encodeURIComponent(target.lesson.publicId)}#discussion-reply-${encodeURIComponent(row.publicId)}`,
     },
     clock,
-    comment.learnerId ? [comment.learnerId] : [],
+    comment.schoolAccountId ? [comment.schoolAccountId] : [],
   );
+  if (viewer.kind === "learner") {
+    await createSchoolAdminNotifications(
+      db,
+      target.product.schoolId,
+      {
+        type: "course_discussion_comment_created",
+        title: "New course discussion reply",
+        body: `A learner replied in “${target.product.title}”.`,
+        href: `/products/${encodeURIComponent(target.product.publicId)}/manage/discussions`,
+      },
+      clock,
+    );
+  }
   await recordActivity(db, {
     schoolId: target.product.schoolId,
-    actorId: viewer.kind === "learner" ? viewer.learnerId : viewer.context.principalId,
+    actorId: viewerAccountId,
     type: ActivityType.COURSE_DISCUSSION_COMMENT_CREATED,
     entityId: row.publicId,
     metadata: {
@@ -1322,7 +1390,8 @@ export async function updateDiscussionReply(
   if (!targetResult.ok) return targetResult;
   const row = await replyForTarget(db, targetResult.value, replyPublicId);
   if (!row) return notFound();
-  if (!owns(viewer, row) || row.deletedAt) return forbidden();
+  const viewerAccountId = await viewerSchoolAccountId(db, viewer);
+  if (!owns(viewerAccountId, row) || row.deletedAt) return forbidden();
   const comment = await db
     .select({ publicId: schema.productDiscussionComments.publicId })
     .from(schema.productDiscussionComments)
@@ -1364,7 +1433,8 @@ export async function deleteDiscussionReply(
   if (!targetResult.ok) return targetResult;
   const row = await replyForTarget(db, targetResult.value, replyPublicId);
   if (!row) return notFound();
-  if (!owns(viewer, row) || row.deletedAt) return forbidden();
+  const viewerAccountId = await viewerSchoolAccountId(db, viewer);
+  if (!owns(viewerAccountId, row) || row.deletedAt) return forbidden();
   const now = clock.now();
   await db.transaction(async (tx) => {
     await tx
@@ -1416,21 +1486,8 @@ export async function toggleDiscussionLike(
   contentType: ContentType,
   contentPublicId: string,
   clock: Clock,
-): Promise<
-  Result<{
-    contentType: ContentType;
-    contentId: string;
-    active: boolean;
-    likesCount: number;
-  }>
-> {
-  const targetResult = await resolveTarget(
-    db,
-    viewer,
-    productPublicId,
-    lessonPublicId,
-    clock.now(),
-  );
+): Promise<Result<{ contentType: ContentType; contentId: string; active: boolean; likesCount: number }>> {
+  const targetResult = await resolveTarget(db, viewer, productPublicId, lessonPublicId, clock.now());
   if (!targetResult.ok) return targetResult;
   const target = targetResult.value;
   const content = await discussionContentRow(db, target, contentType, contentPublicId);
@@ -1444,7 +1501,10 @@ export async function toggleDiscussionLike(
     { perMinute: COURSE_DISCUSSION_RATE_LIMITS.likesPerMinute },
   );
   if (!rateLimit.ok) return rateLimit;
-  const identity = identityColumns(viewer);
+
+  const viewerAccountId = await viewerSchoolAccountId(db, viewer);
+  if (!viewerAccountId) return forbidden();
+
   const existing = await db
     .select({ id: schema.productDiscussionLikes.id })
     .from(schema.productDiscussionLikes)
@@ -1452,12 +1512,11 @@ export async function toggleDiscussionLike(
       and(
         eq(schema.productDiscussionLikes.contentType, contentType),
         eq(schema.productDiscussionLikes.contentId, content.row.id),
-        viewer.kind === "learner"
-          ? eq(schema.productDiscussionLikes.learnerId, viewer.learnerId)
-          : eq(schema.productDiscussionLikes.adminUserId, viewer.context.principalId),
+        eq(schema.productDiscussionLikes.schoolAccountId, viewerAccountId),
       ),
     )
     .limit(1);
+
   const now = clock.now();
   let active: boolean;
   if (existing[0]) {
@@ -1476,11 +1535,12 @@ export async function toggleDiscussionLike(
       contentType,
       contentId: content.row.id,
       commentId: content.commentId,
-      ...identity,
+      schoolAccountId: viewerAccountId,
       createdAt: now,
     });
     active = true;
   }
+
   const table =
     contentType === "comment"
       ? schema.productDiscussionComments
@@ -1490,14 +1550,15 @@ export async function toggleDiscussionLike(
     .set({ likesCount: sql`${table.likesCount} ${active ? sql`+ 1` : sql`- 1`}` })
     .where(eq(table.id, content.row.id))
     .returning({ likesCount: table.likesCount });
+
   if (
     active &&
-    content.row.learnerId &&
-    (viewer.kind !== "learner" || content.row.learnerId !== viewer.learnerId)
+    content.row.schoolAccountId &&
+    content.row.schoolAccountId !== viewerAccountId
   ) {
     await createLearnerNotification(
       db,
-      { schoolId: target.product.schoolId, learnerId: content.row.learnerId },
+      { schoolId: target.product.schoolId, schoolAccountId: content.row.schoolAccountId },
       {
         type: "course_discussion_reacted",
         title: "New discussion reaction",
@@ -1507,15 +1568,17 @@ export async function toggleDiscussionLike(
       clock,
     );
   }
+
   if (active) {
     await recordActivity(db, {
       schoolId: target.product.schoolId,
-      actorId: viewer.kind === "learner" ? viewer.learnerId : viewer.context.principalId,
+      actorId: viewerAccountId,
       type: ActivityType.COURSE_DISCUSSION_REACTED,
       entityId: content.row.publicId,
       metadata: { productId: target.product.publicId, entityType: contentType },
     }, clock);
   }
+
   return {
     ok: true,
     value: {
@@ -1544,7 +1607,8 @@ export async function toggleDiscussionSubscription(
   );
   if (!targetResult.ok) return targetResult;
   const target = targetResult.value;
-  const identity = identityColumns(viewer);
+  const viewerAccountId = await viewerSchoolAccountId(db, viewer);
+  if (!viewerAccountId) return forbidden();
   const existing = await db
     .select({ id: schema.productDiscussionSubscribers.id })
     .from(schema.productDiscussionSubscribers)
@@ -1553,12 +1617,7 @@ export async function toggleDiscussionSubscription(
         eq(schema.productDiscussionSubscribers.productId, target.product.id),
         eq(schema.productDiscussionSubscribers.entityType, "lesson"),
         eq(schema.productDiscussionSubscribers.entityId, target.lesson.id),
-        viewer.kind === "learner"
-          ? eq(schema.productDiscussionSubscribers.learnerId, viewer.learnerId)
-          : eq(
-              schema.productDiscussionSubscribers.adminUserId,
-              viewer.context.principalId,
-            ),
+        eq(schema.productDiscussionSubscribers.schoolAccountId, viewerAccountId),
       ),
     )
     .limit(1);
@@ -1576,7 +1635,7 @@ export async function toggleDiscussionSubscription(
       productId: target.product.id,
       entityType: "lesson",
       entityId: target.lesson.id,
-      ...identity,
+      schoolAccountId: viewerAccountId,
       subscription,
       createdAt: now,
       updatedAt: now,
@@ -1620,10 +1679,11 @@ async function notifyDiscussionLearners(
     href?: string;
   },
   clock: Clock,
-  additionalLearnerIds: string[] = [],
+  additionalSchoolAccountIds: string[] = [],
 ) {
+  const actorAccountId = await viewerSchoolAccountId(db, actor);
   const subscribers = await db
-    .select({ learnerId: schema.productDiscussionSubscribers.learnerId })
+    .select({ schoolAccountId: schema.productDiscussionSubscribers.schoolAccountId })
     .from(schema.productDiscussionSubscribers)
     .where(
       and(
@@ -1636,21 +1696,21 @@ async function notifyDiscussionLearners(
     );
   const recipientIds = new Set(
     subscribers
-      .map((subscriber) => subscriber.learnerId)
-      .filter((learnerId): learnerId is string => learnerId !== null),
+      .map((subscriber) => subscriber.schoolAccountId)
+      .filter((schoolAccountId): schoolAccountId is string => schoolAccountId !== null),
   );
-  for (const learnerId of additionalLearnerIds) recipientIds.add(learnerId);
-  if (actor.kind === "learner") recipientIds.delete(actor.learnerId);
+  for (const accountId of additionalSchoolAccountIds) recipientIds.add(accountId);
+  if (actorAccountId) recipientIds.delete(actorAccountId);
   if (recipientIds.size === 0) return;
 
   const href =
     input.href ??
     `/dashboard/courses/${encodeURIComponent(target.product.publicId)}/${encodeURIComponent(target.lesson.publicId)}`;
   await Promise.all(
-    [...recipientIds].map((learnerId) =>
+    [...recipientIds].map((schoolAccountId) =>
       createLearnerNotification(
         db,
-        { schoolId: target.product.schoolId, learnerId },
+        { schoolId: target.product.schoolId, schoolAccountId },
         { ...input, href },
         clock,
       ),
@@ -1662,7 +1722,7 @@ async function reportDto(
   db: AppDb,
   row: typeof schema.productDiscussionReports.$inferSelect,
 ): Promise<ProductDiscussionReportDto> {
-  const [product, lesson, publicId, preview, content] = await Promise.all([
+  const [product, lesson, reporter, preview, content] = await Promise.all([
     db
       .select({ publicId: schema.products.publicId })
       .from(schema.products)
@@ -1673,14 +1733,13 @@ async function reportDto(
       .from(schema.lessons)
       .where(eq(schema.lessons.id, row.entityId))
       .limit(1),
-    learnerPublicId(db, row.learnerId),
+    authorFields(db, row.schoolAccountId),
     contentPreview(db, row),
     row.contentType === "comment"
       ? db
           .select({
             publicId: schema.productDiscussionComments.publicId,
-            learnerId: schema.productDiscussionComments.learnerId,
-            adminUserId: schema.productDiscussionComments.adminUserId,
+            schoolAccountId: schema.productDiscussionComments.schoolAccountId,
             deletedAt: schema.productDiscussionComments.deletedAt,
           })
           .from(schema.productDiscussionComments)
@@ -1689,15 +1748,14 @@ async function reportDto(
       : db
           .select({
             publicId: schema.productDiscussionReplies.publicId,
-            learnerId: schema.productDiscussionReplies.learnerId,
-            adminUserId: schema.productDiscussionReplies.adminUserId,
+            schoolAccountId: schema.productDiscussionReplies.schoolAccountId,
             deletedAt: schema.productDiscussionReplies.deletedAt,
           })
           .from(schema.productDiscussionReplies)
           .where(eq(schema.productDiscussionReplies.id, row.contentId))
           .limit(1),
   ]);
-  const authorPublicId = await learnerPublicId(db, content[0]?.learnerId ?? null);
+  const author = await authorFields(db, content[0]?.schoolAccountId ?? null);
   const comment = row.commentId
     ? await db
         .select({ publicId: schema.productDiscussionComments.publicId })
@@ -1713,16 +1771,10 @@ async function reportDto(
     contentType: row.contentType,
     contentId: content[0]?.publicId ?? row.contentId,
     commentId: comment[0]?.publicId ?? null,
-    reporterId: row.learnerId ? (publicId ?? null) : row.adminUserId,
-    reporterKind: row.learnerId ? "learner" : row.adminUserId ? "admin" : null,
-    authorId: content[0]?.learnerId
-      ? (authorPublicId ?? null)
-      : (content[0]?.adminUserId ?? null),
-    authorKind: content[0]?.learnerId
-      ? "learner"
-      : content[0]?.adminUserId
-        ? "admin"
-        : null,
+    reporterId: reporter.authorId,
+    reporterKind: reporter.authorKind,
+    authorId: author.authorId,
+    authorKind: author.authorKind,
     reason: row.reason,
     status: row.status,
     rejectionReason: row.rejectionReason,
@@ -1756,6 +1808,8 @@ export async function createDiscussionReport(
   const target = targetResult.value;
   const content = await discussionContentRow(db, target, contentType, contentPublicId);
   if (!content || content.row.deletedAt) return notFound();
+  const viewerAccountId = await viewerSchoolAccountId(db, viewer);
+  if (!viewerAccountId) return forbidden();
   const rateLimit = await enforceDiscussionRateLimit(
     db,
     viewer,
@@ -1767,7 +1821,6 @@ export async function createDiscussionReport(
     },
   );
   if (!rateLimit.ok) return rateLimit;
-  const identity = identityColumns(viewer);
   const duplicate = await db
     .select({ id: schema.productDiscussionReports.id })
     .from(schema.productDiscussionReports)
@@ -1775,9 +1828,7 @@ export async function createDiscussionReport(
       and(
         eq(schema.productDiscussionReports.contentType, contentType),
         eq(schema.productDiscussionReports.contentId, content.row.id),
-        viewer.kind === "learner"
-          ? eq(schema.productDiscussionReports.learnerId, viewer.learnerId)
-          : eq(schema.productDiscussionReports.adminUserId, viewer.context.principalId),
+        eq(schema.productDiscussionReports.schoolAccountId, viewerAccountId),
       ),
     )
     .limit(1);
@@ -1793,7 +1844,7 @@ export async function createDiscussionReport(
     contentType,
     contentId: content.row.id,
     commentId: content.commentId,
-    ...identity,
+    schoolAccountId: viewerAccountId,
     reason: reason.trim(),
     status: "pending" as const,
     rejectionReason: null,

@@ -1,0 +1,26 @@
+{
+  "name": "@courselit/page-blocks",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0"
+  },
+  "dependencies": {
+    "@courselit/api-contract": "workspace:*",
+    "@frontlit/page-builder": "0.1.0-alpha.2",
+    "@frontlit/text-editor": "0.1.0-alpha.1",
+    "lucide-react": "^1.41.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "react": "19.2.8",
+    "typescript": "5.9.3"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}

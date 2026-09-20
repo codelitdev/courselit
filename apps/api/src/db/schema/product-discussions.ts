@@ -1,7 +1,5 @@
-import { sql } from "drizzle-orm";
 import {
   boolean,
-  check,
   index,
   integer,
   pgTable,
@@ -10,10 +8,8 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { user } from "./auth.generated.js";
-import { learners } from "./catalog.js";
 import { products } from "./products.js";
-import { schools } from "./schools.js";
+import { schoolAccounts, schools } from "./schools.js";
 
 const targetFields = {
   schoolId: uuid("school_id")
@@ -26,22 +22,13 @@ const targetFields = {
   entityId: uuid("entity_id").notNull(),
 };
 
-const identityCheck = (name: string) =>
-  check(
-    name,
-    sql`((learner_id IS NOT NULL)::int + (admin_user_id IS NOT NULL)::int) = 1`,
-  );
-
 export const productDiscussionComments = pgTable(
   "product_discussion_comments",
   {
     id: uuid("id").primaryKey(),
     publicId: text("public_id").notNull().unique(),
     ...targetFields,
-    learnerId: uuid("learner_id").references(() => learners.id, {
-      onDelete: "set null",
-    }),
-    adminUserId: text("admin_user_id").references(() => user.id, {
+    schoolAccountId: uuid("school_account_id").references(() => schoolAccounts.id, {
       onDelete: "set null",
     }),
     content: text("content").notNull(),
@@ -65,7 +52,6 @@ export const productDiscussionComments = pgTable(
       table.createdAt,
       table.id,
     ),
-    oneAuthor: identityCheck("product_discussion_comments_one_author_check"),
   }),
 );
 
@@ -79,10 +65,7 @@ export const productDiscussionReplies = pgTable(
       .notNull()
       .references(() => productDiscussionComments.id, { onDelete: "cascade" }),
     parentReplyId: uuid("parent_reply_id"),
-    learnerId: uuid("learner_id").references(() => learners.id, {
-      onDelete: "set null",
-    }),
-    adminUserId: text("admin_user_id").references(() => user.id, {
+    schoolAccountId: uuid("school_account_id").references(() => schoolAccounts.id, {
       onDelete: "set null",
     }),
     content: text("content").notNull(),
@@ -104,7 +87,6 @@ export const productDiscussionReplies = pgTable(
       table.id,
     ),
     parent: index("product_discussion_replies_parent_idx").on(table.parentReplyId),
-    oneAuthor: identityCheck("product_discussion_replies_one_author_check"),
   }),
 );
 
@@ -119,27 +101,22 @@ export const productDiscussionLikes = pgTable(
     commentId: uuid("comment_id").references(() => productDiscussionComments.id, {
       onDelete: "cascade",
     }),
-    learnerId: uuid("learner_id").references(() => learners.id, {
-      onDelete: "cascade",
-    }),
-    adminUserId: text("admin_user_id").references(() => user.id, {
-      onDelete: "cascade",
-    }),
+    schoolAccountId: uuid("school_account_id")
+      .notNull()
+      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
-    learner: uniqueIndex("product_discussion_likes_learner_uidx")
-      .on(table.contentType, table.contentId, table.learnerId)
-      .where(sql`${table.learnerId} IS NOT NULL`),
-    admin: uniqueIndex("product_discussion_likes_admin_uidx")
-      .on(table.contentType, table.contentId, table.adminUserId)
-      .where(sql`${table.adminUserId} IS NOT NULL`),
+    accountLike: uniqueIndex("product_discussion_likes_account_uidx").on(
+      table.contentType,
+      table.contentId,
+      table.schoolAccountId,
+    ),
     target: index("product_discussion_likes_target_idx").on(
       table.productId,
       table.entityType,
       table.entityId,
     ),
-    oneIdentity: identityCheck("product_discussion_likes_one_identity_check"),
   }),
 );
 
@@ -183,24 +160,20 @@ export const productDiscussionSubscribers = pgTable(
     id: uuid("id").primaryKey(),
     publicId: text("public_id").notNull().unique(),
     ...targetFields,
-    learnerId: uuid("learner_id").references(() => learners.id, {
-      onDelete: "cascade",
-    }),
-    adminUserId: text("admin_user_id").references(() => user.id, {
-      onDelete: "cascade",
-    }),
+    schoolAccountId: uuid("school_account_id")
+      .notNull()
+      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
     subscription: boolean("subscription").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
-    learner: uniqueIndex("product_discussion_subscribers_learner_uidx")
-      .on(table.productId, table.entityType, table.entityId, table.learnerId)
-      .where(sql`${table.learnerId} IS NOT NULL`),
-    admin: uniqueIndex("product_discussion_subscribers_admin_uidx")
-      .on(table.productId, table.entityType, table.entityId, table.adminUserId)
-      .where(sql`${table.adminUserId} IS NOT NULL`),
-    oneIdentity: identityCheck("product_discussion_subscribers_one_identity_check"),
+    accountSubscriber: uniqueIndex("product_discussion_subscribers_account_uidx").on(
+      table.productId,
+      table.entityType,
+      table.entityId,
+      table.schoolAccountId,
+    ),
   }),
 );
 
@@ -215,12 +188,9 @@ export const productDiscussionReports = pgTable(
     commentId: uuid("comment_id").references(() => productDiscussionComments.id, {
       onDelete: "cascade",
     }),
-    learnerId: uuid("learner_id").references(() => learners.id, {
-      onDelete: "cascade",
-    }),
-    adminUserId: text("admin_user_id").references(() => user.id, {
-      onDelete: "cascade",
-    }),
+    schoolAccountId: uuid("school_account_id")
+      .notNull()
+      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
     reason: text("reason").notNull(),
     status: text("status")
       .$type<"pending" | "accepted" | "rejected">()
@@ -231,20 +201,17 @@ export const productDiscussionReports = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
-    learner: uniqueIndex("product_discussion_reports_learner_uidx")
-      .on(table.contentType, table.contentId, table.learnerId)
-      .where(sql`${table.learnerId} IS NOT NULL`),
-    admin: uniqueIndex("product_discussion_reports_admin_uidx")
-      .on(table.contentType, table.contentId, table.adminUserId)
-      .where(sql`${table.adminUserId} IS NOT NULL`),
+    accountReport: uniqueIndex("product_discussion_reports_account_uidx").on(
+      table.contentType,
+      table.contentId,
+      table.schoolAccountId,
+    ),
     target: index("product_discussion_reports_target_idx").on(
       table.schoolId,
       table.productId,
       table.entityType,
       table.entityId,
       table.status,
-      table.createdAt,
     ),
-    oneIdentity: identityCheck("product_discussion_reports_one_identity_check"),
   }),
 );

@@ -1,4 +1,12 @@
 import http from "node:http";
+
+if (!process.env.NO_PROXY?.includes("127.0.0.1")) {
+  process.env.NO_PROXY = process.env.NO_PROXY
+    ? `${process.env.NO_PROXY},127.0.0.1,localhost`
+    : "127.0.0.1,localhost";
+  process.env.no_proxy = process.env.NO_PROXY;
+}
+
 import { createObservability, type Observability } from "@codelitdev/observability";
 import { type Clock, frozenClock, systemClock } from "@codelitdev/platform";
 import { PGlite } from "@electric-sql/pglite";
@@ -8,7 +16,7 @@ import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { Pool } from "pg";
 import type { Logger } from "pino";
-import { createAdminAuth, createLearnerAuth } from "./auth/better-auth.js";
+import { createAdminAuth } from "./auth/better-auth.js";
 import {
   type BillingBundle,
   composeBilling,
@@ -22,6 +30,7 @@ import { type MediaLitClient, MemoryMediaLitClient } from "./media.js";
 import { createMediaLitClientFromEnv } from "./media-lit-client.js";
 import type { PaymentProvider } from "./payments.js";
 import { TELEMETRY_PROPERTY_ALLOWLIST } from "./permissions.js";
+import { sendLitConfig } from "./sendlit-client.js";
 import type { AppDb } from "./types.js";
 import { createUnsplashClientFromEnv, type UnsplashClient } from "./unsplash.js";
 
@@ -41,8 +50,6 @@ export async function createPgliteRuntime(options: {
   logger?: Logger;
   observability?: Observability;
   authSecret?: string;
-  learnerAuthSecret?: string;
-  learnerWebOrigin?: string;
   billingMode?: "cloud" | "oss";
   customDomainVerifier?: (hostname: string, token: string) => Promise<boolean>;
   mediaLit?: MediaLitClient;
@@ -88,22 +95,24 @@ export async function createPgliteRuntime(options: {
     webOrigin,
     secret: options.authSecret ?? "test-secret-that-is-at-least-thirty-two-characters",
   });
-  const learnerAuth = createLearnerAuth({
-    db,
-    publicApiUrl,
-    webOrigin: options.learnerWebOrigin ?? webOrigin,
-    secret:
-      options.learnerAuthSecret ??
-      "test-learner-secret-that-is-at-least-thirty-two-characters",
-  });
   const adminHandler = toNodeHandler(auth.auth);
-  const learnerHandler = toNodeHandler(learnerAuth.auth);
   handler = async (req, res) => {
-    const requestPath = req.url?.split("?", 1)[0] ?? "";
-    await (requestPath.startsWith(learnerAuth.authBasePath)
-      ? learnerHandler(req, res)
-      : adminHandler(req, res));
+    await adminHandler(req, res);
   };
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+    const urlString =
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url;
+    if (publicApiUrl && urlString.startsWith(publicApiUrl)) {
+      const req = input instanceof Request ? input : new Request(input, init);
+      return auth.auth.handler(req);
+    }
+    return originalFetch(input, init);
+  }) as typeof globalThis.fetch;
   const importTables = await client.query(
     "select tablename from pg_tables where schemaname = 'public'",
   );
@@ -135,8 +144,8 @@ export async function createPgliteRuntime(options: {
     observability,
     customDomainVerifier: options.customDomainVerifier,
     paymentProvider: options.paymentProvider,
+    sendLit: sendLitConfig(),
     auth,
-    learnerAuth,
     authServer,
     async close() {
       await new Promise<void>((resolve) => {
@@ -146,6 +155,7 @@ export async function createPgliteRuntime(options: {
         }
         authServer.close(() => resolve());
       });
+      globalThis.fetch = originalFetch;
       await client.close();
     },
   };
@@ -162,14 +172,32 @@ export async function createPostgresRuntime(options: {
   logger?: Logger;
   observability?: Observability;
   authSecret: string;
-  learnerAuthSecret: string;
-  learnerWebOrigin?: string;
   mediaLit?: MediaLitClient;
   unsplash?: UnsplashClient;
   paymentProvider?: PaymentProvider;
 }): Promise<Runtime> {
   const client = new Pool({ connectionString: options.databaseUrl });
   await client.query("select 1");
+  const requiredTables = [
+    "school_accounts",
+    "school_sessions",
+    "school_auth_tickets",
+    "memberships",
+    "learner_memberships",
+  ];
+  const tables = await client.query<{ tablename: string }>(
+    `select tablename
+       from pg_tables
+      where schemaname = 'public'
+        and tablename = any($1::text[])`,
+    [requiredTables],
+  );
+  const foundTables = new Set(tables.rows.map((row) => row.tablename));
+  const missingTables = requiredTables.filter((table) => !foundTables.has(table));
+  if (missingTables.length > 0) {
+    await client.end();
+    throw new Error(`schema_missing:${missingTables.join(",")}`);
+  }
   const db = drizzlePostgres(client, {
     schema: { ...schema, ...billingSchema },
   }) as unknown as AppDb;
@@ -187,12 +215,6 @@ export async function createPostgresRuntime(options: {
     publicApiUrl: options.publicApiUrl,
     webOrigin: options.webOrigin,
     secret: options.authSecret,
-  });
-  const learnerAuth = createLearnerAuth({
-    db,
-    publicApiUrl: options.publicApiUrl,
-    webOrigin: options.learnerWebOrigin ?? options.webOrigin,
-    secret: options.learnerAuthSecret,
   });
   const observability =
     options.observability ??
@@ -217,8 +239,8 @@ export async function createPostgresRuntime(options: {
     logger: options.logger ?? observability.logger,
     observability,
     paymentProvider: options.paymentProvider,
+    sendLit: sendLitConfig(),
     auth,
-    learnerAuth,
     authServer: null,
     async close() {
       await client.end();

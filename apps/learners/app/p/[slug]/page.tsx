@@ -54,6 +54,7 @@ export default async function PublicSalesPage({ params }: Props) {
         fallbackToHomepage
         systemRoute="community"
         systemContent={<PublicCommunityDetail communityId={community.id} />}
+        salesResource={{ resourceType: "community", resourceId: community.id }}
       />
     );
   }

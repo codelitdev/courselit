@@ -51,7 +51,8 @@ export async function createLearnerDownloadLink(
   db: AppDb,
   input: {
     schoolId: string;
-    learnerId: string;
+    schoolAccountId?: string;
+    learnerId?: string;
     productPublicId: string;
     actorId: string;
     requestId: string;
@@ -61,6 +62,7 @@ export async function createLearnerDownloadLink(
   | { ok: true; value: LearnerDownloadLinkDto }
   | { ok: false; error: ReturnType<typeof createPlatformError> }
 > {
+  const accountId = input.schoolAccountId ?? input.learnerId!;
   const productRows = await db
     .select()
     .from(schema.products)
@@ -83,7 +85,7 @@ export async function createLearnerDownloadLink(
     .where(
       and(
         eq(schema.learnerMemberships.schoolId, input.schoolId),
-        eq(schema.learnerMemberships.learnerId, input.learnerId),
+        eq(schema.learnerMemberships.schoolAccountId, accountId),
         eq(schema.learnerMemberships.entityType, "product"),
         eq(schema.learnerMemberships.entityId, product.publicId),
         eq(schema.learnerMemberships.status, "active"),
@@ -100,7 +102,7 @@ export async function createLearnerDownloadLink(
       id: uuidv7(clock),
       schoolId: input.schoolId,
       membershipId: membership.id,
-      learnerId: input.learnerId,
+      schoolAccountId: accountId,
       productId: product.id,
       tokenDigest: digestToken(token),
       expiresAt,
@@ -137,7 +139,8 @@ export async function serveLearnerDownload(
   mediaLit: MediaLitClient,
   input: {
     schoolId: string;
-    learnerId: string;
+    schoolAccountId?: string;
+    learnerId?: string;
     token: string;
     requestId: string;
     fetchAsset?: (url: string) => Promise<Uint8Array>;
@@ -147,6 +150,7 @@ export async function serveLearnerDownload(
   | { ok: true; value: LearnerDownloadResult }
   | { ok: false; error: ReturnType<typeof createPlatformError> }
 > {
+  const accountId = input.schoolAccountId ?? input.learnerId!;
   if (!/^[a-f0-9]{128}$/i.test(input.token)) {
     return { ok: false, error: createPlatformError("not_found") };
   }
@@ -167,11 +171,11 @@ export async function serveLearnerDownload(
       and(
         eq(schema.downloadLinks.tokenDigest, digestToken(input.token)),
         eq(schema.downloadLinks.schoolId, input.schoolId),
-        eq(schema.downloadLinks.learnerId, input.learnerId),
+        eq(schema.downloadLinks.schoolAccountId, accountId),
         eq(schema.downloadLinks.consumed, false),
         gt(schema.downloadLinks.expiresAt, now),
         eq(schema.learnerMemberships.schoolId, input.schoolId),
-        eq(schema.learnerMemberships.learnerId, input.learnerId),
+        eq(schema.learnerMemberships.schoolAccountId, accountId),
         eq(schema.learnerMemberships.status, "active"),
         eq(schema.products.schoolId, input.schoolId),
         eq(schema.products.status, "published"),
@@ -291,7 +295,7 @@ export async function serveLearnerDownload(
         and(
           eq(schema.downloadLinks.id, row.link.id),
           eq(schema.downloadLinks.schoolId, input.schoolId),
-          eq(schema.downloadLinks.learnerId, input.learnerId),
+          eq(schema.downloadLinks.schoolAccountId, accountId),
           eq(schema.downloadLinks.consumed, false),
           gt(schema.downloadLinks.expiresAt, now),
         ),
@@ -305,7 +309,7 @@ export async function serveLearnerDownload(
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
       schoolId: input.schoolId,
-      actorId: input.learnerId,
+      actorId: accountId,
       action: "download.completed",
       resourceType: "product",
       resourceId: row.product.publicId,
@@ -314,7 +318,7 @@ export async function serveLearnerDownload(
     });
     await recordActivity(tx as unknown as AppDb, {
       schoolId: input.schoolId,
-      actorId: input.learnerId,
+      actorId: accountId,
       type: ActivityType.DOWNLOADED,
       entityId: row.product.publicId,
       metadata: { downloadLinkId: row.link.id },

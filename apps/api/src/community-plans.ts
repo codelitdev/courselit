@@ -6,11 +6,10 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, or } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import {
   kindForSourceType,
-  type NormalizedPlan,
   type PlanInput,
   type StorefrontContext,
   sourceAmountsForRow,
@@ -50,8 +49,7 @@ function canRead(context: StorefrontContext) {
   return Boolean(
     context.tenantId &&
       (context.permissions.has("storefront:read") ||
-        context.permissions.has("communities:read") ||
-        context.permissions.has("school:admin")),
+        context.permissions.has("communities:read")),
   );
 }
 
@@ -59,8 +57,7 @@ function canWrite(context: StorefrontContext) {
   return Boolean(
     context.tenantId &&
       (context.permissions.has("storefront:write") ||
-        context.permissions.has("communities:write") ||
-        context.permissions.has("school:admin")),
+        context.permissions.has("communities:write")),
   );
 }
 
@@ -123,19 +120,12 @@ async function loadCommunity(db: AppDb, schoolId: string, publicId: string) {
     .where(
       and(
         eq(schema.communities.schoolId, schoolId),
-        eq(schema.communities.publicId, publicId),
+        or(
+          eq(schema.communities.publicId, publicId),
+          eq(schema.communities.slug, publicId),
+        ),
+        isNull(schema.communities.deletedAt),
       ),
-    )
-    .limit(1);
-  return rows[0] ?? null;
-}
-
-async function loadCommunityById(db: AppDb, schoolId: string, id: string) {
-  const rows = await db
-    .select()
-    .from(schema.communities)
-    .where(
-      and(eq(schema.communities.schoolId, schoolId), eq(schema.communities.id, id)),
     )
     .limit(1);
   return rows[0] ?? null;
@@ -167,25 +157,6 @@ async function validateIncludedProducts(
       ),
     );
   return new Set(rows.map((row) => row.publicId)).size === new Set(ids).size;
-}
-
-function isDuplicate(
-  candidate: NormalizedPlan,
-  existing: typeof schema.storefrontPlans.$inferSelect,
-  currentId?: string,
-) {
-  if (currentId && existing.id === currentId) return false;
-  if (
-    existing.status !== "active" ||
-    sourceTypeForKind(existing.kind) !== candidate.type
-  ) {
-    return false;
-  }
-  if (candidate.type !== "subscription") return true;
-  const amounts = sourceAmountsForRow(existing);
-  return candidate.subscriptionMonthlyAmount !== null
-    ? amounts.subscriptionMonthlyAmount !== null
-    : amounts.subscriptionYearlyAmount !== null;
 }
 
 export async function listCommunityPlans(
@@ -230,7 +201,7 @@ export async function listPublicCommunityPlans(
 ): Promise<Result<CommunityPlanDto[]>> {
   const community = await loadCommunity(db, school.schoolId, communityPublicId);
   const schoolRow = await loadSchool(db, school.schoolId);
-  if (!community?.enabled || community.deletedAt || !schoolRow) {
+  if (!community || community.deletedAt || !schoolRow) {
     return { ok: false, error: createPlatformError("not_found") };
   }
   const rows = await db
@@ -291,8 +262,6 @@ export async function createCommunityPlan(
             eq(schema.storefrontPlans.status, "active"),
           ),
         );
-      if (existing.some((plan) => isDuplicate(checked.value, plan)))
-        return duplicatePlan();
       const row = {
         id: uuidv7(clock),
         publicId: createPublicId("pln", clock),
@@ -340,7 +309,8 @@ export async function createCommunityPlan(
       };
     });
   } catch (error) {
-    if (String(error).includes("storefront_plans_")) return duplicatePlan();
+    const errorText = `${error} ${(error as any)?.cause?.message ?? ""} ${(error as any)?.cause?.constraint ?? ""} ${(error as any)?.constraint ?? ""}`;
+    if (errorText.includes("storefront_plans_")) return duplicatePlan();
     throw error;
   }
 }
@@ -375,7 +345,7 @@ export async function updateCommunityPlan(
       }),
     };
   }
-  const community = await loadCommunityById(
+  const community = await loadCommunity(
     db,
     context.tenantId!,
     existing.entityId,
@@ -438,19 +408,6 @@ export async function updateCommunityPlan(
   ) {
     return invalidPlan("invalid_included_products");
   }
-  const existingPlans = await db
-    .select()
-    .from(schema.storefrontPlans)
-    .where(
-      and(
-        eq(schema.storefrontPlans.entityType, "community"),
-        eq(schema.storefrontPlans.entityId, existing.entityId),
-        eq(schema.storefrontPlans.status, "active"),
-      ),
-    );
-  if (existingPlans.some((plan) => isDuplicate(checked.value, plan, existing.id))) {
-    return duplicatePlan();
-  }
   const now = clock.now();
   const next = {
     name: input.name?.trim() ?? existing.name,
@@ -468,22 +425,28 @@ export async function updateCommunityPlan(
     installmentCount: checked.value.installmentCount,
     updatedAt: now,
   };
-  await db.transaction(async (tx) => {
-    await tx
-      .update(schema.storefrontPlans)
-      .set(next)
-      .where(eq(schema.storefrontPlans.id, existing.id));
-    await tx.insert(schema.auditEvents).values({
-      id: uuidv7(clock),
-      schoolId: context.tenantId!,
-      actorId: context.principalId,
-      action: "community_payment_plan.updated",
-      resourceType: "community_payment_plan",
-      resourceId: existing.publicId,
-      requestId: context.requestId,
-      createdAt: now,
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(schema.storefrontPlans)
+        .set(next)
+        .where(eq(schema.storefrontPlans.id, existing.id));
+      await tx.insert(schema.auditEvents).values({
+        id: uuidv7(clock),
+        schoolId: context.tenantId!,
+        actorId: context.principalId,
+        action: "community_payment_plan.updated",
+        resourceType: "community_payment_plan",
+        resourceId: existing.publicId,
+        requestId: context.requestId,
+        createdAt: now,
+      });
     });
-  });
+  } catch (error) {
+    const errorText = `${error} ${(error as any)?.cause?.message ?? ""} ${(error as any)?.cause?.constraint ?? ""} ${(error as any)?.constraint ?? ""}`;
+    if (errorText.includes("storefront_plans_")) return duplicatePlan();
+    throw error;
+  }
   return {
     ok: true,
     value: communityPlanToDto(

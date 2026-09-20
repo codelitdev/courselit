@@ -488,13 +488,15 @@ export async function issueCertificateIfComplete(
   input: {
     schoolId: string;
     productId: string;
-    learnerId: string;
+    schoolAccountId?: string;
+    learnerId?: string;
     membershipId: string;
     actorId: string;
     requestId: string;
   },
   clock: Clock,
 ): Promise<CompletionCertificate> {
+  const schoolAccountId = input.schoolAccountId ?? input.learnerId!;
   const product = await db
     .select({ kind: schema.products.kind, certificate: schema.products.certificate })
     .from(schema.products)
@@ -541,7 +543,7 @@ export async function issueCertificateIfComplete(
     .from(schema.certificates)
     .where(
       and(
-        eq(schema.certificates.learnerId, input.learnerId),
+        eq(schema.certificates.schoolAccountId, schoolAccountId),
         eq(schema.certificates.productId, input.productId),
       ),
     )
@@ -579,7 +581,7 @@ export async function issueCertificateIfComplete(
     verificationId: createPublicId("ver", clock),
     schoolId: input.schoolId,
     productId: input.productId,
-    learnerId: input.learnerId,
+    schoolAccountId,
     templateId: template[0]?.id ?? null,
     issuedAt: now,
     revokedAt: null,
@@ -588,7 +590,7 @@ export async function issueCertificateIfComplete(
     .insert(schema.certificates)
     .values(candidate)
     .onConflictDoNothing({
-      target: [schema.certificates.learnerId, schema.certificates.productId],
+      target: [schema.certificates.schoolAccountId, schema.certificates.productId],
     })
     .returning();
   const certificate =
@@ -599,7 +601,7 @@ export async function issueCertificateIfComplete(
         .from(schema.certificates)
         .where(
           and(
-            eq(schema.certificates.learnerId, input.learnerId),
+            eq(schema.certificates.schoolAccountId, schoolAccountId),
             eq(schema.certificates.productId, input.productId),
           ),
         )
@@ -621,7 +623,7 @@ export async function issueCertificateIfComplete(
       db,
       {
         schoolId: input.schoolId,
-        actorId: input.learnerId,
+        actorId: schoolAccountId,
         type: ActivityType.CERTIFICATE_ISSUED,
         entityId: input.productId,
         metadata: { certificateId: certificate.publicId },
@@ -634,21 +636,22 @@ export async function issueCertificateIfComplete(
 
 export async function listLearnerCertificates(
   db: AppDb,
-  input: { schoolId: string; learnerId: string; publicSchoolId: string },
+  input: { schoolId: string; schoolAccountId?: string; learnerId?: string; publicSchoolId: string },
 ): Promise<CertificateDto[]> {
+  const accountId = input.schoolAccountId ?? input.learnerId!;
   const rows = await db
     .select({
       certificate: schema.certificates,
       product: schema.products,
-      learner: schema.learners,
+      learner: schema.schoolAccounts,
     })
     .from(schema.certificates)
     .innerJoin(schema.products, eq(schema.products.id, schema.certificates.productId))
-    .innerJoin(schema.learners, eq(schema.learners.id, schema.certificates.learnerId))
+    .innerJoin(schema.schoolAccounts, eq(schema.schoolAccounts.id, schema.certificates.schoolAccountId))
     .where(
       and(
         eq(schema.certificates.schoolId, input.schoolId),
-        eq(schema.certificates.learnerId, input.learnerId),
+        eq(schema.certificates.schoolAccountId, accountId),
       ),
     )
     .orderBy(asc(schema.certificates.issuedAt));
@@ -666,14 +669,14 @@ export async function verifyCertificate(
       certificate: schema.certificates,
       school: schema.schools,
       product: schema.products,
-      learner: schema.learners,
+      learner: schema.schoolAccounts,
       template: schema.certificateTemplates,
       creator: schema.user,
     })
     .from(schema.certificates)
     .innerJoin(schema.schools, eq(schema.schools.id, schema.certificates.schoolId))
     .innerJoin(schema.products, eq(schema.products.id, schema.certificates.productId))
-    .innerJoin(schema.learners, eq(schema.learners.id, schema.certificates.learnerId))
+    .innerJoin(schema.schoolAccounts, eq(schema.schoolAccounts.id, schema.certificates.schoolAccountId))
     .leftJoin(
       schema.certificateTemplates,
       eq(schema.certificateTemplates.id, schema.certificates.templateId),
@@ -731,7 +734,7 @@ export async function verifyCertificate(
 function certificateToDto(
   certificate: typeof schema.certificates.$inferSelect,
   product: typeof schema.products.$inferSelect,
-  learner: typeof schema.learners.$inferSelect,
+  account: typeof schema.schoolAccounts.$inferSelect,
   publicSchoolId: string,
 ): CertificateDto {
   return {
@@ -739,8 +742,8 @@ function certificateToDto(
     verificationId: certificate.verificationId,
     schoolId: publicSchoolId,
     productId: product.publicId,
-    learnerId: learner.publicId,
-    learnerName: learner.name,
+    learnerId: account.publicId,
+    learnerName: account.displayName,
     productTitle: product.title,
     issuedAt: serializeDate(certificate.issuedAt),
     revokedAt: certificate.revokedAt ? serializeDate(certificate.revokedAt) : null,

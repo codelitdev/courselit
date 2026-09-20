@@ -35,6 +35,25 @@ export const readinessResponseSchema = z.object({
   checks: z.record(z.string(), z.boolean()),
 });
 
+/**
+ * Shared media reference used by featured images, logos, banners, rich-text
+ * images, and other media-bearing content. An owned CourseLit media item has
+ * `mediaId`; an external or Unsplash image only has its URL.
+ */
+export const mediaRefSchema = z.object({
+  mediaId: z.string().min(1).optional(),
+  url: z.string().url(),
+  thumbnailUrl: z.string().url().nullable().optional(),
+  alt: z.string().max(1000).optional(),
+  fileName: z.string().max(255).optional(),
+  mimeType: z.string().max(200).optional(),
+  byteSize: z.number().int().nonnegative().optional(),
+  title: z.string().max(2000).optional(),
+  kind: z.enum(["image", "video", "audio", "document", "other"]).optional(),
+});
+
+export type MediaRef = z.infer<typeof mediaRefSchema>;
+
 export const productSchema = z.object({
   id: z.string(),
   schoolId: z.string(),
@@ -43,19 +62,13 @@ export const productSchema = z.object({
   slug: z.string(),
   title: z.string(),
   description: z.string(),
-  featuredMedia: z
-    .object({
-      id: z.string(),
-      canonicalUrl: z.string().url(),
-      thumbnailUrl: z.string().url().nullable(),
-      fileName: z.string(),
-      altText: z.string(),
-    })
-    .nullable(),
+  featuredImage: mediaRefSchema.nullable(),
   privacy: z.enum(["public", "unlisted"]),
   leadMagnet: z.boolean(),
   certificate: z.boolean(),
   discussions: z.boolean(),
+  includedWithCommunity: z.boolean(),
+  discussionSpaceId: z.string().nullable(),
   publishedAt: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -97,11 +110,12 @@ export const updateProductBodySchema = z.object({
   slug: z.string().trim().min(1).max(200).optional(),
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(8000).optional(),
-  featuredMediaId: z.string().min(1).nullable().optional(),
+  featuredImage: mediaRefSchema.nullable().optional(),
   privacy: z.enum(["public", "unlisted"]).optional(),
   leadMagnet: z.boolean().optional(),
   certificate: z.boolean().optional(),
   discussions: z.boolean().optional(),
+  includedWithCommunity: z.boolean().optional(),
 });
 
 export const productCertificateTemplateSchema = z.object({
@@ -305,6 +319,10 @@ export const storefrontCheckoutSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
 });
+export const checkoutSessionStartResponseSchema = z.union([
+  storefrontCheckoutSchema,
+  communityCheckoutSchema,
+]);
 export const paymentWebhookResponseSchema = z.object({
   received: z.boolean(),
   duplicate: z.boolean(),
@@ -314,16 +332,31 @@ export const createLearnerCheckoutBodySchema = z.object({
   planId: z.string().min(1),
   returnUrl: z.string().url().optional(),
 });
-export const createCheckoutSessionBodySchema = z.object({
-  productId: z.string().min(1),
-  planId: z.string().min(1),
-});
+export const createCheckoutSessionBodySchema = z
+  .object({
+    productId: z.string().min(1).optional(),
+    communityId: z.string().min(1).optional(),
+    planId: z.string().min(1),
+  })
+  .superRefine((value, ctx) => {
+    if (Boolean(value.productId) === Boolean(value.communityId)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["productId"],
+        message: "Exactly one resource is required.",
+      });
+    }
+  });
 export const storefrontCheckoutSessionSchema = z.object({
   id: z.string(),
-  productId: z.string(),
+  resourceType: z.enum(["product", "community"]),
+  resourceId: z.string(),
+  productId: z.string().nullable(),
+  communityId: z.string().nullable(),
   planId: z.string(),
-  productTitle: z.string(),
-  productKind: z.enum(["course", "download"]),
+  productTitle: z.string().nullable(),
+  productKind: z.enum(["course", "download"]).nullable(),
+  communityName: z.string().nullable(),
   planName: z.string(),
   planDescription: z.string(),
   planType: z.enum(["free", "onetime", "emi", "subscription"]),
@@ -340,6 +373,7 @@ export const storefrontCheckoutSessionSchema = z.object({
 });
 export const startCheckoutSessionBodySchema = z.object({
   returnUrl: z.string().url().optional(),
+  joiningReason: z.string().max(2_000).optional(),
 });
 
 export const entitlementSchema = z.object({
@@ -424,7 +458,7 @@ export const websiteContentSummarySchema = z.object({
   kind: z.enum(["page", "blog"]),
   slug: z.string(),
   status: z.enum(["draft", "published", "published_with_changes"]),
-  featuredImage: z.record(z.string(), z.unknown()).nullable().optional(),
+  featuredImage: mediaRefSchema.nullable().optional(),
   excerpt: z.string().nullable().optional(),
   updatedAt: z.string().nullable().optional(),
 });
@@ -470,14 +504,14 @@ export const websiteThemeSchema = z.object({
 export const websiteBrandingSchema = z.object({
   title: z.string().nullable(),
   subtitle: z.string().nullable(),
-  logo: z.record(z.string(), z.unknown()).nullable(),
+  logo: mediaRefSchema.nullable(),
   themeId: z.string().nullable(),
 });
 export const updateSchoolWebsiteBrandingBodySchema = z
   .object({
     title: z.string().max(200).nullable().optional(),
     subtitle: z.string().max(500).nullable().optional(),
-    logo: z.record(z.string(), z.unknown()).nullable().optional(),
+    logo: mediaRefSchema.nullable().optional(),
     themeId: z.string().nullable().optional(),
   })
   .strict();
@@ -498,12 +532,12 @@ export const websiteBlogSchema = websiteContentSummarySchema.extend({
   title: z.string().nullable().optional(),
   content: z.record(z.string(), z.unknown()).nullable().optional(),
   excerpt: z.string().nullable().optional(),
-  featuredImage: z.record(z.string(), z.unknown()).nullable().optional(),
+  featuredImage: mediaRefSchema.nullable().optional(),
   meta: z.record(z.string(), z.unknown()),
   draftTitle: z.string(),
   draftContent: z.record(z.string(), z.unknown()),
   draftExcerpt: z.string().nullable().optional(),
-  draftFeaturedImage: z.record(z.string(), z.unknown()).nullable().optional(),
+  draftFeaturedImage: mediaRefSchema.nullable().optional(),
   draftMeta: z.record(z.string(), z.unknown()),
   createdAt: z.string().nullable().optional(),
   updatedAt: z.string().nullable().optional(),
@@ -515,7 +549,7 @@ export const websiteBlogSchema = websiteContentSummarySchema.extend({
 export const publicSiteSettingsSchema = z.object({
   title: z.string().nullable(),
   subtitle: z.string().nullable(),
-  logo: z.record(z.string(), z.unknown()).nullable(),
+  logo: mediaRefSchema.nullable(),
   themeId: z.string().nullable(),
   theme: z.record(z.string(), z.unknown()).nullable(),
   codeInjectionHead: z.string(),
@@ -554,7 +588,7 @@ export const publicSiteBlogSchema = z.object({
   title: z.string().nullable(),
   content: z.record(z.string(), z.unknown()).nullable(),
   excerpt: z.string().nullable(),
-  featuredImage: z.record(z.string(), z.unknown()).nullable(),
+  featuredImage: mediaRefSchema.nullable(),
   meta: z.record(z.string(), z.unknown()),
   publishedAt: z.string().nullable(),
   updatedAt: z.string().nullable(),
@@ -576,7 +610,7 @@ export const updateSchoolWebsiteBlogBodySchema = z
     title: z.string().optional(),
     content: z.record(z.string(), z.unknown()).optional(),
     excerpt: z.string().optional(),
-    featuredImage: z.record(z.string(), z.unknown()).optional(),
+    featuredImage: mediaRefSchema.nullable().optional(),
     meta: z.record(z.string(), z.unknown()).optional(),
   })
   .strict();
@@ -670,6 +704,16 @@ export const learnerCommunityMediaAuthorizationBodySchema = z.object({
   byteSize: z.number().int().positive().max(100_000_000),
   accessPolicy: z.enum(["public", "private"]).default("private"),
 });
+export const learnerAvatarMediaAuthorizationBodySchema = z.object({
+  fileName: z.string().trim().min(1).max(255),
+  mimeType: z.string().trim().min(1).max(200),
+  byteSize: z.number().int().positive().max(2_000_000),
+});
+export const learnerAvatarMediaFinalizeBodySchema = z.object({
+  uploadId: z.string().trim().min(1).max(255),
+  altText: z.string().max(1_000).default(""),
+  caption: z.string().max(2_000).default(""),
+});
 export const learnerCommunityMediaListQuerySchema = z.object({
   search: z.string().max(200).optional(),
   cursor: z.string().max(500).optional(),
@@ -726,12 +770,18 @@ export const invitationSchema = z.object({
 });
 export const schoolTeamMemberSchema = z.object({
   id: z.string(),
+  membershipId: z.string().optional(),
+  schoolAccountId: z.string().optional(),
   name: z.string(),
   email: z.string(),
   image: z.string().nullable(),
   isOwner: z.boolean(),
   permissions: z.array(z.string()),
+  effectivePermissions: z.array(z.string()).optional(),
+  presetId: z.string().nullable().optional(),
+  version: z.number().int().optional(),
   createdAt: z.string(),
+  updatedAt: z.string().optional(),
 });
 export const schoolTeamInvitationSchema = z.object({
   invitationId: z.string(),
@@ -860,14 +910,6 @@ export const communityMembershipSchema = z.object({
   updatedAt: z.string(),
 });
 
-export const communityFeaturedMediaSchema = z.object({
-  id: z.string(),
-  canonicalUrl: z.string().url(),
-  thumbnailUrl: z.string().url().nullable(),
-  fileName: z.string(),
-  altText: z.string(),
-});
-
 export const communitySchema = z.object({
   id: z.string(),
   schoolId: z.string(),
@@ -876,16 +918,20 @@ export const communitySchema = z.object({
   description: z.string(),
   banner: z.string(),
   categories: z.array(z.string()),
-  enabled: z.boolean(),
   autoAcceptMembers: z.boolean(),
   joiningReasonText: z.string(),
-  featuredMedia: communityFeaturedMediaSchema.nullable(),
+  featuredImage: mediaRefSchema.nullable(),
   membersCount: z.number().int().nonnegative(),
   postsCount: z.number().int().nonnegative(),
   deletedAt: z.string().nullable(),
   membership: communityMembershipSchema.nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
+});
+
+export const publicCommunityListItemSchema = communitySchema.extend({
+  currency: z.string(),
+  priceMinor: z.number().int().nonnegative().nullable(),
 });
 
 export const createCommunityBodySchema = z.object({
@@ -900,7 +946,6 @@ export const createCommunityBodySchema = z.object({
   description: z.string().max(20_000).default(""),
   banner: z.string().max(20_000).default(""),
   categories: z.array(z.string().trim().min(1).max(100)).min(1).default(["General"]),
-  enabled: z.boolean().default(false),
   autoAcceptMembers: z.boolean().default(true),
   joiningReasonText: z.string().max(500).default(""),
 });
@@ -917,10 +962,9 @@ export const updateCommunityBodySchema = z.object({
   description: z.string().max(20_000).optional(),
   banner: z.string().max(20_000).optional(),
   categories: z.array(z.string().trim().min(1).max(100)).min(1).optional(),
-  enabled: z.boolean().optional(),
   autoAcceptMembers: z.boolean().optional(),
   joiningReasonText: z.string().max(500).optional(),
-  featuredMediaId: z.string().min(1).nullable().optional(),
+  featuredImage: mediaRefSchema.nullable().optional(),
 });
 
 export const addCommunityCategoryBodySchema = z.object({
@@ -975,6 +1019,16 @@ export const learnerFeedPostSchema = communityPostSchema.extend({
     name: z.string(),
     slug: z.string(),
   }),
+  space: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      slug: z.string(),
+      description: z.string(),
+      logo: z.string(),
+      featuredImage: mediaRefSchema.nullable(),
+    })
+    .optional(),
 });
 
 export const communityCommentSchema = z.object({
@@ -1020,9 +1074,11 @@ export const notificationPreferenceTypeSchema = z.enum([
 export const notificationPreferenceSchema = z.object({
   type: notificationPreferenceTypeSchema,
   appEnabled: z.boolean(),
+  emailEnabled: z.boolean(),
 });
 export const updateNotificationPreferenceBodySchema = z.object({
   appEnabled: z.boolean(),
+  emailEnabled: z.boolean(),
 });
 
 export const communityReportContentSchema = z.object({
@@ -1056,6 +1112,50 @@ export const communityListQuerySchema = z.object({
   cursor: z.string().max(500).optional(),
   limit: z.coerce.number().int().min(1).max(50).default(25),
   category: z.string().trim().min(1).max(100).optional(),
+  spaceId: z.string().trim().min(1).max(100).optional(),
+});
+
+export const spaceUnlockSchema = z.object({
+  entityType: z.enum(["community", "product"]),
+  entityId: z.string().min(1).optional(),
+  planIds: z.array(z.string().min(1)).default([]),
+});
+export const spaceSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  slug: z.string(),
+  description: z.string(),
+  logo: z.string(),
+  featuredImage: mediaRefSchema.nullable(),
+  follow: z.boolean(),
+  whoCanPost: z.enum(["members", "admin"]),
+  position: z.number().int(),
+  unlocks: z.array(spaceUnlockSchema),
+  canPost: z.boolean().optional(),
+  followed: z.boolean().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export const createSpaceBodySchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  description: z.string().max(8000).optional(),
+  logo: z.string().max(80).optional(),
+  featuredImage: mediaRefSchema.nullable().optional(),
+  unlocks: z.array(spaceUnlockSchema).optional(),
+  follow: z.boolean().optional(),
+  whoCanPost: z.enum(["members", "admin"]).optional(),
+});
+export const updateSpaceBodySchema = createSpaceBodySchema.partial();
+export const orderSpacesBodySchema = z.object({
+  spaceIds: z.array(z.string().min(1)).min(1),
+});
+export const deleteSpaceBodySchema = z.object({
+  destinationSpaceId: z.string().min(1).optional(),
+});
+export const createSpacePostBodySchema = z.object({
+  title: z.string().trim().min(1).max(300),
+  content: z.string().trim().min(1).max(20_000),
+  mediaIds: z.array(z.string().min(1)).max(10).optional(),
 });
 
 export const communityMembershipListQuerySchema = communityListQuerySchema.extend({
@@ -1305,8 +1405,16 @@ export const learnerSchema = z.object({
   schoolId: z.string(),
   email: z.string().email(),
   name: z.string(),
+  avatarMediaId: z.string().nullable(),
+  image: z.string().url().nullable(),
+  bio: z.string(),
+  emailUpdatesEnabled: z.boolean(),
 });
-export const adminLearnerSchema = learnerSchema.extend({
+export const adminLearnerSchema = z.object({
+  id: z.string(),
+  schoolId: z.string(),
+  email: z.string().email(),
+  name: z.string(),
   status: z.enum(["active", "deactivated"]),
   createdAt: z.string(),
 });
@@ -1316,6 +1424,13 @@ export const listLearnersQuerySchema = z.object({
 });
 export const updateLearnerBodySchema = z.object({
   status: z.enum(["active", "deactivated"]),
+});
+export const updateLearnerProfileBodySchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  avatarMediaId: z.string().nullable().optional(),
+  image: z.string().url().nullable().optional(),
+  bio: z.string().max(2_000).optional(),
+  emailUpdatesEnabled: z.boolean().optional(),
 });
 
 export const learnerMembershipSchema = z.object({
@@ -1781,6 +1896,132 @@ export const contract = c.router({
       403: platformErrorSchema,
     },
   },
+  listSpaces: {
+    method: "GET",
+    path: "/v1/spaces",
+    responses: {
+      200: z.object({ items: z.array(spaceSchema) }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  createSpace: {
+    method: "POST",
+    path: "/v1/spaces",
+    body: createSpaceBodySchema,
+    responses: {
+      201: spaceSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  getSpace: {
+    method: "GET",
+    path: "/v1/spaces/:spaceId",
+    pathParams: z.object({ spaceId: z.string() }),
+    responses: {
+      200: spaceSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  updateSpace: {
+    method: "PATCH",
+    path: "/v1/spaces/:spaceId",
+    pathParams: z.object({ spaceId: z.string() }),
+    body: updateSpaceBodySchema,
+    responses: {
+      200: spaceSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  orderSpaces: {
+    method: "PUT",
+    path: "/v1/spaces/order",
+    body: orderSpacesBodySchema,
+    responses: {
+      200: z.object({ items: z.array(spaceSchema) }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  deleteSpace: {
+    method: "DELETE",
+    path: "/v1/spaces/:spaceId",
+    pathParams: z.object({ spaceId: z.string() }),
+    body: deleteSpaceBodySchema,
+    responses: {
+      200: z.object({ id: z.string() }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  listLearnerSpaces: {
+    method: "GET",
+    path: "/v1/learner/spaces",
+    responses: {
+      200: z.object({ items: z.array(spaceSchema) }),
+      401: platformErrorSchema,
+    },
+  },
+  followLearnerSpace: {
+    method: "PUT",
+    path: "/v1/learner/spaces/:spaceId/follow",
+    pathParams: z.object({ spaceId: z.string() }),
+    body: c.noBody(),
+    responses: {
+      200: z.object({ followed: z.literal(true) }),
+      401: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  unfollowLearnerSpace: {
+    method: "DELETE",
+    path: "/v1/learner/spaces/:spaceId/follow",
+    pathParams: z.object({ spaceId: z.string() }),
+    responses: {
+      200: z.object({ followed: z.literal(false) }),
+      401: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  createLearnerSpacePost: {
+    method: "POST",
+    path: "/v1/learner/spaces/:spaceId/posts",
+    pathParams: z.object({ spaceId: z.string() }),
+    body: createSpacePostBodySchema,
+    responses: {
+      201: z.object({
+        id: z.string(),
+        spaceId: z.string(),
+        title: z.string(),
+        content: z.string(),
+      }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  getLearnerSpacePost: {
+    method: "GET",
+    path: "/v1/learner/spaces/:spaceId/posts/:postId",
+    pathParams: z.object({ spaceId: z.string(), postId: z.string() }),
+    responses: {
+      200: learnerFeedPostSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
   listLearnerFeed: {
     method: "GET",
     path: "/v1/learner/feed",
@@ -1789,6 +2030,7 @@ export const contract = c.router({
       200: z.object({
         items: z.array(learnerFeedPostSchema),
         nextCursor: z.string().nullable(),
+        banner: z.string(),
       }),
       401: platformErrorSchema,
       403: platformErrorSchema,
@@ -1933,6 +2175,28 @@ export const contract = c.router({
       409: platformErrorSchema,
     },
   },
+  authorizeLearnerAvatarMediaUpload: {
+    method: "POST",
+    path: "/v1/learner/profile-media/upload-authorizations",
+    body: learnerAvatarMediaAuthorizationBodySchema,
+    responses: {
+      201: mediaUploadAuthorizationSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  finalizeLearnerAvatarMediaUpload: {
+    method: "POST",
+    path: "/v1/learner/profile-media",
+    body: learnerAvatarMediaFinalizeBodySchema,
+    responses: {
+      201: mediaSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
   listLearnerCommunityMedia: {
     method: "GET",
     path: "/v1/learner/community-media",
@@ -1999,6 +2263,19 @@ export const contract = c.router({
       403: platformErrorSchema,
     },
   },
+  listAdminNotifications: {
+    method: "GET",
+    path: "/v1/notifications",
+    query: notificationListQuerySchema,
+    responses: {
+      200: z.object({
+        items: z.array(notificationSchema),
+        nextCursor: z.string().nullable(),
+      }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
   listLearnerNotificationPreferences: {
     method: "GET",
     path: "/v1/learner/notification-preferences",
@@ -2032,6 +2309,26 @@ export const contract = c.router({
   markAllLearnerNotificationsRead: {
     method: "POST",
     path: "/v1/learner/notifications/read-all",
+    body: z.object({}).default({}),
+    responses: {
+      200: z.object({ updated: z.boolean() }),
+      401: platformErrorSchema,
+    },
+  },
+  markAdminNotificationRead: {
+    method: "PATCH",
+    path: "/v1/notifications/:notificationId/read",
+    pathParams: z.object({ notificationId: z.string() }),
+    body: z.object({}).default({}),
+    responses: {
+      200: notificationSchema,
+      401: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  markAllAdminNotificationsRead: {
+    method: "POST",
+    path: "/v1/notifications/read-all",
     body: z.object({}).default({}),
     responses: {
       200: z.object({ updated: z.boolean() }),
@@ -2446,7 +2743,7 @@ export const contract = c.router({
     query: communityListQuerySchema,
     responses: {
       200: z.object({
-        items: z.array(communitySchema),
+        items: z.array(publicCommunityListItemSchema),
         nextCursor: z.string().nullable(),
       }),
       400: platformErrorSchema,
@@ -3168,6 +3465,17 @@ export const contract = c.router({
       403: platformErrorSchema,
     },
   },
+  updateLearnerProfile: {
+    method: "PATCH",
+    path: "/v1/learner/me",
+    body: updateLearnerProfileBodySchema,
+    responses: {
+      200: learnerSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
   createLearnerMembership: {
     method: "POST",
     path: "/v1/learner/memberships",
@@ -3213,8 +3521,8 @@ export const contract = c.router({
     pathParams: z.object({ sessionId: z.string() }),
     body: startCheckoutSessionBodySchema,
     responses: {
-      200: storefrontCheckoutSchema,
-      201: storefrontCheckoutSchema,
+      200: checkoutSessionStartResponseSchema,
+      201: checkoutSessionStartResponseSchema,
       400: platformErrorSchema,
       401: platformErrorSchema,
       403: platformErrorSchema,
@@ -3401,10 +3709,79 @@ export const contract = c.router({
     method: "PATCH",
     path: "/v1/school/team/members/:userId",
     pathParams: z.object({ userId: z.string().min(1) }),
-    body: z.object({ permissions: z.array(z.string()) }),
+    body: z.object({
+      permissions: z.array(z.string()),
+      presetId: z.string().nullable().optional(),
+      expectedVersion: z.number().int().optional(),
+    }),
     responses: {
       200: schoolTeamMemberSchema,
       400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
+  leaveSchoolTeam: {
+    method: "POST",
+    path: "/v1/school/team/leave",
+    body: c.noBody(),
+    responses: {
+      204: z.undefined(),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
+  transferSchoolOwnership: {
+    method: "POST",
+    path: "/v1/school/team/transfer-ownership",
+    body: z.object({
+      targetMemberId: z.string().min(1),
+    }),
+    responses: {
+      200: z.object({ ok: z.literal(true) }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+  },
+  createSchoolTeamInvitation: {
+    method: "POST",
+    path: "/v1/school/team/invitations",
+    body: z.object({
+      email: z.string().email(),
+      permissions: z.array(z.string()).default([]),
+      presetId: z.string().nullable().optional(),
+    }),
+    responses: {
+      201: invitationSchema,
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+  },
+  resendSchoolTeamInvitation: {
+    method: "POST",
+    path: "/v1/school/team/invitations/:invitationId/resend",
+    pathParams: z.object({ invitationId: z.string().min(1) }),
+    body: c.noBody(),
+    responses: {
+      200: z.object({ ok: z.literal(true), invitationId: z.string() }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+  },
+  revokeSchoolTeamInvitation: {
+    method: "DELETE",
+    path: "/v1/school/team/invitations/:invitationId",
+    pathParams: z.object({ invitationId: z.string().min(1) }),
+    responses: {
+      204: z.undefined(),
       401: platformErrorSchema,
       403: platformErrorSchema,
       404: platformErrorSchema,

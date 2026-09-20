@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@frontlit/page-builder"],
+  transpilePackages: [
+    "@codelitdev/design-system",
+    "@courselit/page-blocks",
+    "@frontlit/page-builder",
+  ],
 };
 
 export default nextConfig;

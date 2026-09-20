@@ -1,18 +1,9 @@
 "use client";
 
-import {
-  Badge,
-  Caption,
-  Header1,
-  Header4,
-  PageCard,
-  PageCardContent,
-  Subheader1,
-  Text2,
-} from "@frontlit/page-builder/primitives";
-import Link from "next/link";
+import type { MediaRef } from "@courselit/api-contract";
+import { Header1, Subheader1, Text2 } from "@frontlit/page-builder/primitives";
 import { useEffect, useState } from "react";
-import { LearnerCardImage } from "@/components/themed-page-builder";
+import { PublicCatalogCard } from "@/components/public-catalog-card";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
 type PublicProduct = {
@@ -21,22 +12,10 @@ type PublicProduct = {
   kind: "course" | "download";
   title: string;
   description: string;
-  featuredMedia: {
-    canonicalUrl: string;
-    thumbnailUrl: string | null;
-    altText: string;
-  } | null;
+  featuredImage: MediaRef | null;
   currency: string;
   priceMinor: number | null;
 };
-
-function priceLabel(product: PublicProduct): string {
-  if (product.priceMinor === null) return "Free access";
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: product.currency,
-  }).format(product.priceMinor / 100);
-}
 
 export function PublicProductsCatalog() {
   const theme = useSchoolThemeStyle();
@@ -79,43 +58,16 @@ export function PublicProductsCatalog() {
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {products.map((product) => {
-            const image = product.featuredMedia;
             return (
-              <Link
+              <PublicCatalogCard
                 key={product.id}
                 href={`/p/${encodeURIComponent(product.slug || product.id)}`}
-              >
-                <PageCard
-                  theme={theme}
-                  isLink
-                  className="h-full overflow-hidden transition-transform hover:-translate-y-1"
-                >
-                  {image ? (
-                    <LearnerCardImage
-                      theme={theme}
-                      src={image.thumbnailUrl ?? image.canonicalUrl}
-                      alt={image.altText || product.title}
-                      className="aspect-[16/9] w-full object-cover"
-                    />
-                  ) : null}
-                  <PageCardContent theme={theme} className="flex h-full flex-col gap-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <Header4 theme={theme}>{product.title}</Header4>
-                      <Badge theme={theme} variant="secondary">
-                        {priceLabel(product)}
-                      </Badge>
-                    </div>
-                    <Caption theme={theme}>
-                      {product.kind === "course" ? "Course" : "Digital download"}
-                    </Caption>
-                    {product.description ? (
-                      <Text2 theme={theme} className="line-clamp-3">
-                        {product.description}
-                      </Text2>
-                    ) : null}
-                  </PageCardContent>
-                </PageCard>
-              </Link>
+                title={product.title}
+                image={product.featuredImage}
+                priceMinor={product.priceMinor}
+                currency={product.currency}
+                meta={product.kind === "course" ? "Course" : "Digital download"}
+              />
             );
           })}
         </div>

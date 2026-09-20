@@ -6,8 +6,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { z } from "zod";
 import { requestJson } from "@/components/communities/learner-community";
+import { courseViewerHref } from "@/components/layout/course-viewer-sidebar";
 import { CourseLitLogo } from "@/components/layout/courselit-logo";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   LearnerBadge,
   LearnerCard,
@@ -17,6 +17,7 @@ import {
   LearnerHeader2,
   LearnerText2,
 } from "@/components/themed-page-builder";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type LearnerProduct = z.infer<typeof learnerProductSchema>;
 type Certificate = z.infer<typeof certificateSchema>;
@@ -30,14 +31,18 @@ function LearnerProductCard({ product }: { product: LearnerProduct }) {
 
   return (
     <Link
-      href={`/course/${encodeURIComponent(product.slug)}/${encodeURIComponent(product.id)}`}
+      href={courseViewerHref(
+        `/course/${encodeURIComponent(product.slug)}/${encodeURIComponent(product.id)}`,
+        null,
+        "dashboard",
+      )}
       className="group block"
     >
       <LearnerCard isLink className="overflow-hidden transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary/60 group-hover:shadow-lg">
-        {product.featuredMedia ? (
+        {product.featuredImage ? (
           <LearnerCardImage
-            src={product.featuredMedia.thumbnailUrl ?? product.featuredMedia.canonicalUrl}
-            alt={product.featuredMedia.altText || product.title}
+            src={product.featuredImage.thumbnailUrl ?? product.featuredImage.url}
+            alt={product.featuredImage.alt || product.title}
             className="h-48 object-cover"
           />
         ) : (

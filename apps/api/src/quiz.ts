@@ -6,9 +6,9 @@ import {
   uuidv7,
 } from "@codelitdev/platform";
 import { and, asc, eq } from "drizzle-orm";
-import { lessonUnlockAt, sectionUnlockAt } from "./catalog.js";
 import { ActivityType, recordActivity } from "./activities.js";
 import * as schema from "./db/schema/index.js";
+import { lessonUnlockAt, sectionUnlockAt } from "./catalog.js";
 import type { AppDb } from "./types.js";
 
 export type QuizEvaluationDto = {
@@ -18,9 +18,10 @@ export type QuizEvaluationDto = {
   passingGrade: number;
 };
 
-type QuizEvaluationInput = {
+export type QuizEvaluationInput = {
   schoolId: string;
-  learnerId: string;
+  schoolAccountId?: string;
+  learnerId?: string;
   productPublicId: string;
   lessonPublicId: string;
 };
@@ -108,13 +109,14 @@ async function loadQuizLessonAccess(
     return { ok: false, error: createPlatformError("not_found") };
   }
 
+  const accountId = input.schoolAccountId ?? input.learnerId!;
   const memberships = await db
     .select({ membership: schema.learnerMemberships })
     .from(schema.learnerMemberships)
     .where(
       and(
         eq(schema.learnerMemberships.schoolId, input.schoolId),
-        eq(schema.learnerMemberships.learnerId, input.learnerId),
+        eq(schema.learnerMemberships.schoolAccountId, accountId),
         eq(schema.learnerMemberships.entityType, "product"),
         eq(schema.learnerMemberships.entityId, row.product.publicId),
         eq(schema.learnerMemberships.status, "active"),
@@ -208,11 +210,12 @@ export async function evaluateQuizLesson(
   const pass = !content.requiresPassingGrade || score >= content.passingGrade;
   const now = clock.now();
   const evaluationId = uuidv7(clock);
+  const accountId = input.schoolAccountId ?? input.learnerId!;
   await db.insert(schema.lessonEvaluations).values({
     id: evaluationId,
     schoolId: input.schoolId,
     membershipId: access.value.membership.id,
-    learnerId: input.learnerId,
+    schoolAccountId: accountId,
     lessonId: access.value.lesson.id,
     pass,
     score,
@@ -228,7 +231,7 @@ export async function evaluateQuizLesson(
   };
   await recordActivity(db, {
     schoolId: input.schoolId,
-    actorId: input.learnerId,
+    actorId: accountId,
     type: ActivityType.QUIZ_ATTEMPTED,
     entityId: input.lessonPublicId,
     metadata: activityMetadata,
@@ -236,7 +239,7 @@ export async function evaluateQuizLesson(
   if (pass) {
     await recordActivity(db, {
       schoolId: input.schoolId,
-      actorId: input.learnerId,
+      actorId: accountId,
       type: ActivityType.QUIZ_PASSED,
       entityId: input.lessonPublicId,
       metadata: activityMetadata,

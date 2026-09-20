@@ -455,16 +455,16 @@ evidence and the production regression cases are ported.
   `.../my-content/my-content-view.tsx`,
   `apps/web/components/admin/my-content/content-card.tsx`, and
   `apps/web/components/admin/my-content/skeleton-card.tsx` in the `main` worktree.
-- **Target implementation/evidence:** the split learner app now redirects `/dashboard`
-  to `/dashboard/feed` and mounts a shared authenticated learner workspace with
-  `/dashboard/feed` and `/dashboard/products` tabs. `apps/learners/components/dashboard/learner-products.tsx`
+- **Target implementation/evidence:** the split learner app mounts the aggregate feed
+  at `/dashboard`, filtered space feeds at `/dashboard/s/<spaceId>`, and products at
+  `/dashboard/products`. `apps/learners/components/dashboard/learner-products.tsx`
   ports the source card hierarchy, featured-artwork fallback, Course/Digital download
   icon badges, certificate badge, progress bar, responsive three-column layout, and
   six-card loading state. Product cards link to `/courses/:productId`; product data
   includes published-lesson progress, featured artwork, certificate linkage, and
   download state.
-- **Community Feed disposition:** the source Feed tab is now ported as the authenticated
-  learner route `/dashboard/feed`. The new `/v1/learner/feed` contract aggregates
+- **Feed disposition:** the source Feed tab is now ported as the authenticated
+  learner route `/dashboard`. The new `/v1/learner/feed` contract aggregates
   non-deleted posts across the learner's active school memberships with cursor
   pagination, community metadata, author/media/reaction/comment-count projections,
   and membership isolation. The learner surface includes loading, empty, error,

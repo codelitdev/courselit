@@ -8,6 +8,7 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
+import type { MediaRef } from "@courselit/api-contract";
 import { and, asc, count, desc, eq, ilike, inArray, lt, or } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import type { CourseLitPermission } from "./permissions.js";
@@ -30,6 +31,68 @@ export const MEDIA_RESOURCE_TYPES = [
 export type MediaResourceType = (typeof MEDIA_RESOURCE_TYPES)[number];
 export type MediaKind = "image" | "video" | "audio" | "document" | "other";
 export type MediaAccessPolicy = "public" | "private";
+
+/** Convert a catalog row into the platform's shared media reference. */
+export function mediaRefFromCatalog(
+  row: Pick<
+    typeof schema.media.$inferSelect,
+    | "publicId"
+    | "canonicalUrl"
+    | "thumbnailUrl"
+    | "altText"
+    | "fileName"
+    | "mimeType"
+    | "byteSize"
+    | "caption"
+    | "kind"
+  >,
+): MediaRef {
+  return {
+    mediaId: row.publicId,
+    url: row.canonicalUrl,
+    ...(row.thumbnailUrl ? { thumbnailUrl: row.thumbnailUrl } : {}),
+    ...(row.altText ? { alt: row.altText } : {}),
+    ...(row.fileName ? { fileName: row.fileName } : {}),
+    ...(row.mimeType ? { mimeType: row.mimeType } : {}),
+    ...(row.byteSize !== null ? { byteSize: row.byteSize } : {}),
+    ...(row.caption ? { title: row.caption } : {}),
+    kind: row.kind,
+  };
+}
+
+export function normalizeMediaRef(input: unknown): MediaRef | null {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return null;
+  const value = input as Record<string, unknown>;
+  const url = typeof value.url === "string" ? value.url.trim() : "";
+  if (!url) return null;
+  const mediaId = typeof value.mediaId === "string" ? value.mediaId.trim() : "";
+  const thumbnailUrl =
+    typeof value.thumbnailUrl === "string" ? value.thumbnailUrl.trim() : "";
+  const alt = typeof value.alt === "string" ? value.alt.trim() : "";
+  const fileName = typeof value.fileName === "string" ? value.fileName.trim() : "";
+  const mimeType = typeof value.mimeType === "string" ? value.mimeType.trim() : "";
+  const byteSize = typeof value.byteSize === "number" ? value.byteSize : undefined;
+  const title = typeof value.title === "string" ? value.title.trim() : "";
+  const kind =
+    value.kind === "image" ||
+    value.kind === "video" ||
+    value.kind === "audio" ||
+    value.kind === "document" ||
+    value.kind === "other"
+      ? value.kind
+      : undefined;
+  return {
+    ...(mediaId ? { mediaId } : {}),
+    url,
+    ...(thumbnailUrl ? { thumbnailUrl } : {}),
+    ...(alt ? { alt } : {}),
+    ...(fileName ? { fileName } : {}),
+    ...(mimeType ? { mimeType } : {}),
+    ...(byteSize !== undefined ? { byteSize } : {}),
+    ...(title ? { title } : {}),
+    ...(kind ? { kind } : {}),
+  };
+}
 
 export type MediaLitAsset = {
   mediaLitId: string;
@@ -191,6 +254,7 @@ export type UploadAuthorizationDto = {
 
 export type LearnerMediaViewer = {
   schoolId: string;
+  schoolAccountId?: string;
   learnerId: string;
   learnerPublicId: string;
 };
@@ -390,6 +454,7 @@ export async function mediaIdsForRichTextContent(
   }
 
   const sources = new Set<string>();
+  const mediaIds = new Set<string>();
   const visit = (node: unknown) => {
     if (!node || typeof node !== "object") return;
     const record = node as Record<string, unknown>;
@@ -398,16 +463,28 @@ export async function mediaIdsForRichTextContent(
       record.type === "image" &&
       attrs &&
       typeof attrs === "object" &&
-      typeof (attrs as Record<string, unknown>).src === "string"
+      !Array.isArray(attrs)
     ) {
-      sources.add((attrs as Record<string, string>).src);
+      const imageAttrs = attrs as Record<string, unknown>;
+      if (typeof imageAttrs.src === "string") sources.add(imageAttrs.src);
+      if (typeof imageAttrs.mediaId === "string" && imageAttrs.mediaId.trim()) {
+        mediaIds.add(imageAttrs.mediaId.trim());
+      }
     }
     if (Array.isArray(record.content)) {
       for (const child of record.content) visit(child);
     }
   };
   visit(document);
-  if (sources.size === 0) return [];
+  if (sources.size === 0 && mediaIds.size === 0) return [];
+
+  const sourceConditions = [];
+  if (sources.size > 0) {
+    sourceConditions.push(inArray(schema.media.canonicalUrl, [...sources]));
+  }
+  if (mediaIds.size > 0) {
+    sourceConditions.push(inArray(schema.media.publicId, [...mediaIds]));
+  }
 
   const rows = await db
     .select({ publicId: schema.media.publicId })
@@ -417,7 +494,7 @@ export async function mediaIdsForRichTextContent(
         eq(schema.media.schoolId, schoolId),
         eq(schema.media.status, "active"),
         eq(schema.media.kind, "image"),
-        inArray(schema.media.canonicalUrl, [...sources]),
+        or(...sourceConditions),
       ),
     );
   return rows.map((row) => row.publicId);
@@ -575,7 +652,7 @@ export async function finalizeMediaUpload(
     accessPolicy: input.accessPolicy,
     status: "active" as const,
     createdBy: ctx.principalId,
-    createdByLearnerId: null,
+    createdBySchoolAccountId: null,
     createdAt: now,
     updatedAt: now,
   };
@@ -665,6 +742,163 @@ export async function authorizeLearnerCommunityMediaUpload(
   }
 }
 
+export async function authorizeLearnerAvatarUpload(
+  viewer: LearnerMediaViewer,
+  client: MediaLitClient,
+  clock: Clock,
+  input: { fileName: string; mimeType: string; byteSize: number },
+): Promise<
+  { ok: true; value: UploadAuthorizationDto } | { ok: false; error: PlatformError }
+> {
+  if (!input.fileName.trim() || input.fileName.length > 255) {
+    return invalid("invalid_file_name");
+  }
+  if (!input.mimeType.trim() || input.mimeType.length > 200) {
+    return invalid("invalid_mime_type");
+  }
+  if (![
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+  ].includes(input.mimeType.toLowerCase())) {
+    return invalid("unsupported_avatar_type");
+  }
+  if (!Number.isSafeInteger(input.byteSize) || input.byteSize < 1 || input.byteSize > 2_000_000) {
+    return invalid("invalid_file_size");
+  }
+  const expiresAt = new Date(clock.now().getTime() + 10 * 60 * 1000);
+  try {
+    const authorization = await client.authorizeUpload({
+      ...input,
+      purpose: "learner_avatar",
+      accessPolicy: "public",
+      schoolId: viewer.schoolId,
+      expiresAt,
+    });
+    return {
+      ok: true,
+      value: {
+        uploadId: authorization.uploadId,
+        uploadUrl: authorization.uploadUrl,
+        uploadProtocol: authorization.uploadProtocol,
+        uploadMethod: authorization.uploadMethod,
+        uploadHeaders: authorization.uploadHeaders,
+        uploadFields: authorization.uploadFields,
+        expiresAt: serializeDate(authorization.expiresAt),
+      },
+    };
+  } catch {
+    return { ok: false, error: createPlatformError("internal_error") };
+  }
+}
+
+export async function finalizeLearnerAvatarUpload(
+  db: AppDb,
+  viewer: LearnerMediaViewer,
+  publicSchoolId: string,
+  client: MediaLitClient,
+  clock: Clock,
+  requestId: string,
+  input: { uploadId: string; altText: string; caption: string },
+): Promise<{ ok: true; value: MediaDto } | { ok: false; error: PlatformError }> {
+  let asset: MediaLitAsset;
+  try {
+    asset = await client.finalizeUpload({
+      schoolId: viewer.schoolId,
+      uploadId: input.uploadId,
+    });
+  } catch {
+    return {
+      ok: false,
+      error: createPlatformError("validation_failed", {
+        safeDetails: { reason: "upload_not_ready" },
+      }),
+    };
+  }
+  const kind = kindForMime(asset.mimeType);
+  if (
+    !asset.mediaLitId ||
+    asset.group !== viewer.schoolId ||
+    !asset.canonicalUrl ||
+    !asset.fileName ||
+    !asset.mimeType ||
+    kind !== "image" ||
+    !Number.isSafeInteger(asset.byteSize) ||
+    asset.byteSize < 1
+  ) {
+    return invalid(
+      asset.group === viewer.schoolId ? "invalid_avatar_asset" : "media_school_mismatch",
+    );
+  }
+  const duplicate = await db
+    .select({ id: schema.media.id })
+    .from(schema.media)
+    .where(
+      and(
+        eq(schema.media.schoolId, viewer.schoolId),
+        eq(schema.media.mediaLitId, asset.mediaLitId),
+      ),
+    )
+    .limit(1);
+  if (duplicate[0]) {
+    return {
+      ok: false,
+      error: createPlatformError("conflict", {
+        safeDetails: { reason: "media_already_registered" },
+      }),
+    };
+  }
+  const now = clock.now();
+  const row = {
+    id: uuidv7(clock),
+    publicId: createPublicId("med", clock),
+    schoolId: viewer.schoolId,
+    mediaLitId: asset.mediaLitId,
+    canonicalUrl: asset.canonicalUrl,
+    thumbnailUrl: asset.thumbnailUrl,
+    fileName: asset.fileName,
+    mimeType: asset.mimeType,
+    byteSize: asset.byteSize,
+    width: asset.width,
+    height: asset.height,
+    kind: "image" as const,
+    altText: input.altText,
+    caption: input.caption,
+    accessPolicy: "public" as const,
+    status: "active" as const,
+    createdBy: null,
+    createdBySchoolAccountId: viewer.schoolAccountId ?? viewer.learnerId,
+    createdAt: now,
+    updatedAt: now,
+  };
+  try {
+    await db.transaction(async (tx) => {
+      await tx.insert(schema.media).values(row);
+      await tx.insert(schema.auditEvents).values({
+        id: uuidv7(clock),
+        schoolId: viewer.schoolId,
+        actorId: viewer.learnerPublicId,
+        action: "media.created",
+        resourceType: "media",
+        resourceId: row.publicId,
+        requestId,
+        createdAt: now,
+      });
+    });
+  } catch (error) {
+    if (String(error).includes("media_school_media_lit_uidx")) {
+      return {
+        ok: false,
+        error: createPlatformError("conflict", {
+          safeDetails: { reason: "media_already_registered" },
+        }),
+      };
+    }
+    throw error;
+  }
+  return { ok: true, value: toDto(row, publicSchoolId, 0) };
+}
+
 export async function finalizeLearnerCommunityMediaUpload(
   db: AppDb,
   viewer: LearnerMediaViewer,
@@ -747,7 +981,7 @@ export async function finalizeLearnerCommunityMediaUpload(
     accessPolicy: input.accessPolicy,
     status: "active" as const,
     createdBy: null,
-    createdByLearnerId: viewer.learnerId,
+    createdBySchoolAccountId: viewer.schoolAccountId ?? viewer.learnerId,
     createdAt: now,
     updatedAt: now,
   };
@@ -790,7 +1024,7 @@ export async function listLearnerCommunityMedia(
 > {
   const conditions = [
     eq(schema.media.schoolId, viewer.schoolId),
-    eq(schema.media.createdByLearnerId, viewer.learnerId),
+    eq(schema.media.createdBySchoolAccountId, viewer.schoolAccountId ?? viewer.learnerId),
     eq(schema.media.status, "active"),
   ];
   const search = input.search?.trim();

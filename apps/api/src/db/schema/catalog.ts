@@ -13,7 +13,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { user } from "./auth.generated.js";
 import { products } from "./products.js";
-import { schools } from "./schools.js";
+import { schoolAccounts, schools } from "./schools.js";
 
 export const media = pgTable(
   "media",
@@ -42,10 +42,10 @@ export const media = pgTable(
       .default("private"),
     status: text("status").$type<"active" | "deleting">().notNull().default("active"),
     createdBy: text("created_by").references(() => user.id, { onDelete: "restrict" }),
-    // Community attachments may be uploaded by a learner rather than an
-    // admin. Keep the existing admin owner column for compatibility and use
-    // this column for the learner side of the polymorphic owner relation.
-    createdByLearnerId: uuid("created_by_learner_id"),
+    createdBySchoolAccountId: uuid("created_by_school_account_id").references(
+      () => schoolAccounts.id,
+      { onDelete: "set null" },
+    ),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
@@ -154,110 +154,6 @@ export const lessons = pgTable(
   }),
 );
 
-export const learners = pgTable(
-  "learners",
-  {
-    id: uuid("id").primaryKey(),
-    publicId: text("public_id").notNull().unique(),
-    schoolId: uuid("school_id")
-      .notNull()
-      .references(() => schools.id, { onDelete: "cascade" }),
-    email: text("email").notNull(),
-    name: text("name").notNull(),
-    status: text("status")
-      .$type<"active" | "deactivated">()
-      .notNull()
-      .default("active"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
-  },
-  (table) => ({
-    schoolEmail: uniqueIndex("learners_school_email_uidx").on(
-      table.schoolId,
-      table.email,
-    ),
-  }),
-);
-
-export const learnerCredentials = pgTable("learner_credentials", {
-  learnerId: uuid("learner_id")
-    .primaryKey()
-    .references(() => learners.id, { onDelete: "cascade" }),
-  passwordDigest: text("password_digest").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
-});
-
-export const learnerSessions = pgTable("learner_sessions", {
-  id: uuid("id").primaryKey(),
-  learnerId: uuid("learner_id")
-    .notNull()
-    .references(() => learners.id, { onDelete: "cascade" }),
-  schoolId: uuid("school_id")
-    .notNull()
-    .references(() => schools.id, { onDelete: "cascade" }),
-  tokenDigest: text("token_digest").notNull().unique(),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
-});
-
-/** Explicit, school-scoped relationship between an admin principal and a
- * learner principal. Email equality is deliberately not used for this link.
- */
-export const learnerAdminLinks = pgTable(
-  "learner_admin_links",
-  {
-    id: uuid("id").primaryKey(),
-    schoolId: uuid("school_id")
-      .notNull()
-      .references(() => schools.id, { onDelete: "cascade" }),
-    learnerId: uuid("learner_id")
-      .notNull()
-      .references(() => learners.id, { onDelete: "cascade" }),
-    adminUserId: text("admin_user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
-  },
-  (table) => ({
-    schoolLearner: uniqueIndex("learner_admin_links_school_learner_uidx").on(
-      table.schoolId,
-      table.learnerId,
-    ),
-    schoolAdmin: uniqueIndex("learner_admin_links_school_admin_uidx").on(
-      table.schoolId,
-      table.adminUserId,
-    ),
-  }),
-);
-
-/** Short-lived handoff created by the admin app and consumed by a learner
- * authentication request. Only the digest is persisted.
- */
-export const learnerIdentityLinkTokens = pgTable(
-  "learner_identity_link_tokens",
-  {
-    id: uuid("id").primaryKey(),
-    schoolId: uuid("school_id")
-      .notNull()
-      .references(() => schools.id, { onDelete: "cascade" }),
-    adminUserId: text("admin_user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    tokenDigest: text("token_digest").notNull().unique(),
-    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-    consumedAt: timestamp("consumed_at", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
-  },
-  (table) => ({
-    lookup: index("learner_identity_link_tokens_lookup_idx").on(
-      table.schoolId,
-      table.adminUserId,
-      table.createdAt,
-    ),
-  }),
-);
-
 export const downloadLinks = pgTable(
   "download_links",
   {
@@ -266,9 +162,9 @@ export const downloadLinks = pgTable(
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
     membershipId: uuid("membership_id").notNull(),
-    learnerId: uuid("learner_id")
+    schoolAccountId: uuid("school_account_id")
       .notNull()
-      .references(() => learners.id, { onDelete: "cascade" }),
+      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
     productId: uuid("product_id")
       .notNull()
       .references(() => products.id, { onDelete: "cascade" }),
@@ -280,7 +176,7 @@ export const downloadLinks = pgTable(
   (table) => ({
     activeLookup: index("download_links_active_lookup_idx").on(
       table.schoolId,
-      table.learnerId,
+      table.schoolAccountId,
       table.productId,
       table.expiresAt,
     ),
@@ -341,9 +237,9 @@ export const lessonEvaluations = pgTable(
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
     membershipId: uuid("membership_id").notNull(),
-    learnerId: uuid("learner_id")
+    schoolAccountId: uuid("school_account_id")
       .notNull()
-      .references(() => learners.id, { onDelete: "cascade" }),
+      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
     lessonId: uuid("lesson_id")
       .notNull()
       .references(() => lessons.id, { onDelete: "cascade" }),
@@ -407,9 +303,9 @@ export const certificates = pgTable(
     productId: uuid("product_id")
       .notNull()
       .references(() => products.id, { onDelete: "cascade" }),
-    learnerId: uuid("learner_id")
+    schoolAccountId: uuid("school_account_id")
       .notNull()
-      .references(() => learners.id, { onDelete: "cascade" }),
+      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
     templateId: uuid("template_id").references(() => certificateTemplates.id, {
       onDelete: "set null",
     }),
@@ -417,8 +313,8 @@ export const certificates = pgTable(
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
   },
   (table) => ({
-    learnerProduct: uniqueIndex("certificates_learner_product_uidx").on(
-      table.learnerId,
+    schoolAccountProduct: uniqueIndex("certificates_school_account_product_uidx").on(
+      table.schoolAccountId,
       table.productId,
     ),
   }),

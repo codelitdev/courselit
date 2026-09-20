@@ -50,8 +50,13 @@ describe.serial("storefront plans", () => {
       headers,
       body: {
         name: "One-time access",
+        description: "",
         type: "onetime",
+        kind: "one_time",
         oneTimeAmount: 49.5,
+        amountMinor: 4950,
+        billingInterval: null,
+        installmentCount: null,
       },
     });
     expect(oneTime.status).toBe(201);

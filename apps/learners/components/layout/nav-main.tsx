@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { LearnerText2 } from "@/components/themed-page-builder";
 import {
   Collapsible,
   CollapsibleContent,
@@ -19,7 +20,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { LearnerText2 } from "@/components/themed-page-builder";
 import { isNavHrefActive, isNavItemActive } from "@/lib/nav-active";
 
 export interface NavItem {
@@ -87,6 +87,8 @@ function NavCollapsibleItem({ item }: { item: NavItem }) {
 
 export function NavItems({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const search = searchParams ? searchParams.toString() : "";
 
   return (
     <>
@@ -95,7 +97,7 @@ export function NavItems({ items }: { items: NavItem[] }) {
           return <NavCollapsibleItem key={item.label} item={item} />;
         }
 
-        const active = isNavItemActive(pathname, item.href);
+        const active = isNavHrefActive(pathname, item.href, search);
         return (
           <SidebarMenuItem key={item.href}>
             <SidebarMenuButton asChild isActive={active} tooltip={item.label}>

@@ -620,26 +620,31 @@ describe.serial("course discussions", () => {
     expect(preferences.status).toBe(200);
     expect(preferences.body).toMatchObject({
       items: [
-        { type: "community_post_created", appEnabled: true },
-        { type: "community_post_liked", appEnabled: true },
-        { type: "community_comment", appEnabled: true },
-        { type: "community_comment_liked", appEnabled: true },
-        { type: "community_reply", appEnabled: true },
-        { type: "community_reply_liked", appEnabled: true },
-        { type: "community_membership_granted", appEnabled: true },
-        { type: "course_discussion_comment_created", appEnabled: true },
-        { type: "course_discussion_reacted", appEnabled: true },
+        { type: "community_post_created", appEnabled: true, emailEnabled: true },
+        { type: "community_post_liked", appEnabled: true, emailEnabled: true },
+        { type: "community_comment", appEnabled: true, emailEnabled: true },
+        { type: "community_comment_liked", appEnabled: true, emailEnabled: true },
+        { type: "community_reply", appEnabled: true, emailEnabled: true },
+        { type: "community_reply_liked", appEnabled: true, emailEnabled: true },
+        { type: "community_membership_granted", appEnabled: true, emailEnabled: true },
+        {
+          type: "course_discussion_comment_created",
+          appEnabled: true,
+          emailEnabled: true,
+        },
+        { type: "course_discussion_reacted", appEnabled: true, emailEnabled: true },
       ],
     });
     const disabledDiscussionNotifications = await dispatch(runtime, {
       method: "PATCH",
       path: "/v1/learner/notification-preferences/course_discussion_comment_created",
       headers: secondLearnerHeaders,
-      body: { appEnabled: false },
+      body: { appEnabled: false, emailEnabled: true },
     });
     expect(disabledDiscussionNotifications.body).toEqual({
       type: "course_discussion_comment_created",
       appEnabled: false,
+      emailEnabled: true,
     });
     const suppressedComment = await dispatch(runtime, {
       method: "POST",

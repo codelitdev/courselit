@@ -8,18 +8,16 @@ import { useSchoolThemeStyle } from "../lib/school-theme-context";
 import { LearnerDiscussionEditor } from "./learner-discussion-editor";
 import {
   LearnerButton as Button,
+  LearnerDialog as Dialog,
+  LearnerDialogContent as DialogContent,
+  LearnerDialogDescription as DialogDescription,
+  LearnerDialogFooter as DialogFooter,
+  LearnerDialogHeader as DialogHeader,
+  LearnerDialogTitle as DialogTitle,
   LearnerLabel,
   LearnerText2,
   LearnerTextarea,
 } from "./themed-page-builder";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/codelit/dialog";
 
 type Content = TextEditorContent;
 type Comment = {
@@ -696,7 +694,9 @@ export function CourseDiscussions({
       ) : null}
       <div className="mt-5 grid gap-4">
         {comments.length === 0 ? (
-        <LearnerText2 className="text-muted-foreground">No comments yet.</LearnerText2>
+          <LearnerText2 className="text-muted-foreground">
+            No comments yet.
+          </LearnerText2>
         ) : null}
         {comments.map((comment) => (
           <article
@@ -877,7 +877,11 @@ export function CourseDiscussions({
                         This reply was removed.
                       </LearnerText2>
                     ) : (
-                      <TextRenderer json={reply.content} theme={theme} className="text-sm" />
+                      <TextRenderer
+                        json={reply.content}
+                        theme={theme}
+                        className="text-sm"
+                      />
                     )}
                     {!previewToken && !reply.deleted ? (
                       <div className="flex gap-3 text-sm">

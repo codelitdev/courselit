@@ -12,15 +12,22 @@ import { MediaUploadDialog, type SelectedMedia } from "@frontlit/media-uploader"
 import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
 import {
   Bell,
+  ChevronLeft,
+  ChevronRight,
+  EllipsisVertical,
   FileText,
   Film,
   Flag,
+  Info,
   MessageCircle,
   Paperclip,
+  Pencil,
   Pin,
-  Plus,
+  Reply,
   Send,
   Share2,
+  SmilePlus,
+  Trash2,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -29,33 +36,47 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { z } from "zod";
 import { LearnerShell } from "@/components/layout/learner-shell";
 import {
+  LearnerAlertDialog as AlertDialog,
+  LearnerAlertDialogAction as AlertDialogAction,
+  LearnerAlertDialogCancel as AlertDialogCancel,
+  LearnerAlertDialogContent as AlertDialogContent,
+  LearnerAlertDialogDescription as AlertDialogDescription,
+  LearnerAlertDialogFooter as AlertDialogFooter,
+  LearnerAlertDialogHeader as AlertDialogHeader,
+  LearnerAlertDialogTitle as AlertDialogTitle,
   LearnerButton as Button,
+  LearnerDialog as Dialog,
+  LearnerDialogContent as DialogContent,
+  LearnerDialogDescription as DialogDescription,
+  LearnerDialogFooter as DialogFooter,
+  LearnerDialogHeader as DialogHeader,
+  LearnerDialogTitle as DialogTitle,
+  LearnerActionMenu,
+  LearnerAvatar,
+  LearnerAvatarFallback,
+  LearnerAvatarImage,
   LearnerCardImage,
+  LearnerDropdownMenuItem,
   LearnerHeader1,
   LearnerHeader2,
   LearnerHeader3,
   LearnerInput,
-  LearnerSelect,
+  LearnerReactionPicker,
   LearnerText2,
   LearnerTextarea,
   LearnerCard as PageCard,
   LearnerCardContent as PageCardContent,
 } from "@/components/themed-page-builder";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/codelit/dialog";
+import { toast } from "@/components/themed-sonner";
 import {
   type LearnerCommunityMedia,
   useLearnerCommunityMediaUploader,
 } from "@/lib/community-media-uploader";
 import { openRazorpayCheckout } from "@/lib/razorpay";
-import { learnerHeaders, writeSchoolId } from "@/lib/school";
+import { requestJson } from "@/lib/request-json";
+import { clearLearnerIdentityLink, writeSchoolId } from "@/lib/school";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
+import { LearnerPostComposerDialog } from "./learner-post-composer-dialog";
 import { LearnerRichTextEditor } from "./learner-rich-text-editor";
 
 type Learner = z.infer<typeof learnerSchema>;
@@ -70,8 +91,6 @@ type PostDraft = {
   content: string;
   category: string;
 };
-
-type ApiError = { message?: string };
 
 type CommunityMedia = CommunityPost["media"][number];
 type CommunityMediaType = CommunityMedia["type"];
@@ -153,13 +172,17 @@ const COMMUNITY_REACTION_EMOJIS = ["👍", "❤️", "😄", "🎉", "😢", "�
 function CommunityReactionsBar({
   reactions,
   onReact,
+  onReply,
+  repliesCount,
 }: {
   reactions: CommunityReaction[];
   onReact: (emoji: string) => void;
+  onReply?: () => void;
+  repliesCount?: number;
 }) {
   return (
     <fieldset
-      className="flex flex-wrap items-center gap-1.5"
+      className="m-0 flex flex-wrap items-center gap-1.5 border-0 p-0"
       title={`${reactionCount(reactions)} reactions`}
       aria-label={`${reactionCount(reactions)} reactions`}
     >
@@ -171,35 +194,84 @@ function CommunityReactionsBar({
             type="button"
             size="sm"
             variant={reaction.active ? "secondary" : "outline"}
-            className="h-8 min-w-11 rounded-full px-2.5 text-sm"
             onClick={() => onReact(reaction.emoji)}
           >
             <span aria-hidden="true">{reaction.emoji}</span>
-            <span className="tabular-nums text-xs">{reaction.count}</span>
+            <span>{reaction.count}</span>
           </Button>
         ))}
-      <details className="relative">
-        <summary className="flex size-8 cursor-pointer list-none items-center justify-center rounded-full border text-muted-foreground transition-colors hover:bg-muted [&::-webkit-details-marker]:hidden">
-          <Plus className="size-4" aria-hidden="true" />
-          <span className="sr-only">Add reaction</span>
-        </summary>
-        <div className="absolute bottom-10 left-0 z-10 flex gap-1 rounded-md border bg-popover p-2 shadow-md">
-          {COMMUNITY_REACTION_EMOJIS.map((emoji) => (
-            <Button
-              key={emoji}
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="size-8 text-lg"
-              onClick={() => onReact(emoji)}
-              aria-label={`React ${emoji}`}
-            >
-              {emoji}
-            </Button>
-          ))}
-        </div>
-      </details>
+      <LearnerReactionPicker emojis={COMMUNITY_REACTION_EMOJIS} onReact={onReact}>
+        <SmilePlus className="size-4" aria-hidden="true" />
+      </LearnerReactionPicker>
+      {onReply ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          onClick={onReply}
+          aria-label="Reply to post"
+        >
+          <Reply className="size-4" />
+          {repliesCount !== undefined ? <span>{repliesCount}</span> : null}
+        </Button>
+      ) : null}
     </fieldset>
+  );
+}
+
+function PostActionsMenu({
+  onEdit,
+  onDelete,
+  onReport,
+}: {
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onReport?: () => void;
+}) {
+  if (!onEdit && !onDelete && !onReport) return null;
+
+  return (
+    <LearnerActionMenu
+      label="Post actions"
+      menu={
+        <>
+          {onReport ? (
+            <LearnerDropdownMenuItem onSelect={onReport}>
+              <Flag className="size-4" /> Report
+            </LearnerDropdownMenuItem>
+          ) : null}
+          {onEdit ? (
+            <LearnerDropdownMenuItem onSelect={onEdit}>
+              <Pencil className="size-4" /> Edit
+            </LearnerDropdownMenuItem>
+          ) : null}
+          {onDelete ? (
+            <LearnerDropdownMenuItem onSelect={onDelete}>
+              <Trash2 className="size-4" /> Delete
+            </LearnerDropdownMenuItem>
+          ) : null}
+        </>
+      }
+    >
+      <EllipsisVertical className="size-5" aria-hidden="true" />
+    </LearnerActionMenu>
+  );
+}
+
+function isOwnedByLearner(
+  content: {
+    authorId: string | null;
+    author: { id: string; email: string | null } | null;
+  },
+  learner: Learner,
+) {
+  if (content.authorId === learner.id || content.author?.id === learner.id) {
+    return true;
+  }
+
+  return Boolean(
+    content.author?.email &&
+      content.author.email.trim().toLowerCase() === learner.email.trim().toLowerCase(),
   );
 }
 
@@ -268,7 +340,6 @@ function MediaAttachments({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-7 shrink-0 px-2 text-xs"
                   onClick={() => onRemove(item.id)}
                 >
                   Remove
@@ -282,23 +353,7 @@ function MediaAttachments({
   );
 }
 
-export async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const headers = learnerHeaders(init.headers);
-  if (init.body && !headers.has("content-type")) {
-    headers.set("content-type", "application/json");
-  }
-  const response = await fetch(path, {
-    ...init,
-    cache: "no-store",
-    credentials: "include",
-    headers,
-  });
-  const body = (await response.json().catch(() => null)) as T & ApiError;
-  if (!response.ok) {
-    throw new Error(body?.message ?? "The request could not be completed.");
-  }
-  return body as T;
-}
+export { requestJson } from "@/lib/request-json";
 
 export function useLearnerSession(nextPath = "/communities") {
   const router = useRouter();
@@ -311,6 +366,7 @@ export function useLearnerSession(nextPath = "/communities") {
       .then((body) => {
         if (!active) return;
         writeSchoolId(body.schoolId);
+        clearLearnerIdentityLink();
         setLearner(body);
       })
       .catch(() => {
@@ -402,6 +458,66 @@ function CommunityDescription({
   return <LearnerText2 className={className}>{value}</LearnerText2>;
 }
 
+function CommunityInfoCard({
+  community,
+  activeMember,
+  leaving,
+  onShare,
+  onLeave,
+}: {
+  community: Community;
+  activeMember: boolean;
+  leaving: boolean;
+  onShare: () => void;
+  onLeave: () => void;
+}) {
+  return (
+    <PageCard className="h-fit">
+      <PageCardContent className="grid gap-5">
+        <div className="flex items-start justify-between gap-3">
+          <LearnerHeader2 className="max-w-[18rem] leading-tight">
+            {community.name}
+          </LearnerHeader2>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onShare}
+            aria-label="Share community"
+          >
+            <Share2 className="size-4" />
+          </Button>
+        </div>
+        <LearnerCardImage
+          src={
+            community.featuredImage?.thumbnailUrl ??
+            community.featuredImage?.url ??
+            "/courselit_backdrop_square.webp"
+          }
+          alt={community.featuredImage?.alt || community.name}
+          className="aspect-square w-full object-cover"
+        />
+        <LearnerText2>
+          {community.membersCount.toLocaleString()}{" "}
+          {community.membersCount === 1 ? "member" : "members"}
+        </LearnerText2>
+        {activeMember ? (
+          <div className="grid gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onLeave}
+              disabled={leaving}
+            >
+              {leaving ? "Leaving…" : "Leave community"}
+            </Button>
+          </div>
+        ) : null}
+      </PageCardContent>
+    </PageCard>
+  );
+}
+
 export function LearnerCommunities() {
   const { learner, checking } = useLearnerSession("/communities");
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -483,7 +599,7 @@ export function LearnerCommunities() {
     }
   }
 
-  if (checking) return <LoadingState label="Loading your communities…" />;
+  if (checking) return <LoadingState label="Loading your community…" />;
   if (!learner) return null;
 
   return (
@@ -497,12 +613,6 @@ export function LearnerCommunities() {
               Learn together, ask questions, and share progress.
             </LearnerText2>
           </div>
-          <Button asChild type="button" variant="outline" aria-label="Notifications">
-            <Link href="/dashboard/notifications">
-              <Bell className="size-4" />
-              Notifications
-            </Link>
-          </Button>
         </header>
         {error ? (
           <LearnerText2 className="text-destructive" role="alert">
@@ -531,22 +641,18 @@ export function LearnerCommunities() {
             aria-label="Communities"
           >
             {communities.map((community) => (
-              <Link
-                key={community.id}
-                href={`/dashboard/community/${encodeURIComponent(community.id)}`}
-                className="group block"
-              >
+              <Link key={community.id} href="/join" className="group block">
                 <PageCard
                   isLink
                   className="flex flex-col gap-4 transition-colors hover:border-primary/60"
                 >
-                  {community.featuredMedia ? (
+                  {community.featuredImage ? (
                     <LearnerCardImage
                       src={
-                        community.featuredMedia.thumbnailUrl ??
-                        community.featuredMedia.canonicalUrl
+                        community.featuredImage.thumbnailUrl ??
+                        community.featuredImage.url
                       }
-                      alt={community.featuredMedia.altText || community.name}
+                      alt={community.featuredImage.alt || community.name}
                       className="aspect-video w-full rounded-md border object-cover"
                     />
                   ) : null}
@@ -609,15 +715,93 @@ export function LearnerCommunities() {
   );
 }
 
-export function LearnerCommunity({
-  communityId,
+export function LearnerSpacePost({
+  spaceId,
   postId,
 }: {
+  spaceId: string;
+  postId: string;
+}) {
+  const routePath = `/dashboard/s/${encodeURIComponent(spaceId)}/${encodeURIComponent(postId)}`;
+  const { learner, checking } = useLearnerSession(routePath);
+  const [spacePost, setSpacePost] = useState<CommunityPost | null>(null);
+  const [spaceName, setSpaceName] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!learner) return;
+    let active = true;
+    setSpacePost(null);
+    setSpaceName(null);
+    setError(null);
+    void requestJson<CommunityPost & { communityId: string; space?: { name: string } }>(
+      `/api/v1/learner/spaces/${encodeURIComponent(spaceId)}/posts/${encodeURIComponent(postId)}`,
+    )
+      .then((post) => {
+        if (active) {
+          setSpacePost(post);
+          setSpaceName(post.space?.name ?? null);
+        }
+      })
+      .catch((caught) => {
+        if (active) {
+          setError(
+            caught instanceof Error
+              ? caught.message
+              : "Unable to load this discussion.",
+          );
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [learner, postId, spaceId]);
+
+  if (checking) return <LoadingState label="Loading discussion…" />;
+  if (!learner) return null;
+  if (error) {
+    return (
+      <main className="flex min-h-[400px] items-center justify-center p-6">
+        <LearnerText2 className="text-destructive" role="alert">
+          {error}
+        </LearnerText2>
+      </main>
+    );
+  }
+  if (!spacePost) return <LoadingState label="Loading discussion…" />;
+
+  return (
+    <LearnerCommunity
+      communityId={spacePost.communityId}
+      spaceId={spaceId}
+      postId={postId}
+      initialPost={spacePost}
+      spaceName={spaceName ?? undefined}
+      routePath={routePath}
+    />
+  );
+}
+
+export function LearnerCommunity({
+  communityId,
+  spaceId,
+  postId,
+  initialPost,
+  spaceName,
+  routePath,
+}: {
   communityId: string;
+  spaceId?: string;
   postId?: string;
+  initialPost?: CommunityPost;
+  spaceName?: string;
+  routePath?: string;
 }) {
   const { learner, checking } = useLearnerSession(
-    `/dashboard/community/${encodeURIComponent(communityId)}${postId ? `/${encodeURIComponent(postId)}` : ""}`,
+    routePath ??
+      (spaceId && postId
+        ? `/dashboard/s/${encodeURIComponent(spaceId)}/${encodeURIComponent(postId)}`
+        : "/dashboard"),
   );
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -626,6 +810,12 @@ export function LearnerCommunity({
   );
   const requestedCategory = searchParams.get("category") ?? "All";
   const requestedPostId = postId ?? searchParams.get("post");
+  const shouldFocusReply = searchParams.get("reply") === "1";
+  const spaceFeedPath = spaceId
+    ? `/dashboard/s/${encodeURIComponent(spaceId)}`
+    : "/dashboard";
+  const postDetailPath = (targetPostId: string) =>
+    spaceId ? `${spaceFeedPath}/${encodeURIComponent(targetPostId)}` : "/dashboard";
   const mediaAdapters = useLearnerCommunityMediaUploader();
   const [community, setCommunity] = useState<Community | null>(null);
   const [plans, setPlans] = useState<CommunityPlan[]>([]);
@@ -678,7 +868,13 @@ export function LearnerCommunity({
     | null
   >(null);
   const [loading, setLoading] = useState(true);
+  const [postDialogOpen, setPostDialogOpen] = useState(false);
   const [postsNextCursor, setPostsNextCursor] = useState<string | null>(null);
+  const [postsPage, setPostsPage] = useState(1);
+  const [postPages, setPostPages] = useState<CommunityPost[][]>([]);
+  const [postPageCursors, setPostPageCursors] = useState<Record<number, string | null>>(
+    {},
+  );
   const [loadingMorePosts, setLoadingMorePosts] = useState(false);
   const [commentNextCursors, setCommentNextCursors] = useState<
     Record<string, string | null>
@@ -690,10 +886,9 @@ export function LearnerCommunity({
   const [joining, setJoining] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
 
   const loadPosts = useCallback(
-    async (cursor?: string | null) => {
+    async (cursor?: string | null, category = activeCategory, page = 1) => {
       const body = await requestJson<{
         items: CommunityPost[];
         nextCursor: string | null;
@@ -701,13 +896,20 @@ export function LearnerCommunity({
         communityPagePath(
           `/api/v1/learner/communities/${encodeURIComponent(communityId)}/posts`,
           cursor,
-          activeCategory,
+          category,
         ),
       );
-      setPosts((current) => (cursor ? [...current, ...body.items] : body.items));
+      setPosts(body.items);
+      setPostsPage(page);
+      setPostPages((current) => {
+        const next = [...current];
+        next[page - 1] = body.items;
+        return next.slice(0, page);
+      });
+      setPostPageCursors((current) => ({ ...current, [page]: body.nextCursor }));
       setPostsNextCursor(body.nextCursor);
       setSubscribedPostIds((current) => {
-        const next = cursor ? new Set(current) : new Set<string>();
+        const next = new Set(cursor ? current : []);
         for (const post of body.items) {
           if (post.subscribed) next.add(post.id);
           else next.delete(post.id);
@@ -733,13 +935,30 @@ export function LearnerCommunity({
       ]);
       setCommunity(detail);
       setPlans(planBody.items);
-      if (detail.membership?.status === "active") {
+      if (initialPost) {
         setComments({});
         setCommentNextCursors({});
-        await loadPosts();
+        setPostsPage(1);
+        setPostPages([[initialPost]]);
+        setPostPageCursors({ 1: null });
+        setPosts([initialPost]);
+        setPostsNextCursor(null);
+        setSubscribedPostIds(
+          initialPost.subscribed ? new Set([initialPost.id]) : new Set(),
+        );
+      } else if (detail.membership?.status === "active") {
+        setComments({});
+        setCommentNextCursors({});
+        setPostsPage(1);
+        setPostPages([]);
+        setPostPageCursors({});
+        await loadPosts(null, requestedCategory, 1);
       } else {
         setPosts([]);
         setPostsNextCursor(null);
+        setPostsPage(1);
+        setPostPages([]);
+        setPostPageCursors({});
         setComments({});
         setCommentNextCursors({});
       }
@@ -750,7 +969,7 @@ export function LearnerCommunity({
     } finally {
       setLoading(false);
     }
-  }, [communityId, learner, loadPosts]);
+  }, [communityId, initialPost, learner, loadPosts, requestedCategory]);
 
   useEffect(() => {
     if (learner) void load();
@@ -760,11 +979,12 @@ export function LearnerCommunity({
     postEditDraftRef.current = postEditDraft;
   }, [postEditDraft]);
 
-  const activeMember = community?.membership?.status === "active";
+  const hasCommunityMembership = community?.membership?.status === "active";
+  const activeMember = Boolean(initialPost) || hasCommunityMembership;
   const focusedPost = postId ? posts.find((post) => post.id === postId) : null;
   const displayedPosts = postId ? (focusedPost ? [focusedPost] : []) : posts;
   const canModerate =
-    activeMember &&
+    hasCommunityMembership &&
     (community?.membership?.role === "moderator" ||
       community?.membership?.role === "owner");
   const categoryOptions = useMemo(
@@ -778,6 +998,10 @@ export function LearnerCommunity({
   const visibleFeedCategories = showAllCategories
     ? feedCategories
     : feedCategories.slice(0, 3);
+  const totalPostPages = Math.max(
+    postsPage,
+    Math.ceil((community?.postsCount ?? 0) / COMMUNITY_PAGE_SIZE),
+  );
 
   useEffect(() => {
     if (!community) return;
@@ -794,6 +1018,14 @@ export function LearnerCommunity({
     setExpandedPostId(null);
     setComments({});
     setCommentNextCursors({});
+    setPostsPage(1);
+    setPostPages([]);
+    setPostPageCursors({});
+    void loadPosts(null, category, 1).catch((caught) => {
+      setError(
+        caught instanceof Error ? caught.message : "Unable to load discussions.",
+      );
+    });
     const nextParams = new URLSearchParams(searchParams.toString());
     nextParams.delete("post");
     if (category === "All") {
@@ -802,10 +1034,7 @@ export function LearnerCommunity({
       nextParams.set("category", category);
     }
     const query = nextParams.toString();
-    router.replace(
-      `/dashboard/community/${encodeURIComponent(communityId)}${query ? `?${query}` : ""}`,
-      { scroll: false },
-    );
+    router.replace(`${spaceFeedPath}${query ? `?${query}` : ""}`, { scroll: false });
   }
 
   function updatePostDraft(field: keyof PostDraft, value: string) {
@@ -916,7 +1145,8 @@ export function LearnerCommunity({
 
   function requestJoin(plan?: CommunityPlan) {
     if (!community) return;
-    const requiresReason = !community.autoAcceptMembers || plan?.kind === "free";
+    const isFree = !plan || plan.kind === "free" || plan.type === "free";
+    const requiresReason = isFree && !community.autoAcceptMembers;
     if (requiresReason) {
       joiningReasonRef.current = "";
       setJoiningReason("");
@@ -968,7 +1198,7 @@ export function LearnerCommunity({
             description: plan.name,
           });
         }
-        setNotice(
+        toast.success(
           plan.kind === "free"
             ? "Your community membership request was submitted."
             : "Your community membership is being processed.",
@@ -981,7 +1211,7 @@ export function LearnerCommunity({
         { method: "POST", body: JSON.stringify({ joiningReason: reason }) },
       );
       setCommunity((current) => (current ? { ...current, membership } : current));
-      setNotice(
+      toast.success(
         membership?.status === "active"
           ? "You joined the community."
           : "Your request is awaiting approval.",
@@ -1003,7 +1233,7 @@ export function LearnerCommunity({
   }
 
   async function leave() {
-    if (!community || !activeMember || leaving) return;
+    if (!community || !hasCommunityMembership || leaving) return;
     setLeaving(true);
     setError(null);
     try {
@@ -1014,10 +1244,13 @@ export function LearnerCommunity({
       setCommunity((current) => (current ? { ...current, membership: null } : current));
       setPosts([]);
       setPostsNextCursor(null);
+      setPostsPage(1);
+      setPostPages([]);
+      setPostPageCursors({});
       setComments({});
       setCommentNextCursors({});
       setExpandedPostId(null);
-      setNotice("You left the community.");
+      toast.success("You left the community.");
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "Unable to leave this community.",
@@ -1028,18 +1261,18 @@ export function LearnerCommunity({
   }
 
   function requestLeave() {
-    if (!community || !activeMember || leaving) return;
+    if (!community || !hasCommunityMembership || leaving) return;
     setLeaveDialogOpen(true);
   }
 
   async function shareCommunity() {
     if (!community) return;
-    const url = `${window.location.origin}/dashboard/community/${encodeURIComponent(community.id)}`;
+    const url = `${window.location.origin}${postId ? postDetailPath(postId) : spaceFeedPath}`;
     try {
       await navigator.clipboard.writeText(url);
-      setNotice("Community link copied to clipboard.");
+      toast.success("Community link copied to clipboard.");
     } catch {
-      setNotice(url);
+      toast.info("Copy this community link", { description: url, duration: 10_000 });
     }
   }
 
@@ -1064,7 +1297,8 @@ export function LearnerCommunity({
       postDraftRef.current = { ...draft, title: "", content: "" };
       setPostDraft(postDraftRef.current);
       updatePostMedia([]);
-      setNotice("Post published.");
+      setPostDialogOpen(false);
+      toast.success("Post published.");
       await load();
     } catch (caught) {
       setError(
@@ -1080,12 +1314,29 @@ export function LearnerCommunity({
     setLoadingMorePosts(true);
     setError(null);
     try {
-      await loadPosts(postsNextCursor);
+      await loadPosts(postsNextCursor, activeCategory, postsPage + 1);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to load more posts.");
     } finally {
       setLoadingMorePosts(false);
     }
+  }
+
+  function loadPreviousPosts() {
+    if (postsPage <= 1 || loadingMorePosts) return;
+    const previousPage = postPages[postsPage - 2];
+    if (!previousPage) return;
+    setPosts(previousPage);
+    setPostsPage(postsPage - 1);
+    setPostsNextCursor(postPageCursors[postsPage - 1] ?? null);
+    setSubscribedPostIds((current) => {
+      const next = new Set(current);
+      for (const post of previousPage) {
+        if (post.subscribed) next.add(post.id);
+        else next.delete(post.id);
+      }
+      return next;
+    });
   }
 
   const loadComments = useCallback(async (postId: string, cursor?: string | null) => {
@@ -1337,7 +1588,7 @@ export function LearnerCommunity({
       );
       setReportTarget(null);
       setReportReason("");
-      setNotice("Thanks. The content was sent for review.");
+      toast.success("Thanks. The content was sent for review.");
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "Unable to report this content.",
@@ -1445,268 +1696,239 @@ export function LearnerCommunity({
     }
   }
 
+  function commentComposer(targetPostId: string, parentCommentId: string | null) {
+    const isReply = Boolean(parentCommentId);
+    return (
+      <div className="grid gap-3">
+        <MediaAttachments
+          items={(commentMedia[targetPostId] ?? []).map(selectedMediaToAttachment)}
+          onRemove={(id) =>
+            updateCommentMedia(
+              targetPostId,
+              (commentMediaRefs.current[targetPostId] ?? []).filter(
+                (media) => media.id !== id,
+              ),
+            )
+          }
+        />
+        <LearnerRichTextEditor
+          key={[
+            targetPostId,
+            parentCommentId ?? "comment",
+            commentEditorVersions[targetPostId] ?? 0,
+          ].join("-")}
+          initialContent={communityEditorContent(commentDrafts[targetPostId] ?? "")}
+          onChange={(document) =>
+            updateCommentDraft(targetPostId, JSON.stringify(document))
+          }
+          placeholder={isReply ? "Write a reply…" : "Add a comment…"}
+          autoFocus={isReply || Boolean(postId && shouldFocusReply)}
+          showToolbar={false}
+          className="rounded-md border bg-background"
+          editorClassName="min-h-[100px]"
+        />
+        <div className="flex flex-wrap justify-end gap-2">
+          <MediaUploadDialog<LearnerCommunityMedia>
+            {...mediaAdapters}
+            title="Attach media"
+            description="Add an image, video, or PDF to your comment."
+            acceptedTypes={COMMUNITY_MEDIA_ACCEPTED_TYPES}
+            allowUnsplash={false}
+            maxUploadBytes={100_000_000}
+            onSelect={(selected) => selectCommentMedia(targetPostId, selected)}
+          >
+            <Button type="button" variant="outline" size="sm">
+              <Paperclip className="size-4" /> Attach
+            </Button>
+          </MediaUploadDialog>
+          {isReply ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                resetCommentEditor(targetPostId);
+                setReplyToCommentId(null);
+              }}
+            >
+              Cancel
+            </Button>
+          ) : null}
+          <Button
+            type="button"
+            size="sm"
+            disabled={
+              busy || !communityDescriptionHasContent(commentDrafts[targetPostId] ?? "")
+            }
+            onClick={() => void createComment(targetPostId, parentCommentId)}
+          >
+            <Send className="size-4" /> {isReply ? "Reply" : "Comment"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (checking) return <LoadingState label="Loading community…" />;
   if (!learner) return null;
 
   return (
-    <LearnerShell user={learner}>
-      <main className="grid gap-7">
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <nav
-              className="flex items-center gap-2 text-sm text-muted-foreground"
-              aria-label="Breadcrumb"
-            >
-              <Link href="/communities" className="hover:text-primary">
-                Communities
-              </Link>
-              <span aria-hidden="true">/</span>
-              {postId ? (
-                <>
-                  <Link
-                    href={`/dashboard/community/${encodeURIComponent(communityId)}`}
-                    className="hover:text-primary"
-                  >
-                    {community?.name ?? "Community"}
-                  </Link>
-                  <span aria-hidden="true">/</span>
-                  <span aria-current="page">Discussion</span>
-                </>
-              ) : (
-                <span aria-current="page">{community?.name ?? "Community"}</span>
-              )}
-            </nav>
-            <LearnerHeader1>{community?.name ?? "Community"}</LearnerHeader1>
-            <CommunityDescription
-              value={community?.description || "Join the conversation."}
-              className="mt-2 text-muted-foreground"
+    <LearnerShell
+      user={learner}
+      headerTitle={postId ? (spaceName ?? "Space") : (community?.name ?? "Community")}
+      headerTitleHref={postId ? spaceFeedPath : undefined}
+      headerContext={postId ? (focusedPost?.title ?? "Discussion") : undefined}
+    >
+      <main
+        className={`grid items-start content-start gap-6 ${
+          postId ? "mx-auto w-full max-w-4xl lg:grid-cols-1" : "lg:grid-cols-3"
+        }`}
+      >
+        {!postId && community ? (
+          <aside className="order-last self-start lg:col-start-3 lg:row-start-1 lg:order-none">
+            <CommunityInfoCard
+              community={community}
+              activeMember={Boolean(hasCommunityMembership)}
+              leaving={leaving}
+              onShare={() => void shareCommunity()}
+              onLeave={requestLeave}
             />
-            {community ? (
-              <LearnerText2 className="text-muted-foreground">
-                {community.membersCount.toLocaleString()} members
-              </LearnerText2>
-            ) : null}
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => void shareCommunity()}
-              disabled={!community}
-            >
-              <Share2 className="size-4" /> Share
-            </Button>
-            {activeMember ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={requestLeave}
-                disabled={leaving}
-              >
-                {leaving ? "Leaving…" : "Leave community"}
-              </Button>
-            ) : null}
-          </div>
-        </header>
-        {community?.featuredMedia ? (
-          <LearnerCardImage
-            src={
-              community.featuredMedia.thumbnailUrl ??
-              community.featuredMedia.canonicalUrl
-            }
-            alt={community.featuredMedia.altText || community.name}
-            className="max-h-72 w-full rounded-xl border object-cover"
-          />
+          </aside>
         ) : null}
-        {community?.banner && communityDescriptionHasContent(community.banner) ? (
-          <PageCard aria-label="Community announcement">
-            <PageCardContent>
-              <CommunityDescription value={community.banner} />
-            </PageCardContent>
-          </PageCard>
-        ) : null}
-        {error ? (
-          <LearnerText2 className="text-destructive" role="alert">
-            {error}
-          </LearnerText2>
-        ) : null}
-        {notice ? (
-          <LearnerText2
-            className="rounded-md bg-[var(--primary-soft)] px-3 py-2 text-sm text-primary"
-            role="status"
-          >
-            {notice}
-          </LearnerText2>
-        ) : null}
-        {loading ? (
-          <LearnerText2 className="text-muted-foreground">
-            Loading discussions…
-          </LearnerText2>
-        ) : null}
-        {!loading && community && !activeMember ? (
-          <PageCard>
-            <PageCardContent className="grid gap-4">
-              <LearnerHeader2>
-                {community.membership?.status === "pending"
-                  ? "Request pending"
-                  : "Join this community"}
-              </LearnerHeader2>
-              <LearnerText2 className="text-muted-foreground">
-                {community.membership?.status === "pending"
-                  ? "An administrator needs to approve your membership before you can participate."
-                  : community.joiningReasonText ||
-                    "Join to post, comment, and follow the conversation."}
-              </LearnerText2>
-              {!community.membership ||
-              ["rejected", "payment_failed", "expired"].includes(
-                community.membership.status,
-              ) ? (
-                <div className="grid gap-4">
-                  {plans.length > 0 ? (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {plans.map((plan) => (
-                        <PageCard key={plan.id}>
-                          <PageCardContent className="grid gap-4">
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <LearnerHeader3>{plan.name}</LearnerHeader3>
-                                {plan.description ? (
-                                  <LearnerText2 className="mt-1 text-muted-foreground">
-                                    {plan.description}
-                                  </LearnerText2>
-                                ) : null}
-                              </div>
-                              <LearnerText2 component="span" className="font-medium">
-                                {plan.amountMinor === 0
-                                  ? "Free"
-                                  : new Intl.NumberFormat(undefined, {
-                                      style: "currency",
-                                      currency: plan.currency,
-                                    }).format(plan.amountMinor / 100)}
-                              </LearnerText2>
-                            </div>
-                            <Button
-                              type="button"
-                              onClick={() => requestJoin(plan)}
-                              disabled={joining}
-                            >
-                              {joining
-                                ? "Joining…"
-                                : plan.kind === "free"
-                                  ? "Join community"
-                                  : "Continue to payment"}
-                            </Button>
-                          </PageCardContent>
-                        </PageCard>
-                      ))}
-                    </div>
-                  ) : (
-                    <Button
-                      type="button"
-                      onClick={() => requestJoin()}
-                      disabled={joining}
-                    >
-                      {joining ? "Joining…" : "Join community"}
-                    </Button>
-                  )}
-                </div>
-              ) : null}
-            </PageCardContent>
-          </PageCard>
-        ) : null}
-        {!loading && activeMember ? (
-          <>
-            {!postId ? (
-              <PageCard>
-                <PageCardContent className="grid gap-4">
-                  <div className="flex items-center gap-2">
-                    <MessageCircle className="size-5 text-primary" />
-                    <LearnerHeader2>Start a discussion</LearnerHeader2>
-                  </div>
-                  <form
-                    onSubmit={(event) => void createPost(event)}
-                    className="grid gap-4"
-                  >
-                    <LearnerInput
-                      value={postDraft.title}
-                      onChange={(event) => updatePostDraft("title", event.target.value)}
-                      placeholder="Discussion title"
-                      aria-label="Discussion title"
-                      className="h-10"
-                      required
-                    />
-                    <LearnerRichTextEditor
-                      initialContent={communityEditorContent(postDraft.content)}
-                      onChange={(document) =>
-                        updatePostDraft("content", JSON.stringify(document))
-                      }
-                      placeholder="Share something with the community…"
-                      className="rounded-md border bg-background"
-                      editorClassName="min-h-[140px]"
-                    />
-                    <MediaAttachments
-                      items={postMedia.map(selectedMediaToAttachment)}
-                      onRemove={(id) =>
-                        updatePostMedia(
-                          postMediaRef.current.filter((media) => media.id !== id),
-                        )
-                      }
-                    />
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <LearnerSelect
-                          value={postDraft.category}
-                          onChange={(event) =>
-                            updatePostDraft("category", event.target.value)
-                          }
-                          aria-label="Discussion category"
-                          className="h-9"
-                        >
-                          {categoryOptions.map((category) => (
-                            <option key={category}>{category}</option>
-                          ))}
-                        </LearnerSelect>
-                        <MediaUploadDialog<LearnerCommunityMedia>
-                          {...mediaAdapters}
-                          title="Attach media"
-                          description="Add an image, video, or PDF to your discussion."
-                          acceptedTypes={COMMUNITY_MEDIA_ACCEPTED_TYPES}
-                          allowUnsplash={false}
-                          maxUploadBytes={100_000_000}
-                          onSelect={selectPostMedia}
-                        >
-                          <Button type="button" variant="outline" size="sm">
-                            <Paperclip className="size-4" /> Attach media
-                          </Button>
-                        </MediaUploadDialog>
-                      </div>
-                      <Button
-                        type="submit"
-                        disabled={
-                          busy ||
-                          !postDraft.title.trim() ||
-                          !communityDescriptionHasContent(postDraft.content)
-                        }
-                      >
-                        <Send className="size-4" />{" "}
-                        {busy ? "Publishing…" : "Publish post"}
-                      </Button>
-                    </div>
-                  </form>
-                </PageCardContent>
-              </PageCard>
-            ) : null}
-            <section className="grid gap-4" aria-label="Community discussions">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <LearnerHeader2>Discussions</LearnerHeader2>
-                <LearnerText2 component="span" className="text-muted-foreground">
-                  {community.postsCount.toLocaleString()}{" "}
-                  {community.postsCount === 1 ? "post" : "posts"}
+        <div
+          className={`grid min-w-0 content-start gap-6 self-start lg:col-start-1 lg:row-start-1 ${
+            postId ? "lg:col-span-1" : "lg:col-span-2"
+          }`}
+        >
+          {error ? (
+            <LearnerText2 className="text-destructive" role="alert">
+              {error}
+            </LearnerText2>
+          ) : null}
+          {loading ? (
+            <LearnerText2 className="text-muted-foreground">
+              Loading discussions…
+            </LearnerText2>
+          ) : null}
+          {!loading && community && !activeMember ? (
+            <PageCard>
+              <PageCardContent className="grid gap-4">
+                <LearnerHeader2>
+                  {community.membership?.status === "pending"
+                    ? "Request pending"
+                    : "Join this community"}
+                </LearnerHeader2>
+                <LearnerText2 className="text-muted-foreground">
+                  {community.membership?.status === "pending"
+                    ? "An administrator needs to approve your membership before you can participate."
+                    : community.joiningReasonText ||
+                      "Join to post, comment, and follow the conversation."}
                 </LearnerText2>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
+                {!community.membership ||
+                ["rejected", "payment_failed", "expired"].includes(
+                  community.membership.status,
+                ) ? (
+                  <div className="grid gap-4">
+                    {plans.length > 0 ? (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {plans.map((plan) => (
+                          <PageCard key={plan.id}>
+                            <PageCardContent className="grid gap-4">
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <LearnerHeader3>{plan.name}</LearnerHeader3>
+                                  {plan.description ? (
+                                    <LearnerText2 className="mt-1 text-muted-foreground">
+                                      {plan.description}
+                                    </LearnerText2>
+                                  ) : null}
+                                </div>
+                                <LearnerText2 component="span" className="font-medium">
+                                  {plan.amountMinor === 0
+                                    ? "Free"
+                                    : new Intl.NumberFormat(undefined, {
+                                        style: "currency",
+                                        currency: plan.currency,
+                                      }).format(plan.amountMinor / 100)}
+                                </LearnerText2>
+                              </div>
+                              <Button
+                                type="button"
+                                onClick={() => requestJoin(plan)}
+                                disabled={joining}
+                              >
+                                {joining
+                                  ? "Joining…"
+                                  : plan.kind === "free"
+                                    ? "Join community"
+                                    : "Continue to payment"}
+                              </Button>
+                            </PageCardContent>
+                          </PageCard>
+                        ))}
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        onClick={() => requestJoin()}
+                        disabled={joining}
+                      >
+                        {joining ? "Joining…" : "Join community"}
+                      </Button>
+                    )}
+                  </div>
+                ) : null}
+              </PageCardContent>
+            </PageCard>
+          ) : null}
+          {!loading && activeMember ? (
+            <div className="grid min-w-0 content-start gap-6 self-start">
+              {!postId ? (
+                <LearnerPostComposerDialog
+                  open={postDialogOpen}
+                  onOpenChange={setPostDialogOpen}
+                  trigger={
+                    <PageCard className="cursor-text transition-colors hover:border-primary/60">
+                      <PageCardContent className="py-4">
+                        <LearnerText2 className="text-muted-foreground">
+                          Write something…
+                        </LearnerText2>
+                      </PageCardContent>
+                    </PageCard>
+                  }
+                  learnerName={learner.name || learner.email}
+                  destinations={categoryOptions.map((category) => ({
+                    id: category,
+                    name: category,
+                  }))}
+                  destinationId={postDraft.category}
+                  destinationLabel="Select a category"
+                  onDestinationChange={(category) =>
+                    updatePostDraft("category", category)
+                  }
+                  title={postDraft.title}
+                  onTitleChange={(value) => updatePostDraft("title", value)}
+                  content={postDraft.content}
+                  onContentChange={(value) => updatePostDraft("content", value)}
+                  media={postMedia}
+                  mediaAdapters={mediaAdapters}
+                  onMediaSelected={selectPostMedia}
+                  onMediaRemove={(id) =>
+                    updatePostMedia(
+                      postMediaRef.current.filter((media) => media.id !== id),
+                    )
+                  }
+                  canSubmit={Boolean(
+                    postDraft.title.trim() &&
+                      communityDescriptionHasContent(postDraft.content),
+                  )}
+                  submitting={busy}
+                  onSubmit={(event) => void createPost(event)}
+                />
+              ) : null}
+              {!postId ? (
                 <div
-                  className="flex flex-wrap items-center gap-1"
+                  className="flex flex-wrap items-center gap-2"
                   role="tablist"
                   aria-label="Discussion categories"
                 >
@@ -1718,7 +1940,7 @@ export function LearnerCommunity({
                         type="button"
                         role="tab"
                         aria-selected={active}
-                        variant={active ? "secondary" : "ghost"}
+                        variant={active ? "secondary" : "outline"}
                         size="sm"
                         onClick={() => selectCategory(category)}
                       >
@@ -1726,102 +1948,119 @@ export function LearnerCommunity({
                       </Button>
                     );
                   })}
-                </div>
-                {feedCategories.length > 3 ? (
                   <Button
                     type="button"
                     size="sm"
-                    variant="ghost"
-                    className="rounded-full"
+                    variant="outline"
                     onClick={() => setShowAllCategories((current) => !current)}
                   >
                     {showAllCategories ? "Less" : "More…"}
                   </Button>
-                ) : null}
-              </div>
-              {displayedPosts.length === 0 ? (
-                <PageCard>
-                  <PageCardContent className="text-muted-foreground">
-                    {postId
-                      ? "This discussion is no longer available."
-                      : "No discussions yet."}
+                </div>
+              ) : null}
+              {!postId &&
+              community?.banner &&
+              communityDescriptionHasContent(community.banner) ? (
+                <PageCard aria-label="Community announcement">
+                  <PageCardContent className="flex items-center gap-3 py-4">
+                    <Info className="size-5 shrink-0 text-muted-foreground" />
+                    <CommunityDescription value={community.banner} />
                   </PageCardContent>
                 </PageCard>
               ) : null}
-              {displayedPosts.map((post) => (
-                <PageCard key={post.id}>
-                  <PageCardContent className="grid gap-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                          {post.pinned ? (
-                            <span className="inline-flex items-center gap-1 text-primary">
-                              <Pin className="size-3" /> Pinned
-                            </span>
-                          ) : null}
-                          <span>{post.category}</span>
-                          <span>·</span>
-                          <span>
-                            {post.author?.name ??
-                              (post.authorKind === "admin"
-                                ? "Admin"
-                                : "Community member")}
-                          </span>
-                          <span>·</span>
-                          <time dateTime={post.updatedAt}>
-                            {new Date(post.updatedAt).toLocaleDateString()}
-                          </time>
-                        </div>
-                        {editingPostId === post.id ? (
-                          <div className="grid gap-4">
-                            <LearnerInput
-                              value={postEditDraft.title}
-                              onChange={(event) =>
-                                setPostEditDraft((current) => ({
-                                  ...current,
-                                  title: event.target.value,
-                                }))
-                              }
-                              className="h-9"
-                              aria-label="Edit post title"
-                            />
-                            <LearnerRichTextEditor
-                              key={`${post.id}-${editingPostId}`}
-                              initialContent={communityEditorContent(
-                                postEditDraft.content,
-                              )}
-                              onChange={(document) =>
-                                updatePostEditContent(JSON.stringify(document))
-                              }
-                              placeholder="Share something with the community…"
-                              className="rounded-md border bg-background"
-                              editorClassName="min-h-[120px]"
-                            />
-                            <MediaAttachments
-                              items={postEditMedia}
-                              onRemove={removePostEditMedia}
-                            />
-                            <MediaUploadDialog<LearnerCommunityMedia>
-                              {...mediaAdapters}
-                              title="Attach media"
-                              description="Add an image, video, or PDF to your discussion."
-                              acceptedTypes={COMMUNITY_MEDIA_ACCEPTED_TYPES}
-                              allowUnsplash={false}
-                              maxUploadBytes={100_000_000}
-                              onSelect={selectPostEditMedia}
-                            >
-                              <Button type="button" variant="outline" size="sm">
-                                <Paperclip className="size-4" /> Attach media
-                              </Button>
-                            </MediaUploadDialog>
+              <section className="grid gap-4" aria-label="Community discussions">
+                {!postId ? (
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <LearnerHeader2>Discussions</LearnerHeader2>
+                    <LearnerText2 component="span" className="text-muted-foreground">
+                      {community.postsCount.toLocaleString()}{" "}
+                      {community.postsCount === 1 ? "post" : "posts"}
+                    </LearnerText2>
+                  </div>
+                ) : null}
+                {displayedPosts.length === 0 ? (
+                  <PageCard>
+                    <PageCardContent className="text-muted-foreground">
+                      {postId
+                        ? "This discussion is no longer available."
+                        : "No discussions yet."}
+                    </PageCardContent>
+                  </PageCard>
+                ) : null}
+                {displayedPosts.map((post) => (
+                  <PageCard
+                    key={post.id}
+                    isLink={!postId}
+                    className="min-w-0"
+                    onClick={(event) => {
+                      if (
+                        (event.target as HTMLElement).closest(
+                          "button,a,input,textarea,select,[contenteditable='true']",
+                        )
+                      ) {
+                        return;
+                      }
+                      if (!postId && editingPostId !== post.id) {
+                        router.push(postDetailPath(post.id));
+                      }
+                    }}
+                  >
+                    <PageCardContent className="grid gap-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <LearnerAvatar className="size-10">
+                            {post.author?.imageUrl ? (
+                              <LearnerAvatarImage
+                                src={post.author.imageUrl}
+                                alt={post.author.name}
+                              />
+                            ) : null}
+                            <LearnerAvatarFallback>
+                              {(post.author?.name ?? "C").slice(0, 1).toUpperCase()}
+                            </LearnerAvatarFallback>
+                          </LearnerAvatar>
+                          <div className="min-w-0">
+                            <LearnerText2 className="truncate font-medium">
+                              {post.author?.name ??
+                                (post.authorKind === "admin"
+                                  ? "Admin"
+                                  : "Community member")}
+                            </LearnerText2>
+                            <LearnerText2 className="text-sm text-muted-foreground">
+                              <time dateTime={post.updatedAt}>
+                                {new Date(post.updatedAt).toLocaleDateString()}
+                              </time>{" "}
+                              · {post.category}
+                            </LearnerText2>
                           </div>
-                        ) : (
-                          <LearnerHeader3>{post.title}</LearnerHeader3>
-                        )}
-                      </div>
-                      {post.authorId === learner.id || canModerate ? (
-                        <div className="flex gap-2">
-                          {post.authorId === learner.id && editingPostId === post.id ? (
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          {post.pinned === true ? (
+                            <Pin
+                              className="size-4 text-muted-foreground"
+                              aria-label="Pinned"
+                            />
+                          ) : null}
+                          {postId ? (
+                            <PostActionsMenu
+                              onReport={
+                                isOwnedByLearner(post, learner)
+                                  ? undefined
+                                  : () => reportPost(post.id)
+                              }
+                              onEdit={
+                                isOwnedByLearner(post, learner)
+                                  ? () => startEditing(post)
+                                  : undefined
+                              }
+                              onDelete={
+                                isOwnedByLearner(post, learner) || canModerate
+                                  ? () => requestDeletePost(post.id)
+                                  : undefined
+                              }
+                            />
+                          ) : null}
+                          {editingPostId === post.id ? (
                             <Button
                               type="button"
                               size="sm"
@@ -1829,319 +2068,300 @@ export function LearnerCommunity({
                             >
                               Save
                             </Button>
-                          ) : post.authorId === learner.id ? (
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => startEditing(post)}
-                            >
-                              Edit
-                            </Button>
-                          ) : null}
-                          {post.authorId === learner.id || canModerate ? (
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => requestDeletePost(post.id)}
-                            >
-                              Delete
-                            </Button>
                           ) : null}
                         </div>
-                      ) : null}
-                    </div>
-                    {editingPostId === post.id ? (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setEditingPostId(null)}
-                      >
-                        Cancel
-                      </Button>
-                    ) : (
-                      <CommunityDescription
-                        value={post.content}
-                        className="text-sm leading-6 text-muted-foreground"
-                      />
-                    )}
-                    {editingPostId === post.id ? null : (
-                      <MediaAttachments
-                        items={post.media.map(communityMediaToAttachment)}
-                      />
-                    )}
-                    <div className="flex flex-wrap items-center gap-2 border-t pt-4">
-                      <CommunityReactionsBar
-                        reactions={post.reactions}
-                        onReact={(emoji) => void toggleReaction(post.id, emoji)}
-                      />
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() =>
-                          expandedPostId === post.id
-                            ? setExpandedPostId(null)
-                            : void loadComments(post.id)
-                        }
-                      >
-                        <MessageCircle className="size-4" />{" "}
-                        {expandedPostId === post.id ? "Hide comments" : "Comments"}
-                        {post.commentsCount > 0 ? ` (${post.commentsCount})` : null}
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant={subscribedPostIds.has(post.id) ? "secondary" : "ghost"}
-                        onClick={() => void toggleSubscription(post.id)}
-                      >
-                        <Bell className="size-4" />{" "}
-                        {subscribedPostIds.has(post.id) ? "Following" : "Follow"}
-                      </Button>
-                      {post.authorId !== learner.id ? (
+                      </div>
+                      {editingPostId === post.id ? (
+                        <div className="grid gap-4">
+                          <LearnerInput
+                            value={postEditDraft.title}
+                            onChange={(event) =>
+                              setPostEditDraft((current) => ({
+                                ...current,
+                                title: event.target.value,
+                              }))
+                            }
+                            className="h-9"
+                            aria-label="Edit post title"
+                          />
+                          <LearnerRichTextEditor
+                            key={`${post.id}-${editingPostId}`}
+                            initialContent={communityEditorContent(
+                              postEditDraft.content,
+                            )}
+                            onChange={(document) =>
+                              updatePostEditContent(JSON.stringify(document))
+                            }
+                            placeholder="Share something with the community…"
+                            className="rounded-md border bg-background"
+                            editorClassName="min-h-[120px]"
+                          />
+                          <MediaAttachments
+                            items={postEditMedia}
+                            onRemove={removePostEditMedia}
+                          />
+                          <MediaUploadDialog<LearnerCommunityMedia>
+                            {...mediaAdapters}
+                            title="Attach media"
+                            description="Add an image, video, or PDF to your discussion."
+                            acceptedTypes={COMMUNITY_MEDIA_ACCEPTED_TYPES}
+                            allowUnsplash={false}
+                            maxUploadBytes={100_000_000}
+                            onSelect={selectPostEditMedia}
+                          >
+                            <Button type="button" variant="outline" size="sm">
+                              <Paperclip className="size-4" /> Attach media
+                            </Button>
+                          </MediaUploadDialog>
+                        </div>
+                      ) : (
+                        <LearnerHeader3>{post.title}</LearnerHeader3>
+                      )}
+                      {editingPostId === post.id ? (
                         <Button
                           type="button"
                           size="sm"
-                          variant="ghost"
-                          onClick={() => reportPost(post.id)}
+                          variant="outline"
+                          onClick={() => setEditingPostId(null)}
                         >
-                          <Flag className="size-4" /> Report
+                          Cancel
                         </Button>
-                      ) : null}
-                    </div>
-                    {expandedPostId === post.id ? (
-                      <div className="grid gap-4 border-t pt-4">
-                        {(comments[post.id] ?? []).map((comment) => (
-                          <div
-                            key={comment.id}
-                            id={comment.id}
-                            className={`rounded-md bg-muted/40 p-3 text-sm ${comment.parentCommentId ? "ml-6" : ""}`}
-                          >
-                            <div className="mb-1 text-xs text-muted-foreground">
-                              {comment.author?.name ??
-                                (comment.authorKind === "admin"
-                                  ? "Admin"
-                                  : "Community member")}{" "}
-                              · {new Date(comment.createdAt).toLocaleDateString()}
-                            </div>
-                            {comment.deletedAt ? (
-                              <LearnerText2 className="italic text-muted-foreground">
-                                Deleted
-                              </LearnerText2>
-                            ) : (
-                              <>
-                                <CommunityDescription value={comment.content} />
-                                <MediaAttachments
-                                  items={comment.media.map(communityMediaToAttachment)}
-                                />
-                              </>
-                            )}
-                            <div className="flex flex-wrap items-center gap-2 text-xs">
-                              {!comment.deletedAt ? (
-                                <CommunityReactionsBar
-                                  reactions={comment.reactions}
-                                  onReact={(emoji) =>
-                                    void toggleCommentReaction(comment, emoji)
-                                  }
-                                />
-                              ) : null}
-                              {!comment.deletedAt &&
-                              (comment.authorId === learner.id || canModerate) ? (
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 px-2 text-xs"
-                                  onClick={() =>
-                                    requestDeleteComment(post.id, comment.id)
-                                  }
-                                >
-                                  Delete
-                                </Button>
-                              ) : null}
-                              {!comment.deletedAt && comment.authorId !== learner.id ? (
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 px-2 text-xs"
-                                  onClick={() => reportComment(comment)}
-                                >
-                                  <Flag className="size-3.5" /> Report
-                                </Button>
-                              ) : null}
-                            </div>
-                            {!comment.parentCommentId && !comment.deletedAt ? (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                className="mt-2"
-                                onClick={() => toggleReplyTarget(post.id, comment.id)}
-                              >
-                                Reply
-                              </Button>
-                            ) : null}
-                          </div>
-                        ))}
-                        {commentNextCursors[post.id] ? (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={loadingMoreCommentsPostId === post.id}
-                            onClick={() => void loadMoreComments(post.id)}
-                          >
-                            {loadingMoreCommentsPostId === post.id
-                              ? "Loading comments…"
-                              : "Load more comments"}
-                          </Button>
-                        ) : null}
-                        <MediaAttachments
-                          items={(commentMedia[post.id] ?? []).map(
-                            selectedMediaToAttachment,
-                          )}
-                          onRemove={(id) =>
-                            updateCommentMedia(
-                              post.id,
-                              (commentMediaRefs.current[post.id] ?? []).filter(
-                                (media) => media.id !== id,
-                              ),
-                            )
-                          }
+                      ) : (
+                        <CommunityDescription
+                          value={post.content}
+                          className="text-sm leading-6 text-muted-foreground"
                         />
-                        <div className="grid gap-4">
-                          <LearnerRichTextEditor
-                            key={`${post.id}-${replyToCommentId ?? "comment"}-${commentEditorVersions[post.id] ?? 0}`}
-                            initialContent={communityEditorContent(
-                              commentDrafts[post.id] ?? "",
-                            )}
-                            onChange={(document) =>
-                              updateCommentDraft(post.id, JSON.stringify(document))
-                            }
-                            placeholder={
-                              replyToCommentId ? "Write a reply…" : "Add a comment…"
-                            }
-                            showToolbar={false}
-                            className="rounded-md border bg-background"
-                            editorClassName="min-h-[100px]"
-                          />
-                          <div className="flex flex-wrap gap-2">
-                            <MediaUploadDialog<LearnerCommunityMedia>
-                              {...mediaAdapters}
-                              title="Attach media"
-                              description="Add an image, video, or PDF to your comment."
-                              acceptedTypes={COMMUNITY_MEDIA_ACCEPTED_TYPES}
-                              allowUnsplash={false}
-                              maxUploadBytes={100_000_000}
-                              onSelect={(selected) =>
-                                selectCommentMedia(post.id, selected)
+                      )}
+                      {editingPostId === post.id ? null : (
+                        <MediaAttachments
+                          items={post.media.map(communityMediaToAttachment)}
+                        />
+                      )}
+                      <div className="flex flex-wrap items-center gap-2 border-t pt-4">
+                        <CommunityReactionsBar
+                          reactions={post.reactions}
+                          onReact={(emoji) => void toggleReaction(post.id, emoji)}
+                          onReply={() =>
+                            router.push(`${postDetailPath(post.id)}?reply=1`)
+                          }
+                          repliesCount={post.commentsCount}
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={
+                            subscribedPostIds.has(post.id) ? "secondary" : "ghost"
+                          }
+                          onClick={() => void toggleSubscription(post.id)}
+                        >
+                          <Bell className="size-4" />{" "}
+                          {subscribedPostIds.has(post.id) ? "Following" : "Follow"}
+                        </Button>
+                      </div>
+                      {expandedPostId === post.id ? (
+                        <div className="grid gap-4 border-t pt-4">
+                          {(comments[post.id] ?? []).map((comment) => (
+                            <div
+                              key={comment.id}
+                              id={comment.id}
+                              className={
+                                "grid gap-2 text-sm " +
+                                (comment.parentCommentId ? "ml-10" : "")
                               }
                             >
-                              <Button type="button" variant="outline" size="sm">
-                                <Paperclip className="size-4" /> Attach
-                              </Button>
-                            </MediaUploadDialog>
+                              <div className="flex items-start gap-3">
+                                <LearnerAvatar className="size-9">
+                                  {comment.author?.imageUrl ? (
+                                    <LearnerAvatarImage
+                                      src={comment.author.imageUrl}
+                                      alt={comment.author.name}
+                                    />
+                                  ) : null}
+                                  <LearnerAvatarFallback>
+                                    {(comment.author?.name ?? "C")
+                                      .slice(0, 1)
+                                      .toUpperCase()}
+                                  </LearnerAvatarFallback>
+                                </LearnerAvatar>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+                                      <LearnerText2
+                                        component="span"
+                                        className="font-medium text-foreground"
+                                      >
+                                        {comment.author?.name ??
+                                          (comment.authorKind === "admin"
+                                            ? "Admin"
+                                            : "Community member")}
+                                      </LearnerText2>
+                                      <span>
+                                        {new Date(
+                                          comment.createdAt,
+                                        ).toLocaleDateString()}
+                                      </span>
+                                    </div>
+                                    {!comment.deletedAt ? (
+                                      <PostActionsMenu
+                                        onDelete={
+                                          isOwnedByLearner(comment, learner) ||
+                                          canModerate
+                                            ? () =>
+                                                requestDeleteComment(
+                                                  post.id,
+                                                  comment.id,
+                                                )
+                                            : undefined
+                                        }
+                                        onReport={
+                                          !isOwnedByLearner(comment, learner)
+                                            ? () => reportComment(comment)
+                                            : undefined
+                                        }
+                                      />
+                                    ) : null}
+                                  </div>
+                                  {comment.deletedAt ? (
+                                    <p className="italic text-muted-foreground">
+                                      Deleted
+                                    </p>
+                                  ) : (
+                                    <>
+                                      <CommunityDescription value={comment.content} />
+                                      <MediaAttachments
+                                        items={comment.media.map(
+                                          communityMediaToAttachment,
+                                        )}
+                                      />
+                                    </>
+                                  )}
+                                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                                    {!comment.deletedAt ? (
+                                      <CommunityReactionsBar
+                                        reactions={comment.reactions}
+                                        onReact={(emoji) =>
+                                          void toggleCommentReaction(comment, emoji)
+                                        }
+                                        onReply={() =>
+                                          toggleReplyTarget(post.id, comment.id)
+                                        }
+                                      />
+                                    ) : null}
+                                  </div>
+                                </div>
+                              </div>
+                              {replyToCommentId === comment.id
+                                ? commentComposer(post.id, comment.id)
+                                : null}
+                            </div>
+                          ))}
+                          {commentNextCursors[post.id] ? (
                             <Button
                               type="button"
                               size="sm"
-                              disabled={
-                                busy ||
-                                !communityDescriptionHasContent(
-                                  commentDrafts[post.id] ?? "",
-                                )
-                              }
-                              onClick={() =>
-                                void createComment(post.id, replyToCommentId)
-                              }
+                              variant="outline"
+                              disabled={loadingMoreCommentsPostId === post.id}
+                              onClick={() => void loadMoreComments(post.id)}
                             >
-                              <Send className="size-4" />{" "}
-                              {replyToCommentId ? "Reply" : "Comment"}
+                              {loadingMoreCommentsPostId === post.id
+                                ? "Loading comments…"
+                                : "Load more comments"}
                             </Button>
-                          </div>
+                          ) : null}
+                          {!replyToCommentId ? commentComposer(post.id, null) : null}
                         </div>
-                      </div>
-                    ) : null}
-                  </PageCardContent>
-                </PageCard>
-              ))}
-              {postsNextCursor ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="self-center"
-                  disabled={loadingMorePosts}
-                  onClick={() => void loadMorePosts()}
-                >
-                  {loadingMorePosts ? "Loading posts…" : "Load more posts"}
-                </Button>
-              ) : null}
-            </section>
-          </>
-        ) : null}
-        <Dialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Leave community</DialogTitle>
-              <DialogDescription>
+                      ) : null}
+                    </PageCardContent>
+                  </PageCard>
+                ))}
+                {!postId && (postsPage > 1 || postsNextCursor) ? (
+                  <nav
+                    className="flex items-center justify-center gap-3 pt-2"
+                    aria-label="Discussion pages"
+                  >
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={postsPage <= 1 || loadingMorePosts}
+                      onClick={loadPreviousPosts}
+                    >
+                      <ChevronLeft className="size-4" /> Previous
+                    </Button>
+                    <LearnerText2 component="span" className="tabular-nums">
+                      {postsPage}
+                    </LearnerText2>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      aria-label="Load more posts"
+                      disabled={!postsNextCursor || loadingMorePosts}
+                      onClick={() => void loadMorePosts()}
+                    >
+                      Next <ChevronRight className="size-4" />
+                    </Button>
+                    <LearnerText2 component="span" className="text-muted-foreground">
+                      of {totalPostPages}
+                    </LearnerText2>
+                  </nav>
+                ) : null}
+              </section>
+            </div>
+          ) : null}
+        </div>
+        <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Leave community</AlertDialogTitle>
+              <AlertDialogDescription>
                 You’ll lose access to this community’s content, discussions, and
                 included products. Any ongoing subscription will also be canceled.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setLeaveDialogOpen(false)}
-              >
-                Cancel
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <Button asChild variant="outline">
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
               </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                disabled={leaving}
-                onClick={() => {
-                  setLeaveDialogOpen(false);
-                  void leave();
-                }}
-              >
-                {leaving ? "Leaving…" : "Leave community"}
+              <Button asChild variant="destructive" disabled={leaving}>
+                <AlertDialogAction
+                  onClick={() => {
+                    setLeaveDialogOpen(false);
+                    void leave();
+                  }}
+                >
+                  {leaving ? "Leaving…" : "Leave community"}
+                </AlertDialogAction>
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        <Dialog
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        <AlertDialog
           open={Boolean(deleteTarget)}
           onOpenChange={(open) => {
             if (!open) setDeleteTarget(null);
           }}
         >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
                 Delete {deleteTarget?.kind === "comment" ? "comment" : "post"}
-              </DialogTitle>
-              <DialogDescription>
+              </AlertDialogTitle>
+              <AlertDialogDescription>
                 This action cannot be undone. The content and its media references will
-                be removed from the community feed.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setDeleteTarget(null)}
-              >
-                Cancel
+                be removed from the feed.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <Button asChild variant="outline">
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
               </Button>
-              <Button type="button" variant="destructive" onClick={confirmDelete}>
-                Delete
+              <Button asChild variant="destructive">
+                <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <Dialog
           open={joinDialogOpen}
           onOpenChange={(open) => {

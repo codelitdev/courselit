@@ -76,9 +76,9 @@ function ProductCard({
     <FeaturedCard
       href={`/products/${product.id}`}
       imageUrl={
-        product.featuredMedia?.thumbnailUrl ?? product.featuredMedia?.canonicalUrl
+        product.featuredImage?.thumbnailUrl ?? product.featuredImage?.url
       }
-      imageAlt={product.featuredMedia?.altText || product.title}
+      imageAlt={product.featuredImage?.alt || product.title}
       title={product.title}
     >
       <div className="mt-3 flex items-center justify-between gap-2">

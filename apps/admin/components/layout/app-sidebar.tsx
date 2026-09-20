@@ -7,6 +7,7 @@ import {
   LibraryBig,
   LifeBuoy,
   Mail,
+  Hash,
   MessageCircleHeart,
   Settings,
   Target,
@@ -39,9 +40,15 @@ const CREATE_NAV: PermissionedNavItem[] = [
     requiredPermission: "products:read",
   },
   {
-    href: "/communities",
-    label: "Communities",
+    href: "/community",
+    label: "Community",
     icon: MessageCircleHeart,
+    requiredPermission: "communities:read",
+  },
+  {
+    href: "/spaces",
+    label: "Spaces",
+    icon: Hash,
     requiredPermission: "communities:read",
   },
   {
@@ -52,17 +59,17 @@ const CREATE_NAV: PermissionedNavItem[] = [
       {
         href: "/website/pages",
         label: "Pages",
-        requiredPermission: "school:admin",
+        requiredPermission: "storefront:read",
       },
       {
         href: "/website/blogs",
         label: "Blogs",
-        requiredPermission: "school:admin",
+        requiredPermission: "storefront:read",
       },
       {
         href: "/website/settings",
         label: "Settings",
-        requiredPermission: "school:admin",
+        requiredPermission: "storefront:read",
       },
     ],
   },
@@ -115,6 +122,11 @@ const SECONDARY_NAV: PermissionedNavItem[] = [
     icon: Settings,
     items: [
       {
+        href: "/settings?tab=payment",
+        label: "Payments",
+        requiredPermission: "commerce:read",
+      },
+      {
         href: "/settings?tab=team",
         label: "Team",
         requiredPermission: "members:read",
@@ -122,7 +134,7 @@ const SECONDARY_NAV: PermissionedNavItem[] = [
       {
         href: "/settings?tab=api-keys",
         label: "API keys",
-        requiredPermission: "school:admin",
+        requiredPermission: "api_keys:read",
       },
     ],
   },

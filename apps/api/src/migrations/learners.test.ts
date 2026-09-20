@@ -21,7 +21,7 @@ describe.serial("legacy learner migration", () => {
         _id: "legacy-learner-1",
         domain: "legacy-domain-learners",
         email: "Learner@Example.com",
-        name: "Imported Learner",
+        displayName: "Imported Learner",
         createdAt: "2025-01-01T00:00:00.000Z",
         updatedAt: "2025-02-01T00:00:00.000Z",
       },
@@ -36,8 +36,8 @@ describe.serial("legacy learner migration", () => {
     expect(
       await runtime.db
         .select()
-        .from(schema.learners)
-        .where(eq(schema.learners.publicId, "legacy-learner-1")),
+        .from(schema.schoolAccounts)
+        .where(eq(schema.schoolAccounts.publicId, "legacy-learner-1")),
     ).toHaveLength(0);
 
     const applied = await importLegacyLearners(runtime.db, {
@@ -49,15 +49,15 @@ describe.serial("legacy learner migration", () => {
     const learner = (
       await runtime.db
         .select()
-        .from(schema.learners)
-        .where(eq(schema.learners.publicId, "legacy-learner-1"))
+        .from(schema.schoolAccounts)
+        .where(eq(schema.schoolAccounts.publicId, "legacy-learner-1"))
     )[0]!;
-    expect(learner).toMatchObject({ email: "learner@example.com", name: "Imported Learner", status: "active" });
+    expect(learner).toMatchObject({ email: "learner@example.com", displayName: "Imported Learner", status: "active" });
     expect(
       await runtime.db
         .select()
-        .from(schema.learnerSessions)
-        .where(eq(schema.learnerSessions.learnerId, learner.id)),
+        .from(schema.schoolSessions)
+        .where(eq(schema.schoolSessions.schoolAccountId, learner.id)),
     ).toHaveLength(0);
 
     const second = await importLegacyLearners(runtime.db, {
@@ -101,8 +101,8 @@ describe.serial("legacy learner migration", () => {
     expect(
       await runtime.db
         .select()
-        .from(schema.learners)
-        .where(and(eq(schema.learners.schoolId, schools[0]!.id), eq(schema.learners.email, "duplicate@example.com"))),
+        .from(schema.schoolAccounts)
+        .where(and(eq(schema.schoolAccounts.schoolId, schools[0]!.id), eq(schema.schoolAccounts.email, "duplicate@example.com"))),
     ).toHaveLength(1);
     await runtime.close();
   });

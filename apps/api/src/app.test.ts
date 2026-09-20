@@ -439,7 +439,7 @@ describe.serial("reference API adapters", () => {
         principalId: world.owner.id,
         tenantId: world.schoolA.id,
         credential: { kind: "session", credentialId: "sess_owner" },
-        permissions: new Set(["school:admin"]),
+        permissions: new Set(["members:manage"]),
       },
       world.owner.id,
       clock,
@@ -447,7 +447,7 @@ describe.serial("reference API adapters", () => {
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("expected failure");
     expect(result.error.code).toBe("conflict");
-    expect(result.error.safeDetails).toEqual({ reason: "last_owner" });
+    expect(result.error.safeDetails).toEqual({ reason: "owner_cannot_be_removed" });
     await runtime.close();
   });
 
@@ -621,6 +621,58 @@ describe.serial("reference API adapters", () => {
       title: "Certificate of completion",
     });
     await new Promise<void>((resolve) => server.close(() => resolve()));
+    await runtime.close();
+  });
+
+  it("serves Unsplash search through the Express adapter", async () => {
+    const queries: Array<string | undefined> = [];
+    const runtime = await createPgliteRuntime({
+      clock: freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z")),
+      unsplash: {
+        search: async (query) => {
+          queries.push(query);
+          return {
+            configured: true,
+            items: [
+              {
+                id: "photo_1",
+                url: "https://images.unsplash.com/photo_1",
+                thumbUrl: "https://images.unsplash.com/photo_1?w=200",
+                alt: "A course workspace",
+                photographer: "CourseLit Test",
+              },
+            ],
+          };
+        },
+      },
+    });
+    const world = await seedWorld(runtime, runtime.clock);
+    const app = createExpressApp(runtime);
+    const server = await new Promise<ReturnType<typeof app.listen>>((resolve) => {
+      const listening = app.listen(0, () => resolve(listening));
+    });
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("listen_failed");
+
+    const response = await fetch(
+      `http://127.0.0.1:${address.port}/v1/media/unsplash?q=workspace`,
+      {
+        headers: {
+          cookie: world.owner.sessionCookie,
+          "x-school-id": world.schoolA.publicId,
+        },
+      },
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      configured: true,
+      items: [{ id: "photo_1", photographer: "CourseLit Test" }],
+    });
+    expect(queries).toEqual(["workspace"]);
+
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()));
+    });
     await runtime.close();
   });
 

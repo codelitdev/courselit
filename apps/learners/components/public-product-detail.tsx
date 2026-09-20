@@ -1,6 +1,7 @@
 "use client";
 
 import type { ThemeStyle } from "@frontlit/page-builder/models";
+import type { MediaRef } from "@courselit/api-contract";
 import { Caption, Header1, Text2 } from "@frontlit/page-builder/primitives";
 import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
 import Link from "next/link";
@@ -21,11 +22,7 @@ type PublicProduct = {
   title: string;
   description: string;
   enrolled: boolean;
-  featuredMedia: {
-    canonicalUrl: string;
-    thumbnailUrl: string | null;
-    altText: string;
-  } | null;
+  featuredImage: MediaRef | null;
   sections: Array<{ id: string; title: string }>;
   lessons: Array<{
     id: string;
@@ -129,13 +126,11 @@ export function PublicProductDetail({ productId }: { productId: string }) {
     <div className="flex flex-col gap-16">
       <section id="checkout" className="scroll-mt-24">
         <div className="grid items-center gap-10 md:grid-cols-2">
-          {product.featuredMedia ? (
+          {product.featuredImage ? (
             <LearnerCardImage
               theme={theme}
-              src={
-                product.featuredMedia.thumbnailUrl ?? product.featuredMedia.canonicalUrl
-              }
-              alt={product.featuredMedia.altText || product.title}
+              src={product.featuredImage.thumbnailUrl ?? product.featuredImage.url}
+              alt={product.featuredImage.alt || product.title}
               className="aspect-[4/3] w-full border object-cover"
             />
           ) : (

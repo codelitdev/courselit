@@ -7,6 +7,8 @@ import { PublicProductsCatalog } from "@/components/public-products-catalog";
 import { SitePageRenderer, SitePageSection } from "@/components/site-page-renderer";
 import {
   getPageBySlug,
+  getPublicCommunity,
+  getPublicCommunityPlans,
   getPublicProductDetail,
   getPublicProductPlans,
   getSettings,
@@ -19,6 +21,7 @@ export type PublicSystemRoute =
   | "products"
   | "communities"
   | "community"
+  | "join"
   | "product"
   | "lesson"
   | "checkout"
@@ -27,9 +30,42 @@ export type PublicSystemRoute =
 export function publicSystemRouteForSlug(
   pageSlug: string,
 ): PublicSystemRoute | undefined {
-  return pageSlug === "blog" || pageSlug === "products" || pageSlug === "communities"
+  return pageSlug === "blog" ||
+    pageSlug === "products" ||
+    pageSlug === "communities" ||
+    pageSlug === "join"
     ? pageSlug
     : undefined;
+}
+
+function defaultChromeWidget(name: "header" | "footer"): WidgetInstance {
+  return {
+    widgetId: `join-${name}`,
+    name,
+    deletable: false,
+    moveable: false,
+    shared: true,
+    settings: {},
+  };
+}
+
+function composeJoinLayout(chrome: WidgetInstance[]): WidgetInstance[] {
+  const header =
+    chrome.find((instance) => instance.name === "header") ?? defaultChromeWidget("header");
+  const footer =
+    chrome.find((instance) => instance.name === "footer") ?? defaultChromeWidget("footer");
+  return [
+    header,
+    {
+      widgetId: "join-community",
+      name: "courselit-community",
+      deletable: false,
+      moveable: false,
+      shared: false,
+      settings: { textPosition: "left", textAlignment: "left" },
+    },
+    footer,
+  ];
 }
 
 export async function loadPublicPage(pageSlug: string) {
@@ -55,7 +91,9 @@ export async function PublicSitePage({
    * requiring a persisted FrontLit page. */
   systemRoute?: PublicSystemRoute;
   systemContent?: React.ReactNode;
-  salesResource?: { resourceType: "product"; resourceId: string };
+  salesResource?:
+    | { resourceType: "product"; resourceId: string }
+    | { resourceType: "community"; resourceId: string };
 }) {
   const isSalesPage = Boolean(salesPageSlug);
   const { host, page } = await loadPublicPage(
@@ -69,30 +107,67 @@ export async function PublicSitePage({
 
   const siteLogoUrl =
     typeof settings?.logo?.url === "string" ? settings.logo.url : null;
-  const siteLogoAlt =
-    typeof settings?.logo?.alt === "string"
-      ? settings.logo.alt
-      : typeof settings?.logo?.caption === "string"
-        ? settings.logo.caption
-        : null;
+  const siteLogoAlt = settings?.logo?.alt ?? null;
 
   const salesProduct =
     salesResource?.resourceType === "product"
       ? await getPublicProductDetail(host, salesResource.resourceId)
       : null;
+  const salesCommunity =
+    salesResource?.resourceType === "community"
+      ? await getPublicCommunity(host, salesResource.resourceId)
+      : null;
   const salesPlans =
-    salesProduct && salesResource
+    salesProduct && salesResource?.resourceType === "product"
       ? await getPublicProductPlans(host, salesResource.resourceId)
-      : [];
+      : salesCommunity && salesResource?.resourceType === "community"
+        ? await getPublicCommunityPlans(host, salesResource.resourceId)
+        : [];
+  const siteCommunity =
+    salesCommunity ??
+    (salesProduct?.includedWithCommunity ||
+    systemRoute === "join" ||
+    pageSlug === "join"
+      ? await getPublicCommunity(host, "community")
+      : pageSlug && systemRoute !== "products" && systemRoute !== "blog"
+        ? await getPublicCommunity(host, "community")
+        : null);
+  if (systemRoute === "join" && !siteCommunity) notFound();
+  const siteCommunityPlans = siteCommunity
+    ? await getPublicCommunityPlans(host, siteCommunity.id)
+    : [];
 
   const pageData: PageData = {
     pageType: "site",
     pageSlug,
-    ...(salesProduct && salesResource
+    ...(salesProduct && salesResource?.resourceType === "product"
       ? {
           courseLitSalesData: {
-            resourceType: salesResource.resourceType,
-            product: { ...salesProduct, plans: salesPlans },
+            resourceType: "product" as const,
+            product: {
+              ...salesProduct,
+              plans: salesPlans,
+              includedWithCommunity: salesProduct.includedWithCommunity,
+              community:
+                salesProduct.includedWithCommunity && siteCommunity
+                  ? { id: siteCommunity.id, plans: siteCommunityPlans }
+                  : null,
+            },
+          },
+        }
+      : {}),
+    ...((salesCommunity && salesResource?.resourceType === "community") ||
+    (!salesProduct && siteCommunity)
+      ? {
+          courseLitSalesData: {
+            resourceType: "community" as const,
+            community: {
+              ...(salesCommunity ?? siteCommunity)!,
+              plans:
+                salesCommunity && salesResource?.resourceType === "community"
+                  ? salesPlans
+                  : siteCommunityPlans,
+            },
           },
         }
       : {}),
@@ -101,7 +176,7 @@ export async function PublicSitePage({
     settings?.title?.trim() && settings.title.trim().toLowerCase() !== "frontlit"
       ? settings.title.trim()
       : "CourseLit";
-  const baseLayout: WidgetInstance[] =
+  const chromeLayout: WidgetInstance[] =
     systemRoute && !isSalesPage
       ? (resolvedPage?.layout ?? []).filter(
           (instance) => instance.name === "header" || instance.name === "footer",
@@ -111,7 +186,45 @@ export async function PublicSitePage({
             (instance) => instance.name === "header" || instance.name === "footer",
           )
         : (resolvedPage?.layout ?? []);
-  const brandedLayout = baseLayout.map((instance) => {
+  const baseLayout: WidgetInstance[] =
+    systemRoute === "join" ? composeJoinLayout(chromeLayout) : chromeLayout;
+  const renderLayout = baseLayout.map((instance) => {
+    const isLegacySalesSlot =
+      instance.name === "data-slot" &&
+      instance.settings?.slot === "courselit.sales-page-content";
+    const isLegacySalesBanner = [
+      "banner",
+      "courselit-banner",
+      "courselit-product-banner",
+      "courselit-community-banner",
+    ].includes(instance.name);
+    if (salesResource && (isLegacySalesSlot || isLegacySalesBanner)) {
+      const legacyTextPosition = instance.settings?.alignment;
+      const legacyTextAlignment = instance.settings?.textAlignment;
+      return {
+        ...instance,
+        name:
+          salesResource.resourceType === "community"
+            ? "courselit-community"
+            : "courselit-product",
+        settings: {
+          ...instance.settings,
+          textPosition:
+            typeof legacyTextPosition === "string" &&
+            ["left", "right", "top", "bottom"].includes(legacyTextPosition)
+              ? legacyTextPosition
+              : "left",
+          textAlignment:
+            typeof legacyTextAlignment === "string" &&
+            ["left", "center", "right"].includes(legacyTextAlignment)
+              ? legacyTextAlignment
+              : "left",
+        },
+      };
+    }
+    return instance;
+  });
+  const brandedLayout = renderLayout.map((instance) => {
     if (instance.name !== "header" && instance.name !== "footer") return instance;
     const currentSettings = instance.settings ?? {};
     const logoText = currentSettings.logoText;
@@ -189,7 +302,7 @@ export async function PublicSitePage({
       pageData={resolvedPageData}
       dataSlots={dataSlots}
     >
-      {systemRoute && (!isSalesPage || !page) ? (
+      {systemRoute && systemRoute !== "join" && (!isSalesPage || !page) ? (
         <SitePageSection>{systemContent}</SitePageSection>
       ) : undefined}
     </SitePageRenderer>

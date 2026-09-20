@@ -1,8 +1,9 @@
+import type { MediaRef } from "@courselit/api-contract";
 import { sql } from "drizzle-orm";
 import {
   boolean,
-  check,
   index,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -10,8 +11,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth.generated.js";
-import { learners } from "./catalog.js";
-import { schools } from "./schools.js";
+import { schoolAccounts, schools } from "./schools.js";
 
 export const communities = pgTable(
   "communities",
@@ -27,8 +27,8 @@ export const communities = pgTable(
     slug: text("slug").notNull(),
     description: text("description").notNull().default(""),
     banner: text("banner").notNull().default(""),
+    featuredImage: jsonb("featured_image").$type<MediaRef | null>(),
     categories: text("categories").notNull().default('["General"]'),
-    enabled: boolean("enabled").notNull().default(false),
     autoAcceptMembers: boolean("auto_accept_members").notNull().default(true),
     joiningReasonText: text("joining_reason_text").notNull().default(""),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
@@ -43,6 +43,9 @@ export const communities = pgTable(
       table.schoolId,
       table.slug,
     ),
+    schoolSingleton: uniqueIndex("communities_school_uidx")
+      .on(table.schoolId)
+      .where(sql`${table.deletedAt} is null`),
   }),
 );
 
@@ -60,12 +63,9 @@ export const communityMemberships = pgTable(
     // Kept nullable for legacy/free memberships and populated when a learner
     // joins through a selected community payment plan.
     paymentPlanId: uuid("payment_plan_id"),
-    learnerId: uuid("learner_id").references(() => learners.id, {
-      onDelete: "cascade",
-    }),
-    adminUserId: text("admin_user_id").references(() => user.id, {
-      onDelete: "cascade",
-    }),
+    schoolAccountId: uuid("school_account_id")
+      .notNull()
+      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
     status: text("status")
       .$type<
         "active" | "payment_failed" | "expired" | "pending" | "rejected" | "paused"
@@ -82,12 +82,10 @@ export const communityMemberships = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
-    learner: uniqueIndex("community_memberships_community_learner_uidx")
-      .on(table.communityId, table.learnerId)
-      .where(sql`${table.learnerId} IS NOT NULL`),
-    admin: uniqueIndex("community_memberships_community_admin_uidx")
-      .on(table.communityId, table.adminUserId)
-      .where(sql`${table.adminUserId} IS NOT NULL`),
+    communitySchoolAccount: uniqueIndex("community_memberships_community_account_uidx").on(
+      table.communityId,
+      table.schoolAccountId,
+    ),
   }),
 );
 
@@ -102,15 +100,13 @@ export const communityPosts = pgTable(
     communityId: uuid("community_id")
       .notNull()
       .references(() => communities.id, { onDelete: "cascade" }),
-    learnerId: uuid("learner_id").references(() => learners.id, {
-      onDelete: "set null",
-    }),
-    adminUserId: text("admin_user_id").references(() => user.id, {
+    schoolAccountId: uuid("school_account_id").references(() => schoolAccounts.id, {
       onDelete: "set null",
     }),
     title: text("title").notNull(),
     content: text("content").notNull().default(""),
     category: text("category").notNull().default("General"),
+    spaceId: uuid("space_id"),
     pinned: boolean("pinned").notNull().default(false),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
@@ -128,15 +124,11 @@ export const communityPosts = pgTable(
       table.createdAt,
       table.id,
     ),
-    learnerFeed: index("community_posts_learner_feed_idx").on(
+    accountFeed: index("community_posts_account_feed_idx").on(
       table.schoolId,
       table.updatedAt,
       table.createdAt,
       table.id,
-    ),
-    oneAuthor: check(
-      "community_posts_one_author_check",
-      sql`((learner_id IS NOT NULL)::int + (admin_user_id IS NOT NULL)::int) = 1`,
     ),
   }),
 );
@@ -156,10 +148,7 @@ export const communityComments = pgTable(
       .notNull()
       .references(() => communityPosts.id, { onDelete: "cascade" }),
     parentCommentId: uuid("parent_comment_id"),
-    learnerId: uuid("learner_id").references(() => learners.id, {
-      onDelete: "set null",
-    }),
-    adminUserId: text("admin_user_id").references(() => user.id, {
+    schoolAccountId: uuid("school_account_id").references(() => schoolAccounts.id, {
       onDelete: "set null",
     }),
     content: text("content").notNull(),
@@ -172,10 +161,6 @@ export const communityComments = pgTable(
       table.postId,
       table.createdAt,
       table.id,
-    ),
-    oneAuthor: check(
-      "community_comments_one_author_check",
-      sql`((learner_id IS NOT NULL)::int + (admin_user_id IS NOT NULL)::int) = 1`,
     ),
   }),
 );
@@ -194,35 +179,17 @@ export const communityReactions = pgTable(
     entityType: text("entity_type").$type<"post" | "comment" | "reply">().notNull(),
     entityId: uuid("entity_id").notNull(),
     emoji: text("emoji").notNull(),
-    learnerId: uuid("learner_id").references(() => learners.id, {
-      onDelete: "cascade",
-    }),
-    adminUserId: text("admin_user_id").references(() => user.id, {
-      onDelete: "cascade",
-    }),
+    schoolAccountId: uuid("school_account_id")
+      .notNull()
+      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
   },
   (table) => ({
-    learner: uniqueIndex("community_reactions_learner_uidx")
-      .on(
-        table.communityId,
-        table.entityType,
-        table.entityId,
-        table.emoji,
-        table.learnerId,
-      )
-      .where(sql`${table.learnerId} IS NOT NULL`),
-    admin: uniqueIndex("community_reactions_admin_uidx")
-      .on(
-        table.communityId,
-        table.entityType,
-        table.entityId,
-        table.emoji,
-        table.adminUserId,
-      )
-      .where(sql`${table.adminUserId} IS NOT NULL`),
-    oneIdentity: check(
-      "community_reactions_one_identity_check",
-      sql`((learner_id IS NOT NULL)::int + (admin_user_id IS NOT NULL)::int) = 1`,
+    accountReaction: uniqueIndex("community_reactions_account_uidx").on(
+      table.communityId,
+      table.entityType,
+      table.entityId,
+      table.emoji,
+      table.schoolAccountId,
     ),
   }),
 );
@@ -240,23 +207,14 @@ export const communityPostSubscribers = pgTable(
     postId: uuid("post_id")
       .notNull()
       .references(() => communityPosts.id, { onDelete: "cascade" }),
-    learnerId: uuid("learner_id").references(() => learners.id, {
-      onDelete: "cascade",
-    }),
-    adminUserId: text("admin_user_id").references(() => user.id, {
-      onDelete: "cascade",
-    }),
+    schoolAccountId: uuid("school_account_id")
+      .notNull()
+      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
   },
   (table) => ({
-    learner: uniqueIndex("community_subscribers_learner_uidx")
-      .on(table.postId, table.learnerId)
-      .where(sql`${table.learnerId} IS NOT NULL`),
-    admin: uniqueIndex("community_subscribers_admin_uidx")
-      .on(table.postId, table.adminUserId)
-      .where(sql`${table.adminUserId} IS NOT NULL`),
-    oneIdentity: check(
-      "community_subscribers_one_identity_check",
-      sql`((learner_id IS NOT NULL)::int + (admin_user_id IS NOT NULL)::int) = 1`,
+    accountSubscriber: uniqueIndex("community_subscribers_account_uidx").on(
+      table.postId,
+      table.schoolAccountId,
     ),
   }),
 );
@@ -275,12 +233,9 @@ export const communityReports = pgTable(
     contentType: text("content_type").$type<"post" | "comment" | "reply">().notNull(),
     contentId: uuid("content_id").notNull(),
     contentParentId: uuid("content_parent_id"),
-    learnerId: uuid("learner_id").references(() => learners.id, {
-      onDelete: "cascade",
-    }),
-    adminUserId: text("admin_user_id").references(() => user.id, {
-      onDelete: "cascade",
-    }),
+    schoolAccountId: uuid("school_account_id")
+      .notNull()
+      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
     reason: text("reason").notNull(),
     status: text("status")
       .$type<"pending" | "accepted" | "rejected">()
@@ -291,15 +246,11 @@ export const communityReports = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
-    learner: uniqueIndex("community_reports_learner_uidx")
-      .on(table.communityId, table.contentType, table.contentId, table.learnerId)
-      .where(sql`${table.learnerId} IS NOT NULL`),
-    admin: uniqueIndex("community_reports_admin_uidx")
-      .on(table.communityId, table.contentType, table.contentId, table.adminUserId)
-      .where(sql`${table.adminUserId} IS NOT NULL`),
-    oneIdentity: check(
-      "community_reports_one_identity_check",
-      sql`((learner_id IS NOT NULL)::int + (admin_user_id IS NOT NULL)::int) = 1`,
+    accountReport: uniqueIndex("community_reports_account_uidx").on(
+      table.communityId,
+      table.contentType,
+      table.contentId,
+      table.schoolAccountId,
     ),
   }),
 );

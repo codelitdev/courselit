@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LearnerText2 } from "@/components/themed-page-builder";
-import { learnerHeaders, writeSchoolId } from "@/lib/school";
+import { clearLearnerIdentityLink, learnerHeaders, writeSchoolId } from "@/lib/school";
 
 function isCoursePreviewPath(pathname: string) {
   return pathname.startsWith("/dashboard/courses/");
@@ -45,6 +45,7 @@ export function LoggedInRoute({ children }: { children: React.ReactNode }) {
         }
         const body = (await response.json()) as { schoolId?: string };
         if (body.schoolId) writeSchoolId(body.schoolId);
+        clearLearnerIdentityLink();
       })
       .catch(() => {
         if (!active) return;

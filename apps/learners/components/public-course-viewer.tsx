@@ -1,8 +1,10 @@
 "use client";
 
+import type { MediaRef } from "@courselit/api-contract";
 import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
 import { ArrowLeft, ArrowRight, Check, LockKeyhole } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { CourseDiscussions } from "@/components/course-discussions";
 import {
@@ -11,6 +13,8 @@ import {
 } from "@/components/layout/course-viewer-shell";
 import {
   type CourseViewerProduct,
+  courseViewerEntryPointFromParam,
+  courseViewerExitHref,
   courseViewerHref,
 } from "@/components/layout/course-viewer-sidebar";
 import {
@@ -28,6 +32,10 @@ import {
   LearnerHeader2,
   LearnerHeader4,
   LearnerSelect,
+  LearnerSelectContent,
+  LearnerSelectItem,
+  LearnerSelectTrigger,
+  LearnerSelectValue,
   LearnerText2,
 } from "@/components/themed-page-builder";
 import { learnerHeaders, writeSchoolId } from "@/lib/school";
@@ -60,12 +68,7 @@ type Product = CourseViewerProduct & {
   status: "draft" | "published";
   leadMagnet: boolean;
   certificate: boolean;
-  featuredMedia: {
-    canonicalUrl: string;
-    thumbnailUrl: string | null;
-    fileName: string;
-    altText: string;
-  } | null;
+  featuredImage: MediaRef | null;
   plans: Plan[];
 };
 
@@ -130,13 +133,20 @@ function AccessActions({
   productId,
   plans,
   onError,
+  selectedPlanId: controlledSelectedPlanId,
+  onSelectedPlanIdChange,
 }: {
   productId: string;
   plans: Plan[];
   onError: (message: string) => void;
+  selectedPlanId?: string | null;
+  onSelectedPlanIdChange?: (planId: string) => void;
 }) {
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [internalSelectedPlanId, setInternalSelectedPlanId] = useState<string | null>(
+    null,
+  );
   const [busyPlanId, setBusyPlanId] = useState<string | null>(null);
+  const selectedPlanId = controlledSelectedPlanId ?? internalSelectedPlanId;
   const selectedPlan =
     plans.find((plan) => plan.id === selectedPlanId) ??
     plans.find((plan) => plan.isDefault) ??
@@ -190,13 +200,21 @@ function AccessActions({
         <LearnerSelect
           aria-label="Choose an access plan"
           value={selectedPlan.id}
-          onChange={(event) => setSelectedPlanId(event.currentTarget.value)}
+          onValueChange={(planId) => {
+            onSelectedPlanIdChange?.(planId);
+            if (!onSelectedPlanIdChange) setInternalSelectedPlanId(planId);
+          }}
         >
-          {plans.map((plan) => (
-            <option key={plan.id} value={plan.id}>
-              {plan.name} · {formatPlan(plan)}
-            </option>
-          ))}
+          <LearnerSelectTrigger>
+            <LearnerSelectValue placeholder="Choose an access plan" />
+          </LearnerSelectTrigger>
+          <LearnerSelectContent>
+            {plans.map((plan) => (
+              <LearnerSelectItem key={plan.id} value={plan.id}>
+                {plan.name} · {formatPlan(plan)}
+              </LearnerSelectItem>
+            ))}
+          </LearnerSelectContent>
         </LearnerSelect>
       ) : null}
       <Button
@@ -223,9 +241,14 @@ function CourseOverview({
   actionError: string | null;
   onError: (message: string) => void;
 }) {
+  const searchParams = useSearchParams();
+  const entryPoint = courseViewerEntryPointFromParam(searchParams.get("from"));
   const firstLesson = product.lessons.find(hasLessonContent);
   const description = parseProductDescription(product.description);
   const defaultPlan = product.plans.find((plan) => plan.isDefault) ?? product.plans[0];
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const selectedPlan =
+    product.plans.find((plan) => plan.id === selectedPlanId) ?? defaultPlan;
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-8">
@@ -236,23 +259,25 @@ function CourseOverview({
       {!product.enrolled && !previewToken ? (
         <div className="flex flex-wrap items-center justify-between gap-4">
           {defaultPlan ? (
-            <LearnerHeader4>{formatPlanAmount(defaultPlan)}</LearnerHeader4>
+            <LearnerHeader4>
+              {selectedPlan ? formatPlan(selectedPlan) : null}
+            </LearnerHeader4>
           ) : null}
           <AccessActions
             productId={product.id}
             plans={product.plans}
             onError={onError}
+            selectedPlanId={selectedPlanId}
+            onSelectedPlanIdChange={setSelectedPlanId}
           />
         </div>
       ) : null}
 
-      {product.featuredMedia ? (
+      {product.featuredImage ? (
         <div className="flex justify-center">
           <LearnerCardImage
-            src={
-              product.featuredMedia.thumbnailUrl ?? product.featuredMedia.canonicalUrl
-            }
-            alt={product.featuredMedia.altText || product.title}
+            src={product.featuredImage.thumbnailUrl ?? product.featuredImage.url}
+            alt={product.featuredImage.alt || product.title}
             loading="eager"
             sizes="(max-width: 768px) 100vw, 768px"
             className="max-h-[32rem] object-contain"
@@ -265,11 +290,13 @@ function CourseOverview({
       {product.enrolled || previewToken ? (
         <div className="flex justify-end">
           <Link
-            href={
+            href={courseViewerHref(
               firstLesson
                 ? courseViewerPath(productSlug, product.id, firstLesson.id)
-                : courseViewerPath(productSlug, product.id)
-            }
+                : courseViewerPath(productSlug, product.id),
+              previewToken,
+              entryPoint,
+            )}
           >
             <Button type="button">
               {firstLesson
@@ -320,6 +347,8 @@ function LessonPage({
   actionError: string | null;
   onError: (message: string) => void;
 }) {
+  const searchParams = useSearchParams();
+  const entryPoint = courseViewerEntryPointFromParam(searchParams.get("from"));
   const hasContent = hasLessonContent(lesson);
   const locked = Boolean(
     !previewToken &&
@@ -341,6 +370,7 @@ function LessonPage({
           href={courseViewerHref(
             courseViewerPath(productSlug, product.id),
             previewToken,
+            entryPoint,
           )}
           className="w-fit text-sm font-semibold text-muted-foreground hover:text-foreground"
         >
@@ -443,6 +473,7 @@ function LessonPage({
               ? courseViewerPath(productSlug, product.id, previousLesson.id)
               : courseViewerPath(productSlug, product.id),
             previewToken,
+            entryPoint,
           )}
         >
           <Button type="button" variant="outline" size="sm">
@@ -458,6 +489,7 @@ function LessonPage({
               ? courseViewerPath(productSlug, product.id, nextLesson.id)
               : courseViewerPath(productSlug, product.id),
             previewToken,
+            entryPoint,
           )}
         >
           <Button type="button" variant="outline" size="sm">
@@ -481,6 +513,8 @@ export function PublicCourseViewer({
   productId: string;
   lessonId?: string;
 }) {
+  const searchParams = useSearchParams();
+  const entryPoint = courseViewerEntryPointFromParam(searchParams.get("from"));
   const [product, setProduct] = useState<Product | null>(null);
   const [learner, setLearner] = useState<Learner | null>(null);
   const [previewToken, setPreviewToken] = useState<string | null>(null);
@@ -647,7 +681,7 @@ export function PublicCourseViewer({
           {error ?? "That course is not available."}
         </LearnerText2>
         <Link
-          href={`/p/${encodeURIComponent(productSlug)}`}
+          href={courseViewerExitHref(productSlug, entryPoint)}
           className="font-medium text-primary hover:underline"
         >
           Back to product
@@ -662,7 +696,11 @@ export function PublicCourseViewer({
           That lesson is not available.
         </LearnerText2>
         <Link
-          href={courseViewerPath(productSlug, product.id)}
+          href={courseViewerHref(
+            courseViewerPath(productSlug, product.id),
+            previewToken,
+            entryPoint,
+          )}
           className="font-medium text-primary hover:underline"
         >
           Back to course
@@ -713,6 +751,8 @@ export function PublicCourseDiscussions({
   productSlug: string;
   productId: string;
 }) {
+  const searchParams = useSearchParams();
+  const entryPoint = courseViewerEntryPointFromParam(searchParams.get("from"));
   const [product, setProduct] = useState<Product | null>(null);
   const [learner, setLearner] = useState<Learner | null>(null);
   const [previewToken, setPreviewToken] = useState<string | null>(null);
@@ -825,7 +865,7 @@ export function PublicCourseDiscussions({
         )}
         {error ? (
           <Link
-            href={`/p/${encodeURIComponent(productSlug)}`}
+            href={courseViewerExitHref(productSlug, entryPoint)}
             className="font-medium text-primary hover:underline"
           >
             Back to product
@@ -883,6 +923,7 @@ export function PublicCourseDiscussions({
               href={courseViewerHref(
                 `${courseViewerPath(productSlug, product.id, item.entityId)}?discussion=open`,
                 previewToken,
+                entryPoint,
               )}
               className="flex items-center justify-between gap-4 rounded-xl border bg-card p-4 hover:bg-muted"
             >

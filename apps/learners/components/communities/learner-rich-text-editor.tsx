@@ -7,8 +7,8 @@ import {
   ImagePickerContextProvider,
   type PickedImage,
 } from "@frontlit/text-editor";
-import { LearnerText2 } from "@/components/themed-page-builder";
 import { useCallback, useRef, useState } from "react";
+import { LearnerText2 } from "@/components/themed-page-builder";
 import {
   type LearnerCommunityMedia,
   useLearnerCommunityMediaUploader,
@@ -21,6 +21,36 @@ const COMMUNITY_TEXT_IMAGE_TYPES = [
   "image/webp",
 ];
 
+type RichTextNode = {
+  [key: string]: unknown;
+  type?: unknown;
+  attrs?: Record<string, unknown>;
+  content?: RichTextNode[];
+};
+
+function annotateOwnedImages(
+  document: Parameters<EditorProps["onChange"]>[0],
+  mediaIdsByUrl: ReadonlyMap<string, string>,
+): Parameters<EditorProps["onChange"]>[0] {
+  const visit = (node: RichTextNode): RichTextNode => {
+    const attrs = node.attrs;
+    const src = typeof attrs?.src === "string" ? attrs.src : null;
+    const mediaId = src ? mediaIdsByUrl.get(src) : undefined;
+    const nextAttrs =
+      node.type === "image" && mediaId && !attrs?.mediaId
+        ? { ...(attrs ?? {}), mediaId }
+        : attrs;
+    const nextContent = node.content?.map(visit);
+    return {
+      ...node,
+      ...(nextAttrs ? { attrs: nextAttrs } : {}),
+      ...(nextContent ? { content: nextContent } : {}),
+    };
+  };
+
+  return visit(document as RichTextNode) as Parameters<EditorProps["onChange"]>[0];
+}
+
 type LearnerRichTextEditorProps = Omit<EditorProps, "onError"> & {
   onError?: EditorProps["onError"];
 };
@@ -32,6 +62,7 @@ export function LearnerRichTextEditor({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pendingPicker = useRef<((image: PickedImage | null) => void) | null>(null);
+  const selectedMediaByUrl = useRef(new Map<string, string>());
   const adapters = useLearnerCommunityMediaUploader();
 
   const filteredAdapters = {
@@ -64,8 +95,11 @@ export function LearnerRichTextEditor({
       resolve?.(null);
       return;
     }
+    if (selected.media) {
+      selectedMediaByUrl.current.set(selected.media.url, selected.media.id);
+    }
     setError(null);
-    resolve?.({ src: selected.src, alt: selected.alt });
+    resolve?.({ src: selected.media?.url ?? selected.src, alt: selected.alt });
   }
 
   function closePicker(open: boolean) {
@@ -82,10 +116,14 @@ export function LearnerRichTextEditor({
     onError?.(message);
   }
 
+  function handleChange(document: Parameters<EditorProps["onChange"]>[0]) {
+    editorProps.onChange(annotateOwnedImages(document, selectedMediaByUrl.current));
+  }
+
   return (
     <div className="space-y-2">
       <ImagePickerContextProvider pickImage={pickImage}>
-        <Editor {...editorProps} onError={handleError} />
+        <Editor {...editorProps} onChange={handleChange} onError={handleError} />
       </ImagePickerContextProvider>
       <ImageUploadDialog<LearnerCommunityMedia>
         {...filteredAdapters}

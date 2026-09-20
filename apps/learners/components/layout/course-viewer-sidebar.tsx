@@ -13,9 +13,9 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
-import { CourseLitLogo } from "@/components/layout/courselit-logo";
-import { LearnerText2 } from "@/components/themed-page-builder";
+import { LearnerSchoolLogo } from "@/components/layout/learner-school-logo";
 import type { LearnerLesson } from "@/components/lesson-viewer";
+import { LearnerText2 } from "@/components/themed-page-builder";
 import {
   Collapsible,
   CollapsibleContent,
@@ -57,8 +57,33 @@ export type CourseViewerProduct = {
   lessons: LearnerLesson[];
 };
 
-export function courseViewerHref(path: string, previewToken: string | null) {
-  return previewToken ? `${path}#preview=${encodeURIComponent(previewToken)}` : path;
+export type CourseViewerEntryPoint = "product" | "dashboard";
+
+export function courseViewerEntryPointFromParam(value: string | null) {
+  return value === "dashboard" ? "dashboard" : "product";
+}
+
+export function courseViewerExitHref(
+  productSlug: string,
+  entryPoint: CourseViewerEntryPoint,
+) {
+  return entryPoint === "dashboard"
+    ? "/dashboard/products"
+    : `/p/${encodeURIComponent(productSlug)}`;
+}
+
+export function courseViewerHref(
+  path: string,
+  previewToken: string | null,
+  entryPoint?: CourseViewerEntryPoint,
+) {
+  const pathWithEntryPoint =
+    entryPoint === "dashboard"
+      ? `${path}${path.includes("?") ? "&" : "?"}from=dashboard`
+      : path;
+  return previewToken
+    ? `${pathWithEntryPoint}#preview=${encodeURIComponent(previewToken)}`
+    : pathWithEntryPoint;
 }
 
 function isLessonLocked(
@@ -117,6 +142,7 @@ export function CourseViewerSidebar({
   user,
   basePath,
   homeHref = "/dashboard/products",
+  entryPoint,
 }: {
   product: CourseViewerProduct;
   previewToken: string | null;
@@ -124,6 +150,7 @@ export function CourseViewerSidebar({
   user: { email: string; schoolId: string } | null;
   basePath?: string;
   homeHref?: string;
+  entryPoint?: CourseViewerEntryPoint;
 }) {
   const pathname = usePathname();
   const resolvedBasePath =
@@ -148,6 +175,7 @@ export function CourseViewerSidebar({
     const href = courseViewerHref(
       `${resolvedBasePath}/${encodeURIComponent(lesson.id)}`,
       previewToken,
+      entryPoint,
     );
     const active = pathname === `${resolvedBasePath}/${encodeURIComponent(lesson.id)}`;
     return (
@@ -212,7 +240,7 @@ export function CourseViewerSidebar({
             <SidebarMenuButton size="lg" asChild>
               <Link href={homeHref}>
                 <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <CourseLitLogo className="size-8" />
+                  <LearnerSchoolLogo className="size-8 object-contain" />
                 </div>
                 <LearnerText2 component="span" className="truncate font-semibold">
                   {product.title}
@@ -232,7 +260,9 @@ export function CourseViewerSidebar({
                   isActive={pathname === resolvedBasePath}
                   tooltip="About"
                 >
-                  <Link href={courseViewerHref(resolvedBasePath, previewToken)}>
+                  <Link
+                    href={courseViewerHref(resolvedBasePath, previewToken, entryPoint)}
+                  >
                     <BookOpen />
                     <LearnerText2 component="span">About</LearnerText2>
                   </Link>
@@ -249,6 +279,7 @@ export function CourseViewerSidebar({
                       href={courseViewerHref(
                         `${resolvedBasePath}/discussions`,
                         previewToken,
+                        entryPoint,
                       )}
                     >
                       <MessageSquare />

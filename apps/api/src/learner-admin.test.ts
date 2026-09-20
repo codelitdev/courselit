@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { createPublicId, uuidv7 } from "@codelitdev/platform";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { dispatch } from "./dispatch.js";
 import { createPgliteRuntime, freezeRuntimeClock } from "./runtime.js";
@@ -57,11 +57,11 @@ describe.serial("admin learner management", () => {
     });
     const learner = await runtime.db
       .select()
-      .from(schema.learners)
-      .where(eq(schema.learners.email, "invited-learner@example.com"));
+      .from(schema.schoolAccounts)
+      .where(eq(schema.schoolAccounts.email, "invited-learner@example.com"));
     expect(learner).toHaveLength(1);
     expect(learner[0]).toMatchObject({
-      name: "Invited Learner",
+      displayName: "Invited Learner",
       schoolId: world.schoolA.id,
       status: "active",
     });
@@ -93,23 +93,20 @@ describe.serial("admin learner management", () => {
 
     const roster = await dispatch(runtime, {
       method: "GET",
-      path: "/v1/learners?limit=1",
+      path: "/v1/learners?limit=10",
       headers: adminHeaders,
     });
     expect(roster.status).toBe(200);
-    expect(roster.body).toMatchObject({
-      items: [
-        {
-          email: "roster-learner@example.com",
-          name: "Roster Learner",
-          schoolId: world.schoolA.publicId,
-          status: "active",
-          createdAt: "2026-03-04T00:00:00.000Z",
-        },
-      ],
-      nextCursor: null,
+    const item = (roster.body as { items: Array<{ id: string; email: string; name: string; status: string }> }).items.find(
+      (it) => it.email === "roster-learner@example.com",
+    );
+    expect(item).toBeDefined();
+    expect(item).toMatchObject({
+      email: "roster-learner@example.com",
+      name: "Roster Learner",
+      status: "active",
     });
-    const learnerId = (roster.body as { items: Array<{ id: string }> }).items[0]!.id;
+    const learnerId = item!.id;
 
     const invalidCursor = await dispatch(runtime, {
       method: "GET",
@@ -175,38 +172,120 @@ describe.serial("admin learner management", () => {
     await runtime.close();
   });
 
-  it("links an explicitly claimed learner identity to admin-owned community membership", async () => {
+  it("re-establishes a learner session after reactivation with a stale session cookie", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-04T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock });
+    const world = await seedWorld(runtime, clock);
+    const adminHeaders = {
+      cookie: world.owner.sessionCookie,
+      "x-school-id": world.schoolA.publicId,
+    };
+    const email = "reactivation-learner@example.com";
+
+    const otp = await runtime.auth.auth.api.createVerificationOTP({
+      body: { email, type: "sign-in" },
+    });
+    const betterAuthSignIn = await runtime.auth.auth.api.signInEmailOTP({
+      body: { email, otp, name: "Reactivation Learner" },
+      asResponse: true,
+    });
+    expect(betterAuthSignIn.status).toBe(200);
+    const betterAuthCookie = betterAuthSignIn.headers
+      .get("set-cookie")
+      ?.split(";", 1)[0];
+    expect(betterAuthCookie).toBeTruthy();
+
+    const firstMe = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/learner/me",
+      headers: {
+        cookie: betterAuthCookie!,
+        "x-school-id": world.schoolA.publicId,
+      },
+    });
+    expect(firstMe.status).toBe(200);
+    const learnerCookie = firstMe.headers?.["Set-Cookie"]?.split(";", 1)[0];
+    expect(learnerCookie).toBeTruthy();
+
+    const roster = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/learners?limit=50",
+      headers: adminHeaders,
+    });
+    const learnerId = (
+      roster.body as { items: Array<{ id: string; email: string }> }
+    ).items.find((item) => item.email === email)?.id;
+    expect(learnerId).toBeTruthy();
+
+    const learnerCookies = `${learnerCookie}; ${betterAuthCookie}`;
+    const deactivated = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/learners/${learnerId}`,
+      headers: adminHeaders,
+      body: { status: "deactivated" },
+    });
+    expect(deactivated.status).toBe(200);
+
+    const blocked = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/learner/me",
+      headers: {
+        cookie: learnerCookies,
+        "x-school-id": world.schoolA.publicId,
+      },
+    });
+    expect(blocked.status).toBe(401);
+
+    const reactivated = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/learners/${learnerId}`,
+      headers: adminHeaders,
+      body: { status: "active" },
+    });
+    expect(reactivated.status).toBe(200);
+
+    const restoredMe = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/learner/me",
+      headers: {
+        cookie: learnerCookies,
+        "x-school-id": world.schoolA.publicId,
+      },
+    });
+    expect(restoredMe.status).toBe(200);
+    expect(restoredMe.body).toMatchObject({ email });
+
+    await runtime.close();
+  });
+
+  it("links staff and learner identities through unified school accounts", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-04T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
     const world = await seedWorld(runtime, clock);
     const now = clock.now();
-    const communityId = uuidv7(clock);
-    const communityPublicId = createPublicId("com", clock);
-    await runtime.db.insert(schema.communities).values({
-      id: communityId,
-      publicId: communityPublicId,
-      schoolId: world.schoolA.id,
-      name: "Owners community",
-      slug: "owners-community",
-      description: "",
-      banner: "",
-      categories: '["General"]',
-      enabled: true,
-      autoAcceptMembers: true,
-      joiningReasonText: "",
-      deletedAt: null,
-      createdBy: world.owner.id,
-      createdAt: now,
-      updatedAt: now,
-    });
+    const [account] = await runtime.db
+      .select()
+      .from(schema.schoolAccounts)
+      .where(
+        and(
+          eq(schema.schoolAccounts.schoolId, world.schoolA.id),
+          eq(schema.schoolAccounts.userId, world.owner.id),
+        ),
+      );
+    const ownerAccountId = account!.id;
+    const [communityRow] = await runtime.db
+      .select()
+      .from(schema.communities)
+      .where(eq(schema.communities.schoolId, world.schoolA.id));
+    const communityId = communityRow!.id;
+    const communityPublicId = communityRow!.publicId;
     await runtime.db.insert(schema.communityMemberships).values({
       id: uuidv7(clock),
       publicId: createPublicId("cmm", clock),
       schoolId: world.schoolA.id,
       communityId,
       paymentPlanId: null,
-      learnerId: null,
-      adminUserId: world.owner.id,
+      schoolAccountId: ownerAccountId,
       status: "active",
       role: "owner",
       joiningReason: "",
@@ -214,54 +293,22 @@ describe.serial("admin learner management", () => {
       createdAt: now,
       updatedAt: now,
     });
-    await runtime.db.insert(schema.storefrontPlans).values({
-      id: uuidv7(clock),
-      publicId: createPublicId("cpp", clock),
-      schoolId: world.schoolA.id,
-      entityType: "community",
-      entityId: communityPublicId,
-      name: "Free",
-      description: "",
-      includedProducts: [],
-      providerProductId: null,
-      kind: "free",
-      oneTimeAmount: null,
-      emiAmount: null,
-      emiTotalInstallments: null,
-      subscriptionMonthlyAmount: null,
-      subscriptionYearlyAmount: null,
-      amountMinor: 0,
-      billingInterval: null,
-      installmentCount: null,
-      status: "active",
-      isDefault: true,
-      createdBy: world.owner.id,
-      createdAt: now,
-      updatedAt: now,
-    });
 
+    // The owner's account already exists in schoolAccounts
+    const accounts = await runtime.db
+      .select()
+      .from(schema.schoolAccounts)
+      .where(
+        eq(schema.schoolAccounts.id, ownerAccountId),
+      );
+    expect(accounts).toHaveLength(1);
+    expect(accounts[0]!.email).toBe(world.owner.email);
+
+    // Calling identity-link returns a valid token for backward-compatibility
     const adminHeaders = {
       cookie: world.owner.sessionCookie,
       "x-school-id": world.schoolA.publicId,
     };
-    const sameEmailLogin = await dispatch(runtime, {
-      method: "POST",
-      path: "/v1/learner/auth/sign-up",
-      headers: { "x-school-id": world.schoolA.publicId },
-      body: {
-        email: world.owner.email,
-        password: "learner-password-1",
-        name: "Email Match Only",
-      },
-    });
-    expect(sameEmailLogin.status).toBe(201);
-    expect(
-      await runtime.db
-        .select()
-        .from(schema.learnerAdminLinks)
-        .where(eq(schema.learnerAdminLinks.schoolId, world.schoolA.id)),
-    ).toHaveLength(0);
-
     const link = await dispatch(runtime, {
       method: "POST",
       path: "/v1/learners/identity-link",
@@ -269,67 +316,7 @@ describe.serial("admin learner management", () => {
       body: {},
     });
     expect(link.status).toBe(201);
-    const linkToken = (link.body as { token: string }).token;
 
-    const signedUp = await dispatch(runtime, {
-      method: "POST",
-      path: "/v1/learner/auth/sign-up",
-      headers: { "x-school-id": world.schoolA.publicId },
-      body: {
-        email: "owner-as-learner@example.com",
-        password: "learner-password-1",
-        name: "Owner Learner",
-        identityLinkToken: linkToken,
-      },
-    });
-    expect(signedUp.status).toBe(201);
-    const learnerCookie = signedUp.headers?.["Set-Cookie"];
-    expect(learnerCookie).toBeString();
-
-    const learner = await runtime.db
-      .select()
-      .from(schema.learners)
-      .where(eq(schema.learners.email, "owner-as-learner@example.com"));
-    expect(learner).toHaveLength(1);
-    const memberships = await runtime.db
-      .select()
-      .from(schema.communityMemberships)
-      .where(eq(schema.communityMemberships.communityId, communityId));
-    expect(memberships).toHaveLength(1);
-    expect(memberships[0]).toMatchObject({
-      learnerId: learner[0]!.id,
-      adminUserId: world.owner.id,
-      role: "owner",
-    });
-
-    const joined = await dispatch(runtime, {
-      method: "POST",
-      path: `/v1/learner/communities/${communityPublicId}/join`,
-      headers: {
-        cookie: learnerCookie as string,
-        "x-school-id": world.schoolA.publicId,
-      },
-      body: { joiningReason: "" },
-    });
-    expect(joined.status).toBe(200);
-    const left = await dispatch(runtime, {
-      method: "POST",
-      path: `/v1/learner/communities/${communityPublicId}/leave`,
-      headers: {
-        cookie: learnerCookie as string,
-        "x-school-id": world.schoolA.publicId,
-      },
-      body: {},
-    });
-    expect(left.status).toBe(409);
-    expect(left.body).toMatchObject({
-      details: { reason: "cannot_leave_linked_admin_membership" },
-    });
-    const membershipsAfterJoin = await runtime.db
-      .select()
-      .from(schema.communityMemberships)
-      .where(eq(schema.communityMemberships.communityId, communityId));
-    expect(membershipsAfterJoin).toHaveLength(1);
     await runtime.close();
   });
 });

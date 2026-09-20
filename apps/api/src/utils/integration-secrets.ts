@@ -2,18 +2,21 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:
 
 const ALGORITHM = "aes-256-gcm";
 
-function encryptionKey(): Buffer {
+function encryptionKey(secretOverride?: string): Buffer {
   const secret =
-    process.env.INTEGRATIONS_ENCRYPTION_KEY?.trim() || process.env.AUTH_SECRET?.trim();
+    secretOverride?.trim() ||
+    process.env.INTEGRATIONS_ENCRYPTION_KEY?.trim() ||
+    process.env.AUTH_SECRET?.trim() ||
+    process.env.LEARNER_AUTH_SECRET?.trim();
   if (!secret) throw new Error("INTEGRATIONS_ENCRYPTION_KEY_REQUIRED");
   return createHash("sha256").update(secret).digest();
 }
 
 /** Encrypt a sister-product team secret for storage in PostgreSQL. The
  * version prefix leaves room for a future key-rotation format. */
-export function encryptIntegrationSecret(value: string): string {
+export function encryptIntegrationSecret(value: string, secretOverride?: string): string {
   const iv = randomBytes(12);
-  const cipher = createCipheriv(ALGORITHM, encryptionKey(), iv);
+  const cipher = createCipheriv(ALGORITHM, encryptionKey(secretOverride), iv);
   const encrypted = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
   const tag = cipher.getAuthTag();
   return [
@@ -24,14 +27,14 @@ export function encryptIntegrationSecret(value: string): string {
   ].join(".");
 }
 
-export function decryptIntegrationSecret(value: string): string {
+export function decryptIntegrationSecret(value: string, secretOverride?: string): string {
   const [version, encodedIv, encodedTag, encodedCiphertext] = value.split(".");
   if (version !== "v1" || !encodedIv || !encodedTag || !encodedCiphertext) {
     throw new Error("INVALID_INTEGRATION_SECRET");
   }
   const decipher = createDecipheriv(
     ALGORITHM,
-    encryptionKey(),
+    encryptionKey(secretOverride),
     Buffer.from(encodedIv, "base64url"),
   );
   decipher.setAuthTag(Buffer.from(encodedTag, "base64url"));

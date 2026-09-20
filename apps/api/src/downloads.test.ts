@@ -181,7 +181,7 @@ describe.serial("digital downloads", () => {
     const membershipRows = await runtime.db
       .select({ consumed: schema.downloadLinks.consumed })
       .from(schema.downloadLinks)
-      .where(eq(schema.downloadLinks.learnerId, session.value.learner.id));
+      .where(eq(schema.downloadLinks.schoolAccountId, session.value.schoolAccount.id));
     expect(membershipRows).toEqual([{ consumed: true }]);
     const completedEvents = await runtime.db
       .select({ action: schema.auditEvents.action })

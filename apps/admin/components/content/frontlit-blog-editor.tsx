@@ -1,6 +1,7 @@
 "use client";
 
-import { Editor, type TextEditorContent } from "@frontlit/text-editor";
+import type { MediaRef } from "@courselit/api-contract";
+import type { TextEditorContent } from "@frontlit/text-editor";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
@@ -8,6 +9,7 @@ import { BlogFeaturedImage } from "@/components/content/blog-featured-image";
 import { WritingEditorDocumentHeader } from "@/components/content/writing-editor-document-header";
 import { WritingEditorShell } from "@/components/content/writing-editor-shell";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
+import { RichTextEditor } from "@/components/products/rich-text-editor";
 import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
 import { Textarea } from "@/components/ui/codelit/textarea";
@@ -141,8 +143,8 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
     }
   }
 
-  async function handleFeaturedImageChange(value: Record<string, unknown> | null) {
-    await savePatch({ featuredImage: value ?? {} });
+  async function handleFeaturedImageChange(value: MediaRef | null) {
+    await savePatch({ featuredImage: value });
   }
 
   function scheduleSave(field: keyof BlogDraft) {
@@ -324,29 +326,33 @@ export function FrontLitBlogEditor({ blogId }: { blogId: string }) {
                 {error}
               </p>
             ) : null}
-            <Editor
-              key={resetKey}
-              initialContent={blog.draftContent}
-              onChange={(content) => void handleContentChange(content)}
-              placeholder="Start writing…"
-              className="h-full min-h-0 gap-0 overflow-x-hidden overflow-y-auto border-0"
-              contentClassName="max-w-[46rem]"
-              editorClassName="writing-editor-content min-h-[420px]"
-              beforeContent={
-                <WritingEditorDocumentHeader
-                  title={draft.title}
-                  description={draft.excerpt}
-                  onTitleChange={(value) => {
-                    setDraftValue("title", value);
-                    scheduleSave("title");
-                  }}
-                  onDescriptionChange={(value) => {
-                    setDraftValue("excerpt", value);
-                    scheduleSave("excerpt");
-                  }}
-                />
-              }
-            />
+            {school ? (
+              <RichTextEditor
+                key={resetKey}
+                school={school}
+                purpose="blog_artwork"
+                initialContent={blog.draftContent}
+                onChange={(content) => void handleContentChange(content)}
+                placeholder="Start writing…"
+                className="h-full min-h-0 gap-0 overflow-x-hidden overflow-y-auto border-0"
+                contentClassName="max-w-[46rem]"
+                editorClassName="writing-editor-content min-h-[420px]"
+                beforeContent={
+                  <WritingEditorDocumentHeader
+                    title={draft.title}
+                    description={draft.excerpt}
+                    onTitleChange={(value) => {
+                      setDraftValue("title", value);
+                      scheduleSave("title");
+                    }}
+                    onDescriptionChange={(value) => {
+                      setDraftValue("excerpt", value);
+                      scheduleSave("excerpt");
+                    }}
+                  />
+                }
+              />
+            ) : null}
           </div>
         </WritingEditorShell>
       ) : (

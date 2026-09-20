@@ -142,6 +142,7 @@ export default async function PublicSiteCatchAllPage({ params }: Props) {
         fallbackToHomepage
         systemRoute="community"
         systemContent={<PublicCommunityDetail communityId={community.id} />}
+        salesResource={{ resourceType: "community", resourceId: community.id }}
       />
     );
   }

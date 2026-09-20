@@ -17,6 +17,7 @@ import {
   serializePermissions,
 } from "./permissions.js";
 import type { Runtime } from "./runtime.js";
+import { provisionSchoolCommunity } from "./spaces.js";
 
 export type SeededWorld = {
   owner: {
@@ -69,7 +70,8 @@ async function signUp(
     asResponse: true,
   });
   if (!response.ok) {
-    throw new Error(`signup_failed:${email}:${response.status}`);
+    const text = await response.text();
+    throw new Error(`signup_failed:${email}:${response.status}:${text}`);
   }
   const sessionCookie = cookiesFromResponse(response);
   const resolved = await resolveBetterAuthSession(
@@ -258,33 +260,110 @@ export async function seedWorld(runtime: Runtime, clock: Clock): Promise<SeededW
       updatedAt: now,
     },
   ]);
-  await runtime.db.insert(schema.memberships).values([
+
+  const ownerAccountAId = uuidv7(clock);
+  const memberAccountAId = uuidv7(clock);
+  const ownerAccountBId = uuidv7(clock);
+
+  await runtime.db.insert(schema.schoolAccounts).values([
     {
-      id: uuidv7(clock),
+      id: ownerAccountAId,
+      publicId: createPublicId("lrn", clock),
       schoolId: schoolAId,
       userId: owner.id,
-      role: "owner",
-      isOwner: true,
-      permissions: serializePermissions(OWNER_PERMISSIONS),
+      email: "owner@example.com",
+      displayName: "Owner",
+      status: "active",
       createdAt: now,
+      updatedAt: now,
     },
     {
-      id: uuidv7(clock),
+      id: memberAccountAId,
+      publicId: createPublicId("lrn", clock),
       schoolId: schoolAId,
       userId: member.id,
-      role: "member",
-      isOwner: false,
-      permissions: serializePermissions(MEMBER_PERMISSIONS),
+      email: "member@example.com",
+      displayName: "Member",
+      status: "active",
       createdAt: now,
+      updatedAt: now,
     },
     {
-      id: uuidv7(clock),
+      id: ownerAccountBId,
+      publicId: createPublicId("lrn", clock),
       schoolId: schoolBId,
       userId: owner.id,
-      role: "owner",
-      isOwner: true,
-      permissions: serializePermissions(OWNER_PERMISSIONS),
+      email: "owner@example.com",
+      displayName: "Owner",
+      status: "active",
       createdAt: now,
+      updatedAt: now,
+    },
+  ]);
+
+  await provisionSchoolCommunity(
+    runtime.db,
+    {
+      schoolId: schoolAId,
+      schoolName: "School A",
+      principalId: owner.id,
+      schoolAccountId: ownerAccountAId,
+      schoolAccountPublicId: "unused",
+    },
+    clock,
+  );
+  await provisionSchoolCommunity(
+    runtime.db,
+    {
+      schoolId: schoolBId,
+      schoolName: "School B",
+      principalId: owner.id,
+      schoolAccountId: ownerAccountBId,
+      schoolAccountPublicId: "unused",
+    },
+    clock,
+  );
+
+  const ownerMembershipAId = uuidv7(clock);
+  const memberMembershipAId = uuidv7(clock);
+  const ownerMembershipBId = uuidv7(clock);
+
+  await runtime.db.insert(schema.memberships).values([
+    {
+      id: ownerMembershipAId,
+      publicId: createPublicId("mem", clock),
+      schoolId: schoolAId,
+      schoolAccountId: ownerAccountAId,
+      isOwner: true,
+      permissions: [],
+      presetId: "full_access",
+      version: 1,
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: memberMembershipAId,
+      publicId: createPublicId("mem", clock),
+      schoolId: schoolAId,
+      schoolAccountId: memberAccountAId,
+      isOwner: false,
+      permissions: [...MEMBER_PERMISSIONS],
+      presetId: "content_manager",
+      version: 1,
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: ownerMembershipBId,
+      publicId: createPublicId("mem", clock),
+      schoolId: schoolBId,
+      schoolAccountId: ownerAccountBId,
+      isOwner: true,
+      permissions: [],
+      presetId: "full_access",
+      version: 1,
+      createdAt: now,
+      updatedAt: now,
     },
   ]);
   await runtime.db.insert(schema.selectedSchools).values({
@@ -298,10 +377,14 @@ export async function seedWorld(runtime: Runtime, clock: Clock): Promise<SeededW
     id: uuidv7(clock),
     publicId: keyPublicId,
     schoolId: schoolAId,
+    membershipId: ownerMembershipAId,
+    createdBySchoolAccountId: ownerAccountAId,
     userId: owner.id,
+    name: "Seed API Key",
     digest: digestApiKeySecret(runtime.apiKeyPepper, secret),
-    permissions: serializePermissions(OWNER_PERMISSIONS),
+    permissions: [...OWNER_PERMISSIONS],
     createdAt: now,
+    updatedAt: now,
   });
 
   const notePublicId = createPublicId("prd", clock);

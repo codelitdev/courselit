@@ -7,15 +7,13 @@ import { createOAuthProviderOptions } from "@codelitdev/oauth-server-kit/better-
 import { getSchema } from "better-auth/db";
 import { emailOTP } from "better-auth/plugins/email-otp";
 import { jwt } from "better-auth/plugins/jwt";
-import { sso } from "@better-auth/sso";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const tsPath = path.join(root, "src/db/schema/auth.generated.ts");
-const learnerTsPath = path.join(root, "src/db/schema/learner-auth.generated.ts");
 const check = process.argv.includes("--check");
 
 const publicApiUrl = "http://127.0.0.1:4000";
-const adminOptions = {
+const authOptions = {
   appName: "CourseLit",
   baseURL: publicApiUrl,
   basePath: "/api/auth",
@@ -37,33 +35,6 @@ const adminOptions = {
         clientRegistrationAllowedScopes: ["offline_access", "data:read"],
       }),
     ),
-    sso({
-      fields: {
-        domain: "domain_string",
-      },
-    }),
-  ],
-};
-
-const learnerOptions = {
-  appName: "CourseLit Learners",
-  baseURL: publicApiUrl,
-  basePath: "/api/learner-auth",
-  secret: "learner-schema-generation-secret-at-least-32-chars",
-  emailAndPassword: { enabled: false },
-  user: { modelName: "learnerUser" },
-  session: { modelName: "learnerSession" },
-  account: { modelName: "learnerAccount" },
-  verification: { modelName: "learnerVerification" },
-  advanced: { cookiePrefix: "courselit-learner" },
-  plugins: [
-    emailOTP({
-      async sendVerificationOTP() {},
-    }),
-    sso({
-      modelName: "learnerSsoProvider",
-      fields: { domain: "domain_string" },
-    }),
   ],
 };
 
@@ -137,12 +108,8 @@ function generateSource(schema, description) {
 }
 
 const tsSource = generateSource(
-  getSchema(adminOptions),
+  getSchema(authOptions),
   "jwt + oauth-server-kit oauthProvider",
-);
-const learnerTsSource = generateSource(
-  getSchema(learnerOptions),
-  "the learner email-OTP and SSO realm",
 );
 
 function writeOrCheck(filePath, source) {
@@ -174,5 +141,4 @@ function writeOrCheck(filePath, source) {
 }
 
 const tsOk = writeOrCheck(tsPath, tsSource);
-const learnerTsOk = writeOrCheck(learnerTsPath, learnerTsSource);
-if (check && (!tsOk || !learnerTsOk)) process.exit(1);
+if (check && !tsOk) process.exit(1);

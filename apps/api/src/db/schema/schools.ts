@@ -1,5 +1,8 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
+  index,
+  integer,
   jsonb,
   pgTable,
   text,
@@ -20,16 +23,6 @@ export const schools = pgTable("schools", {
     .default("active"),
   locale: text("locale").notNull().default("en"),
   currency: text("currency").notNull().default("USD"),
-  loginMethods: text("login_methods").array().notNull().default(["email"]),
-  ssoConfig: jsonb("sso_config").$type<{
-    idpMetadata?: string;
-    entryPoint?: string;
-    cert?: string;
-  } | null>(),
-  googleConfig: jsonb("google_config").$type<{
-    clientId?: string;
-    clientSecret?: string;
-  } | null>(),
   /** Encrypted provider credentials and the school's selected checkout gateway. */
   paymentSettingsEncrypted: text("payment_settings_encrypted"),
   codeInjectionHead: text("code_injection_head").notNull().default(""),
@@ -65,27 +58,121 @@ export const schoolHosts = pgTable(
   }),
 );
 
-export const memberships = pgTable(
-  "memberships",
+export const schoolAccounts = pgTable(
+  "school_accounts",
   {
     id: uuid("id").primaryKey(),
+    publicId: text("public_id").notNull().unique(),
     schoolId: uuid("school_id")
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    role: text("role").notNull(),
-    isOwner: boolean("is_owner").notNull().default(false),
-    permissions: text("permissions").notNull(),
+    email: text("email").notNull(),
+    displayName: text("display_name").notNull(),
+    image: text("image"),
+    status: text("status")
+      .$type<"active" | "deactivated">()
+      .notNull()
+      .default("active"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
-    schoolUser: uniqueIndex("memberships_school_user_uidx").on(
+    schoolUser: uniqueIndex("school_accounts_school_user_uidx").on(
       table.schoolId,
       table.userId,
     ),
+    schoolEmail: uniqueIndex("school_accounts_school_email_uidx").on(
+      table.schoolId,
+      table.email,
+    ),
   }),
+);
+
+export const memberships = pgTable(
+  "memberships",
+  {
+    id: uuid("id").primaryKey(),
+    publicId: text("public_id").notNull().unique(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    schoolAccountId: uuid("school_account_id")
+      .notNull()
+      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
+    isOwner: boolean("is_owner").notNull().default(false),
+    permissions: text("permissions").array().notNull().default([]),
+    presetId: text("preset_id"),
+    version: integer("version").notNull().default(1),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+  },
+  (table) => ({
+    schoolAccount: uniqueIndex("memberships_school_account_uidx").on(
+      table.schoolId,
+      table.schoolAccountId,
+    ),
+    singleOwner: uniqueIndex("memberships_school_single_owner_uidx")
+      .on(table.schoolId)
+      .where(sql`${table.isOwner} = true`),
+    schoolAccountIdx: index("memberships_school_account_idx").on(
+      table.schoolAccountId,
+    ),
+  }),
+);
+
+export const schoolSessions = pgTable(
+  "school_sessions",
+  {
+    id: uuid("id").primaryKey(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    schoolAccountId: uuid("school_account_id")
+      .notNull()
+      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    tokenDigest: text("token_digest").notNull().unique(),
+    authenticationMethod: text("authentication_method")
+      .$type<"email" | "google">()
+      .notNull(),
+    authenticatedAt: timestamp("authenticated_at", { withTimezone: true }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  },
+  (table) => ({
+    schoolAccount: index("school_sessions_school_account_idx").on(
+      table.schoolId,
+      table.schoolAccountId,
+    ),
+  }),
+);
+
+export const schoolAuthTickets = pgTable(
+  "school_auth_tickets",
+  {
+    id: uuid("id").primaryKey(),
+    ticketDigest: text("ticket_digest").notNull().unique(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    schoolAccountId: uuid("school_account_id")
+      .notNull()
+      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    authenticationMethod: text("authentication_method")
+      .$type<"email" | "google">()
+      .notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  },
 );
 
 export const selectedSchools = pgTable("selected_schools", {
@@ -97,24 +184,51 @@ export const selectedSchools = pgTable("selected_schools", {
     .references(() => schools.id, { onDelete: "cascade" }),
 });
 
-export const invitations = pgTable("invitations", {
-  id: uuid("id").primaryKey(),
-  publicId: text("public_id").notNull().unique(),
-  schoolId: uuid("school_id")
-    .notNull()
-    .references(() => schools.id, { onDelete: "cascade" }),
-  email: text("email").notNull(),
-  role: text("role").notNull(),
-  permissions: text("permissions").notNull(),
-  tokenDigest: text("token_digest").notNull(),
-  inviterId: text("inviter_id")
-    .notNull()
-    .references(() => user.id),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-  acceptedAt: timestamp("accepted_at", { withTimezone: true }),
-  revokedAt: timestamp("revoked_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
-});
+export const invitations = pgTable(
+  "invitations",
+  {
+    id: uuid("id").primaryKey(),
+    publicId: text("public_id").notNull().unique(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    normalizedEmail: text("normalized_email").notNull(),
+    permissions: text("permissions").array().notNull().default([]),
+    presetId: text("preset_id"),
+    tokenDigest: text("token_digest").notNull(),
+    invitedBySchoolAccountId: uuid("invited_by_school_account_id").references(
+      () => schoolAccounts.id,
+      { onDelete: "set null" },
+    ),
+    inviterId: text("inviter_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    status: text("status")
+      .$type<"pending" | "accepted" | "rejected" | "revoked" | "expired">()
+      .notNull()
+      .default("pending"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    acceptedBySchoolAccountId: uuid("accepted_by_school_account_id").references(
+      () => schoolAccounts.id,
+      { onDelete: "set null" },
+    ),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    rejectedAt: timestamp("rejected_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+  },
+  (table) => ({
+    schoolEmail: index("invitations_school_email_idx").on(
+      table.schoolId,
+      table.email,
+    ),
+    pendingEmail: uniqueIndex("invitations_school_pending_email_uidx")
+      .on(table.schoolId, table.normalizedEmail)
+      .where(sql`${table.status} = 'pending'`),
+  }),
+);
 
 export const apiKeys = pgTable("api_keys", {
   id: uuid("id").primaryKey(),
@@ -122,13 +236,22 @@ export const apiKeys = pgTable("api_keys", {
   schoolId: uuid("school_id")
     .notNull()
     .references(() => schools.id, { onDelete: "cascade" }),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
+  membershipId: uuid("membership_id").references(() => memberships.id, {
+    onDelete: "cascade",
+  }),
+  createdBySchoolAccountId: uuid("created_by_school_account_id").references(
+    () => schoolAccounts.id,
+    { onDelete: "set null" },
+  ),
+  userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
+  name: text("name").notNull().default("Default"),
   digest: text("digest").notNull(),
-  permissions: text("permissions").notNull(),
+  permissions: text("permissions").array().notNull().default([]),
   expiresAt: timestamp("expires_at", { withTimezone: true }),
   revokedAt: timestamp("revoked_at", { withTimezone: true }),
   lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
 });

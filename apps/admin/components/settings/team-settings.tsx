@@ -129,25 +129,23 @@ export function TeamSettings() {
   const canInvite = Boolean(
     viewer &&
       (viewer.isOwner ||
-        viewer.permissions.includes("school:admin") ||
         viewer.permissions.includes("members:invite") ||
         viewer.permissions.includes("members:manage")),
   );
   const canManage = Boolean(
     viewer &&
       (viewer.isOwner ||
-        viewer.permissions.includes("school:admin") ||
         viewer.permissions.includes("members:manage")),
   );
   const selectablePermissions = viewer
-    ? viewer.isOwner || viewer.permissions.includes("school:admin")
+    ? viewer.isOwner
       ? COURSELIT_PERMISSIONS
       : filterDelegableCourseLitPermissions(viewer.permissions)
     : [];
 
   function canEditMember(member: TeamMember): boolean {
     if (!canManage || member.isOwner || member.id === viewer?.id) return false;
-    if (viewer?.isOwner || viewer?.permissions.includes("school:admin")) return true;
+    if (viewer?.isOwner) return true;
     const actorPermissions = new Set(viewer?.permissions ?? []);
     return computeEffectiveCourseLitPermissions(member.permissions).every(
       (permission) => actorPermissions.has(permission),

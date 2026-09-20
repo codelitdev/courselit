@@ -27,6 +27,9 @@ describe("admin and learner surfaces", () => {
       "admin/components/website/code-injection-settings.tsx",
     );
     const shell = read("admin/components/layout/admin-shell.tsx");
+    const adminNotificationsBell = read(
+      "admin/components/notifications/notifications-bell.tsx",
+    );
     const createSchool = read("admin/components/layout/create-school-form.tsx");
     const products = read("admin/app/products/page.tsx");
     const resources = read("admin/components/resources.tsx");
@@ -54,6 +57,9 @@ describe("admin and learner surfaces", () => {
       "admin/components/content/writing-editor-document-header.tsx",
     );
     const communities = read("admin/app/communities/page.tsx");
+    const communityPage = read("admin/app/community/page.tsx");
+    const spacesPage = read("admin/app/spaces/page.tsx");
+    const spacesAdmin = read("admin/components/spaces/spaces-admin.tsx");
     const acceptInvitation = read("admin/app/invitations/accept/page.tsx");
     const teamInvitation = read("admin/app/team-invitations/[invitationId]/page.tsx");
     const teamInvitationLayout = read(
@@ -63,9 +69,7 @@ describe("admin and learner surfaces", () => {
     const communityFeaturedImage = read(
       "admin/components/communities/community-featured-image.tsx",
     );
-    const communityPlansPage = read(
-      "admin/app/community/[communityId]/manage/plans/page.tsx",
-    );
+    const communityPlansPage = read("admin/app/community/plans/page.tsx");
     const discussionReports = read(
       "admin/components/products/product-discussion-reports.tsx",
     );
@@ -79,11 +83,8 @@ describe("admin and learner surfaces", () => {
     const publicCommunitiesCatalog = read(
       "learners/components/public-communities-catalog.tsx",
     );
-    const learnerCommunity = read(
-      "learners/app/(loggedin)/dashboard/community/[communityId]/page.tsx",
-    );
-    const learnerCommunityPost = read(
-      "learners/app/(loggedin)/dashboard/community/[communityId]/[postId]/page.tsx",
+    const learnerSpacePost = read(
+      "learners/app/(loggedin)/dashboard/s/[spaceId]/[postId]/page.tsx",
     );
     const learnerCommunityComponent = read(
       "learners/components/communities/learner-community.tsx",
@@ -91,11 +92,18 @@ describe("admin and learner surfaces", () => {
     const learnerCommunityEditor = read(
       "learners/components/communities/learner-rich-text-editor.tsx",
     );
+    const learnerPostComposer = read(
+      "learners/components/communities/learner-post-composer-dialog.tsx",
+    );
     const learnerNotifications = read(
       "learners/app/(loggedin)/dashboard/notifications/page.tsx",
     );
     const learnerNotificationsComponent = read(
       "learners/components/notifications/learner-notifications.tsx",
+    );
+    const learnerShell = read("learners/components/layout/learner-shell.tsx");
+    const learnerNotificationsBell = read(
+      "learners/components/notifications/learner-notifications-bell.tsx",
     );
     const learnerAccount = read("learners/app/(loggedin)/dashboard/account/page.tsx");
     const productRootPlaceholder = ["$", "{productRoot}"].join("");
@@ -127,6 +135,7 @@ describe("admin and learner surfaces", () => {
     expect(sidebar).toContain('href: "/website/settings"');
     expect(sidebar).toContain('href: "/settings?tab=api-keys"');
     expect(sidebar).toContain('href: "/settings?tab=team"');
+    expect(sidebar).toContain('href: "/settings?tab=payment"');
     expect(sidebar).toContain('href: "/mails/settings"');
     expect(sidebar).not.toContain('{ href: "/settings?tab=mails", label: "Mails" }');
     expect(sidebar).toContain('href: "/media"');
@@ -160,18 +169,19 @@ describe("admin and learner surfaces", () => {
     expect(brandingSettings).toContain('"/api/v1/school/website/branding"');
     expect(codeInjectionSettings).toContain('"/api/v1/school/code-injection"');
     expect(settings).toContain('"branding",');
-    expect(settings).toContain('"api-keys", "team"] as const');
-    expect(settings).toContain('"team"] as const');
+    expect(settings).toContain('"payment", "team", "api-keys"] as const');
+    expect(settings).toContain('"api-keys"] as const');
     expect(settings).toContain('value="team"');
-    expect(settings).toContain('"login-methods",');
-    expect(settings).toContain('value="login-methods"');
     expect(settings).toContain('value="api-keys"');
+    expect(settings).toContain('value="payment"');
     expect(settings).toContain("Payment");
     expect(settings).toContain("Code Injection");
     expect(settings).not.toContain('label: "Miscellaneous"');
     expect(settings).toContain("/api/v1/schools/");
     expect(settings).toContain('method: "PATCH"');
     expect(settings).toContain("Currency saved.");
+    expect(settings).toContain("/api/v1/school/payment-settings");
+    expect(settings).not.toContain("/api/v1/settings/payment");
     expect(shell).toContain('router.replace("/schools")');
     expect(adminSurface).toContain('name="subdomain"');
     expect(createSchool).toContain("/api/v1/billing/catalog");
@@ -189,8 +199,8 @@ describe("admin and learner surfaces", () => {
     expect(contentPages).not.toContain(">Edit</");
     expect(contentPages).toContain("gap-y-3");
     expect(communityWorkspace).toContain("<FeaturedCard");
-    expect(communityWorkspace).toContain("href={`/community/${item.id}`}");
-    expect(communityWorkspace).toContain("item.featuredMedia?.thumbnailUrl");
+    expect(communityWorkspace).toContain('href="/community"');
+    expect(communityWorkspace).toContain("item.featuredImage?.thumbnailUrl");
     expect(communityWorkspace).toContain("gap-y-3");
     expect(communityWorkspace).toContain("shareCommunity");
     expect(communityWorkspace).toContain(publicCommunityPath);
@@ -310,7 +320,7 @@ describe("admin and learner surfaces", () => {
       "Currency is managed centrally in School settings.",
     );
     expect(paymentPlanList).toContain("includedProducts.length");
-    expect(productWorkspace).toContain("featuredMediaId");
+    expect(productWorkspace).toContain("featuredImage");
     expect(productWorkspace).toContain(
       "The URL-friendly identifier for this product page.",
     );
@@ -350,8 +360,31 @@ describe("admin and learner surfaces", () => {
     expect(productWorkspace).toContain("<ProductAnalytics");
     expect(discussionReports).toContain("Reported content");
     expect(products).not.toContain('form.get("body")');
-    expect(communities).toContain("CommunityAdmin");
-    expect(communityWorkspace).toContain("Communities");
+    expect(communities).toContain('redirect("/community")');
+    expect(communityPage).toContain("CommunityAdmin");
+    expect(spacesPage).toContain("SpacesAdmin");
+    expect(spacesAdmin).toContain("<Dialog");
+    expect(spacesAdmin).toContain("open={creating || Boolean(editing)}");
+    expect(spacesAdmin).toContain(
+      '<DialogTitle>{editing ? "Edit space" : "New space"}</DialogTitle>',
+    );
+    expect(spacesAdmin).toContain('fetch("/api/v1/community"');
+    expect(spacesAdmin).toContain("Only specific members");
+    expect(spacesAdmin).toContain("All members");
+    expect(spacesAdmin).toContain("selectedCommunityPlanIds");
+    expect(spacesAdmin).toContain("<DropdownMenuCheckboxItem");
+    expect(spacesAdmin).toContain("Delete “{deleting?.name}”?");
+    expect(spacesAdmin).toContain("Move existing posts to");
+    expect(spacesAdmin).toContain("attached media will be preserved");
+    expect(spacesAdmin).toContain('variant="destructive"');
+    expect(communityWorkspace).toContain("Community");
+    expect(communityWorkspace).toContain("/api/v1/community");
+    expect(communityWorkspace).not.toContain("New community");
+    expect(sidebar).toContain('label: "Community"');
+    expect(sidebar).toContain('href: "/community"');
+    expect(sidebar).toContain('label: "Spaces"');
+    expect(sidebar).toContain('href: "/spaces"');
+    expect(sidebar).not.toContain('label: "Communities"');
     expect(communityWorkspace).toContain("/api/v1/communities");
     expect(communityWorkspace).toContain("/api/v1/community-memberships/");
     expect(communityWorkspace).toContain("/api/v1/community-reports/");
@@ -366,10 +399,10 @@ describe("admin and learner surfaces", () => {
     expect(communityWorkspace).toContain("Payment plans");
     expect(communityWorkspace).toContain("CommunityMediaPreview");
     expect(communityWorkspace).toContain("togglePostPin");
-    expect(communityWorkspace).toContain("addCategory");
-    expect(communityWorkspace).toContain("Delete category");
-    expect(communityWorkspace).toContain("migrateToCategory");
-    expect(communityWorkspace).toContain("featuredMediaId");
+    expect(communityWorkspace).not.toContain("addCategory");
+    expect(communityWorkspace).not.toContain("Delete category");
+    expect(communityWorkspace).toContain('href="/spaces"');
+    expect(communityWorkspace).toContain("featuredImage");
     expect(communityWorkspace).toContain("CommunityFeaturedImage");
     expect(communityWorkspace).toContain("RichTextEditor");
     expect(communityWorkspace).toContain('purpose="community_content"');
@@ -381,8 +414,12 @@ describe("admin and learner surfaces", () => {
     expect(communityFeaturedImage).toContain("@frontlit/media-uploader");
     expect(communityFeaturedImage).toContain("filterCourseLitMediaAdapters");
     expect(communityFeaturedImage).toContain("allowUnsplash");
-    expect(communityFeaturedImage).toContain("fetch(selected.src)");
-    expect(communityFeaturedImage).toContain("new File([blob]");
+    expect(communityFeaturedImage).toContain("toMediaRef");
+    expect(communityFeaturedImage).not.toContain("fetch(selected.src)");
+    expect(communityFeaturedImage).not.toContain("new File([blob]");
+    expect(learnerCommunityEditor).toContain("annotateOwnedImages");
+    expect(learnerCommunityEditor).toContain("selectedMediaByUrl");
+    expect(learnerCommunityEditor).toContain("mediaId");
     expect(communityWorkspace).toContain("Load more posts");
     expect(communityWorkspace).toContain("Load more memberships");
     expect(communityWorkspace).toContain("Load more reports");
@@ -397,7 +434,9 @@ describe("admin and learner surfaces", () => {
     expect(communityWorkspace).not.toContain(legacyDashboardLabel);
     expect(sidebar).not.toContain(legacyDashboardLabel);
     expect(learnerSidebar).not.toContain(`label: "${legacyDashboardLabel}"`);
-    expect(learnerSidebar).toContain('href: "/dashboard/feed"');
+    expect(learnerSidebar).toContain('href: "/dashboard"');
+    expect(learnerSidebar).toContain('label: "Home", icon: Home');
+    expect(learnerSidebar).toContain("/dashboard/s/");
     expect(learnerSidebar).toContain('href: "/dashboard/products"');
     expect(learnerDashboardLayout).toContain(
       'headerTitle={isProducts ? "Products" : "Feed"}',
@@ -405,24 +444,29 @@ describe("admin and learner surfaces", () => {
     expect(learnerDashboardLayout).not.toContain("PlatformTabNav");
     expect(learnerDashboardLayout).not.toContain('ariaLabel="Learner content"');
     expect(learnerFeed).toContain("/api/v1/learner/feed");
-    expect(learnerFeed).toContain("Your communities");
+    expect(learnerFeed).toContain("FeedComposer");
+    expect(learnerFeed).toContain("feedResponseSchema");
+    expect(learnerFeed).toContain("FeedAnnouncement banner={banner}");
+    expect(learnerFeed).not.toContain("Space announcement");
+    expect(learnerFeed).not.toContain("Pencil");
     expect(learnerProducts).toContain("/api/v1/learner/products");
     expect(learnerSidebar).not.toContain('href: "/communities"');
     expect(learnerSidebar).toContain('href="/dashboard/notifications"');
     expect(learnerSidebar).toContain('href="/dashboard/account"');
     expect(learnerAccount).toContain('useLearnerSession("/dashboard/account")');
     expect(learnerAccount).toContain("Notification settings");
-    expect(learnerCommunities).toContain('systemRoute="communities"');
+    expect(learnerCommunities).toContain("notFound()");
     expect(publicCommunitiesCatalog).toContain("@frontlit/page-builder/primitives");
     expect(publicCommunitiesCatalog).toContain("/api/v1/public/communities");
-    expect(learnerCommunity).toContain("LearnerCommunity");
-    expect(learnerCommunityPost).toContain("postId");
-    expect(learnerCommunityPost).toContain("<LearnerCommunity");
+    expect(learnerSpacePost).toContain("spaceId");
+    expect(learnerSpacePost).toContain("<LearnerSpacePost");
+    expect(learnerSpacePost).not.toContain("communityId");
     expect(learnerCommunityComponent).toContain("/api/v1/learner/communities");
     expect(learnerCommunityComponent).toContain("/api/v1/learner/community-posts/");
     expect(learnerCommunityComponent).toContain("/leave");
     expect(learnerCommunityComponent).toContain("Leave community");
-    expect(learnerCommunityComponent).toContain("Publish post");
+    expect(learnerCommunityComponent).toContain("<LearnerPostComposerDialog");
+    expect(learnerPostComposer).toContain('submitting ? "Posting…" : "Post"');
     expect(learnerCommunityComponent).toContain("Add a comment");
     expect(learnerCommunityComponent).toContain("@frontlit/media-uploader");
     expect(learnerCommunityComponent).toContain(
@@ -430,7 +474,7 @@ describe("admin and learner surfaces", () => {
     );
     expect(learnerCommunityComponent).toContain("reportComment");
     expect(learnerCommunityComponent).toContain("deleteComment");
-    expect(learnerCommunityComponent).toContain(">Deleted</p>");
+    expect(learnerCommunityComponent).toContain("Deleted");
     expect(learnerCommunityComponent).toContain("comment.deletedAt");
     expect(learnerCommunityComponent).toContain("commentTargetId");
     expect(learnerCommunityComponent).toContain("scrollIntoView");
@@ -446,7 +490,9 @@ describe("admin and learner surfaces", () => {
     expect(learnerCommunityComponent).toContain("displayedPosts");
     expect(learnerCommunityComponent).toContain("community.postsCount");
     expect(learnerCommunityComponent).toContain("postId?: string");
-    expect(learnerCommunityComponent).toContain("community.featuredMedia");
+    expect(learnerCommunityComponent).toContain("LearnerSpacePost");
+    expect(learnerCommunityComponent).toContain("/api/v1/learner/spaces/");
+    expect(learnerCommunityComponent).toContain("community.featuredImage");
     expect(learnerCommunityComponent).toContain("community.banner");
     expect(learnerCommunityComponent).toContain("communityDescriptionHasContent");
     expect(learnerCommunityComponent).toContain("Community announcement");
@@ -482,6 +528,16 @@ describe("admin and learner surfaces", () => {
     expect(pageEditor).toContain("state.seo.socialImage != null");
     expect(pageEditor).not.toContain("socialImage: state.seo.socialImage ?? null");
     expect(shell).toContain("isFullScreenPageEditor");
+    expect(shell).toContain("NotificationsBell");
+    expect(adminNotificationsBell).toContain("/api/v1/notifications");
+    expect(adminNotificationsBell).toContain("new EventSource");
+    expect(adminNotificationsBell).toContain("/api/v1/notifications/stream");
+    expect(adminNotificationsBell).toContain("bg-red-500");
+    expect(learnerShell).toContain("LearnerNotificationsBell");
+    expect(learnerNotificationsBell).toContain("/api/v1/learner/notifications");
+    expect(learnerNotificationsBell).toContain("new EventSource");
+    expect(learnerNotificationsBell).toContain("/api/v1/learner/notifications/stream");
+    expect(learnerNotificationsBell).toContain("bg-red-500");
     expect(pageEditor).toContain("h-dvh min-h-0");
     expect(pageEditor).toContain("min-w-0");
     expect(pageEditor).toContain("overflow-hidden");
@@ -489,6 +545,8 @@ describe("admin and learner surfaces", () => {
     expect(shell).toContain("data-full-screen-editor");
     expect(shell).toContain("h-dvh min-h-0 w-full min-w-0 overflow-hidden");
     expect(blogEditor).toContain("@frontlit/text-editor");
+    expect(blogEditor).toContain("RichTextEditor");
+    expect(blogEditor).toContain('purpose="blog_artwork"');
     expect(blogEditor).toContain("BlogFeaturedImage");
     expect(blogEditor).toContain("draftFeaturedImage");
     expect(blogFeaturedImage).toContain("@frontlit/media-uploader");
@@ -533,7 +591,10 @@ describe("admin and learner surfaces", () => {
     const themeProvider = read("learners/app/layout.tsx");
     const dashboard = read("learners/app/(loggedin)/dashboard/page.tsx");
     const dashboardLayout = read("learners/app/(loggedin)/dashboard/layout.tsx");
-    const dashboardFeed = read("learners/app/(loggedin)/dashboard/feed/page.tsx");
+    const dashboardFeed = dashboard;
+    const dashboardSpaceFeed = read(
+      "learners/app/(loggedin)/dashboard/s/[spaceId]/page.tsx",
+    );
     const dashboardProducts = read(
       "learners/app/(loggedin)/dashboard/products/page.tsx",
     );
@@ -560,7 +621,7 @@ describe("admin and learner surfaces", () => {
       "learners/app/(loggedin)/dashboard/courses/[productId]/discussions/page.tsx",
     );
     const proxy = read("learners/app/api/[...path]/route.ts");
-    const surface = `${login}\n${home}\n${publicPage}\n${publicProductsPage}\n${publicProductsCatalog}\n${publicProductDetailPage}\n${publicProductDetail}\n${publicCheckout}\n${publicProductBlocks}\n${publicBlogArticlePage}\n${publicBlogArticle}\n${themeProvider}\n${sitePageRenderer}\n${dashboard}\n${dashboardLayout}\n${dashboardFeed}\n${dashboardProducts}\n${dashboardFeedComponent}\n${dashboardProductsComponent}\n${dashboardLayoutComponent}\n${course}\n${discussions}\n${discussionEditor}\n${courseIndex}\n${proxy}`;
+    const surface = `${login}\n${home}\n${publicPage}\n${publicProductsPage}\n${publicProductsCatalog}\n${publicProductDetailPage}\n${publicProductDetail}\n${publicCheckout}\n${publicProductBlocks}\n${publicBlogArticlePage}\n${publicBlogArticle}\n${themeProvider}\n${sitePageRenderer}\n${dashboard}\n${dashboardLayout}\n${dashboardFeed}\n${dashboardSpaceFeed}\n${dashboardProducts}\n${dashboardFeedComponent}\n${dashboardProductsComponent}\n${dashboardLayoutComponent}\n${course}\n${discussions}\n${discussionEditor}\n${courseIndex}\n${proxy}`;
     expect(publicPage).toContain("SitePageRenderer");
     expect(publicPage).toContain("SitePageSection");
     expect(publicPage).toContain("loadDataSlots");
@@ -575,6 +636,9 @@ describe("admin and learner surfaces", () => {
     expect(publicProductDetail).toContain("/api/v1/storefront/products/");
     expect(publicProductDetail).toContain("/api/v1/storefront/checkout-sessions");
     expect(publicCheckout).toContain("/api/v1/learner/checkout-sessions/");
+    expect(publicCheckout).toContain("Check status again");
+    expect(publicCheckout).toContain("Payment verified successfully");
+    expect(publicCheckout).toContain("session.checkoutId");
     expect(publicProductBlocks).toContain("ProductCurriculumBlock");
     expect(publicProductBlocks).toContain("Continue learning");
     expect(publicBlogArticlePage).toContain("getPublicArticleBySlug");
@@ -600,12 +664,14 @@ describe("admin and learner surfaces", () => {
     expect(surface).toContain("LEARNER_THEME_MODE_KEY");
     expect(surface).toContain("localStorage.setItem");
     expect(surface).toContain("onThemeModeChange");
-    expect(dashboard).toContain('redirect("/dashboard/feed")');
+    expect(dashboard).toContain("<LearnerFeed");
     expect(dashboardLayout).toContain("LearnerDashboardLayout");
+    expect(dashboardLayoutComponent).toContain("isSpacePost");
     expect(dashboardFeed).toContain("LearnerFeed");
+    expect(dashboardSpaceFeed).toContain("spaceId={spaceId}");
     expect(dashboardProducts).toContain("LearnerProducts");
     expect(dashboardFeedComponent).toContain("/api/v1/learner/feed");
-    expect(dashboardFeedComponent).toContain("Your communities");
+    expect(dashboardFeedComponent).toContain("FeedComposer");
     expect(dashboardProductsComponent).toContain("/api/v1/learner/products");
     expect(dashboardProductsComponent).toContain("LearnerProductCard");
     expect(learnerShell).toContain("<SidebarProvider defaultOpen={true}>");

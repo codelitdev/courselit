@@ -17,7 +17,10 @@ function learnerCookie(response: { headers?: Record<string, string> }) {
 describe.serial("communities", () => {
   it("lists empty community collections for a new learner", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
-    const runtime = await createPgliteRuntime({ clock, paymentProvider: new MemoryPaymentProvider() });
+    const runtime = await createPgliteRuntime({
+      clock,
+      paymentProvider: new MemoryPaymentProvider(),
+    });
     const world = await seedWorld(runtime, clock);
     const learner = await dispatch(runtime, {
       method: "POST",
@@ -53,7 +56,7 @@ describe.serial("communities", () => {
     await runtime.close();
   });
 
-  it("lists only enabled communities for an uncredentialed school host", async () => {
+  it("lists active communities for an uncredentialed school host", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock, billingMode: "oss" });
     const world = await seedWorld(runtime, clock);
@@ -70,7 +73,6 @@ describe.serial("communities", () => {
         name: "Public learner community",
         description: "Ask questions and share progress.",
         categories: ["General", "Questions"],
-        enabled: false,
         autoAcceptMembers: true,
       },
     });
@@ -83,13 +85,6 @@ describe.serial("communities", () => {
       body: { name: "Free access", type: "free", kind: "free" },
     });
     expect(plan.status).toBe(201);
-    const enabled = await dispatch(runtime, {
-      method: "PATCH",
-      path: `/v1/communities/${visibleCommunityId}`,
-      headers: adminHeaders,
-      body: { enabled: true },
-    });
-    expect(enabled.status).toBe(200);
 
     const hidden = await dispatch(runtime, {
       method: "POST",
@@ -98,11 +93,16 @@ describe.serial("communities", () => {
       body: {
         name: "Private learner community",
         categories: ["General"],
-        enabled: false,
         autoAcceptMembers: true,
       },
     });
     expect(hidden.status).toBe(201);
+    const hiddenId = (hidden.body as { id: string }).id;
+    await dispatch(runtime, {
+      method: "DELETE",
+      path: `/v1/communities/${hiddenId}`,
+      headers: adminHeaders,
+    });
 
     const publicCatalog = await dispatch(runtime, {
       method: "GET",
@@ -115,8 +115,9 @@ describe.serial("communities", () => {
         {
           id: visibleCommunityId,
           name: "Public learner community",
-          enabled: true,
           membership: null,
+          currency: "USD",
+          priceMinor: 0,
         },
       ],
       nextCursor: null,
@@ -145,13 +146,13 @@ describe.serial("communities", () => {
 
     const hiddenDetail = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/public/communities/${(hidden.body as { id: string }).id}`,
+      path: `/v1/public/communities/${hiddenId}`,
       headers: { "x-forwarded-host": "school-a.localhost:3001" },
     });
     expect(hiddenDetail.status).toBe(404);
     const hiddenPlans = await dispatch(runtime, {
       method: "GET",
-      path: `/v1/public/communities/${(hidden.body as { id: string }).id}/plans`,
+      path: `/v1/public/communities/${hiddenId}/plans`,
       headers: { "x-forwarded-host": "school-a.localhost:3001" },
     });
     expect(hiddenPlans.status).toBe(404);
@@ -161,7 +162,10 @@ describe.serial("communities", () => {
 
   it("keeps community membership, discussions, reactions, reports, and tenancy scoped", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
-    const runtime = await createPgliteRuntime({ clock, paymentProvider: new MemoryPaymentProvider() });
+    const runtime = await createPgliteRuntime({
+      clock,
+      paymentProvider: new MemoryPaymentProvider(),
+    });
     const world = await seedWorld(runtime, clock);
     const adminHeaders = {
       cookie: world.owner.sessionCookie,
@@ -178,7 +182,6 @@ describe.serial("communities", () => {
         banner:
           '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Welcome to the community."}]}]}',
         categories: ["General", "Questions"],
-        enabled: false,
         autoAcceptMembers: true,
       },
     });
@@ -199,33 +202,6 @@ describe.serial("communities", () => {
       banner:
         '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Welcome to the community."}]}]}',
       membersCount: 1,
-      enabled: false,
-    });
-
-    const enabledOnCreate = await dispatch(runtime, {
-      method: "POST",
-      path: "/v1/communities",
-      headers: adminHeaders,
-      body: {
-        name: "Published without a plan",
-        categories: ["General"],
-        enabled: true,
-      },
-    });
-    expect(enabledOnCreate.status).toBe(409);
-    expect(enabledOnCreate.body).toMatchObject({
-      details: { reason: "community_requires_default_payment_plan" },
-    });
-
-    const enabledWithoutPlan = await dispatch(runtime, {
-      method: "PATCH",
-      path: `/v1/communities/${community.id}`,
-      headers: adminHeaders,
-      body: { enabled: true },
-    });
-    expect(enabledWithoutPlan.status).toBe(409);
-    expect(enabledWithoutPlan.body).toMatchObject({
-      details: { reason: "community_requires_default_payment_plan" },
     });
 
     const updatedBanner = await dispatch(runtime, {
@@ -267,16 +243,30 @@ describe.serial("communities", () => {
       },
     });
     expect(featuredMedia.status).toBe(201);
-    const featuredMediaId = (featuredMedia.body as { id: string }).id;
+    const featuredMediaRecord = featuredMedia.body as {
+      id: string;
+      canonicalUrl: string;
+    };
+    const featuredMediaId = featuredMediaRecord.id;
     const featuredCommunity = await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/communities/${community.id}`,
       headers: adminHeaders,
-      body: { featuredMediaId },
+      body: {
+        featuredImage: {
+          mediaId: featuredMediaId,
+          url: featuredMediaRecord.canonicalUrl,
+          alt: "Community cover",
+        },
+      },
     });
     expect(featuredCommunity.status).toBe(200);
     expect(featuredCommunity.body).toMatchObject({
-      featuredMedia: { id: featuredMediaId, fileName: "community-cover.png" },
+      featuredImage: {
+        mediaId: featuredMediaId,
+        url: featuredMediaRecord.canonicalUrl,
+        alt: "Community cover",
+      },
     });
 
     const addedCategory = await dispatch(runtime, {
@@ -288,7 +278,7 @@ describe.serial("communities", () => {
     expect(addedCategory.status).toBe(200);
     expect(addedCategory.body).toMatchObject({
       categories: ["General", "Questions", "Announcements"],
-      featuredMedia: { id: featuredMediaId },
+      featuredImage: { mediaId: featuredMediaId },
     });
     const listedCommunities = await dispatch(runtime, {
       method: "GET",
@@ -296,7 +286,7 @@ describe.serial("communities", () => {
       headers: adminHeaders,
     });
     expect(listedCommunities.body).toMatchObject({
-      items: [{ id: community.id, featuredMedia: { id: featuredMediaId } }],
+      items: [{ id: community.id, featuredImage: { mediaId: featuredMediaId } }],
     });
     const duplicateCategory = await dispatch(runtime, {
       method: "POST",
@@ -318,17 +308,6 @@ describe.serial("communities", () => {
       currency: "USD",
       isDefault: true,
       kind: "free",
-    });
-    const enabledWithPlan = await dispatch(runtime, {
-      method: "PATCH",
-      path: `/v1/communities/${community.id}`,
-      headers: adminHeaders,
-      body: { enabled: true },
-    });
-    expect(enabledWithPlan.status).toBe(200);
-    expect(enabledWithPlan.body).toMatchObject({
-      id: community.id,
-      enabled: true,
     });
     const plans = await dispatch(runtime, {
       method: "GET",
@@ -430,7 +409,7 @@ describe.serial("communities", () => {
         {
           id: community.id,
           membership: null,
-          featuredMedia: { id: featuredMediaId },
+          featuredImage: { mediaId: featuredMediaId },
         },
       ],
     });
@@ -905,9 +884,9 @@ describe.serial("communities", () => {
     )[0];
     const secondLearnerRow = (
       await runtime.db
-        .select({ id: schema.learners.id })
-        .from(schema.learners)
-        .where(eq(schema.learners.email, "community-commenter@example.com"))
+        .select({ id: schema.schoolAccounts.id })
+        .from(schema.schoolAccounts)
+        .where(eq(schema.schoolAccounts.email, "community-commenter@example.com"))
         .limit(1)
     )[0];
     expect(firstPostForSubscription).toBeDefined();
@@ -918,7 +897,7 @@ describe.serial("communities", () => {
       .where(eq(schema.communityPostSubscribers.postId, firstPostForSubscription!.id));
     expect(secondLearnerSubscription).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ learnerId: secondLearnerRow!.id }),
+        expect.objectContaining({ schoolAccountId: secondLearnerRow!.id }),
       ]),
     );
     const secondLearnerComment = await dispatch(runtime, {
@@ -973,8 +952,10 @@ describe.serial("communities", () => {
       notificationItems.some(
         (item) =>
           item.type === "community_comment" &&
-          item.href ===
-            `/dashboard/community/${community.id}/${postBody.id}#${(secondLearnerComment.body as { id: string }).id}`,
+          item.href.startsWith("/dashboard/s/") &&
+          item.href.endsWith(
+            `/${postBody.id}#${(secondLearnerComment.body as { id: string }).id}`,
+          ),
       ),
     ).toBe(true);
     expect(
@@ -1234,9 +1215,9 @@ describe.serial("communities", () => {
       headers: learnerHeaders,
     });
     expect(secondFeedPage.status).toBe(200);
-    expect(
-      (secondFeedPage.body as { items: Array<{ id: string }> }).items[0]?.id,
-    ).toBe((secondPost.body as { id: string }).id);
+    expect((secondFeedPage.body as { items: Array<{ id: string }> }).items[0]?.id).toBe(
+      (secondPost.body as { id: string }).id,
+    );
 
     const categoryFilteredPosts = await dispatch(runtime, {
       method: "GET",
@@ -1374,7 +1355,6 @@ describe.serial("communities", () => {
         name: "Moderated community",
         description: "Requires an approval before posting",
         categories: ["General"],
-        enabled: false,
         autoAcceptMembers: false,
       },
     });
@@ -1387,13 +1367,6 @@ describe.serial("communities", () => {
       body: { name: "Moderated community access", type: "free", kind: "free" },
     });
     expect(moderatedPlan.status).toBe(201);
-    const enabledModeratedCommunity = await dispatch(runtime, {
-      method: "PATCH",
-      path: `/v1/communities/${moderatedCommunity.id}`,
-      headers: adminHeaders,
-      body: { enabled: true },
-    });
-    expect(enabledModeratedCommunity.status).toBe(200);
     const firstCommunityPage = await dispatch(runtime, {
       method: "GET",
       path: "/v1/communities?limit=1",
@@ -1571,7 +1544,7 @@ describe.serial("communities", () => {
       ).items.some(
         (item) =>
           item.type === "community_membership_granted" &&
-          item.href === `/dashboard/community/${moderatedCommunity.id}`,
+          item.href === "/dashboard",
       ),
     ).toBe(true);
     const allowedPost = await dispatch(runtime, {
@@ -1732,9 +1705,84 @@ describe.serial("communities", () => {
     await runtime.close();
   });
 
+  it("keeps external community featured images out of the media library", async () => {
+    const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
+    const runtime = await createPgliteRuntime({ clock, billingMode: "oss" });
+    const world = await seedWorld(runtime, clock);
+    const adminHeaders = {
+      cookie: world.owner.sessionCookie,
+      "x-school-id": world.schoolA.publicId,
+    };
+    const created = await dispatch(runtime, {
+      method: "POST",
+      path: "/v1/communities",
+      headers: adminHeaders,
+      body: { name: "External image community", categories: ["General"] },
+    });
+    expect(created.status).toBe(201);
+    const communityId = (created.body as { id: string }).id;
+    const externalUrl = "https://images.unsplash.com/photo-external?auto=format";
+
+    const updated = await dispatch(runtime, {
+      method: "PATCH",
+      path: `/v1/communities/${communityId}`,
+      headers: adminHeaders,
+      body: {
+        featuredImage: {
+          url: externalUrl,
+          alt: "A community workspace",
+        },
+      },
+    });
+    expect(updated.status).toBe(200);
+    expect(updated.body).toMatchObject({
+      featuredImage: {
+        url: externalUrl,
+        alt: "A community workspace",
+      },
+    });
+
+    const detail = await dispatch(runtime, {
+      method: "GET",
+      path: `/v1/communities/${communityId}`,
+      headers: adminHeaders,
+    });
+    expect(detail.status).toBe(200);
+    expect(detail.body).toMatchObject({
+      featuredImage: { url: externalUrl, alt: "A community workspace" },
+    });
+    const list = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/communities?limit=50",
+      headers: adminHeaders,
+    });
+    expect(list.status).toBe(200);
+    expect(list.body).toMatchObject({
+      items: [
+        { id: communityId, featuredImage: { url: externalUrl, alt: "A community workspace" } },
+      ],
+    });
+
+    const mediaLibrary = await dispatch(runtime, {
+      method: "GET",
+      path: "/v1/media?limit=50",
+      headers: adminHeaders,
+    });
+    expect(mediaLibrary.status).toBe(200);
+    expect(mediaLibrary.body).toMatchObject({ items: [] });
+    const references = await runtime.db
+      .select({ id: schema.mediaReferences.id })
+      .from(schema.mediaReferences);
+    expect(references).toHaveLength(0);
+    await runtime.close();
+  });
+
   it("tracks recurring community access and revokes it on payment failure or refund", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
-    const runtime = await createPgliteRuntime({ clock, paymentProvider: new MemoryPaymentProvider() });
+    const runtime = await createPgliteRuntime({
+      clock,
+      paymentProvider: new MemoryPaymentProvider(),
+    });
     const world = await seedWorld(runtime, clock);
     const adminHeaders = {
       cookie: world.owner.sessionCookie,
@@ -1748,7 +1796,6 @@ describe.serial("communities", () => {
         name: "Subscription community",
         description: "Recurring access",
         categories: ["General"],
-        enabled: false,
         autoAcceptMembers: true,
       },
     });
@@ -1768,13 +1815,6 @@ describe.serial("communities", () => {
       },
     });
     expect(planResponse.status).toBe(201);
-    const enabledSubscriptionCommunity = await dispatch(runtime, {
-      method: "PATCH",
-      path: `/v1/communities/${communityId}`,
-      headers: adminHeaders,
-      body: { enabled: true },
-    });
-    expect(enabledSubscriptionCommunity.status).toBe(200);
     const planId = (planResponse.body as { id: string }).id;
     const learnerResponse = await dispatch(runtime, {
       method: "POST",
@@ -1892,7 +1932,6 @@ describe.serial("communities", () => {
         name: "Leaveable community",
         description: "Learners can leave this community.",
         categories: ["General"],
-        enabled: false,
         autoAcceptMembers: true,
       },
     });
@@ -1912,13 +1951,6 @@ describe.serial("communities", () => {
       },
     });
     expect(plan.status).toBe(201);
-    const enabledLeaveableCommunity = await dispatch(runtime, {
-      method: "PATCH",
-      path: `/v1/communities/${(community.body as { id: string }).id}`,
-      headers: adminHeaders,
-      body: { enabled: true },
-    });
-    expect(enabledLeaveableCommunity.status).toBe(200);
     const learner = await dispatch(runtime, {
       method: "POST",
       path: "/v1/learner/auth/sign-up",
@@ -1970,7 +2002,7 @@ describe.serial("communities", () => {
     expect(provider.cancelledSubscriptions).toEqual(["community-leave-subscription-1"]);
 
     const memberships = await runtime.db.select().from(schema.communityMemberships);
-    expect(memberships.filter((item) => item.learnerId)).toHaveLength(0);
+    expect(memberships.filter((item) => item.role === "member")).toHaveLength(0);
     const subscriptions = await runtime.db.select().from(schema.communitySubscriptions);
     expect(subscriptions).toMatchObject([{ status: "cancelled" }]);
 

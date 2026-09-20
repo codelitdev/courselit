@@ -3,7 +3,7 @@ import {
   type PlatformCredential,
   type PlatformError,
 } from "@codelitdev/platform";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import {
   type CourseLitPermission,
@@ -16,6 +16,13 @@ import type { AppDb } from "./types.js";
 export type ResolvedSchool = {
   schoolId: string;
   publicId: string;
+  schoolAccountId: string;
+  schoolAccountPublicId: string;
+  staffMembershipId: string;
+  staffMembershipPublicId: string;
+  isOwner: boolean;
+  membershipVersion: number;
+  directPermissions: readonly CourseLitPermission[];
   permissions: ReadonlySet<CourseLitPermission>;
 };
 
@@ -30,32 +37,81 @@ export async function resolveSchoolContext(input: {
       return { ok: false, error: createPlatformError("unauthenticated") };
     }
     const keys = await input.db
-      .select()
+      .select({
+        apiKey: schema.apiKeys,
+        school: schema.schools,
+        membership: schema.memberships,
+        schoolAccount: schema.schoolAccounts,
+      })
       .from(schema.apiKeys)
-      .where(eq(schema.apiKeys.id, input.credential.credentialId))
+      .innerJoin(schema.schools, eq(schema.schools.id, schema.apiKeys.schoolId))
+      .leftJoin(
+        schema.memberships,
+        eq(schema.memberships.id, schema.apiKeys.membershipId),
+      )
+      .leftJoin(
+        schema.schoolAccounts,
+        eq(schema.schoolAccounts.id, schema.memberships.schoolAccountId),
+      )
+      .where(
+        and(
+          eq(schema.apiKeys.id, input.credential.credentialId),
+          isNull(schema.apiKeys.revokedAt),
+        ),
+      )
       .limit(1);
-    const key = keys[0];
-    if (!key) {
+    const row = keys[0];
+    if (!row) {
       return { ok: false, error: createPlatformError("unauthenticated") };
     }
-    const schools = await input.db
-      .select()
-      .from(schema.schools)
-      .where(eq(schema.schools.id, key.schoolId))
-      .limit(1);
-    const school = schools[0];
-    if (!school) {
-      return { ok: false, error: createPlatformError("tenant_forbidden") };
+    if (row.apiKey.expiresAt && row.apiKey.expiresAt.valueOf() <= Date.now()) {
+      return { ok: false, error: createPlatformError("unauthenticated") };
+    }
+    if (row.membership && row.schoolAccount) {
+      if (row.schoolAccount.status !== "active") {
+        return { ok: false, error: createPlatformError("tenant_forbidden") };
+      }
+      const memberEffective = row.membership.isOwner
+        ? new Set(OWNER_PERMISSIONS)
+        : parsePermissions(row.membership.permissions);
+      const keyEffective = parsePermissions(row.apiKey.permissions);
+      const intersected = new Set<CourseLitPermission>();
+      for (const p of keyEffective) {
+        if (memberEffective.has(p)) intersected.add(p);
+      }
+      return {
+        ok: true,
+        value: {
+          schoolId: row.school.id,
+          publicId: row.school.publicId,
+          schoolAccountId: row.schoolAccount.id,
+          schoolAccountPublicId: row.schoolAccount.publicId,
+          staffMembershipId: row.membership.id,
+          staffMembershipPublicId: row.membership.publicId,
+          isOwner: false,
+          membershipVersion: row.membership.version,
+          directPermissions: row.apiKey.permissions as CourseLitPermission[],
+          permissions: intersected,
+        },
+      };
     }
     return {
       ok: true,
       value: {
-        schoolId: school.id,
-        publicId: school.publicId,
-        permissions: parsePermissions(key.permissions),
+        schoolId: row.school.id,
+        publicId: row.school.publicId,
+        schoolAccountId: row.apiKey.createdBySchoolAccountId ?? "",
+        schoolAccountPublicId: "",
+        staffMembershipId: row.apiKey.membershipId ?? "",
+        staffMembershipPublicId: "",
+        isOwner: false,
+        membershipVersion: 1,
+        directPermissions: row.apiKey.permissions as CourseLitPermission[],
+        permissions: parsePermissions(row.apiKey.permissions),
       },
     };
   }
+
   if (!input.requestedPublicSchoolId) {
     const selected = await input.db
       .select()
@@ -83,13 +139,19 @@ async function loadMembership(
     .select({
       membership: schema.memberships,
       school: schema.schools,
+      schoolAccount: schema.schoolAccounts,
     })
     .from(schema.memberships)
     .innerJoin(schema.schools, eq(schema.schools.id, schema.memberships.schoolId))
+    .innerJoin(
+      schema.schoolAccounts,
+      eq(schema.schoolAccounts.id, schema.memberships.schoolAccountId),
+    )
     .where(
       and(
         eq(schema.memberships.schoolId, schoolId),
-        eq(schema.memberships.userId, principalId),
+        eq(schema.schoolAccounts.userId, principalId),
+        eq(schema.schoolAccounts.status, "active"),
       ),
     )
     .limit(1);
@@ -102,9 +164,13 @@ async function loadMembership(
     value: {
       schoolId: row.school.id,
       publicId: row.school.publicId,
-      // Ownership is the stable authorization invariant. Older databases may
-      // contain owner rows written before newer capabilities (such as the
-      // MediaLit permissions) were added to the permission catalog.
+      schoolAccountId: row.schoolAccount.id,
+      schoolAccountPublicId: row.schoolAccount.publicId,
+      staffMembershipId: row.membership.id,
+      staffMembershipPublicId: row.membership.publicId,
+      isOwner: row.membership.isOwner,
+      membershipVersion: row.membership.version,
+      directPermissions: row.membership.permissions as CourseLitPermission[],
       permissions: row.membership.isOwner
         ? new Set(OWNER_PERMISSIONS)
         : parsePermissions(row.membership.permissions),

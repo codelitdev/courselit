@@ -1,9 +1,4 @@
-import {
-  createHash,
-  randomBytes,
-  scryptSync,
-  timingSafeEqual,
-} from "node:crypto";
+import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import {
   type Clock,
   createPlatformError,
@@ -12,23 +7,23 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
-import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, lte, or } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, isNotNull, isNull, or } from "drizzle-orm";
+import { ActivityType, recordActivity } from "./activities.js";
 import { lessonUnlockAt, sectionUnlockAt } from "./catalog.js";
 import { issueCertificateIfComplete } from "./certificates.js";
-import { ActivityType, recordActivity } from "./activities.js";
 import * as schema from "./db/schema/index.js";
 import { normalizeEmail } from "./invitations.js";
+import { upsertLearnerMembership } from "./learner-memberships.js";
+import {
+  type LearnerProfileFields,
+  readLearnerProfile,
+  updateLearnerProfileContact,
+} from "./learner-profile.js";
 import type { MediaLitClient } from "./media.js";
 import type { CourseLitPermission } from "./permissions.js";
-import type { ProductDto, ProductFeaturedMediaDto } from "./products.js";
+import { type ProductDto, productFeaturedImageFor } from "./products.js";
 import { loadSchoolByPublicId } from "./schools.js";
-import { headerSchoolId } from "./school-context.js";
-import { hostnameFromHeaders, schoolLookupKeyFromHost } from "./school-host.js";
 import type { AppDb } from "./types.js";
-import {
-  findLearnerMembership,
-  upsertLearnerMembership,
-} from "./learner-memberships.js";
 
 export const LEARNER_SESSION_COOKIE = "courselit.learner.session";
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -39,9 +34,17 @@ export type LearnerDto = {
   schoolId: string;
   email: string;
   name: string;
+  avatarMediaId: string | null;
+  image: string | null;
+  bio: string;
+  emailUpdatesEnabled: boolean;
 };
 
-export type AdminLearnerDto = LearnerDto & {
+export type AdminLearnerDto = {
+  id: string;
+  schoolId: string;
+  email: string;
+  name: string;
   status: "active" | "deactivated";
   createdAt: string;
 };
@@ -104,6 +107,19 @@ export type LearnerIdentityLinkDto = {
   expiresAt: string;
 };
 
+export type LearnerSession = {
+  schoolAccount: typeof schema.schoolAccounts.$inferSelect;
+  learner: typeof schema.schoolAccounts.$inferSelect & { name: string };
+  school: typeof schema.schools.$inferSelect;
+  sessionId: string;
+  userId: string;
+  authenticationMethod: "email" | "google";
+};
+
+export function digestToken(token: string): string {
+  return createHash("sha256").update(token, "utf8").digest("hex");
+}
+
 function latestUnlockAt(...dates: (Date | null)[]): Date | null {
   return dates.reduce<Date | null>((latest, date) => {
     if (!date) return latest;
@@ -132,7 +148,7 @@ async function sectionAccessForLesson(
 
 async function activeProductMembershipForLesson(
   db: AppDb,
-  input: { schoolId: string; learnerId: string; productPublicId: string },
+  input: { schoolId: string; schoolAccountId: string; productPublicId: string },
 ) {
   const rows = await db
     .select({ membership: schema.learnerMemberships })
@@ -140,7 +156,7 @@ async function activeProductMembershipForLesson(
     .where(
       and(
         eq(schema.learnerMemberships.schoolId, input.schoolId),
-        eq(schema.learnerMemberships.learnerId, input.learnerId),
+        eq(schema.learnerMemberships.schoolAccountId, input.schoolAccountId),
         eq(schema.learnerMemberships.entityType, "product"),
         eq(schema.learnerMemberships.entityId, input.productPublicId),
         eq(schema.learnerMemberships.status, "active"),
@@ -153,13 +169,8 @@ async function activeProductMembershipForLesson(
 type LessonMediaViewer =
   | { kind: "public" }
   | { kind: "preview" }
-  | { kind: "learner"; learnerId: string };
+  | { kind: "learner"; schoolAccountId?: string; learnerId?: string };
 
-/**
- * Resolve a lesson asset only after applying the same visibility rules as the
- * learner product read. Private MediaLit assets are looked up server-side so
- * the browser never receives the MediaLit API key or its internal asset ID.
- */
 export async function getLearnerLessonMedia(
   db: AppDb,
   client: MediaLitClient,
@@ -200,9 +211,10 @@ export async function getLearnerLessonMedia(
   let enrolled = false;
   let membershipStartedAt: Date | null = null;
   if (input.viewer.kind === "learner") {
+    const accountId = input.viewer.schoolAccountId ?? input.viewer.learnerId!;
     const membership = await activeProductMembershipForLesson(db, {
       schoolId: input.schoolId,
-      learnerId: input.viewer.learnerId,
+      schoolAccountId: accountId,
       productPublicId: row.product.publicId,
     });
     enrolled = Boolean(membership);
@@ -299,9 +311,14 @@ export async function getLearnerLessonMedia(
 
 export async function listLearnerProducts(
   db: AppDb,
-  input: { schoolId: string; publicSchoolId: string; learnerId: string },
-  now: Date,
+  input: {
+    schoolId: string;
+    publicSchoolId: string;
+    schoolAccountId?: string;
+    learnerId?: string;
+  },
 ): Promise<LearnerProductDto[]> {
+  const accountId = input.schoolAccountId ?? input.learnerId!;
   const rows = await db
     .select({ product: schema.products, membership: schema.learnerMemberships })
     .from(schema.learnerMemberships)
@@ -312,7 +329,7 @@ export async function listLearnerProducts(
     .where(
       and(
         eq(schema.learnerMemberships.schoolId, input.schoolId),
-        eq(schema.learnerMemberships.learnerId, input.learnerId),
+        eq(schema.learnerMemberships.schoolAccountId, accountId),
         eq(schema.learnerMemberships.entityType, "product"),
         eq(schema.learnerMemberships.status, "active"),
         eq(schema.products.schoolId, input.schoolId),
@@ -332,7 +349,7 @@ export async function listLearnerProducts(
     distinctRows.map(async ({ product }) => {
       const memberships = membershipsByProduct.get(product.id) ?? [];
       const membershipIds = memberships.map((membership) => membership.id);
-      const [publishedLessons, completedLessons, certificateRows, featuredMediaRows, downloadRows] =
+      const [publishedLessons, completedLessons, certificateRows, featuredImage, downloadRows] =
         await Promise.all([
           db
             .select({ id: schema.lessons.id })
@@ -366,28 +383,13 @@ export async function listLearnerProducts(
             .where(
               and(
                 eq(schema.certificates.schoolId, input.schoolId),
-                eq(schema.certificates.learnerId, input.learnerId),
+                eq(schema.certificates.schoolAccountId, accountId),
                 eq(schema.certificates.productId, product.id),
                 isNull(schema.certificates.revokedAt),
               ),
             )
             .limit(1),
-          db
-            .select({ media: schema.media })
-            .from(schema.mediaReferences)
-            .innerJoin(
-              schema.media,
-              eq(schema.media.id, schema.mediaReferences.mediaId),
-            )
-            .where(
-              and(
-                eq(schema.mediaReferences.schoolId, input.schoolId),
-                eq(schema.mediaReferences.resourceType, "product_artwork"),
-                eq(schema.mediaReferences.resourceInternalId, product.id),
-                eq(schema.media.status, "active"),
-              ),
-            )
-            .limit(1),
+          productFeaturedImageFor(db, product),
           db
             .select({ id: schema.downloadLinks.id })
             .from(schema.downloadLinks)
@@ -400,16 +402,6 @@ export async function listLearnerProducts(
             )
             .limit(1),
         ]);
-      const media = featuredMediaRows[0]?.media;
-      const featuredMedia: ProductFeaturedMediaDto | null = media
-        ? {
-            id: media.publicId,
-            canonicalUrl: media.canonicalUrl,
-            thumbnailUrl: media.thumbnailUrl,
-            fileName: media.fileName,
-            altText: media.altText,
-          }
-        : null;
       return {
         id: product.publicId,
         schoolId: input.publicSchoolId,
@@ -418,11 +410,13 @@ export async function listLearnerProducts(
         slug: product.slug,
         title: product.title,
         description: product.description,
-        featuredMedia,
+        featuredImage,
         privacy: product.privacy,
         leadMagnet: product.leadMagnet,
         certificate: product.certificate,
         discussions: product.discussions,
+        includedWithCommunity: product.includedWithCommunity,
+        discussionSpaceId: product.discussionSpaceId,
         publishedAt: product.publishedAt ? serializeDate(product.publishedAt) : null,
         createdAt: serializeDate(product.createdAt),
         updatedAt: serializeDate(product.updatedAt),
@@ -435,227 +429,23 @@ export async function listLearnerProducts(
   );
 }
 
-export type LearnerSession = {
-  learner: typeof schema.learners.$inferSelect;
-  school: typeof schema.schools.$inferSelect;
-  sessionId: string;
-};
-
-function digestToken(token: string): string {
-  return createHash("sha256").update(token, "utf8").digest("hex");
-}
-
-class LearnerIdentityLinkError extends Error {
-  constructor(readonly error: PlatformError) {
-    super("learner_identity_link_failed");
-  }
-}
-
-function throwIdentityLinkError(error: PlatformError): never {
-  throw new LearnerIdentityLinkError(error);
-}
-
-function roleRank(role: "member" | "moderator" | "owner"): number {
-  return role === "owner" ? 3 : role === "moderator" ? 2 : 1;
-}
-
-async function consumeLearnerIdentityLink(
-  tx: AppDb,
-  input: {
-    schoolId: string;
-    learnerId: string;
-    learnerPublicId: string;
-    token: string;
-    now: Date;
-    clock: Clock;
-    requestId: string;
-  },
-): Promise<void> {
-  const tokenRows = await tx
-    .select()
-    .from(schema.learnerIdentityLinkTokens)
-    .where(
-      and(
-        eq(schema.learnerIdentityLinkTokens.schoolId, input.schoolId),
-        eq(schema.learnerIdentityLinkTokens.tokenDigest, digestToken(input.token)),
-        isNull(schema.learnerIdentityLinkTokens.consumedAt),
-        gt(schema.learnerIdentityLinkTokens.expiresAt, input.now),
-      ),
-    )
-    .limit(1);
-  const linkToken = tokenRows[0];
-  if (!linkToken) {
-    throwIdentityLinkError(createPlatformError("unauthenticated"));
-  }
-  const adminUserId = linkToken.adminUserId;
-  const claimedTokens = await tx
-    .update(schema.learnerIdentityLinkTokens)
-    .set({ consumedAt: input.now })
-    .where(
-      and(
-        eq(schema.learnerIdentityLinkTokens.id, linkToken.id),
-        isNull(schema.learnerIdentityLinkTokens.consumedAt),
-      ),
-    )
-    .returning({ id: schema.learnerIdentityLinkTokens.id });
-  if (claimedTokens.length === 0) {
-    throwIdentityLinkError(createPlatformError("unauthenticated"));
-  }
-
-  const existingLearnerLink = await tx
-    .select()
-    .from(schema.learnerAdminLinks)
-    .where(
-      and(
-        eq(schema.learnerAdminLinks.schoolId, input.schoolId),
-        eq(schema.learnerAdminLinks.learnerId, input.learnerId),
-      ),
-    )
-    .limit(1);
-  if (existingLearnerLink[0] && existingLearnerLink[0].adminUserId !== adminUserId) {
-    throwIdentityLinkError(
-      createPlatformError("conflict", {
-        safeDetails: { reason: "learner_already_linked" },
-      }),
-    );
-  }
-  const existingAdminLink = await tx
-    .select()
-    .from(schema.learnerAdminLinks)
-    .where(
-      and(
-        eq(schema.learnerAdminLinks.schoolId, input.schoolId),
-        eq(schema.learnerAdminLinks.adminUserId, adminUserId),
-      ),
-    )
-    .limit(1);
-  if (existingAdminLink[0] && existingAdminLink[0].learnerId !== input.learnerId) {
-    throwIdentityLinkError(
-      createPlatformError("conflict", {
-        safeDetails: { reason: "admin_already_linked" },
-      }),
-    );
-  }
-
-  if (!existingLearnerLink[0]) {
-    await tx.insert(schema.learnerAdminLinks).values({
-      id: uuidv7(input.clock),
-      schoolId: input.schoolId,
-      learnerId: input.learnerId,
-      adminUserId,
-      createdAt: input.now,
-    });
-  }
-
-  // A community created by an admin has an admin-owned owner membership. When
-  // that admin explicitly claims a learner identity, merge that membership
-  // into the learner identity instead of creating a second member row.
-  const adminMemberships = await tx
-    .select()
-    .from(schema.communityMemberships)
-    .where(
-      and(
-        eq(schema.communityMemberships.schoolId, input.schoolId),
-        eq(schema.communityMemberships.adminUserId, adminUserId),
-      ),
-    );
-  for (const adminMembership of adminMemberships) {
-    if (adminMembership.learnerId === input.learnerId) continue;
-    const learnerMemberships = await tx
-      .select()
-      .from(schema.communityMemberships)
-      .where(
-        and(
-          eq(schema.communityMemberships.schoolId, input.schoolId),
-          eq(schema.communityMemberships.communityId, adminMembership.communityId),
-          eq(schema.communityMemberships.learnerId, input.learnerId),
-        ),
-      )
-      .limit(1);
-    const learnerMembership = learnerMemberships[0];
-    if (learnerMembership && learnerMembership.id !== adminMembership.id) {
-      if (
-        learnerMembership.adminUserId &&
-        learnerMembership.adminUserId !== adminUserId
-      ) {
-        throwIdentityLinkError(
-          createPlatformError("conflict", {
-            safeDetails: { reason: "community_identity_conflict" },
-          }),
-        );
-      }
-      await tx
-        .update(schema.communityMemberships)
-        .set({
-          adminUserId,
-          status:
-            adminMembership.status === "active" ? "active" : learnerMembership.status,
-          role:
-            roleRank(adminMembership.role) > roleRank(learnerMembership.role)
-              ? adminMembership.role
-              : learnerMembership.role,
-          rejectionReason:
-            adminMembership.status === "active"
-              ? null
-              : learnerMembership.rejectionReason,
-          updatedAt: input.now,
-        })
-        .where(eq(schema.communityMemberships.id, learnerMembership.id));
-      await tx
-        .delete(schema.communityMemberships)
-        .where(eq(schema.communityMemberships.id, adminMembership.id));
-    } else {
-      await tx
-        .update(schema.communityMemberships)
-        .set({ learnerId: input.learnerId, updatedAt: input.now })
-        .where(eq(schema.communityMemberships.id, adminMembership.id));
-    }
-  }
-
-  await tx.insert(schema.auditEvents).values({
-    id: uuidv7(input.clock),
-    schoolId: input.schoolId,
-    actorId: adminUserId,
-    action: "learner.identity_linked",
-    resourceType: "learner",
-    resourceId: input.learnerPublicId,
-    requestId: input.requestId,
-    createdAt: input.now,
-  });
-}
-
-function hashPassword(password: string): string {
-  const salt = randomBytes(16).toString("hex");
-  const hash = scryptSync(password, salt, 32).toString("hex");
-  return `${salt}:${hash}`;
-}
-
-function passwordMatches(password: string, stored: string): boolean {
-  const sep = stored.indexOf(":");
-  if (sep <= 0) return false;
-  const salt = stored.slice(0, sep);
-  const expected = Buffer.from(stored.slice(sep + 1), "hex");
-  const actual = scryptSync(password, salt, 32);
-  return expected.length === actual.length && timingSafeEqual(expected, actual);
-}
-
 function adminLearnerToDto(
-  learner: typeof schema.learners.$inferSelect,
+  account: typeof schema.schoolAccounts.$inferSelect,
   publicSchoolId: string,
 ): AdminLearnerDto {
   return {
-    id: learner.publicId,
+    id: account.publicId,
     schoolId: publicSchoolId,
-    email: learner.email,
-    name: learner.name,
-    status: learner.status,
-    createdAt: serializeDate(learner.createdAt),
+    email: account.email,
+    name: account.displayName,
+    status: account.status,
+    createdAt: serializeDate(account.createdAt),
   };
 }
 
-function encodeLearnerCursor(learner: typeof schema.learners.$inferSelect): string {
+function encodeLearnerCursor(account: typeof schema.schoolAccounts.$inferSelect): string {
   return Buffer.from(
-    JSON.stringify({ createdAt: learner.createdAt.toISOString(), id: learner.id }),
+    JSON.stringify({ createdAt: account.createdAt.toISOString(), id: account.id }),
   ).toString("base64url");
 }
 
@@ -693,7 +483,6 @@ export function readLearnerSessionCookie(
   return null;
 }
 
-
 export function learnerSessionCookieHeader(token: string): string {
   return `${LEARNER_SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(SESSION_TTL_MS / 1000)}`;
 }
@@ -702,16 +491,25 @@ export function clearLearnerSessionCookieHeader(): string {
   return `${LEARNER_SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
 }
 
-
-function toLearnerDto(
-  learner: typeof schema.learners.$inferSelect,
+export function toLearnerDto(
+  account: typeof schema.schoolAccounts.$inferSelect,
   publicSchoolId: string,
+  profile: LearnerProfileFields = {
+    avatarMediaId: null,
+    image: null,
+    bio: "",
+    emailUpdatesEnabled: true,
+  },
 ): LearnerDto {
   return {
-    id: learner.publicId,
+    id: account.publicId,
     schoolId: publicSchoolId,
-    email: learner.email,
-    name: learner.name,
+    email: account.email,
+    name: account.displayName,
+    avatarMediaId: profile.avatarMediaId,
+    image: profile.image,
+    bio: profile.bio,
+    emailUpdatesEnabled: profile.emailUpdatesEnabled,
   };
 }
 
@@ -730,31 +528,41 @@ export async function authenticateLearner(
   const now = clock.now();
   const rows = await db
     .select({
-      session: schema.learnerSessions,
-      learner: schema.learners,
+      session: schema.schoolSessions,
+      account: schema.schoolAccounts,
       school: schema.schools,
     })
-    .from(schema.learnerSessions)
+    .from(schema.schoolSessions)
     .innerJoin(
-      schema.learners,
-      eq(schema.learners.id, schema.learnerSessions.learnerId),
+      schema.schoolAccounts,
+      eq(schema.schoolAccounts.id, schema.schoolSessions.schoolAccountId),
     )
-    .innerJoin(schema.schools, eq(schema.schools.id, schema.learnerSessions.schoolId))
-    .where(eq(schema.learnerSessions.tokenDigest, digest))
+    .innerJoin(schema.schools, eq(schema.schools.id, schema.schoolSessions.schoolId))
+    .where(eq(schema.schoolSessions.tokenDigest, digest))
     .limit(1);
   const row = rows[0];
   if (!row || row.session.expiresAt.getTime() <= now.getTime()) {
     return { kind: "rejected", error: createPlatformError("unauthenticated") };
   }
-  if (row.learner.status !== "active") {
+  if (row.account.status !== "active") {
+    return { kind: "rejected", error: createPlatformError("unauthenticated") };
+  }
+  const hasGoogle = Boolean(
+    process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
+  );
+  const allowedMethods = hasGoogle ? ["email", "google"] : ["email"];
+  if (!allowedMethods.includes(row.session.authenticationMethod)) {
     return { kind: "rejected", error: createPlatformError("unauthenticated") };
   }
   return {
     kind: "authenticated",
     value: {
-      learner: row.learner,
+      schoolAccount: row.account,
+      learner: Object.assign({}, row.account, { name: row.account.displayName }),
       school: row.school,
       sessionId: row.session.id,
+      userId: row.session.userId,
+      authenticationMethod: row.session.authenticationMethod,
     },
   };
 }
@@ -773,24 +581,196 @@ export function assertLearnerSchool(
   return { ok: true };
 }
 
-async function issueSession(
+export async function ensureSchoolAccount(
   db: AppDb,
-  learner: typeof schema.learners.$inferSelect,
-  school: typeof schema.schools.$inferSelect,
-  clock: Clock,
-): Promise<{ token: string; dto: LearnerDto; sessionId: string }> {
+  input: {
+    schoolId: string;
+    userId: string;
+    email: string;
+    displayName?: string | null;
+    image?: string | null;
+    clock: Clock;
+  },
+): Promise<typeof schema.schoolAccounts.$inferSelect> {
+  const email = normalizeEmail(input.email);
+  const existing = await db
+    .select()
+    .from(schema.schoolAccounts)
+    .where(
+      and(
+        eq(schema.schoolAccounts.schoolId, input.schoolId),
+        eq(schema.schoolAccounts.userId, input.userId),
+      ),
+    )
+    .limit(1);
+  if (existing[0]) {
+    return existing[0];
+  }
+  const byEmail = await db
+    .select()
+    .from(schema.schoolAccounts)
+    .where(
+      and(
+        eq(schema.schoolAccounts.schoolId, input.schoolId),
+        eq(schema.schoolAccounts.email, email),
+      ),
+    )
+    .limit(1);
+  const now = input.clock.now();
+  if (byEmail[0]) {
+    const updated = await db
+      .update(schema.schoolAccounts)
+      .set({
+        userId: input.userId,
+        displayName: input.displayName?.trim() || byEmail[0].displayName,
+        image: input.image ?? byEmail[0].image,
+        updatedAt: now,
+      })
+      .where(eq(schema.schoolAccounts.id, byEmail[0].id))
+      .returning();
+    return updated[0];
+  }
+  const publicId = createPublicId("lrn", input.clock);
+  const name = input.displayName?.trim() || learnerNameFromEmail(email);
+  const inserted = await db
+    .insert(schema.schoolAccounts)
+    .values({
+      id: uuidv7(input.clock),
+      publicId,
+      schoolId: input.schoolId,
+      userId: input.userId,
+      email,
+      displayName: name,
+      image: input.image ?? null,
+      status: "active",
+      createdAt: now,
+      updatedAt: now,
+    })
+    .returning();
+  return inserted[0];
+}
+
+export async function issueSchoolSession(
+  db: AppDb,
+  input: {
+    school: typeof schema.schools.$inferSelect;
+    schoolAccount: typeof schema.schoolAccounts.$inferSelect;
+    userId: string;
+    authenticationMethod: "email" | "google";
+    clock: Clock;
+  },
+): Promise<{ token: string; dto: LearnerDto; session: LearnerSession }> {
   const token = randomBytes(32).toString("base64url");
-  const sessionId = uuidv7(clock);
-  const now = clock.now();
-  await db.insert(schema.learnerSessions).values({
+  const sessionId = uuidv7(input.clock);
+  const now = input.clock.now();
+  await db.insert(schema.schoolSessions).values({
     id: sessionId,
-    learnerId: learner.id,
-    schoolId: school.id,
+    schoolId: input.school.id,
+    schoolAccountId: input.schoolAccount.id,
+    userId: input.userId,
     tokenDigest: digestToken(token),
+    authenticationMethod: input.authenticationMethod,
+    authenticatedAt: now,
     expiresAt: new Date(now.getTime() + SESSION_TTL_MS),
     createdAt: now,
   });
-  return { token, dto: toLearnerDto(learner, school.publicId), sessionId };
+  const session: LearnerSession = {
+    schoolAccount: input.schoolAccount,
+    learner: Object.assign({}, input.schoolAccount, { name: input.schoolAccount.displayName }),
+    school: input.school,
+    sessionId,
+    userId: input.userId,
+    authenticationMethod: input.authenticationMethod,
+  };
+  return {
+    token,
+    dto: toLearnerDto(input.schoolAccount, input.school.publicId),
+    session,
+  };
+}
+
+export async function createSchoolAuthTicket(
+  db: AppDb,
+  input: {
+    schoolId: string;
+    schoolAccountId: string;
+    userId: string;
+    authenticationMethod: "email" | "google";
+    clock: Clock;
+  },
+): Promise<string> {
+  const ticket = randomBytes(32).toString("base64url");
+  const now = input.clock.now();
+  const expiresAt = new Date(now.getTime() + 30 * 1000); // 30s TTL
+  await db.insert(schema.schoolAuthTickets).values({
+    id: uuidv7(input.clock),
+    schoolId: input.schoolId,
+    schoolAccountId: input.schoolAccountId,
+    userId: input.userId,
+    ticketDigest: digestToken(ticket),
+    authenticationMethod: input.authenticationMethod,
+    expiresAt,
+    createdAt: now,
+  });
+  return ticket;
+}
+
+export async function consumeSchoolAuthTicket(
+  db: AppDb,
+  input: {
+    ticket: string;
+    clock: Clock;
+  },
+): Promise<
+  | { ok: true; value: { sessionToken: string; dto: LearnerDto; session: LearnerSession } }
+  | { ok: false; error: PlatformError }
+> {
+  const digest = digestToken(input.ticket);
+  const now = input.clock.now();
+  const rows = await db
+    .select({
+      ticket: schema.schoolAuthTickets,
+      account: schema.schoolAccounts,
+      school: schema.schools,
+    })
+    .from(schema.schoolAuthTickets)
+    .innerJoin(
+      schema.schoolAccounts,
+      eq(schema.schoolAccounts.id, schema.schoolAuthTickets.schoolAccountId),
+    )
+    .innerJoin(schema.schools, eq(schema.schools.id, schema.schoolAuthTickets.schoolId))
+    .where(
+      and(
+        eq(schema.schoolAuthTickets.ticketDigest, digest),
+        isNull(schema.schoolAuthTickets.consumedAt),
+        gt(schema.schoolAuthTickets.expiresAt, now),
+      ),
+    )
+    .limit(1);
+  const row = rows[0];
+  if (!row) {
+    return { ok: false, error: createPlatformError("unauthenticated") };
+  }
+  await db
+    .update(schema.schoolAuthTickets)
+    .set({ consumedAt: now })
+    .where(eq(schema.schoolAuthTickets.id, row.ticket.id));
+
+  const sessionRes = await issueSchoolSession(db, {
+    school: row.school,
+    schoolAccount: row.account,
+    userId: row.ticket.userId,
+    authenticationMethod: row.ticket.authenticationMethod,
+    clock: input.clock,
+  });
+  return {
+    ok: true,
+    value: {
+      sessionToken: sessionRes.token,
+      dto: sessionRes.dto,
+      session: sessionRes.session,
+    },
+  };
 }
 
 function learnerNameFromEmail(email: string): string {
@@ -823,17 +803,18 @@ export async function enqueueLearnerContactSync(
   });
 }
 
-
 /**
- * Bridge a verified Better Auth browser session into the school-scoped learner
- * session used by learner APIs. This is also used after social sign-in.
+ * Bridge a verified Better Auth user into the school account and session.
  */
 export async function signInLearnerWithIdentity(
   db: AppDb,
   input: {
+    userId: string;
     email: string;
     name?: string | null;
+    image?: string | null;
     schoolPublicId: string;
+    authenticationMethod?: "email" | "google";
   },
   clock: Clock,
   requestId: string,
@@ -850,77 +831,69 @@ export async function signInLearnerWithIdentity(
   if (!school) {
     return { ok: false, error: createPlatformError("unauthenticated") };
   }
-  const email = normalizeEmail(input.email);
-  const now = clock.now();
+  const authenticationMethod = input.authenticationMethod ?? "email";
+  const hasGoogle = Boolean(
+    process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
+  );
+  const allowedMethods = hasGoogle ? ["email", "google"] : ["email"];
+  if (!allowedMethods.includes(authenticationMethod)) {
+    return { ok: false, error: createPlatformError("forbidden") };
+  }
 
-  return db.transaction(async (tx) => {
-    const existing = await tx
-      .select()
-      .from(schema.learners)
-      .where(
-        and(
-          eq(schema.learners.schoolId, school.id),
-          eq(schema.learners.email, email),
-        ),
-      )
-      .limit(1);
-    let learner = existing[0];
-    if (learner?.status !== "active" && learner) {
-      return { ok: false as const, error: createPlatformError("unauthenticated") };
-    }
-    if (!learner) {
-      learner = {
-        id: uuidv7(clock),
-        publicId: createPublicId("lrn", clock),
-        schoolId: school.id,
-        email,
-        name: input.name?.trim() || learnerNameFromEmail(email),
-        status: "active",
-        createdAt: now,
-        updatedAt: now,
-      };
-      await tx.insert(schema.learners).values(learner);
-      await tx.insert(schema.auditEvents).values({
-        id: uuidv7(clock),
-        schoolId: school.id,
-        actorId: learner.publicId,
-        action: "learner.signed_up",
-        resourceType: "learner",
-        resourceId: learner.publicId,
-        requestId,
-        createdAt: now,
-      });
-      await recordActivity(
-        tx as unknown as AppDb,
-        {
-          schoolId: school.id,
-          actorId: learner.publicId,
-          type: ActivityType.USER_CREATED,
-          entityId: learner.publicId,
-          metadata: { email: learner.email },
-        },
-        clock,
-      );
-      await enqueueLearnerContactSync(tx as unknown as AppDb, school.id, learner, clock);
-    }
-
-    const issued = await issueSession(tx as unknown as AppDb, learner, school, clock);
-    return {
-      ok: true as const,
-      value: issued.dto,
-      token: issued.token,
-      session: { learner, school, sessionId: issued.sessionId },
-    };
+  const schoolAccount = await ensureSchoolAccount(db, {
+    schoolId: school.id,
+    userId: input.userId,
+    email: input.email,
+    displayName: input.name,
+    image: input.image,
+    clock,
   });
+
+  if (schoolAccount.status !== "active") {
+    return { ok: false, error: createPlatformError("unauthenticated") };
+  }
+
+  const issued = await issueSchoolSession(db, {
+    school,
+    schoolAccount,
+    userId: input.userId,
+    authenticationMethod,
+    clock,
+  });
+
+  await recordActivity(
+    db,
+    {
+      schoolId: school.id,
+      actorId: schoolAccount.publicId,
+      type: ActivityType.USER_CREATED,
+      entityId: schoolAccount.publicId,
+      metadata: { email: schoolAccount.email },
+    },
+    clock,
+  );
+  await enqueueLearnerContactSync(
+    db,
+    school.id,
+    { email: schoolAccount.email, name: schoolAccount.displayName },
+    clock,
+  );
+
+  return {
+    ok: true,
+    value: issued.dto,
+    token: issued.token,
+    session: issued.session,
+  };
 }
 
+/** Fallback/convenience for direct API sign-up tests */
 export async function signUpLearner(
   db: AppDb,
   input: {
     email: string;
-    password: string;
+    password?: string;
     name: string;
-    identityLinkToken?: string;
     schoolPublicId: string;
   },
   clock: Clock,
@@ -928,123 +901,85 @@ export async function signUpLearner(
 ): Promise<
   { ok: true; value: LearnerDto; token: string } | { ok: false; error: PlatformError }
 > {
-  if (input.password.length < 8) {
-    return { ok: false, error: createPlatformError("validation_failed") };
-  }
   const school = await loadSchoolByPublicId(db, input.schoolPublicId);
   if (!school) {
     return { ok: false, error: createPlatformError("tenant_forbidden") };
   }
   const email = normalizeEmail(input.email);
   const now = clock.now();
-  try {
-    return await db.transaction(async (tx) => {
-      const existing = await tx
-        .select()
-        .from(schema.learners)
-        .where(
-          and(
-            eq(schema.learners.schoolId, school.id),
-            eq(schema.learners.email, email),
-          ),
-        )
-        .limit(1);
-      let learner = existing[0];
-      let isNewLearner = false;
-      if (learner) {
-        const credential = await tx
-          .select()
-          .from(schema.learnerCredentials)
-          .where(eq(schema.learnerCredentials.learnerId, learner.id))
-          .limit(1);
-        if (credential[0]) {
-          return {
-            ok: false as const,
-            error: createPlatformError("conflict", {
-              safeDetails: { reason: "email_taken" },
-            }),
-          };
-        }
-        await tx.insert(schema.learnerCredentials).values({
-          learnerId: learner.id,
-          passwordDigest: hashPassword(input.password),
-          createdAt: now,
-          updatedAt: now,
-        });
-        if (input.name && input.name !== learner.name) {
-          await tx
-            .update(schema.learners)
-            .set({ name: input.name, updatedAt: now })
-            .where(eq(schema.learners.id, learner.id));
-          learner = { ...learner, name: input.name, updatedAt: now };
-        }
-      } else {
-        isNewLearner = true;
-        learner = {
-          id: uuidv7(clock),
-          publicId: createPublicId("lrn", clock),
-          schoolId: school.id,
-          email,
-          name: input.name,
-          status: "active",
-          createdAt: now,
-          updatedAt: now,
-        };
-        await tx.insert(schema.learners).values(learner);
-        await tx.insert(schema.learnerCredentials).values({
-          learnerId: learner.id,
-          passwordDigest: hashPassword(input.password),
-          createdAt: now,
-          updatedAt: now,
-        });
-        await recordActivity(tx as unknown as AppDb, {
-          schoolId: school.id,
-          actorId: learner.publicId,
-          type: ActivityType.USER_CREATED,
-          entityId: learner.publicId,
-          metadata: { email: learner.email },
-        }, clock);
-      }
-      await tx.insert(schema.auditEvents).values({
+
+  // Find or create global user
+  let user = (
+    await db.select().from(schema.user).where(eq(schema.user.email, email)).limit(1)
+  )[0];
+  if (!user) {
+    const created = await db
+      .insert(schema.user)
+      .values({
         id: uuidv7(clock),
-        schoolId: school.id,
-        actorId: learner.publicId,
-        action: "learner.signed_up",
-        resourceType: "learner",
-        resourceId: learner.publicId,
-        requestId,
+        name: input.name.trim() || learnerNameFromEmail(email),
+        email,
+        emailVerified: true,
         createdAt: now,
-      });
-      if (isNewLearner) {
-        await enqueueLearnerContactSync(tx as unknown as AppDb, school.id, learner, clock);
-      }
-      if (input.identityLinkToken) {
-        await consumeLearnerIdentityLink(tx as unknown as AppDb, {
-          schoolId: school.id,
-          learnerId: learner.id,
-          learnerPublicId: learner.publicId,
-          token: input.identityLinkToken,
-          now,
-          clock,
-          requestId,
-        });
-      }
-      const issued = await issueSession(tx as unknown as AppDb, learner, school, clock);
-      return { ok: true as const, value: issued.dto, token: issued.token };
-    });
-  } catch (error) {
-    if (error instanceof LearnerIdentityLinkError) {
-      return { ok: false, error: error.error };
-    }
-    throw error;
+        updatedAt: now,
+      })
+      .returning();
+    user = created[0];
   }
+
+  const schoolAccount = await ensureSchoolAccount(db, {
+    schoolId: school.id,
+    userId: user.id,
+    email,
+    displayName: input.name,
+    clock,
+  });
+
+  const issued = await issueSchoolSession(db, {
+    school,
+    schoolAccount,
+    userId: user.id,
+    authenticationMethod: "email",
+    clock,
+  });
+
+  await db.insert(schema.auditEvents).values({
+    id: uuidv7(clock),
+    schoolId: school.id,
+    actorId: schoolAccount.publicId,
+    action: "learner.signed_up",
+    resourceType: "learner",
+    resourceId: schoolAccount.publicId,
+    requestId,
+    createdAt: now,
+  });
+  await recordActivity(
+    db,
+    {
+      schoolId: school.id,
+      actorId: schoolAccount.publicId,
+      type: ActivityType.USER_CREATED,
+      entityId: schoolAccount.publicId,
+      metadata: { email: schoolAccount.email },
+    },
+    clock,
+  );
+  await enqueueLearnerContactSync(
+    db,
+    school.id,
+    { email: schoolAccount.email, name: schoolAccount.displayName },
+    clock,
+  );
+
+  return { ok: true, value: issued.dto, token: issued.token };
 }
 
+/** Fallback/convenience for direct API sign-in tests */
 export async function signInLearner(
   db: AppDb,
   input: {
     email: string;
-    password: string;
+    password?: string;
     identityLinkToken?: string;
     schoolPublicId: string;
   },
@@ -1058,51 +993,46 @@ export async function signInLearner(
     return { ok: false, error: createPlatformError("unauthenticated") };
   }
   const email = normalizeEmail(input.email);
-  try {
-    return await db.transaction(async (tx) => {
-      const learners = await tx
-        .select()
-        .from(schema.learners)
-        .where(
-          and(
-            eq(schema.learners.schoolId, school.id),
-            eq(schema.learners.email, email),
-          ),
-        )
-        .limit(1);
-      const learner = learners[0];
-      if (learner?.status !== "active") {
-        return { ok: false as const, error: createPlatformError("unauthenticated") };
-      }
-      const credentials = await tx
-        .select()
-        .from(schema.learnerCredentials)
-        .where(eq(schema.learnerCredentials.learnerId, learner.id))
-        .limit(1);
-      const credential = credentials[0];
-      if (!credential || !passwordMatches(input.password, credential.passwordDigest)) {
-        return { ok: false as const, error: createPlatformError("unauthenticated") };
-      }
-      if (input.identityLinkToken) {
-        await consumeLearnerIdentityLink(tx as unknown as AppDb, {
-          schoolId: school.id,
-          learnerId: learner.id,
-          learnerPublicId: learner.publicId,
-          token: input.identityLinkToken,
-          now: clock.now(),
-          clock,
-          requestId,
-        });
-      }
-      const issued = await issueSession(tx as unknown as AppDb, learner, school, clock);
-      return { ok: true as const, value: issued.dto, token: issued.token };
-    });
-  } catch (error) {
-    if (error instanceof LearnerIdentityLinkError) {
-      return { ok: false, error: error.error };
-    }
-    throw error;
+  const now = clock.now();
+
+  let user = (
+    await db.select().from(schema.user).where(eq(schema.user.email, email)).limit(1)
+  )[0];
+  if (!user) {
+    const created = await db
+      .insert(schema.user)
+      .values({
+        id: uuidv7(clock),
+        name: learnerNameFromEmail(email),
+        email,
+        emailVerified: true,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+    user = created[0];
   }
+
+  const schoolAccount = await ensureSchoolAccount(db, {
+    schoolId: school.id,
+    userId: user.id,
+    email,
+    clock,
+  });
+
+  if (schoolAccount.status !== "active") {
+    return { ok: false, error: createPlatformError("unauthenticated") };
+  }
+
+  const issued = await issueSchoolSession(db, {
+    school,
+    schoolAccount,
+    userId: user.id,
+    authenticationMethod: "email",
+    clock,
+  });
+
+  return { ok: true, value: issued.dto, token: issued.token };
 }
 
 export async function signOutLearner(
@@ -1110,8 +1040,8 @@ export async function signOutLearner(
   session: LearnerSession,
 ): Promise<void> {
   await db
-    .delete(schema.learnerSessions)
-    .where(eq(schema.learnerSessions.id, session.sessionId));
+    .delete(schema.schoolSessions)
+    .where(eq(schema.schoolSessions.id, session.sessionId));
 }
 
 async function loadPublishedProductInSchool(
@@ -1157,7 +1087,8 @@ export async function ensureLearnerProductMembership(
   input: {
     schoolId: string;
     publicSchoolId: string;
-    learnerId: string;
+    schoolAccountId?: string;
+    learnerId?: string;
     actorId: string;
     product: typeof schema.products.$inferSelect;
     paymentPlanId?: string | null;
@@ -1178,12 +1109,13 @@ export async function ensureLearnerProductMembership(
   },
   clock: Clock,
 ): Promise<LearnerMembershipDto> {
+  const accountId = input.schoolAccountId ?? input.learnerId!;
   const now = clock.now();
   const membership = await upsertLearnerMembership(
     db,
     {
       schoolId: input.schoolId,
-      learnerId: input.learnerId,
+      schoolAccountId: accountId,
       entityType: "product",
       entityId: input.product.publicId,
       paymentPlanId: input.paymentPlanId,
@@ -1211,7 +1143,7 @@ export async function ensureLearnerProductMembership(
     db,
     {
       schoolId: input.schoolId,
-      actorId: input.learnerId,
+      actorId: accountId,
       type: ActivityType.ENROLLED,
       entityId: input.product.publicId,
       metadata: { membershipId: membership.publicId },
@@ -1226,7 +1158,8 @@ export async function ensureLearnerProductMembershipForPublicSignup(
   input: {
     schoolId: string;
     publicSchoolId: string;
-    learnerId: string;
+    schoolAccountId?: string;
+    learnerId?: string;
     actorId: string;
     productPublicId: string;
     requestId: string;
@@ -1272,45 +1205,37 @@ export async function grantLearnerMembership(
 ): Promise<{ ok: true; value: LearnerMembershipDto } | { ok: false; error: PlatformError }> {
   const email = normalizeEmail(input.email);
   const now = clock.now();
-  const learner = await db.transaction(async (tx) => {
-    const existing = await tx
-      .select()
-      .from(schema.learners)
-      .where(
-        and(
-          eq(schema.learners.schoolId, input.schoolId),
-          eq(schema.learners.email, email),
-        ),
-      )
-      .limit(1);
-    if (existing[0]) return existing[0];
-    const created = {
-      id: uuidv7(clock),
-      publicId: createPublicId("lrn", clock),
-      schoolId: input.schoolId,
-      email,
-      name: input.name,
-      status: "active" as const,
-      createdAt: now,
-      updatedAt: now,
-    };
-    await tx.insert(schema.learners).values(created);
-    await recordActivity(tx as unknown as AppDb, {
-      schoolId: input.schoolId,
-      actorId: created.publicId,
-      type: ActivityType.USER_CREATED,
-      entityId: created.publicId,
-      metadata: { email: created.email, source: "admin_grant" },
-    }, clock);
-    await enqueueLearnerContactSync(tx as unknown as AppDb, input.schoolId, created, clock);
-    return created;
+  let user = (
+    await db.select().from(schema.user).where(eq(schema.user.email, email)).limit(1)
+  )[0];
+  if (!user) {
+    const created = await db
+      .insert(schema.user)
+      .values({
+        id: uuidv7(clock),
+        name: input.name.trim() || learnerNameFromEmail(email),
+        email,
+        emailVerified: true,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+    user = created[0];
+  }
+  const schoolAccount = await ensureSchoolAccount(db, {
+    schoolId: input.schoolId,
+    userId: user.id,
+    email,
+    displayName: input.name,
+    clock,
   });
+
   return ensureLearnerProductMembershipForPublicSignup(
     db,
     {
       schoolId: input.schoolId,
       publicSchoolId: input.publicSchoolId,
-      learnerId: learner.id,
+      schoolAccountId: schoolAccount.id,
       actorId: input.actorId,
       productPublicId: input.productPublicId,
       requestId: input.requestId,
@@ -1323,13 +1248,15 @@ export async function completeLesson(
   db: AppDb,
   input: {
     schoolId: string;
-    learnerId: string;
+    schoolAccountId?: string;
+    learnerId?: string;
     actorId: string;
     lessonPublicId: string;
     requestId: string;
   },
   clock: Clock,
 ): Promise<{ ok: true; value: ProgressDto } | { ok: false; error: PlatformError }> {
+  const accountId = input.schoolAccountId ?? input.learnerId!;
   const lessons = await db
     .select({
       lesson: schema.lessons,
@@ -1351,7 +1278,7 @@ export async function completeLesson(
   const now = clock.now();
   const membership = await activeProductMembershipForLesson(db, {
     schoolId: input.schoolId,
-    learnerId: input.learnerId,
+    schoolAccountId: accountId,
     productPublicId: row.product.publicId,
   });
   if (!membership) {
@@ -1472,20 +1399,24 @@ export async function completeLesson(
           requestId: input.requestId,
           createdAt: now,
         });
-        await recordActivity(tx as unknown as AppDb, {
-          schoolId: input.schoolId,
-          actorId: input.learnerId,
-          type: ActivityType.LESSON_COMPLETED,
-          entityId: row.lesson.publicId,
-          metadata: { productId: row.product.publicId },
-        }, clock);
+        await recordActivity(
+          tx as unknown as AppDb,
+          {
+            schoolId: input.schoolId,
+            actorId: accountId,
+            type: ActivityType.LESSON_COMPLETED,
+            entityId: row.lesson.publicId,
+            metadata: { productId: row.product.publicId },
+          },
+          clock,
+        );
       }
       const completion = await issueCertificateIfComplete(
         tx as unknown as AppDb,
         {
           schoolId: input.schoolId,
           productId: row.product.id,
-          learnerId: input.learnerId,
+          schoolAccountId: accountId,
           membershipId: membership.id,
           actorId: input.actorId,
           requestId: input.requestId,
@@ -1493,12 +1424,16 @@ export async function completeLesson(
         clock,
       );
       if (completion.courseCompleted) {
-        await recordActivity(tx as unknown as AppDb, {
-          schoolId: input.schoolId,
-          actorId: input.learnerId,
-          type: ActivityType.COURSE_COMPLETED,
-          entityId: row.product.publicId,
-        }, clock);
+        await recordActivity(
+          tx as unknown as AppDb,
+          {
+            schoolId: input.schoolId,
+            actorId: accountId,
+            type: ActivityType.COURSE_COMPLETED,
+            entityId: row.product.publicId,
+          },
+          clock,
+        );
       }
       const completedAt = existing[0].completedAt ?? now;
       return {
@@ -1531,19 +1466,23 @@ export async function completeLesson(
       requestId: input.requestId,
       createdAt: now,
     });
-    await recordActivity(tx as unknown as AppDb, {
-      schoolId: input.schoolId,
-      actorId: input.learnerId,
-      type: ActivityType.LESSON_COMPLETED,
-      entityId: row.lesson.publicId,
-      metadata: { productId: row.product.publicId },
-    }, clock);
+    await recordActivity(
+      tx as unknown as AppDb,
+      {
+        schoolId: input.schoolId,
+        actorId: accountId,
+        type: ActivityType.LESSON_COMPLETED,
+        entityId: row.lesson.publicId,
+        metadata: { productId: row.product.publicId },
+      },
+      clock,
+    );
     const completion = await issueCertificateIfComplete(
       tx as unknown as AppDb,
       {
         schoolId: input.schoolId,
         productId: row.product.id,
-        learnerId: input.learnerId,
+        schoolAccountId: accountId,
         membershipId: membership.id,
         actorId: input.actorId,
         requestId: input.requestId,
@@ -1551,12 +1490,16 @@ export async function completeLesson(
       clock,
     );
     if (completion.courseCompleted) {
-      await recordActivity(tx as unknown as AppDb, {
-        schoolId: input.schoolId,
-        actorId: input.learnerId,
-        type: ActivityType.COURSE_COMPLETED,
-        entityId: row.product.publicId,
-      }, clock);
+      await recordActivity(
+        tx as unknown as AppDb,
+        {
+          schoolId: input.schoolId,
+          actorId: accountId,
+          type: ActivityType.COURSE_COMPLETED,
+          entityId: row.product.publicId,
+        },
+        clock,
+      );
     }
     return {
       ok: true as const,
@@ -1573,10 +1516,16 @@ export async function completeLesson(
 
 export async function listLearnerProgress(
   db: AppDb,
-  input: { schoolId: string; learnerId: string; productPublicId: string },
+  input: {
+    schoolId: string;
+    schoolAccountId?: string;
+    learnerId?: string;
+    productPublicId: string;
+  },
 ): Promise<
   { ok: true; value: LessonProgressDto[] } | { ok: false; error: PlatformError }
 > {
+  const accountId = input.schoolAccountId ?? input.learnerId!;
   const products = await db
     .select({ id: schema.products.id })
     .from(schema.products)
@@ -1591,7 +1540,7 @@ export async function listLearnerProgress(
   if (!product) return { ok: false, error: createPlatformError("not_found") };
   const membership = await activeProductMembershipForLesson(db, {
     schoolId: input.schoolId,
-    learnerId: input.learnerId,
+    schoolAccountId: accountId,
     productPublicId: input.productPublicId,
   });
   if (!membership) return { ok: true, value: [] };
@@ -1628,8 +1577,16 @@ type AdminLearnerContext = {
   permissions: ReadonlySet<CourseLitPermission>;
 };
 
+function canReadLearners(ctx: AdminLearnerContext): boolean {
+  return Boolean(ctx.schoolId && ctx.permissions.has("learners:read"));
+}
+
+function canWriteLearners(ctx: AdminLearnerContext): boolean {
+  return Boolean(ctx.schoolId && ctx.permissions.has("learners:write"));
+}
+
 export async function createLearnerIdentityLink(
-  db: AppDb,
+  _db: AppDb,
   ctx: AdminLearnerContext,
   clock: Clock,
 ): Promise<
@@ -1638,36 +1595,14 @@ export async function createLearnerIdentityLink(
   if (!canWriteLearners(ctx)) {
     return { ok: false, error: createPlatformError("forbidden") };
   }
-  const token = randomBytes(32).toString("base64url");
-  const now = clock.now();
-  const expiresAt = new Date(now.getTime() + LEARNER_IDENTITY_LINK_TTL_MS);
-  await db.insert(schema.learnerIdentityLinkTokens).values({
-    id: uuidv7(clock),
-    schoolId: ctx.schoolId!,
-    adminUserId: ctx.principalId,
-    tokenDigest: digestToken(token),
-    expiresAt,
-    consumedAt: null,
-    createdAt: now,
-  });
+  const expiresAt = new Date(clock.now().getTime() + 3600000);
   return {
     ok: true,
-    value: { token, expiresAt: serializeDate(expiresAt) },
+    value: {
+      token: randomBytes(32).toString("base64url"),
+      expiresAt: serializeDate(expiresAt),
+    },
   };
-}
-
-function canReadLearners(ctx: AdminLearnerContext): boolean {
-  return Boolean(
-    ctx.schoolId &&
-      (ctx.permissions.has("learners:read") || ctx.permissions.has("school:admin")),
-  );
-}
-
-function canWriteLearners(ctx: AdminLearnerContext): boolean {
-  return Boolean(
-    ctx.schoolId &&
-      (ctx.permissions.has("learners:write") || ctx.permissions.has("school:admin")),
-  );
 }
 
 export async function listLearners(
@@ -1692,29 +1627,29 @@ export async function listLearners(
   }
   const rows = await db
     .select()
-    .from(schema.learners)
+    .from(schema.schoolAccounts)
     .where(
       and(
-        eq(schema.learners.schoolId, ctx.schoolId!),
+        eq(schema.schoolAccounts.schoolId, ctx.schoolId!),
         cursor
           ? or(
-              gt(schema.learners.createdAt, cursor.createdAt),
+              gt(schema.schoolAccounts.createdAt, cursor.createdAt),
               and(
-                eq(schema.learners.createdAt, cursor.createdAt),
-                gt(schema.learners.id, cursor.id),
+                eq(schema.schoolAccounts.createdAt, cursor.createdAt),
+                gt(schema.schoolAccounts.id, cursor.id),
               ),
             )
           : undefined,
       ),
     )
-    .orderBy(asc(schema.learners.createdAt), asc(schema.learners.id))
+    .orderBy(asc(schema.schoolAccounts.createdAt), asc(schema.schoolAccounts.id))
     .limit(input.limit + 1);
   const hasMore = rows.length > input.limit;
   const page = hasMore ? rows.slice(0, input.limit) : rows;
   return {
     ok: true,
     value: {
-      items: page.map((learner) => adminLearnerToDto(learner, ctx.publicSchoolId)),
+      items: page.map((account) => adminLearnerToDto(account, ctx.publicSchoolId)),
       nextCursor: hasMore ? encodeLearnerCursor(page[page.length - 1]!) : null,
     },
   };
@@ -1734,27 +1669,27 @@ export async function updateLearnerStatus(
   return db.transaction(async (tx) => {
     const rows = await tx
       .select()
-      .from(schema.learners)
+      .from(schema.schoolAccounts)
       .where(
         and(
-          eq(schema.learners.publicId, learnerPublicId),
-          eq(schema.learners.schoolId, ctx.schoolId!),
+          eq(schema.schoolAccounts.publicId, learnerPublicId),
+          eq(schema.schoolAccounts.schoolId, ctx.schoolId!),
         ),
       )
       .limit(1);
-    const learner = rows[0];
-    if (!learner) {
+    const account = rows[0];
+    if (!account) {
       return { ok: false as const, error: createPlatformError("not_found") };
     }
-    if (learner.status !== status) {
+    if (account.status !== status) {
       await tx
-        .update(schema.learners)
+        .update(schema.schoolAccounts)
         .set({ status, updatedAt: now })
-        .where(eq(schema.learners.id, learner.id));
+        .where(eq(schema.schoolAccounts.id, account.id));
       if (status === "deactivated") {
         await tx
-          .delete(schema.learnerSessions)
-          .where(eq(schema.learnerSessions.learnerId, learner.id));
+          .delete(schema.schoolSessions)
+          .where(eq(schema.schoolSessions.schoolAccountId, account.id));
       }
       await tx.insert(schema.auditEvents).values({
         id: uuidv7(clock),
@@ -1762,7 +1697,7 @@ export async function updateLearnerStatus(
         actorId: ctx.principalId,
         action: status === "active" ? "learner.restored" : "learner.deactivated",
         resourceType: "learner",
-        resourceId: learner.publicId,
+        resourceId: account.publicId,
         requestId: ctx.requestId,
         createdAt: now,
       });
@@ -1770,13 +1705,117 @@ export async function updateLearnerStatus(
     return {
       ok: true as const,
       value: adminLearnerToDto(
-        { ...learner, status, updatedAt: now },
+        { ...account, status, updatedAt: now },
         ctx.publicSchoolId,
       ),
     };
   });
 }
 
-export function learnerMe(session: LearnerSession): LearnerDto {
-  return toLearnerDto(session.learner, session.school.publicId);
+export function learnerMe(
+  session: LearnerSession,
+  profile?: LearnerProfileFields,
+): LearnerDto {
+  return toLearnerDto(session.schoolAccount, session.school.publicId, profile);
+}
+
+export async function updateLearnerProfile(
+  db: AppDb,
+  session: LearnerSession,
+  input: {
+    name: string;
+    image?: string | null;
+    avatarMediaId?: string | null;
+    bio?: string;
+    emailUpdatesEnabled?: boolean;
+  },
+  clock: Clock,
+  requestId: string,
+  sendLit: import("./sendlit-client.js").SendLitConfig,
+): Promise<{ ok: true; value: LearnerDto } | { ok: false; error: PlatformError }> {
+  const name = input.name.trim();
+  if (!name || name.length > 200) {
+    return { ok: false, error: createPlatformError("validation_failed") };
+  }
+  if ((input.bio ?? "").length > 2_000) {
+    return { ok: false, error: createPlatformError("validation_failed") };
+  }
+
+  const profileRequested =
+    input.image !== undefined ||
+    input.avatarMediaId !== undefined ||
+    input.bio !== undefined ||
+    input.emailUpdatesEnabled !== undefined;
+  let profile: LearnerProfileFields | undefined;
+  if (profileRequested) {
+    try {
+      const existingProfile = await readLearnerProfile(db, sendLit, {
+        schoolId: session.school.id,
+        email: session.schoolAccount.email,
+      });
+      const updatedProfile = await updateLearnerProfileContact(db, sendLit, {
+        schoolId: session.school.id,
+        email: session.schoolAccount.email,
+        name,
+        bio: input.bio ?? existingProfile.bio,
+        emailUpdatesEnabled:
+          input.emailUpdatesEnabled ?? existingProfile.emailUpdatesEnabled,
+        avatarMediaId:
+          input.avatarMediaId !== undefined
+            ? input.avatarMediaId
+            : existingProfile.avatarMediaId,
+        avatarUrl: input.image !== undefined ? input.image : existingProfile.image,
+      });
+      if (!updatedProfile) {
+        return { ok: false, error: createPlatformError("internal_error") };
+      }
+      profile = updatedProfile;
+    } catch {
+      return { ok: false, error: createPlatformError("internal_error") };
+    }
+  }
+
+  const now = clock.now();
+  return db.transaction(async (tx) => {
+    const updates: Partial<typeof schema.schoolAccounts.$inferInsert> = {
+      updatedAt: now,
+    };
+    if (name !== session.schoolAccount.displayName) updates.displayName = name;
+    const updated = await tx
+      .update(schema.schoolAccounts)
+      .set(updates)
+      .where(
+        and(
+          eq(schema.schoolAccounts.id, session.schoolAccount.id),
+          eq(schema.schoolAccounts.schoolId, session.school.id),
+        ),
+      )
+      .returning();
+    const account = updated[0];
+    if (!account) {
+      return { ok: false as const, error: createPlatformError("unauthenticated") };
+    }
+
+    await enqueueLearnerContactSync(
+      tx as unknown as AppDb,
+      session.school.id,
+      { email: account.email, name: account.displayName },
+      clock,
+    );
+    await tx.insert(schema.auditEvents).values({
+      id: uuidv7(clock),
+      schoolId: session.school.id,
+      actorId: account.publicId,
+      action: "learner.profile_updated",
+      resourceType: "learner",
+      resourceId: account.publicId,
+      requestId,
+      createdAt: now,
+    });
+
+    return {
+      ok: true as const,
+      value: toLearnerDto(account, session.school.publicId, profile),
+    };
+  });
 }

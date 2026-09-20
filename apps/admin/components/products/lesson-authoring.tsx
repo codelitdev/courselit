@@ -751,7 +751,7 @@ export function LessonAuthoring({
                     />
                   ) : (
                     <p className="text-sm text-muted-foreground">
-                      Save the lesson first, then select a reusable MediaLit asset.
+                      Save the lesson first, then select a reusable media library asset.
                     </p>
                   )}
                 </div>

@@ -1,6 +1,8 @@
+import type { MediaRef } from "@courselit/api-contract";
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -25,6 +27,7 @@ export const products = pgTable(
     slug: text("slug").notNull(),
     title: text("title").notNull(),
     description: text("description").notNull().default(""),
+    featuredImage: jsonb("featured_image").$type<MediaRef | null>(),
     privacy: text("privacy")
       .$type<"public" | "unlisted">()
       .notNull()
@@ -32,6 +35,8 @@ export const products = pgTable(
     leadMagnet: boolean("lead_magnet").notNull().default(false),
     certificate: boolean("certificate").notNull().default(false),
     discussions: boolean("discussions").notNull().default(false),
+    includedWithCommunity: boolean("included_with_community").notNull().default(false),
+    discussionSpaceId: uuid("discussion_space_id"),
     createdBy: text("created_by")
       .notNull()
       .references(() => user.id),

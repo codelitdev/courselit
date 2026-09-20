@@ -3,26 +3,57 @@
  * memberships, so the dashboard and API must agree on the identifiers.
  */
 export const COURSELIT_PERMISSIONS = [
+  // Team
   "members:read",
   "members:invite",
   "members:manage",
+  // School
+  "school:read",
+  "school:write",
+  // Products
   "products:read",
   "products:write",
+  "products:publish",
   "products:delete",
+  // Learners
   "learners:read",
   "learners:write",
-  "school:admin",
-  "billing:read",
-  "media:read",
-  "media:write",
-  "media:delete",
-  "certificates:read",
-  "certificates:write",
-  "storefront:read",
-  "storefront:write",
+  // Community
   "communities:read",
   "communities:write",
   "communities:moderate",
+  // Website
+  "storefront:read",
+  "storefront:write",
+  "storefront:publish",
+  // Commerce
+  "commerce:read",
+  "commerce:manage",
+  "commerce:refund",
+  // Contacts
+  "contacts:read",
+  "contacts:write",
+  // Mail
+  "mails:read",
+  "mails:write",
+  "mails:send",
+  // Media
+  "media:read",
+  "media:write",
+  "media:delete",
+  // Certificates
+  "certificates:read",
+  "certificates:write",
+  // Analytics
+  "analytics:read",
+  // Billing
+  "billing:read",
+  // API access
+  "api_keys:read",
+  "api_keys:manage",
+  // Integrations
+  "integrations:read",
+  "integrations:manage",
 ] as const;
 
 export type CourseLitPermission = (typeof COURSELIT_PERMISSIONS)[number];
@@ -31,7 +62,7 @@ export const OWNER_PERMISSIONS: readonly CourseLitPermission[] = [
   ...COURSELIT_PERMISSIONS,
 ];
 
-/** The legacy member grant set remains the default for migrated memberships. */
+/** The default direct grants for a non-owner member when no preset is specified. */
 export const MEMBER_PERMISSIONS: readonly CourseLitPermission[] = [
   "products:read",
   "products:write",
@@ -52,20 +83,31 @@ export const COURSELIT_PERMISSION_IMPLICATIONS: Readonly<
 > = {
   "members:invite": ["members:read"],
   "members:manage": ["members:read"],
+  "school:write": ["school:read"],
   "products:write": ["products:read"],
+  "products:publish": ["products:write", "products:read"],
   "products:delete": ["products:write", "products:read"],
   "learners:write": ["learners:read"],
+  "communities:write": ["communities:read"],
+  "communities:moderate": ["communities:write", "communities:read"],
+  "storefront:write": ["storefront:read"],
+  "storefront:publish": ["storefront:write", "storefront:read"],
+  "commerce:manage": ["commerce:read"],
+  "commerce:refund": ["commerce:manage", "commerce:read"],
+  "contacts:write": ["contacts:read"],
+  "mails:write": ["mails:read"],
+  "mails:send": ["mails:write", "mails:read"],
   "media:write": ["media:read"],
   "media:delete": ["media:write", "media:read"],
   "certificates:write": ["certificates:read"],
-  "storefront:write": ["storefront:read"],
-  "communities:write": ["communities:read"],
-  "communities:moderate": ["communities:write", "communities:read"],
+  "api_keys:manage": ["api_keys:read"],
+  "integrations:manage": ["integrations:read"],
 };
 
 export const COURSELIT_PERMISSION_PRESET_IDS = [
   "full_access",
   "content_manager",
+  "community_manager",
   "support",
   "marketing",
   "read_only",
@@ -75,37 +117,70 @@ export const COURSELIT_PERMISSION_PRESET_IDS = [
 export type CourseLitPermissionPresetId =
   (typeof COURSELIT_PERMISSION_PRESET_IDS)[number];
 
-const COURSE_READ_PERMISSIONS = COURSELIT_PERMISSIONS.filter(
-  (permission) => permission.endsWith(":read") && !permission.startsWith("members:"),
+const ALL_READ_PERMISSIONS = COURSELIT_PERMISSIONS.filter((permission) =>
+  permission.endsWith(":read"),
 );
 
 export const COURSELIT_PERMISSION_PRESETS: Record<
   Exclude<CourseLitPermissionPresetId, "custom">,
   readonly CourseLitPermission[]
 > = {
-  full_access: OWNER_PERMISSIONS,
+  full_access: COURSELIT_PERMISSIONS,
   content_manager: [
     "products:read",
     "products:write",
+    "products:publish",
+    "products:delete",
+    "storefront:read",
+    "storefront:write",
+    "storefront:publish",
+    "media:read",
+    "media:write",
+    "media:delete",
+    "certificates:read",
+    "certificates:write",
+    "analytics:read",
+  ],
+  community_manager: [
+    "communities:read",
+    "communities:write",
+    "communities:moderate",
     "learners:read",
     "media:read",
     "media:write",
-    "certificates:read",
-    "certificates:write",
-    "communities:read",
-    "communities:write",
+    "analytics:read",
   ],
-  support: ["products:read", "learners:read", "communities:read"],
-  marketing: ["storefront:read", "storefront:write", "communities:read"],
-  read_only: COURSE_READ_PERMISSIONS,
+  support: [
+    "products:read",
+    "learners:read",
+    "learners:write",
+    "communities:read",
+    "communities:moderate",
+    "commerce:read",
+    "contacts:read",
+  ],
+  marketing: [
+    "storefront:read",
+    "storefront:write",
+    "storefront:publish",
+    "contacts:read",
+    "contacts:write",
+    "mails:read",
+    "mails:write",
+    "mails:send",
+    "media:read",
+    "media:write",
+    "analytics:read",
+  ],
+  read_only: ALL_READ_PERMISSIONS,
 };
 
 export const COURSELIT_HIGH_IMPACT_PERMISSIONS = [
-  "school:admin",
   "members:manage",
   "products:delete",
   "media:delete",
   "communities:moderate",
+  "commerce:refund",
 ] as const satisfies readonly CourseLitPermission[];
 
 export function normalizeCourseLitPermissions(
@@ -143,9 +218,10 @@ export function expandCourseLitPermissionPreset(
 
 export function filterDelegableCourseLitPermissions(
   actorEffective: readonly CourseLitPermission[],
+  isOwner = false,
 ): CourseLitPermission[] {
+  if (isOwner) return [...COURSELIT_PERMISSIONS];
   const allowed = new Set(actorEffective);
-  if (allowed.has("school:admin")) return [...COURSELIT_PERMISSIONS];
   return COURSELIT_PERMISSIONS.filter((permission) => allowed.has(permission));
 }
 
@@ -156,20 +232,62 @@ export const COURSELIT_PERMISSION_GROUPS: ReadonlyArray<{
 }> = [
   {
     id: "members",
-    label: "Members",
+    label: "Team",
     permissions: ["members:read", "members:invite", "members:manage"],
+  },
+  {
+    id: "school",
+    label: "School",
+    permissions: ["school:read", "school:write"],
   },
   {
     id: "products",
     label: "Products",
-    permissions: ["products:read", "products:write", "products:delete"],
+    permissions: [
+      "products:read",
+      "products:write",
+      "products:publish",
+      "products:delete",
+    ],
   },
   {
     id: "learners",
     label: "Learners",
     permissions: ["learners:read", "learners:write"],
   },
-  { id: "billing", label: "Billing", permissions: ["billing:read"] },
+  {
+    id: "communities",
+    label: "Community",
+    permissions: [
+      "communities:read",
+      "communities:write",
+      "communities:moderate",
+    ],
+  },
+  {
+    id: "storefront",
+    label: "Website",
+    permissions: [
+      "storefront:read",
+      "storefront:write",
+      "storefront:publish",
+    ],
+  },
+  {
+    id: "commerce",
+    label: "Commerce",
+    permissions: ["commerce:read", "commerce:manage", "commerce:refund"],
+  },
+  {
+    id: "contacts",
+    label: "Contacts",
+    permissions: ["contacts:read", "contacts:write"],
+  },
+  {
+    id: "mails",
+    label: "Mail",
+    permissions: ["mails:read", "mails:write", "mails:send"],
+  },
   {
     id: "media",
     label: "Media",
@@ -181,14 +299,23 @@ export const COURSELIT_PERMISSION_GROUPS: ReadonlyArray<{
     permissions: ["certificates:read", "certificates:write"],
   },
   {
-    id: "storefront",
-    label: "Storefront",
-    permissions: ["storefront:read", "storefront:write"],
+    id: "analytics",
+    label: "Analytics",
+    permissions: ["analytics:read"],
   },
   {
-    id: "communities",
-    label: "Communities",
-    permissions: ["communities:read", "communities:write", "communities:moderate"],
+    id: "billing",
+    label: "Billing",
+    permissions: ["billing:read"],
   },
-  { id: "school", label: "School", permissions: ["school:admin"] },
+  {
+    id: "api_keys",
+    label: "API Access",
+    permissions: ["api_keys:read", "api_keys:manage"],
+  },
+  {
+    id: "integrations",
+    label: "Integrations",
+    permissions: ["integrations:read", "integrations:manage"],
+  },
 ];

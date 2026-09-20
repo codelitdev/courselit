@@ -183,14 +183,3 @@ export const oauthClientAssertion = pgTable("oauth_client_assertion", {
         id: text("id").primaryKey(),
         expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
 });
-
-export const ssoProvider = pgTable("sso_provider", {
-        id: text("id").primaryKey(),
-        issuer: text("issuer").notNull(),
-        oidcConfig: text("oidc_config"),
-        samlConfig: text("saml_config"),
-        userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
-        providerId: text("provider_id").notNull().unique(),
-        organizationId: text("organization_id"),
-        domainString: text("domain_string").notNull(),
-});

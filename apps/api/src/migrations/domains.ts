@@ -439,14 +439,37 @@ export async function importLegacyDomains(
               ]
             : []),
         ]);
-        await tx.insert(schema.memberships).values({
-          id: uuidv7(input.clock),
+        const [ownerUser] = await tx
+          .select({ email: schema.user.email, name: schema.user.name, image: schema.user.image })
+          .from(schema.user)
+          .where(eq(schema.user.id, ownerId))
+          .limit(1);
+        const ownerEmail = ownerUser?.email ?? domain.email;
+        const ownerName = ownerUser?.name ?? "Owner";
+        const schoolAccountId = uuidv7(input.clock);
+        await tx.insert(schema.schoolAccounts).values({
+          id: schoolAccountId,
+          publicId: createPublicId("lrn", input.clock),
           schoolId,
           userId: ownerId,
-          role: "owner",
-          isOwner: true,
-          permissions: serializePermissions(OWNER_PERMISSIONS),
+          email: ownerEmail,
+          displayName: ownerName,
+          image: ownerUser?.image ?? null,
+          status: "active",
           createdAt: domain.createdAt,
+          updatedAt: domain.updatedAt,
+        });
+        await tx.insert(schema.memberships).values({
+          id: uuidv7(input.clock),
+          publicId: createPublicId("mbr", input.clock),
+          schoolId,
+          schoolAccountId,
+          isOwner: true,
+          permissions: [],
+          presetId: "full_access",
+          version: 1,
+          createdAt: domain.createdAt,
+          updatedAt: domain.updatedAt,
         });
         await tx.insert(schema.migrationMappings).values({
           id: uuidv7(input.clock),

@@ -29,12 +29,12 @@ export function GoogleLogo() {
 }
 
 export function ExternalLoginButton({
-  provider,
+  provider = "google",
   label,
   onClick,
   disabled,
 }: {
-  provider: "google" | "sso";
+  provider?: "google";
   label?: string;
   onClick: () => Promise<void> | void;
   disabled?: boolean;
@@ -47,10 +47,9 @@ export function ExternalLoginButton({
       disabled={disabled}
       className="w-full flex items-center justify-center gap-2"
     >
-      {provider === "google" ? <GoogleLogo /> : null}
+      <GoogleLogo />
       <LearnerText2 component="span">
-        {label ??
-          (provider === "google" ? "Continue with Google" : "Continue with SSO")}
+        {label ?? "Continue with Google"}
       </LearnerText2>
     </Button>
   );

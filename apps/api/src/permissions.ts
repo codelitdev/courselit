@@ -17,8 +17,11 @@ export const TELEMETRY_PROPERTY_ALLOWLIST = new Set([
   "request_id",
 ]);
 
-export function parsePermissions(value: string): Set<CourseLitPermission> {
-  return new Set(computeEffectiveCourseLitPermissions(value.split(",")));
+export function parsePermissions(
+  value: string | readonly string[],
+): Set<CourseLitPermission> {
+  const list = typeof value === "string" ? value.split(",") : value;
+  return new Set(computeEffectiveCourseLitPermissions(list));
 }
 
 export function serializePermissions(

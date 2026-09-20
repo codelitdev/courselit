@@ -13,8 +13,6 @@ import {
   Palette,
   RotateCcw,
   Save,
-  Settings,
-  Sliders,
   Trash2,
   Users,
 } from "lucide-react";
@@ -32,7 +30,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/codelit/button";
-import { Checkbox } from "@/components/ui/codelit/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -53,14 +50,9 @@ import {
 import { Textarea } from "@/components/ui/codelit/textarea";
 import currencies from "@/data/currencies.json";
 
-const GENERAL_SETTINGS_TABS = ["api-keys", "team"] as const;
+const GENERAL_SETTINGS_TABS = ["payment", "team", "api-keys"] as const;
 const MAIL_SETTINGS_TABS = ["delivery"] as const;
-const WEBSITE_SETTINGS_TABS = [
-  "branding",
-  "payment",
-  "code-injection",
-  "login-methods",
-] as const;
+const WEBSITE_SETTINGS_TABS = ["branding", "code-injection"] as const;
 type SettingsMode = "general" | "website" | "mails";
 type SettingsTab =
   | (typeof GENERAL_SETTINGS_TABS)[number]
@@ -105,19 +97,19 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
       ? "branding"
       : mode === "mails"
         ? "delivery"
-        : "api-keys";
+        : "payment";
 
   useEffect(() => {
     const legacyTab = searchParams.get("tab");
+    if (mode === "website" && legacyTab === "payment") {
+      router.replace("/settings?tab=payment", { scroll: false });
+      return;
+    }
     if (mode !== "general") return;
     if (legacyTab === "branding") {
       router.replace("/website/settings?tab=branding", { scroll: false });
     } else if (legacyTab === "code-injection") {
       router.replace("/website/settings?tab=code-injection", { scroll: false });
-    } else if (legacyTab === "payment") {
-      router.replace("/website/settings?tab=payment", { scroll: false });
-    } else if (legacyTab === "login-methods") {
-      router.replace("/website/settings?tab=login-methods", { scroll: false });
     } else if (legacyTab === "mails") {
       router.replace("/mails/settings", { scroll: false });
     } else if (legacyTab === "miscellaneous") {
@@ -151,34 +143,6 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
 
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [apiKeys, setApiKeys] = useState<ApiKeyItem[]>([]);
-  const [emailLogin, setEmailLogin] = useState(true);
-  const [googleLogin, setGoogleLogin] = useState(false);
-  const [ssoLogin, setSsoLogin] = useState(false);
-  const [ssoConfigured, setSsoConfigured] = useState(false);
-  const [googleConfigured, setGoogleConfigured] = useState(false);
-
-  const [ssoDialogOpen, setSsoDialogOpen] = useState(false);
-  const [googleDialogOpen, setGoogleDialogOpen] = useState(false);
-  const [ssoResetConfirmOpen, setSsoResetConfirmOpen] = useState(false);
-  const [googleResetConfirmOpen, setGoogleResetConfirmOpen] = useState(false);
-
-  const [ssoIdpMetadata, setSsoIdpMetadata] = useState("");
-  const [ssoEntryPoint, setSsoEntryPoint] = useState("");
-  const [ssoCert, setSsoCert] = useState("");
-  const [ssoSaving, setSsoSaving] = useState(false);
-  const [ssoResetting, setSsoResetting] = useState(false);
-  const [ssoError, setSsoError] = useState<string | null>(null);
-
-  const [googleClientId, setGoogleClientId] = useState("");
-  const [googleClientSecret, setGoogleClientSecret] = useState("");
-  const [googleHasSavedSecret, setGoogleHasSavedSecret] = useState(false);
-  const [googleSaving, setGoogleSaving] = useState(false);
-  const [googleResetting, setGoogleResetting] = useState(false);
-  const [googleError, setGoogleError] = useState<string | null>(null);
-
-  const [loginMethodsSaving, setLoginMethodsSaving] = useState(false);
-  const [loginMethodsError, setLoginMethodsError] = useState<string | null>(null);
-  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const webhookUrl = useMemo(() => {
     if (typeof window === "undefined") return "/v1/storefront/webhooks/{provider}";
@@ -283,277 +247,6 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
       .catch(() => setApiKeys([]));
   }, [mode, schoolId]);
 
-  useEffect(() => {
-    if (!schoolId || mode !== "website") return;
-    void fetch("/api/v1/school/login-methods", {
-      credentials: "include",
-      cache: "no-store",
-      headers: { "x-school-id": schoolId },
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!data) return;
-        const methods = data.loginMethods || ["email"];
-        setEmailLogin(methods.includes("email"));
-        setGoogleLogin(methods.includes("google"));
-        setSsoLogin(methods.includes("sso"));
-        if (data.sso) {
-          setSsoIdpMetadata(data.sso.idpMetadata || "");
-          setSsoEntryPoint(data.sso.entryPoint || "");
-          setSsoCert(data.sso.cert || "");
-          setSsoConfigured(Boolean(data.sso.configured));
-        }
-        if (data.google) {
-          setGoogleClientId(data.google.clientId || "");
-          setGoogleHasSavedSecret(Boolean(data.google.hasClientSecret));
-          setGoogleConfigured(Boolean(data.google.configured));
-        }
-      })
-      .catch(() => {});
-  }, [mode, schoolId]);
-
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const ssoSpAcsUrl = `${origin}/api/auth/sso/saml2/sp/acs/sso`;
-  const ssoSpEntityId = `${origin}/api/auth/sso/saml2/sp/metadata?providerId=sso`;
-  const googleRedirectUri = `${origin}/api/auth/sso/oauth2/callback/google`;
-
-  async function copyText(text: string, field: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedField(field);
-      setTimeout(() => setCopiedField(null), 2000);
-    } catch {
-      /* ignore */
-    }
-  }
-
-  async function updateLoginMethods(updated: {
-    email?: boolean;
-    google?: boolean;
-    sso?: boolean;
-  }) {
-    if (!schoolId || loginMethodsSaving) return;
-    const nextEmail = updated.email ?? emailLogin;
-    const nextGoogle = updated.google ?? googleLogin;
-    const nextSso = updated.sso ?? ssoLogin;
-
-    if (!nextEmail && !nextGoogle && !nextSso) {
-      setLoginMethodsError("At least one login method must be enabled.");
-      return;
-    }
-
-    if (nextSso && !ssoConfigured) {
-      setSsoDialogOpen(true);
-      return;
-    }
-
-    if (nextGoogle && !googleConfigured) {
-      setGoogleDialogOpen(true);
-      return;
-    }
-
-    setLoginMethodsSaving(true);
-    setLoginMethodsError(null);
-    const methods: string[] = [];
-    if (nextEmail) methods.push("email");
-    if (nextGoogle) methods.push("google");
-    if (nextSso) methods.push("sso");
-
-    try {
-      const response = await fetch("/api/v1/school/login-methods", {
-        method: "PATCH",
-        credentials: "include",
-        headers: {
-          "content-type": "application/json",
-          "x-school-id": schoolId,
-        },
-        body: JSON.stringify({ loginMethods: methods }),
-      });
-      const body = await response.json();
-      if (!response.ok) {
-        throw new Error(body?.message || "Failed to update login methods.");
-      }
-      setEmailLogin(nextEmail);
-      setGoogleLogin(nextGoogle);
-      setSsoLogin(nextSso);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to update login methods.";
-      setLoginMethodsError(msg);
-    } finally {
-      setLoginMethodsSaving(false);
-    }
-  }
-
-  async function saveSsoConfig() {
-    if (!schoolId || ssoSaving) return;
-    setSsoSaving(true);
-    setSsoError(null);
-    try {
-      const methods = [
-        ...new Set([
-          ...(emailLogin ? ["email"] : []),
-          ...(googleLogin ? ["google"] : []),
-          "sso",
-        ]),
-      ];
-      const response = await fetch("/api/v1/school/login-methods", {
-        method: "PATCH",
-        credentials: "include",
-        headers: {
-          "content-type": "application/json",
-          "x-school-id": schoolId,
-        },
-        body: JSON.stringify({
-          sso: {
-            idpMetadata: ssoIdpMetadata,
-            entryPoint: ssoEntryPoint,
-            cert: ssoCert,
-          },
-          loginMethods: methods,
-        }),
-      });
-      const body = await response.json();
-      if (!response.ok) {
-        throw new Error(body?.message || "Failed to save SSO configuration.");
-      }
-      setSsoConfigured(true);
-      setSsoLogin(true);
-      setSsoDialogOpen(false);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to save SSO configuration.";
-      setSsoError(msg);
-    } finally {
-      setSsoSaving(false);
-    }
-  }
-
-  async function resetSsoConfig() {
-    if (!schoolId || ssoResetting) return;
-    setSsoResetting(true);
-    setSsoError(null);
-    try {
-      const remaining = [];
-      if (emailLogin) remaining.push("email");
-      if (googleLogin) remaining.push("google");
-      if (remaining.length === 0) remaining.push("email");
-
-      const response = await fetch("/api/v1/school/login-methods", {
-        method: "PATCH",
-        credentials: "include",
-        headers: {
-          "content-type": "application/json",
-          "x-school-id": schoolId,
-        },
-        body: JSON.stringify({
-          sso: null,
-          loginMethods: remaining,
-        }),
-      });
-      if (!response.ok) {
-        const body = await response.json();
-        throw new Error(body?.message || "Failed to reset SSO configuration.");
-      }
-      setSsoIdpMetadata("");
-      setSsoEntryPoint("");
-      setSsoCert("");
-      setSsoConfigured(false);
-      setSsoLogin(false);
-      if (remaining.includes("email")) setEmailLogin(true);
-      setSsoResetConfirmOpen(false);
-      setSsoDialogOpen(false);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to reset SSO configuration.";
-      setSsoError(msg);
-    } finally {
-      setSsoResetting(false);
-    }
-  }
-
-  async function saveGoogleConfig() {
-    if (!schoolId || googleSaving) return;
-    setGoogleSaving(true);
-    setGoogleError(null);
-    try {
-      const methods = [
-        ...new Set([
-          ...(emailLogin ? ["email"] : []),
-          "google",
-          ...(ssoLogin ? ["sso"] : []),
-        ]),
-      ];
-      const response = await fetch("/api/v1/school/login-methods", {
-        method: "PATCH",
-        credentials: "include",
-        headers: {
-          "content-type": "application/json",
-          "x-school-id": schoolId,
-        },
-        body: JSON.stringify({
-          google: {
-            clientId: googleClientId,
-            clientSecret: googleClientSecret || undefined,
-          },
-          loginMethods: methods,
-        }),
-      });
-      const body = await response.json();
-      if (!response.ok) {
-        throw new Error(body?.message || "Failed to save Google configuration.");
-      }
-      setGoogleConfigured(true);
-      setGoogleLogin(true);
-      setGoogleHasSavedSecret(Boolean(googleClientSecret || googleHasSavedSecret));
-      setGoogleDialogOpen(false);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to save Google configuration.";
-      setGoogleError(msg);
-    } finally {
-      setGoogleSaving(false);
-    }
-  }
-
-  async function resetGoogleConfig() {
-    if (!schoolId || googleResetting) return;
-    setGoogleResetting(true);
-    setGoogleError(null);
-    try {
-      const remaining = [];
-      if (emailLogin) remaining.push("email");
-      if (ssoLogin) remaining.push("sso");
-      if (remaining.length === 0) remaining.push("email");
-
-      const response = await fetch("/api/v1/school/login-methods", {
-        method: "PATCH",
-        credentials: "include",
-        headers: {
-          "content-type": "application/json",
-          "x-school-id": schoolId,
-        },
-        body: JSON.stringify({
-          google: null,
-          loginMethods: remaining,
-        }),
-      });
-      if (!response.ok) {
-        const body = await response.json();
-        throw new Error(body?.message || "Failed to reset Google configuration.");
-      }
-      setGoogleClientId("");
-      setGoogleClientSecret("");
-      setGoogleConfigured(false);
-      setGoogleLogin(false);
-      setGoogleHasSavedSecret(false);
-      if (remaining.includes("email")) setEmailLogin(true);
-      setGoogleResetConfirmOpen(false);
-      setGoogleDialogOpen(false);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to reset Google configuration.";
-      setGoogleError(msg);
-    } finally {
-      setGoogleResetting(false);
-    }
-  }
-
   function selectTab(tab: string) {
     const params = new URLSearchParams(searchParams.toString());
     const settingsPath =
@@ -565,7 +258,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
     if (
       (mode === "website" && tab === "branding") ||
       (mode === "mails" && tab === "delivery") ||
-      (mode === "general" && tab === "api-keys")
+      (mode === "general" && tab === "payment")
     ) {
       params.delete("tab");
     }
@@ -685,10 +378,10 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {mode === "website"
-              ? "Manage your website branding, payments, code injection, and login methods."
+              ? "Manage your website branding and code injection."
               : mode === "mails"
                 ? "Manage mail delivery settings for this school."
-                : "Manage team access and API access for this school."}
+                : "Manage team access, API access, and payment settings for this school."}
           </p>
         </header>
 
@@ -711,19 +404,9 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                     icon: <Palette className="size-4" />,
                   },
                   {
-                    value: "payment",
-                    label: "Payments",
-                    icon: <CreditCard className="size-4" />,
-                  },
-                  {
                     value: "code-injection",
                     label: "Code Injection",
                     icon: <Code className="size-4" />,
-                  },
-                  {
-                    value: "login-methods",
-                    label: "Login methods",
-                    icon: <Sliders className="size-4" />,
                   },
                 ]
               : mode === "mails"
@@ -735,6 +418,11 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
                     },
                   ]
               : [
+                  {
+                    value: "payment",
+                    label: "Payments",
+                    icon: <CreditCard className="size-4" />,
+                  },
                   {
                     value: "team",
                     label: "Team",
@@ -1038,53 +726,6 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
             </PlatformTabsContent>
           ) : null}
 
-          {mode === "website" ? (
-            <PlatformTabsContent
-              value="login-methods"
-              className="space-y-4 pt-4"
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle>Login methods</CardTitle>
-                  <CardDescription>
-                    Choose how learners can sign in to your school.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {loginMethodsError ? (
-                    <p className="text-sm text-destructive" role="alert">
-                      {loginMethodsError}
-                    </p>
-                  ) : null}
-                  <LoginMethodRow
-                    label="Email"
-                    checked={emailLogin}
-                    disabled={emailLogin && !googleLogin && !ssoLogin}
-                    onCheckedChange={(checked) =>
-                      void updateLoginMethods({ email: checked })
-                    }
-                  />
-                  <LoginMethodRow
-                    label="Google"
-                    checked={googleLogin}
-                    onCheckedChange={(checked) =>
-                      void updateLoginMethods({ google: checked })
-                    }
-                    onConfigure={() => setGoogleDialogOpen(true)}
-                  />
-                  <LoginMethodRow
-                    label="SSO"
-                    checked={ssoLogin}
-                    onCheckedChange={(checked) =>
-                      void updateLoginMethods({ sso: checked })
-                    }
-                    onConfigure={() => setSsoDialogOpen(true)}
-                  />
-                </CardContent>
-              </Card>
-            </PlatformTabsContent>
-          ) : null}
-
           {mode === "general" ? (
             <PlatformTabsContent
               value="api-keys"
@@ -1150,380 +791,7 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
           ) : null}
         </PlatformTabs>
 
-        {/* SSO Configuration Dialog */}
-        <Dialog open={ssoDialogOpen} onOpenChange={setSsoDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Single Sign-On (SSO)</DialogTitle>
-              <DialogDescription>
-                Configure SAML 2.0 Identity Provider for your learners.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-6 py-2">
-              {/* SP Settings */}
-              <div className="space-y-3 rounded-lg border bg-muted/40 p-4">
-                <div>
-                  <h3 className="text-sm font-semibold">School Settings (SP)</h3>
-                  <p className="text-xs text-muted-foreground">
-                    Enter these URLs into your Identity Provider (Okta, Azure AD, OneLogin, etc.).
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <div className="space-y-1">
-                    <Label className="text-xs">SP ACS URL (Assertion Consumer Service)</Label>
-                    <div className="flex gap-2">
-                      <Input readOnly value={ssoSpAcsUrl} className="font-mono text-xs" />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-9 w-9 p-0"
-                        onClick={() => void copyText(ssoSpAcsUrl, "sso_acs")}
-                        title="Copy SP ACS URL"
-                      >
-                        {copiedField === "sso_acs" ? (
-                          <Check className="size-4 text-emerald-600" />
-                        ) : (
-                          <Copy className="size-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">SP Entity ID / Metadata URL</Label>
-                    <div className="flex gap-2">
-                      <Input readOnly value={ssoSpEntityId} className="font-mono text-xs" />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-9 w-9 p-0"
-                        onClick={() => void copyText(ssoSpEntityId, "sso_entity")}
-                        title="Copy SP Entity ID"
-                      >
-                        {copiedField === "sso_entity" ? (
-                          <Check className="size-4 text-emerald-600" />
-                        ) : (
-                          <Copy className="size-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* IdP Settings */}
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="sso-idp-metadata">IDP Metadata XML</Label>
-                  <Textarea
-                    id="sso-idp-metadata"
-                    rows={5}
-                    className="font-mono text-xs"
-                    placeholder="<EntityDescriptor xmlns=...>"
-                    value={ssoIdpMetadata}
-                    onChange={(e) => setSsoIdpMetadata(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="sso-entry-point">Entry Point URL</Label>
-                  <Input
-                    id="sso-entry-point"
-                    placeholder="https://login.microsoftonline.com/.../saml2"
-                    value={ssoEntryPoint}
-                    onChange={(e) => setSsoEntryPoint(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="sso-cert">Certificate (X.509)</Label>
-                  <Textarea
-                    id="sso-cert"
-                    rows={5}
-                    className="font-mono text-xs"
-                    placeholder="-----BEGIN CERTIFICATE----- ... -----END CERTIFICATE-----"
-                    value={ssoCert}
-                    onChange={(e) => setSsoCert(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {ssoError ? (
-                <p className="text-sm text-destructive" role="alert">
-                  {ssoError}
-                </p>
-              ) : null}
-
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Info className="size-3.5" />
-                <span>
-                  Need help? View the{" "}
-                  <a
-                    href="https://docs.courselit.app/schools/sso"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline inline-flex items-center gap-0.5"
-                  >
-                    SSO documentation <ExternalLink className="size-3" />
-                  </a>
-                  .
-                </span>
-              </div>
-            </div>
-            <DialogFooter className="flex items-center justify-between sm:justify-between">
-              {ssoConfigured ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setSsoResetConfirmOpen(true)}
-                  disabled={ssoSaving || ssoResetting}
-                >
-                  <RotateCcw className="mr-1.5 size-4" />
-                  Reset
-                </Button>
-              ) : (
-                <div />
-              )}
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setSsoDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => void saveSsoConfig()}
-                  disabled={
-                    ssoSaving ||
-                    !ssoIdpMetadata.trim() ||
-                    !ssoEntryPoint.trim() ||
-                    !ssoCert.trim()
-                  }
-                >
-                  <Save className="mr-1.5 size-4" />
-                  {ssoSaving ? "Saving…" : "Save"}
-                </Button>
-              </div>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* SSO Reset Confirmation Dialog */}
-        <Dialog open={ssoResetConfirmOpen} onOpenChange={setSsoResetConfirmOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Clear SSO configuration?</DialogTitle>
-              <DialogDescription>
-                This action is irreversible. All SSO provider configuration will be wiped out
-                and SSO login will be disabled.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setSsoResetConfirmOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => void resetSsoConfig()}
-                disabled={ssoResetting}
-              >
-                {ssoResetting ? "Resetting…" : "Reset"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Google Configuration Dialog */}
-        <Dialog open={googleDialogOpen} onOpenChange={setGoogleDialogOpen}>
-          <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Google Sign-in</DialogTitle>
-              <DialogDescription>
-                Configure Google OAuth credentials for your learners.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-6 py-2">
-              {/* Redirect details */}
-              <div className="space-y-3 rounded-lg border bg-muted/40 p-4">
-                <div>
-                  <h3 className="text-sm font-semibold">Google Cloud Credentials</h3>
-                  <p className="text-xs text-muted-foreground">
-                    Add these URLs to your OAuth 2.0 Client ID settings in Google Cloud Console.
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Authorized redirect URI</Label>
-                    <div className="flex gap-2">
-                      <Input readOnly value={googleRedirectUri} className="font-mono text-xs" />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-9 w-9 p-0"
-                        onClick={() => void copyText(googleRedirectUri, "google_uri")}
-                        title="Copy Redirect URI"
-                      >
-                        {copiedField === "google_uri" ? (
-                          <Check className="size-4 text-emerald-600" />
-                        ) : (
-                          <Copy className="size-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Authorized JavaScript origin</Label>
-                    <div className="flex gap-2">
-                      <Input readOnly value={origin} className="font-mono text-xs" />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-9 w-9 p-0"
-                        onClick={() => void copyText(origin, "google_origin")}
-                        title="Copy Origin"
-                      >
-                        {copiedField === "google_origin" ? (
-                          <Check className="size-4 text-emerald-600" />
-                        ) : (
-                          <Copy className="size-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Client credentials */}
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="google-client-id">Client ID</Label>
-                  <Input
-                    id="google-client-id"
-                    placeholder="e.g. 123456789-abc.apps.googleusercontent.com"
-                    value={googleClientId}
-                    onChange={(e) => setGoogleClientId(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="google-client-secret">Client Secret</Label>
-                  <Input
-                    id="google-client-secret"
-                    type="password"
-                    autoComplete="off"
-                    placeholder={
-                      googleHasSavedSecret
-                        ? "Secret saved. Enter a new secret to update."
-                        : "Enter Client Secret"
-                    }
-                    value={googleClientSecret}
-                    onChange={(e) => setGoogleClientSecret(e.target.value)}
-                  />
-                  {googleHasSavedSecret && !googleClientSecret ? (
-                    <p className="text-xs text-muted-foreground">
-                      A client secret is currently configured and saved.
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-
-              {googleError ? (
-                <p className="text-sm text-destructive" role="alert">
-                  {googleError}
-                </p>
-              ) : null}
-
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Info className="size-3.5" />
-                <span>
-                  Need help? View the{" "}
-                  <a
-                    href="https://docs.courselit.app/schools/google-sign-in"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline inline-flex items-center gap-0.5"
-                  >
-                    Google sign-in documentation <ExternalLink className="size-3" />
-                  </a>
-                  .
-                </span>
-              </div>
-            </div>
-            <DialogFooter className="flex items-center justify-between sm:justify-between">
-              {googleConfigured ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setGoogleResetConfirmOpen(true)}
-                  disabled={googleSaving || googleResetting}
-                >
-                  <RotateCcw className="mr-1.5 size-4" />
-                  Reset
-                </Button>
-              ) : (
-                <div />
-              )}
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setGoogleDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => void saveGoogleConfig()}
-                  disabled={
-                    googleSaving ||
-                    !googleClientId.trim() ||
-                    (!googleHasSavedSecret && !googleClientSecret.trim())
-                  }
-                >
-                  <Save className="mr-1.5 size-4" />
-                  {googleSaving ? "Saving…" : "Save"}
-                </Button>
-              </div>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Google Reset Confirmation Dialog */}
-        <Dialog open={googleResetConfirmOpen} onOpenChange={setGoogleResetConfirmOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Clear Google configuration?</DialogTitle>
-              <DialogDescription>
-                This action is irreversible. The Google client credentials will be removed
-                and Google sign-in will be disabled.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setGoogleResetConfirmOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => void resetGoogleConfig()}
-                disabled={googleResetting}
-              >
-                {googleResetting ? "Resetting…" : "Reset"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        
 
         <Dialog open={resetOpen} onOpenChange={setResetOpen}>
           <DialogContent>
@@ -1557,43 +825,3 @@ export function SettingsPage({ mode = "general" }: { mode?: SettingsMode }) {
 }
 
 export default SettingsPage;
-
-function LoginMethodRow({
-  label,
-  checked,
-  disabled,
-  onCheckedChange,
-  onConfigure,
-}: {
-  label: string;
-  checked: boolean;
-  disabled?: boolean;
-  onCheckedChange: (value: boolean) => void;
-  onConfigure?: () => void;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4 rounded-lg border bg-muted/30 px-4 py-3.5">
-      <div className="flex items-center gap-3">
-        <Checkbox
-          checked={checked}
-          disabled={disabled}
-          onCheckedChange={(value) => onCheckedChange(value === true)}
-          aria-label={label}
-        />
-        <span className="font-medium">{label}</span>
-      </div>
-      {onConfigure ? (
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          className="size-8 p-0"
-          onClick={onConfigure}
-          title={`Configure ${label}`}
-        >
-          <Settings className="size-4" />
-        </Button>
-      ) : null}
-    </div>
-  );
-}

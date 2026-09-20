@@ -1,6 +1,7 @@
 "use client";
 
-import { ImageUploadDialog, type SelectedImage } from "@frontlit/media-uploader";
+import type { MediaRef } from "@courselit/api-contract";
+import { ImageUploadDialog, type SelectedMedia } from "@frontlit/media-uploader";
 import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
@@ -10,6 +11,7 @@ import {
   mediaMatchesAcceptedTypes,
   useCourseLitMediaUploader,
 } from "@/lib/course-media-uploader";
+import { toMediaRef } from "@/lib/media-ref";
 
 const COMMUNITY_IMAGE_ACCEPTED_TYPES = [
   "image/jpeg",
@@ -18,14 +20,6 @@ const COMMUNITY_IMAGE_ACCEPTED_TYPES = [
   "image/webp",
 ];
 
-export type CommunityFeaturedMedia = {
-  id: string;
-  canonicalUrl: string;
-  thumbnailUrl: string | null;
-  fileName: string;
-  altText: string;
-};
-
 export function CommunityFeaturedImage({
   school,
   value,
@@ -33,9 +27,9 @@ export function CommunityFeaturedImage({
   onChange,
 }: {
   school: { id: string };
-  value: CommunityFeaturedMedia | null;
+  value: MediaRef | null;
   disabled?: boolean;
-  onChange: (mediaId: string | null) => void;
+  onChange: (value: MediaRef | null) => void;
 }) {
   const [error, setError] = useState<string | null>(null);
   const adapters = useCourseLitMediaUploader({
@@ -48,49 +42,16 @@ export function CommunityFeaturedImage({
     COMMUNITY_IMAGE_ACCEPTED_TYPES,
   );
 
-  async function selectImage(selected: SelectedImage<CourseLitMedia>) {
-    if (!selected.media) {
-      const uploadMedia = adapters.uploadMedia;
-      if (!uploadMedia) {
-        setError("Featured images must be stored in the MediaLit library.");
-        return;
-      }
-      try {
-        const response = await fetch(selected.src);
-        if (!response.ok) throw new Error("Unable to download the Unsplash image.");
-        const blob = await response.blob();
-        const fileName = selected.fileName || "unsplash-image.jpg";
-        const mimeType = blob.type || selected.mimeType || "image/jpeg";
-        if (
-          !mediaMatchesAcceptedTypes(
-            { fileName, mimeType },
-            COMMUNITY_IMAGE_ACCEPTED_TYPES,
-          )
-        ) {
-          setError("Featured images must be JPEG, PNG, GIF, or WebP images.");
-          return;
-        }
-        const media = await uploadMedia(
-          new File([blob], fileName, { type: mimeType }),
-          {
-            alt: selected.alt,
-            fileName,
-            mimeType,
-          },
-        );
-        setError(null);
-        onChange(media.id);
-      } catch {
-        setError("Unable to import the Unsplash image into the MediaLit library.");
-      }
-      return;
-    }
-    if (!mediaMatchesAcceptedTypes(selected.media, COMMUNITY_IMAGE_ACCEPTED_TYPES)) {
+  function selectImage(selected: SelectedMedia<CourseLitMedia>) {
+    if (
+      selected.media &&
+      !mediaMatchesAcceptedTypes(selected.media, COMMUNITY_IMAGE_ACCEPTED_TYPES)
+    ) {
       setError("Featured images must be JPEG, PNG, GIF, or WebP images.");
       return;
     }
     setError(null);
-    onChange(selected.media.id);
+    onChange(toMediaRef(selected));
   }
 
   return (
@@ -104,15 +65,15 @@ export function CommunityFeaturedImage({
       {value ? (
         <div className="flex flex-wrap items-start gap-4">
           <Image
-            src={value.thumbnailUrl ?? value.canonicalUrl}
-            alt={value.altText || value.fileName}
+            src={value.thumbnailUrl ?? value.url}
+            alt={value.alt || "Community featured image"}
             width={176}
             height={112}
             unoptimized
             className="h-28 w-44 rounded-md border object-cover"
           />
           <div className="space-y-2 text-sm">
-            <p className="font-medium">{value.fileName}</p>
+            <p className="font-medium">{value.alt || value.url}</p>
             <Button
               type="button"
               variant="outline"

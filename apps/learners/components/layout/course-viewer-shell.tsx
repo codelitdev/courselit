@@ -1,5 +1,6 @@
 "use client";
 
+import { ThemeModeSwitcher } from "@frontlit/page-builder/components";
 import { LogOut, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -9,7 +10,10 @@ import { CourseDiscussions } from "@/components/course-discussions";
 import {
   type CourseViewerProduct,
   CourseViewerSidebar,
+  courseViewerEntryPointFromParam,
+  courseViewerExitHref,
 } from "@/components/layout/course-viewer-sidebar";
+import { LearnerNotificationsBell } from "@/components/notifications/learner-notifications-bell";
 import {
   LearnerButton as Button,
   LearnerText2,
@@ -21,6 +25,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useSchoolThemeMode, useSchoolThemeStyle } from "@/lib/school-theme-context";
 
 export function courseViewerPath(
   productSlug: string,
@@ -67,7 +72,11 @@ export function CourseViewerShell({
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const theme = useSchoolThemeStyle();
+  const { mode, mounted, toggle } = useSchoolThemeMode();
   const basePath = courseViewerPath(productSlug, product.id);
+  const entryPoint = courseViewerEntryPointFromParam(searchParams.get("from"));
+  const exitHref = courseViewerExitHref(productSlug, entryPoint);
   const discussionOpen = searchParams.get("discussion") === "open";
   const actualLesson = Boolean(currentLessonId);
   const canUseDiscussions = Boolean(
@@ -102,12 +111,21 @@ export function CourseViewerShell({
         completedLessonIds={completedLessonIds}
         user={user}
         basePath={basePath}
-        homeHref={`/p/${encodeURIComponent(productSlug)}`}
+        homeHref={exitHref}
+        entryPoint={entryPoint}
       />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
           <div className="flex items-center gap-2">
+            {user ? <LearnerNotificationsBell /> : null}
+            <ThemeModeSwitcher
+              resolved={mounted ? mode : "light"}
+              onToggle={toggle}
+              theme={theme}
+              size="sm"
+              variant="outline"
+            />
             {previewToken ? (
               <LearnerText2
                 component="span"
@@ -130,7 +148,7 @@ export function CourseViewerShell({
               </Button>
             ) : null}
             <Button asChild aria-label="Exit course" variant="ghost" size="sm">
-              <Link href={`/p/${encodeURIComponent(productSlug)}`}>
+              <Link href={exitHref}>
                 <LogOut className="size-4" />
                 <LearnerText2 component="span" className="hidden sm:inline">
                   Exit

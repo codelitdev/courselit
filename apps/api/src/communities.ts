@@ -7,6 +7,7 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
+import type { MediaRef } from "@courselit/api-contract";
 import {
   and,
   asc,
@@ -20,19 +21,25 @@ import {
   or,
   sql,
 } from "drizzle-orm";
-import { revokeCommunityMembershipAccess } from "./community-commerce.js";
 import { ActivityType, recordActivity } from "./activities.js";
+import { revokeCommunityMembershipAccess } from "./community-commerce.js";
 import * as schema from "./db/schema/index.js";
-import { getPaymentProvider, type PaymentProvider } from "./payments.js";
 import { enqueueSalesPageProvisioning } from "./frontlit-sales-pages.js";
-import { resourceSlugTaken } from "./resource-slugs.js";
 import {
   type MediaKind,
   mediaIdsForRichTextContent,
+  mediaRefFromCatalog,
+  normalizeMediaRef,
   reconcileMediaReferencesInTransaction,
 } from "./media.js";
-import { createLearnerNotification } from "./notifications.js";
+import {
+  createLearnerNotification,
+  createSchoolAdminNotifications,
+} from "./notifications.js";
+import { getPaymentProvider, type PaymentProvider } from "./payments.js";
 import type { CourseLitPermission } from "./permissions.js";
+import { resourceSlugTaken } from "./resource-slugs.js";
+import { accessibleSpaceIds } from "./space-access.js";
 import type { AppDb } from "./types.js";
 
 type AdminContext = PlatformRequestContext<string, string, CourseLitPermission>;
@@ -59,10 +66,9 @@ export type CommunityDto = {
   description: string;
   banner: string;
   categories: string[];
-  enabled: boolean;
   autoAcceptMembers: boolean;
   joiningReasonText: string;
-  featuredMedia: CommunityFeaturedMediaDto | null;
+  featuredImage: MediaRef | null;
   membersCount: number;
   postsCount: number;
   deletedAt: string | null;
@@ -71,12 +77,9 @@ export type CommunityDto = {
   updatedAt: string;
 };
 
-export type CommunityFeaturedMediaDto = {
-  id: string;
-  canonicalUrl: string;
-  thumbnailUrl: string | null;
-  fileName: string;
-  altText: string;
+export type PublicCommunityListItemDto = CommunityDto & {
+  currency: string;
+  priceMinor: number | null;
 };
 
 export type CommunityActorDto = {
@@ -125,6 +128,17 @@ export type LearnerFeedPostDto = CommunityPostDto & {
     id: string;
     name: string;
     slug: string;
+  };
+};
+
+export type LearnerSpaceFeedPostDto = LearnerFeedPostDto & {
+  space: {
+    id: string;
+    name: string;
+    slug: string;
+    description: string;
+    logo: string;
+    featuredImage: MediaRef | null;
   };
 };
 
@@ -193,9 +207,12 @@ type Result<T> = { ok: true; value: T } | { ok: false; error: PlatformError };
 const EMOJIS = ["👍", "❤️", "😄", "🎉", "😢", "😮"] as const;
 type CommunityEmoji = (typeof EMOJIS)[number];
 
-type Identity =
-  | { kind: "learner"; id: string; publicId: string }
-  | { kind: "admin"; id: string; publicId: string };
+type Identity = {
+  kind?: "learner" | "admin";
+  id: string; // schoolAccountId
+  publicId?: string;
+  schoolAccountId?: string;
+};
 
 function forbidden(): Result<never> {
   return { ok: false, error: createPlatformError("forbidden") };
@@ -306,7 +323,9 @@ function encodeCommunityPostCursor(row: {
   ).toString("base64url");
 }
 
-function decodeCommunityPostCursor(value: string | undefined): CommunityPostCursor | null {
+function decodeCommunityPostCursor(
+  value: string | undefined,
+): CommunityPostCursor | null {
   if (!value) return null;
   try {
     const parsed = JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as {
@@ -396,16 +415,14 @@ function decodeCommunityNameCursor(
 }
 
 function identityColumns(identity: Identity) {
-  return identity.kind === "learner"
-    ? { learnerId: identity.id, adminUserId: null }
-    : { learnerId: null, adminUserId: identity.id };
+  return { schoolAccountId: identity.schoolAccountId ?? identity.id };
 }
 
 function communityToDto(
   row: typeof schema.communities.$inferSelect,
   schoolPublicId: string,
   membership: CommunityMembershipDto | null,
-  featuredMedia: CommunityFeaturedMediaDto | null = null,
+  featuredImage: MediaRef | null = null,
   membersCount = 0,
   postsCount = 0,
 ): CommunityDto {
@@ -417,10 +434,9 @@ function communityToDto(
     description: row.description,
     banner: row.banner,
     categories: parseCategories(row.categories),
-    enabled: row.enabled,
     autoAcceptMembers: row.autoAcceptMembers,
     joiningReasonText: row.joiningReasonText,
-    featuredMedia,
+    featuredImage,
     membersCount,
     postsCount,
     deletedAt: row.deletedAt ? serializeDate(row.deletedAt) : null,
@@ -428,6 +444,11 @@ function communityToDto(
     createdAt: serializeDate(row.createdAt),
     updatedAt: serializeDate(row.updatedAt),
   };
+}
+
+function normalizeCurrency(value: string | null | undefined): string {
+  const currency = value?.trim().toUpperCase();
+  return currency && /^[A-Z]{3}$/.test(currency) ? currency : "USD";
 }
 
 function membershipToDto(
@@ -439,8 +460,8 @@ function membershipToDto(
   return {
     id: row.publicId,
     communityId: communityPublicId ?? row.communityId,
-    learnerId: learnerPublicId ?? row.learnerId,
-    adminUserId: row.adminUserId,
+    learnerId: learnerPublicId ?? member?.id ?? row.schoolAccountId,
+    adminUserId: member?.kind === "admin" ? member.id : null,
     member,
     status: row.status,
     role: row.role,
@@ -474,23 +495,15 @@ function communityMediaToDto(row: typeof schema.media.$inferSelect): CommunityMe
   };
 }
 
-function communityFeaturedMediaToDto(
-  row: typeof schema.media.$inferSelect,
-): CommunityFeaturedMediaDto {
-  return {
-    id: row.publicId,
-    canonicalUrl: row.canonicalUrl,
-    thumbnailUrl: row.thumbnailUrl,
-    fileName: row.fileName,
-    altText: row.altText,
-  };
+function communityFeaturedImageToRef(row: typeof schema.media.$inferSelect): MediaRef {
+  return mediaRefFromCatalog(row);
 }
 
-async function communityFeaturedMediaMap(
+async function communityFeaturedImageMap(
   db: AppDb,
   schoolId: string,
   resourceInternalIds: readonly string[],
-): Promise<Map<string, CommunityFeaturedMediaDto>> {
+): Promise<Map<string, MediaRef>> {
   if (resourceInternalIds.length === 0) return new Map();
   const rows = await db
     .select({ reference: schema.mediaReferences, media: schema.media })
@@ -506,25 +519,44 @@ async function communityFeaturedMediaMap(
       ),
     )
     .orderBy(asc(schema.mediaReferences.createdAt), asc(schema.mediaReferences.id));
-  const media = new Map<string, CommunityFeaturedMediaDto>();
+  const media = new Map<string, MediaRef>();
   for (const row of rows) {
     if (!media.has(row.reference.resourceInternalId)) {
       media.set(
         row.reference.resourceInternalId,
-        communityFeaturedMediaToDto(row.media),
+        communityFeaturedImageToRef(row.media),
       );
+    }
+  }
+  const externalRows = await db
+    .select({
+      id: schema.communities.id,
+      featuredImage: schema.communities.featuredImage,
+    })
+    .from(schema.communities)
+    .where(
+      and(
+        eq(schema.communities.schoolId, schoolId),
+        inArray(schema.communities.id, [...resourceInternalIds]),
+      ),
+    );
+  for (const row of externalRows) {
+    if (media.has(row.id)) continue;
+    const featuredImage = normalizeMediaRef(row.featuredImage);
+    if (featuredImage && !featuredImage.mediaId) {
+      media.set(row.id, featuredImage);
     }
   }
   return media;
 }
 
-async function communityFeaturedMediaFor(
+async function communityFeaturedImageFor(
   db: AppDb,
   schoolId: string,
   communityInternalId: string,
-): Promise<CommunityFeaturedMediaDto | null> {
+): Promise<MediaRef | null> {
   return (
-    (await communityFeaturedMediaMap(db, schoolId, [communityInternalId])).get(
+    (await communityFeaturedImageMap(db, schoolId, [communityInternalId])).get(
       communityInternalId,
     ) ?? null
   );
@@ -617,8 +649,8 @@ function postToDto(
   return {
     id: row.publicId,
     communityId: communityPublicId ?? row.communityId,
-    authorId: row.learnerId ? (learnerPublicId ?? row.learnerId) : row.adminUserId,
-    authorKind: row.learnerId ? "learner" : row.adminUserId ? "admin" : null,
+    authorId: author?.id ?? learnerPublicId ?? row.schoolAccountId,
+    authorKind: author?.kind ?? (row.schoolAccountId ? "learner" : null),
     author,
     title: row.title,
     content: row.content,
@@ -650,8 +682,8 @@ function commentToDto(
     postId: postPublicId ?? row.postId,
     parentCommentId:
       parentPublicId !== undefined ? parentPublicId : row.parentCommentId,
-    authorId: row.learnerId ? (learnerPublicId ?? row.learnerId) : row.adminUserId,
-    authorKind: row.learnerId ? "learner" : row.adminUserId ? "admin" : null,
+    authorId: author?.id ?? learnerPublicId ?? row.schoolAccountId,
+    authorKind: author?.kind ?? (row.schoolAccountId ? "learner" : null),
     author,
     content: row.deletedAt ? DELETED_COMMUNITY_CONTENT : row.content,
     media,
@@ -677,8 +709,8 @@ function reportToDto(
     contentId: contentPublicId ?? row.contentId,
     contentParentId:
       contentParentPublicId !== undefined ? contentParentPublicId : row.contentParentId,
-    reporterId: row.learnerId ? (learnerPublicId ?? row.learnerId) : row.adminUserId,
-    reporterKind: row.learnerId ? "learner" : row.adminUserId ? "admin" : null,
+    reporterId: learnerPublicId ?? row.schoolAccountId,
+    reporterKind: "learner",
     authorId: content?.authorId ?? null,
     authorKind: content?.authorKind ?? null,
     content,
@@ -742,25 +774,18 @@ async function reportContentMap(
     ...posts.map((post) => post.id),
     ...comments.map((comment) => comment.id),
   ]);
-  const actors = await communityActorMap(
-    db,
-    [
-      ...posts.map((post) => post.learnerId),
-      ...comments.map((comment) => comment.learnerId),
-    ],
-    [
-      ...posts.map((post) => post.adminUserId),
-      ...comments.map((comment) => comment.adminUserId),
-    ],
-  );
+  const actors = await communityActorMap(db, [
+    ...posts.map((post) => post.schoolAccountId),
+    ...comments.map((comment) => comment.schoolAccountId),
+  ]);
   const [postAuthors, commentAuthors] = await Promise.all([
     learnerPublicIds(
       db,
-      posts.map((post) => post.learnerId),
+      posts.map((post) => post.schoolAccountId),
     ),
     learnerPublicIds(
       db,
-      comments.map((comment) => comment.learnerId),
+      comments.map((comment) => comment.schoolAccountId),
     ),
   ]);
   const postsById = new Map(posts.map((post) => [post.id, post]));
@@ -771,25 +796,20 @@ async function reportContentMap(
       report.contentType === "post"
         ? postsById.get(report.contentId)
         : commentsById.get(report.contentId);
-    // Moderation history may outlive the reported entity. Once content has
-    // been deleted, do not rehydrate its original body or attachments into a
-    // report response. The admin UI already treats a missing content payload
-    // as "no longer available" while retaining the report itself for audit.
     if (!row || row.deletedAt) continue;
     const authorIds = report.contentType === "post" ? postAuthors : commentAuthors;
+    const author = row.schoolAccountId
+      ? (actors.get(row.schoolAccountId) ?? null)
+      : null;
     result.set(`${report.contentType}:${report.contentId}`, {
       id: row.publicId,
       content: row.content,
       media: media.get(row.id) ?? [],
-      authorId: row.learnerId
-        ? (authorIds.get(row.learnerId) ?? null)
-        : row.adminUserId,
-      authorKind: row.learnerId ? "learner" : row.adminUserId ? "admin" : null,
-      author: row.learnerId
-        ? (actors.get(`learner:${row.learnerId}`) ?? null)
-        : row.adminUserId
-          ? (actors.get(`admin:${row.adminUserId}`) ?? null)
-          : null,
+      authorId: row.schoolAccountId
+        ? (authorIds.get(row.schoolAccountId) ?? null)
+        : null,
+      authorKind: author?.kind ?? "learner",
+      author,
     });
   }
   return result;
@@ -811,27 +831,6 @@ async function loadCommunity(db: AppDb, schoolId: string, publicId: string) {
     )
     .limit(1);
   return rows[0] ?? null;
-}
-
-async function hasActiveDefaultCommunityPlan(
-  db: AppDb,
-  schoolId: string,
-  communityPublicId: string,
-) {
-  const rows = await db
-    .select({ id: schema.storefrontPlans.id })
-    .from(schema.storefrontPlans)
-    .where(
-      and(
-        eq(schema.storefrontPlans.schoolId, schoolId),
-        eq(schema.storefrontPlans.entityType, "community"),
-        eq(schema.storefrontPlans.entityId, communityPublicId),
-        eq(schema.storefrontPlans.status, "active"),
-        eq(schema.storefrontPlans.isDefault, true),
-      ),
-    )
-    .limit(1);
-  return rows.length > 0;
 }
 
 async function activeCommunityMemberCount(
@@ -983,7 +982,28 @@ async function loadMembership(
   communityId: string,
   identity: Identity,
 ) {
-  const columns = identityColumns(identity);
+  let targetSchoolAccountId = identity.schoolAccountId ?? identity.id;
+  if (identity.kind === "admin") {
+    const mem = await db
+      .select({ schoolAccountId: schema.schoolAccounts.id })
+      .from(schema.schoolAccounts)
+      .innerJoin(
+        schema.memberships,
+        eq(schema.memberships.schoolAccountId, schema.schoolAccounts.id),
+      )
+      .where(
+        and(
+          eq(schema.schoolAccounts.schoolId, schoolId),
+          eq(schema.schoolAccounts.userId, identity.id),
+        ),
+      )
+      .limit(1);
+    targetSchoolAccountId = mem[0]?.schoolAccountId ?? identity.id;
+  }
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    targetSchoolAccountId,
+  );
+  if (!isUuid) return null;
   const rows = await db
     .select()
     .from(schema.communityMemberships)
@@ -991,9 +1011,7 @@ async function loadMembership(
       and(
         eq(schema.communityMemberships.schoolId, schoolId),
         eq(schema.communityMemberships.communityId, communityId),
-        identity.kind === "learner"
-          ? eq(schema.communityMemberships.learnerId, columns.learnerId!)
-          : eq(schema.communityMemberships.adminUserId, columns.adminUserId!),
+        eq(schema.communityMemberships.schoolAccountId, targetSchoolAccountId),
       ),
     )
     .limit(1);
@@ -1005,6 +1023,7 @@ async function canReadCommunity(
   schoolId: string,
   communityId: string,
   viewer: CommunityViewer,
+  spaceId?: string | null,
 ) {
   if (viewer.kind === "admin") {
     return adminCan(viewer.context, "communities:read");
@@ -1014,7 +1033,21 @@ async function canReadCommunity(
     id: viewer.learnerId,
     publicId: viewer.learnerPublicId,
   });
-  return membership?.status === "active";
+  if (membership?.status === "active") return true;
+
+  const accessible = await accessibleSpaceIds(db, schoolId, viewer.learnerId);
+  if (accessible.size === 0) return false;
+  if (spaceId) return accessible.has(spaceId);
+  const posts = await db
+    .select({ spaceId: schema.communityPosts.spaceId })
+    .from(schema.communityPosts)
+    .where(
+      and(
+        eq(schema.communityPosts.schoolId, schoolId),
+        eq(schema.communityPosts.communityId, communityId),
+      ),
+    );
+  return posts.some((post) => post.spaceId !== null && accessible.has(post.spaceId));
 }
 
 async function canWriteCommunity(
@@ -1022,6 +1055,7 @@ async function canWriteCommunity(
   schoolId: string,
   communityId: string,
   viewer: CommunityViewer,
+  spaceId?: string | null,
 ) {
   if (viewer.kind === "admin") {
     return adminCan(viewer.context, "communities:write");
@@ -1031,7 +1065,21 @@ async function canWriteCommunity(
     id: viewer.learnerId,
     publicId: viewer.learnerPublicId,
   });
-  return membership?.status === "active";
+  if (membership?.status === "active") return true;
+
+  const accessible = await accessibleSpaceIds(db, schoolId, viewer.learnerId);
+  if (accessible.size === 0) return false;
+  if (spaceId) return accessible.has(spaceId);
+  const posts = await db
+    .select({ spaceId: schema.communityPosts.spaceId })
+    .from(schema.communityPosts)
+    .where(
+      and(
+        eq(schema.communityPosts.schoolId, schoolId),
+        eq(schema.communityPosts.communityId, communityId),
+      ),
+    );
+  return posts.some((post) => post.spaceId !== null && accessible.has(post.spaceId));
 }
 
 async function canModerateCommunity(
@@ -1058,63 +1106,65 @@ async function learnerPublicIds(db: AppDb, ids: (string | null)[]) {
   const internalIds = ids.filter((id): id is string => Boolean(id));
   if (internalIds.length === 0) return new Map<string, string>();
   const rows = await db
-    .select({ id: schema.learners.id, publicId: schema.learners.publicId })
-    .from(schema.learners)
-    .where(inArray(schema.learners.id, internalIds));
+    .select({ id: schema.schoolAccounts.id, publicId: schema.schoolAccounts.publicId })
+    .from(schema.schoolAccounts)
+    .where(inArray(schema.schoolAccounts.id, internalIds));
   return new Map(rows.map((row) => [row.id, row.publicId]));
 }
 
 async function communityActorMap(
   db: AppDb,
-  learnerIds: readonly (string | null)[],
-  adminIds: readonly (string | null)[],
+  accountIds: readonly (string | null)[],
+  _adminIds?: readonly (string | null)[],
 ): Promise<Map<string, CommunityActorDto>> {
-  const learnerInternalIds = [
-    ...new Set(learnerIds.filter((id): id is string => Boolean(id))),
-  ];
-  const adminUserIds = [...new Set(adminIds.filter((id): id is string => Boolean(id)))];
-  const [learnerRows, adminRows] = await Promise.all([
-    learnerInternalIds.length > 0
-      ? db
-          .select({
-            id: schema.learners.id,
-            publicId: schema.learners.publicId,
-            name: schema.learners.name,
-            email: schema.learners.email,
-          })
-          .from(schema.learners)
-          .where(inArray(schema.learners.id, learnerInternalIds))
-      : Promise.resolve([]),
-    adminUserIds.length > 0
-      ? db
-          .select({
-            id: schema.user.id,
-            name: schema.user.name,
-            email: schema.user.email,
-            imageUrl: schema.user.image,
-          })
-          .from(schema.user)
-          .where(inArray(schema.user.id, adminUserIds))
-      : Promise.resolve([]),
-  ]);
+  const allIds = [...accountIds, ...(_adminIds ?? [])];
+  const internalIds = [...new Set(allIds.filter((id): id is string => Boolean(id)))];
+  if (internalIds.length === 0) return new Map();
+  const accounts = await db
+    .select({
+      id: schema.schoolAccounts.id,
+      publicId: schema.schoolAccounts.publicId,
+      schoolId: schema.schoolAccounts.schoolId,
+      name: schema.schoolAccounts.displayName,
+      email: schema.schoolAccounts.email,
+      image: schema.schoolAccounts.image,
+    })
+    .from(schema.schoolAccounts)
+    .where(inArray(schema.schoolAccounts.id, internalIds));
+  if (accounts.length === 0) return new Map();
+  const adminMemberships = await db
+    .select({
+      schoolAccountId: schema.memberships.schoolAccountId,
+      userId: schema.schoolAccounts.userId,
+    })
+    .from(schema.memberships)
+    .innerJoin(
+      schema.schoolAccounts,
+      eq(schema.schoolAccounts.id, schema.memberships.schoolAccountId),
+    )
+    .where(inArray(schema.memberships.schoolAccountId, internalIds));
+  const adminAccountMap = new Map(
+    adminMemberships.map((m) => [m.schoolAccountId, m.userId]),
+  );
   const actors = new Map<string, CommunityActorDto>();
-  for (const row of learnerRows) {
-    actors.set(`learner:${row.id}`, {
-      id: row.publicId,
-      kind: "learner",
+  for (const row of accounts) {
+    const adminUserId = adminAccountMap.get(row.id);
+    const isAdmin = Boolean(adminUserId);
+    const actor: CommunityActorDto = {
+      id: isAdmin ? adminUserId! : row.publicId,
+      kind: isAdmin ? "admin" : "learner",
       name: row.name,
       email: row.email,
-      imageUrl: null,
-    });
-  }
-  for (const row of adminRows) {
-    actors.set(`admin:${row.id}`, {
-      id: row.id,
-      kind: "admin",
-      name: row.name,
-      email: row.email,
-      imageUrl: row.imageUrl,
-    });
+      imageUrl: row.image,
+    };
+    actors.set(row.id, actor);
+    actors.set(row.publicId, actor);
+    if (adminUserId) {
+      actors.set(adminUserId, actor);
+    }
+    actors.set(`account:${row.id}`, actor);
+    actors.set(`learner:${row.id}`, actor);
+    actors.set(`admin:${row.id}`, actor);
   }
   return actors;
 }
@@ -1149,7 +1199,8 @@ async function communityReactionMap(
       active: false,
     };
     reaction.count += 1;
-    if (viewerLearnerId && row.learnerId === viewerLearnerId) reaction.active = true;
+    if (viewerLearnerId && row.schoolAccountId === viewerLearnerId)
+      reaction.active = true;
     byEmoji.set(row.emoji, reaction);
     grouped.set(row.entityId, byEmoji);
   }
@@ -1201,7 +1252,7 @@ async function communityPostSubscriptionSet(
     .where(
       and(
         eq(schema.communityPostSubscribers.schoolId, schoolId),
-        eq(schema.communityPostSubscribers.learnerId, viewer.learnerId),
+        eq(schema.communityPostSubscribers.schoolAccountId, viewer.learnerId),
         inArray(schema.communityPostSubscribers.postId, [...postIds]),
       ),
     );
@@ -1242,7 +1293,7 @@ export async function listCommunities(
     .orderBy(asc(schema.communities.name), asc(schema.communities.id))
     .limit(options.limit + 1);
   const page = rows.slice(0, options.limit);
-  const featuredMedia = await communityFeaturedMediaMap(
+  const featuredImage = await communityFeaturedImageMap(
     db,
     school.schoolId,
     page.map((row) => row.id),
@@ -1265,7 +1316,7 @@ export async function listCommunities(
           row,
           publicSchoolId,
           null,
-          featuredMedia.get(row.id) ?? null,
+          featuredImage.get(row.id) ?? null,
           membersCount.get(row.id) ?? 0,
           postsCount.get(row.id) ?? 0,
         ),
@@ -1289,7 +1340,7 @@ export async function listLearnerCommunities(
   }
   const conditions = [
     eq(schema.communityMemberships.schoolId, viewer.schoolId),
-    eq(schema.communityMemberships.learnerId, viewer.learnerId),
+    eq(schema.communityMemberships.schoolAccountId, viewer.learnerId),
     isNull(schema.communities.deletedAt),
   ];
   if (cursor) {
@@ -1314,7 +1365,7 @@ export async function listLearnerCommunities(
     .orderBy(asc(schema.communities.name), asc(schema.communities.id))
     .limit(options.limit + 1);
   const page = rows.slice(0, options.limit);
-  const featuredMedia = await communityFeaturedMediaMap(
+  const featuredImage = await communityFeaturedImageMap(
     db,
     viewer.schoolId,
     page.map((row) => row.community.id),
@@ -1341,7 +1392,7 @@ export async function listLearnerCommunities(
             viewer.learnerPublicId,
             row.community.publicId,
           ),
-          featuredMedia.get(row.community.id) ?? null,
+          featuredImage.get(row.community.id) ?? null,
           membersCount.get(row.community.id) ?? 0,
           postsCount.get(row.community.id) ?? 0,
         ),
@@ -1370,10 +1421,9 @@ export async function listLearnerFeed(
     eq(schema.communityPosts.schoolId, viewer.schoolId),
     isNull(schema.communityPosts.deletedAt),
     eq(schema.communities.schoolId, viewer.schoolId),
-    eq(schema.communities.enabled, true),
     isNull(schema.communities.deletedAt),
     eq(schema.communityMemberships.schoolId, viewer.schoolId),
-    eq(schema.communityMemberships.learnerId, viewer.learnerId),
+    eq(schema.communityMemberships.schoolAccountId, viewer.learnerId),
     eq(schema.communityMemberships.status, "active"),
   ];
   if (cursor) {
@@ -1412,7 +1462,7 @@ export async function listLearnerFeed(
       schema.communityMemberships,
       and(
         eq(schema.communityMemberships.communityId, schema.communities.id),
-        eq(schema.communityMemberships.learnerId, viewer.learnerId),
+        eq(schema.communityMemberships.schoolAccountId, viewer.learnerId),
       ),
     )
     .where(and(...conditions))
@@ -1427,8 +1477,7 @@ export async function listLearnerFeed(
   const learnerIds = await resolveLearnerMapForPosts(db, postRows);
   const actors = await communityActorMap(
     db,
-    postRows.map((row) => row.learnerId),
-    postRows.map((row) => row.adminUserId),
+    postRows.map((row) => row.schoolAccountId),
   );
   const media = await communityMediaMap(
     db,
@@ -1470,14 +1519,12 @@ export async function listLearnerFeed(
     ok: true,
     value: {
       items: page.map((row) => {
-        const author = row.post.learnerId
-          ? (actors.get(`learner:${row.post.learnerId}`) ?? null)
-          : row.post.adminUserId
-            ? (actors.get(`admin:${row.post.adminUserId}`) ?? null)
-            : null;
+        const author = row.post.schoolAccountId
+          ? (actors.get(row.post.schoolAccountId) ?? null)
+          : null;
         const post = postToDto(
           row.post,
-          row.post.learnerId ? learnerIds.get(row.post.learnerId) : null,
+          row.post.schoolAccountId ? learnerIds.get(row.post.schoolAccountId) : null,
           row.community.publicId,
           media.get(row.post.id) ?? [],
           reactions.get(row.community.id)?.get(row.post.id) ?? [],
@@ -1504,21 +1551,20 @@ export async function listLearnerFeed(
 
 /**
  * Public community catalog. Membership and participation remain learner-only;
- * this operation only exposes enabled, non-deleted communities for the public
+ * this operation only exposes non-deleted communities for the public
  * school site.
  */
 export async function listPublicCommunities(
   db: AppDb,
-  school: { schoolId: string; publicId: string },
+  school: { schoolId: string; publicId: string; currency: string },
   options: { cursor?: string; limit: number },
-): Promise<Result<{ items: CommunityDto[]; nextCursor: string | null }>> {
+): Promise<Result<{ items: PublicCommunityListItemDto[]; nextCursor: string | null }>> {
   const cursor = decodeCommunityNameCursor(options.cursor);
   if (options.cursor && !cursor) {
     return { ok: false, error: createPlatformError("validation_failed") };
   }
   const conditions = [
     eq(schema.communities.schoolId, school.schoolId),
-    eq(schema.communities.enabled, true),
     isNull(schema.communities.deletedAt),
   ];
   if (cursor) {
@@ -1540,25 +1586,60 @@ export async function listPublicCommunities(
     .limit(options.limit + 1);
   const page = rows.slice(0, options.limit);
   const communityIds = page.map((row) => row.id);
-  const [featuredMedia, membersCount, postsCount] = await Promise.all([
-    communityFeaturedMediaMap(db, school.schoolId, communityIds),
+  const [featuredImage, membersCount, postsCount] = await Promise.all([
+    communityFeaturedImageMap(db, school.schoolId, communityIds),
     activeCommunityMemberCountMap(db, school.schoolId, communityIds),
     communityPostCountMap(db, school.schoolId, communityIds),
   ]);
+  const planRows =
+    page.length === 0
+      ? []
+      : await db
+          .select({
+            communityPublicId: schema.storefrontPlans.entityId,
+            amountMinor: schema.storefrontPlans.amountMinor,
+            isDefault: schema.storefrontPlans.isDefault,
+            createdAt: schema.storefrontPlans.createdAt,
+          })
+          .from(schema.storefrontPlans)
+          .where(
+            and(
+              eq(schema.storefrontPlans.schoolId, school.schoolId),
+              eq(schema.storefrontPlans.entityType, "community"),
+              inArray(
+                schema.storefrontPlans.entityId,
+                page.map((community) => community.publicId),
+              ),
+              eq(schema.storefrontPlans.status, "active"),
+            ),
+          )
+          .orderBy(
+            desc(schema.storefrontPlans.isDefault),
+            asc(schema.storefrontPlans.createdAt),
+          );
+  const priceByCommunity = new Map<string, number>();
+  for (const plan of planRows) {
+    if (!priceByCommunity.has(plan.communityPublicId)) {
+      priceByCommunity.set(plan.communityPublicId, plan.amountMinor);
+    }
+  }
+  const currency = normalizeCurrency(school.currency);
 
   return {
     ok: true,
     value: {
-      items: page.map((row) =>
-        communityToDto(
+      items: page.map((row) => ({
+        ...communityToDto(
           row,
           school.publicId,
           null,
-          featuredMedia.get(row.id) ?? null,
+          featuredImage.get(row.id) ?? null,
           membersCount.get(row.id) ?? 0,
           postsCount.get(row.id) ?? 0,
         ),
-      ),
+        currency,
+        priceMinor: priceByCommunity.get(row.publicId) ?? null,
+      })),
       nextCursor:
         rows.length > options.limit && page.at(-1)
           ? encodeCommunityNameCursor(page.at(-1)!.name, page.at(-1)!.id)
@@ -1568,7 +1649,7 @@ export async function listPublicCommunities(
 }
 
 /**
- * Reads one enabled community for the public school site. Membership and
+ * Reads one community for the public school site. Membership and
  * participation remain learner-only; the public response is deliberately
  * discovery metadata with no viewer membership state.
  */
@@ -1578,10 +1659,10 @@ export async function getPublicCommunity(
   communityPublicId: string,
 ): Promise<Result<CommunityDto>> {
   const community = await loadCommunity(db, school.schoolId, communityPublicId);
-  if (!community?.enabled || community.deletedAt) return notFound();
+  if (!community || community.deletedAt) return notFound();
 
-  const [featuredMedia, membersCount, postsCount] = await Promise.all([
-    communityFeaturedMediaFor(db, school.schoolId, community.id),
+  const [featuredImage, membersCount, postsCount] = await Promise.all([
+    communityFeaturedImageFor(db, school.schoolId, community.id),
     activeCommunityMemberCount(db, school.schoolId, community.id),
     communityPostCount(db, school.schoolId, community.id),
   ]);
@@ -1592,7 +1673,7 @@ export async function getPublicCommunity(
       community,
       school.publicId,
       null,
-      featuredMedia,
+      featuredImage,
       membersCount,
       postsCount,
     ),
@@ -1610,7 +1691,6 @@ export async function listAvailableLearnerCommunities(
   }
   const conditions = [
     eq(schema.communities.schoolId, viewer.schoolId),
-    eq(schema.communities.enabled, true),
     isNull(schema.communities.deletedAt),
   ];
   if (cursor) {
@@ -1631,14 +1711,14 @@ export async function listAvailableLearnerCommunities(
       schema.communityMemberships,
       and(
         eq(schema.communityMemberships.communityId, schema.communities.id),
-        eq(schema.communityMemberships.learnerId, viewer.learnerId),
+        eq(schema.communityMemberships.schoolAccountId, viewer.learnerId),
       ),
     )
     .where(and(...conditions))
     .orderBy(asc(schema.communities.name), asc(schema.communities.id))
     .limit(options.limit + 1);
   const page = rows.slice(0, options.limit);
-  const featuredMedia = await communityFeaturedMediaMap(
+  const featuredImage = await communityFeaturedImageMap(
     db,
     viewer.schoolId,
     page.map((row) => row.community.id),
@@ -1667,7 +1747,7 @@ export async function listAvailableLearnerCommunities(
                 row.community.publicId,
               )
             : null,
-          featuredMedia.get(row.community.id) ?? null,
+          featuredImage.get(row.community.id) ?? null,
           membersCount.get(row.community.id) ?? 0,
           postsCount.get(row.community.id) ?? 0,
         ),
@@ -1693,7 +1773,6 @@ export async function createCommunity(
     description: string;
     banner: string;
     categories: string[];
-    enabled: boolean;
     autoAcceptMembers: boolean;
     joiningReasonText: string;
   },
@@ -1705,14 +1784,6 @@ export async function createCommunity(
   const categories = input.categories.map((item) => item.trim()).filter(Boolean);
   if (!name || name.length > 200 || categories.length === 0) {
     return { ok: false, error: createPlatformError("validation_failed") };
-  }
-  if (input.enabled) {
-    return {
-      ok: false,
-      error: createPlatformError("conflict", {
-        safeDetails: { reason: "community_requires_default_payment_plan" },
-      }),
-    };
   }
   const publicId = createPublicId("com", clock);
   const slug = input.slug?.trim() || slugify(name, publicId);
@@ -1742,8 +1813,8 @@ export async function createCommunity(
         slug,
         description: input.description,
         banner: input.banner,
+        featuredImage: null,
         categories: JSON.stringify(categories),
-        enabled: input.enabled,
         autoAcceptMembers: input.autoAcceptMembers,
         joiningReasonText: input.joiningReasonText,
         deletedAt: null,
@@ -1781,13 +1852,26 @@ export async function createCommunity(
         clock,
       );
       if (!contentReferences.ok) return contentReferences;
+      const [staff] = await tx
+        .select({ schoolAccountId: schema.schoolAccounts.id })
+        .from(schema.schoolAccounts)
+        .innerJoin(
+          schema.memberships,
+          eq(schema.memberships.schoolAccountId, schema.schoolAccounts.id),
+        )
+        .where(
+          and(
+            eq(schema.schoolAccounts.schoolId, school.schoolId),
+            eq(schema.schoolAccounts.userId, context.principalId),
+          ),
+        )
+        .limit(1);
       const membership = {
         id: uuidv7(clock),
         publicId: createPublicId("cmm", clock),
         schoolId: school.schoolId,
         communityId: row.id,
-        learnerId: null,
-        adminUserId: context.principalId,
+        schoolAccountId: staff?.schoolAccountId ?? row.id,
         paymentPlanId: null,
         status: "active" as const,
         role: "owner" as const,
@@ -1842,7 +1926,6 @@ export async function getCommunity(
   if (viewer.kind === "admin" && !adminCan(viewer.context, "communities:read")) {
     return forbidden();
   }
-  if (viewer.kind === "learner" && !row.enabled) return notFound();
   const identity: Identity =
     viewer.kind === "learner"
       ? { kind: "learner", id: viewer.learnerId, publicId: viewer.learnerPublicId }
@@ -1866,7 +1949,7 @@ export async function getCommunity(
             publicId,
           )
         : null,
-      await communityFeaturedMediaFor(db, school.schoolId, row.id),
+      await communityFeaturedImageFor(db, school.schoolId, row.id),
       membersCount,
       postsCount,
     ),
@@ -1884,10 +1967,9 @@ export async function updateCommunity(
     description?: string;
     banner?: string;
     categories?: string[];
-    enabled?: boolean;
     autoAcceptMembers?: boolean;
     joiningReasonText?: string;
-    featuredMediaId?: string | null;
+    featuredImage?: MediaRef | null;
   },
   clock: Clock,
 ): Promise<Result<CommunityDto>> {
@@ -1902,27 +1984,16 @@ export async function updateCommunity(
   if (categories && categories.length === 0) {
     return { ok: false, error: createPlatformError("validation_failed") };
   }
-  if (
-    input.enabled === true &&
-    !(await hasActiveDefaultCommunityPlan(db, school.schoolId, existing.publicId))
-  ) {
-    return {
-      ok: false,
-      error: createPlatformError("conflict", {
-        safeDetails: { reason: "community_requires_default_payment_plan" },
-      }),
-    };
-  }
   const now = clock.now();
   try {
     return await db.transaction(async (tx) => {
-      const next = {
+      let next = {
         name: input.name?.trim() ?? existing.name,
         slug: input.slug?.trim() ?? existing.slug,
         description: input.description ?? existing.description,
         banner: input.banner ?? existing.banner,
+        featuredImage: existing.featuredImage,
         categories: categories ? JSON.stringify(categories) : existing.categories,
-        enabled: input.enabled ?? existing.enabled,
         autoAcceptMembers: input.autoAcceptMembers ?? existing.autoAcceptMembers,
         joiningReasonText: input.joiningReasonText ?? existing.joiningReasonText,
         updatedAt: now,
@@ -1967,25 +2038,8 @@ export async function updateCommunity(
         );
         if (!contentReferences.ok) return contentReferences;
       }
-      let featuredMedia: CommunityFeaturedMediaDto | null;
-      if (input.featuredMediaId !== undefined) {
-        let selectedMedia: typeof schema.media.$inferSelect | null = null;
-        if (input.featuredMediaId) {
-          const rows = await tx
-            .select()
-            .from(schema.media)
-            .where(
-              and(
-                eq(schema.media.publicId, input.featuredMediaId),
-                eq(schema.media.schoolId, school.schoolId),
-                eq(schema.media.status, "active"),
-                eq(schema.media.kind, "image"),
-              ),
-            )
-            .limit(1);
-          selectedMedia = rows[0] ?? null;
-          if (!selectedMedia) return notFound();
-        }
+      let featuredImage: MediaRef | null | undefined;
+      if (input.featuredImage !== undefined) {
         await tx
           .delete(schema.mediaReferences)
           .where(
@@ -1995,6 +2049,23 @@ export async function updateCommunity(
               eq(schema.mediaReferences.resourceInternalId, existing.id),
             ),
           );
+        let selectedMedia: typeof schema.media.$inferSelect | null = null;
+        if (input.featuredImage?.mediaId) {
+          const rows = await tx
+            .select()
+            .from(schema.media)
+            .where(
+              and(
+                eq(schema.media.publicId, input.featuredImage.mediaId),
+                eq(schema.media.schoolId, school.schoolId),
+                eq(schema.media.status, "active"),
+                eq(schema.media.kind, "image"),
+              ),
+            )
+            .limit(1);
+          selectedMedia = rows[0] ?? null;
+          if (!selectedMedia) return notFound();
+        }
         if (selectedMedia) {
           await tx.insert(schema.mediaReferences).values({
             id: uuidv7(clock),
@@ -2008,12 +2079,13 @@ export async function updateCommunity(
             createdAt: now,
             updatedAt: now,
           });
+          featuredImage = mediaRefFromCatalog(selectedMedia);
+        } else {
+          featuredImage = normalizeMediaRef(input.featuredImage);
         }
-        featuredMedia = selectedMedia
-          ? communityFeaturedMediaToDto(selectedMedia)
-          : null;
+        next = { ...next, featuredImage };
       } else {
-        featuredMedia = await communityFeaturedMediaFor(
+        featuredImage = await communityFeaturedImageFor(
           tx as AppDb,
           school.schoolId,
           existing.id,
@@ -2062,7 +2134,7 @@ export async function updateCommunity(
           { ...existing, ...next },
           publicSchoolId,
           null,
-          featuredMedia,
+          featuredImage ?? null,
           membersCount,
           postsCount,
         ),
@@ -2138,7 +2210,7 @@ export async function addCommunityCategory(
       { ...existing, ...next },
       publicSchoolId,
       null,
-      await communityFeaturedMediaFor(db, school.schoolId, existing.id),
+      await communityFeaturedImageFor(db, school.schoolId, existing.id),
       membersCount,
       postsCount,
     ),
@@ -2250,7 +2322,7 @@ export async function deleteCommunityCategory(
       { ...existing, ...next },
       publicSchoolId,
       null,
-      await communityFeaturedMediaFor(db, school.schoolId, existing.id),
+      await communityFeaturedImageFor(db, school.schoolId, existing.id),
       membersCount,
       postsCount,
     ),
@@ -2271,7 +2343,7 @@ export async function deleteCommunity(
   await db.transaction(async (tx) => {
     await tx
       .update(schema.communities)
-      .set({ deletedAt: now, enabled: false, updatedAt: now })
+      .set({ deletedAt: now, updatedAt: now })
       .where(eq(schema.communities.id, existing.id));
     await tx
       .delete(schema.mediaReferences)
@@ -2313,7 +2385,7 @@ export async function joinCommunity(
   clock: Clock,
 ): Promise<Result<CommunityMembershipDto>> {
   const community = await loadCommunity(db, viewer.schoolId, communityPublicId);
-  if (!community?.enabled) return notFound();
+  if (!community) return notFound();
   const activePlans = await db
     .select({
       id: schema.storefrontPlans.id,
@@ -2376,8 +2448,7 @@ export async function joinCommunity(
     schoolId: viewer.schoolId,
     communityId: community.id,
     paymentPlanId: freePlan.id,
-    learnerId: viewer.learnerId,
-    adminUserId: null,
+    schoolAccountId: viewer.learnerId,
     status: community.autoAcceptMembers ? ("active" as const) : ("pending" as const),
     role: "member" as const,
     joiningReason: normalizedJoiningReason,
@@ -2386,22 +2457,50 @@ export async function joinCommunity(
     updatedAt: now,
   };
   await db.insert(schema.communityMemberships).values(row);
-  await recordActivity(db, {
-    schoolId: viewer.schoolId,
-    actorId: viewer.learnerId,
-    type: ActivityType.COMMUNITY_MEMBERSHIP_REQUESTED,
-    entityId: community.publicId,
-    metadata: { membershipId: row.publicId },
-  }, clock);
-  if (row.status === "active") {
-    await recordActivity(db, {
+  await recordActivity(
+    db,
+    {
       schoolId: viewer.schoolId,
       actorId: viewer.learnerId,
-      type: ActivityType.COMMUNITY_JOINED,
+      type: ActivityType.COMMUNITY_MEMBERSHIP_REQUESTED,
       entityId: community.publicId,
       metadata: { membershipId: row.publicId },
-    }, clock);
+    },
+    clock,
+  );
+  if (row.status === "active") {
+    await recordActivity(
+      db,
+      {
+        schoolId: viewer.schoolId,
+        actorId: viewer.learnerId,
+        type: ActivityType.COMMUNITY_JOINED,
+        entityId: community.publicId,
+        metadata: { membershipId: row.publicId },
+      },
+      clock,
+    );
   }
+  await createSchoolAdminNotifications(
+    db,
+    viewer.schoolId,
+    {
+      type:
+        row.status === "pending"
+          ? "community_membership_requested"
+          : "community_joined",
+      title:
+        row.status === "pending"
+          ? "New community membership request"
+          : "New community member",
+      body:
+        row.status === "pending"
+          ? "A learner requested to join a community."
+          : "A learner joined a community.",
+      href: `/community/memberships`,
+    },
+    clock,
+  );
   return {
     ok: true,
     value: membershipToDto(row, viewer.learnerPublicId, communityPublicId),
@@ -2427,7 +2526,17 @@ export async function leaveCommunity(
   if (membership?.status !== "active") {
     return { ok: true, value: { left: true } };
   }
-  if (membership.adminUserId) {
+  const [staffMembership] = await db
+    .select({ id: schema.memberships.id })
+    .from(schema.memberships)
+    .where(
+      and(
+        eq(schema.memberships.schoolId, viewer.schoolId),
+        eq(schema.memberships.schoolAccountId, membership.schoolAccountId),
+      ),
+    )
+    .limit(1);
+  if (staffMembership) {
     return {
       ok: false,
       error: createPlatformError("conflict", {
@@ -2470,11 +2579,15 @@ export async function leaveCommunity(
         eq(schema.communitySubscriptions.status, "active"),
         eq(schema.communityCheckoutAttempts.schoolId, viewer.schoolId),
         eq(schema.communityCheckoutAttempts.communityId, community.id),
-        eq(schema.communityCheckoutAttempts.learnerId, viewer.learnerId),
+        eq(schema.communityCheckoutAttempts.schoolAccountId, viewer.learnerId),
       ),
     );
   if (subscriptions.length > 0) {
-    const paymentProvider = await getPaymentProvider(db, viewer.schoolId, paymentProviderOverride);
+    const paymentProvider = await getPaymentProvider(
+      db,
+      viewer.schoolId,
+      paymentProviderOverride,
+    );
     if (!paymentProvider?.cancelSubscription) {
       return {
         ok: false,
@@ -2485,7 +2598,9 @@ export async function leaveCommunity(
     }
     try {
       for (const row of subscriptions) {
-        await paymentProvider.cancelSubscription(row.subscription.providerSubscriptionId);
+        await paymentProvider.cancelSubscription(
+          row.subscription.providerSubscriptionId,
+        );
       }
     } catch {
       return {
@@ -2515,7 +2630,7 @@ export async function leaveCommunity(
         and(
           eq(schema.communityMemberships.id, membership.id),
           eq(schema.communityMemberships.schoolId, viewer.schoolId),
-          eq(schema.communityMemberships.learnerId, viewer.learnerId),
+          eq(schema.communityMemberships.schoolAccountId, viewer.learnerId),
         ),
       );
     if (subscriptions.length > 0) {
@@ -2539,13 +2654,17 @@ export async function leaveCommunity(
       requestId,
       createdAt: now,
     });
-    await recordActivity(tx as unknown as AppDb, {
-      schoolId: viewer.schoolId,
-      actorId: viewer.learnerId,
-      type: ActivityType.COMMUNITY_LEFT,
-      entityId: community.publicId,
-      metadata: { membershipId: membership.publicId },
-    }, clock);
+    await recordActivity(
+      tx as unknown as AppDb,
+      {
+        schoolId: viewer.schoolId,
+        actorId: viewer.learnerId,
+        type: ActivityType.COMMUNITY_LEFT,
+        entityId: community.publicId,
+        metadata: { membershipId: membership.publicId },
+      },
+      clock,
+    );
   });
 
   return { ok: true, value: { left: true } };
@@ -2593,12 +2712,12 @@ export async function listMemberships(
   const rows = await db
     .select({
       membership: schema.communityMemberships,
-      learnerPublicId: schema.learners.publicId,
+      learnerPublicId: schema.schoolAccounts.publicId,
     })
     .from(schema.communityMemberships)
     .leftJoin(
-      schema.learners,
-      eq(schema.learners.id, schema.communityMemberships.learnerId),
+      schema.schoolAccounts,
+      eq(schema.schoolAccounts.id, schema.communityMemberships.schoolAccountId),
     )
     .where(and(...conditions))
     .orderBy(
@@ -2609,8 +2728,7 @@ export async function listMemberships(
   const page = rows.slice(0, options.limit);
   const actors = await communityActorMap(
     db,
-    page.map((row) => row.membership.learnerId),
-    page.map((row) => row.membership.adminUserId),
+    page.map((row) => row.membership.schoolAccountId),
   );
   return {
     ok: true,
@@ -2620,11 +2738,9 @@ export async function listMemberships(
           row.membership,
           row.learnerPublicId,
           communityPublicId,
-          row.membership.learnerId
-            ? (actors.get(`learner:${row.membership.learnerId}`) ?? null)
-            : row.membership.adminUserId
-              ? (actors.get(`admin:${row.membership.adminUserId}`) ?? null)
-              : null,
+          row.membership.schoolAccountId
+            ? (actors.get(row.membership.schoolAccountId) ?? null)
+            : null,
         ),
       ),
       nextCursor:
@@ -2652,7 +2768,7 @@ export async function updateMembership(
     .select({
       membership: schema.communityMemberships,
       communityPublicId: schema.communities.publicId,
-      learnerPublicId: schema.learners.publicId,
+      learnerPublicId: schema.schoolAccounts.publicId,
     })
     .from(schema.communityMemberships)
     .innerJoin(
@@ -2660,8 +2776,8 @@ export async function updateMembership(
       eq(schema.communities.id, schema.communityMemberships.communityId),
     )
     .leftJoin(
-      schema.learners,
-      eq(schema.learners.id, schema.communityMemberships.learnerId),
+      schema.schoolAccounts,
+      eq(schema.schoolAccounts.id, schema.communityMemberships.schoolAccountId),
     )
     .where(
       and(
@@ -2672,7 +2788,21 @@ export async function updateMembership(
     .limit(1);
   const existing = rows[0]?.membership;
   if (!existing) return notFound();
-  if (existing.adminUserId === context.principalId) {
+  const [staffMembership] = await db
+    .select({ userId: schema.schoolAccounts.userId })
+    .from(schema.memberships)
+    .innerJoin(
+      schema.schoolAccounts,
+      eq(schema.schoolAccounts.id, schema.memberships.schoolAccountId),
+    )
+    .where(
+      and(
+        eq(schema.memberships.schoolId, school.schoolId),
+        eq(schema.memberships.schoolAccountId, existing.schoolAccountId),
+      ),
+    )
+    .limit(1);
+  if (staffMembership?.userId === context.principalId) {
     return {
       ok: false,
       error: createPlatformError("conflict", {
@@ -2728,30 +2858,38 @@ export async function updateMembership(
       }),
     };
   }
-  const actors = await communityActorMap(
-    db,
-    [existing.learnerId],
-    [existing.adminUserId],
-  );
+  const actors = await communityActorMap(db, [existing.schoolAccountId]);
   await db
     .update(schema.communityMemberships)
     .set(next)
     .where(eq(schema.communityMemberships.id, existing.id));
-  if (next.status === "active" && existing.status !== "active" && existing.learnerId) {
-    await recordActivity(db, {
-      schoolId: school.schoolId,
-      actorId: existing.learnerId,
-      type: ActivityType.COMMUNITY_MEMBERSHIP_GRANTED,
-      entityId: rows[0]?.communityPublicId ?? existing.communityId,
-      metadata: { membershipId: existing.publicId, grantedBy: context.principalId },
-    }, clock);
-    await recordActivity(db, {
-      schoolId: school.schoolId,
-      actorId: existing.learnerId,
-      type: ActivityType.COMMUNITY_JOINED,
-      entityId: rows[0]?.communityPublicId ?? existing.communityId,
-      metadata: { membershipId: existing.publicId },
-    }, clock);
+  if (
+    next.status === "active" &&
+    existing.status !== "active" &&
+    existing.schoolAccountId
+  ) {
+    await recordActivity(
+      db,
+      {
+        schoolId: school.schoolId,
+        actorId: existing.schoolAccountId,
+        type: ActivityType.COMMUNITY_MEMBERSHIP_GRANTED,
+        entityId: rows[0]?.communityPublicId ?? existing.communityId,
+        metadata: { membershipId: existing.publicId, grantedBy: context.principalId },
+      },
+      clock,
+    );
+    await recordActivity(
+      db,
+      {
+        schoolId: school.schoolId,
+        actorId: existing.schoolAccountId,
+        type: ActivityType.COMMUNITY_JOINED,
+        entityId: rows[0]?.communityPublicId ?? existing.communityId,
+        metadata: { membershipId: existing.publicId },
+      },
+      clock,
+    );
   }
   await db.insert(schema.auditEvents).values({
     id: uuidv7(clock),
@@ -2766,17 +2904,17 @@ export async function updateMembership(
   if (
     next.status === "active" &&
     existing.status !== "active" &&
-    existing.learnerId &&
+    existing.schoolAccountId &&
     rows[0]?.communityPublicId
   ) {
     await createLearnerNotification(
       db,
-      { schoolId: school.schoolId, learnerId: existing.learnerId },
+      { schoolId: school.schoolId, schoolAccountId: existing.schoolAccountId },
       {
         type: "community_membership_granted",
         title: "Community membership approved",
         body: "Your request to join the community was approved.",
-        href: `/dashboard/community/${rows[0].communityPublicId}`,
+        href: "/dashboard",
       },
       clock,
     );
@@ -2787,11 +2925,7 @@ export async function updateMembership(
       { ...existing, ...next },
       rows[0]?.learnerPublicId,
       rows[0]?.communityPublicId,
-      existing.learnerId
-        ? (actors.get(`learner:${existing.learnerId}`) ?? null)
-        : existing.adminUserId
-          ? (actors.get(`admin:${existing.adminUserId}`) ?? null)
-          : null,
+      existing.schoolAccountId ? (actors.get(existing.schoolAccountId) ?? null) : null,
     ),
   };
 }
@@ -2808,6 +2942,28 @@ async function loadPost(db: AppDb, schoolId: string, publicId: string) {
     )
     .limit(1);
   return rows[0] ?? null;
+}
+
+async function learnerPostHref(
+  db: AppDb,
+  schoolId: string,
+  postPublicId: string,
+  fragment?: string,
+) {
+  const rows = await db
+    .select({ spacePublicId: schema.spaces.publicId })
+    .from(schema.communityPosts)
+    .innerJoin(schema.spaces, eq(schema.spaces.id, schema.communityPosts.spaceId))
+    .where(
+      and(
+        eq(schema.communityPosts.schoolId, schoolId),
+        eq(schema.communityPosts.publicId, postPublicId),
+      ),
+    )
+    .limit(1);
+  const spacePublicId = rows[0]?.spacePublicId;
+  if (!spacePublicId) return "/dashboard";
+  return `/dashboard/s/${encodeURIComponent(spacePublicId)}/${encodeURIComponent(postPublicId)}${fragment ?? ""}`;
 }
 
 async function loadComment(db: AppDb, schoolId: string, publicId: string) {
@@ -2830,8 +2986,110 @@ async function resolveLearnerMapForPosts(
 ) {
   return learnerPublicIds(
     db,
-    rows.map((row) => row.learnerId),
+    rows.map((row) => row.schoolAccountId),
   );
+}
+
+export async function mapLearnerSpaceFeedPosts(
+  db: AppDb,
+  viewer: CommunityLearnerViewer,
+  rows: Array<{
+    post: typeof schema.communityPosts.$inferSelect;
+    space: typeof schema.spaces.$inferSelect;
+  }>,
+): Promise<LearnerSpaceFeedPostDto[]> {
+  if (rows.length === 0) return [];
+
+  const postRows = rows.map((row) => row.post);
+  const communityIds = [...new Set(postRows.map((row) => row.communityId))];
+  const communities = await db
+    .select({
+      id: schema.communities.id,
+      publicId: schema.communities.publicId,
+      name: schema.communities.name,
+      slug: schema.communities.slug,
+    })
+    .from(schema.communities)
+    .where(inArray(schema.communities.id, communityIds));
+  const communityById = new Map(
+    communities.map((community) => [community.id, community]),
+  );
+  const learnerIds = await resolveLearnerMapForPosts(db, postRows);
+  const actors = await communityActorMap(
+    db,
+    postRows.map((row) => row.schoolAccountId),
+  );
+  const media = await communityMediaMap(
+    db,
+    viewer.schoolId,
+    postRows.map((row) => row.id),
+  );
+  const commentsCount = await communityCommentCountMap(
+    db,
+    viewer.schoolId,
+    postRows.map((row) => row.id),
+  );
+  const subscriptions = await communityPostSubscriptionSet(
+    db,
+    viewer.schoolId,
+    postRows.map((row) => row.id),
+    viewer,
+  );
+  const reactionMaps = await Promise.all(
+    communityIds.map(async (communityId) => {
+      const postIds = postRows
+        .filter((row) => row.communityId === communityId)
+        .map((row) => row.id);
+      return [
+        communityId,
+        await communityReactionMap(
+          db,
+          viewer.schoolId,
+          communityId,
+          "post",
+          postIds,
+          viewer,
+        ),
+      ] as const;
+    }),
+  );
+  const reactions = new Map(reactionMaps);
+
+  return rows.flatMap((row) => {
+    const community = communityById.get(row.post.communityId);
+    if (!community) return [];
+    const author = row.post.schoolAccountId
+      ? (actors.get(row.post.schoolAccountId) ?? null)
+      : null;
+    const post = postToDto(
+      row.post,
+      row.post.schoolAccountId ? learnerIds.get(row.post.schoolAccountId) : null,
+      community.publicId,
+      media.get(row.post.id) ?? [],
+      reactions.get(row.post.communityId)?.get(row.post.id) ?? [],
+      commentsCount.get(row.post.id) ?? 0,
+      subscriptions.has(row.post.id),
+      author,
+    );
+    return [
+      {
+        ...post,
+        community: {
+          id: community.publicId,
+          name: community.name,
+          slug: community.slug,
+        },
+        space: {
+          id: row.space.publicId,
+          name: row.space.name,
+          slug: row.space.slug,
+          description: row.space.description,
+          logo: row.space.logo,
+          featuredImage: normalizeMediaRef(row.space.featuredImage),
+        },
+      },
+    ];
+  });
 }
 
 async function resolveLearnerMapForComments(
@@ -2840,7 +3098,7 @@ async function resolveLearnerMapForComments(
 ) {
   return learnerPublicIds(
     db,
-    rows.map((row) => row.learnerId),
+    rows.map((row) => row.schoolAccountId),
   );
 }
 
@@ -2904,8 +3162,7 @@ export async function listPosts(
   const ids = await resolveLearnerMapForPosts(db, page);
   const actors = await communityActorMap(
     db,
-    page.map((row) => row.learnerId),
-    page.map((row) => row.adminUserId),
+    page.map((row) => row.schoolAccountId),
   );
   const media = await communityMediaMap(
     db,
@@ -2937,17 +3194,13 @@ export async function listPosts(
       items: page.map((row) =>
         postToDto(
           row,
-          row.learnerId ? ids.get(row.learnerId) : null,
+          row.schoolAccountId ? ids.get(row.schoolAccountId) : null,
           community.publicId,
           media.get(row.id) ?? [],
           reactions.get(row.id) ?? [],
           commentsCount.get(row.id) ?? 0,
           subscriptions.has(row.id),
-          row.learnerId
-            ? (actors.get(`learner:${row.learnerId}`) ?? null)
-            : row.adminUserId
-              ? (actors.get(`admin:${row.adminUserId}`) ?? null)
-              : null,
+          row.schoolAccountId ? (actors.get(row.schoolAccountId) ?? null) : null,
         ),
       ),
       nextCursor:
@@ -2966,13 +3219,15 @@ export async function getPost(
 ): Promise<Result<CommunityPostDto>> {
   const row = await loadPost(db, school.schoolId, postPublicId);
   if (!row || row.deletedAt) return notFound();
-  if (!(await canReadCommunity(db, school.schoolId, row.communityId, viewer))) {
+  if (
+    !(await canReadCommunity(db, school.schoolId, row.communityId, viewer, row.spaceId))
+  ) {
     return forbidden();
   }
 
   const [learnerIds, media, reactions, commentsCount, subscriptions, actors] =
     await Promise.all([
-      learnerPublicIds(db, row.learnerId ? [row.learnerId] : []),
+      learnerPublicIds(db, row.schoolAccountId ? [row.schoolAccountId] : []),
       communityMediaMap(db, school.schoolId, [row.id]),
       communityReactionMap(
         db,
@@ -2984,24 +3239,20 @@ export async function getPost(
       ),
       communityCommentCountMap(db, school.schoolId, [row.id]),
       communityPostSubscriptionSet(db, school.schoolId, [row.id], viewer),
-      communityActorMap(db, [row.learnerId], [row.adminUserId]),
+      communityActorMap(db, [row.schoolAccountId]),
     ]);
 
   return {
     ok: true,
     value: postToDto(
       row,
-      row.learnerId ? (learnerIds.get(row.learnerId) ?? null) : null,
+      row.schoolAccountId ? (learnerIds.get(row.schoolAccountId) ?? null) : null,
       (await publicCommunityId(db, row.communityId)) ?? undefined,
       media.get(row.id) ?? [],
       reactions.get(row.id) ?? [],
       commentsCount.get(row.id) ?? 0,
       subscriptions.has(row.id),
-      row.learnerId
-        ? (actors.get(`learner:${row.learnerId}`) ?? null)
-        : row.adminUserId
-          ? (actors.get(`admin:${row.adminUserId}`) ?? null)
-          : null,
+      row.schoolAccountId ? (actors.get(row.schoolAccountId) ?? null) : null,
     ),
   };
 }
@@ -3053,6 +3304,7 @@ export async function createPost(
     content: input.content,
     category,
     pinned: false,
+    spaceId: null,
     deletedAt: null,
     createdAt: now,
     updatedAt: now,
@@ -3063,8 +3315,7 @@ export async function createPost(
     schoolId: school.schoolId,
     communityId: community.id,
     postId: row.id,
-    learnerId: viewer.learnerId,
-    adminUserId: null,
+    schoolAccountId: viewer.learnerId,
   });
   const richTextMediaIds = await mediaIdsForRichTextContent(
     db,
@@ -3088,15 +3339,30 @@ export async function createPost(
       return references;
     }
   }
-  await recordActivity(db, {
-    schoolId: school.schoolId,
-    actorId: viewer.learnerId,
-    type: ActivityType.COMMUNITY_POST_CREATED,
-    entityId: row.publicId,
-    metadata: { communityId: community.publicId },
-  }, clock);
+  await recordActivity(
+    db,
+    {
+      schoolId: school.schoolId,
+      actorId: viewer.learnerId,
+      type: ActivityType.COMMUNITY_POST_CREATED,
+      entityId: row.publicId,
+      metadata: { communityId: community.publicId },
+    },
+    clock,
+  );
+  await createSchoolAdminNotifications(
+    db,
+    school.schoolId,
+    {
+      type: "community_post_created",
+      title: "New space post",
+      body: `A learner posted in “${community.name}”.`,
+      href: `/community/${encodeURIComponent(community.publicId)}/${encodeURIComponent(row.publicId)}`,
+    },
+    clock,
+  );
   const activeMembers = await db
-    .select({ learnerId: schema.communityMemberships.learnerId })
+    .select({ schoolAccountId: schema.communityMemberships.schoolAccountId })
     .from(schema.communityMemberships)
     .where(
       and(
@@ -3105,20 +3371,21 @@ export async function createPost(
         eq(schema.communityMemberships.status, "active"),
       ),
     );
+  const learnerPostUrl = await learnerPostHref(db, school.schoolId, row.publicId);
   await Promise.all(
     activeMembers
-      .map((member) => member.learnerId)
-      .filter((learnerId): learnerId is string => learnerId !== null)
-      .filter((learnerId) => learnerId !== viewer.learnerId)
-      .map((learnerId) =>
+      .map((member) => member.schoolAccountId)
+      .filter((accountId): accountId is string => accountId !== null)
+      .filter((accountId) => accountId !== viewer.learnerId)
+      .map((schoolAccountId) =>
         createLearnerNotification(
           db,
-          { schoolId: school.schoolId, learnerId },
+          { schoolId: school.schoolId, schoolAccountId },
           {
             type: "community_post_created",
-            title: "New community post",
+            title: "New space post",
             body: `Someone posted in “${community.name}”.`,
-            href: `/dashboard/community/${community.publicId}/${encodeURIComponent(row.publicId)}`,
+            href: learnerPostUrl,
           },
           clock,
         ),
@@ -3134,29 +3401,29 @@ export async function createPost(
     viewer,
   );
   const commentsCount = await communityCommentCountMap(db, school.schoolId, [row.id]);
-  const actors = await communityActorMap(db, [row.learnerId], [row.adminUserId]);
+  const actors = await communityActorMap(db, [row.schoolAccountId]);
   return {
     ok: true,
     value: postToDto(
       row,
-      identity.kind === "learner" ? identity.publicId : null,
+      identity.publicId ?? null,
       community.publicId,
       media.get(row.id) ?? [],
       reactions.get(row.id) ?? [],
       commentsCount.get(row.id) ?? 0,
       true,
-      actors.get(`learner:${row.learnerId}`) ?? null,
+      actors.get(row.schoolAccountId) ?? null,
     ),
   };
 }
 
 async function authorCanChange(
   viewer: CommunityViewer,
-  learnerId: string | null,
-  adminUserId: string | null,
+  schoolAccountId: string | null,
+  _unusedAdminUserId?: string | null,
 ) {
   if (viewer.kind === "admin") return adminCan(viewer.context, "communities:write");
-  return viewer.learnerId === learnerId && !adminUserId;
+  return Boolean(schoolAccountId && viewer.learnerId === schoolAccountId);
 }
 
 export async function updatePost(
@@ -3175,10 +3442,17 @@ export async function updatePost(
 ): Promise<Result<CommunityPostDto>> {
   const existing = await loadPost(db, school.schoolId, publicId);
   if (!existing || existing.deletedAt) return notFound();
-  if (!(await canWriteCommunity(db, school.schoolId, existing.communityId, viewer)))
+  if (
+    !(await canWriteCommunity(
+      db,
+      school.schoolId,
+      existing.communityId,
+      viewer,
+      existing.spaceId,
+    ))
+  )
     return forbidden();
-  if (!(await authorCanChange(viewer, existing.learnerId, existing.adminUserId)))
-    return forbidden();
+  if (!(await authorCanChange(viewer, existing.schoolAccountId))) return forbidden();
   const now = clock.now();
   const next = {
     title: input.title?.trim() ?? existing.title,
@@ -3253,17 +3527,15 @@ export async function updatePost(
     [existing.id],
     viewer,
   );
-  const actors = await communityActorMap(
-    db,
-    [existing.learnerId],
-    [existing.adminUserId],
-  );
+  const actors = await communityActorMap(db, [existing.schoolAccountId]);
   return {
     ok: true,
     value: postToDto(
       { ...existing, ...next },
-      existing.learnerId
-        ? (await learnerPublicIds(db, [existing.learnerId])).get(existing.learnerId)
+      existing.schoolAccountId
+        ? (await learnerPublicIds(db, [existing.schoolAccountId])).get(
+            existing.schoolAccountId,
+          )
         : null,
       (await publicCommunityId(db, existing.communityId)) ?? undefined,
       (await communityMediaMap(db, school.schoolId, [existing.id])).get(existing.id) ??
@@ -3271,11 +3543,7 @@ export async function updatePost(
       reactions.get(existing.id) ?? [],
       commentsCount.get(existing.id) ?? 0,
       subscriptions.has(existing.id),
-      existing.learnerId
-        ? (actors.get(`learner:${existing.learnerId}`) ?? null)
-        : existing.adminUserId
-          ? (actors.get(`admin:${existing.adminUserId}`) ?? null)
-          : null,
+      existing.schoolAccountId ? (actors.get(existing.schoolAccountId) ?? null) : null,
     ),
   };
 }
@@ -3292,7 +3560,7 @@ export async function deletePost(
   if (!(await canWriteCommunity(db, schoolId, existing.communityId, viewer)))
     return forbidden();
   const canDelete =
-    (await authorCanChange(viewer, existing.learnerId, existing.adminUserId)) ||
+    (await authorCanChange(viewer, existing.schoolAccountId)) ||
     (await canModerateCommunity(db, schoolId, existing.communityId, viewer));
   if (!canDelete) return forbidden();
   const now = clock.now();
@@ -3326,7 +3594,15 @@ export async function listComments(
 ): Promise<Result<{ items: CommunityCommentDto[]; nextCursor: string | null }>> {
   const post = await loadPost(db, school.schoolId, postPublicId);
   if (!post || post.deletedAt) return notFound();
-  if (!(await canReadCommunity(db, school.schoolId, post.communityId, viewer)))
+  if (
+    !(await canReadCommunity(
+      db,
+      school.schoolId,
+      post.communityId,
+      viewer,
+      post.spaceId,
+    ))
+  )
     return forbidden();
   const cursor = decodeCursor(options.cursor);
   if (options.cursor && !cursor)
@@ -3356,8 +3632,7 @@ export async function listComments(
   const ids = await resolveLearnerMapForComments(db, page);
   const actors = await communityActorMap(
     db,
-    page.map((row) => row.learnerId),
-    page.map((row) => row.adminUserId),
+    page.map((row) => row.schoolAccountId),
   );
   const media = await communityMediaMap(
     db,
@@ -3394,17 +3669,13 @@ export async function listComments(
       items: page.map((row, index) =>
         commentToDto(
           row,
-          row.learnerId ? ids.get(row.learnerId) : null,
+          row.schoolAccountId ? ids.get(row.schoolAccountId) : null,
           communityPublicId ?? undefined,
           postPublicId,
           parentPublicIds[index],
           media.get(row.id) ?? [],
           (row.parentCommentId ? replyReactions : commentReactions).get(row.id) ?? [],
-          row.learnerId
-            ? (actors.get(`learner:${row.learnerId}`) ?? null)
-            : row.adminUserId
-              ? (actors.get(`admin:${row.adminUserId}`) ?? null)
-              : null,
+          row.schoolAccountId ? (actors.get(row.schoolAccountId) ?? null) : null,
         ),
       ),
       nextCursor:
@@ -3430,7 +3701,15 @@ export async function createComment(
   if (viewer.kind === "admin") return forbidden();
   const post = await loadPost(db, school.schoolId, postPublicId);
   if (!post || post.deletedAt) return notFound();
-  if (!(await canWriteCommunity(db, school.schoolId, post.communityId, viewer)))
+  if (
+    !(await canWriteCommunity(
+      db,
+      school.schoolId,
+      post.communityId,
+      viewer,
+      post.spaceId,
+    ))
+  )
     return forbidden();
   if (input.content.length > 20_000 || !communityContentHasText(input.content))
     return { ok: false, error: createPlatformError("validation_failed") };
@@ -3438,15 +3717,9 @@ export async function createComment(
   let parentLearnerId: string | null = null;
   if (input.parentCommentId) {
     const parent = await loadComment(db, school.schoolId, input.parentCommentId);
-    if (
-      !parent ||
-      parent.postId !== post.id ||
-      parent.parentCommentId ||
-      parent.deletedAt
-    )
-      return notFound();
+    if (!parent || parent.postId !== post.id || parent.deletedAt) return notFound();
     parentCommentId = parent.id;
-    parentLearnerId = parent.learnerId;
+    parentLearnerId = parent.schoolAccountId;
   }
   const identity: Identity = {
     kind: "learner",
@@ -3493,19 +3766,36 @@ export async function createComment(
     }
   }
   const communityPublicId = (await publicCommunityId(db, post.communityId)) ?? "";
-  await recordActivity(db, {
-    schoolId: school.schoolId,
-    actorId: viewer.learnerId,
-    type: parentCommentId
-      ? ActivityType.COMMUNITY_REPLY_CREATED
-      : ActivityType.COMMUNITY_COMMENT_CREATED,
-    entityId: row.publicId,
-    metadata: {
-      communityId: communityPublicId,
-      postId: post.publicId,
-      ...(parentCommentId ? { commentId: input.parentCommentId } : {}),
+  await recordActivity(
+    db,
+    {
+      schoolId: school.schoolId,
+      actorId: viewer.learnerId,
+      type: parentCommentId
+        ? ActivityType.COMMUNITY_REPLY_CREATED
+        : ActivityType.COMMUNITY_COMMENT_CREATED,
+      entityId: row.publicId,
+      metadata: {
+        communityId: communityPublicId,
+        postId: post.publicId,
+        ...(parentCommentId ? { commentId: input.parentCommentId } : {}),
+      },
     },
-  }, clock);
+    clock,
+  );
+  await createSchoolAdminNotifications(
+    db,
+    school.schoolId,
+    {
+      type: parentCommentId ? "community_reply" : "community_comment",
+      title: parentCommentId ? "New space reply" : "New space comment",
+      body: parentCommentId
+        ? `A learner replied to “${post.title}”.`
+        : `A learner commented on “${post.title}”.`,
+      href: `/community/${encodeURIComponent(communityPublicId)}/${encodeURIComponent(post.publicId)}#${encodeURIComponent(row.publicId)}`,
+    },
+    clock,
+  );
   await db
     .insert(schema.communityPostSubscribers)
     .values({
@@ -3513,33 +3803,38 @@ export async function createComment(
       schoolId: school.schoolId,
       communityId: post.communityId,
       postId: post.id,
-      learnerId: viewer.learnerId,
-      adminUserId: null,
+      schoolAccountId: viewer.learnerId,
     })
     .onConflictDoNothing();
   const recipients = new Set<string>();
-  if (post.learnerId) recipients.add(post.learnerId);
+  if (post.schoolAccountId) recipients.add(post.schoolAccountId);
   if (parentLearnerId) recipients.add(parentLearnerId);
   const subscribers = await db
-    .select({ learnerId: schema.communityPostSubscribers.learnerId })
+    .select({ schoolAccountId: schema.communityPostSubscribers.schoolAccountId })
     .from(schema.communityPostSubscribers)
     .where(eq(schema.communityPostSubscribers.postId, post.id));
   for (const subscriber of subscribers) {
-    if (subscriber.learnerId) recipients.add(subscriber.learnerId);
+    if (subscriber.schoolAccountId) recipients.add(subscriber.schoolAccountId);
   }
   recipients.delete(viewer.learnerId);
+  const learnerPostUrl = await learnerPostHref(
+    db,
+    school.schoolId,
+    post.publicId,
+    `#${encodeURIComponent(row.publicId)}`,
+  );
   await Promise.all(
-    [...recipients].map((learnerId) =>
+    [...recipients].map((schoolAccountId) =>
       createLearnerNotification(
         db,
-        { schoolId: school.schoolId, learnerId },
+        { schoolId: school.schoolId, schoolAccountId },
         {
           type: parentCommentId ? "community_reply" : "community_comment",
           title: parentCommentId ? "New reply" : "New comment",
           body: parentCommentId
             ? `Someone replied to “${post.title}”.`
             : `Someone commented on “${post.title}”.`,
-          href: `/dashboard/community/${communityPublicId}/${encodeURIComponent(post.publicId)}#${encodeURIComponent(row.publicId)}`,
+          href: learnerPostUrl,
         },
         clock,
       ),
@@ -3553,18 +3848,18 @@ export async function createComment(
     [row.id],
     viewer,
   );
-  const actors = await communityActorMap(db, [row.learnerId], [row.adminUserId]);
+  const actors = await communityActorMap(db, [row.schoolAccountId]);
   return {
     ok: true,
     value: commentToDto(
       row,
-      identity.kind === "learner" ? identity.publicId : null,
+      identity.publicId ?? null,
       (await publicCommunityId(db, row.communityId)) ?? undefined,
       postPublicId,
       parentCommentId ? input.parentCommentId : null,
       (await communityMediaMap(db, school.schoolId, [row.id])).get(row.id) ?? [],
       reactions.get(row.id) ?? [],
-      actors.get(`learner:${row.learnerId}`) ?? null,
+      actors.get(row.schoolAccountId) ?? null,
     ),
   };
 }
@@ -3581,8 +3876,7 @@ export async function updateComment(
   if (!existing || existing.deletedAt) return notFound();
   if (!(await canWriteCommunity(db, schoolId, existing.communityId, viewer)))
     return forbidden();
-  if (!(await authorCanChange(viewer, existing.learnerId, existing.adminUserId)))
-    return forbidden();
+  if (!(await authorCanChange(viewer, existing.schoolAccountId))) return forbidden();
   if (input.content.length > 20_000 || !communityContentHasText(input.content))
     return { ok: false, error: createPlatformError("validation_failed") };
   const richTextMediaIds = await mediaIdsForRichTextContent(
@@ -3618,12 +3912,11 @@ export async function updateComment(
     .update(schema.communityComments)
     .set(next)
     .where(eq(schema.communityComments.id, existing.id));
-  const ids = await learnerPublicIds(db, [existing.learnerId]);
-  const actors = await communityActorMap(
+  const ids = await learnerPublicIds(
     db,
-    [existing.learnerId],
-    [existing.adminUserId],
+    existing.schoolAccountId ? [existing.schoolAccountId] : [],
   );
+  const actors = await communityActorMap(db, [existing.schoolAccountId]);
   const reactions = await communityReactionMap(
     db,
     schoolId,
@@ -3636,7 +3929,7 @@ export async function updateComment(
     ok: true,
     value: commentToDto(
       { ...existing, ...next },
-      existing.learnerId ? ids.get(existing.learnerId) : null,
+      existing.schoolAccountId ? ids.get(existing.schoolAccountId) : null,
       (await publicCommunityId(db, existing.communityId)) ?? undefined,
       (await publicContentId(db, "post", existing.postId)) ?? undefined,
       existing.parentCommentId
@@ -3644,11 +3937,7 @@ export async function updateComment(
         : null,
       (await communityMediaMap(db, schoolId, [existing.id])).get(existing.id) ?? [],
       reactions.get(existing.id) ?? [],
-      existing.learnerId
-        ? (actors.get(`learner:${existing.learnerId}`) ?? null)
-        : existing.adminUserId
-          ? (actors.get(`admin:${existing.adminUserId}`) ?? null)
-          : null,
+      existing.schoolAccountId ? (actors.get(existing.schoolAccountId) ?? null) : null,
     ),
   };
 }
@@ -3665,7 +3954,7 @@ export async function deleteComment(
   if (!(await canWriteCommunity(db, schoolId, existing.communityId, viewer)))
     return forbidden();
   const canDelete =
-    (await authorCanChange(viewer, existing.learnerId, existing.adminUserId)) ||
+    (await authorCanChange(viewer, existing.schoolAccountId)) ||
     (await canModerateCommunity(db, schoolId, existing.communityId, viewer));
   if (!canDelete) return forbidden();
   const now = clock.now();
@@ -3691,7 +3980,7 @@ async function entityForCommunity(
           id: row.id,
           parentId: null,
           deletedAt: row.deletedAt,
-          authorId: row.learnerId,
+          authorId: row.schoolAccountId,
           postPublicId: row.publicId,
         }
       : null;
@@ -3721,7 +4010,7 @@ async function entityForCommunity(
     id: row.id,
     parentId: row.parentCommentId,
     deletedAt: row.deletedAt,
-    authorId: row.learnerId,
+    authorId: row.schoolAccountId,
     postPublicId: await publicContentId(db, "post", row.postId),
   };
 }
@@ -3739,8 +4028,6 @@ export async function toggleReaction(
     return { ok: false, error: createPlatformError("validation_failed") };
   const community = await loadCommunity(db, school.schoolId, communityPublicId);
   if (!community) return notFound();
-  if (!(await canWriteCommunity(db, school.schoolId, community.id, viewer)))
-    return forbidden();
   const entity = await entityForCommunity(
     db,
     school.schoolId,
@@ -3749,6 +4036,14 @@ export async function toggleReaction(
     input.entityId,
   );
   if (!entity || entity.deletedAt) return notFound();
+  const post = entity.postPublicId
+    ? await loadPost(db, school.schoolId, entity.postPublicId)
+    : null;
+  if (
+    !post ||
+    !(await canWriteCommunity(db, school.schoolId, community.id, viewer, post.spaceId))
+  )
+    return forbidden();
   const identity: Identity = {
     kind: "learner",
     id: viewer.learnerId,
@@ -3764,7 +4059,7 @@ export async function toggleReaction(
         eq(schema.communityReactions.entityType, input.entityType),
         eq(schema.communityReactions.entityId, entity.id),
         eq(schema.communityReactions.emoji, input.emoji),
-        eq(schema.communityReactions.learnerId, identity.id),
+        eq(schema.communityReactions.schoolAccountId, identity.id),
       ),
     )
     .limit(1);
@@ -3791,18 +4086,22 @@ export async function toggleReaction(
     emoji: input.emoji,
     ...columns,
   });
-  await recordActivity(db, {
-    schoolId: school.schoolId,
-    actorId: viewer.learnerId,
-    type:
-      input.entityType === "post"
-        ? ActivityType.COMMUNITY_POST_LIKED
-        : input.entityType === "reply"
-          ? ActivityType.COMMUNITY_REPLY_LIKED
-          : ActivityType.COMMUNITY_COMMENT_LIKED,
-    entityId: input.entityId,
-    metadata: { communityId: community.publicId, emoji: input.emoji },
-  }, clock);
+  await recordActivity(
+    db,
+    {
+      schoolId: school.schoolId,
+      actorId: viewer.learnerId,
+      type:
+        input.entityType === "post"
+          ? ActivityType.COMMUNITY_POST_LIKED
+          : input.entityType === "reply"
+            ? ActivityType.COMMUNITY_REPLY_LIKED
+            : ActivityType.COMMUNITY_COMMENT_LIKED,
+      entityId: input.entityId,
+      metadata: { communityId: community.publicId, emoji: input.emoji },
+    },
+    clock,
+  );
   if (entity.authorId && entity.authorId !== viewer.learnerId) {
     const notificationType =
       input.entityType === "post"
@@ -3816,16 +4115,24 @@ export async function toggleReaction(
         : input.entityType === "reply"
           ? "reply"
           : "comment";
+    const learnerPostUrl = entity.postPublicId
+      ? await learnerPostHref(
+          db,
+          school.schoolId,
+          entity.postPublicId,
+          input.entityType === "post"
+            ? undefined
+            : `#${encodeURIComponent(input.entityId)}`,
+        )
+      : "/dashboard";
     await createLearnerNotification(
       db,
-      { schoolId: school.schoolId, learnerId: entity.authorId },
+      { schoolId: school.schoolId, schoolAccountId: entity.authorId },
       {
         type: notificationType,
-        title: "New community reaction",
+        title: "New space reaction",
         body: `Someone reacted to your community ${contentLabel}.`,
-        href: entity.postPublicId
-          ? `/dashboard/community/${community.publicId}/${encodeURIComponent(entity.postPublicId)}${input.entityType === "post" ? "" : `#${encodeURIComponent(input.entityId)}`}`
-          : `/dashboard/community/${community.publicId}`,
+        href: learnerPostUrl,
       },
       clock,
     );
@@ -3865,7 +4172,7 @@ export async function togglePostSubscription(
     .where(
       and(
         eq(schema.communityPostSubscribers.postId, post.id),
-        eq(schema.communityPostSubscribers.learnerId, identity.id),
+        eq(schema.communityPostSubscribers.schoolAccountId, identity.id),
       ),
     )
     .limit(1);
@@ -4019,7 +4326,7 @@ export async function listReports(
   const page = rows.slice(0, options.limit);
   const ids = await learnerPublicIds(
     db,
-    page.map((row) => row.learnerId),
+    page.map((row) => row.schoolAccountId),
   );
   const contentIds = await Promise.all(
     page.map((row) => publicContentId(db, row.contentType, row.contentId)),
@@ -4038,7 +4345,7 @@ export async function listReports(
       items: page.map((row, index) =>
         reportToDto(
           row,
-          row.learnerId ? ids.get(row.learnerId) : null,
+          row.schoolAccountId ? ids.get(row.schoolAccountId) : null,
           community.publicId,
           contentIds[index] ?? undefined,
           parentIds[index],
@@ -4140,7 +4447,10 @@ export async function updateReport(
       }
     }
   });
-  const ids = await learnerPublicIds(db, [existing.learnerId]);
+  const ids = await learnerPublicIds(
+    db,
+    existing.schoolAccountId ? [existing.schoolAccountId] : [],
+  );
   const content =
     (await reportContentMap(db, schoolId, [existing])).get(
       `${existing.contentType}:${existing.contentId}`,
@@ -4149,7 +4459,7 @@ export async function updateReport(
     ok: true,
     value: reportToDto(
       { ...existing, ...next },
-      existing.learnerId ? ids.get(existing.learnerId) : null,
+      existing.schoolAccountId ? ids.get(existing.schoolAccountId) : null,
       (await publicCommunityId(db, existing.communityId)) ?? undefined,
       (await publicContentId(db, existing.contentType, existing.contentId)) ??
         undefined,

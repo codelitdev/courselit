@@ -10,15 +10,20 @@ import {
   LearnerText2,
 } from "@/components/themed-page-builder";
 import { authClient } from "@/lib/auth-client";
-import { learnerHeaders, writeSchoolId } from "@/lib/school";
+import {
+  clearLearnerIdentityLink,
+  learnerHeaders,
+  writeLearnerIdentityLink,
+  writeSchoolId,
+} from "@/lib/school";
 import { useSchoolThemeStyle } from "@/lib/school-theme-context";
 
 type OtpStep = "email" | "otp";
 
 function destinationAfterLogin() {
-  if (typeof window === "undefined") return "/dashboard/feed";
+  if (typeof window === "undefined") return "/dashboard";
   const next = new URLSearchParams(window.location.search).get("next");
-  return next?.startsWith("/") && !next.startsWith("//") ? next : "/dashboard/feed";
+  return next?.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
 }
 
 /**
@@ -45,11 +50,17 @@ export function PublicLoginBlock() {
       headers: learnerHeaders(),
     })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data: { loginMethods?: string[] } | null) => {
-        if (data?.loginMethods && Array.isArray(data.loginMethods)) {
-          setLoginMethods(data.loginMethods);
-        }
-      })
+      .then(
+        (
+          data: {
+            loginMethods?: string[];
+          } | null,
+        ) => {
+          if (data?.loginMethods && Array.isArray(data.loginMethods)) {
+            setLoginMethods(data.loginMethods);
+          }
+        },
+      )
       .catch(() => {});
   }, []);
 
@@ -65,8 +76,10 @@ export function PublicLoginBlock() {
       if (res.error)
         throw new Error(res.error.message || "Unable to send a sign-in code.");
       setOtpStep("otp");
-    } catch {
-      setError("Unable to send a sign-in code.");
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Unable to send a sign-in code.",
+      );
     } finally {
       setLoading(false);
     }
@@ -80,15 +93,23 @@ export function PublicLoginBlock() {
       const res = await authClient.signIn.emailOtp({ email, otp });
       if (res.error) throw new Error(res.error.message || "Invalid or expired code.");
       const meRes = await fetch("/api/v1/learner/me", {
-        headers: learnerHeaders(),
+        headers: {
+          ...learnerHeaders(),
+          ...(identityLinkToken
+            ? { "x-learner-identity-link": identityLinkToken }
+            : {}),
+        },
         credentials: "include",
       });
       if (!meRes.ok) throw new Error("Unable to establish your learner session.");
       const meBody = (await meRes.json()) as { schoolId?: string };
       if (meBody.schoolId) writeSchoolId(meBody.schoolId);
+      clearLearnerIdentityLink();
       window.location.assign(destinationAfterLogin());
-    } catch {
-      setError("Unable to verify the sign-in code.");
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Unable to verify the sign-in code.",
+      );
     } finally {
       setLoading(false);
     }
@@ -98,15 +119,16 @@ export function PublicLoginBlock() {
     setError(null);
     setLoading(true);
     try {
+      const callbackURL = identityLinkToken
+        ? `${destinationAfterLogin()}${destinationAfterLogin().includes("?") ? "&" : "?"}identityLink=${encodeURIComponent(identityLinkToken)}`
+        : destinationAfterLogin();
+      if (identityLinkToken) writeLearnerIdentityLink(identityLinkToken);
       const res = await authClient.signIn.social({
         provider: "google",
-        callbackURL: destinationAfterLogin(),
+        callbackURL,
       });
       if (res?.error) {
-        await authClient.signIn.sso({
-          providerId: "google",
-          callbackURL: destinationAfterLogin(),
-        });
+        throw new Error(res.error.message || "Unable to sign in with Google.");
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Unable to sign in with Google.");
@@ -115,28 +137,9 @@ export function PublicLoginBlock() {
     }
   }
 
-  async function handleSsoSignIn() {
-    setError(null);
-    setLoading(true);
-    try {
-      const res = await authClient.signIn.sso({
-        providerId: "sso",
-        callbackURL: destinationAfterLogin(),
-      });
-      if (res?.error) {
-        setError(res.error.message || "Unable to sign in with SSO.");
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Unable to sign in with SSO.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   const showEmail = loginMethods.includes("email");
   const showGoogle = loginMethods.includes("google");
-  const showSso = loginMethods.includes("sso");
-  const hasExternal = showGoogle || showSso;
+  const hasExternal = showGoogle;
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-4 py-12">
@@ -229,13 +232,6 @@ export function PublicLoginBlock() {
               provider="google"
               disabled={loading}
               onClick={handleGoogleSignIn}
-            />
-          ) : null}
-          {showSso ? (
-            <ExternalLoginButton
-              provider="sso"
-              disabled={loading}
-              onClick={handleSsoSignIn}
             />
           ) : null}
         </div>

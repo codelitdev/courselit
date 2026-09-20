@@ -118,12 +118,22 @@ describe.serial("product analytics", () => {
     const planId = uuidv7(clock);
     const checkoutId = uuidv7(clock);
 
-    await runtime.db.insert(schema.learners).values({
-      id: learnerId,
-      publicId: createPublicId("lrn", clock),
-      schoolId: world.schoolA.id,
+    const userId = uuidv7(clock);
+    await runtime.db.insert(schema.user).values({
+      id: userId,
       email: "learner@example.com",
       name: "Learner",
+      emailVerified: true,
+      createdAt: eventDate,
+      updatedAt: eventDate,
+    });
+    await runtime.db.insert(schema.schoolAccounts).values({
+      id: learnerId,
+      publicId: createPublicId("sca", clock),
+      schoolId: world.schoolA.id,
+      userId,
+      email: "learner@example.com",
+      displayName: "Learner",
       status: "active",
       createdAt: eventDate,
       updatedAt: eventDate,
@@ -158,7 +168,7 @@ describe.serial("product analytics", () => {
       id: membershipId,
       publicId: createPublicId("lrm", clock),
       schoolId: world.schoolA.id,
-      learnerId,
+      schoolAccountId: learnerId,
       entityType: "product",
       entityId: world.noteA.publicId,
       paymentPlanId: null,
@@ -187,7 +197,8 @@ describe.serial("product analytics", () => {
       id: planId,
       publicId: createPublicId("pln", clock),
       schoolId: world.schoolA.id,
-      productId: product.id,
+      entityType: "product",
+      entityId: world.noteA.publicId,
       name: "Paid access",
       description: "",
       includedProducts: [],
@@ -206,7 +217,7 @@ describe.serial("product analytics", () => {
       id: checkoutId,
       publicId: createPublicId("chk", clock),
       schoolId: world.schoolA.id,
-      learnerId,
+      schoolAccountId: learnerId,
       productId: product.id,
       planId,
       provider: "stripe",

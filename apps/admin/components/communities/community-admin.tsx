@@ -1,5 +1,6 @@
 "use client";
 
+import type { MediaRef } from "@courselit/api-contract";
 import { PlatformTabNav } from "@courselit/components-library";
 import {
   type Editor,
@@ -7,15 +8,14 @@ import {
   TextRenderer,
 } from "@frontlit/text-editor";
 import {
-  CheckCircle,
   CircleDashed,
   FileText,
   Film,
   Flag,
   Pin,
   Plus,
-  Share2,
   Settings,
+  Share2,
   Trash2,
   Users,
 } from "lucide-react";
@@ -37,10 +37,10 @@ import { FeaturedCard } from "@/components/featured-card";
 import { useSetBreadcrumb } from "@/components/layout/breadcrumb-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { PermissionMessage } from "@/components/permission-message";
-import { Resources } from "@/components/resources";
 import { PaymentPlanList } from "@/components/products/payment-plan-list";
 import type { SalesPage, StorefrontPlan } from "@/components/products/product-types";
 import { RichTextEditor } from "@/components/products/rich-text-editor";
+import { Resources } from "@/components/resources";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/codelit/button";
 import {
@@ -59,13 +59,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/codelit/select";
+import { Switch } from "@/components/ui/codelit/switch";
 import { Textarea } from "@/components/ui/codelit/textarea";
 import { learnerUrl } from "@/lib/learner-url";
 import { hasSchoolPermission } from "@/lib/school-permissions";
-import {
-  CommunityFeaturedImage,
-  type CommunityFeaturedMedia,
-} from "./community-featured-image";
+import { CommunityFeaturedImage } from "./community-featured-image";
 
 type School = {
   id: string;
@@ -112,6 +110,7 @@ function communityRichTextContent(value: string): TextEditorContent | null {
   return null;
 }
 
+const CommunityDescription = CommunityPostContent;
 function CommunityPostContent({ value }: { value: string }) {
   const richText = communityRichTextContent(value);
   return richText ? (
@@ -123,18 +122,6 @@ function CommunityPostContent({ value }: { value: string }) {
   );
 }
 
-function CommunityDescription({
-  value,
-  className,
-}: {
-  value: string;
-  className?: string;
-}) {
-  const richText = communityRichTextContent(value);
-  if (richText) return <TextRenderer json={richText} className={className} />;
-  return <p className={className}>{value}</p>;
-}
-
 type Community = {
   id: string;
   schoolId: string;
@@ -143,10 +130,9 @@ type Community = {
   description: string;
   banner: string;
   categories: string[];
-  enabled: boolean;
   autoAcceptMembers: boolean;
   joiningReasonText: string;
-  featuredMedia: CommunityFeaturedMedia | null;
+  featuredImage: MediaRef | null;
   membersCount: number;
   postsCount: number;
   membership: Membership | null;
@@ -221,7 +207,12 @@ type Report = {
 export type CommunityAdminView = "list" | "new" | "detail" | "manage";
 export type CommunityManageSection = "settings" | "memberships" | "plans" | "reports";
 
-type ApiError = { message?: string };
+type ApiError = {
+  message?: string;
+  details?: {
+    reason?: string;
+  };
+};
 
 const COMMUNITY_PAGE_SIZE = 10;
 
@@ -249,6 +240,13 @@ function errorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
 
+function communityApiErrorMessage(error: ApiError | null, fallback: string) {
+  if (error?.details?.reason === "community_requires_default_payment_plan") {
+    return "Add an active default payment plan before enabling this community for learners.";
+  }
+  return error?.message ?? fallback;
+}
+
 function SectionHeading({
   eyebrow,
   title,
@@ -266,18 +264,6 @@ function SectionHeading({
   );
 }
 
-function StatusBadge({ enabled }: { enabled: boolean }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium">
-      {enabled ? (
-        <CheckCircle className="size-3.5 text-primary" />
-      ) : (
-        <CircleDashed className="size-3.5" />
-      )}
-      {enabled ? "Enabled" : "Disabled"}
-    </span>
-  );
-}
 
 function CommunityMediaPreview({ items }: { items: CommunityMedia[] }) {
   if (items.length === 0) return null;
@@ -344,16 +330,15 @@ function CommunityMediaPreview({ items }: { items: CommunityMedia[] }) {
 
 export function CommunityAdmin({
   view,
-  communityId,
   manageSection = "settings",
 }: {
   view: CommunityAdminView;
-  communityId?: string;
   manageSection?: CommunityManageSection;
 }) {
   const router = useRouter();
   const [school, setSchool] = useState<School | null>(null);
   const [community, setCommunity] = useState<Community | null>(null);
+  const [communityId, setCommunityId] = useState<string | undefined>();
   const [communities, setCommunities] = useState<Community[]>([]);
   const [communitiesNextCursor, setCommunitiesNextCursor] = useState<string | null>(
     null,
@@ -381,28 +366,20 @@ export function CommunityAdmin({
   const [notice, setNotice] = useState<string | null>(null);
 
   const breadcrumbItems = useMemo(() => {
-    if (view === "list") {
-      return [{ label: "Communities" }];
+    if (view === "detail" || view === "list") {
+      return [{ label: "Community" }];
     }
-    if (view === "new") {
-      return [
-        { label: "Communities", href: "/communities" },
-        { label: "New community" },
-      ];
+    if (view === "manage" && manageSection && manageSection !== "settings") {
+      const sectionLabel =
+        manageSection === "memberships"
+          ? "Members"
+          : manageSection === "plans"
+            ? "Payment plans"
+            : "Moderation";
+      return [{ label: "Community", href: "/community" }, { label: sectionLabel }];
     }
-    const name = community?.name ?? "Community";
-    if (view === "detail") {
-      return [{ label: "Communities", href: "/communities" }, { label: name }];
-    }
-    if (view === "manage") {
-      return [
-        { label: "Communities", href: "/communities" },
-        { label: name, href: `/community/${communityId}` },
-        { label: "Settings" },
-      ];
-    }
-    return [{ label: "Communities", href: "/communities" }];
-  }, [view, community?.name, communityId]);
+    return [{ label: "Community", href: "/community" }];
+  }, [view, manageSection]);
 
   useSetBreadcrumb(breadcrumbItems);
 
@@ -422,9 +399,11 @@ export function CommunityAdmin({
         credentials: "include",
         headers,
       });
-      const body = (await response.json().catch(() => null)) as T & ApiError;
+      const body = (await response.json().catch(() => null)) as (T & ApiError) | null;
       if (!response.ok) {
-        throw new Error(body?.message ?? "The request could not be completed.");
+        throw new Error(
+          communityApiErrorMessage(body, "The request could not be completed."),
+        );
       }
       return body as T;
     },
@@ -534,48 +513,30 @@ export function CommunityAdmin({
       .then(async (selected) => {
         if (!selected) return;
         const headers = { "x-school-id": selected.id };
-        if (view === "list") {
-          const body = await fetch(communityPagePath("/api/v1/communities"), {
-            credentials: "include",
-            cache: "no-store",
-            headers,
-          });
-          if (!body.ok) throw new Error("Unable to load communities.");
-          const result = (await body.json()) as {
-            items?: Community[];
-            nextCursor?: string | null;
-          };
-          if (active) {
-            setCommunities(result.items ?? []);
-            setCommunitiesNextCursor(result.nextCursor ?? null);
-          }
-          return;
-        }
-        if (!communityId || view === "new") return;
-        const detailResponse = await fetch(
-          `/api/v1/communities/${encodeURIComponent(communityId)}`,
-          { credentials: "include", cache: "no-store", headers },
-        );
+        if (view === "new") return;
+        const detailResponse = await fetch("/api/v1/community", {
+          credentials: "include",
+          cache: "no-store",
+          headers,
+        });
         if (!detailResponse.ok) {
-          if (detailResponse.status === 404) {
-            router.replace("/communities");
-            return;
-          }
           throw new Error("Unable to load the community.");
         }
         const detail = (await detailResponse.json()) as Community;
+        const resolvedId = detail.id;
+        if (active) setCommunityId(resolvedId);
         const salesPageResponse = await fetch(
-          `/api/v1/sales-pages/community/${encodeURIComponent(communityId)}`,
+          `/api/v1/sales-pages/community/${encodeURIComponent(resolvedId)}`,
           { credentials: "include", cache: "no-store", headers },
         );
         const salesPage = salesPageResponse.ok
           ? ((await salesPageResponse.json()) as SalesPage)
           : null;
         if (active) setCommunity({ ...detail, salesPage });
-        if (view === "detail") {
+        if (view === "detail" || view === "list") {
           const postResponse = await fetch(
             communityPagePath(
-              `/api/v1/communities/${encodeURIComponent(communityId)}/posts`,
+              `/api/v1/communities/${encodeURIComponent(resolvedId)}/posts`,
             ),
             { credentials: "include", cache: "no-store", headers },
           );
@@ -588,11 +549,11 @@ export function CommunityAdmin({
             setPosts(postBody.items ?? []);
             setPostsNextCursor(postBody.nextCursor ?? null);
           }
-        } else if (manageSection !== "settings") {
+        } else {
           const [memberResponse, reportResponse, planResponse] = await Promise.all([
             fetch(
               communityPagePath(
-                `/api/v1/communities/${encodeURIComponent(communityId)}/members`,
+                `/api/v1/communities/${encodeURIComponent(resolvedId)}/members`,
                 null,
                 {
                   status:
@@ -607,7 +568,7 @@ export function CommunityAdmin({
             ),
             fetch(
               communityPagePath(
-                `/api/v1/communities/${encodeURIComponent(communityId)}/reports`,
+                `/api/v1/communities/${encodeURIComponent(resolvedId)}/reports`,
                 null,
                 {
                   status:
@@ -616,7 +577,7 @@ export function CommunityAdmin({
               ),
               { credentials: "include", cache: "no-store", headers },
             ),
-            fetch(`/api/v1/communities/${encodeURIComponent(communityId)}/plans`, {
+            fetch(`/api/v1/communities/${encodeURIComponent(resolvedId)}/plans`, {
               credentials: "include",
               cache: "no-store",
               headers,
@@ -652,21 +613,14 @@ export function CommunityAdmin({
     return () => {
       active = false;
     };
-  }, [
-    communityId,
-    manageSection,
-    membersStatusFilter,
-    reportsStatusFilter,
-    router,
-    view,
-  ]);
+  }, [membersStatusFilter, reportsStatusFilter, view]);
 
   async function reloadCurrent() {
     if (view === "detail") {
       await Promise.all([loadCommunity(), loadPosts()]);
     } else {
       await loadCommunity();
-      if (manageSection !== "settings") await loadManageData();
+      await loadManageData();
     }
   }
 
@@ -819,7 +773,7 @@ export function CommunityAdmin({
               onShare={() => void shareCommunity()}
               onTogglePin={togglePostPin}
               canManage={canWriteCommunities}
-              canEditWebsite={hasSchoolPermission(school, "school:admin")}
+              canEditWebsite={hasSchoolPermission(school, "storefront:write")}
               canModerate={hasSchoolPermission(school, "communities:moderate")}
               onLoadMore={loadMorePosts}
               loadingMore={loadingMorePosts}
@@ -891,16 +845,7 @@ function CommunityOverview({
     <>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-2">
-          <SectionHeading
-            title={community.name}
-            description={
-              community.description ? (
-                <CommunityDescription value={community.description} />
-              ) : (
-                "Community management"
-              )
-            }
-          />
+          <SectionHeading title={community.name} />
           <Button
             type="button"
             variant="ghost"
@@ -913,11 +858,10 @@ function CommunityOverview({
           </Button>
         </div>
         <div className="flex items-center gap-2">
-          <StatusBadge enabled={community.enabled} />
           {community.salesPage?.pageId && canEditWebsite ? (
             <Button asChild variant="outline">
               <Link
-                href={`/pages/${encodeURIComponent(community.salesPage.pageId)}/edit?redirectTo=${encodeURIComponent(`/community/${community.id}`)}`}
+                href={`/pages/${encodeURIComponent(community.salesPage.pageId)}/edit?redirectTo=${encodeURIComponent(`/community`)}&resourceType=community&resourceId=${encodeURIComponent(community.id)}`}
               >
                 Edit page
               </Link>
@@ -925,7 +869,7 @@ function CommunityOverview({
           ) : null}
           {canManage ? (
             <Button asChild>
-              <Link href={`/community/${community.id}/manage`}>
+              <Link href="/community">
                 <Settings className="size-4" />
                 Manage community
               </Link>
@@ -933,25 +877,23 @@ function CommunityOverview({
           ) : null}
         </div>
       </div>
-      {community.featuredMedia ? (
+      {community.featuredImage ? (
         <Image
-          src={
-            community.featuredMedia.thumbnailUrl ?? community.featuredMedia.canonicalUrl
-          }
-          alt={community.featuredMedia.altText || community.name}
+          src={community.featuredImage.thumbnailUrl ?? community.featuredImage.url}
+          alt={community.featuredImage.alt || community.name}
           width={1280}
           height={480}
           unoptimized
           className="max-h-72 w-full rounded-xl border object-cover"
         />
       ) : null}
-      <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-        {community.categories.map((item) => (
-          <span key={item} className="rounded-full border px-3 py-1">
-            {item}
-          </span>
-        ))}
-      </div>
+      <p className="text-sm text-muted-foreground">
+        Discussion areas are managed as{" "}
+        <Link href="/spaces" className="underline underline-offset-2">
+          Spaces
+        </Link>
+        .
+      </p>
       <section className="grid gap-4 md:grid-cols-4" aria-label="Community overview">
         <div className="card">
           <p className="text-sm text-muted-foreground">Active members</p>
@@ -971,12 +913,6 @@ function CommunityOverview({
             {community.autoAcceptMembers ? "Automatic" : "Approval required"}
           </p>
         </div>
-        <div className="card">
-          <p className="text-sm text-muted-foreground">Learner visibility</p>
-          <p className="mt-2 text-2xl font-semibold">
-            {community.enabled ? "Published" : "Hidden"}
-          </p>
-        </div>
       </section>
       {canManage || canModerate ? (
         <section className="card stack">
@@ -992,12 +928,12 @@ function CommunityOverview({
               {canManage ? (
                 <>
                   <Button asChild variant="outline">
-                    <Link href={`/community/${community.id}/manage/memberships`}>
+                    <Link href="/community/memberships">
                       <Users className="size-4" /> Members
                     </Link>
                   </Button>
                   <Button asChild variant="outline">
-                    <Link href={`/community/${community.id}/manage/plans`}>
+                    <Link href="/community/plans">
                       <CircleDashed className="size-4" /> Payment plans
                     </Link>
                   </Button>
@@ -1005,7 +941,7 @@ function CommunityOverview({
               ) : null}
               {canModerate ? (
                 <Button asChild variant="outline">
-                  <Link href={`/community/${community.id}/manage/reports`}>
+                  <Link href="/community/reports">
                     <Flag className="size-4" /> Moderation
                   </Link>
                 </Button>
@@ -1029,8 +965,7 @@ function CommunityOverview({
               <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
                 <div className="flex flex-wrap items-center gap-2">
                   {post.pinned ? <span className="text-primary">Pinned</span> : null}
-                  <span>{post.category}</span>
-                  <span>·</span>
+                  {post.pinned ? <span>·</span> : null}
                   <span>
                     {post.author?.name ??
                       (post.authorKind === "admin" ? "Admin" : "Learner")}
@@ -1091,34 +1026,14 @@ function CommunityList({
   return (
     <>
       <PageHeader
-        title="Communities"
-        description="Create spaces where learners can ask questions, share progress, and connect."
-        action={
-          canCreate ? (
-            <Button asChild>
-              <Link href="/community/new">
-                <Plus className="size-4" />
-                New community
-              </Link>
-            </Button>
-          ) : undefined
-        }
+        title="Community"
+        description="Configure your school community, plans, and members."
       />
       {communities.length === 0 ? (
         <EmptyState
           icon={Users}
-          title="No Communities Found"
-          description="You have not added any communities yet."
-          action={
-            canCreate ? (
-              <Button asChild>
-                <Link href="/community/new">
-                  <Plus className="size-4" />
-                  New community
-                </Link>
-              </Button>
-            ) : undefined
-          }
+          title="Community unavailable"
+          description="The school community could not be loaded."
         />
       ) : (
         <section
@@ -1128,20 +1043,11 @@ function CommunityList({
           {communities.map((item) => (
             <FeaturedCard
               key={item.id}
-              href={`/community/${item.id}`}
+              href="/community"
               title={item.name}
-              imageUrl={
-                item.featuredMedia?.thumbnailUrl ?? item.featuredMedia?.canonicalUrl
-              }
-              imageAlt={item.featuredMedia?.altText || item.name}
+              imageUrl={item.featuredImage?.thumbnailUrl ?? item.featuredImage?.url}
+              imageAlt={item.featuredImage?.alt || item.name}
             >
-              <div className="mt-2 flex min-h-10 items-start justify-between gap-3">
-                <CommunityDescription
-                  value={item.description || "No description"}
-                  className="line-clamp-2 text-sm text-muted-foreground"
-                />
-                <StatusBadge enabled={item.enabled} />
-              </div>
               <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
                 <span>
                   {item.categories.length}{" "}
@@ -1197,7 +1103,6 @@ function NewCommunity({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [categories, setCategories] = useState("General");
-  const [enabled, setEnabled] = useState(false);
   const [autoAcceptMembers, setAutoAcceptMembers] = useState(true);
   const [joiningReasonText, setJoiningReasonText] = useState("");
 
@@ -1216,12 +1121,11 @@ function NewCommunity({
             .split(",")
             .map((item) => item.trim())
             .filter(Boolean),
-          enabled,
           autoAcceptMembers,
           joiningReasonText,
         }),
       });
-      router.replace(`/community/${body.id}`);
+      router.replace("/community");
     } catch (caught) {
       setError(errorMessage(caught, "Unable to create the community."));
       setSaving(false);
@@ -1232,7 +1136,7 @@ function NewCommunity({
     <div className="page-shell">
       <SectionHeading
         eyebrow="Communities"
-        title="New community"
+        title="Community"
         description="Create a community, then configure its members and discussions."
       />
       <form onSubmit={create} className="card stack">
@@ -1272,25 +1176,19 @@ function NewCommunity({
             Separate categories with commas.
           </span>
         </div>
-        <label className="flex items-center gap-3 text-sm">
-          <input
-            type="checkbox"
-            checked={enabled}
-            onChange={(event) => setEnabled(event.target.checked)}
-          />
-          Enable community for learners
-        </label>
-        <label className="flex items-center gap-3 text-sm">
-          <input
-            type="checkbox"
+        <div className="flex items-center justify-between gap-4">
+          <label htmlFor="community-auto-accept-members" className="text-sm">
+            Automatically accept new members
+          </label>
+          <Switch
+            id="community-auto-accept-members"
             checked={autoAcceptMembers}
-            onChange={(event) => setAutoAcceptMembers(event.target.checked)}
+            onCheckedChange={setAutoAcceptMembers}
           />
-          Automatically accept new members
-        </label>
+        </div>
         {!autoAcceptMembers ? (
           <div className="field">
-            <label htmlFor="community-joining-question">Joining question</label>
+            <label htmlFor="community-joining-question">Screening question</label>
             <Textarea
               id="community-joining-question"
               maxLength={500}
@@ -1374,12 +1272,6 @@ function CommunityManage({
   const [slug, setSlug] = useState(community.slug);
   const [description, setDescription] = useState(community.description);
   const [banner, setBanner] = useState(community.banner);
-  const [categoryList, setCategoryList] = useState(community.categories);
-  const [newCategory, setNewCategory] = useState("");
-  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
-  const [migrationCategory, setMigrationCategory] = useState("");
-  const [categorySaving, setCategorySaving] = useState(false);
-  const [enabled, setEnabled] = useState(community.enabled);
   const [autoAcceptMembers, setAutoAcceptMembers] = useState(
     community.autoAcceptMembers,
   );
@@ -1390,33 +1282,28 @@ function CommunityManage({
   const [memberRejectionReason, setMemberRejectionReason] = useState("");
   const [reportToReject, setReportToReject] = useState<Report | null>(null);
   const [reportRejectionReason, setReportRejectionReason] = useState("");
-  const [deleteCommunityDialogOpen, setDeleteCommunityDialogOpen] = useState(false);
+
 
   useEffect(() => {
     setName(community.name);
     setSlug(community.slug);
     setDescription(community.description);
     setBanner(community.banner);
-    setCategoryList(community.categories);
-    setEnabled(community.enabled);
     setAutoAcceptMembers(community.autoAcceptMembers);
     setJoiningReasonText(community.joiningReasonText);
   }, [community]);
 
   async function saveSettings(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!name.trim() || saving) return;
+    if (saving) return;
     setSaving(true);
     setError(null);
     try {
       const updated = await request<Community>(`/api/v1/communities/${community.id}`, {
         method: "PATCH",
         body: JSON.stringify({
-          name,
-          slug,
           description,
           banner,
-          enabled,
           autoAcceptMembers,
           joiningReasonText,
         }),
@@ -1430,7 +1317,7 @@ function CommunityManage({
     }
   }
 
-  async function changeFeaturedImage(mediaId: string | null) {
+  async function changeFeaturedImage(selection: MediaRef | null) {
     if (saving) return;
     setSaving(true);
     setError(null);
@@ -1439,66 +1326,15 @@ function CommunityManage({
         `/api/v1/communities/${encodeURIComponent(community.id)}`,
         {
           method: "PATCH",
-          body: JSON.stringify({ featuredMediaId: mediaId }),
+          body: JSON.stringify({ featuredImage: selection }),
         },
       );
       setCommunity(updated);
-      setNotice(mediaId ? "Featured image saved." : "Featured image removed.");
+      setNotice(selection ? "Featured image saved." : "Featured image removed.");
     } catch (caught) {
       setError(errorMessage(caught, "Unable to update the featured image."));
     } finally {
       setSaving(false);
-    }
-  }
-
-  async function addCategory() {
-    const category = newCategory.trim();
-    if (!category || categorySaving) return;
-    setCategorySaving(true);
-    setError(null);
-    try {
-      const updated = await request<Community>(
-        `/api/v1/communities/${encodeURIComponent(community.id)}/categories`,
-        {
-          method: "POST",
-          body: JSON.stringify({ category }),
-        },
-      );
-      setCommunity(updated);
-      setCategoryList(updated.categories);
-      setNewCategory("");
-      setNotice("Category added.");
-    } catch (caught) {
-      setError(errorMessage(caught, "Unable to add the category."));
-    } finally {
-      setCategorySaving(false);
-    }
-  }
-
-  async function removeCategory() {
-    if (!categoryToDelete || categorySaving) return;
-    setCategorySaving(true);
-    setError(null);
-    try {
-      const updated = await request<Community>(
-        `/api/v1/communities/${encodeURIComponent(community.id)}/categories/${encodeURIComponent(categoryToDelete)}`,
-        {
-          method: "DELETE",
-          body: JSON.stringify({
-            migrateToCategory:
-              migrationCategory === "__none__" ? null : migrationCategory || null,
-          }),
-        },
-      );
-      setCommunity(updated);
-      setCategoryList(updated.categories);
-      setCategoryToDelete(null);
-      setMigrationCategory("");
-      setNotice("Category deleted.");
-    } catch (caught) {
-      setError(errorMessage(caught, "Unable to delete the category."));
-    } finally {
-      setCategorySaving(false);
     }
   }
 
@@ -1581,15 +1417,6 @@ function CommunityManage({
     setReportRejectionReason("");
   }
 
-  async function deleteCommunity() {
-    try {
-      await request(`/api/v1/communities/${community.id}`, { method: "DELETE" });
-      router.replace("/communities");
-    } catch (caught) {
-      setError(errorMessage(caught, "Unable to delete the community."));
-    }
-  }
-
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -1603,13 +1430,12 @@ function CommunityManage({
           {community.salesPage?.pageId ? (
             <Button asChild variant="outline">
               <Link
-                href={`/pages/${encodeURIComponent(community.salesPage.pageId)}/edit?redirectTo=${encodeURIComponent(`/community/${community.id}/manage`)}`}
+                href={`/pages/${encodeURIComponent(community.salesPage.pageId)}/edit?redirectTo=${encodeURIComponent(`/community`)}&resourceType=community&resourceId=${encodeURIComponent(community.id)}`}
               >
                 Edit page
               </Link>
             </Button>
           ) : null}
-          <StatusBadge enabled={community.enabled} />
         </div>
       </div>
       <PlatformTabNav
@@ -1619,53 +1445,37 @@ function CommunityManage({
           {
             value: "settings",
             label: "Settings",
-            href: `/community/${community.id}/manage`,
+            href: "/community",
             icon: <Settings className="size-4" />,
           },
           {
             value: "memberships",
             label: "Memberships",
-            href: `/community/${community.id}/manage/memberships`,
+            href: "/community/memberships",
             icon: <Users className="size-4" />,
           },
           {
             value: "plans",
             label: "Payment plans",
-            href: `/community/${community.id}/manage/plans`,
+            href: "/community/plans",
             icon: <CircleDashed className="size-4" />,
           },
           {
             value: "reports",
             label: "Reports",
-            href: `/community/${community.id}/manage/reports`,
+            href: "/community/reports",
             icon: <Flag className="size-4" />,
           },
         ]}
       />
       {section === "settings" ? (
         <form onSubmit={saveSettings} className="w-full space-y-5">
-          <div className="field">
-            <label htmlFor="manage-community-name">Name</label>
-            <Input
-              id="manage-community-name"
-              required
-              maxLength={200}
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="manage-community-slug">Slug</label>
-            <Input
-              id="manage-community-slug"
-              required
-              value={slug}
-              onChange={(event) => setSlug(event.target.value)}
-            />
-            <span className="text-xs text-muted-foreground">
-              Lowercase letters, numbers, and hyphens.
-            </span>
-          </div>
+          <CommunityFeaturedImage
+            school={school}
+            value={community.featuredImage}
+            disabled={saving}
+            onChange={(value) => void changeFeaturedImage(value)}
+          />
           <div className="field">
             <span className="font-medium">Description</span>
             <RichTextEditor
@@ -1697,168 +1507,40 @@ function CommunityManage({
               editorClassName="min-h-[120px]"
             />
           </div>
-          <CommunityFeaturedImage
-            school={school}
-            value={community.featuredMedia}
-            disabled={saving}
-            onChange={(mediaId) => void changeFeaturedImage(mediaId)}
-          />
-          <div className="field">
-            <div>
-              <span className="font-medium">Categories</span>
-              <p className="text-xs text-muted-foreground">
-                Add categories or migrate posts before removing one.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {categoryList.map((category) => (
-                <span
-                  key={category}
-                  className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm"
-                >
-                  {category}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-1.5 text-xs"
-                    aria-label={`Delete ${category} category`}
-                    onClick={() => {
-                      setCategoryToDelete(category);
-                      setMigrationCategory("");
-                    }}
-                  >
-                    <Trash2 className="size-3" />
-                  </Button>
-                </span>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                aria-label="New community category"
-                value={newCategory}
-                maxLength={100}
-                onChange={(event) => setNewCategory(event.target.value)}
-                placeholder="Enter category name"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                disabled={!newCategory.trim() || categorySaving}
-                onClick={() => void addCategory()}
-              >
-                Add category
-              </Button>
-            </div>
-          </div>
-          <label className="flex items-center gap-3 text-sm">
-            <input
-              type="checkbox"
-              checked={enabled}
-              onChange={(event) => setEnabled(event.target.checked)}
-            />
-            Enable community for learners
-          </label>
-          <label className="flex items-center gap-3 text-sm">
-            <input
-              type="checkbox"
+          <div className="flex items-center justify-between gap-4">
+            <label htmlFor="manage-community-auto-accept" className="text-sm">
+              Automatically accept new members
+            </label>
+            <Switch
+              id="manage-community-auto-accept"
               checked={autoAcceptMembers}
-              onChange={(event) => setAutoAcceptMembers(event.target.checked)}
+              onCheckedChange={setAutoAcceptMembers}
             />
-            Automatically accept new members
-          </label>
+          </div>
           {!autoAcceptMembers ? (
             <div className="field">
               <label htmlFor="manage-community-joining-question">
-                Joining question
+                Screening question
               </label>
-              <Textarea
+              <Input
                 id="manage-community-joining-question"
                 maxLength={500}
                 value={joiningReasonText}
                 onChange={(event) => setJoiningReasonText(event.target.value)}
+                placeholder="Why do you want to join this community?"
               />
             </div>
           ) : null}
           <div className="flex gap-2">
-            <Button type="submit" disabled={saving || !name.trim()}>
+            <Button type="submit" disabled={saving}>
               {saving ? "Saving…" : "Save changes"}
             </Button>
             <Button type="button" variant="outline" onClick={() => void onRefresh()}>
               Reset
             </Button>
           </div>
-          <div className="mt-10 rounded-xl border border-destructive/40 p-5">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="font-semibold">Danger zone</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Deleting a community removes it from the admin and learner surfaces.
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => setDeleteCommunityDialogOpen(true)}
-              >
-                <Trash2 className="size-4" />
-                Delete
-              </Button>
-            </div>
-          </div>
         </form>
       ) : null}
-      <Dialog
-        open={Boolean(categoryToDelete)}
-        onOpenChange={(open) => {
-          if (!open) {
-            setCategoryToDelete(null);
-            setMigrationCategory("");
-          }
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete category</DialogTitle>
-            <DialogDescription>
-              Move existing posts to another category before deleting “
-              {categoryToDelete}”.
-            </DialogDescription>
-          </DialogHeader>
-          <Select value={migrationCategory} onValueChange={setMigrationCategory}>
-            <SelectTrigger>
-              <SelectValue placeholder="Choose a migration target" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">No migration</SelectItem>
-              {categoryList
-                .filter((category) => category !== categoryToDelete)
-                .map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setCategoryToDelete(null)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={!migrationCategory || categorySaving}
-              onClick={() => void removeCategory()}
-            >
-              {categorySaving ? "Deleting…" : "Delete category"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
       {section === "memberships" ? (
         <section className="space-y-4">
           <div className="flex items-center justify-between">
@@ -2100,39 +1782,6 @@ function CommunityManage({
               onClick={() => void rejectReport()}
             >
               Reject report
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <Dialog
-        open={deleteCommunityDialogOpen}
-        onOpenChange={setDeleteCommunityDialogOpen}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete “{community.name}”?</DialogTitle>
-            <DialogDescription>
-              This permanently removes the community and its learner content. This
-              action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDeleteCommunityDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => {
-                setDeleteCommunityDialogOpen(false);
-                void deleteCommunity();
-              }}
-            >
-              Delete community
             </Button>
           </DialogFooter>
         </DialogContent>

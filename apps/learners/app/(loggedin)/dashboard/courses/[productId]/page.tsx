@@ -1,5 +1,6 @@
 "use client";
 
+import type { MediaRef } from "@courselit/api-contract";
 // Course viewing is protected, except for explicit preview tokens.
 import { type TextEditorContent, TextRenderer } from "@frontlit/text-editor";
 import Link from "next/link";
@@ -31,12 +32,7 @@ type Product = {
   title: string;
   description: string;
   enrolled: boolean;
-  featuredMedia: {
-    canonicalUrl: string;
-    thumbnailUrl: string | null;
-    fileName: string;
-    altText: string;
-  } | null;
+  featuredImage: MediaRef | null;
   discussions: boolean;
   sections: CourseViewerProduct["sections"];
   status: string;
@@ -419,13 +415,12 @@ export default function CoursePage() {
             ) : null}
             {product?.kind === "course" ? (
               <>
-                {product.featuredMedia ? (
+                {product.featuredImage ? (
                   <PageCardImage
                     src={
-                      product.featuredMedia.thumbnailUrl ??
-                      product.featuredMedia.canonicalUrl
+                      product.featuredImage.thumbnailUrl ?? product.featuredImage.url
                     }
-                    alt={product.featuredMedia.altText || product.title}
+                    alt={product.featuredImage.alt || product.title}
                     className="w-full rounded-lg object-cover"
                   />
                 ) : null}

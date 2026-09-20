@@ -155,7 +155,7 @@ export function ScormLessonUpload({
 
   function selectPackage(selected: SelectedMedia<CourseLitMedia>) {
     if (!selected.media) {
-      setError("SCORM packages must be stored in the private MediaLit library.");
+      setError("SCORM packages must be stored in the private media library.");
       return;
     }
     if (!mediaMatchesAcceptedTypes(selected.media, SCORM_ACCEPTED_TYPES)) {

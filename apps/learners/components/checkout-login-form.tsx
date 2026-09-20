@@ -1,11 +1,15 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
+import { ExternalLoginButton } from "@/components/auth/external-login-button";
+import {
+  LearnerButton,
+  LearnerInput,
+  LearnerLabel,
+  LearnerText2,
+} from "@/components/themed-page-builder";
 import { authClient } from "@/lib/auth-client";
 import { learnerHeaders, writeSchoolId } from "@/lib/school";
-import { ExternalLoginButton } from "./auth/external-login-button";
-import { LearnerButton, LearnerInput, LearnerText2 } from "./themed-page-builder";
-
 type Learner = {
   id: string;
   email: string;
@@ -20,6 +24,8 @@ export function CheckoutLoginForm({
 }: {
   checkoutPath: string;
   loginMethods: string[];
+  googleProviderId?: string | null;
+  ssoProviderId?: string | null;
   onComplete: (learner: Learner) => void;
 }) {
   const [otpStep, setOtpStep] = useState<"email" | "otp">("email");
@@ -30,8 +36,7 @@ export function CheckoutLoginForm({
 
   const showEmail = loginMethods.includes("email");
   const showGoogle = loginMethods.includes("google");
-  const showSso = loginMethods.includes("sso");
-  const hasExternal = showGoogle || showSso;
+  const hasExternal = showGoogle;
 
   async function completeFromSession() {
     const response = await fetch("/api/v1/learner/me", {
@@ -93,33 +98,11 @@ export function CheckoutLoginForm({
         callbackURL: checkoutPath,
       });
       if (result?.error) {
-        await authClient.signIn.sso({
-          providerId: "google",
-          callbackURL: checkoutPath,
-        });
+        throw new Error(result.error.message || "Unable to sign in with Google.");
       }
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : "Unable to sign in with Google.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function signInWithSso() {
-    setError(null);
-    setLoading(true);
-    try {
-      const result = await authClient.signIn.sso({
-        providerId: "sso",
-        callbackURL: checkoutPath,
-      });
-      if (result?.error)
-        setError(result.error.message || "Unable to sign in with SSO.");
-    } catch (caught) {
-      setError(
-        caught instanceof Error ? caught.message : "Unable to sign in with SSO.",
       );
     } finally {
       setLoading(false);
@@ -137,19 +120,18 @@ export function CheckoutLoginForm({
               autoComplete="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="Email address"
+              placeholder="Enter your email"
               required
             />
             <LearnerButton type="submit" disabled={loading} className="w-full">
-              {loading ? "Sending…" : "Continue"}
+              {loading ? "Sending…" : "Continue with email"}
             </LearnerButton>
           </form>
         ) : (
           <form onSubmit={verifyOtp} className="flex flex-col gap-3">
-            <LearnerText2 className="text-muted-foreground">
-              Enter the six-digit code sent to {email}.
-            </LearnerText2>
+            <LearnerLabel htmlFor="checkout-code">Code</LearnerLabel>
             <LearnerInput
+              id="checkout-code"
               inputMode="numeric"
               autoComplete="one-time-code"
               pattern="[0-9]{6}"
@@ -159,22 +141,18 @@ export function CheckoutLoginForm({
               placeholder="Verification code"
               required
             />
-            <LearnerButton
-              type="submit"
-              disabled={loading || otp.length !== 6}
-              className="w-full"
-            >
-              {loading ? "Verifying…" : "Continue"}
+            <LearnerButton type="submit" disabled={loading || otp.length !== 6}>
+              {loading ? "Verifying…" : "Sign in and continue"}
             </LearnerButton>
             <LearnerButton
               type="button"
+              variant="link"
+              size="sm"
               onClick={() => {
                 setOtpStep("email");
                 setOtp("");
                 setError(null);
               }}
-              variant="ghost"
-              className="text-muted-foreground"
             >
               Use a different email
             </LearnerButton>
@@ -183,7 +161,7 @@ export function CheckoutLoginForm({
       ) : null}
 
       {showEmail && hasExternal && otpStep === "email" ? (
-        <div className="relative flex items-center justify-center py-1">
+        <div className="relative my-1 flex items-center justify-center">
           <div className="absolute inset-x-0 border-t border-border" />
           <LearnerText2
             component="span"
@@ -201,13 +179,6 @@ export function CheckoutLoginForm({
               provider="google"
               disabled={loading}
               onClick={signInWithGoogle}
-            />
-          ) : null}
-          {showSso ? (
-            <ExternalLoginButton
-              provider="sso"
-              disabled={loading}
-              onClick={signInWithSso}
             />
           ) : null}
         </div>

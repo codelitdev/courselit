@@ -10,11 +10,11 @@
     "start": "next start --port 3001"
   },
   "dependencies": {
-    "@better-auth/sso": "1.7.2",
     "@codelitdev/observability": "0.1.0-alpha.0",
     "@courselit/api-contract": "workspace:*",
+    "@courselit/page-blocks": "workspace:*",
     "@frontlit/media-uploader": "0.1.0-alpha.0",
-    "@frontlit/page-builder": "0.1.0-alpha.1",
+    "@frontlit/page-builder": "0.1.0-alpha.2",
     "@frontlit/text-editor": "0.1.0-alpha.1",
     "better-auth": "1.7.2",
     "class-variance-authority": "^0.7.1",
@@ -26,6 +26,7 @@
     "radix-ui": "^1.6.7",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "sonner": "^2.0.8",
     "tailwind-merge": "^3.6.0",
     "tus-js-client": "^4.3.1",
     "zod": "4.5.4"

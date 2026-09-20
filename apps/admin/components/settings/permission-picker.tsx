@@ -24,6 +24,7 @@ export const COURSE_PERMISSION_PRESET_LABELS: Record<
 > = {
   full_access: "Full access",
   content_manager: "Content manager",
+  community_manager: "Community manager",
   support: "Support",
   marketing: "Marketing",
   read_only: "Read-only",

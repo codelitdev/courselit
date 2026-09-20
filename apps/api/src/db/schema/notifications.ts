@@ -7,8 +7,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { learners } from "./catalog.js";
-import { schools } from "./schools.js";
+import { memberships, schoolAccounts, schools } from "./schools.js";
 
 export const notifications = pgTable(
   "notifications",
@@ -18,9 +17,9 @@ export const notifications = pgTable(
     schoolId: uuid("school_id")
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
-    learnerId: uuid("learner_id")
+    schoolAccountId: uuid("school_account_id")
       .notNull()
-      .references(() => learners.id, { onDelete: "cascade" }),
+      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
     type: text("type").notNull(),
     title: text("title").notNull(),
     body: text("body").notNull(),
@@ -29,9 +28,9 @@ export const notifications = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
-    learnerFeed: index("notifications_learner_feed_idx").on(
+    feed: index("notifications_feed_idx").on(
       table.schoolId,
-      table.learnerId,
+      table.schoolAccountId,
       table.createdAt,
       table.id,
     ),
@@ -45,18 +44,44 @@ export const learnerNotificationPreferences = pgTable(
     schoolId: uuid("school_id")
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
-    learnerId: uuid("learner_id")
+    schoolAccountId: uuid("school_account_id")
       .notNull()
-      .references(() => learners.id, { onDelete: "cascade" }),
+      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
     type: text("type").notNull(),
     appEnabled: boolean("app_enabled").notNull().default(true),
+    emailEnabled: boolean("email_enabled").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
-    learnerType: uniqueIndex("learner_notification_preferences_type_uidx").on(
+    accountType: uniqueIndex("learner_notification_preferences_type_uidx").on(
       table.schoolId,
-      table.learnerId,
+      table.schoolAccountId,
+      table.type,
+    ),
+  }),
+);
+
+export const staffNotificationPreferences = pgTable(
+  "staff_notification_preferences",
+  {
+    id: uuid("id").primaryKey(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    membershipId: uuid("membership_id")
+      .notNull()
+      .references(() => memberships.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    appEnabled: boolean("app_enabled").notNull().default(true),
+    emailEnabled: boolean("email_enabled").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+  },
+  (table) => ({
+    membershipType: uniqueIndex("staff_notification_preferences_type_uidx").on(
+      table.schoolId,
+      table.membershipId,
       table.type,
     ),
   }),

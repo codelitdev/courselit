@@ -106,55 +106,36 @@ export function getFallbackBreadcrumbs(pathname: string): BreadcrumbItemType[] {
     return crumbs;
   }
 
-  // Communities routes:
-  // /communities
-  // /community/new or /communities/new
-  // /community/:id or /communities/:id
+  // Community routes:
+  // /community
+  // /community/:id
   // /community/:id/manage
-  // /community/:id/manage/memberships
-  // /community/:id/manage/reports
   if (clean === "/communities" || clean === "/community") {
-    return [{ label: "Communities" }];
+    return [{ label: "Community" }];
+  }
+  if (clean === "/spaces") {
+    return [{ label: "Spaces" }];
   }
   if (clean === "/community/new" || clean === "/communities/new") {
+    return [{ label: "Community", href: "/community" }];
+  }
+  if (clean === "/community/memberships" || clean === "/community/manage/memberships") {
     return [
-      { label: "Communities", href: "/communities" },
-      { label: "New Community" },
+      { label: "Community", href: "/community" },
+      { label: "Members" },
     ];
   }
-  if (clean.startsWith("/community/") || clean.startsWith("/communities/")) {
-    const parts = clean.split("/").filter(Boolean);
-    const commId = parts[1];
-    const commRoot = `/community/${commId}`;
-    const crumbs: BreadcrumbItemType[] = [
-      { label: "Communities", href: "/communities" },
+  if (clean === "/community/plans" || clean === "/community/manage/plans") {
+    return [
+      { label: "Community", href: "/community" },
+      { label: "Payment plans" },
     ];
-
-    if (parts.length === 2) {
-      crumbs.push({ label: "Community" });
-      return crumbs;
-    }
-
-    crumbs.push({ label: "Community", href: commRoot });
-
-    if (parts[2] === "manage") {
-      const manageRoot = `${commRoot}/manage`;
-      if (parts.length === 3) {
-        crumbs.push({ label: "Settings" });
-        return crumbs;
-      }
-      crumbs.push({ label: "Settings", href: manageRoot });
-
-      if (parts[3] === "memberships") {
-        crumbs.push({ label: "Members" });
-        return crumbs;
-      }
-      if (parts[3] === "reports") {
-        crumbs.push({ label: "Reports" });
-        return crumbs;
-      }
-    }
-    return crumbs;
+  }
+  if (clean === "/community/reports" || clean === "/community/manage/reports") {
+    return [
+      { label: "Community", href: "/community" },
+      { label: "Moderation" },
+    ];
   }
 
   // Contacts / Learners

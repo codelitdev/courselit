@@ -1,5 +1,5 @@
-import { LearnerNotifications } from "@/components/notifications/learner-notifications";
+import { redirect } from "next/navigation";
 
 export default function NotificationsPage() {
-  return <LearnerNotifications />;
+  redirect("/dashboard/account/notifications");
 }

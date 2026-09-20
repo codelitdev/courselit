@@ -8,6 +8,7 @@ import {
 import { and, eq, ne, or } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import { frontLitConfig } from "./frontlit-client.js";
+import { normalizeEmail } from "./invitations.js";
 import {
   OWNER_PERMISSIONS,
   parsePermissions,
@@ -23,6 +24,7 @@ import {
   type StoredPaymentSettings,
 } from "./payments.js";
 import { encryptIntegrationSecret } from "./utils/integration-secrets.js";
+import { provisionSchoolCommunity } from "./spaces.js";
 
 export type SchoolDto = {
   id: string;
@@ -88,9 +90,6 @@ export async function createSchool(
     status: "active" as const,
     locale: input.locale,
     currency: input.currency,
-    loginMethods: ["email"],
-    ssoConfig: null,
-    googleConfig: null,
     paymentSettingsEncrypted: null,
     codeInjectionHead: "",
     codeInjectionBody: "",
@@ -117,14 +116,43 @@ export async function createSchool(
       createdAt: now,
       updatedAt: now,
     });
-    await tx.insert(schema.memberships).values({
-      id: uuidv7(clock),
+
+    const [owner] = await tx
+      .select({ email: schema.user.email, name: schema.user.name, image: schema.user.image })
+      .from(schema.user)
+      .where(eq(schema.user.id, input.principalId))
+      .limit(1);
+    const ownerEmail = owner?.email ?? "";
+    const ownerName = owner?.name?.trim() || ownerEmail.split("@", 1)[0]?.trim() || "Owner";
+    const schoolAccountId = uuidv7(clock);
+    const ownerAccountPublicId = createPublicId("lrn", clock);
+
+    await tx.insert(schema.schoolAccounts).values({
+      id: schoolAccountId,
+      publicId: ownerAccountPublicId,
       schoolId,
       userId: input.principalId,
-      role: "owner",
-      isOwner: true,
-      permissions: serializePermissions(OWNER_PERMISSIONS),
+      email: normalizeEmail(ownerEmail),
+      displayName: ownerName,
+      image: owner?.image ?? null,
+      status: "active",
       createdAt: now,
+      updatedAt: now,
+    });
+
+    const membershipId = uuidv7(clock);
+    const membershipPublicId = createPublicId("mem", clock);
+    await tx.insert(schema.memberships).values({
+      id: membershipId,
+      publicId: membershipPublicId,
+      schoolId,
+      schoolAccountId,
+      isOwner: true,
+      permissions: [],
+      presetId: "full_access",
+      version: 1,
+      createdAt: now,
+      updatedAt: now,
     });
     await tx.insert(schema.auditEvents).values({
       id: uuidv7(clock),
@@ -143,12 +171,27 @@ export async function createSchool(
       .insert(schema.selectedSchools)
       .values({ userId: input.principalId, schoolId });
 
-    const [owner] = await tx
-      .select({ email: schema.user.email })
-      .from(schema.user)
-      .where(eq(schema.user.id, input.principalId))
-      .limit(1);
-    const ownerEmail = owner?.email ?? "";
+    await tx.insert(schema.auditEvents).values({
+      id: uuidv7(clock),
+      schoolId,
+      actorId: input.principalId,
+      action: "learner.owner_profile_provisioned",
+      resourceType: "learner",
+      resourceId: ownerAccountPublicId,
+      requestId: input.requestId ?? "",
+      createdAt: now,
+    });
+    await provisionSchoolCommunity(
+      tx as AppDb,
+      {
+        schoolId,
+        schoolName: input.name,
+        principalId: input.principalId,
+        schoolAccountId,
+        schoolAccountPublicId: ownerAccountPublicId,
+      },
+      clock,
+    );
 
     await tx.insert(schema.schoolIntegrations).values({
       id: uuidv7(clock),
@@ -220,7 +263,16 @@ export async function listSchoolsForUser(
     .select({ school: schema.schools, membership: schema.memberships })
     .from(schema.memberships)
     .innerJoin(schema.schools, eq(schema.schools.id, schema.memberships.schoolId))
-    .where(eq(schema.memberships.userId, principalId));
+    .innerJoin(
+      schema.schoolAccounts,
+      eq(schema.schoolAccounts.id, schema.memberships.schoolAccountId),
+    )
+    .where(
+      and(
+        eq(schema.schoolAccounts.userId, principalId),
+        eq(schema.schoolAccounts.status, "active"),
+      ),
+    );
   return rows.map((row) =>
     toSchoolDto(
       row.school,
@@ -444,8 +496,6 @@ function mergeSecretGroup<T extends Record<string, string | undefined>>(
   if (!patch) return current;
   const merged = { ...(current ?? {}) } as T;
   for (const [key, value] of Object.entries(patch)) {
-    // Empty secret inputs mean “keep the configured secret”, which lets the
-    // admin edit public IDs without ever reading credentials back.
     if (typeof value === "string" && value.trim()) {
       (merged as Record<string, string>)[key] = value.trim();
     }

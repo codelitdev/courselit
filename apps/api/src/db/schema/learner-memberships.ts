@@ -9,14 +9,13 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { learners } from "./catalog.js";
-import { schools } from "./schools.js";
+import { schoolAccounts, schools } from "./schools.js";
 
 /**
  * The learner's durable access relationship with a product or community.
  *
  * This is intentionally separate from `memberships`, which is the admin
- * user's relationship with a school. `entityId` and `paymentPlanId` contain
+ * user's staff relationship with a school. `entityId` and `paymentPlanId` contain
  * public IDs because a membership can point at either a product plan or a
  * community plan.
  */
@@ -28,9 +27,9 @@ export const learnerMemberships = pgTable(
     schoolId: uuid("school_id")
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
-    learnerId: uuid("learner_id")
+    schoolAccountId: uuid("school_account_id")
       .notNull()
-      .references(() => learners.id, { onDelete: "cascade" }),
+      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
     entityType: text("entity_type").$type<"product" | "community">().notNull(),
     entityId: text("entity_id").notNull(),
     paymentPlanId: text("payment_plan_id"),
@@ -58,20 +57,20 @@ export const learnerMemberships = pgTable(
   },
   (table) => ({
     directEntity: uniqueIndex("learner_memberships_direct_entity_uidx")
-      .on(table.schoolId, table.learnerId, table.entityType, table.entityId)
+      .on(table.schoolId, table.schoolAccountId, table.entityType, table.entityId)
       .where(sql`${table.isIncludedInPlan} = false`),
     includedEntity: uniqueIndex("learner_memberships_included_entity_uidx")
       .on(
         table.schoolId,
-        table.learnerId,
+        table.schoolAccountId,
         table.entityType,
         table.entityId,
         table.parentMembershipId,
       )
       .where(sql`${table.isIncludedInPlan} = true`),
-    learnerLookup: index("learner_memberships_learner_lookup_idx").on(
+    schoolAccountLookup: index("learner_memberships_school_account_lookup_idx").on(
       table.schoolId,
-      table.learnerId,
+      table.schoolAccountId,
       table.status,
     ),
     parentLookup: index("learner_memberships_parent_lookup_idx").on(

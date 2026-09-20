@@ -11,9 +11,9 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth.generated.js";
-import { learners } from "./catalog.js";
+import { communities } from "./communities.js";
 import { products } from "./products.js";
-import { schools } from "./schools.js";
+import { schoolAccounts, schools } from "./schools.js";
 
 export const storefrontPlans = pgTable(
   "storefront_plans",
@@ -63,26 +63,32 @@ export const storefrontPlans = pgTable(
   (table) => ({
     activeFreeType: uniqueIndex("storefront_plans_active_free_type_uidx")
       .on(table.entityType, table.entityId)
-      .where(sql`${table.status} = 'active' AND ${table.kind} = 'free'`),
+      .where(
+        sql`${table.entityType} = 'product' AND ${table.status} = 'active' AND ${table.kind} = 'free'`,
+      ),
     activeOneTimeType: uniqueIndex("storefront_plans_active_one_time_type_uidx")
       .on(table.entityType, table.entityId)
-      .where(sql`${table.status} = 'active' AND ${table.kind} = 'one_time'`),
+      .where(
+        sql`${table.entityType} = 'product' AND ${table.status} = 'active' AND ${table.kind} = 'one_time'`,
+      ),
     activeInstallmentType: uniqueIndex("storefront_plans_active_installment_type_uidx")
       .on(table.entityType, table.entityId)
-      .where(sql`${table.status} = 'active' AND ${table.kind} = 'installment'`),
+      .where(
+        sql`${table.entityType} = 'product' AND ${table.status} = 'active' AND ${table.kind} = 'installment'`,
+      ),
     activeSubscriptionMonthly: uniqueIndex(
       "storefront_plans_active_subscription_monthly_uidx",
     )
       .on(table.entityType, table.entityId)
       .where(
-        sql`${table.status} = 'active' AND ${table.kind} = 'subscription' AND ${table.subscriptionMonthlyAmount} IS NOT NULL`,
+        sql`${table.entityType} = 'product' AND ${table.status} = 'active' AND ${table.kind} = 'subscription' AND ${table.subscriptionMonthlyAmount} IS NOT NULL`,
       ),
     activeSubscriptionYearly: uniqueIndex(
       "storefront_plans_active_subscription_yearly_uidx",
     )
       .on(table.entityType, table.entityId)
       .where(
-        sql`${table.status} = 'active' AND ${table.kind} = 'subscription' AND ${table.subscriptionYearlyAmount} IS NOT NULL`,
+        sql`${table.entityType} = 'product' AND ${table.status} = 'active' AND ${table.kind} = 'subscription' AND ${table.subscriptionYearlyAmount} IS NOT NULL`,
       ),
     activeDefault: uniqueIndex("storefront_plans_active_default_uidx")
       .on(table.entityType, table.entityId)
@@ -90,7 +96,7 @@ export const storefrontPlans = pgTable(
     amountCheck: check("storefront_plans_amount_check", sql`${table.amountMinor} >= 0`),
     entityTypeCheck: check(
       "storefront_plans_entity_type_check",
-      sql`${table.entityType} IN ('product', 'community')`,
+      sql`${table.entityType} IN ('product', 'community')` as any,
     ),
     entityIdCheck: check(
       "storefront_plans_entity_id_check",
@@ -124,9 +130,9 @@ export const storefrontCheckoutAttempts = pgTable(
     schoolId: uuid("school_id")
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
-    learnerId: uuid("learner_id")
+    schoolAccountId: uuid("school_account_id")
       .notNull()
-      .references(() => learners.id, { onDelete: "cascade" }),
+      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
     productId: uuid("product_id")
       .notNull()
       .references(() => products.id, { onDelete: "cascade" }),
@@ -172,18 +178,26 @@ export const storefrontCheckoutSessions = pgTable(
     schoolId: uuid("school_id")
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
+    entityType: text("entity_type")
+      .$type<"product" | "community">()
+      .notNull(),
     productId: uuid("product_id")
-      .notNull()
       .references(() => products.id, { onDelete: "cascade" }),
+    communityId: uuid("community_id").references(() => communities.id, {
+      onDelete: "cascade",
+    }),
     planId: uuid("plan_id")
       .notNull()
       .references(() => storefrontPlans.id, { onDelete: "restrict" }),
-    learnerId: uuid("learner_id").references(() => learners.id, {
+    schoolAccountId: uuid("school_account_id").references(() => schoolAccounts.id, {
       onDelete: "set null",
     }),
     checkoutId: uuid("checkout_id").references(() => storefrontCheckoutAttempts.id, {
       onDelete: "set null",
     }),
+    // Community checkouts use their own attempt table because their
+    // fulfillment and payment records are separate from product commerce.
+    communityCheckoutId: uuid("community_checkout_id"),
     status: text("status")
       .$type<"open" | "completed" | "expired">()
       .notNull()
@@ -196,6 +210,10 @@ export const storefrontCheckoutSessions = pgTable(
     schoolExpiry: uniqueIndex("storefront_checkout_sessions_school_id_uidx").on(
       table.schoolId,
       table.id,
+    ),
+    resourceCheck: check(
+      "storefront_checkout_sessions_resource_check",
+      sql`(${table.entityType} = 'product' AND ${table.productId} IS NOT NULL AND ${table.communityId} IS NULL) OR (${table.entityType} = 'community' AND ${table.productId} IS NULL AND ${table.communityId} IS NOT NULL)`,
     ),
   }),
 );
@@ -243,7 +261,11 @@ export const storefrontInvoices = pgTable(
     status: text("status").$type<"pending" | "paid" | "refunded" | "void">().notNull(),
     currency: text("currency").notNull(),
     amountMinor: integer("amount_minor").notNull(),
+    pdfUrl: text("pdf_url"),
+    hostedInvoiceUrl: text("hosted_invoice_url"),
     issuedAt: timestamp("issued_at", { withTimezone: true }).notNull(),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
@@ -261,7 +283,6 @@ export const storefrontSubscriptions = pgTable(
     checkoutId: uuid("checkout_id")
       .notNull()
       .references(() => storefrontCheckoutAttempts.id, { onDelete: "restrict" }),
-    membershipId: uuid("membership_id"),
     providerSubscriptionId: text("provider_subscription_id").notNull(),
     status: text("status")
       .$type<"active" | "past_due" | "cancelled" | "expired">()

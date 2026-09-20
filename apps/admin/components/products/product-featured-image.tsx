@@ -1,8 +1,8 @@
 "use client";
 
+import type { MediaRef } from "@courselit/api-contract";
 import { ImageUploadDialog, type SelectedImage } from "@frontlit/media-uploader";
 import Image from "next/image";
-import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/codelit/button";
 import {
@@ -11,6 +11,7 @@ import {
   mediaMatchesAcceptedTypes,
   useCourseLitMediaUploader,
 } from "@/lib/course-media-uploader";
+import { toMediaRef } from "@/lib/media-ref";
 import type { Product, School } from "./product-types";
 
 const PRODUCT_IMAGE_ACCEPTED_TYPES = [
@@ -26,8 +27,8 @@ export function ProductFeaturedImage({
   onChange,
 }: {
   school: School;
-  value: Product["featuredMedia"];
-  onChange: (mediaId: string | null) => void;
+  value: Product["featuredImage"];
+  onChange: (value: MediaRef | null) => void;
 }) {
   const [error, setError] = useState<string | null>(null);
   const adapters = useCourseLitMediaUploader({
@@ -42,7 +43,7 @@ export function ProductFeaturedImage({
 
   function selectImage(selected: SelectedImage<CourseLitMedia>) {
     if (!selected.media) {
-      setError("Featured images must be stored in the MediaLit library.");
+      setError("Featured images must be stored in the media library.");
       return;
     }
     if (!mediaMatchesAcceptedTypes(selected.media, PRODUCT_IMAGE_ACCEPTED_TYPES)) {
@@ -50,7 +51,7 @@ export function ProductFeaturedImage({
       return;
     }
     setError(null);
-    onChange(selected.media.id);
+    onChange(toMediaRef(selected));
   }
 
   return (
@@ -58,22 +59,21 @@ export function ProductFeaturedImage({
       <div>
         <h2 className="font-semibold">Featured image</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          The hero image for your product. Images are selected from the MediaLit
-          library.
+          The hero image for your product. Images are selected from the media library.
         </p>
       </div>
       {value ? (
         <div className="flex flex-wrap items-start gap-4">
           <Image
-            src={value.thumbnailUrl ?? value.canonicalUrl}
-            alt={value.altText || value.fileName}
+            src={value.thumbnailUrl ?? value.url}
+            alt={value.alt || "Product featured image"}
             width={176}
             height={112}
             unoptimized
             className="h-28 w-44 rounded-md border object-cover"
           />
           <div className="space-y-2 text-sm">
-            <p className="font-medium">{value.fileName}</p>
+            <p className="font-medium">{value.alt || value.url}</p>
             <Button
               type="button"
               variant="outline"

@@ -74,7 +74,7 @@ export function salesPageLayout(input: {
   if (isProduct) {
     layout.push({
       widgetId: `${input.resourceId}-sales-banner`,
-      name: "courselit-product-banner",
+      name: "courselit-product",
       deletable: false,
       moveable: true,
       shared: false,
@@ -95,15 +95,13 @@ export function salesPageLayout(input: {
       });
     }
   } else {
-    // Communities still use the ordinary dynamic content slot until their
-    // dedicated sales-page block is introduced.
     layout.push({
-      widgetId: `${input.resourceId}-sales-content`,
-      name: "data-slot",
+      widgetId: `${input.resourceId}-sales-banner`,
+      name: "courselit-community",
       deletable: false,
-      moveable: false,
+      moveable: true,
       shared: false,
-      settings: { slot: "courselit.sales-page-content" },
+      settings: { textPosition: "left", textAlignment: "left" },
     });
   }
 

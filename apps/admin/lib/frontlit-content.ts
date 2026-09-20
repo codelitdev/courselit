@@ -1,3 +1,4 @@
+import type { MediaRef } from "@courselit/api-contract";
 import type { TextEditorContent } from "@frontlit/text-editor";
 
 export type FrontLitContentStatus = "draft" | "published" | "published_with_changes";
@@ -22,7 +23,7 @@ export type FrontLitTheme = {
 export type FrontLitSettings = {
   title: string | null;
   subtitle: string | null;
-  logo: Record<string, unknown> | null;
+  logo: MediaRef | null;
   themeId: string | null;
 };
 
@@ -42,6 +43,11 @@ export type FrontLitPage = {
   draftDescription?: string | null;
   draftSocialImage?: Record<string, unknown> | null;
   draftRobotsAllowed?: boolean | null;
+  /** CourseLit attaches these fields when the page is a product/community
+   * sales page so the editor can render its real blocks without URL state. */
+  salesResourceType?: "product" | "community" | null;
+  salesResourceId?: string | null;
+  salesResourceKind?: "course" | "download" | null;
   createdAt?: string | null;
   updatedAt?: string | null;
 };
@@ -50,8 +56,8 @@ export type FrontLitBlog = {
   documentId: string;
   slug: string;
   status: FrontLitContentStatus;
-  featuredImage?: Record<string, unknown> | null;
-  draftFeaturedImage?: Record<string, unknown> | null;
+  featuredImage?: MediaRef | null;
+  draftFeaturedImage?: MediaRef | null;
   draftTitle: string;
   draftContent: TextEditorContent;
   draftExcerpt?: string | null;

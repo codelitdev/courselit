@@ -1,3 +1,5 @@
+import type { MediaRef } from "@courselit/api-contract";
+
 /**
  * CourseLit’s server-side adapter for FrontLit’s supported API. This is
  * intentionally hand-written: CourseLit must not import FrontLit’s private
@@ -45,7 +47,7 @@ export type FrontLitContentSummary = {
   kind: "page" | "blog";
   slug: string;
   status: FrontLitContentStatus;
-  featuredImage?: Record<string, unknown> | null;
+  featuredImage?: MediaRef | null;
   excerpt?: string | null;
   updatedAt?: string | null;
 };
@@ -93,7 +95,7 @@ type FrontLitThemeResponse = {
 export type FrontLitSettingsResponse = {
   title: string | null;
   subtitle: string | null;
-  logo: Record<string, unknown> | null;
+  logo: MediaRef | null;
   themeId: string | null;
 };
 
@@ -106,11 +108,11 @@ type FrontLitBlogResponse = {
   publishedAt?: string | null;
   content?: Record<string, unknown> | null;
   excerpt?: string | null;
-  featuredImage?: Record<string, unknown> | null;
+  featuredImage?: MediaRef | null;
   meta: Record<string, unknown>;
   draftContent: Record<string, unknown>;
   draftExcerpt?: string | null;
-  draftFeaturedImage?: Record<string, unknown> | null;
+  draftFeaturedImage?: MediaRef | null;
   draftMeta: Record<string, unknown>;
   createdAt?: string | null;
   updatedAt?: string | null;
@@ -140,12 +142,12 @@ export type FrontLitBlog = FrontLitContentSummary & {
   title?: string | null;
   content?: Record<string, unknown> | null;
   excerpt?: string | null;
-  featuredImage?: Record<string, unknown> | null;
+  featuredImage?: MediaRef | null;
   meta: Record<string, unknown>;
   draftTitle: string;
   draftContent: Record<string, unknown>;
   draftExcerpt?: string | null;
-  draftFeaturedImage?: Record<string, unknown> | null;
+  draftFeaturedImage?: MediaRef | null;
   draftMeta: Record<string, unknown>;
   createdAt?: string | null;
   updatedAt?: string | null;
@@ -154,7 +156,7 @@ export type FrontLitBlog = FrontLitContentSummary & {
 export type FrontLitPublicSettings = {
   title: string | null;
   subtitle: string | null;
-  logo: Record<string, unknown> | null;
+  logo: MediaRef | null;
   themeId: string | null;
   theme: Record<string, unknown> | null;
 };
@@ -178,7 +180,7 @@ export type FrontLitPublicBlog = {
   title: string | null;
   content: Record<string, unknown> | null;
   excerpt: string | null;
-  featuredImage: Record<string, unknown> | null;
+  featuredImage: MediaRef | null;
   meta: Record<string, unknown>;
   publishedAt: string | null;
   updatedAt: string | null;
@@ -235,8 +237,59 @@ function toFrontLitPage(page: FrontLitPageResponse): FrontLitPage {
   return { ...page, ...toFrontLitPageSummary(page), id: page.pageId, kind: "page" };
 }
 
+function normalizeFrontLitMedia(input: unknown): MediaRef | null {
+  if (typeof input === "string") {
+    const url = input.trim();
+    return url ? { url } : null;
+  }
+  if (!input || typeof input !== "object" || Array.isArray(input)) return null;
+  const value = input as Record<string, unknown>;
+  const url = [value.url, value.file, value.src].find(
+    (candidate): candidate is string =>
+      typeof candidate === "string" && candidate.trim().length > 0,
+  );
+  if (!url) return null;
+  const mediaId = typeof value.mediaId === "string" ? value.mediaId.trim() : "";
+  const thumbnailUrl = [value.thumbnailUrl, value.thumbnail, value.thumbUrl].find(
+    (candidate): candidate is string =>
+      typeof candidate === "string" && candidate.trim().length > 0,
+  );
+  const alt = [value.alt, value.caption].find(
+    (candidate): candidate is string =>
+      typeof candidate === "string" && candidate.trim().length > 0,
+  );
+  const fileName = typeof value.fileName === "string" ? value.fileName.trim() : "";
+  const mimeType = typeof value.mimeType === "string" ? value.mimeType.trim() : "";
+  const byteSize = typeof value.byteSize === "number" ? value.byteSize : undefined;
+  const title = [value.title, value.caption].find(
+    (candidate): candidate is string =>
+      typeof candidate === "string" && candidate.trim().length > 0,
+  );
+  const kind =
+    value.kind === "image" ||
+    value.kind === "video" ||
+    value.kind === "audio" ||
+    value.kind === "document" ||
+    value.kind === "other"
+      ? value.kind
+      : undefined;
+  return {
+    ...(mediaId ? { mediaId } : {}),
+    url: url.trim(),
+    ...(thumbnailUrl ? { thumbnailUrl: thumbnailUrl.trim() } : {}),
+    ...(alt ? { alt: alt.trim() } : {}),
+    ...(fileName ? { fileName } : {}),
+    ...(mimeType ? { mimeType } : {}),
+    ...(byteSize !== undefined ? { byteSize } : {}),
+    ...(title ? { title: title.trim() } : {}),
+    ...(kind ? { kind } : {}),
+  };
+}
+
 function toFrontLitBlogSummary(blog: FrontLitBlogResponse): FrontLitContentSummary {
-  const featuredImage = blog.draftFeaturedImage ?? blog.featuredImage ?? null;
+  const featuredImage = normalizeFrontLitMedia(
+    blog.draftFeaturedImage ?? blog.featuredImage,
+  );
   const excerpt = blog.draftExcerpt ?? blog.excerpt ?? null;
   return {
     id: blog.documentId,
@@ -253,6 +306,8 @@ function toFrontLitBlogSummary(blog: FrontLitBlogResponse): FrontLitContentSumma
 function toFrontLitBlog(blog: FrontLitBlogResponse): FrontLitBlog {
   return {
     ...blog,
+    featuredImage: normalizeFrontLitMedia(blog.featuredImage),
+    draftFeaturedImage: normalizeFrontLitMedia(blog.draftFeaturedImage),
     ...toFrontLitBlogSummary(blog),
     id: blog.documentId,
     kind: "blog",
@@ -432,31 +487,33 @@ export async function getFrontLitSettings(
   options: { config?: FrontLitConfig; fetcher?: FetchLike } = {},
 ): Promise<FrontLitSettingsResponse> {
   const config = options.config ?? frontLitConfig();
-  return requestJson<FrontLitSettingsResponse>(
+  const settings = await requestJson<FrontLitSettingsResponse>(
     config,
     "/settings",
     { apiKey: teamApiKey },
     options.fetcher,
   );
+  return { ...settings, logo: normalizeFrontLitMedia(settings.logo) };
 }
 
 export async function updateFrontLitSettings(
   patch: Partial<{
     title: string | null;
     subtitle: string | null;
-    logo: Record<string, unknown> | null;
+    logo: MediaRef | null;
     themeId: string | null;
   }>,
   teamApiKey: string,
   options: { config?: FrontLitConfig; fetcher?: FetchLike } = {},
 ): Promise<FrontLitSettingsResponse> {
   const config = options.config ?? frontLitConfig();
-  return requestJson<FrontLitSettingsResponse>(
+  const settings = await requestJson<FrontLitSettingsResponse>(
     config,
     "/settings",
     { method: "PATCH", apiKey: teamApiKey, body: patch },
     options.fetcher,
   );
+  return { ...settings, logo: normalizeFrontLitMedia(settings.logo) };
 }
 
 export async function listFrontLitThemes(
@@ -521,7 +578,7 @@ export async function publishFrontLitPage(
   pageId: string,
   teamApiKey: string,
   options: { config?: FrontLitConfig; fetcher?: FetchLike } = {},
-): Promise<FrontLitContentSummary> {
+): Promise<FrontLitPage> {
   const config = options.config ?? frontLitConfig();
   const page = await requestJson<FrontLitPageResponse>(
     config,
@@ -529,7 +586,7 @@ export async function publishFrontLitPage(
     { method: "POST", apiKey: teamApiKey, body: undefined },
     options.fetcher,
   );
-  return toFrontLitPageSummary(page);
+  return toFrontLitPage(page);
 }
 
 export async function listFrontLitBlogs(
@@ -602,12 +659,13 @@ export async function getPublicFrontLitSettings(
   options: { config?: FrontLitConfig; fetcher?: FetchLike } = {},
 ): Promise<FrontLitPublicSettings> {
   const config = options.config ?? frontLitConfig();
-  return requestJson<FrontLitPublicSettings>(
+  const settings = await requestJson<FrontLitPublicSettings>(
     config,
     `/public/${encodeURIComponent(remoteTeamId)}/settings`,
     {},
     options.fetcher,
   );
+  return { ...settings, logo: normalizeFrontLitMedia(settings.logo) };
 }
 
 export async function getPublicFrontLitPage(
@@ -630,12 +688,19 @@ export async function listPublicFrontLitBlogs(
   options: { config?: FrontLitConfig; fetcher?: FetchLike } = {},
 ): Promise<{ items: FrontLitPublicBlog[]; total: number }> {
   const config = options.config ?? frontLitConfig();
-  return requestJson<{ items: FrontLitPublicBlog[]; total: number }>(
+  const response = await requestJson<{ items: FrontLitPublicBlog[]; total: number }>(
     config,
     `/public/${encodeURIComponent(remoteTeamId)}/content/articles?offset=1&itemsPerPage=100`,
     {},
     options.fetcher,
   );
+  return {
+    ...response,
+    items: response.items.map((blog) => ({
+      ...blog,
+      featuredImage: normalizeFrontLitMedia(blog.featuredImage),
+    })),
+  };
 }
 
 export async function getPublicFrontLitBlog(
@@ -644,12 +709,13 @@ export async function getPublicFrontLitBlog(
   options: { config?: FrontLitConfig; fetcher?: FetchLike } = {},
 ): Promise<FrontLitPublicBlog> {
   const config = options.config ?? frontLitConfig();
-  return requestJson<FrontLitPublicBlog>(
+  const blog = await requestJson<FrontLitPublicBlog>(
     config,
     `/public/${encodeURIComponent(remoteTeamId)}/content/articles/${encodeURIComponent(slug)}`,
     {},
     options.fetcher,
   );
+  return { ...blog, featuredImage: normalizeFrontLitMedia(blog.featuredImage) };
 }
 
 export async function updateFrontLitBlog(
@@ -659,7 +725,7 @@ export async function updateFrontLitBlog(
     title?: string;
     content?: Record<string, unknown>;
     excerpt?: string;
-    featuredImage?: Record<string, unknown>;
+    featuredImage?: MediaRef | null;
     meta?: Record<string, unknown>;
   },
   teamApiKey: string,

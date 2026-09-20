@@ -15,13 +15,13 @@ function mediaIdFromTusResponse(payload: {
   lastResponse: { getHeader(name: string): string | null | undefined };
 }): string {
   const rawMedia = payload.lastResponse.getHeader("Media");
-  if (!rawMedia) throw new Error("MediaLit returned no media metadata.");
+  if (!rawMedia) throw new Error("The media service returned no metadata.");
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(rawMedia);
   } catch {
-    throw new Error("MediaLit returned invalid media metadata.");
+    throw new Error("The media service returned invalid metadata.");
   }
   if (
     !parsed ||
@@ -29,7 +29,7 @@ function mediaIdFromTusResponse(payload: {
     typeof (parsed as { mediaId?: unknown }).mediaId !== "string" ||
     !(parsed as { mediaId: string }).mediaId
   ) {
-    throw new Error("MediaLit returned no media ID.");
+    throw new Error("The media service returned no media ID.");
   }
   return (parsed as { mediaId: string }).mediaId;
 }
@@ -56,11 +56,11 @@ async function uploadDirect(
     headers,
     body,
   });
-  if (!response.ok) throw new Error("MediaLit rejected the upload.");
+  if (!response.ok) throw new Error("The media service rejected the upload.");
 
   const payload = (await response.json()) as { mediaId?: unknown };
   if (typeof payload.mediaId !== "string" || !payload.mediaId) {
-    throw new Error("MediaLit returned no media ID.");
+    throw new Error("The media service returned no media ID.");
   }
   return payload.mediaId;
 }

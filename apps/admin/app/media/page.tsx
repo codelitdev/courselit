@@ -70,7 +70,7 @@ export default function MediaPage() {
 
   function addSelectedMedia(selected: SelectedMedia<CourseLitMedia>) {
     if (!selected.media) {
-      setError("Only MediaLit assets can be added to the media library.");
+      setError("Only uploaded media can be added to the media library.");
       return;
     }
     const media = selected.media;

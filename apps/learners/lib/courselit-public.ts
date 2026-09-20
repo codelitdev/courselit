@@ -1,3 +1,4 @@
+import type { MediaRef } from "@courselit/api-contract";
 import type { WidgetInstance } from "@frontlit/page-builder/models";
 import type { TextEditorContent } from "@frontlit/text-editor";
 
@@ -6,7 +7,7 @@ const API_URL = (process.env.API_URL ?? "http://127.0.0.1:4000").replace(/\/$/, 
 export interface PublicSettings {
   title: string | null;
   subtitle: string | null;
-  logo: Record<string, unknown> | null;
+  logo: MediaRef | null;
   themeId: string | null;
   theme: Record<string, unknown> | null;
   codeInjectionHead: string;
@@ -32,7 +33,7 @@ export interface PublicArticle {
   title: string | null;
   content: TextEditorContent | null;
   excerpt: string | null;
-  featuredImage: Record<string, unknown> | null;
+  featuredImage: MediaRef | null;
   publishedAt: string | null;
   updatedAt: string | null;
 }
@@ -104,11 +105,8 @@ export interface PublicProductSummary {
 export interface PublicProductDetail extends PublicProductSummary {
   enrolled: boolean;
   leadMagnet: boolean;
-  featuredMedia: {
-    canonicalUrl: string;
-    thumbnailUrl: string | null;
-    altText: string;
-  } | null;
+  includedWithCommunity?: boolean;
+  featuredImage: MediaRef | null;
   sections: Array<{ id: string; title: string }>;
   lessons: Array<{
     id: string;
@@ -135,6 +133,30 @@ export interface PublicCommunitySummary {
   slug: string;
   name: string;
   description: string;
+}
+
+export interface PublicCommunityDetail extends PublicCommunitySummary {
+  banner: string;
+  categories: string[];
+  autoAcceptMembers: boolean;
+  joiningReasonText: string;
+  featuredImage: MediaRef | null;
+  membersCount: number;
+  postsCount: number;
+  deletedAt: string | null;
+  membership?: { status?: string } | null;
+}
+
+export interface PublicCommunityPlan {
+  id: string;
+  name: string;
+  description: string;
+  type: "free" | "onetime" | "emi" | "subscription";
+  currency: string;
+  amountMinor: number;
+  billingInterval: "month" | "year" | null;
+  installmentCount: number | null;
+  isDefault: boolean;
 }
 
 export function getPublicProduct(
@@ -174,10 +196,22 @@ export async function getPublicProductPlans(
 export function getPublicCommunity(
   host: string,
   idOrSlug: string,
-): Promise<PublicCommunitySummary | null> {
+): Promise<PublicCommunityDetail | null> {
   if (!idOrSlug) return Promise.resolve(null);
-  return getFromApi<PublicCommunitySummary>(
+  return getFromApi<PublicCommunityDetail>(
     `/v1/public/communities/${encodeURIComponent(idOrSlug)}`,
     host,
   );
+}
+
+export async function getPublicCommunityPlans(
+  host: string,
+  idOrSlug: string,
+): Promise<PublicCommunityPlan[]> {
+  if (!idOrSlug) return [];
+  const result = await getFromApi<{ items?: PublicCommunityPlan[] }>(
+    `/v1/public/communities/${encodeURIComponent(idOrSlug)}/plans`,
+    host,
+  );
+  return result?.items ?? [];
 }

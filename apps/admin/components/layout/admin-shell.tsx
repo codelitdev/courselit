@@ -5,9 +5,10 @@ import { useEffect, useState } from "react";
 import { AdminBreadcrumb } from "@/components/layout/admin-breadcrumb";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { BreadcrumbProvider } from "@/components/layout/breadcrumb-context";
-import { Toaster } from "@/components/ui/sonner";
+import { NotificationsBell } from "@/components/notifications/notifications-bell";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Toaster } from "@/components/ui/sonner";
 
 const SCHOOL_OPTIONAL_PREFIXES = [
   "/schools",
@@ -160,6 +161,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               className="mr-2 data-vertical:h-4 data-vertical:self-auto"
             />
             <AdminBreadcrumb />
+            <div className="ml-auto">
+              <NotificationsBell />
+            </div>
           </header>
           <div className="min-h-0 min-w-0 w-full flex-1 overflow-auto p-6">
             {children}

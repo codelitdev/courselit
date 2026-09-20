@@ -18,6 +18,9 @@ export function isNavHrefActive(pathname: string, href: string, search = ""): bo
   const current = new URLSearchParams(
     search.startsWith("?") ? search.slice(1) : search,
   );
+  if (pathname === "/settings" && !current.has("tab")) {
+    current.set("tab", "payment");
+  }
   for (const [key, value] of required) {
     if (current.get(key) !== value) return false;
   }

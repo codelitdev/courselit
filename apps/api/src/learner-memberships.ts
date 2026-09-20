@@ -18,7 +18,8 @@ export type LearnerMembershipRow = typeof schema.learnerMemberships.$inferSelect
 
 type MembershipInput = {
   schoolId: string;
-  learnerId: string;
+  schoolAccountId?: string;
+  learnerId?: string;
   entityType: LearnerMembershipEntityType;
   entityId: string;
   paymentPlanId?: string | null;
@@ -42,18 +43,19 @@ function parentCondition(parentMembershipId: string | null | undefined) {
 /** Find a membership by its durable learner/entity relationship. */
 export async function findLearnerMembership(
   db: AppDb,
-  input: Pick<MembershipInput, "schoolId" | "learnerId" | "entityType" | "entityId"> & {
+  input: Pick<MembershipInput, "schoolId" | "schoolAccountId" | "learnerId" | "entityType" | "entityId"> & {
     isIncludedInPlan?: boolean;
     parentMembershipId?: string | null;
   },
 ): Promise<LearnerMembershipRow | null> {
+  const accountId = input.schoolAccountId ?? input.learnerId!;
   const rows = await db
     .select()
     .from(schema.learnerMemberships)
     .where(
       and(
         eq(schema.learnerMemberships.schoolId, input.schoolId),
-        eq(schema.learnerMemberships.learnerId, input.learnerId),
+        eq(schema.learnerMemberships.schoolAccountId, accountId),
         eq(schema.learnerMemberships.entityType, input.entityType),
         eq(schema.learnerMemberships.entityId, input.entityId),
         eq(schema.learnerMemberships.isIncludedInPlan, input.isIncludedInPlan ?? false),
@@ -109,11 +111,12 @@ export async function upsertLearnerMembership(
       .where(eq(schema.learnerMemberships.id, existing.id));
     return { ...existing, ...values };
   }
+  const accountId = input.schoolAccountId ?? input.learnerId!;
   const row = {
     id: uuidv7(clock),
     publicId: createPublicId("lrm", clock),
     schoolId: input.schoolId,
-    learnerId: input.learnerId,
+    schoolAccountId: accountId,
     entityType: input.entityType,
     entityId: input.entityId,
     ...values,
@@ -125,15 +128,16 @@ export async function upsertLearnerMembership(
 
 export async function activeProductMembership(
   db: AppDb,
-  input: { schoolId: string; learnerId: string; productPublicId: string },
+  input: { schoolId: string; schoolAccountId?: string; learnerId?: string; productPublicId: string },
 ): Promise<LearnerMembershipRow | null> {
+  const accountId = input.schoolAccountId ?? input.learnerId!;
   const rows = await db
     .select()
     .from(schema.learnerMemberships)
     .where(
       and(
         eq(schema.learnerMemberships.schoolId, input.schoolId),
-        eq(schema.learnerMemberships.learnerId, input.learnerId),
+        eq(schema.learnerMemberships.schoolAccountId, accountId),
         eq(schema.learnerMemberships.entityType, "product"),
         eq(schema.learnerMemberships.entityId, input.productPublicId),
         eq(schema.learnerMemberships.status, "active"),
@@ -145,15 +149,16 @@ export async function activeProductMembership(
 
 export async function activeProductMemberships(
   db: AppDb,
-  input: { schoolId: string; learnerId: string; productPublicId: string },
+  input: { schoolId: string; schoolAccountId?: string; learnerId?: string; productPublicId: string },
 ): Promise<LearnerMembershipRow[]> {
+  const accountId = input.schoolAccountId ?? input.learnerId!;
   return db
     .select()
     .from(schema.learnerMemberships)
     .where(
       and(
         eq(schema.learnerMemberships.schoolId, input.schoolId),
-        eq(schema.learnerMemberships.learnerId, input.learnerId),
+        eq(schema.learnerMemberships.schoolAccountId, accountId),
         eq(schema.learnerMemberships.entityType, "product"),
         eq(schema.learnerMemberships.entityId, input.productPublicId),
         eq(schema.learnerMemberships.status, "active"),

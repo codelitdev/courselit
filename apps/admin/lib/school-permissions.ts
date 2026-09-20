@@ -9,9 +9,7 @@ export function hasSchoolPermission(
   permission: CourseLitPermission,
 ): boolean {
   const permissions = school?.permissions;
-  return Boolean(
-    permissions?.includes(permission) || permissions?.includes("school:admin"),
-  );
+  return Boolean(permissions?.includes(permission));
 }
 
 export function hasAnySchoolPermission(

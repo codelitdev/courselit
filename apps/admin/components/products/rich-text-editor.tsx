@@ -14,7 +14,7 @@ import {
   mediaMatchesAcceptedTypes,
   useCourseLitMediaUploader,
 } from "@/lib/course-media-uploader";
-import type { School } from "./product-types";
+import { toMediaRef } from "@/lib/media-ref";
 
 const RICH_TEXT_IMAGE_ACCEPTED_TYPES = [
   "image/jpeg",
@@ -23,10 +23,44 @@ const RICH_TEXT_IMAGE_ACCEPTED_TYPES = [
   "image/webp",
 ];
 
-type RichTextImagePurpose = "product_content" | "lesson_content" | "community_content";
+type RichTextImagePurpose =
+  | "product_content"
+  | "lesson_content"
+  | "community_content"
+  | "blog_artwork";
+
+type RichTextNode = {
+  [key: string]: unknown;
+  type?: unknown;
+  attrs?: Record<string, unknown>;
+  content?: RichTextNode[];
+};
+
+function annotateOwnedImages(
+  document: Parameters<EditorProps["onChange"]>[0],
+  mediaIdsByUrl: ReadonlyMap<string, string>,
+): Parameters<EditorProps["onChange"]>[0] {
+  const visit = (node: RichTextNode): RichTextNode => {
+    const attrs = node.attrs;
+    const src = typeof attrs?.src === "string" ? attrs.src : null;
+    const mediaId = src ? mediaIdsByUrl.get(src) : undefined;
+    const nextAttrs =
+      node.type === "image" && mediaId && !attrs?.mediaId
+        ? { ...(attrs ?? {}), mediaId }
+        : attrs;
+    const nextContent = node.content?.map(visit);
+    return {
+      ...node,
+      ...(nextAttrs ? { attrs: nextAttrs } : {}),
+      ...(nextContent ? { content: nextContent } : {}),
+    };
+  };
+
+  return visit(document as RichTextNode) as Parameters<EditorProps["onChange"]>[0];
+}
 
 type RichTextEditorProps = Omit<EditorProps, "onError"> & {
-  school: School;
+  school: { id: string };
   purpose: RichTextImagePurpose;
   onError?: EditorProps["onError"];
 };
@@ -44,6 +78,7 @@ export function RichTextEditor({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pendingPicker = useRef<((image: PickedImage | null) => void) | null>(null);
+  const selectedMediaByUrl = useRef(new Map<string, string>());
   const adapters = useCourseLitMediaUploader({
     schoolId: school.id,
     purpose,
@@ -72,8 +107,16 @@ export function RichTextEditor({
       resolve?.(null);
       return;
     }
+    const selectedRef = toMediaRef(selected);
+    if (selectedRef.mediaId) {
+      selectedMediaByUrl.current.set(selectedRef.url, selectedRef.mediaId);
+    }
     setError(null);
-    resolve?.({ src: selected.src, alt: selected.alt });
+    resolve?.({ src: selectedRef.url, alt: selectedRef.alt });
+  }
+
+  function handleChange(document: Parameters<EditorProps["onChange"]>[0]) {
+    editorProps.onChange(annotateOwnedImages(document, selectedMediaByUrl.current));
   }
 
   function closePicker(open: boolean) {
@@ -93,7 +136,7 @@ export function RichTextEditor({
   return (
     <div className="space-y-2">
       <ImagePickerContextProvider pickImage={pickImage}>
-        <Editor {...editorProps} onError={handleError} />
+        <Editor {...editorProps} onChange={handleChange} onError={handleError} />
       </ImagePickerContextProvider>
       <ImageUploadDialog<CourseLitMedia>
         {...filteredAdapters}

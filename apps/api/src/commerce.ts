@@ -7,7 +7,11 @@ import {
   uuidv7,
 } from "@codelitdev/platform";
 import { and, eq, isNull, lt, or } from "drizzle-orm";
-import { processCommunityPaymentEvent } from "./community-commerce.js";
+import {
+  processCommunityPaymentEvent,
+  startLearnerCommunityCheckout,
+  type CommunityCheckoutDto,
+} from "./community-commerce.js";
 import { ActivityType, recordActivity } from "./activities.js";
 import * as schema from "./db/schema/index.js";
 import {
@@ -52,7 +56,8 @@ export type StorefrontCheckoutDto = {
 type CheckoutContext = {
   schoolId: string;
   publicSchoolId: string;
-  learnerId: string;
+  schoolAccountId?: string;
+  learnerId?: string;
   learnerPublicId: string;
   learnerEmail: string;
   learnerName: string;
@@ -64,10 +69,14 @@ type CheckoutSessionRow = typeof schema.storefrontCheckoutSessions.$inferSelect;
 
 export type StorefrontCheckoutSessionDto = {
   id: string;
-  productId: string;
+  resourceType: "product" | "community";
+  resourceId: string;
+  productId: string | null;
+  communityId: string | null;
   planId: string;
-  productTitle: string;
-  productKind: "course" | "download";
+  productTitle: string | null;
+  productKind: "course" | "download" | null;
+  communityName: string | null;
   planName: string;
   planDescription: string;
   planType: "free" | "onetime" | "emi" | "subscription";
@@ -170,21 +179,56 @@ async function loadCheckoutPlan(db: AppDb, schoolId: string, planPublicId: strin
   return rows[0] ?? null;
 }
 
+async function loadCommunityCheckoutPlan(
+  db: AppDb,
+  schoolId: string,
+  communityPublicId: string,
+  planPublicId: string,
+) {
+  const rows = await db
+    .select({
+      plan: schema.storefrontPlans,
+      community: schema.communities,
+      school: schema.schools,
+    })
+    .from(schema.storefrontPlans)
+    .innerJoin(
+      schema.communities,
+      and(
+        eq(schema.communities.publicId, schema.storefrontPlans.entityId),
+        eq(schema.storefrontPlans.entityType, "community"),
+      ),
+    )
+    .innerJoin(schema.schools, eq(schema.schools.id, schema.storefrontPlans.schoolId))
+    .where(
+      and(
+        eq(schema.storefrontPlans.publicId, planPublicId),
+        eq(schema.storefrontPlans.schoolId, schoolId),
+        eq(schema.storefrontPlans.entityId, communityPublicId),
+        eq(schema.storefrontPlans.status, "active"),
+        eq(schema.communities.schoolId, schoolId),
+        isNull(schema.communities.deletedAt),
+      ),
+    )
+    .limit(1);
+  return rows[0] ?? null;
+}
+
 async function loadCheckoutSession(
   db: AppDb,
   schoolId: string,
   sessionPublicId: string,
-  learnerId?: string,
+  schoolAccountId?: string,
 ) {
   const conditions = [
     eq(schema.storefrontCheckoutSessions.publicId, sessionPublicId),
     eq(schema.storefrontCheckoutSessions.schoolId, schoolId),
   ];
-  if (learnerId) {
+  if (schoolAccountId) {
     conditions.push(
       or(
-        isNull(schema.storefrontCheckoutSessions.learnerId),
-        eq(schema.storefrontCheckoutSessions.learnerId, learnerId),
+        isNull(schema.storefrontCheckoutSessions.schoolAccountId),
+        eq(schema.storefrontCheckoutSessions.schoolAccountId, schoolAccountId),
       )!,
     );
   }
@@ -193,20 +237,29 @@ async function loadCheckoutSession(
       session: schema.storefrontCheckoutSessions,
       plan: schema.storefrontPlans,
       product: schema.products,
+      community: schema.communities,
       school: schema.schools,
       attempt: schema.storefrontCheckoutAttempts,
+      communityAttempt: schema.communityCheckoutAttempts,
     })
     .from(schema.storefrontCheckoutSessions)
     .innerJoin(
       schema.storefrontPlans,
+      eq(schema.storefrontPlans.id, schema.storefrontCheckoutSessions.planId),
+    )
+    .leftJoin(
+      schema.products,
       and(
-        eq(schema.storefrontPlans.id, schema.storefrontCheckoutSessions.planId),
-        eq(schema.storefrontPlans.entityType, "product"),
+        eq(schema.products.id, schema.storefrontCheckoutSessions.productId),
+        eq(schema.storefrontCheckoutSessions.entityType, "product"),
       ),
     )
-    .innerJoin(
-      schema.products,
-      eq(schema.products.id, schema.storefrontCheckoutSessions.productId),
+    .leftJoin(
+      schema.communities,
+      and(
+        eq(schema.communities.id, schema.storefrontCheckoutSessions.communityId),
+        eq(schema.storefrontCheckoutSessions.entityType, "community"),
+      ),
     )
     .innerJoin(
       schema.schools,
@@ -219,6 +272,13 @@ async function loadCheckoutSession(
         schema.storefrontCheckoutSessions.checkoutId,
       ),
     )
+    .leftJoin(
+      schema.communityCheckoutAttempts,
+      eq(
+        schema.communityCheckoutAttempts.id,
+        schema.storefrontCheckoutSessions.communityCheckoutId,
+      ),
+    )
     .where(and(...conditions))
     .limit(1);
   return rows[0] ?? null;
@@ -227,16 +287,27 @@ async function loadCheckoutSession(
 function checkoutSessionToDto(row: {
   session: CheckoutSessionRow;
   plan: typeof schema.storefrontPlans.$inferSelect;
-  product: typeof schema.products.$inferSelect;
+  product: typeof schema.products.$inferSelect | null;
+  community: typeof schema.communities.$inferSelect | null;
   school: typeof schema.schools.$inferSelect;
   attempt: CheckoutRow | null;
+  communityAttempt: typeof schema.communityCheckoutAttempts.$inferSelect | null;
 }): StorefrontCheckoutSessionDto {
+  const isProduct = row.session.entityType === "product";
+  const resource = isProduct ? row.product : row.community;
+  if (!resource) {
+    throw new Error("checkout_session_resource_missing");
+  }
   return {
     id: row.session.publicId,
-    productId: row.product.publicId,
+    resourceType: row.session.entityType,
+    resourceId: resource.publicId,
+    productId: row.product?.publicId ?? null,
+    communityId: row.community?.publicId ?? null,
     planId: row.plan.publicId,
-    productTitle: row.product.title,
-    productKind: row.product.kind,
+    productTitle: row.product?.title ?? null,
+    productKind: row.product?.kind ?? null,
+    communityName: row.community?.name ?? null,
     planName: row.plan.name,
     planDescription: row.plan.description,
     planType: sourceTypeForKind(row.plan.kind),
@@ -245,8 +316,8 @@ function checkoutSessionToDto(row: {
     billingInterval: row.plan.billingInterval,
     installmentCount: row.plan.installmentCount,
     status: row.session.status,
-    checkoutId: row.attempt?.publicId ?? null,
-    checkoutStatus: row.attempt?.status ?? null,
+    checkoutId: row.attempt?.publicId ?? row.communityAttempt?.publicId ?? null,
+    checkoutStatus: row.attempt?.status ?? row.communityAttempt?.status ?? null,
     expiresAt: serializeDate(row.session.expiresAt),
   };
 }
@@ -266,17 +337,37 @@ async function expireCheckoutSession(db: AppDb, row: CheckoutSessionRow, clock: 
 export async function createCheckoutSession(
   db: AppDb,
   school: { schoolId: string; publicId: string },
-  input: { productPublicId: string; planPublicId: string },
+  input:
+    | { resourceType: "product"; resourcePublicId: string; planPublicId: string }
+    | { resourceType: "community"; resourcePublicId: string; planPublicId: string },
   clock: Clock,
 ): Promise<
   | { ok: true; value: StorefrontCheckoutSessionDto }
   | { ok: false; error: PlatformError }
 > {
-  const selected = await loadCheckoutPlan(db, school.schoolId, input.planPublicId);
+  const selected =
+    input.resourceType === "product"
+      ? await loadCheckoutPlan(db, school.schoolId, input.planPublicId)
+      : await loadCommunityCheckoutPlan(
+          db,
+          school.schoolId,
+          input.resourcePublicId,
+          input.planPublicId,
+        );
+  if (!selected) return error("not_found");
+  const productSelected =
+    input.resourceType === "product"
+      ? (selected as NonNullable<Awaited<ReturnType<typeof loadCheckoutPlan>>>)
+      : null;
+  const communitySelected =
+    input.resourceType === "community"
+      ? (selected as NonNullable<Awaited<ReturnType<typeof loadCommunityCheckoutPlan>>>)
+      : null;
   if (
-    !selected ||
-    selected.product.publicId !== input.productPublicId ||
-    selected.product.status !== "published"
+    input.resourceType === "product" &&
+    (!productSelected ||
+      productSelected.product.publicId !== input.resourcePublicId ||
+      productSelected.product.status !== "published")
   ) {
     return error("not_found");
   }
@@ -296,10 +387,13 @@ export async function createCheckoutSession(
     id: uuidv7(clock),
     publicId: createPublicId("cse", clock),
     schoolId: school.schoolId,
-    productId: selected.product.id,
+    entityType: input.resourceType,
+    productId: productSelected?.product.id ?? null,
+    communityId: communitySelected?.community.id ?? null,
     planId: selected.plan.id,
-    learnerId: null,
+    schoolAccountId: null,
     checkoutId: null,
+    communityCheckoutId: null,
     status: "open",
     expiresAt: new Date(now.getTime() + 30 * 60 * 1000),
     createdAt: now,
@@ -311,9 +405,11 @@ export async function createCheckoutSession(
     value: checkoutSessionToDto({
       session,
       plan: selected.plan,
-      product: selected.product,
+      product: productSelected?.product ?? null,
+      community: communitySelected?.community ?? null,
       school: selected.school,
       attempt: null,
+      communityAttempt: null,
     }),
   };
 }
@@ -349,11 +445,13 @@ export async function startCheckoutSession(
   input: {
     sessionPublicId: string;
     returnUrl: string;
+    joiningReason?: string;
   },
   clock: Clock,
   paymentProvider?: PaymentProvider,
 ): Promise<
-  { ok: true; value: StorefrontCheckoutDto } | { ok: false; error: PlatformError }
+  | { ok: true; value: StorefrontCheckoutDto | CommunityCheckoutDto }
+  | { ok: false; error: PlatformError }
 > {
   const row = await loadCheckoutSession(db, context.schoolId, input.sessionPublicId);
   if (!row) return error("not_found");
@@ -364,17 +462,18 @@ export async function startCheckoutSession(
     await expireCheckoutSession(db, row.session, clock);
     return error("not_found");
   }
-  if (row.session.learnerId && row.session.learnerId !== context.learnerId) {
+  const accountId = context.schoolAccountId ?? context.learnerId!;
+  if (row.session.schoolAccountId && row.session.schoolAccountId !== accountId) {
     return error("conflict", { reason: "checkout_session_already_claimed" });
   }
-  if (!row.session.learnerId) {
+  if (!row.session.schoolAccountId) {
     await db
       .update(schema.storefrontCheckoutSessions)
-      .set({ learnerId: context.learnerId, updatedAt: clock.now() })
+      .set({ schoolAccountId: accountId, updatedAt: clock.now() })
       .where(
         and(
           eq(schema.storefrontCheckoutSessions.id, row.session.id),
-          isNull(schema.storefrontCheckoutSessions.learnerId),
+          isNull(schema.storefrontCheckoutSessions.schoolAccountId),
         ),
       );
     const claimed = await loadCheckoutSession(
@@ -382,41 +481,74 @@ export async function startCheckoutSession(
       context.schoolId,
       input.sessionPublicId,
     );
-    if (!claimed || claimed.session.learnerId !== context.learnerId) {
+    if (!claimed || claimed.session.schoolAccountId !== accountId) {
       return error("conflict", { reason: "checkout_session_already_claimed" });
     }
   }
-  const result = await startLearnerCheckout(
-    db,
-    context,
-    {
-      planPublicId: row.plan.publicId,
-      idempotencyKey: `session:${row.session.publicId}`,
-      returnUrl: input.returnUrl,
-    },
-    clock,
-    paymentProvider,
-  );
+  const result =
+    row.session.entityType === "community"
+      ? row.community
+        ? await startLearnerCommunityCheckout(
+            db,
+            { ...context, learnerId: accountId },
+            row.community.publicId,
+            {
+              planPublicId: row.plan.publicId,
+              joiningReason: input.joiningReason ?? "",
+              idempotencyKey: `session:${row.session.publicId}`,
+              returnUrl: input.returnUrl,
+            },
+            clock,
+            paymentProvider,
+          )
+        : error("not_found")
+      : await startLearnerCheckout(
+          db,
+          context,
+          {
+            planPublicId: row.plan.publicId,
+            idempotencyKey: `session:${row.session.publicId}`,
+            returnUrl: input.returnUrl,
+          },
+          clock,
+          paymentProvider,
+        );
   if (!result.ok) return result;
-  const attempt = await db
-    .select({ id: schema.storefrontCheckoutAttempts.id })
-    .from(schema.storefrontCheckoutAttempts)
-    .where(eq(schema.storefrontCheckoutAttempts.publicId, result.value.id))
-    .limit(1);
-  if (attempt[0]) {
+  if (row.session.entityType === "community") {
+    const attempt = await db
+      .select({ id: schema.communityCheckoutAttempts.id })
+      .from(schema.communityCheckoutAttempts)
+      .where(eq(schema.communityCheckoutAttempts.publicId, result.value.id))
+      .limit(1);
     await db
       .update(schema.storefrontCheckoutSessions)
       .set({
-        checkoutId: attempt[0].id,
+        communityCheckoutId: attempt[0]?.id ?? null,
         status: result.value.status === "paid" ? "completed" : "open",
         updatedAt: clock.now(),
       })
       .where(eq(schema.storefrontCheckoutSessions.id, row.session.id));
-  } else if (result.value.status === "paid") {
-    await db
-      .update(schema.storefrontCheckoutSessions)
-      .set({ status: "completed", updatedAt: clock.now() })
-      .where(eq(schema.storefrontCheckoutSessions.id, row.session.id));
+  } else {
+    const attempt = await db
+      .select({ id: schema.storefrontCheckoutAttempts.id })
+      .from(schema.storefrontCheckoutAttempts)
+      .where(eq(schema.storefrontCheckoutAttempts.publicId, result.value.id))
+      .limit(1);
+    if (attempt[0]) {
+      await db
+        .update(schema.storefrontCheckoutSessions)
+        .set({
+          checkoutId: attempt[0].id,
+          status: result.value.status === "paid" ? "completed" : "open",
+          updatedAt: clock.now(),
+        })
+        .where(eq(schema.storefrontCheckoutSessions.id, row.session.id));
+    } else if (result.value.status === "paid") {
+      await db
+        .update(schema.storefrontCheckoutSessions)
+        .set({ status: "completed", updatedAt: clock.now() })
+        .where(eq(schema.storefrontCheckoutSessions.id, row.session.id));
+    }
   }
   return result;
 }
@@ -448,7 +580,7 @@ async function loadCheckoutById(
       and(
         eq(schema.storefrontCheckoutAttempts.publicId, checkoutPublicId),
         eq(schema.storefrontCheckoutAttempts.schoolId, context.schoolId),
-        eq(schema.storefrontCheckoutAttempts.learnerId, context.learnerId),
+        eq(schema.storefrontCheckoutAttempts.schoolAccountId, context.schoolAccountId ?? context.learnerId!),
       ),
     )
     .limit(1);
@@ -486,7 +618,7 @@ async function fulfillFreeCheckout(
       tx as unknown as AppDb,
       {
         schoolId: context.schoolId,
-        learnerId: context.learnerId,
+        schoolAccountId: context.schoolAccountId ?? context.learnerId!,
         entityType: "product",
         entityId: product.publicId,
         paymentPlanId: plan.publicId,
@@ -526,6 +658,7 @@ async function fulfillFreeCheckout(
       currency: current.currency,
       amountMinor: current.amountMinor,
       issuedAt: now,
+      createdAt: now,
       updatedAt: now,
     });
     await tx
@@ -592,7 +725,7 @@ export async function startLearnerCheckout(
     const selected = await loadCheckoutPlan(db, context.schoolId, input.planPublicId);
     if (
       !selected ||
-      row.learnerId !== context.learnerId ||
+      row.schoolAccountId !== (context.schoolAccountId ?? context.learnerId) ||
       row.planId !== selected.plan.id ||
       row.productId !== selected.product.id
     ) {
@@ -669,11 +802,12 @@ export async function startLearnerCheckout(
     }
   }
   const now = clock.now();
+  const accountId = context.schoolAccountId ?? context.learnerId!;
   const row = {
     id: uuidv7(clock),
     publicId: createPublicId("chk", clock),
     schoolId: context.schoolId,
-    learnerId: context.learnerId,
+    schoolAccountId: accountId,
     productId: selected.product.id,
     planId: selected.plan.id,
     provider: selected.plan.kind === "free"
@@ -702,7 +836,7 @@ export async function startLearnerCheckout(
     db,
     {
       schoolId: context.schoolId,
-      learnerId: context.learnerId,
+      schoolAccountId: accountId,
       entityType: "product",
       entityId: selected.product.publicId,
       paymentPlanId: selected.plan.publicId,
@@ -787,6 +921,7 @@ export async function startLearnerCheckout(
     currency: row.currency,
     amountMinor: row.amountMinor,
     issuedAt: updatedAt,
+    createdAt: updatedAt,
     updatedAt,
   });
   return {
@@ -949,7 +1084,7 @@ async function processPaymentEvent(
         tx as unknown as AppDb,
         {
           schoolId: current.schoolId,
-          learnerId: current.learnerId,
+          schoolAccountId: current.schoolAccountId,
           entityType: "product",
           entityId: eventCheckout.product.publicId,
           paymentPlanId: eventCheckout.plan.publicId,
@@ -1045,6 +1180,7 @@ async function processPaymentEvent(
           currency,
           amountMinor: amount,
           issuedAt: now,
+          createdAt: now,
           updatedAt: now,
         });
       }
@@ -1060,7 +1196,7 @@ async function processPaymentEvent(
       }
       await recordActivity(tx as unknown as AppDb, {
         schoolId: current.schoolId,
-        actorId: current.learnerId,
+        actorId: current.schoolAccountId,
         type: ActivityType.PURCHASED,
         entityId: eventCheckout.product.publicId,
         metadata: {
@@ -1089,7 +1225,6 @@ async function processPaymentEvent(
             id: uuidv7(clock),
             publicId: createPublicId("sub", clock),
             checkoutId: current.id,
-            membershipId: membership.id,
             providerSubscriptionId: subscriptionId,
             status: "active",
             currentPeriodEnd: null,

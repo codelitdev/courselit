@@ -51,7 +51,7 @@ describe.serial("certificates", () => {
       accessPolicy: "public",
       status: "active",
       createdBy: world.owner.id,
-      createdByLearnerId: null,
+      createdBySchoolAccountId: null,
       createdAt: clock.now(),
       updatedAt: clock.now(),
     });

@@ -156,11 +156,21 @@ describe.serial("media library", () => {
       method: "PATCH",
       path: `/v1/products/${world.noteA.publicId}`,
       headers,
-      body: { featuredMediaId: media.id },
+      body: {
+        featuredImage: {
+          mediaId: media.id,
+          url: canonicalUrl,
+          alt: "Course cover",
+        },
+      },
     });
     expect(featured.status).toBe(200);
     expect(featured.body).toMatchObject({
-      featuredMedia: { id: media.id, fileName: "cover.png" },
+      featuredImage: {
+        mediaId: media.id,
+        url: canonicalUrl,
+        alt: "Course cover",
+      },
     });
     const productWithArtwork = await dispatch(runtime, {
       method: "GET",
@@ -168,16 +178,16 @@ describe.serial("media library", () => {
       headers,
     });
     expect(productWithArtwork.body).toMatchObject({
-      featuredMedia: { id: media.id },
+      featuredImage: { mediaId: media.id },
     });
     const removedArtwork = await dispatch(runtime, {
       method: "PATCH",
       path: `/v1/products/${world.noteA.publicId}`,
       headers,
-      body: { featuredMediaId: null },
+      body: { featuredImage: null },
     });
     expect(removedArtwork.status).toBe(200);
-    expect(removedArtwork.body).toMatchObject({ featuredMedia: null });
+    expect(removedArtwork.body).toMatchObject({ featuredImage: null });
 
     const richDescription = JSON.stringify({
       type: "doc",
@@ -187,7 +197,11 @@ describe.serial("media library", () => {
           content: [
             {
               type: "image",
-              attrs: { src: canonicalUrl, alt: "Course cover" },
+              attrs: {
+                src: "https://cdn.example.com/course-cover-copy.png",
+                mediaId: media.id,
+                alt: "Course cover",
+              },
             },
           ],
         },
@@ -464,20 +478,28 @@ describe.serial("media library", () => {
     await runtime.close();
   });
 
-  it("keeps legacy owner memberships able to manage MediaLit assets", async () => {
+  it("allows staff memberships with media:manage to manage media assets", async () => {
     const clock = freezeRuntimeClock(new Date("2026-03-01T00:00:00.000Z"));
     const runtime = await createPgliteRuntime({ clock });
     const world = await seedWorld(runtime, clock);
+    const [memberAccount] = await runtime.db
+      .select()
+      .from(schema.schoolAccounts)
+      .where(
+        and(
+          eq(schema.schoolAccounts.schoolId, world.schoolA.id),
+          eq(schema.schoolAccounts.userId, world.member.id),
+        ),
+      );
     await runtime.db
       .update(schema.memberships)
       .set({
-        permissions:
-          "products:read,products:write,products:delete,learners:write,school:admin,billing:read",
+        permissions: ["media:write"],
       })
       .where(
         and(
           eq(schema.memberships.schoolId, world.schoolA.id),
-          eq(schema.memberships.userId, world.owner.id),
+          eq(schema.memberships.schoolAccountId, memberAccount!.id),
         ),
       );
 
@@ -485,11 +507,11 @@ describe.serial("media library", () => {
       method: "POST",
       path: "/v1/media/upload-authorizations",
       headers: {
-        cookie: world.owner.sessionCookie,
+        cookie: world.member.sessionCookie,
         "x-school-id": world.schoolA.publicId,
       },
       body: {
-        fileName: "legacy-owner.png",
+        fileName: "staff-asset.png",
         mimeType: "image/png",
         byteSize: 1024,
         purpose: "product_artwork",

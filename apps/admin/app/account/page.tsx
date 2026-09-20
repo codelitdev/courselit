@@ -14,10 +14,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/codelit/button";
-import { Checkbox } from "@/components/ui/codelit/checkbox";
 import { Input } from "@/components/ui/codelit/input";
 import { Label } from "@/components/ui/codelit/label";
-import { Textarea } from "@/components/ui/codelit/textarea";
 import {
   type CourseLitMedia,
   filterCourseLitMediaAdapters,
@@ -37,9 +35,7 @@ interface AccountUser {
 export default function AccountPage() {
   const [account, setAccount] = useState<AccountUser | null>(null);
   const [name, setName] = useState("");
-  const [bio, setBio] = useState("");
   const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
-  const [subscribedToUpdates, setSubscribedToUpdates] = useState(false);
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
 
@@ -48,9 +44,8 @@ export default function AccountPage() {
   const [saveStatus, setSaveStatus] = useState<"success" | "error" | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const initialValuesRef = useRef<{ name: string; bio: string; image: string | null }>({
+  const initialValuesRef = useRef<{ name: string; image: string | null }>({
     name: "",
-    bio: "",
     image: null,
   });
 
@@ -78,7 +73,6 @@ export default function AccountPage() {
           setAvatarSrc(user.image ?? null);
           initialValuesRef.current = {
             name: user.name ?? "",
-            bio: "",
             image: user.image ?? null,
           };
         }
@@ -99,7 +93,7 @@ export default function AccountPage() {
 
   function selectPhoto(selected: SelectedImage<CourseLitMedia>) {
     if (!selected.media) {
-      setErrorMessage("Profile photos must be stored in the MediaLit library.");
+      setErrorMessage("Profile photos must be stored in the media library.");
       setSaveStatus("error");
       return;
     }
@@ -148,7 +142,6 @@ export default function AccountPage() {
 
       initialValuesRef.current = {
         name: trimmedName,
-        bio,
         image: avatarSrc,
       };
 
@@ -167,7 +160,6 @@ export default function AccountPage() {
 
   const hasChanges =
     name !== initialValuesRef.current.name ||
-    bio !== initialValuesRef.current.bio ||
     avatarSrc !== initialValuesRef.current.image;
 
   const initials = (name || account?.email || "U").slice(0, 1).toUpperCase();
@@ -282,17 +274,6 @@ export default function AccountPage() {
                       />
                     </div>
 
-                    <div className="space-y-1.5">
-                      <Label htmlFor="account-bio">Bio</Label>
-                      <Textarea
-                        id="account-bio"
-                        rows={3}
-                        placeholder="A brief bio about yourself…"
-                        value={bio}
-                        onChange={(e) => setBio(e.target.value)}
-                      />
-                    </div>
-
                     {saveStatus === "success" && (
                       <div className="flex items-center gap-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                         <Check className="size-4" />
@@ -314,39 +295,6 @@ export default function AccountPage() {
                 </form>
               </Card>
             </div>
-
-            {/* Email preferences card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Email preferences</CardTitle>
-                <CardDescription>
-                  Manage newsletter and product updates sent to your email.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-start space-x-3">
-                  <Checkbox
-                    id="newsletter-updates"
-                    checked={subscribedToUpdates}
-                    onCheckedChange={(checked) =>
-                      setSubscribedToUpdates(checked === true)
-                    }
-                  />
-                  <div className="space-y-1 leading-none">
-                    <Label
-                      htmlFor="newsletter-updates"
-                      className="cursor-pointer font-medium text-sm"
-                    >
-                      Receive newsletter and product updates
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Get announcements about new features, security updates, and
-                      releases.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         )}
       </div>

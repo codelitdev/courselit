@@ -7,10 +7,9 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { learners } from "./catalog.js";
 import { communities } from "./communities.js";
 import { storefrontPlans } from "./storefront.js";
-import { schools } from "./schools.js";
+import { schoolAccounts, schools } from "./schools.js";
 
 export const communityCheckoutAttempts = pgTable(
   "community_checkout_attempts",
@@ -20,9 +19,9 @@ export const communityCheckoutAttempts = pgTable(
     schoolId: uuid("school_id")
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
-    learnerId: uuid("learner_id")
+    schoolAccountId: uuid("school_account_id")
       .notNull()
-      .references(() => learners.id, { onDelete: "cascade" }),
+      .references(() => schoolAccounts.id, { onDelete: "cascade" }),
     communityId: uuid("community_id")
       .notNull()
       .references(() => communities.id, { onDelete: "cascade" }),

@@ -7,14 +7,14 @@ import {
   serializeDate,
   uuidv7,
 } from "@codelitdev/platform";
-import { and, asc, eq, gt, inArray, isNull, lte, or } from "drizzle-orm";
+import { and, asc, eq, inArray, or } from "drizzle-orm";
 import * as schema from "./db/schema/index.js";
 import {
   mediaIdsForRichTextContent,
   reconcileMediaReferencesInTransaction,
 } from "./media.js";
 import type { CourseLitPermission } from "./permissions.js";
-import type { ProductDto, ProductFeaturedMediaDto } from "./products.js";
+import { type ProductDto, productFeaturedImageFor } from "./products.js";
 import type { AppDb } from "./types.js";
 
 type Ctx = PlatformRequestContext<string, string, CourseLitPermission>;
@@ -55,13 +55,13 @@ export type ProductDetailDto = ProductDto & {
 export type ProductViewer =
   | { kind: "admin" }
   | { kind: "preview" }
-  | { kind: "learner"; learnerId: string }
+  | { kind: "learner"; schoolAccountId?: string; learnerId?: string }
   | { kind: "public" };
 
 function productToDto(
   row: typeof schema.products.$inferSelect,
   publicSchoolId: string,
-  featuredMedia: ProductFeaturedMediaDto | null,
+  featuredImage: ProductDto["featuredImage"],
 ): ProductDto {
   return {
     id: row.publicId,
@@ -71,11 +71,13 @@ function productToDto(
     slug: row.slug,
     title: row.title,
     description: row.description,
-    featuredMedia,
+    featuredImage,
     privacy: row.privacy,
     leadMagnet: row.leadMagnet,
     certificate: row.certificate,
     discussions: row.discussions,
+    includedWithCommunity: row.includedWithCommunity,
+    discussionSpaceId: row.discussionSpaceId,
     publishedAt: row.publishedAt ? serializeDate(row.publishedAt) : null,
     createdAt: serializeDate(row.createdAt),
     updatedAt: serializeDate(row.updatedAt),
@@ -481,19 +483,22 @@ export async function getProduct(
   let enrolled = false;
   let membershipStartedAt: Date | null = null;
   if (viewer.kind === "learner") {
-    const memberships = await db
-      .select({ createdAt: schema.learnerMemberships.createdAt })
-      .from(schema.learnerMemberships)
-      .where(
-        and(
-          eq(schema.learnerMemberships.learnerId, viewer.learnerId),
-          eq(schema.learnerMemberships.entityType, "product"),
-          eq(schema.learnerMemberships.entityId, product.publicId),
-          eq(schema.learnerMemberships.schoolId, school.schoolId),
-          eq(schema.learnerMemberships.status, "active"),
-        ),
-      )
-      .limit(1);
+    const schoolAccountId = viewer.schoolAccountId ?? viewer.learnerId;
+    const memberships = schoolAccountId
+      ? await db
+          .select({ createdAt: schema.learnerMemberships.createdAt })
+          .from(schema.learnerMemberships)
+          .where(
+            and(
+              eq(schema.learnerMemberships.schoolAccountId, schoolAccountId),
+              eq(schema.learnerMemberships.entityType, "product"),
+              eq(schema.learnerMemberships.entityId, product.publicId),
+              eq(schema.learnerMemberships.schoolId, school.schoolId),
+              eq(schema.learnerMemberships.status, "active"),
+            ),
+          )
+          .limit(1)
+      : [];
     enrolled = Boolean(memberships[0]);
     membershipStartedAt = memberships[0]?.createdAt ?? null;
   }
@@ -506,34 +511,12 @@ export async function getProduct(
   const visibleSections = hasAuthoringAccess
     ? sectionRows
     : sectionRows.filter((section) => visibleSectionIds.has(section.id));
-  const featuredMediaRows = await db
-    .select({ media: schema.media })
-    .from(schema.mediaReferences)
-    .innerJoin(schema.media, eq(schema.media.id, schema.mediaReferences.mediaId))
-    .where(
-      and(
-        eq(schema.mediaReferences.schoolId, school.schoolId),
-        eq(schema.mediaReferences.resourceType, "product_artwork"),
-        eq(schema.mediaReferences.resourceInternalId, product.id),
-        eq(schema.media.status, "active"),
-      ),
-    )
-    .limit(1);
-  const featuredMediaRow = featuredMediaRows[0]?.media;
-  const featuredMedia = featuredMediaRow
-    ? {
-        id: featuredMediaRow.publicId,
-        canonicalUrl: featuredMediaRow.canonicalUrl,
-        thumbnailUrl: featuredMediaRow.thumbnailUrl,
-        fileName: featuredMediaRow.fileName,
-        altText: featuredMediaRow.altText,
-      }
-    : null;
+  const featuredImage = await productFeaturedImageFor(db, product);
   const sectionUnlocks = sectionUnlockTimes(sectionRows, membershipStartedAt);
   return {
     ok: true,
     value: {
-      ...productToDto(product, school.publicId, featuredMedia),
+      ...productToDto(product, school.publicId, featuredImage),
       enrolled,
       sections: visibleSections.map(sectionToDto),
       lessons: visible.map((row) => {

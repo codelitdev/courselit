@@ -83,12 +83,22 @@ describe.serial("product listing", () => {
       )
       .limit(1);
     const learnerId = uuidv7(clock);
-    await runtime.db.insert(schema.learners).values({
-      id: learnerId,
-      publicId: createPublicId("lrn", clock),
-      schoolId: world.schoolA.id,
+    const userId = uuidv7(clock);
+    await runtime.db.insert(schema.user).values({
+      id: userId,
       email: "learner@example.com",
       name: "Learner",
+      emailVerified: true,
+      createdAt: clock.now(),
+      updatedAt: clock.now(),
+    });
+    await runtime.db.insert(schema.schoolAccounts).values({
+      id: learnerId,
+      publicId: createPublicId("sca", clock),
+      schoolId: world.schoolA.id,
+      userId,
+      email: "learner@example.com",
+      displayName: "Learner",
       status: "active",
       createdAt: clock.now(),
       updatedAt: clock.now(),
@@ -97,7 +107,7 @@ describe.serial("product listing", () => {
       id: uuidv7(clock),
       publicId: createPublicId("lrm", clock),
       schoolId: world.schoolA.id,
-      learnerId,
+      schoolAccountId: learnerId,
       entityType: "product",
       entityId: world.noteA.publicId,
       paymentPlanId: null,
@@ -268,13 +278,22 @@ describe.serial("product listing", () => {
       status: "published",
     });
 
+    const [memberAccount] = await runtime.db
+      .select()
+      .from(schema.schoolAccounts)
+      .where(
+        and(
+          eq(schema.schoolAccounts.schoolId, world.schoolA.id),
+          eq(schema.schoolAccounts.userId, world.member.id),
+        ),
+      );
     await runtime.db
       .update(schema.memberships)
-      .set({ permissions: "communities:read" })
+      .set({ permissions: ["communities:read"] })
       .where(
         and(
           eq(schema.memberships.schoolId, world.schoolA.id),
-          eq(schema.memberships.userId, world.member.id),
+          eq(schema.memberships.schoolAccountId, memberAccount!.id),
         ),
       );
     const publicWithAdminSession = await dispatch(runtime, {

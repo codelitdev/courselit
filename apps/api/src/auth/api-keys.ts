@@ -43,6 +43,9 @@ export async function createApiKeyRecord(input: {
   db: AppDb;
   schoolId: string;
   userId: string;
+  membershipId?: string;
+  schoolAccountId?: string;
+  name?: string;
   permissions: readonly string[];
   pepper: string;
   clock: Clock;
@@ -59,10 +62,14 @@ export async function createApiKeyRecord(input: {
       publicId,
       schoolId: input.schoolId,
       userId: input.userId,
+      membershipId: input.membershipId,
+      createdBySchoolAccountId: input.schoolAccountId,
+      name: input.name ?? "Default",
       digest: digestApiKeySecret(input.pepper, secret),
-      permissions: input.permissions.join(","),
+      permissions: [...input.permissions],
       ...(input.expiresAt ? { expiresAt: input.expiresAt } : {}),
       createdAt: now,
+      updatedAt: now,
     });
     if (input.audit) {
       await tx.insert(schema.auditEvents).values({
